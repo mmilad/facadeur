@@ -148,13 +148,145 @@ export const variantAxisSchema = Type.Object(
   { additionalProperties: false },
 );
 
+/** `{color.blue.500}` — a token reference stored in a style or layout value. */
+export const tokenRefSchema = Type.String({
+  pattern: '^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$',
+});
+
+/** `color.blue.500` — a token path, without braces. */
+export const tokenPathSchema = Type.String({
+  pattern: '^[a-z][a-z0-9]*(\\.[a-z0-9]+)+$',
+});
+
+const breakpointIdSchema = Type.String({ pattern: '^[a-z][a-z0-9]*$' });
+
+export const spacingBoxSchema = Type.Object(
+  {
+    top: Type.Optional(tokenRefSchema),
+    right: Type.Optional(tokenRefSchema),
+    bottom: Type.Optional(tokenRefSchema),
+    left: Type.Optional(tokenRefSchema),
+  },
+  { additionalProperties: false },
+);
+
+export const spacingSchema = Type.Union([tokenRefSchema, spacingBoxSchema]);
+
+export const sizeValueSchema = Type.Union([
+  Type.Number({ exclusiveMinimum: 0 }),
+  tokenRefSchema,
+  Type.Object(
+    {
+      unit: Type.Literal('%'),
+      value: Type.Number({ exclusiveMinimum: 0, maximum: 100 }),
+    },
+    { additionalProperties: false },
+  ),
+]);
+
+export const axisSizeSchema = Type.Object(
+  {
+    mode: Type.Union([Type.Literal('hug'), Type.Literal('fill'), Type.Literal('fixed')]),
+    size: Type.Optional(sizeValueSchema),
+    min: Type.Optional(sizeValueSchema),
+    max: Type.Optional(sizeValueSchema),
+  },
+  { additionalProperties: false },
+);
+
+const layoutFields = {
+  position: Type.Optional(Type.Union([Type.Literal('auto'), Type.Literal('absolute')])),
+  x: Type.Optional(Type.Number()),
+  y: Type.Optional(Type.Number()),
+  width: Type.Optional(axisSizeSchema),
+  height: Type.Optional(axisSizeSchema),
+  direction: Type.Optional(Type.Union([Type.Literal('row'), Type.Literal('column')])),
+  gap: Type.Optional(tokenRefSchema),
+  padding: Type.Optional(spacingSchema),
+  margin: Type.Optional(spacingSchema),
+  justify: Type.Optional(
+    Type.Union([
+      Type.Literal('start'),
+      Type.Literal('center'),
+      Type.Literal('end'),
+      Type.Literal('space-between'),
+    ]),
+  ),
+  align: Type.Optional(
+    Type.Union([
+      Type.Literal('start'),
+      Type.Literal('center'),
+      Type.Literal('end'),
+      Type.Literal('stretch'),
+    ]),
+  ),
+  wrap: Type.Optional(Type.Boolean()),
+};
+
+/** Layout fields that a breakpoint may override. Breakpoints do not nest. */
+export const layoutOverrideSchema = Type.Object(layoutFields, { additionalProperties: false });
+
 export const layoutSchema = Type.Object(
   {
-    position: Type.Optional(Type.Union([Type.Literal('auto'), Type.Literal('absolute')])),
-    x: Type.Optional(Type.Number()),
-    y: Type.Optional(Type.Number()),
-    width: Type.Optional(Type.Number({ exclusiveMinimum: 0 })),
-    height: Type.Optional(Type.Number({ exclusiveMinimum: 0 })),
+    ...layoutFields,
+    breakpoints: Type.Optional(Type.Record(breakpointIdSchema, layoutOverrideSchema)),
+  },
+  { additionalProperties: false },
+);
+
+const cssPropertySchema = Type.String({ pattern: '^(--)?[A-Za-z_][\\w-]*$' });
+const styleDeclarationsSchema = Type.Record(cssPropertySchema, Type.String());
+
+export const styleStatesSchema = Type.Object(
+  {
+    hover: Type.Optional(styleDeclarationsSchema),
+    'focus-visible': Type.Optional(styleDeclarationsSchema),
+    disabled: Type.Optional(styleDeclarationsSchema),
+  },
+  { additionalProperties: false },
+);
+
+export const styleLayerSchema = Type.Object(
+  {
+    declarations: Type.Optional(styleDeclarationsSchema),
+    states: Type.Optional(styleStatesSchema),
+  },
+  { additionalProperties: false },
+);
+
+const variantStyleSchema = Type.Record(
+  idSchema,
+  Type.Record(Type.String({ minLength: 1 }), styleLayerSchema),
+);
+
+const breakpointStyleSchema = Type.Record(breakpointIdSchema, styleLayerSchema);
+
+/** A descendant rule. One level deep: nested instances carry their own style block. */
+export const styleChildSchema = Type.Object(
+  {
+    declarations: Type.Optional(styleDeclarationsSchema),
+    states: Type.Optional(styleStatesSchema),
+    variants: Type.Optional(variantStyleSchema),
+    breakpoints: Type.Optional(breakpointStyleSchema),
+  },
+  { additionalProperties: false },
+);
+
+export const styleBlockSchema = Type.Object(
+  {
+    declarations: Type.Optional(styleDeclarationsSchema),
+    states: Type.Optional(styleStatesSchema),
+    variants: Type.Optional(variantStyleSchema),
+    breakpoints: Type.Optional(breakpointStyleSchema),
+    children: Type.Optional(Type.Record(idSchema, styleChildSchema)),
+  },
+  { additionalProperties: false },
+);
+
+export const tokenInterfaceSchema = Type.Object(
+  {
+    reads: Type.Optional(Type.Array(tokenPathSchema, { minItems: 1 })),
+    sets: Type.Optional(Type.Record(tokenPathSchema, Type.String({ minLength: 1 }))),
   },
   { additionalProperties: false },
 );
@@ -304,7 +436,7 @@ const documentSchemaMeta = {
   additionalProperties: false,
   title: 'Facadeur document',
   description:
-    'Nested facadeur document. Nodes are frame, text, image, or instance. Tokens are a DTCG tree. Fonts list families and their sources. Instances override fields and variants only.',
+    'Nested facadeur document. Nodes are frame, text, image, or instance. Tokens are a DTCG tree. Fonts list families and their sources. A style block paints the component. Instances override fields and variants only.',
 } as const;
 
 function documentProperties<Kind extends TSchema>(kind: Kind) {
@@ -318,6 +450,8 @@ function documentProperties<Kind extends TSchema>(kind: Kind) {
     settings: Type.Optional(settingsSchema),
     fonts: Type.Optional(Type.Array(fontFamilySchema, { minItems: 1 })),
     tokens: Type.Optional(tokenTreeSchema),
+    styles: Type.Optional(styleBlockSchema),
+    tokenInterface: Type.Optional(tokenInterfaceSchema),
     root: nestedNodeSchema,
   };
 }
@@ -344,6 +478,17 @@ export type FieldValue = Static<typeof fieldValueSchema>;
 export type FieldDefinition = Static<typeof fieldDefinitionSchema>;
 export type VariantAxis = Static<typeof variantAxisSchema>;
 export type Layout = Static<typeof layoutSchema>;
+export type LayoutOverride = Static<typeof layoutOverrideSchema>;
+export type AxisSize = Static<typeof axisSizeSchema>;
+export type SizeValue = Static<typeof sizeValueSchema>;
+export type Spacing = Static<typeof spacingSchema>;
+export type SpacingBox = Static<typeof spacingBoxSchema>;
+export type StyleDeclarations = Record<string, string>;
+export type StyleStates = Static<typeof styleStatesSchema>;
+export type StyleLayer = Static<typeof styleLayerSchema>;
+export type StyleChild = Static<typeof styleChildSchema>;
+export type StyleBlock = Static<typeof styleBlockSchema>;
+export type TokenInterface = Static<typeof tokenInterfaceSchema>;
 export type Binding = Static<typeof bindingSchema>;
 export type NestedNode = Static<typeof nestedNodeSchema>;
 export type DocumentSettings = Static<typeof settingsSchema>;

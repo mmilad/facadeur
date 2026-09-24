@@ -13,6 +13,10 @@ export default defineConfig({
         new URL('../renderer-dom/src/index.ts', import.meta.url),
       ),
       '@facadeur/tokens': fileURLToPath(new URL('../tokens/src/index.ts', import.meta.url)),
+      '@facadeur/style-engine': fileURLToPath(
+        new URL('../style-engine/src/index.ts', import.meta.url),
+      ),
+      '@facadeur/store-yjs': fileURLToPath(new URL('../store-yjs/src/index.ts', import.meta.url)),
     },
   },
 });

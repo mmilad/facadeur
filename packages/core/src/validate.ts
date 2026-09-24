@@ -3,6 +3,7 @@ import { DocumentError } from './errors.js';
 import { type FlatDocument, type FlatNode, toFlat } from './flat.js';
 import { defaultNestingRules, type NestingRule } from './kinds.js';
 import { assertBreakpoints, assertFonts } from './libraries.js';
+import { parseLayout } from './layout.js';
 import {
   createDocumentSchema,
   documentFileSchema,
@@ -14,6 +15,7 @@ import {
   type FieldValue,
 } from './schema.js';
 import { readTokenTree } from './token-tree.js';
+import { assertStyleContract } from './style-block.js';
 
 export interface ValidateOptions {
   rules?: Readonly<Record<string, NestingRule>>;
@@ -98,6 +100,7 @@ export function validateLibraries(doc: FlatDocument): void {
   assertFonts(doc.fonts);
   assertBreakpoints(doc.settings.breakpoints);
   readTokenTree(doc.tokens);
+  assertStyleContract(doc);
 }
 
 export function validateDefinitions(doc: FlatDocument): void {
@@ -300,19 +303,7 @@ export function assertBindings(bindings: Binding[] | undefined): void {
 }
 
 export function assertLayout(layout: NonNullable<FlatNode['layout']>): void {
-  for (const key of ['x', 'y', 'width', 'height'] as const) {
-    const value = layout[key];
-    if (value === undefined) continue;
-    if (typeof value !== 'number' || !Number.isFinite(value)) {
-      throw new DocumentError('schema', `Layout ${key} must be a finite number`);
-    }
-  }
-  if (layout.width !== undefined && layout.width <= 0) {
-    throw new DocumentError('schema', 'Layout width must be greater than 0');
-  }
-  if (layout.height !== undefined && layout.height <= 0) {
-    throw new DocumentError('schema', 'Layout height must be greater than 0');
-  }
+  parseLayout(layout);
 }
 
 function formatErrors(errors: ErrorObject[] | null | undefined): string {

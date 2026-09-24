@@ -11,6 +11,8 @@
   "dependencies": {
     "@facadeur/core": "workspace:*",
     "@facadeur/renderer-dom": "workspace:*",
+    "@facadeur/store-yjs": "workspace:*",
+    "@facadeur/style-engine": "workspace:*",
     "@facadeur/tokens": "workspace:*"
   },
   "devDependencies": {

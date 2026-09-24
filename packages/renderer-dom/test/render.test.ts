@@ -37,7 +37,12 @@ describe('renderer', () => {
             component: 'button',
             fields: { label: 'Continue' },
             variants: { tone: 'ghost', size: 'sm' },
-            layout: { position: 'absolute', x: 12, y: 4, width: 80 },
+            layout: {
+              position: 'absolute',
+              x: 12,
+              y: 4,
+              width: { mode: 'fixed', size: 80 },
+            },
           },
         ],
       },
@@ -48,7 +53,8 @@ describe('renderer', () => {
     expect(buttonEl?.textContent).toBe('Continue');
     expect(buttonEl?.getAttribute('data-variant-tone')).toBe('ghost');
     expect(buttonEl?.getAttribute('data-variant-size')).toBe('sm');
-    expect((buttonEl as HTMLElement).style.left).toBe('12px');
+    expect(buttonEl?.getAttribute('data-node')).toBe('go');
+    expect((buttonEl as HTMLElement).style.left).toBe('');
     expect(records.get('go')?.text).toBe('Continue');
     expect(records.get('go')?.fields).toMatchObject({ label: 'Continue' });
     expect(records.get('go/label')).toBeUndefined();
@@ -60,21 +66,26 @@ describe('renderer', () => {
     if (!page) throw new Error('missing page');
     const host = document.createElement('div');
     const records = renderDocument(page, documents, host);
-    expect(host.querySelector('[data-id="specimen-section/heading"]')?.textContent).toBe(
+    expect(host.querySelector('[data-id="specimen-section/intro/heading"]')?.textContent).toBe(
       'Specimen',
     );
-    expect(host.querySelector('[data-id="specimen-section/btn-primary"]')?.textContent).toBe(
-      'Primary',
-    );
-    expect(host.querySelector('[data-id="specimen-section/card-notes/title"]')?.textContent).toBe(
-      'Field notes',
-    );
+    expect(
+      host.querySelector('[data-id="specimen-section/buttons/button-row/btn-primary"]')
+        ?.textContent,
+    ).toBe('Primary');
+    expect(
+      host.querySelector('[data-id="specimen-section/cards/card-row/card-notes/title"]')
+        ?.textContent,
+    ).toBe('Field notes');
     expect(
       host
-        .querySelector('[data-id="specimen-section/card-signin/email/control"]')
+        .querySelector('[data-id="specimen-section/cards/card-row/card-signin/email/control"]')
         ?.getAttribute('value'),
     ).toBe('ada@atelier.test');
-    expect(records.get('specimen-section/card-signin/continue')?.component).toBe('button');
+    expect(records.get('specimen-section/cards/card-row/card-signin/continue')?.component).toBe(
+      'button',
+    );
+    expect(host.querySelector('[data-id="specimen-section"]')?.getAttribute('style')).toBeNull();
   });
 
   it('skips event-handler attributes and shows an unknown component', () => {

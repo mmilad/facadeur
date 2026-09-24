@@ -1,6 +1,8 @@
 import { validateCatalog, type DocumentFile } from '@facadeur/core';
-import { renderDocument } from '@facadeur/renderer-dom';
-import { createProjectTemplate, renderDesignCss } from '@facadeur/tokens';
+import { createDomRenderer, type RenderedNode } from '@facadeur/renderer-dom';
+import { createStyleEngine } from '@facadeur/style-engine';
+import { createDocumentStore } from '@facadeur/store-yjs';
+import { createProjectTemplate } from '@facadeur/tokens';
 import button from '../../../examples/button.json';
 import card from '../../../examples/card.json';
 import input from '../../../examples/input.json';
@@ -10,6 +12,9 @@ import specimenSection from '../../../examples/specimen-section.json';
 import { createSelection } from './selection.js';
 import { createStage } from './stage.js';
 import './styles.css';
+
+/** Keeps the renderer, stores, and style engine alive after main() returns. */
+const session: object[] = [];
 
 const pageName = document.querySelector('#page-name');
 const viewport = document.querySelector('#viewport');
@@ -39,16 +44,6 @@ function main() {
     return;
   }
 
-  try {
-    const tokens = document.createElement('style');
-    tokens.id = 'facadeur-tokens';
-    tokens.textContent = renderDesignCss(createProjectTemplate());
-    document.head.append(tokens);
-  } catch (error) {
-    showBootError(error);
-    return;
-  }
-
   let documents: DocumentFile[];
   try {
     documents = validateCatalog([button, input, card, signIn, specimenSection, specimenPage]);
@@ -71,7 +66,19 @@ function main() {
   board.style.height = `${artboard.height}px`;
   stageEl.append(board);
 
-  const records = renderDocument(page, documents, board);
+  let records: Map<string, RenderedNode>;
+  try {
+    const styles = createStyleEngine(document);
+    styles.setDesign(createProjectTemplate());
+    const renderer = createDomRenderer({ parent: board, catalog: documents, styles });
+    records = renderer.mount(page);
+    const stores = documents.map((entry) => createDocumentStore(entry));
+    for (const store of stores) renderer.connect(store);
+    session.push(styles, renderer, ...stores);
+  } catch (error) {
+    showBootError(error);
+    return;
+  }
   const stage = createStage(viewport, stageEl);
   const selection = createSelection({
     stage: stageEl,

@@ -1,4 +1,12 @@
-import { makeFlatNode, type FlatDocument, type FlatNode, type Layout } from '@facadeur/core';
+import {
+  canonicalizeLayout,
+  makeFlatNode,
+  type FlatDocument,
+  type FlatNode,
+  type Layout,
+  type StyleBlock,
+  type TokenInterface,
+} from '@facadeur/core';
 import type {
   Binding,
   DocumentSettings,
@@ -23,6 +31,11 @@ export function patchDocument(doc: Y.Doc, next: FlatDocument): void {
   syncNodes(doc.getMap<Y.Map<unknown>>('nodes'), next);
   syncJsonObject(doc.getMap('tokens'), next.tokens);
   syncFonts(doc.getMap('fonts'), next.fonts);
+  syncJsonObject(doc.getMap('styles'), (next.styles ?? {}) as Record<string, JsonValue>);
+  syncJsonObject(
+    doc.getMap('tokenInterface'),
+    (next.tokenInterface ?? {}) as Record<string, JsonValue>,
+  );
 }
 
 export function readDocument(doc: Y.Doc): FlatDocument {
@@ -42,6 +55,8 @@ export function readDocument(doc: Y.Doc): FlatDocument {
     settings: readSettings(doc.getMap('settings')),
     tokens: readJsonObject(doc.getMap('tokens')),
     fonts: readFonts(doc.getMap('fonts')),
+    ...readStyleBlock(doc.getMap('styles')),
+    ...readTokenInterface(doc.getMap('tokenInterface')),
     nodes,
   };
 }
@@ -54,6 +69,8 @@ export function ensureDocumentMaps(doc: Y.Doc): void {
   doc.getMap('nodes');
   doc.getMap('tokens');
   doc.getMap('fonts');
+  doc.getMap('styles');
+  doc.getMap('tokenInterface');
 }
 
 function syncMeta(meta: Y.Map<unknown>, doc: FlatDocument): void {
@@ -449,11 +466,19 @@ function syncLayout(parent: Y.Map<unknown>, layout: Layout | undefined): void {
     return;
   }
   const map = ensureMap(parent, 'layout');
-  syncScalar(map, 'position', layout.position);
-  syncScalar(map, 'x', layout.x);
-  syncScalar(map, 'y', layout.y);
-  syncScalar(map, 'width', layout.width);
-  syncScalar(map, 'height', layout.height);
+  syncJsonObject(map, layout as unknown as Record<string, JsonValue>);
+}
+
+function readStyleBlock(map: Y.Map<unknown>): { styles?: StyleBlock } {
+  const value = readJsonObject(map);
+  if (!Object.keys(value).length) return {};
+  return { styles: value as unknown as StyleBlock };
+}
+
+function readTokenInterface(map: Y.Map<unknown>): { tokenInterface?: TokenInterface } {
+  const value = readJsonObject(map);
+  if (!Object.keys(value).length) return {};
+  return { tokenInterface: value as unknown as TokenInterface };
 }
 
 function syncStringMap(
@@ -493,15 +518,8 @@ function syncValueMap(
 }
 
 function readLayout(value: unknown): Layout | undefined {
-  if (!(value instanceof Y.Map)) return undefined;
-  const layout: Layout = {};
-  const position = value.get('position');
-  if (position === 'auto' || position === 'absolute') layout.position = position;
-  for (const key of ['x', 'y', 'width', 'height'] as const) {
-    const item = value.get(key);
-    if (typeof item === 'number') layout[key] = item;
-  }
-  return Object.keys(layout).length ? layout : undefined;
+  if (!(value instanceof Y.Map) || value.size === 0) return undefined;
+  return canonicalizeLayout(readJsonObject(value) as unknown as Layout);
 }
 
 function readStringMap(value: unknown): Record<string, string> | undefined {

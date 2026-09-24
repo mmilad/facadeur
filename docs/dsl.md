@@ -30,6 +30,8 @@ Examples live in `examples/`. The JSON Schema generated from `packages/core` is 
 | `settings.breakpoints` | no       | Viewport widths. Default, when omitted: mobile 375, tablet 768, desktop 1440.                                       |
 | `fonts`                | no       | Font families: id, CSS name, weights, source, fallbacks.                                                            |
 | `tokens`               | no       | W3C DTCG tree. A token has `$value`; a group does not.                                                              |
+| `styles`               | no       | Style block for this document: base, states, variants, breakpoints, children.                                       |
+| `tokenInterface`       | no       | `reads` and `sets`: tokens this document uses and overrides for descendants.                                        |
 | `root`                 | yes      | The canvas node. Nesting rules apply to what is inside it.                                                          |
 
 Field types are `text`, `richText`, `image`, `link`, `boolean`, `enum`, `number`, and `token`. Enum fields also carry `options`. `richText` is reserved; nothing renders rich text yet.
@@ -59,7 +61,12 @@ A container. Children are nested in the file and stored as an ordered id list in
   "type": "frame",
   "tag": "section",
   "attributes": { "class": "hero" },
-  "layout": { "position": "absolute", "x": 56, "y": 64, "width": 480 },
+  "layout": {
+    "direction": "column",
+    "gap": "{space.gap.md}",
+    "padding": "{space.inset.md}",
+    "width": { "mode": "fixed", "size": 480 }
+  },
   "children": []
 }
 ```
@@ -89,7 +96,7 @@ A reference to another document. An instance may override field values and varia
   "component": "button",
   "fields": { "label": "Primary" },
   "variants": { "tone": "primary", "size": "md" },
-  "layout": { "position": "absolute", "x": 56, "y": 232 }
+  "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
 }
 ```
 
@@ -110,11 +117,42 @@ An instance's `fields` object replaces those defaults for that instance only. Om
 
 ## Variants
 
-An axis lists its allowed strings. An instance's `variants` object picks one value per axis. Omitted axes use the axis `default`, then the first value. Variants are data in this milestone. The specimen stage reflects them with `data-variant-*` attributes. The style engine that turns axes into style overrides comes later.
+An axis lists its allowed strings. An instance's `variants` object picks one value per axis. Omitted axes use the axis `default`, then the first value. The renderer writes `data-variant-*` on the instance element. The component style block overrides declarations for those values.
 
 ## Layout
 
-`layout.position` is `auto` (the normal case) or `absolute`. Absolute nodes use `x` and `y` as pixel offsets from the parent frame. `width` and `height` are pixel sizes. Gap, padding, and margin are not stored as numbers on a node. Spacing is a token reference (`space.gap`, `space.inset`, `space.stack` in the default set). The style engine that applies those references is a later milestone.
+Frames render as flexbox. The default direction is `column`, alignment is stretch on the cross axis, and packing starts at the start of the main axis. `layout.position` is `auto` (the normal case) or `absolute`. Absolute is explicit: `x` and `y` are pixel offsets from the parent frame, and the parent frame is the containing block.
+
+`width` and `height` are per-axis sizing, not bare numbers:
+
+| `mode`  | CSS                                                                                                            |
+| ------- | -------------------------------------------------------------------------------------------------------------- |
+| `hug`   | `fit-content`                                                                                                  |
+| `fill`  | `flex: 1` on the parent's main axis, otherwise stretch. A component root with no parent direction uses `100%`. |
+| `fixed` | `size` is a pixel number, a token reference, or `{ "unit": "%", "value": 50 }`                                 |
+
+`min` and `max` use the same size value. `gap`, `padding`, and `margin` are token references (`{space.gap.md}`), or a box of `{ top, right, bottom, left }` for padding and margin. A raw length is rejected.
+
+`breakpoints` overrides any of those fields per breakpoint id. The base breakpoint (smallest `minWidth`, mobile 375 when the document lists none) is not a query. Larger breakpoints become `@media (min-width: Npx)`. Child fill/hug is compiled against the base direction.
+
+## Style block
+
+`styles` on an atom, component, or section paints that document. `declarations` are the base. `states` are `hover`, `focus-visible`, and `disabled`. `variants` map an axis to a value to a layer of declarations and states. `breakpoints` do the same inside a media query. `children` keys are node ids in this document (not instances) and use the same shape one level deep.
+
+Values may contain token references. `font: "{type.body}"` expands to the typography longhands (`font-family`, `font-size`, `font-weight`, `line-height`, `letter-spacing`). Spacing properties in the block are token references only.
+
+`tokenInterface.reads` lists every token path the style block and layout use. `tokenInterface.sets` maps a token path to a value and emits that custom property on the component root, so descendants inherit the override. `{font.sans}` is a font family, not a read. A path like `{font.weight.regular}` is a token and is a read.
+
+`style` on a primitive node is still the `setStyle` map. It overrides the style block's base declaration for the same property. States, variants, and breakpoints stay above that.
+
+Selectors:
+
+| Target         | Selector                                               |
+| -------------- | ------------------------------------------------------ |
+| Component root | `[data-component="button"]`                            |
+| Descendant     | `[data-component="button"] [data-node="title"]`        |
+| Variant        | `[data-component="button"][data-variant-tone="ghost"]` |
+| State          | `[data-component="button"]:hover`                      |
 
 ## Tokens
 
@@ -199,7 +237,7 @@ Ids match `[a-z][a-z0-9]*`. Widths are positive integers and unique. When the do
 {
   id, name, kind, rootId,
   fields, variants, settings,
-  tokens, fonts,
+  tokens, fonts, styles, tokenInterface,
   nodes: {
     "<id>": { type, children: ["<child-id>", ...] }
   }
@@ -212,18 +250,18 @@ Only frames have `children`. Ids are unique inside one document. `toFlat` / `toN
 
 Documents change only through commands. Each command is one transaction in the Yjs store. Undo and redo walk those transactions.
 
-`insert`, `remove`, `move`, `setProp`, `setStyle`, `setField`, `setVariant`, `defineField`, `removeField`, `defineVariant`, `removeVariant`, `setToken`, `removeToken`, `setTokenGroup`, `removeTokenGroup`, `setFont`, `removeFont`, `setBreakpoints`.
+`insert`, `remove`, `move`, `setProp`, `setStyle`, `setField`, `setVariant`, `defineField`, `removeField`, `defineVariant`, `removeVariant`, `setToken`, `removeToken`, `setTokenGroup`, `removeTokenGroup`, `setFont`, `removeFont`, `setBreakpoints`, `setStyleBlock`, `setTokenInterface`.
 
-`setField` and `setVariant` apply to instances. `setStyle` writes a style map on a primitive node; it does not apply to instances. Painting that map is the style engine's job. `move.index` is the index in the destination child list after the node has been taken out of its current parent. `setToken` replaces one token and creates missing groups along the path. `setBreakpoints` with an empty list clears the document's breakpoints, and CSS falls back to the defaults. The store resolves token references before it commits, so a cycle or a missing target never lands in the document.
+`setField` and `setVariant` apply to instances. `setStyle` writes a style map on a primitive node; it does not apply to instances. `setStyleBlock` replaces the document style block. `setTokenInterface` replaces `reads` / `sets`. The style engine paints both. `move.index` is the index in the destination child list after the node has been taken out of its current parent. `setToken` replaces one token and creates missing groups along the path. `setBreakpoints` with an empty list clears the document's breakpoints, and CSS falls back to the defaults. The store resolves token references before it commits, so a cycle or a missing target never lands in the document.
 
 ## Ids in the DOM
 
-The renderer writes `data-id`.
+The renderer writes `data-id`. The document root frame is the canvas and is not an element, so its children are not prefixed with `root`.
 
-- A node in the open document uses its id.
-- A node inside an expanded instance is prefixed with the instance id: `card-notes/title`.
-- Nested instances keep gaining prefixes: `card-signin/email/control`.
+- A node in the open document uses its id. A nested frame adds its own segment: `intro/heading`.
+- A node inside an expanded instance is prefixed with the instance id: `card-notes/title`. The component root frame is that instance element, so it does not add a second `root` segment.
+- Nested instances and frames keep gaining prefixes: `card-signin/email/control`, `specimen-section/intro/heading`.
 
 ## Out of scope here
 
-The style engine (painting token references onto nodes), iframe viewports, slots, codegen, and multiplayer sync. The stage can show the generated custom properties, but it does not apply them to components yet.
+Iframe viewports, slots, codegen, and multiplayer sync. Media queries are real `@media` rules on the document that hosts the style engine. They follow the browser viewport until each viewport has its own iframe.

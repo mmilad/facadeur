@@ -3,122 +3,307 @@
   "id": "specimen-section",
   "name": "Specimen section",
   "kind": "section",
+  "tokenInterface": {
+    "reads": [
+      "color.accent.default",
+      "color.text.primary",
+      "color.text.secondary",
+      "space.0",
+      "space.gap.lg",
+      "space.gap.md",
+      "space.gap.sm",
+      "space.inset.lg",
+      "space.stack.lg",
+      "space.stack.md",
+      "space.stack.sm",
+      "type.body",
+      "type.caption",
+      "type.display"
+    ]
+  },
+  "styles": {
+    "children": {
+      "heading": {
+        "declarations": {
+          "color": "{color.text.primary}",
+          "font": "{type.display}",
+          "margin": "{space.0}"
+        }
+      },
+      "kicker": {
+        "declarations": {
+          "color": "{color.accent.default}",
+          "font": "{type.caption}",
+          "letterSpacing": "0.18em",
+          "margin": "{space.0}",
+          "textTransform": "uppercase"
+        }
+      },
+      "label-button": {
+        "declarations": {
+          "color": "{color.text.secondary}",
+          "font": "{type.caption}",
+          "letterSpacing": "0.16em",
+          "margin": "{space.0}",
+          "textTransform": "uppercase"
+        }
+      },
+      "label-card": {
+        "declarations": {
+          "color": "{color.text.secondary}",
+          "font": "{type.caption}",
+          "letterSpacing": "0.16em",
+          "margin": "{space.0}",
+          "textTransform": "uppercase"
+        }
+      },
+      "label-input": {
+        "declarations": {
+          "color": "{color.text.secondary}",
+          "font": "{type.caption}",
+          "letterSpacing": "0.16em",
+          "margin": "{space.0}",
+          "textTransform": "uppercase"
+        }
+      },
+      "lede": {
+        "declarations": {
+          "color": "{color.text.secondary}",
+          "font": "{type.body}",
+          "margin": "{space.0}"
+        }
+      }
+    }
+  },
   "root": {
     "id": "root",
     "type": "frame",
     "tag": "div",
-    "layout": { "width": 1040, "height": 860 },
+    "layout": {
+      "direction": "column",
+      "align": "stretch",
+      "gap": "{space.stack.lg}",
+      "padding": "{space.inset.lg}",
+      "width": { "mode": "fixed", "size": 1040 },
+      "height": { "mode": "hug", "min": 860 }
+    },
     "children": [
       {
-        "id": "kicker",
-        "type": "text",
-        "tag": "p",
-        "text": "facadeur",
-        "attributes": { "class": "spec-kicker" },
-        "layout": { "position": "absolute", "x": 56, "y": 40 }
+        "id": "intro",
+        "type": "frame",
+        "tag": "div",
+        "layout": {
+          "direction": "column",
+          "align": "stretch",
+          "gap": "{space.stack.md}",
+          "width": { "mode": "fill" },
+          "height": { "mode": "hug" }
+        },
+        "children": [
+          {
+            "id": "kicker",
+            "type": "text",
+            "tag": "p",
+            "text": "facadeur",
+            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+          },
+          {
+            "id": "heading",
+            "type": "text",
+            "tag": "h1",
+            "text": "Specimen",
+            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+          },
+          {
+            "id": "lede",
+            "type": "text",
+            "tag": "p",
+            "text": "Auto layout, token styles, and a sign-in card that overrides the input border for its children.",
+            "layout": {
+              "width": { "mode": "fill", "max": 640 },
+              "height": { "mode": "hug" }
+            }
+          }
+        ]
       },
       {
-        "id": "heading",
-        "type": "text",
-        "tag": "h1",
-        "text": "Specimen",
-        "attributes": { "class": "spec-title" },
-        "layout": { "position": "absolute", "x": 56, "y": 64 }
+        "id": "buttons",
+        "type": "frame",
+        "tag": "div",
+        "layout": {
+          "direction": "column",
+          "align": "stretch",
+          "gap": "{space.stack.sm}",
+          "width": { "mode": "fill" },
+          "height": { "mode": "hug" }
+        },
+        "children": [
+          {
+            "id": "label-button",
+            "type": "text",
+            "tag": "p",
+            "text": "Button",
+            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+          },
+          {
+            "id": "button-row",
+            "type": "frame",
+            "tag": "div",
+            "layout": {
+              "direction": "row",
+              "align": "center",
+              "wrap": true,
+              "gap": "{space.gap.sm}",
+              "width": { "mode": "fill" },
+              "height": { "mode": "hug" },
+              "breakpoints": {
+                "desktop": { "gap": "{space.gap.md}" }
+              }
+            },
+            "children": [
+              {
+                "id": "btn-primary",
+                "type": "instance",
+                "component": "button",
+                "fields": { "label": "Primary" },
+                "variants": { "tone": "primary", "size": "md" }
+              },
+              {
+                "id": "btn-secondary",
+                "type": "instance",
+                "component": "button",
+                "fields": { "label": "Secondary" },
+                "variants": { "tone": "secondary", "size": "md" }
+              },
+              {
+                "id": "btn-ghost",
+                "type": "instance",
+                "component": "button",
+                "fields": { "label": "Ghost" },
+                "variants": { "tone": "ghost", "size": "md" }
+              },
+              {
+                "id": "btn-small",
+                "type": "instance",
+                "component": "button",
+                "fields": { "label": "Small" },
+                "variants": { "tone": "primary", "size": "sm" }
+              }
+            ]
+          }
+        ]
       },
       {
-        "id": "lede",
-        "type": "text",
-        "tag": "p",
-        "text": "Button, input, and card. Each one is a JSON node rendered to real DOM.",
-        "attributes": { "class": "spec-lede" },
-        "layout": { "position": "absolute", "x": 56, "y": 136, "width": 480 }
+        "id": "fields",
+        "type": "frame",
+        "tag": "div",
+        "layout": {
+          "direction": "column",
+          "align": "stretch",
+          "gap": "{space.stack.sm}",
+          "width": { "mode": "fill" },
+          "height": { "mode": "hug" }
+        },
+        "children": [
+          {
+            "id": "label-input",
+            "type": "text",
+            "tag": "p",
+            "text": "Input",
+            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+          },
+          {
+            "id": "input-row",
+            "type": "frame",
+            "tag": "div",
+            "layout": {
+              "direction": "row",
+              "align": "start",
+              "wrap": true,
+              "gap": "{space.gap.md}",
+              "width": { "mode": "fill" },
+              "height": { "mode": "hug" }
+            },
+            "children": [
+              {
+                "id": "input-email",
+                "type": "instance",
+                "component": "input",
+                "layout": {
+                  "width": { "mode": "fixed", "size": 300 },
+                  "height": { "mode": "hug" }
+                },
+                "fields": { "label": "Email", "value": "ada@atelier.test", "name": "email" }
+              },
+              {
+                "id": "input-search",
+                "type": "instance",
+                "component": "input",
+                "layout": {
+                  "width": { "mode": "fixed", "size": 300 },
+                  "height": { "mode": "hug" }
+                },
+                "fields": { "label": "Search", "placeholder": "Search components", "name": "q" }
+              }
+            ]
+          }
+        ]
       },
       {
-        "id": "label-button",
-        "type": "text",
-        "tag": "p",
-        "text": "Button",
-        "attributes": { "class": "spec-label" },
-        "layout": { "position": "absolute", "x": 56, "y": 200 }
-      },
-      {
-        "id": "btn-primary",
-        "type": "instance",
-        "component": "button",
-        "layout": { "position": "absolute", "x": 56, "y": 232 },
-        "fields": { "label": "Primary" },
-        "variants": { "tone": "primary", "size": "md" }
-      },
-      {
-        "id": "btn-secondary",
-        "type": "instance",
-        "component": "button",
-        "layout": { "position": "absolute", "x": 188, "y": 232 },
-        "fields": { "label": "Secondary" },
-        "variants": { "tone": "secondary", "size": "md" }
-      },
-      {
-        "id": "btn-ghost",
-        "type": "instance",
-        "component": "button",
-        "layout": { "position": "absolute", "x": 348, "y": 232 },
-        "fields": { "label": "Ghost" },
-        "variants": { "tone": "ghost", "size": "md" }
-      },
-      {
-        "id": "btn-small",
-        "type": "instance",
-        "component": "button",
-        "layout": { "position": "absolute", "x": 470, "y": 237 },
-        "fields": { "label": "Small" },
-        "variants": { "tone": "primary", "size": "sm" }
-      },
-      {
-        "id": "label-input",
-        "type": "text",
-        "tag": "p",
-        "text": "Input",
-        "attributes": { "class": "spec-label" },
-        "layout": { "position": "absolute", "x": 56, "y": 316 }
-      },
-      {
-        "id": "input-email",
-        "type": "instance",
-        "component": "input",
-        "layout": { "position": "absolute", "x": 56, "y": 348, "width": 300 },
-        "fields": { "label": "Email", "value": "ada@atelier.test", "name": "email" }
-      },
-      {
-        "id": "input-search",
-        "type": "instance",
-        "component": "input",
-        "layout": { "position": "absolute", "x": 380, "y": 348, "width": 300 },
-        "fields": { "label": "Search", "placeholder": "Search components", "name": "q" }
-      },
-      {
-        "id": "label-card",
-        "type": "text",
-        "tag": "p",
-        "text": "Card",
-        "attributes": { "class": "spec-label" },
-        "layout": { "position": "absolute", "x": 56, "y": 468 }
-      },
-      {
-        "id": "card-notes",
-        "type": "instance",
-        "component": "card",
-        "layout": { "position": "absolute", "x": 56, "y": 500, "width": 420 },
-        "fields": {
-          "eyebrow": "Layout",
-          "title": "Field notes",
-          "body": "Props fill the template. Click the title, or click the card padding to select the card itself."
-        }
-      },
-      {
-        "id": "card-signin",
-        "type": "instance",
-        "component": "sign-in",
-        "layout": { "position": "absolute", "x": 524, "y": 500, "width": 460 }
+        "id": "cards",
+        "type": "frame",
+        "tag": "div",
+        "layout": {
+          "direction": "column",
+          "align": "stretch",
+          "gap": "{space.stack.sm}",
+          "width": { "mode": "fill" },
+          "height": { "mode": "hug" }
+        },
+        "children": [
+          {
+            "id": "label-card",
+            "type": "text",
+            "tag": "p",
+            "text": "Card",
+            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+          },
+          {
+            "id": "card-row",
+            "type": "frame",
+            "tag": "div",
+            "layout": {
+              "direction": "row",
+              "align": "start",
+              "wrap": true,
+              "gap": "{space.gap.lg}",
+              "width": { "mode": "fill" },
+              "height": { "mode": "hug" }
+            },
+            "children": [
+              {
+                "id": "card-notes",
+                "type": "instance",
+                "component": "card",
+                "layout": {
+                  "width": { "mode": "fixed", "size": 420 },
+                  "height": { "mode": "hug" }
+                },
+                "fields": {
+                  "eyebrow": "Layout",
+                  "title": "Field notes",
+                  "body": "Props fill the template. Click the title, or click the card padding to select the card itself."
+                }
+              },
+              {
+                "id": "card-signin",
+                "type": "instance",
+                "component": "sign-in",
+                "layout": { "width": { "mode": "fixed", "size": 460 }, "height": { "mode": "hug" } }
+              }
+            ]
+          }
+        ]
       }
     ]
   }

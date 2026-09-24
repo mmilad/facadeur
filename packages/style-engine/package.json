@@ -1,0 +1,21 @@
+{
+  "name": "@facadeur/style-engine",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@facadeur/core": "workspace:*",
+    "@facadeur/tokens": "workspace:*"
+  },
+  "devDependencies": {
+    "@facadeur/renderer-dom": "workspace:*",
+    "@facadeur/store-yjs": "workspace:*",
+    "typescript": "^5.9.2"
+  }
+}

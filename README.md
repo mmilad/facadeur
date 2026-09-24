@@ -4,7 +4,7 @@ Design-system foundation: a JSON document rendered as real DOM on a zoomable sta
 
 A document has a kind (`atom`, `component`, `section`, or `page`) and a tree of `frame`, `text`, `image`, and `instance` nodes. The HTML tag is a property. Instances point at another document and may only override fields and variants. Pages contain sections. The file on disk is nested JSON; the editor's store keeps a flat map of nodes and runs every change as a command.
 
-This repository is the M2 foundation (document model, Yjs store, tokens, fonts) plus the original stage. It is not the product UI yet. The stage injects the default token stylesheet as `<style id="facadeur-tokens">`. Components are not painted from those tokens yet.
+This repository is the M3 foundation: document model, Yjs store, tokens, fonts, a live style engine, and a DOM renderer that patches nodes in place. It is not the product UI yet. The stage paints the specimen with token-based styles and flex auto layout.
 
 ## Run the stage
 
@@ -38,7 +38,8 @@ pnpm test
 packages/core           types, JSON Schema, flat model, commands, DocumentStore
 packages/store-yjs      Yjs DocumentStore, one transaction per command, undo/redo
 packages/tokens         DTCG parser, reference resolution, CSS custom properties, project template
-packages/renderer-dom   document JSON to DOM
+packages/style-engine   live CSSStyleRules, component style blocks, auto layout
+packages/renderer-dom   document JSON to DOM, targeted updates from the store
 packages/editor         Vite stage (pan, zoom, grid, selection)
 examples/               specimen page, section, atoms, and examples/project-template.json
 schema/                 generated JSON Schema
@@ -46,7 +47,7 @@ docs/dsl.md             the document format
 docs/plan.md            milestones
 ```
 
-The stage still renders the specimen: a page whose only child is a section instance, which instances the atoms and components. React panels and the style engine are later milestones. `examples/project-template.json` is the optional starter (colors, spacing, radius, shadows, Inter, type scale).
+The stage renders the specimen: a page whose only child is a section instance, which instances the atoms and components. Styles come from each document's style block and the default token set. React panels are a later milestone. `examples/project-template.json` is the optional starter (colors, spacing, radius, shadows, Inter, type scale).
 
 To print the default stylesheet:
 

@@ -60,6 +60,12 @@ importers:
       '@facadeur/renderer-dom':
         specifier: workspace:*
         version: link:../renderer-dom
+      '@facadeur/store-yjs':
+        specifier: workspace:*
+        version: link:../store-yjs
+      '@facadeur/style-engine':
+        specifier: workspace:*
+        version: link:../style-engine
       '@facadeur/tokens':
         specifier: workspace:*
         version: link:../tokens
@@ -96,6 +102,25 @@ importers:
         specifier: ^13.6.27
         version: 13.6.33
     devDependencies:
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+
+  packages/style-engine:
+    dependencies:
+      '@facadeur/core':
+        specifier: workspace:*
+        version: link:../core
+      '@facadeur/tokens':
+        specifier: workspace:*
+        version: link:../tokens
+    devDependencies:
+      '@facadeur/renderer-dom':
+        specifier: workspace:*
+        version: link:../renderer-dom
+      '@facadeur/store-yjs':
+        specifier: workspace:*
+        version: link:../store-yjs
       typescript:
         specifier: ^5.9.2
         version: 5.9.3

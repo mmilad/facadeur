@@ -12,11 +12,104 @@
     },
     { "name": "size", "values": ["sm", "md"], "default": "md" }
   ],
+  "tokenInterface": {
+    "reads": [
+      "button.color.bg",
+      "button.color.text",
+      "button.gap",
+      "button.padding.x",
+      "button.padding.y",
+      "color.accent.default",
+      "color.accent.hover",
+      "color.bg.muted",
+      "color.border.default",
+      "color.text.primary",
+      "color.text.secondary",
+      "radius.full",
+      "space.1",
+      "space.3",
+      "space.5",
+      "type.caption",
+      "type.label"
+    ]
+  },
+  "styles": {
+    "declarations": {
+      "appearance": "none",
+      "background": "{button.color.bg}",
+      "border": "1px solid transparent",
+      "borderRadius": "{radius.full}",
+      "color": "{button.color.text}",
+      "cursor": "pointer",
+      "font": "{type.label}",
+      "letterSpacing": "0.01em",
+      "lineHeight": "1",
+      "paddingBlock": "{button.padding.y}",
+      "paddingInline": "{button.padding.x}",
+      "whiteSpace": "nowrap"
+    },
+    "states": {
+      "hover": { "background": "{color.accent.hover}" },
+      "focus-visible": {
+        "outline": "2px solid {color.accent.default}",
+        "outlineOffset": "2px"
+      },
+      "disabled": { "opacity": "0.5" }
+    },
+    "variants": {
+      "size": {
+        "sm": {
+          "declarations": {
+            "font": "{type.caption}",
+            "paddingBlock": "{space.1}",
+            "paddingInline": "{space.3}"
+          }
+        }
+      },
+      "tone": {
+        "ghost": {
+          "declarations": {
+            "background": "transparent",
+            "color": "{color.text.secondary}"
+          },
+          "states": {
+            "hover": {
+              "background": "{color.bg.muted}",
+              "color": "{color.text.primary}"
+            }
+          }
+        },
+        "secondary": {
+          "declarations": {
+            "background": "transparent",
+            "borderColor": "{color.border.default}",
+            "color": "{color.text.primary}"
+          },
+          "states": {
+            "hover": { "background": "{color.bg.muted}" }
+          }
+        }
+      }
+    },
+    "breakpoints": {
+      "tablet": {
+        "declarations": { "paddingInline": "{space.5}" }
+      }
+    }
+  },
   "root": {
     "id": "root",
     "type": "frame",
     "tag": "button",
-    "attributes": { "class": "ds-button", "type": "button" },
+    "attributes": { "type": "button" },
+    "layout": {
+      "direction": "row",
+      "align": "center",
+      "justify": "center",
+      "gap": "{button.gap}",
+      "width": { "mode": "hug" },
+      "height": { "mode": "hug" }
+    },
     "bindings": [{ "field": "label", "target": "text" }]
   }
 }
