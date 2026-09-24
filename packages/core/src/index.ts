@@ -6,6 +6,8 @@ export {
   type NodeProp,
 } from './commands.js';
 export { DocumentError } from './errors.js';
+export { canonicalizeJson, isJsonValue, isPlainObject, type JsonValue } from './json.js';
+export { assertBreakpoints, assertFont, assertFonts, fontStyles } from './libraries.js';
 export {
   canonicalizeFlat,
   collectSubtree,
@@ -40,16 +42,39 @@ export {
   fieldTypes,
   type Binding,
   type BindingTarget,
+  defaultBreakpoints,
+  type Breakpoint,
   type DocumentFile,
   type DocumentSchemaOptions,
   type DocumentSettings,
   type FieldDefinition,
   type FieldType,
   type FieldValue,
+  type FontFaceFile,
+  type FontFamily,
+  type FontSource,
+  type FontStyle,
   type Layout,
   type NestedNode,
+  type TokenType,
   type VariantAxis,
 } from './schema.js';
+export {
+  readTokenTree,
+  removeGroupFromTree,
+  removeTokenFromTree,
+  setGroupInTree,
+  setTokenInTree,
+  tokenReference,
+  TOKEN_SEGMENT,
+  type IndexedGroup,
+  type IndexedToken,
+  type TokenDefinition,
+  type TokenGroupDefinition,
+  type TokenIndex,
+  type TokenTier,
+  type TokenTree,
+} from './token-tree.js';
 export { type DocumentChange, type DocumentStore } from './store.js';
 export {
   assertFieldDefinition,
@@ -58,6 +83,7 @@ export {
   validateCatalog,
   validateDefinitions,
   validateDocumentFile,
+  validateLibraries,
   validateTree,
   type ValidateOptions,
 } from './validate.js';

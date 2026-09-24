@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "@facadeur/core": "workspace:*",
-    "@facadeur/renderer-dom": "workspace:*"
+    "@facadeur/renderer-dom": "workspace:*",
+    "@facadeur/tokens": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.19.0",

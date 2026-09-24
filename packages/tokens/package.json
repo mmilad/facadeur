@@ -1,5 +1,5 @@
 {
-  "name": "@facadeur/store-yjs",
+  "name": "@facadeur/tokens",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -10,9 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@facadeur/core": "workspace:*",
-    "@facadeur/tokens": "workspace:*",
-    "yjs": "^13.6.27"
+    "@facadeur/core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.2"

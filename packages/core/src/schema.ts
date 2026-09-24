@@ -50,6 +50,85 @@ export const kindSchema = Type.Union([
   Type.Literal('page'),
 ]);
 
+export const tokenTypes = [
+  'color',
+  'dimension',
+  'number',
+  'fontFamily',
+  'fontWeight',
+  'shadow',
+  'typography',
+] as const;
+export type TokenType = (typeof tokenTypes)[number];
+
+export const tokenTypeSchema = Type.Union([
+  Type.Literal('color'),
+  Type.Literal('dimension'),
+  Type.Literal('number'),
+  Type.Literal('fontFamily'),
+  Type.Literal('fontWeight'),
+  Type.Literal('shadow'),
+  Type.Literal('typography'),
+]);
+
+/**
+ * DTCG group or token. The published schema is structural; `readTokenTree` enforces
+ * inheritance, names, and value shapes. A recursive TypeBox type here makes the
+ * document's Static type collapse, so the JSON Schema is written by hand.
+ */
+export const tokenTreeSchema = Type.Unsafe<Record<string, unknown>>({
+  $ref: '#/$defs/dtcgNode',
+});
+
+export const fontStyleSchema = Type.Union([Type.Literal('normal'), Type.Literal('italic')]);
+
+export const fontFaceFileSchema = Type.Object(
+  {
+    weight: Type.Integer({ minimum: 1, maximum: 1000 }),
+    style: fontStyleSchema,
+    url: Type.String({ minLength: 1 }),
+    format: Type.Optional(Type.String({ minLength: 1 })),
+  },
+  { additionalProperties: false },
+);
+
+export const fontSourceSchema = Type.Union([
+  Type.Object(
+    {
+      type: Type.Literal('file'),
+      files: Type.Array(fontFaceFileSchema, { minItems: 1 }),
+    },
+    { additionalProperties: false },
+  ),
+  Type.Object(
+    {
+      type: Type.Literal('google'),
+      family: Type.String({ minLength: 1 }),
+    },
+    { additionalProperties: false },
+  ),
+]);
+
+export const fontFamilySchema = Type.Object(
+  {
+    id: Type.String({ pattern: '^[a-z][a-z0-9]*$' }),
+    family: Type.String({ minLength: 1 }),
+    weights: Type.Array(Type.Integer({ minimum: 1, maximum: 1000 }), { minItems: 1 }),
+    styles: Type.Optional(Type.Array(fontStyleSchema, { minItems: 1 })),
+    source: fontSourceSchema,
+    fallbacks: Type.Array(Type.String({ minLength: 1 }), { minItems: 1 }),
+  },
+  { additionalProperties: false },
+);
+
+export const breakpointSchema = Type.Object(
+  {
+    id: Type.String({ pattern: '^[a-z][a-z0-9]*$' }),
+    minWidth: Type.Integer({ minimum: 1 }),
+  },
+  { additionalProperties: false },
+);
+
 export const fieldDefinitionSchema = Type.Object(
   {
     name: idSchema,
@@ -154,6 +233,7 @@ export const settingsSchema = Type.Object(
         { additionalProperties: false },
       ),
     ),
+    breakpoints: Type.Optional(Type.Array(breakpointSchema, { minItems: 1 })),
   },
   { additionalProperties: false },
 );
@@ -165,42 +245,98 @@ export interface DocumentSchemaOptions {
   schemaId?: string;
 }
 
+const DTCG_DEFS = {
+  jsonValue: {
+    anyOf: [
+      { type: 'string' },
+      { type: 'number' },
+      { type: 'boolean' },
+      { type: 'array', items: { $ref: '#/$defs/jsonValue' } },
+      { type: 'object', additionalProperties: { $ref: '#/$defs/jsonValue' } },
+    ],
+  },
+  facadeurExtension: {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      tier: { enum: ['primitive', 'semantic', 'component'] },
+      breakpoints: {
+        type: 'object',
+        propertyNames: { pattern: '^[a-z][a-z0-9]*$' },
+        additionalProperties: { $ref: '#/$defs/jsonValue' },
+      },
+    },
+  },
+  tokenExtensions: {
+    type: 'object',
+    additionalProperties: { $ref: '#/$defs/jsonValue' },
+    properties: {
+      facadeur: { $ref: '#/$defs/facadeurExtension' },
+    },
+  },
+  dtcgNode: {
+    type: 'object',
+    additionalProperties: false,
+    description:
+      'DTCG group or token. $value makes an object a token. Group $type is inherited. Child names match [a-z0-9]+.',
+    properties: {
+      $value: { $ref: '#/$defs/jsonValue' },
+      $type: {
+        enum: ['color', 'dimension', 'number', 'fontFamily', 'fontWeight', 'shadow', 'typography'],
+      },
+      $description: { type: 'string' },
+      $deprecated: { anyOf: [{ type: 'boolean' }, { type: 'string' }] },
+      $extensions: { $ref: '#/$defs/tokenExtensions' },
+    },
+    patternProperties: {
+      '^[a-z0-9]+$': { $ref: '#/$defs/dtcgNode' },
+    },
+  },
+} as const;
+
+/** Attach token definitions without changing the TypeBox static type. */
+function withTokenDefs<T extends object>(schema: T): T {
+  Object.assign(schema, { $defs: DTCG_DEFS });
+  return schema;
+}
+
 const documentSchemaMeta = {
   additionalProperties: false,
   title: 'Facadeur document',
   description:
-    'Nested facadeur document. Nodes are frame, text, image, or instance. Instances override fields and variants only.',
+    'Nested facadeur document. Nodes are frame, text, image, or instance. Tokens are a DTCG tree. Fonts list families and their sources. Instances override fields and variants only.',
 } as const;
 
-export const documentFileSchema = Type.Object(
-  {
+function documentProperties<Kind extends TSchema>(kind: Kind) {
+  return {
     version: Type.Literal(1),
     id: idSchema,
     name: Type.String({ minLength: 1 }),
-    kind: kindSchema,
+    kind,
     fields: Type.Optional(Type.Array(fieldDefinitionSchema)),
     variants: Type.Optional(Type.Array(variantAxisSchema)),
     settings: Type.Optional(settingsSchema),
+    fonts: Type.Optional(Type.Array(fontFamilySchema, { minItems: 1 })),
+    tokens: Type.Optional(tokenTreeSchema),
     root: nestedNodeSchema,
-  },
-  { ...documentSchemaMeta, $id: DOCUMENT_SCHEMA_ID },
+  };
+}
+
+export const documentFileSchema = withTokenDefs(
+  Type.Object(documentProperties(kindSchema), {
+    ...documentSchemaMeta,
+    $id: DOCUMENT_SCHEMA_ID,
+  }),
 );
 
 /** JSON Schema for one nested document. Kinds default to atom, component, section, and page. */
 export function createDocumentSchema(options: DocumentSchemaOptions = {}) {
   if (!options.kinds && !options.schemaId) return documentFileSchema;
-  return Type.Object(
-    {
-      version: Type.Literal(1),
-      id: idSchema,
-      name: Type.String({ minLength: 1 }),
-      kind: literalUnion(options.kinds ?? [...defaultKinds]),
-      fields: Type.Optional(Type.Array(fieldDefinitionSchema)),
-      variants: Type.Optional(Type.Array(variantAxisSchema)),
-      settings: Type.Optional(settingsSchema),
-      root: nestedNodeSchema,
-    },
-    { ...documentSchemaMeta, $id: options.schemaId ?? DOCUMENT_SCHEMA_ID },
+  return withTokenDefs(
+    Type.Object(documentProperties(literalUnion(options.kinds ?? [...defaultKinds])), {
+      ...documentSchemaMeta,
+      $id: options.schemaId ?? DOCUMENT_SCHEMA_ID,
+    }),
   );
 }
 
@@ -212,6 +348,18 @@ export type Binding = Static<typeof bindingSchema>;
 export type NestedNode = Static<typeof nestedNodeSchema>;
 export type DocumentSettings = Static<typeof settingsSchema>;
 export type DocumentFile = Static<typeof documentFileSchema>;
+export type FontStyle = Static<typeof fontStyleSchema>;
+export type FontFaceFile = Static<typeof fontFaceFileSchema>;
+export type FontSource = Static<typeof fontSourceSchema>;
+export type FontFamily = Static<typeof fontFamilySchema>;
+export type Breakpoint = Static<typeof breakpointSchema>;
+
+/** Viewports used when a document does not set its own breakpoints. */
+export const defaultBreakpoints: Breakpoint[] = [
+  { id: 'mobile', minWidth: 375 },
+  { id: 'tablet', minWidth: 768 },
+  { id: 'desktop', minWidth: 1440 },
+];
 
 function literalUnion(values: readonly string[]): TSchema {
   const literals = values.map((value) => Type.Literal(value));

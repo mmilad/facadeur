@@ -9,6 +9,7 @@ export default defineConfig({
       '@facadeur/core': `${root}packages/core/src/index.ts`,
       '@facadeur/store-yjs': `${root}packages/store-yjs/src/index.ts`,
       '@facadeur/renderer-dom': `${root}packages/renderer-dom/src/index.ts`,
+      '@facadeur/tokens': `${root}packages/tokens/src/index.ts`,
     },
   },
   test: {

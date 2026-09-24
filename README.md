@@ -1,10 +1,10 @@
 ﻿# facadeur
 
-Design-system foundation: a JSON document rendered as real DOM on a zoomable stage.
+Design-system foundation: a JSON document rendered as real DOM on a zoomable stage, with design tokens and fonts.
 
 A document has a kind (`atom`, `component`, `section`, or `page`) and a tree of `frame`, `text`, `image`, and `instance` nodes. The HTML tag is a property. Instances point at another document and may only override fields and variants. Pages contain sections. The file on disk is nested JSON; the editor's store keeps a flat map of nodes and runs every change as a command.
 
-This repository is the M1 foundation plus the original stage. It is not the product UI yet.
+This repository is the M2 foundation (document model, Yjs store, tokens, fonts) plus the original stage. It is not the product UI yet. The stage injects the default token stylesheet as `<style id="facadeur-tokens">`. Components are not painted from those tokens yet.
 
 ## Run the stage
 
@@ -37,12 +37,19 @@ pnpm test
 ```
 packages/core           types, JSON Schema, flat model, commands, DocumentStore
 packages/store-yjs      Yjs DocumentStore, one transaction per command, undo/redo
+packages/tokens         DTCG parser, reference resolution, CSS custom properties, project template
 packages/renderer-dom   document JSON to DOM
 packages/editor         Vite stage (pan, zoom, grid, selection)
-examples/               specimen page, section, and the button, input, card, sign-in documents
+examples/               specimen page, section, atoms, and examples/project-template.json
 schema/                 generated JSON Schema
 docs/dsl.md             the document format
 docs/plan.md            milestones
 ```
 
-The stage still renders the specimen: a page whose only child is a section instance, which instances the atoms and components. React panels, tokens, and the style engine are later milestones.
+The stage still renders the specimen: a page whose only child is a section instance, which instances the atoms and components. React panels and the style engine are later milestones. `examples/project-template.json` is the optional starter (colors, spacing, radius, shadows, Inter, type scale).
+
+To print the default stylesheet:
+
+```bash
+pnpm exec tsx -e "import { createProjectTemplate, renderDesignCss } from './packages/tokens/src/index.ts'; console.log(renderDesignCss(createProjectTemplate()))"
+```

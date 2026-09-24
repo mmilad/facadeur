@@ -11,6 +11,7 @@ import {
   type FlatDocument,
   type FlatNode,
 } from '@facadeur/core';
+import { loadTokens } from '@facadeur/tokens';
 import * as Y from 'yjs';
 import { ensureDocumentMaps, patchDocument, readDocument } from './codec.js';
 
@@ -29,6 +30,7 @@ export function createDocumentStore(
 ): YjsDocumentStore {
   const doc = new Y.Doc();
   const flat = isFlat(initial) ? canonicalizeFlat(initial) : toFlat(initial);
+  assertDesignResolvable(flat);
   doc.transact(() => {
     ensureDocumentMaps(doc);
     patchDocument(doc, flat);
@@ -41,6 +43,8 @@ export function createDocumentStore(
       doc.getArray('fields'),
       doc.getArray('variants'),
       doc.getMap('nodes'),
+      doc.getMap('tokens'),
+      doc.getMap('fonts'),
     ],
     {
       trackedOrigins: new Set([COMMAND_ORIGIN]),
@@ -64,6 +68,7 @@ export function createDocumentStore(
     },
     execute(command: Command) {
       const next = applyCommand(this.getDocument(), command, options);
+      assertDesignResolvable(next);
       doc.transact(() => {
         patchDocument(doc, next);
       }, COMMAND_ORIGIN);
@@ -101,4 +106,13 @@ export function createDocumentStore(
 
 function isFlat(value: DocumentFile | FlatDocument): value is FlatDocument {
   return 'rootId' in value && 'nodes' in value;
+}
+
+/** References, cycles, and breakpoint names. Structural checks already ran in applyCommand. */
+function assertDesignResolvable(doc: FlatDocument): void {
+  loadTokens({
+    tokens: doc.tokens,
+    fonts: doc.fonts,
+    breakpoints: doc.settings.breakpoints,
+  });
 }
