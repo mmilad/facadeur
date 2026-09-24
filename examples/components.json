@@ -1,0 +1,87 @@
+{
+  "button": {
+    "defaults": {
+      "label": "Button",
+      "tone": "primary",
+      "size": "md"
+    },
+    "template": {
+      "tagName": "button",
+      "attributes": {
+        "class": "ds-button ds-button--{{tone}} ds-button--{{size}}",
+        "type": "button"
+      },
+      "text": "{{label}}"
+    }
+  },
+  "input": {
+    "defaults": {
+      "label": "Label",
+      "value": "",
+      "placeholder": "",
+      "name": ""
+    },
+    "template": {
+      "tagName": "label",
+      "attributes": {
+        "class": "ds-field"
+      },
+      "text": "{{label}}",
+      "children": [
+        {
+          "id": "control",
+          "tagName": "input",
+          "attributes": {
+            "class": "ds-field__control",
+            "type": "text",
+            "value": "{{value}}",
+            "placeholder": "{{placeholder}}",
+            "name": "{{name}}",
+            "readonly": "readonly",
+            "tabindex": "-1",
+            "autocomplete": "off"
+          }
+        }
+      ]
+    }
+  },
+  "card": {
+    "defaults": {
+      "eyebrow": "Card",
+      "title": "Title",
+      "body": ""
+    },
+    "template": {
+      "tagName": "article",
+      "attributes": {
+        "class": "ds-card"
+      },
+      "children": [
+        {
+          "id": "eyebrow",
+          "tagName": "p",
+          "attributes": {
+            "class": "ds-card__eyebrow"
+          },
+          "text": "{{eyebrow}}"
+        },
+        {
+          "id": "title",
+          "tagName": "h2",
+          "attributes": {
+            "class": "ds-card__title"
+          },
+          "text": "{{title}}"
+        },
+        {
+          "id": "body",
+          "tagName": "p",
+          "attributes": {
+            "class": "ds-card__body"
+          },
+          "text": "{{body}}"
+        }
+      ]
+    }
+  }
+}

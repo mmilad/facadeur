@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>facadeur</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231c1915'/%3E%3Crect x='8' y='8' width='16' height='16' fill='none' stroke='%23f3eadf' stroke-width='2'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="src/styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">facadeur</div>
+        <div class="topbar-name" id="page-name"></div>
+        <div class="topbar-spacer"></div>
+        <span class="zoom-readout" id="zoom-readout">100%</span>
+        <button type="button" class="text-button" id="reset-view">Reset view</button>
+      </header>
+      <div class="workspace">
+        <div class="viewport" id="viewport">
+          <div class="stage" id="stage"></div>
+          <p class="hint">Scroll to zoom · drag empty background to pan</p>
+        </div>
+        <aside class="sidebar" id="sidebar" aria-label="Selection">
+          <h2>Selection</h2>
+          <div id="inspector" aria-live="polite"></div>
+        </aside>
+      </div>
+    </div>
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>
