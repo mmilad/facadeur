@@ -4,8 +4,14 @@ import type {
   DocumentSettings,
   FieldDefinition,
   FieldValue,
+  FontFaceFile,
+  FontFamily,
+  FontSource,
+  FontStyle,
+  JsonValue,
   VariantAxis,
 } from '@facadeur/core';
+import { isPlainObject } from '@facadeur/core';
 import * as Y from 'yjs';
 
 /** Write `next` into the Y.Doc, updating existing maps and child arrays in place. */
@@ -15,6 +21,8 @@ export function patchDocument(doc: Y.Doc, next: FlatDocument): void {
   syncFields(doc.getArray<Y.Map<unknown>>('fields'), next.fields);
   syncVariants(doc.getArray<Y.Map<unknown>>('variants'), next.variants);
   syncNodes(doc.getMap<Y.Map<unknown>>('nodes'), next);
+  syncJsonObject(doc.getMap('tokens'), next.tokens);
+  syncFonts(doc.getMap('fonts'), next.fonts);
 }
 
 export function readDocument(doc: Y.Doc): FlatDocument {
@@ -32,6 +40,8 @@ export function readDocument(doc: Y.Doc): FlatDocument {
     fields: readFields(doc.getArray<Y.Map<unknown>>('fields')),
     variants: readVariants(doc.getArray<Y.Map<unknown>>('variants')),
     settings: readSettings(doc.getMap('settings')),
+    tokens: readJsonObject(doc.getMap('tokens')),
+    fonts: readFonts(doc.getMap('fonts')),
     nodes,
   };
 }
@@ -42,7 +52,6 @@ export function ensureDocumentMaps(doc: Y.Doc): void {
   doc.getArray('fields');
   doc.getArray('variants');
   doc.getMap('nodes');
-  // Reserved for later milestones. Empty until tokens and fonts land.
   doc.getMap('tokens');
   doc.getMap('fonts');
 }
@@ -57,12 +66,53 @@ function syncMeta(meta: Y.Map<unknown>, doc: FlatDocument): void {
 
 function syncSettings(settings: Y.Map<unknown>, value: DocumentSettings): void {
   if (!value.artboard) {
-    settings.delete('artboard');
+    if (settings.has('artboard')) settings.delete('artboard');
+  } else {
+    const artboard = ensureMap(settings, 'artboard');
+    syncScalar(artboard, 'width', value.artboard.width);
+    syncScalar(artboard, 'height', value.artboard.height);
+  }
+  syncBreakpoints(settings, value.breakpoints);
+}
+
+function syncBreakpoints(
+  settings: Y.Map<unknown>,
+  breakpoints: DocumentSettings['breakpoints'],
+): void {
+  if (!breakpoints?.length) {
+    if (settings.has('breakpoints')) settings.delete('breakpoints');
     return;
   }
-  const artboard = ensureMap(settings, 'artboard');
-  syncScalar(artboard, 'width', value.artboard.width);
-  syncScalar(artboard, 'height', value.artboard.height);
+  const current = settings.get('breakpoints');
+  if (current instanceof Y.Array && sameBreakpoints(current, breakpoints)) return;
+  const list = new Y.Array<Y.Map<unknown>>();
+  list.insert(
+    0,
+    breakpoints.map((breakpoint) => {
+      const map = new Y.Map<unknown>();
+      map.set('id', breakpoint.id);
+      map.set('minWidth', breakpoint.minWidth);
+      return map;
+    }),
+  );
+  settings.set('breakpoints', list);
+}
+
+function sameBreakpoints(
+  list: Y.Array<unknown>,
+  breakpoints: NonNullable<DocumentSettings['breakpoints']>,
+): boolean {
+  const current = list.toArray();
+  if (current.length !== breakpoints.length) return false;
+  return current.every((item, index) => {
+    if (!(item instanceof Y.Map)) return false;
+    const breakpoint = breakpoints[index];
+    return (
+      breakpoint !== undefined &&
+      item.get('id') === breakpoint.id &&
+      item.get('minWidth') === breakpoint.minWidth
+    );
+  });
 }
 
 function syncFields(list: Y.Array<Y.Map<unknown>>, fields: FieldDefinition[]): void {
@@ -254,14 +304,117 @@ function readVariants(list: Y.Array<Y.Map<unknown>>): VariantAxis[] {
 }
 
 function readSettings(settings: Y.Map<unknown>): DocumentSettings {
+  const result: DocumentSettings = {};
   const artboard = settings.get('artboard');
-  if (!(artboard instanceof Y.Map)) return {};
-  return {
-    artboard: {
+  if (artboard instanceof Y.Map) {
+    result.artboard = {
       width: numberValue(artboard.get('width')),
       height: numberValue(artboard.get('height')),
-    },
+    };
+  }
+  const breakpoints = settings.get('breakpoints');
+  if (breakpoints instanceof Y.Array) {
+    const list = breakpoints.toArray().flatMap((item) => {
+      if (!(item instanceof Y.Map)) return [];
+      const id = item.get('id');
+      const minWidth = item.get('minWidth');
+      if (typeof id !== 'string' || typeof minWidth !== 'number') return [];
+      return [{ id, minWidth }];
+    });
+    if (list.length) result.breakpoints = list;
+  }
+  return result;
+}
+
+function syncFonts(fonts: Y.Map<unknown>, list: FontFamily[]): void {
+  const ids = new Set(list.map((font) => font.id));
+  for (const key of [...fonts.keys()]) {
+    if (key !== '$order' && !ids.has(key)) fonts.delete(key);
+  }
+  for (const font of list) {
+    const current = fonts.get(font.id);
+    const map = current instanceof Y.Map ? current : new Y.Map<unknown>();
+    if (!(current instanceof Y.Map)) fonts.set(font.id, map);
+    writeFont(map, font);
+  }
+  reconcile(
+    ensureArray<string>(fonts, '$order'),
+    list.map((font) => font.id),
+  );
+}
+
+function writeFont(map: Y.Map<unknown>, font: FontFamily): void {
+  syncScalar(map, 'id', font.id);
+  syncScalar(map, 'family', font.family);
+  syncJsonArray(ensureArray<unknown>(map, 'weights'), font.weights);
+  if (font.styles?.length) syncJsonArray(ensureArray<unknown>(map, 'styles'), font.styles);
+  else if (map.has('styles')) map.delete('styles');
+  writeSource(map, font.source);
+  syncJsonArray(ensureArray<unknown>(map, 'fallbacks'), font.fallbacks);
+}
+
+function writeSource(parent: Y.Map<unknown>, source: FontSource): void {
+  const map = ensureMap(parent, 'source');
+  syncScalar(map, 'type', source.type);
+  if (source.type === 'google') {
+    syncScalar(map, 'family', source.family);
+    if (map.has('files')) map.delete('files');
+    return;
+  }
+  if (map.has('family')) map.delete('family');
+  const files = source.files.map((file) => {
+    const item: Record<string, JsonValue> = {
+      weight: file.weight,
+      style: file.style,
+      url: file.url,
+    };
+    if (file.format !== undefined) item.format = file.format;
+    return item;
+  });
+  syncJsonArray(ensureArray<unknown>(map, 'files'), files);
+}
+
+function readFonts(fonts: Y.Map<unknown>): FontFamily[] {
+  const orderValue = fonts.get('$order');
+  if (!(orderValue instanceof Y.Array)) return [];
+  const fontsOut: FontFamily[] = [];
+  for (const id of orderValue.toArray()) {
+    if (typeof id !== 'string') continue;
+    const map = fonts.get(id);
+    if (map instanceof Y.Map) fontsOut.push(readFont(map));
+  }
+  return fontsOut;
+}
+
+function readFont(map: Y.Map<unknown>): FontFamily {
+  const font: FontFamily = {
+    id: stringValue(map.get('id')),
+    family: stringValue(map.get('family')),
+    weights: readNumberArray(map.get('weights')),
+    source: readSource(map.get('source')),
+    fallbacks: readStringArray(map.get('fallbacks')),
   };
+  const styles = readStringArray(map.get('styles'));
+  if (styles.length) font.styles = styles.filter(isFontStyle);
+  return font;
+}
+
+function readSource(value: unknown): FontSource {
+  if (!(value instanceof Y.Map)) return { type: 'google', family: '' };
+  if (value.get('type') === 'file') {
+    const files = readJsonArray(value.get('files')).flatMap((item) => {
+      if (!isPlainObject(item)) return [];
+      const weight = item.weight;
+      const style = item.style;
+      const url = item.url;
+      if (typeof weight !== 'number' || !isFontStyle(style) || typeof url !== 'string') return [];
+      const file: FontFaceFile = { weight, style, url };
+      if (typeof item.format === 'string') file.format = item.format;
+      return [file];
+    });
+    return { type: 'file', files };
+  }
+  return { type: 'google', family: stringValue(value.get('family')) };
 }
 
 function syncChildren(map: Y.Map<unknown>, children: string[]): void {
@@ -456,6 +609,85 @@ function sameList(current: unknown, next: readonly string[]): boolean {
     current.length === next.length &&
     current.every((item, index) => item === next[index])
   );
+}
+
+function syncJsonObject(map: Y.Map<unknown>, value: Record<string, JsonValue>): void {
+  for (const key of [...map.keys()]) {
+    if (!(key in value)) map.delete(key);
+  }
+  for (const [key, item] of Object.entries(value)) {
+    syncJsonValue(map, key, item);
+  }
+}
+
+function syncJsonValue(parent: Y.Map<unknown>, key: string, value: JsonValue): void {
+  const current = parent.get(key);
+  if (isPlainObject(value)) {
+    const map = current instanceof Y.Map ? current : new Y.Map<unknown>();
+    if (!(current instanceof Y.Map)) parent.set(key, map);
+    syncJsonObject(map, value);
+    return;
+  }
+  if (Array.isArray(value)) {
+    const list = current instanceof Y.Array ? current : new Y.Array<unknown>();
+    if (!(current instanceof Y.Array)) parent.set(key, list);
+    syncJsonArray(list, value);
+    return;
+  }
+  if (current instanceof Y.Map || current instanceof Y.Array || current !== value) {
+    parent.set(key, value);
+  }
+}
+
+function syncJsonArray(list: Y.Array<unknown>, value: readonly JsonValue[]): void {
+  if (JSON.stringify(readJsonArray(list)) === JSON.stringify(value)) return;
+  if (list.length > 0) list.delete(0, list.length);
+  if (value.length > 0) list.insert(0, value.map(embedJson));
+}
+
+function embedJson(value: JsonValue): unknown {
+  if (isPlainObject(value)) {
+    const map = new Y.Map<unknown>();
+    for (const [key, item] of Object.entries(value)) map.set(key, embedJson(item));
+    return map;
+  }
+  if (Array.isArray(value)) {
+    const list = new Y.Array<unknown>();
+    if (value.length > 0) list.insert(0, value.map(embedJson));
+    return list;
+  }
+  return value;
+}
+
+function readJsonObject(map: Y.Map<unknown>): Record<string, JsonValue> {
+  const result: Record<string, JsonValue> = {};
+  for (const [key, value] of map.entries()) result[key] = readJson(value);
+  return result;
+}
+
+function readJsonArray(value: unknown): JsonValue[] {
+  if (!(value instanceof Y.Array)) return [];
+  return value.toArray().map((item) => readJson(item));
+}
+
+function readJson(value: unknown): JsonValue {
+  if (value instanceof Y.Map) return readJsonObject(value);
+  if (value instanceof Y.Array) return readJsonArray(value);
+  if (typeof value === 'string' || typeof value === 'boolean' || value === null) return value;
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  throw new Error('Yjs document contains a value that is not JSON');
+}
+
+function readNumberArray(value: unknown): number[] {
+  return readJsonArray(value).filter((item): item is number => typeof item === 'number');
+}
+
+function readStringArray(value: unknown): string[] {
+  return readJsonArray(value).filter((item): item is string => typeof item === 'string');
+}
+
+function isFontStyle(value: unknown): value is FontStyle {
+  return value === 'normal' || value === 'italic';
 }
 
 function stringValue(value: unknown): string {

@@ -2,6 +2,7 @@ import Ajv, { type ErrorObject, type ValidateFunction } from 'ajv';
 import { DocumentError } from './errors.js';
 import { type FlatDocument, type FlatNode, toFlat } from './flat.js';
 import { defaultNestingRules, type NestingRule } from './kinds.js';
+import { assertBreakpoints, assertFonts } from './libraries.js';
 import {
   createDocumentSchema,
   documentFileSchema,
@@ -12,6 +13,7 @@ import {
   type FieldDefinition,
   type FieldValue,
 } from './schema.js';
+import { readTokenTree } from './token-tree.js';
 
 export interface ValidateOptions {
   rules?: Readonly<Record<string, NestingRule>>;
@@ -91,6 +93,13 @@ export function validateTree(doc: FlatDocument, options: ValidateOptions = {}): 
   }
 }
 
+/** Fonts, breakpoints, and the DTCG tree. Reference targets are resolved by `@facadeur/tokens`. */
+export function validateLibraries(doc: FlatDocument): void {
+  assertFonts(doc.fonts);
+  assertBreakpoints(doc.settings.breakpoints);
+  readTokenTree(doc.tokens);
+}
+
 export function validateDefinitions(doc: FlatDocument): void {
   const names = new Set<string>();
   for (const field of doc.fields) {
@@ -134,6 +143,7 @@ export function validateCatalog(files: readonly unknown[]): DocumentFile[] {
   for (const document of documents) {
     const flat = toFlat(document);
     validateDefinitions(flat);
+    validateLibraries(flat);
     validateTree(flat, {
       resolveKind: (componentId) => byId.get(componentId)?.kind,
     });

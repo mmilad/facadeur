@@ -1,5 +1,6 @@
 import { validateCatalog, type DocumentFile } from '@facadeur/core';
 import { renderDocument } from '@facadeur/renderer-dom';
+import { createProjectTemplate, renderDesignCss } from '@facadeur/tokens';
 import button from '../../../examples/button.json';
 import card from '../../../examples/card.json';
 import input from '../../../examples/input.json';
@@ -35,6 +36,16 @@ function main() {
     !(resetView instanceof HTMLButtonElement)
   ) {
     showBootError(new Error('Demo chrome is missing'));
+    return;
+  }
+
+  try {
+    const tokens = document.createElement('style');
+    tokens.id = 'facadeur-tokens';
+    tokens.textContent = renderDesignCss(createProjectTemplate());
+    document.head.append(tokens);
+  } catch (error) {
+    showBootError(error);
     return;
   }
 

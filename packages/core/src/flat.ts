@@ -1,4 +1,6 @@
 import { DocumentError } from './errors.js';
+import { cloneBreakpoints, cloneFonts } from './libraries.js';
+import type { FontFamily } from './schema.js';
 import type {
   Binding,
   DocumentFile,
@@ -9,6 +11,7 @@ import type {
   NestedNode,
   VariantAxis,
 } from './schema.js';
+import { canonicalizeTokenTree, type TokenTree } from './token-tree.js';
 
 export interface FlatNodeBase {
   id: string;
@@ -59,6 +62,9 @@ export interface FlatDocument {
   fields: FieldDefinition[];
   variants: VariantAxis[];
   settings: DocumentSettings;
+  /** DTCG tree. Empty when the file omits tokens. References stay unresolved. */
+  tokens: TokenTree;
+  fonts: FontFamily[];
   nodes: Record<string, FlatNode>;
 }
 
@@ -74,6 +80,8 @@ export function toFlat(file: DocumentFile): FlatDocument {
     fields: file.fields ?? [],
     variants: file.variants ?? [],
     settings: file.settings ?? {},
+    tokens: (file.tokens ?? {}) as TokenTree,
+    fonts: file.fonts ?? [],
     nodes,
   });
 }
@@ -89,7 +97,21 @@ export function toNested(doc: FlatDocument): DocumentFile {
   };
   if (doc.fields.length) file.fields = doc.fields;
   if (doc.variants.length) file.variants = doc.variants;
-  if (doc.settings.artboard) file.settings = { artboard: { ...doc.settings.artboard } };
+  if (doc.settings.artboard || doc.settings.breakpoints?.length) {
+    const settings: DocumentSettings = {};
+    if (doc.settings.artboard) {
+      settings.artboard = {
+        width: doc.settings.artboard.width,
+        height: doc.settings.artboard.height,
+      };
+    }
+    if (doc.settings.breakpoints?.length) {
+      settings.breakpoints = cloneBreakpoints(doc.settings.breakpoints);
+    }
+    file.settings = settings;
+  }
+  if (doc.fonts.length) file.fonts = cloneFonts(doc.fonts);
+  if (Object.keys(doc.tokens).length) file.tokens = canonicalizeTokenTree(doc.tokens);
   return file;
 }
 
@@ -107,6 +129,9 @@ export function canonicalizeFlat(doc: FlatDocument): FlatDocument {
       height: doc.settings.artboard.height,
     };
   }
+  if (doc.settings.breakpoints?.length) {
+    settings.breakpoints = cloneBreakpoints(doc.settings.breakpoints);
+  }
   return {
     version: 1,
     id: doc.id,
@@ -116,6 +141,8 @@ export function canonicalizeFlat(doc: FlatDocument): FlatDocument {
     fields: doc.fields.map(cloneField),
     variants: doc.variants.map(cloneVariant),
     settings,
+    tokens: canonicalizeTokenTree(doc.tokens),
+    fonts: cloneFonts(doc.fonts),
     nodes,
   };
 }

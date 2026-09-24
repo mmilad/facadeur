@@ -12,6 +12,7 @@ export default defineConfig({
       '@facadeur/renderer-dom': fileURLToPath(
         new URL('../renderer-dom/src/index.ts', import.meta.url),
       ),
+      '@facadeur/tokens': fileURLToPath(new URL('../tokens/src/index.ts', import.meta.url)),
     },
   },
 });

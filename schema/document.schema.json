@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "title": "Facadeur document",
-  "description": "Nested facadeur document. Nodes are frame, text, image, or instance. Instances override fields and variants only.",
+  "description": "Nested facadeur document. Nodes are frame, text, image, or instance. Tokens are a DTCG tree. Fonts list families and their sources. Instances override fields and variants only.",
   "$id": "https://github.com/mmilad/facadeur/schema/document.schema.json",
   "type": "object",
   "required": ["version", "id", "name", "kind", "root"],
@@ -157,8 +157,148 @@
               "type": "number"
             }
           }
+        },
+        "breakpoints": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": ["id", "minWidth"],
+            "properties": {
+              "id": {
+                "pattern": "^[a-z][a-z0-9]*$",
+                "type": "string"
+              },
+              "minWidth": {
+                "minimum": 1,
+                "type": "integer"
+              }
+            }
+          }
         }
       }
+    },
+    "fonts": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": ["id", "family", "weights", "source", "fallbacks"],
+        "properties": {
+          "id": {
+            "pattern": "^[a-z][a-z0-9]*$",
+            "type": "string"
+          },
+          "family": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "weights": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "minimum": 1,
+              "maximum": 1000,
+              "type": "integer"
+            }
+          },
+          "styles": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "const": "normal",
+                  "type": "string"
+                },
+                {
+                  "const": "italic",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "source": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "type": "object",
+                "required": ["type", "files"],
+                "properties": {
+                  "type": {
+                    "const": "file",
+                    "type": "string"
+                  },
+                  "files": {
+                    "minItems": 1,
+                    "type": "array",
+                    "items": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": ["weight", "style", "url"],
+                      "properties": {
+                        "weight": {
+                          "minimum": 1,
+                          "maximum": 1000,
+                          "type": "integer"
+                        },
+                        "style": {
+                          "anyOf": [
+                            {
+                              "const": "normal",
+                              "type": "string"
+                            },
+                            {
+                              "const": "italic",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "url": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "format": {
+                          "minLength": 1,
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "additionalProperties": false,
+                "type": "object",
+                "required": ["type", "family"],
+                "properties": {
+                  "type": {
+                    "const": "google",
+                    "type": "string"
+                  },
+                  "family": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          },
+          "fallbacks": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "tokens": {
+      "$ref": "#/$defs/dtcgNode"
     },
     "root": {
       "$id": "T0",
@@ -619,6 +759,104 @@
           }
         }
       ]
+    }
+  },
+  "$defs": {
+    "jsonValue": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/jsonValue"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/jsonValue"
+          }
+        }
+      ]
+    },
+    "facadeurExtension": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tier": {
+          "enum": ["primitive", "semantic", "component"]
+        },
+        "breakpoints": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9]*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/jsonValue"
+          }
+        }
+      }
+    },
+    "tokenExtensions": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/jsonValue"
+      },
+      "properties": {
+        "facadeur": {
+          "$ref": "#/$defs/facadeurExtension"
+        }
+      }
+    },
+    "dtcgNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "DTCG group or token. $value makes an object a token. Group $type is inherited. Child names match [a-z0-9]+.",
+      "properties": {
+        "$value": {
+          "$ref": "#/$defs/jsonValue"
+        },
+        "$type": {
+          "enum": [
+            "color",
+            "dimension",
+            "number",
+            "fontFamily",
+            "fontWeight",
+            "shadow",
+            "typography"
+          ]
+        },
+        "$description": {
+          "type": "string"
+        },
+        "$deprecated": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "$extensions": {
+          "$ref": "#/$defs/tokenExtensions"
+        }
+      },
+      "patternProperties": {
+        "^[a-z0-9]+$": {
+          "$ref": "#/$defs/dtcgNode"
+        }
+      }
     }
   }
 }

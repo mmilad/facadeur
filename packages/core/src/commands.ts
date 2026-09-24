@@ -12,14 +12,25 @@ import {
 } from './flat.js';
 import { createId, ID_PATTERN, TAG_PATTERN } from './ids.js';
 import type { NodeType } from './kinds.js';
+import { assertBreakpoints, assertFont, cloneBreakpoints, cloneFont } from './libraries.js';
 import type {
   Binding,
+  Breakpoint,
   FieldDefinition,
   FieldValue,
+  FontFamily,
   Layout,
   NestedNode,
   VariantAxis,
 } from './schema.js';
+import {
+  removeGroupFromTree,
+  removeTokenFromTree,
+  setGroupInTree,
+  setTokenInTree,
+  type TokenDefinition,
+  type TokenGroupDefinition,
+} from './token-tree.js';
 import {
   assertAttributes,
   assertBindings,
@@ -27,6 +38,7 @@ import {
   assertLayout,
   assertVariantAxis,
   validateDefinitions,
+  validateLibraries,
   validateTree,
   type ValidateOptions,
 } from './validate.js';
@@ -68,7 +80,14 @@ export type Command =
   | { type: 'defineField'; field: FieldDefinition }
   | { type: 'removeField'; name: string }
   | { type: 'defineVariant'; axis: VariantAxis }
-  | { type: 'removeVariant'; name: string };
+  | { type: 'removeVariant'; name: string }
+  | { type: 'setToken'; path: string; token: TokenDefinition }
+  | { type: 'removeToken'; path: string }
+  | { type: 'setTokenGroup'; path: string; group: TokenGroupDefinition }
+  | { type: 'removeTokenGroup'; path: string }
+  | { type: 'setFont'; font: FontFamily }
+  | { type: 'removeFont'; id: string }
+  | { type: 'setBreakpoints'; breakpoints: Breakpoint[] };
 
 const PROPS: Record<NodeType, readonly NodeProp[]> = {
   frame: ['name', 'tag', 'attributes', 'layout', 'bindings'],
@@ -124,6 +143,27 @@ export function applyCommand(
     case 'removeVariant':
       removeVariant(next, command.name);
       break;
+    case 'setToken':
+      next.tokens = setTokenInTree(next.tokens, command.path, command.token);
+      break;
+    case 'removeToken':
+      next.tokens = removeTokenFromTree(next.tokens, command.path);
+      break;
+    case 'setTokenGroup':
+      next.tokens = setGroupInTree(next.tokens, command.path, command.group);
+      break;
+    case 'removeTokenGroup':
+      next.tokens = removeGroupFromTree(next.tokens, command.path);
+      break;
+    case 'setFont':
+      setFont(next, command.font);
+      break;
+    case 'removeFont':
+      removeFont(next, command.id);
+      break;
+    case 'setBreakpoints':
+      setBreakpoints(next, command.breakpoints);
+      break;
     default: {
       const unreachable: never = command;
       throw new DocumentError('schema', `Unknown command ${JSON.stringify(unreachable)}`);
@@ -131,6 +171,7 @@ export function applyCommand(
   }
   const canonical = canonicalizeFlat(next);
   validateDefinitions(canonical);
+  validateLibraries(canonical);
   validateTree(canonical, ctx);
   return canonical;
 }
@@ -290,6 +331,31 @@ function removeVariant(doc: FlatDocument, name: string): void {
     throw new DocumentError('unknown-variant', `Variant "${name}" is not defined`);
   }
   doc.variants.splice(index, 1);
+}
+
+function setFont(doc: FlatDocument, font: FontFamily): void {
+  assertFont(font);
+  const next = cloneFont(font);
+  const index = doc.fonts.findIndex((item) => item.id === next.id);
+  if (index === -1) doc.fonts.push(next);
+  else doc.fonts[index] = next;
+}
+
+function removeFont(doc: FlatDocument, id: string): void {
+  const index = doc.fonts.findIndex((item) => item.id === id);
+  if (index === -1) {
+    throw new DocumentError('schema', `Font "${id}" is not defined`);
+  }
+  doc.fonts.splice(index, 1);
+}
+
+function setBreakpoints(doc: FlatDocument, breakpoints: Breakpoint[]): void {
+  if (!breakpoints.length) {
+    delete doc.settings.breakpoints;
+    return;
+  }
+  assertBreakpoints(breakpoints);
+  doc.settings.breakpoints = cloneBreakpoints(breakpoints);
 }
 
 function materialize(draft: InsertNode, seen: Set<string>, nextId: () => string): NestedNode {
