@@ -1,11 +1,17 @@
 /**
  * Fixed viewport over a stage positioned with CSS translate + scale.
- * Pan by dragging empty background. Zoom with the wheel, toward the cursor.
+ * Pan by dragging empty canvas. Zoom with the wheel, toward the cursor.
+ * The dot grid is a viewport background locked to the same tx/ty/scale,
+ * so panning moves the camera over one infinite surface. Dot radius stays
+ * in CSS pixels (it does not scale with background-size); spacing does.
  * Content stays real DOM, so hit testing follows the transform.
  */
 
 const MIN_SCALE = 0.2;
 const MAX_SCALE = 4;
+const GRID_BASE = 20;
+const GRID_MIN_SCREEN = 14;
+const GRID_MAX_SCREEN = 28;
 
 export function createStage(viewport, stage) {
   let scale = 1;
@@ -29,7 +35,16 @@ export function createStage(viewport, stage) {
   function apply() {
     stage.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
     stage.style.setProperty('--stage-scale', String(scale));
+    paintGrid();
     notify();
+  }
+
+  function paintGrid() {
+    const step = gridStep(scale);
+    const size = step * scale;
+    // Tile center sits on world multiples of `step`. World origin is at (tx, ty).
+    viewport.style.backgroundSize = `${size}px ${size}px`;
+    viewport.style.backgroundPosition = `${tx - size / 2}px ${ty - size / 2}px`;
   }
 
   function setTransform(nextScale, nextTx, nextTy) {
@@ -131,6 +146,21 @@ export function createStage(viewport, stage) {
       setTransform(nextScale, (vw - width * nextScale) / 2, (vh - height * nextScale) / 2);
     },
   };
+}
+
+function gridStep(scale) {
+  let step = GRID_BASE;
+  let guard = 0;
+  while (step * scale < GRID_MIN_SCREEN && guard < 8) {
+    step *= 2;
+    guard += 1;
+  }
+  guard = 0;
+  while (step * scale > GRID_MAX_SCREEN && step > 5 && guard < 8) {
+    step /= 2;
+    guard += 1;
+  }
+  return step;
 }
 
 function clamp(value, min, max) {

@@ -108,12 +108,14 @@ input {
   overflow: hidden;
   cursor: grab;
   background-color: var(--canvas);
-  background-image: radial-gradient(rgba(28, 25, 21, 0.18) 1px, transparent 1px);
-  background-size: 22px 22px;
+  /* 1px stops stay 1 CSS pixel when background-size changes with zoom. */
+  background-image: radial-gradient(circle, rgba(28, 25, 21, 0.38) 0.85px, transparent 1.35px);
+  background-repeat: repeat;
   touch-action: none;
 }
 
-.viewport.is-panning {
+.viewport.is-panning,
+.viewport.is-panning * {
   cursor: grabbing;
 }
 

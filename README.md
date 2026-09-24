@@ -19,7 +19,7 @@ Open <http://localhost:8080>.
 Any static file server works the same way. From the page you can:
 
 - Scroll over the stage to zoom toward the cursor.
-- Drag the empty background (the dot grid, or the sheet around the specimens) to pan.
+- Drag empty canvas to pan. The dot grid moves and zooms with the stage, like a camera over an infinite surface.
 - Click a button, a card, a title inside a card, or a label to select that node.
 - Read the selected `data-id`, props, and variants in the sidebar.
 - Click empty background, or press Escape, to clear the selection.
