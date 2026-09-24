@@ -9,11 +9,70 @@
     { "name": "placeholder", "type": "text", "default": "" },
     { "name": "name", "type": "text", "default": "" }
   ],
+  "tokenInterface": {
+    "reads": [
+      "color.accent.default",
+      "color.text.secondary",
+      "font.weight.medium",
+      "input.color.bg",
+      "input.color.border",
+      "input.color.text",
+      "input.padding.x",
+      "input.padding.y",
+      "input.radius",
+      "space.0",
+      "space.gap.xs",
+      "type.body",
+      "type.caption"
+    ]
+  },
+  "styles": {
+    "declarations": {
+      "color": "{color.text.secondary}",
+      "font": "{type.caption}",
+      "fontWeight": "{font.weight.medium}",
+      "letterSpacing": "0.14em",
+      "textTransform": "uppercase"
+    },
+    "children": {
+      "control": {
+        "declarations": {
+          "appearance": "none",
+          "background": "{input.color.bg}",
+          "border": "1px solid {input.color.border}",
+          "borderRadius": "{input.radius}",
+          "color": "{input.color.text}",
+          "font": "{type.body}",
+          "letterSpacing": "0",
+          "paddingBlock": "{input.padding.y}",
+          "paddingInline": "{input.padding.x}",
+          "textTransform": "none"
+        },
+        "states": {
+          "focus-visible": {
+            "borderColor": "{color.accent.default}",
+            "outline": "2px solid {color.accent.default}",
+            "outlineOffset": "1px"
+          },
+          "disabled": { "opacity": "0.5" }
+        }
+      },
+      "label": {
+        "declarations": { "margin": "{space.0}" }
+      }
+    }
+  },
   "root": {
     "id": "root",
     "type": "frame",
     "tag": "label",
-    "attributes": { "class": "ds-field" },
+    "layout": {
+      "direction": "column",
+      "align": "stretch",
+      "gap": "{space.gap.xs}",
+      "width": { "mode": "fill" },
+      "height": { "mode": "hug" }
+    },
     "children": [
       {
         "id": "label",
@@ -25,8 +84,11 @@
         "id": "control",
         "type": "frame",
         "tag": "input",
+        "layout": {
+          "width": { "mode": "fill" },
+          "height": { "mode": "hug" }
+        },
         "attributes": {
-          "class": "ds-field__control",
           "type": "text",
           "readonly": "readonly",
           "tabindex": "-1",

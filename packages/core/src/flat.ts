@@ -1,5 +1,6 @@
 import { DocumentError } from './errors.js';
 import { cloneBreakpoints, cloneFonts } from './libraries.js';
+import { canonicalizeLayout } from './layout.js';
 import type { FontFamily } from './schema.js';
 import type {
   Binding,
@@ -9,8 +10,11 @@ import type {
   FieldValue,
   Layout,
   NestedNode,
+  StyleBlock,
+  TokenInterface,
   VariantAxis,
 } from './schema.js';
+import { canonicalizeStyleBlock, canonicalizeTokenInterface } from './style-block.js';
 import { canonicalizeTokenTree, type TokenTree } from './token-tree.js';
 
 export interface FlatNodeBase {
@@ -65,6 +69,10 @@ export interface FlatDocument {
   /** DTCG tree. Empty when the file omits tokens. References stay unresolved. */
   tokens: TokenTree;
   fonts: FontFamily[];
+  /** Component style block: base, variants, states, breakpoints. */
+  styles?: StyleBlock;
+  /** Tokens this component reads, and tokens it sets for descendants. */
+  tokenInterface?: TokenInterface;
   nodes: Record<string, FlatNode>;
 }
 
@@ -82,6 +90,8 @@ export function toFlat(file: DocumentFile): FlatDocument {
     settings: file.settings ?? {},
     tokens: (file.tokens ?? {}) as TokenTree,
     fonts: file.fonts ?? [],
+    ...(file.styles ? { styles: file.styles } : {}),
+    ...(file.tokenInterface ? { tokenInterface: file.tokenInterface } : {}),
     nodes,
   });
 }
@@ -112,6 +122,8 @@ export function toNested(doc: FlatDocument): DocumentFile {
   }
   if (doc.fonts.length) file.fonts = cloneFonts(doc.fonts);
   if (Object.keys(doc.tokens).length) file.tokens = canonicalizeTokenTree(doc.tokens);
+  if (doc.styles) file.styles = doc.styles;
+  if (doc.tokenInterface) file.tokenInterface = doc.tokenInterface;
   return file;
 }
 
@@ -132,6 +144,8 @@ export function canonicalizeFlat(doc: FlatDocument): FlatDocument {
   if (doc.settings.breakpoints?.length) {
     settings.breakpoints = cloneBreakpoints(doc.settings.breakpoints);
   }
+  const styles = canonicalizeStyleBlock(doc.styles);
+  const tokenInterface = canonicalizeTokenInterface(doc.tokenInterface);
   return {
     version: 1,
     id: doc.id,
@@ -143,6 +157,8 @@ export function canonicalizeFlat(doc: FlatDocument): FlatDocument {
     settings,
     tokens: canonicalizeTokenTree(doc.tokens),
     fonts: cloneFonts(doc.fonts),
+    ...(styles ? { styles } : {}),
+    ...(tokenInterface ? { tokenInterface } : {}),
     nodes,
   };
 }
@@ -344,14 +360,7 @@ function sharedToNested(node: Exclude<FlatNode, InstanceNode>): {
 }
 
 function cleanLayout(layout: Layout | undefined): Layout | undefined {
-  if (!layout) return undefined;
-  const next: Layout = {};
-  if (layout.position !== undefined) next.position = layout.position;
-  if (layout.x !== undefined) next.x = layout.x;
-  if (layout.y !== undefined) next.y = layout.y;
-  if (layout.width !== undefined) next.width = layout.width;
-  if (layout.height !== undefined) next.height = layout.height;
-  return Object.keys(next).length ? next : undefined;
+  return canonicalizeLayout(layout);
 }
 
 function sortStringRecord(

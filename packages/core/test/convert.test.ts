@@ -15,7 +15,13 @@ const sample: DocumentFile = {
     name: 'Hero frame',
     tag: 'section',
     attributes: { class: 'hero' },
-    layout: { position: 'absolute', x: 1, y: 2, width: 100, height: 80 },
+    layout: {
+      position: 'absolute',
+      x: 1,
+      y: 2,
+      width: { mode: 'fixed', size: 100 },
+      height: { mode: 'fixed', size: 80 },
+    },
     style: { display: 'flex' },
     children: [
       {

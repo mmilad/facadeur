@@ -13,6 +13,7 @@ import {
 import { createId, ID_PATTERN, TAG_PATTERN } from './ids.js';
 import type { NodeType } from './kinds.js';
 import { assertBreakpoints, assertFont, cloneBreakpoints, cloneFont } from './libraries.js';
+import { parseLayout } from './layout.js';
 import type {
   Binding,
   Breakpoint,
@@ -21,8 +22,11 @@ import type {
   FontFamily,
   Layout,
   NestedNode,
+  StyleBlock,
+  TokenInterface,
   VariantAxis,
 } from './schema.js';
+import { assertStyleMap, parseStyleBlock, parseTokenInterface } from './style-block.js';
 import {
   removeGroupFromTree,
   removeTokenFromTree,
@@ -87,7 +91,9 @@ export type Command =
   | { type: 'removeTokenGroup'; path: string }
   | { type: 'setFont'; font: FontFamily }
   | { type: 'removeFont'; id: string }
-  | { type: 'setBreakpoints'; breakpoints: Breakpoint[] };
+  | { type: 'setBreakpoints'; breakpoints: Breakpoint[] }
+  | { type: 'setStyleBlock'; style: StyleBlock | null }
+  | { type: 'setTokenInterface'; tokenInterface: TokenInterface | null };
 
 const PROPS: Record<NodeType, readonly NodeProp[]> = {
   frame: ['name', 'tag', 'attributes', 'layout', 'bindings'],
@@ -163,6 +169,14 @@ export function applyCommand(
       break;
     case 'setBreakpoints':
       setBreakpoints(next, command.breakpoints);
+      break;
+    case 'setStyleBlock':
+      if (command.style === null) delete next.styles;
+      else next.styles = parseStyleBlock(command.style);
+      break;
+    case 'setTokenInterface':
+      if (command.tokenInterface === null) delete next.tokenInterface;
+      else next.tokenInterface = parseTokenInterface(command.tokenInterface);
       break;
     default: {
       const unreachable: never = command;
@@ -259,6 +273,7 @@ function setStyle(doc: FlatDocument, command: Extract<Command, { type: 'setStyle
   } else {
     throw new DocumentError('schema', 'Style values must be strings');
   }
+  if (Object.keys(style).length) assertStyleMap(style);
   node.style = style;
   doc.nodes[node.id] = makeFlatNode(node);
 }
@@ -596,23 +611,7 @@ function requireStringRecord(value: unknown, label: string): Record<string, stri
 }
 
 function requireLayout(value: unknown): Layout {
-  if (!isRecord(value)) throw new DocumentError('schema', 'Layout must be an object');
-  const layout: Layout = {};
-  if (value.position !== undefined) {
-    if (value.position !== 'auto' && value.position !== 'absolute') {
-      throw new DocumentError('schema', 'Layout position must be auto or absolute');
-    }
-    layout.position = value.position;
-  }
-  for (const key of ['x', 'y', 'width', 'height'] as const) {
-    if (value[key] === undefined) continue;
-    if (typeof value[key] !== 'number') {
-      throw new DocumentError('schema', `Layout ${key} must be a number`);
-    }
-    layout[key] = value[key];
-  }
-  assertLayout(layout);
-  return layout;
+  return parseLayout(value);
 }
 
 function cleanCommandLayout(layout: Layout): Layout {
@@ -637,14 +636,6 @@ function requireBindings(value: unknown): Binding[] {
     }
     return binding;
   });
-}
-
-function assertStyleMap(style: Record<string, string>): void {
-  for (const key of Object.keys(style)) {
-    if (!STYLE_PROPERTY.test(key)) {
-      throw new DocumentError('schema', `Invalid style property "${key}"`);
-    }
-  }
 }
 
 function isFieldValue(value: unknown): value is FieldValue {

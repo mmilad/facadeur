@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "title": "Facadeur document",
-  "description": "Nested facadeur document. Nodes are frame, text, image, or instance. Tokens are a DTCG tree. Fonts list families and their sources. Instances override fields and variants only.",
+  "description": "Nested facadeur document. Nodes are frame, text, image, or instance. Tokens are a DTCG tree. Fonts list families and their sources. A style block paints the component. Instances override fields and variants only.",
   "$id": "https://github.com/mmilad/facadeur/schema/document.schema.json",
   "type": "object",
   "required": ["version", "id", "name", "kind", "root"],
@@ -300,6 +300,328 @@
     "tokens": {
       "$ref": "#/$defs/dtcgNode"
     },
+    "styles": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "declarations": {
+          "type": "object",
+          "patternProperties": {
+            "^(--)?[A-Za-z_][\\w-]*$": {
+              "type": "string"
+            }
+          }
+        },
+        "states": {
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {
+            "hover": {
+              "type": "object",
+              "patternProperties": {
+                "^(--)?[A-Za-z_][\\w-]*$": {
+                  "type": "string"
+                }
+              }
+            },
+            "focus-visible": {
+              "type": "object",
+              "patternProperties": {
+                "^(--)?[A-Za-z_][\\w-]*$": {
+                  "type": "string"
+                }
+              }
+            },
+            "disabled": {
+              "type": "object",
+              "patternProperties": {
+                "^(--)?[A-Za-z_][\\w-]*$": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "variants": {
+          "type": "object",
+          "patternProperties": {
+            "^[A-Za-z][A-Za-z0-9_-]*$": {
+              "type": "object",
+              "patternProperties": {
+                "^(.*)$": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "properties": {
+                    "declarations": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(--)?[A-Za-z_][\\w-]*$": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "states": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "properties": {
+                        "hover": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(--)?[A-Za-z_][\\w-]*$": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "focus-visible": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(--)?[A-Za-z_][\\w-]*$": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "disabled": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(--)?[A-Za-z_][\\w-]*$": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "breakpoints": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-z][a-z0-9]*$": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "declarations": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^(--)?[A-Za-z_][\\w-]*$": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "states": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "properties": {
+                    "hover": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(--)?[A-Za-z_][\\w-]*$": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "focus-visible": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(--)?[A-Za-z_][\\w-]*$": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "disabled": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(--)?[A-Za-z_][\\w-]*$": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "children": {
+          "type": "object",
+          "patternProperties": {
+            "^[A-Za-z][A-Za-z0-9_-]*$": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "declarations": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^(--)?[A-Za-z_][\\w-]*$": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "states": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "properties": {
+                    "hover": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(--)?[A-Za-z_][\\w-]*$": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "focus-visible": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(--)?[A-Za-z_][\\w-]*$": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "disabled": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(--)?[A-Za-z_][\\w-]*$": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "variants": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^[A-Za-z][A-Za-z0-9_-]*$": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(.*)$": {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "properties": {
+                            "declarations": {
+                              "type": "object",
+                              "patternProperties": {
+                                "^(--)?[A-Za-z_][\\w-]*$": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "states": {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "properties": {
+                                "hover": {
+                                  "type": "object",
+                                  "patternProperties": {
+                                    "^(--)?[A-Za-z_][\\w-]*$": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "focus-visible": {
+                                  "type": "object",
+                                  "patternProperties": {
+                                    "^(--)?[A-Za-z_][\\w-]*$": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "disabled": {
+                                  "type": "object",
+                                  "patternProperties": {
+                                    "^(--)?[A-Za-z_][\\w-]*$": {
+                                      "type": "string"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "breakpoints": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^[a-z][a-z0-9]*$": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "properties": {
+                        "declarations": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(--)?[A-Za-z_][\\w-]*$": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "states": {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "properties": {
+                            "hover": {
+                              "type": "object",
+                              "patternProperties": {
+                                "^(--)?[A-Za-z_][\\w-]*$": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "focus-visible": {
+                              "type": "object",
+                              "patternProperties": {
+                                "^(--)?[A-Za-z_][\\w-]*$": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "disabled": {
+                              "type": "object",
+                              "patternProperties": {
+                                "^(--)?[A-Za-z_][\\w-]*$": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "tokenInterface": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "reads": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "pattern": "^[a-z][a-z0-9]*(\\.[a-z0-9]+)+$",
+            "type": "string"
+          }
+        },
+        "sets": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-z][a-z0-9]*(\\.[a-z0-9]+)+$": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "root": {
       "$id": "T0",
       "anyOf": [
@@ -352,12 +674,699 @@
                   "type": "number"
                 },
                 "width": {
-                  "exclusiveMinimum": 0,
-                  "type": "number"
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": ["mode"],
+                  "properties": {
+                    "mode": {
+                      "anyOf": [
+                        {
+                          "const": "hug",
+                          "type": "string"
+                        },
+                        {
+                          "const": "fill",
+                          "type": "string"
+                        },
+                        {
+                          "const": "fixed",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "size": {
+                      "anyOf": [
+                        {
+                          "exclusiveMinimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["unit", "value"],
+                          "properties": {
+                            "unit": {
+                              "const": "%",
+                              "type": "string"
+                            },
+                            "value": {
+                              "exclusiveMinimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "min": {
+                      "anyOf": [
+                        {
+                          "exclusiveMinimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["unit", "value"],
+                          "properties": {
+                            "unit": {
+                              "const": "%",
+                              "type": "string"
+                            },
+                            "value": {
+                              "exclusiveMinimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "max": {
+                      "anyOf": [
+                        {
+                          "exclusiveMinimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["unit", "value"],
+                          "properties": {
+                            "unit": {
+                              "const": "%",
+                              "type": "string"
+                            },
+                            "value": {
+                              "exclusiveMinimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
                 },
                 "height": {
-                  "exclusiveMinimum": 0,
-                  "type": "number"
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": ["mode"],
+                  "properties": {
+                    "mode": {
+                      "anyOf": [
+                        {
+                          "const": "hug",
+                          "type": "string"
+                        },
+                        {
+                          "const": "fill",
+                          "type": "string"
+                        },
+                        {
+                          "const": "fixed",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "size": {
+                      "anyOf": [
+                        {
+                          "exclusiveMinimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["unit", "value"],
+                          "properties": {
+                            "unit": {
+                              "const": "%",
+                              "type": "string"
+                            },
+                            "value": {
+                              "exclusiveMinimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "min": {
+                      "anyOf": [
+                        {
+                          "exclusiveMinimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["unit", "value"],
+                          "properties": {
+                            "unit": {
+                              "const": "%",
+                              "type": "string"
+                            },
+                            "value": {
+                              "exclusiveMinimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "max": {
+                      "anyOf": [
+                        {
+                          "exclusiveMinimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["unit", "value"],
+                          "properties": {
+                            "unit": {
+                              "const": "%",
+                              "type": "string"
+                            },
+                            "value": {
+                              "exclusiveMinimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                "direction": {
+                  "anyOf": [
+                    {
+                      "const": "row",
+                      "type": "string"
+                    },
+                    {
+                      "const": "column",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "gap": {
+                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                  "type": "string"
+                },
+                "padding": {
+                  "anyOf": [
+                    {
+                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                      "type": "string"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "properties": {
+                        "top": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "right": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "bottom": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "left": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "margin": {
+                  "anyOf": [
+                    {
+                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                      "type": "string"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "properties": {
+                        "top": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "right": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "bottom": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "left": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "justify": {
+                  "anyOf": [
+                    {
+                      "const": "start",
+                      "type": "string"
+                    },
+                    {
+                      "const": "center",
+                      "type": "string"
+                    },
+                    {
+                      "const": "end",
+                      "type": "string"
+                    },
+                    {
+                      "const": "space-between",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "align": {
+                  "anyOf": [
+                    {
+                      "const": "start",
+                      "type": "string"
+                    },
+                    {
+                      "const": "center",
+                      "type": "string"
+                    },
+                    {
+                      "const": "end",
+                      "type": "string"
+                    },
+                    {
+                      "const": "stretch",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "wrap": {
+                  "type": "boolean"
+                },
+                "breakpoints": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^[a-z][a-z0-9]*$": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "properties": {
+                        "position": {
+                          "anyOf": [
+                            {
+                              "const": "auto",
+                              "type": "string"
+                            },
+                            {
+                              "const": "absolute",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "x": {
+                          "type": "number"
+                        },
+                        "y": {
+                          "type": "number"
+                        },
+                        "width": {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["mode"],
+                          "properties": {
+                            "mode": {
+                              "anyOf": [
+                                {
+                                  "const": "hug",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "fill",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "fixed",
+                                  "type": "string"
+                                }
+                              ]
+                            },
+                            "size": {
+                              "anyOf": [
+                                {
+                                  "exclusiveMinimum": 0,
+                                  "type": "number"
+                                },
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": ["unit", "value"],
+                                  "properties": {
+                                    "unit": {
+                                      "const": "%",
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 100,
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "min": {
+                              "anyOf": [
+                                {
+                                  "exclusiveMinimum": 0,
+                                  "type": "number"
+                                },
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": ["unit", "value"],
+                                  "properties": {
+                                    "unit": {
+                                      "const": "%",
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 100,
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "max": {
+                              "anyOf": [
+                                {
+                                  "exclusiveMinimum": 0,
+                                  "type": "number"
+                                },
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": ["unit", "value"],
+                                  "properties": {
+                                    "unit": {
+                                      "const": "%",
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 100,
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "height": {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["mode"],
+                          "properties": {
+                            "mode": {
+                              "anyOf": [
+                                {
+                                  "const": "hug",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "fill",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "fixed",
+                                  "type": "string"
+                                }
+                              ]
+                            },
+                            "size": {
+                              "anyOf": [
+                                {
+                                  "exclusiveMinimum": 0,
+                                  "type": "number"
+                                },
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": ["unit", "value"],
+                                  "properties": {
+                                    "unit": {
+                                      "const": "%",
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 100,
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "min": {
+                              "anyOf": [
+                                {
+                                  "exclusiveMinimum": 0,
+                                  "type": "number"
+                                },
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": ["unit", "value"],
+                                  "properties": {
+                                    "unit": {
+                                      "const": "%",
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 100,
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "max": {
+                              "anyOf": [
+                                {
+                                  "exclusiveMinimum": 0,
+                                  "type": "number"
+                                },
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": ["unit", "value"],
+                                  "properties": {
+                                    "unit": {
+                                      "const": "%",
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 100,
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "direction": {
+                          "anyOf": [
+                            {
+                              "const": "row",
+                              "type": "string"
+                            },
+                            {
+                              "const": "column",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "gap": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "padding": {
+                          "anyOf": [
+                            {
+                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                              "type": "string"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "properties": {
+                                "top": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                "right": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                "bottom": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                "left": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "margin": {
+                          "anyOf": [
+                            {
+                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                              "type": "string"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "properties": {
+                                "top": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                "right": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                "bottom": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                "left": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "justify": {
+                          "anyOf": [
+                            {
+                              "const": "start",
+                              "type": "string"
+                            },
+                            {
+                              "const": "center",
+                              "type": "string"
+                            },
+                            {
+                              "const": "end",
+                              "type": "string"
+                            },
+                            {
+                              "const": "space-between",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "align": {
+                          "anyOf": [
+                            {
+                              "const": "start",
+                              "type": "string"
+                            },
+                            {
+                              "const": "center",
+                              "type": "string"
+                            },
+                            {
+                              "const": "end",
+                              "type": "string"
+                            },
+                            {
+                              "const": "stretch",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "wrap": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
                 }
               }
             },
@@ -477,12 +1486,699 @@
                   "type": "number"
                 },
                 "width": {
-                  "exclusiveMinimum": 0,
-                  "type": "number"
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": ["mode"],
+                  "properties": {
+                    "mode": {
+                      "anyOf": [
+                        {
+                          "const": "hug",
+                          "type": "string"
+                        },
+                        {
+                          "const": "fill",
+                          "type": "string"
+                        },
+                        {
+                          "const": "fixed",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "size": {
+                      "anyOf": [
+                        {
+                          "exclusiveMinimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["unit", "value"],
+                          "properties": {
+                            "unit": {
+                              "const": "%",
+                              "type": "string"
+                            },
+                            "value": {
+                              "exclusiveMinimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "min": {
+                      "anyOf": [
+                        {
+                          "exclusiveMinimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["unit", "value"],
+                          "properties": {
+                            "unit": {
+                              "const": "%",
+                              "type": "string"
+                            },
+                            "value": {
+                              "exclusiveMinimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "max": {
+                      "anyOf": [
+                        {
+                          "exclusiveMinimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["unit", "value"],
+                          "properties": {
+                            "unit": {
+                              "const": "%",
+                              "type": "string"
+                            },
+                            "value": {
+                              "exclusiveMinimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
                 },
                 "height": {
-                  "exclusiveMinimum": 0,
-                  "type": "number"
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": ["mode"],
+                  "properties": {
+                    "mode": {
+                      "anyOf": [
+                        {
+                          "const": "hug",
+                          "type": "string"
+                        },
+                        {
+                          "const": "fill",
+                          "type": "string"
+                        },
+                        {
+                          "const": "fixed",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "size": {
+                      "anyOf": [
+                        {
+                          "exclusiveMinimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["unit", "value"],
+                          "properties": {
+                            "unit": {
+                              "const": "%",
+                              "type": "string"
+                            },
+                            "value": {
+                              "exclusiveMinimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "min": {
+                      "anyOf": [
+                        {
+                          "exclusiveMinimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["unit", "value"],
+                          "properties": {
+                            "unit": {
+                              "const": "%",
+                              "type": "string"
+                            },
+                            "value": {
+                              "exclusiveMinimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "max": {
+                      "anyOf": [
+                        {
+                          "exclusiveMinimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["unit", "value"],
+                          "properties": {
+                            "unit": {
+                              "const": "%",
+                              "type": "string"
+                            },
+                            "value": {
+                              "exclusiveMinimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                "direction": {
+                  "anyOf": [
+                    {
+                      "const": "row",
+                      "type": "string"
+                    },
+                    {
+                      "const": "column",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "gap": {
+                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                  "type": "string"
+                },
+                "padding": {
+                  "anyOf": [
+                    {
+                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                      "type": "string"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "properties": {
+                        "top": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "right": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "bottom": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "left": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "margin": {
+                  "anyOf": [
+                    {
+                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                      "type": "string"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "properties": {
+                        "top": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "right": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "bottom": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "left": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "justify": {
+                  "anyOf": [
+                    {
+                      "const": "start",
+                      "type": "string"
+                    },
+                    {
+                      "const": "center",
+                      "type": "string"
+                    },
+                    {
+                      "const": "end",
+                      "type": "string"
+                    },
+                    {
+                      "const": "space-between",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "align": {
+                  "anyOf": [
+                    {
+                      "const": "start",
+                      "type": "string"
+                    },
+                    {
+                      "const": "center",
+                      "type": "string"
+                    },
+                    {
+                      "const": "end",
+                      "type": "string"
+                    },
+                    {
+                      "const": "stretch",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "wrap": {
+                  "type": "boolean"
+                },
+                "breakpoints": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^[a-z][a-z0-9]*$": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "properties": {
+                        "position": {
+                          "anyOf": [
+                            {
+                              "const": "auto",
+                              "type": "string"
+                            },
+                            {
+                              "const": "absolute",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "x": {
+                          "type": "number"
+                        },
+                        "y": {
+                          "type": "number"
+                        },
+                        "width": {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["mode"],
+                          "properties": {
+                            "mode": {
+                              "anyOf": [
+                                {
+                                  "const": "hug",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "fill",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "fixed",
+                                  "type": "string"
+                                }
+                              ]
+                            },
+                            "size": {
+                              "anyOf": [
+                                {
+                                  "exclusiveMinimum": 0,
+                                  "type": "number"
+                                },
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": ["unit", "value"],
+                                  "properties": {
+                                    "unit": {
+                                      "const": "%",
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 100,
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "min": {
+                              "anyOf": [
+                                {
+                                  "exclusiveMinimum": 0,
+                                  "type": "number"
+                                },
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": ["unit", "value"],
+                                  "properties": {
+                                    "unit": {
+                                      "const": "%",
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 100,
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "max": {
+                              "anyOf": [
+                                {
+                                  "exclusiveMinimum": 0,
+                                  "type": "number"
+                                },
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": ["unit", "value"],
+                                  "properties": {
+                                    "unit": {
+                                      "const": "%",
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 100,
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "height": {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["mode"],
+                          "properties": {
+                            "mode": {
+                              "anyOf": [
+                                {
+                                  "const": "hug",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "fill",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "fixed",
+                                  "type": "string"
+                                }
+                              ]
+                            },
+                            "size": {
+                              "anyOf": [
+                                {
+                                  "exclusiveMinimum": 0,
+                                  "type": "number"
+                                },
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": ["unit", "value"],
+                                  "properties": {
+                                    "unit": {
+                                      "const": "%",
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 100,
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "min": {
+                              "anyOf": [
+                                {
+                                  "exclusiveMinimum": 0,
+                                  "type": "number"
+                                },
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": ["unit", "value"],
+                                  "properties": {
+                                    "unit": {
+                                      "const": "%",
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 100,
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "max": {
+                              "anyOf": [
+                                {
+                                  "exclusiveMinimum": 0,
+                                  "type": "number"
+                                },
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": ["unit", "value"],
+                                  "properties": {
+                                    "unit": {
+                                      "const": "%",
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 100,
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "direction": {
+                          "anyOf": [
+                            {
+                              "const": "row",
+                              "type": "string"
+                            },
+                            {
+                              "const": "column",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "gap": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "padding": {
+                          "anyOf": [
+                            {
+                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                              "type": "string"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "properties": {
+                                "top": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                "right": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                "bottom": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                "left": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "margin": {
+                          "anyOf": [
+                            {
+                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                              "type": "string"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "properties": {
+                                "top": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                "right": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                "bottom": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                "left": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "justify": {
+                          "anyOf": [
+                            {
+                              "const": "start",
+                              "type": "string"
+                            },
+                            {
+                              "const": "center",
+                              "type": "string"
+                            },
+                            {
+                              "const": "end",
+                              "type": "string"
+                            },
+                            {
+                              "const": "space-between",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "align": {
+                          "anyOf": [
+                            {
+                              "const": "start",
+                              "type": "string"
+                            },
+                            {
+                              "const": "center",
+                              "type": "string"
+                            },
+                            {
+                              "const": "end",
+                              "type": "string"
+                            },
+                            {
+                              "const": "stretch",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "wrap": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
                 }
               }
             },
@@ -599,12 +2295,699 @@
                   "type": "number"
                 },
                 "width": {
-                  "exclusiveMinimum": 0,
-                  "type": "number"
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": ["mode"],
+                  "properties": {
+                    "mode": {
+                      "anyOf": [
+                        {
+                          "const": "hug",
+                          "type": "string"
+                        },
+                        {
+                          "const": "fill",
+                          "type": "string"
+                        },
+                        {
+                          "const": "fixed",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "size": {
+                      "anyOf": [
+                        {
+                          "exclusiveMinimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["unit", "value"],
+                          "properties": {
+                            "unit": {
+                              "const": "%",
+                              "type": "string"
+                            },
+                            "value": {
+                              "exclusiveMinimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "min": {
+                      "anyOf": [
+                        {
+                          "exclusiveMinimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["unit", "value"],
+                          "properties": {
+                            "unit": {
+                              "const": "%",
+                              "type": "string"
+                            },
+                            "value": {
+                              "exclusiveMinimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "max": {
+                      "anyOf": [
+                        {
+                          "exclusiveMinimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["unit", "value"],
+                          "properties": {
+                            "unit": {
+                              "const": "%",
+                              "type": "string"
+                            },
+                            "value": {
+                              "exclusiveMinimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
                 },
                 "height": {
-                  "exclusiveMinimum": 0,
-                  "type": "number"
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": ["mode"],
+                  "properties": {
+                    "mode": {
+                      "anyOf": [
+                        {
+                          "const": "hug",
+                          "type": "string"
+                        },
+                        {
+                          "const": "fill",
+                          "type": "string"
+                        },
+                        {
+                          "const": "fixed",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "size": {
+                      "anyOf": [
+                        {
+                          "exclusiveMinimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["unit", "value"],
+                          "properties": {
+                            "unit": {
+                              "const": "%",
+                              "type": "string"
+                            },
+                            "value": {
+                              "exclusiveMinimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "min": {
+                      "anyOf": [
+                        {
+                          "exclusiveMinimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["unit", "value"],
+                          "properties": {
+                            "unit": {
+                              "const": "%",
+                              "type": "string"
+                            },
+                            "value": {
+                              "exclusiveMinimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "max": {
+                      "anyOf": [
+                        {
+                          "exclusiveMinimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["unit", "value"],
+                          "properties": {
+                            "unit": {
+                              "const": "%",
+                              "type": "string"
+                            },
+                            "value": {
+                              "exclusiveMinimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                "direction": {
+                  "anyOf": [
+                    {
+                      "const": "row",
+                      "type": "string"
+                    },
+                    {
+                      "const": "column",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "gap": {
+                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                  "type": "string"
+                },
+                "padding": {
+                  "anyOf": [
+                    {
+                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                      "type": "string"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "properties": {
+                        "top": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "right": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "bottom": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "left": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "margin": {
+                  "anyOf": [
+                    {
+                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                      "type": "string"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "properties": {
+                        "top": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "right": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "bottom": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "left": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "justify": {
+                  "anyOf": [
+                    {
+                      "const": "start",
+                      "type": "string"
+                    },
+                    {
+                      "const": "center",
+                      "type": "string"
+                    },
+                    {
+                      "const": "end",
+                      "type": "string"
+                    },
+                    {
+                      "const": "space-between",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "align": {
+                  "anyOf": [
+                    {
+                      "const": "start",
+                      "type": "string"
+                    },
+                    {
+                      "const": "center",
+                      "type": "string"
+                    },
+                    {
+                      "const": "end",
+                      "type": "string"
+                    },
+                    {
+                      "const": "stretch",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "wrap": {
+                  "type": "boolean"
+                },
+                "breakpoints": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^[a-z][a-z0-9]*$": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "properties": {
+                        "position": {
+                          "anyOf": [
+                            {
+                              "const": "auto",
+                              "type": "string"
+                            },
+                            {
+                              "const": "absolute",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "x": {
+                          "type": "number"
+                        },
+                        "y": {
+                          "type": "number"
+                        },
+                        "width": {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["mode"],
+                          "properties": {
+                            "mode": {
+                              "anyOf": [
+                                {
+                                  "const": "hug",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "fill",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "fixed",
+                                  "type": "string"
+                                }
+                              ]
+                            },
+                            "size": {
+                              "anyOf": [
+                                {
+                                  "exclusiveMinimum": 0,
+                                  "type": "number"
+                                },
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": ["unit", "value"],
+                                  "properties": {
+                                    "unit": {
+                                      "const": "%",
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 100,
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "min": {
+                              "anyOf": [
+                                {
+                                  "exclusiveMinimum": 0,
+                                  "type": "number"
+                                },
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": ["unit", "value"],
+                                  "properties": {
+                                    "unit": {
+                                      "const": "%",
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 100,
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "max": {
+                              "anyOf": [
+                                {
+                                  "exclusiveMinimum": 0,
+                                  "type": "number"
+                                },
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": ["unit", "value"],
+                                  "properties": {
+                                    "unit": {
+                                      "const": "%",
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 100,
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "height": {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["mode"],
+                          "properties": {
+                            "mode": {
+                              "anyOf": [
+                                {
+                                  "const": "hug",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "fill",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "fixed",
+                                  "type": "string"
+                                }
+                              ]
+                            },
+                            "size": {
+                              "anyOf": [
+                                {
+                                  "exclusiveMinimum": 0,
+                                  "type": "number"
+                                },
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": ["unit", "value"],
+                                  "properties": {
+                                    "unit": {
+                                      "const": "%",
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 100,
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "min": {
+                              "anyOf": [
+                                {
+                                  "exclusiveMinimum": 0,
+                                  "type": "number"
+                                },
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": ["unit", "value"],
+                                  "properties": {
+                                    "unit": {
+                                      "const": "%",
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 100,
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "max": {
+                              "anyOf": [
+                                {
+                                  "exclusiveMinimum": 0,
+                                  "type": "number"
+                                },
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": ["unit", "value"],
+                                  "properties": {
+                                    "unit": {
+                                      "const": "%",
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 100,
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "direction": {
+                          "anyOf": [
+                            {
+                              "const": "row",
+                              "type": "string"
+                            },
+                            {
+                              "const": "column",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "gap": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "padding": {
+                          "anyOf": [
+                            {
+                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                              "type": "string"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "properties": {
+                                "top": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                "right": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                "bottom": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                "left": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "margin": {
+                          "anyOf": [
+                            {
+                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                              "type": "string"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "properties": {
+                                "top": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                "right": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                "bottom": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                "left": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "justify": {
+                          "anyOf": [
+                            {
+                              "const": "start",
+                              "type": "string"
+                            },
+                            {
+                              "const": "center",
+                              "type": "string"
+                            },
+                            {
+                              "const": "end",
+                              "type": "string"
+                            },
+                            {
+                              "const": "space-between",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "align": {
+                          "anyOf": [
+                            {
+                              "const": "start",
+                              "type": "string"
+                            },
+                            {
+                              "const": "center",
+                              "type": "string"
+                            },
+                            {
+                              "const": "end",
+                              "type": "string"
+                            },
+                            {
+                              "const": "stretch",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "wrap": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
                 }
               }
             },
@@ -712,12 +3095,699 @@
                   "type": "number"
                 },
                 "width": {
-                  "exclusiveMinimum": 0,
-                  "type": "number"
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": ["mode"],
+                  "properties": {
+                    "mode": {
+                      "anyOf": [
+                        {
+                          "const": "hug",
+                          "type": "string"
+                        },
+                        {
+                          "const": "fill",
+                          "type": "string"
+                        },
+                        {
+                          "const": "fixed",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "size": {
+                      "anyOf": [
+                        {
+                          "exclusiveMinimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["unit", "value"],
+                          "properties": {
+                            "unit": {
+                              "const": "%",
+                              "type": "string"
+                            },
+                            "value": {
+                              "exclusiveMinimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "min": {
+                      "anyOf": [
+                        {
+                          "exclusiveMinimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["unit", "value"],
+                          "properties": {
+                            "unit": {
+                              "const": "%",
+                              "type": "string"
+                            },
+                            "value": {
+                              "exclusiveMinimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "max": {
+                      "anyOf": [
+                        {
+                          "exclusiveMinimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["unit", "value"],
+                          "properties": {
+                            "unit": {
+                              "const": "%",
+                              "type": "string"
+                            },
+                            "value": {
+                              "exclusiveMinimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
                 },
                 "height": {
-                  "exclusiveMinimum": 0,
-                  "type": "number"
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": ["mode"],
+                  "properties": {
+                    "mode": {
+                      "anyOf": [
+                        {
+                          "const": "hug",
+                          "type": "string"
+                        },
+                        {
+                          "const": "fill",
+                          "type": "string"
+                        },
+                        {
+                          "const": "fixed",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "size": {
+                      "anyOf": [
+                        {
+                          "exclusiveMinimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["unit", "value"],
+                          "properties": {
+                            "unit": {
+                              "const": "%",
+                              "type": "string"
+                            },
+                            "value": {
+                              "exclusiveMinimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "min": {
+                      "anyOf": [
+                        {
+                          "exclusiveMinimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["unit", "value"],
+                          "properties": {
+                            "unit": {
+                              "const": "%",
+                              "type": "string"
+                            },
+                            "value": {
+                              "exclusiveMinimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "max": {
+                      "anyOf": [
+                        {
+                          "exclusiveMinimum": 0,
+                          "type": "number"
+                        },
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["unit", "value"],
+                          "properties": {
+                            "unit": {
+                              "const": "%",
+                              "type": "string"
+                            },
+                            "value": {
+                              "exclusiveMinimum": 0,
+                              "maximum": 100,
+                              "type": "number"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                "direction": {
+                  "anyOf": [
+                    {
+                      "const": "row",
+                      "type": "string"
+                    },
+                    {
+                      "const": "column",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "gap": {
+                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                  "type": "string"
+                },
+                "padding": {
+                  "anyOf": [
+                    {
+                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                      "type": "string"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "properties": {
+                        "top": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "right": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "bottom": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "left": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "margin": {
+                  "anyOf": [
+                    {
+                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                      "type": "string"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "properties": {
+                        "top": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "right": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "bottom": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "left": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "justify": {
+                  "anyOf": [
+                    {
+                      "const": "start",
+                      "type": "string"
+                    },
+                    {
+                      "const": "center",
+                      "type": "string"
+                    },
+                    {
+                      "const": "end",
+                      "type": "string"
+                    },
+                    {
+                      "const": "space-between",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "align": {
+                  "anyOf": [
+                    {
+                      "const": "start",
+                      "type": "string"
+                    },
+                    {
+                      "const": "center",
+                      "type": "string"
+                    },
+                    {
+                      "const": "end",
+                      "type": "string"
+                    },
+                    {
+                      "const": "stretch",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "wrap": {
+                  "type": "boolean"
+                },
+                "breakpoints": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^[a-z][a-z0-9]*$": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "properties": {
+                        "position": {
+                          "anyOf": [
+                            {
+                              "const": "auto",
+                              "type": "string"
+                            },
+                            {
+                              "const": "absolute",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "x": {
+                          "type": "number"
+                        },
+                        "y": {
+                          "type": "number"
+                        },
+                        "width": {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["mode"],
+                          "properties": {
+                            "mode": {
+                              "anyOf": [
+                                {
+                                  "const": "hug",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "fill",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "fixed",
+                                  "type": "string"
+                                }
+                              ]
+                            },
+                            "size": {
+                              "anyOf": [
+                                {
+                                  "exclusiveMinimum": 0,
+                                  "type": "number"
+                                },
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": ["unit", "value"],
+                                  "properties": {
+                                    "unit": {
+                                      "const": "%",
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 100,
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "min": {
+                              "anyOf": [
+                                {
+                                  "exclusiveMinimum": 0,
+                                  "type": "number"
+                                },
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": ["unit", "value"],
+                                  "properties": {
+                                    "unit": {
+                                      "const": "%",
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 100,
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "max": {
+                              "anyOf": [
+                                {
+                                  "exclusiveMinimum": 0,
+                                  "type": "number"
+                                },
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": ["unit", "value"],
+                                  "properties": {
+                                    "unit": {
+                                      "const": "%",
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 100,
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "height": {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["mode"],
+                          "properties": {
+                            "mode": {
+                              "anyOf": [
+                                {
+                                  "const": "hug",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "fill",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "fixed",
+                                  "type": "string"
+                                }
+                              ]
+                            },
+                            "size": {
+                              "anyOf": [
+                                {
+                                  "exclusiveMinimum": 0,
+                                  "type": "number"
+                                },
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": ["unit", "value"],
+                                  "properties": {
+                                    "unit": {
+                                      "const": "%",
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 100,
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "min": {
+                              "anyOf": [
+                                {
+                                  "exclusiveMinimum": 0,
+                                  "type": "number"
+                                },
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": ["unit", "value"],
+                                  "properties": {
+                                    "unit": {
+                                      "const": "%",
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 100,
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "max": {
+                              "anyOf": [
+                                {
+                                  "exclusiveMinimum": 0,
+                                  "type": "number"
+                                },
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "required": ["unit", "value"],
+                                  "properties": {
+                                    "unit": {
+                                      "const": "%",
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 100,
+                                      "type": "number"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "direction": {
+                          "anyOf": [
+                            {
+                              "const": "row",
+                              "type": "string"
+                            },
+                            {
+                              "const": "column",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "gap": {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        "padding": {
+                          "anyOf": [
+                            {
+                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                              "type": "string"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "properties": {
+                                "top": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                "right": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                "bottom": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                "left": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "margin": {
+                          "anyOf": [
+                            {
+                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                              "type": "string"
+                            },
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "properties": {
+                                "top": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                "right": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                "bottom": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                "left": {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "justify": {
+                          "anyOf": [
+                            {
+                              "const": "start",
+                              "type": "string"
+                            },
+                            {
+                              "const": "center",
+                              "type": "string"
+                            },
+                            {
+                              "const": "end",
+                              "type": "string"
+                            },
+                            {
+                              "const": "space-between",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "align": {
+                          "anyOf": [
+                            {
+                              "const": "start",
+                              "type": "string"
+                            },
+                            {
+                              "const": "center",
+                              "type": "string"
+                            },
+                            {
+                              "const": "end",
+                              "type": "string"
+                            },
+                            {
+                              "const": "stretch",
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "wrap": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
                 }
               }
             },

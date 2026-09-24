@@ -25,6 +25,7 @@ export {
   type TextNode,
 } from './flat.js';
 export { createId, ID_PATTERN, TAG_PATTERN } from './ids.js';
+export { canonicalizeLayout, layoutTokenRefs, parseLayout } from './layout.js';
 export {
   defaultKinds,
   defaultNestingRules,
@@ -54,8 +55,19 @@ export {
   type FontFamily,
   type FontSource,
   type FontStyle,
+  type AxisSize,
   type Layout,
+  type LayoutOverride,
   type NestedNode,
+  type SizeValue,
+  type Spacing,
+  type SpacingBox,
+  type StyleBlock,
+  type StyleChild,
+  type StyleDeclarations,
+  type StyleLayer,
+  type StyleStates,
+  type TokenInterface,
   type TokenType,
   type VariantAxis,
 } from './schema.js';
@@ -76,6 +88,17 @@ export {
   type TokenTree,
 } from './token-tree.js';
 export { type DocumentChange, type DocumentStore } from './store.js';
+export {
+  assertStyleContract,
+  assertStyleMap,
+  canonicalizeStyleBlock,
+  canonicalizeTokenInterface,
+  collectTokenRefs,
+  isFontFamilyRef,
+  parseStyleBlock,
+  parseTokenInterface,
+  refsInText,
+} from './style-block.js';
 export {
   assertFieldDefinition,
   assertVariantAxis,

@@ -148,10 +148,10 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 
 ### M3 – Style-Engine und Renderer
 
-- [ ] `style-engine` auf Basis von style-controller, Bugs beheben, Tests
-- [ ] Stil-Block pro Komponente mit Varianten, Zuständen und Breakpoint-Overrides
-- [ ] Komponenten setzen/überschreiben Tokens für Kinder
-- [ ] `renderer-dom`: gezielte Updates pro Knoten statt Neurendern
+- [x] `style-engine` auf Basis von style-controller, Bugs beheben, Tests
+- [x] Stil-Block pro Komponente mit Varianten, Zuständen und Breakpoint-Overrides
+- [x] Komponenten setzen/überschreiben Tokens für Kinder
+- [x] `renderer-dom`: gezielte Updates pro Knoten statt Neurendern
 
 ### M4 – Viewports mit iframes
 
@@ -223,3 +223,8 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 - 2026-09-24: Die Strukturprüfung des DTCG-Baums (`readTokenTree`) liegt in `core`, damit Schema, Katalog und Befehle denselben Baum ablehnen, ohne die CSS-Ausgabe einzubinden. Referenzauflösung und CSS bleiben in `@facadeur/tokens`. Der Store ruft sie vor dem Commit auf. Ein rekursives TypeBox-Schema für den Baum hat den Static-Typ des Dokuments zerstört; das JSON Schema beschreibt den Knoten deshalb über `$defs`, die Typen bleiben in TypeScript von Hand.
 - 2026-09-24: Unterstützte `$type`-Werte sind `color`, `dimension`, `number`, `fontFamily`, `fontWeight`, `shadow`, `typography`. Der übrige DTCG-Katalog (duration, cubicBezier, gradient, …) kommt dazu, wenn ein Stil ihn braucht.
 - 2026-09-24: `packages/editor` hängt das Stylesheet der Projektvorlage als `<style id="facadeur-tokens">` ein, damit die Custom Properties in der Specimen-Seite sichtbar sind. Die Bühne wendet sie noch nicht auf Knoten an; das bleibt die Style-Engine in M3.
+- 2026-09-24: M3. `packages/style-engine` übernimmt `StyleController` und `Rule` aus style-controller, ohne das npm- oder Webpack-Build. Kinder, die an `insert` übergeben werden, landen als eigene Regeln im selben Stylesheet; der Selektor ist Eltern-Selektor plus Kind-Selektor. CSS-Nesting (`CSSStyleRule.insertRule`) entfällt, damit dasselbe Verhalten in jsdom und später pro iframe gilt. `delete` entfernt nur bei Index `>= 0`. Regeln werden ans Ende angehängt, nicht an Index 0, damit die Kaskade der Einfügereihenfolge folgt. Der Konstruktor nimmt ein `Document`, ein `HTMLStyleElement` oder `{ document, styleElement }`.
+- 2026-09-24: Der Stil-Block heißt im Dokument `styles`, damit er nicht mit `node.style` (`setStyle`) kollidiert. Zustände sind `hover`, `focus-visible`, `disabled`. `font: "{type.body}"` wird zu den Typo-Longhands. `tokenInterface.reads` muss jede Token-Referenz aus Stil-Block und Layout enthalten; `sets` schreibt die Custom Property auf die Komponentenwurzel, Kinder erben sie. `{font.<id>}` ist eine Schrift und kein Read. `node.style` überschreibt die Basisdeklaration derselben Eigenschaft; Zustände, Varianten und Breakpoints bleiben darüber. `setStyleBlock` und `setTokenInterface` ersetzen den Block als ein Befehl.
+- 2026-09-24: Frames sind Flexbox. Die Standardrichtung ist `column` (die CSS-Anfangrichtung wäre `row`; Sektionen, Karten und Formulare stapeln). `gap`, `padding` und `margin` sind nur Token-Referenzen. `width` und `height` sind `{ mode: hug | fill | fixed }`, nicht mehr nackte Pixel. `fixed.size` ist px, ein Token oder `{ unit: "%", value }`. Absolut nur bei `position: "absolute"`. Breakpoint-Overrides werden `@media (min-width)` ab dem nächstgrößeren Breakpoint; die Basis bleibt ohne Query. Fill/Hug eines Kindes wird gegen die Basis-Richtung des Eltern-Frames berechnet, nicht gegen eine Richtung, die erst in einer Query gilt. Die Beispiele nutzen Auto Layout; absolute Platzierung bleibt im Schema und im Konvertierungstest die ausdrückliche Ausnahme.
+- 2026-09-24: Der Renderer schreibt `data-node` (lokale Id) und patched über `data-id`. `setStyle` und Layout-Änderungen bauen das Element nicht neu. `DocumentStore`-Events aktualisieren den betroffenen Teilbaum. Die Bühne erzeugt die Style-Engine auf `document` und malt das Specimen daraus. Die früheren Klassen-Styles für Button, Input und Card in `styles.css` entfallen.
+- 2026-09-24: `data-id` enthält jedes Frame unter der Instanz (`specimen-section/intro/heading`). Das Wurzel-Frame der Komponente ist das Instanz-Element und fügt kein zweites `root` an. Ein Stylesheet braucht einen Browsing Context: `createHTMLDocument()` hat in jsdom keins, ein iframe-Dokument schon. Die Engine hängt ihr `<style>` an das übergebene `Document` und läuft später einmal pro iframe.

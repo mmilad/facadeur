@@ -10,6 +10,7 @@ export default defineConfig({
       '@facadeur/store-yjs': `${root}packages/store-yjs/src/index.ts`,
       '@facadeur/renderer-dom': `${root}packages/renderer-dom/src/index.ts`,
       '@facadeur/tokens': `${root}packages/tokens/src/index.ts`,
+      '@facadeur/style-engine': `${root}packages/style-engine/src/index.ts`,
     },
   },
   test: {

@@ -8,31 +8,85 @@
     { "name": "title", "type": "text", "default": "Title" },
     { "name": "body", "type": "text", "default": "" }
   ],
+  "tokenInterface": {
+    "reads": [
+      "card.color.bg",
+      "card.color.border",
+      "card.gap",
+      "card.padding",
+      "card.radius",
+      "card.shadow",
+      "color.accent.default",
+      "color.text.primary",
+      "color.text.secondary",
+      "space.0",
+      "type.body",
+      "type.caption",
+      "type.title"
+    ]
+  },
+  "styles": {
+    "declarations": {
+      "background": "{card.color.bg}",
+      "border": "1px solid {card.color.border}",
+      "borderRadius": "{card.radius}",
+      "boxShadow": "{card.shadow}"
+    },
+    "children": {
+      "body": {
+        "declarations": {
+          "color": "{color.text.secondary}",
+          "font": "{type.body}",
+          "margin": "{space.0}"
+        }
+      },
+      "eyebrow": {
+        "declarations": {
+          "color": "{color.accent.default}",
+          "font": "{type.caption}",
+          "letterSpacing": "0.16em",
+          "margin": "{space.0}",
+          "textTransform": "uppercase"
+        }
+      },
+      "title": {
+        "declarations": {
+          "color": "{color.text.primary}",
+          "font": "{type.title}",
+          "margin": "{space.0}"
+        }
+      }
+    }
+  },
   "root": {
     "id": "root",
     "type": "frame",
     "tag": "article",
-    "attributes": { "class": "ds-card" },
+    "layout": {
+      "direction": "column",
+      "align": "stretch",
+      "gap": "{card.gap}",
+      "padding": "{card.padding}",
+      "width": { "mode": "fill" },
+      "height": { "mode": "hug" }
+    },
     "children": [
       {
         "id": "eyebrow",
         "type": "text",
         "tag": "p",
-        "attributes": { "class": "ds-card__eyebrow" },
         "bindings": [{ "field": "eyebrow", "target": "text" }]
       },
       {
         "id": "title",
         "type": "text",
         "tag": "h2",
-        "attributes": { "class": "ds-card__title" },
         "bindings": [{ "field": "title", "target": "text" }]
       },
       {
         "id": "body",
         "type": "text",
         "tag": "p",
-        "attributes": { "class": "ds-card__body" },
         "bindings": [{ "field": "body", "target": "text" }]
       }
     ]
