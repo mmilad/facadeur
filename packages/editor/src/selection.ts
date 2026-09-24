@@ -1,11 +1,16 @@
 import type { RenderedNode } from '@facadeur/renderer-dom';
+import { overlayBox, pointInFrame, type OverlayBox } from './geometry.js';
+import type { ViewportFrame } from './viewports.js';
 
 const HANDLES = ['nw', 'ne', 'sw', 'se'];
 
 export interface SelectionController {
-  setNodes: (next: Map<string, RenderedNode>) => void;
   select: (id: string) => void;
   clear: () => void;
+  /** Node under the pointer, if it sits inside a viewport frame. */
+  hitAt: (clientX: number, clientY: number) => { id: string } | null;
+  hoverAt: (clientX: number, clientY: number) => void;
+  clearHover: () => void;
   reposition: () => void;
 }
 
@@ -13,58 +18,161 @@ export function createSelection({
   stage,
   inspector,
   getScale,
+  frames,
 }: {
   stage: HTMLElement;
   inspector: HTMLElement;
   getScale: () => number;
+  frames: () => readonly ViewportFrame[];
 }): SelectionController {
-  const box = document.createElement('div');
-  box.className = 'selection-box';
-  box.hidden = true;
-  for (const name of HANDLES) {
-    const handle = document.createElement('span');
-    handle.className = `handle handle-${name}`;
-    box.append(handle);
-  }
-  stage.append(box);
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay-layer';
+  stage.append(overlay);
 
-  let nodes = new Map<string, RenderedNode>();
-  let selectedEl: HTMLElement | null = null;
+  const hover = document.createElement('div');
+  hover.className = 'hover-box';
+  hover.hidden = true;
+  overlay.append(hover);
+
+  const selectionBoxes: HTMLDivElement[] = [];
+  let selectedId: string | null = null;
+  let hoverId: string | null = null;
+  let hoverFrameId: string | null = null;
 
   function select(id: string) {
-    const record = nodes.get(id);
-    const el = stage.querySelector(byId(id));
-    if (!record || !(el instanceof HTMLElement)) {
+    const record = recordFor(id);
+    if (!record) {
       clear();
       return;
     }
-    if (selectedEl) delete selectedEl.dataset.selected;
-    selectedEl = el;
-    el.dataset.selected = 'true';
-    placeBox();
+    selectedId = id;
+    if (hoverId === id) clearHover();
+    placeBoxes();
     renderInspector(record);
   }
 
   function clear() {
-    if (selectedEl) delete selectedEl.dataset.selected;
-    selectedEl = null;
-    box.hidden = true;
+    selectedId = null;
+    for (const box of selectionBoxes) box.hidden = true;
     renderInspector(null);
   }
 
-  function placeBox() {
-    if (!selectedEl) {
-      box.hidden = true;
+  function hitAt(clientX: number, clientY: number): { id: string } | null {
+    const scale = getScale() || 1;
+    for (const frame of frames()) {
+      const rect = frame.host.element.getBoundingClientRect();
+      const local = pointInFrame({ clientX, clientY, frame: rect, scale });
+      if (!local) continue;
+      const target = frame.host.contentDocument().elementFromPoint(local.x, local.y);
+      const node = isHtmlElement(target) ? target.closest('[data-id]') : null;
+      if (!isHtmlElement(node) || !node.dataset.id) return null;
+      return { id: node.dataset.id };
+    }
+    return null;
+  }
+
+  function hoverAt(clientX: number, clientY: number) {
+    const hit = hitAt(clientX, clientY);
+    if (!hit || hit.id === selectedId) {
+      clearHover();
       return;
     }
+    const frame = frameUnder(clientX, clientY);
+    hoverId = hit.id;
+    hoverFrameId = frame?.host.id ?? null;
+    placeHover();
+  }
+
+  function clearHover() {
+    hoverId = null;
+    hoverFrameId = null;
+    hover.hidden = true;
+  }
+
+  function placeBoxes() {
     const scale = getScale() || 1;
     const origin = stage.getBoundingClientRect();
-    const rect = selectedEl.getBoundingClientRect();
-    box.hidden = false;
-    box.style.left = `${(rect.left - origin.left) / scale}px`;
-    box.style.top = `${(rect.top - origin.top) / scale}px`;
-    box.style.width = `${rect.width / scale}px`;
-    box.style.height = `${rect.height / scale}px`;
+    const list = frames();
+    const id = selectedId;
+    if (!id) {
+      for (const box of selectionBoxes) box.hidden = true;
+      return;
+    }
+    list.forEach((frame, index) => {
+      const box = selectionBox(index);
+      const node = frame.host.contentDocument().querySelector(byId(id));
+      if (!isHtmlElement(node)) {
+        box.hidden = true;
+        return;
+      }
+      place(box, boxFor(node, frame, origin, scale));
+    });
+    for (let index = list.length; index < selectionBoxes.length; index += 1) {
+      const extra = selectionBoxes[index];
+      if (extra) extra.hidden = true;
+    }
+    placeHover();
+  }
+
+  function placeHover() {
+    if (!hoverId || !hoverFrameId || hoverId === selectedId) {
+      hover.hidden = true;
+      return;
+    }
+    const frame = frames().find((item) => item.host.id === hoverFrameId);
+    const node = frame?.host.contentDocument().querySelector(byId(hoverId));
+    if (!frame || !isHtmlElement(node)) {
+      hover.hidden = true;
+      return;
+    }
+    place(hover, boxFor(node, frame, stage.getBoundingClientRect(), getScale() || 1));
+  }
+
+  function recordFor(id: string): RenderedNode | undefined {
+    for (const frame of frames()) {
+      const record = frame.renderer.records.get(id);
+      if (record) return record;
+    }
+    return undefined;
+  }
+
+  function frameUnder(clientX: number, clientY: number): ViewportFrame | undefined {
+    const scale = getScale() || 1;
+    return frames().find((frame) => {
+      const rect = frame.host.element.getBoundingClientRect();
+      return pointInFrame({ clientX, clientY, frame: rect, scale }) !== null;
+    });
+  }
+
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') clear();
+  });
+
+  renderInspector(null);
+
+  return {
+    select,
+    clear,
+    hitAt,
+    hoverAt,
+    clearHover,
+    reposition: placeBoxes,
+  };
+
+  function selectionBox(index: number): HTMLDivElement {
+    const existing = selectionBoxes[index];
+    if (existing) return existing;
+    const box = document.createElement('div');
+    box.className = 'selection-box';
+    box.hidden = true;
+    for (const name of HANDLES) {
+      const handle = document.createElement('span');
+      handle.className = `handle handle-${name}`;
+      box.append(handle);
+    }
+    overlay.append(box);
+    selectionBoxes[index] = box;
+    return box;
   }
 
   function renderInspector(record: RenderedNode | null) {
@@ -72,7 +180,7 @@ export function createSelection({
     if (!record) {
       const empty = document.createElement('p');
       empty.className = 'inspector-empty';
-      empty.textContent = 'Nothing selected. Click an element on the stage.';
+      empty.textContent = 'Nothing selected. Click an element in a viewport.';
       inspector.append(empty);
       return;
     }
@@ -105,47 +213,39 @@ export function createSelection({
       inspector.append(objectList(record.attributes));
     }
   }
+}
 
-  let downId: string | null = null;
-  let downX = 0;
-  let downY = 0;
+/** Iframe nodes fail `instanceof` against the editor realm. nodeType is shared. */
+function isHtmlElement(value: unknown): value is HTMLElement {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'nodeType' in value &&
+    (value as Node).nodeType === Node.ELEMENT_NODE &&
+    'dataset' in value
+  );
+}
 
-  stage.addEventListener('pointerdown', (event) => {
-    if (event.button !== 0) return;
-    const hit = event.target instanceof Element ? event.target.closest('[data-id]') : null;
-    if (!(hit instanceof HTMLElement) || !stage.contains(hit)) {
-      downId = null;
-      return;
-    }
-    downId = hit.dataset.id ?? null;
-    downX = event.clientX;
-    downY = event.clientY;
+function boxFor(
+  node: HTMLElement,
+  frame: ViewportFrame,
+  stage: DOMRect,
+  scale: number,
+): OverlayBox {
+  return overlayBox({
+    element: node.getBoundingClientRect(),
+    frame: frame.host.element.getBoundingClientRect(),
+    stage,
+    scale,
   });
+}
 
-  stage.addEventListener('pointerup', (event) => {
-    if (!downId) return;
-    const hit = event.target instanceof Element ? event.target.closest('[data-id]') : null;
-    const sameTarget = hit instanceof HTMLElement && hit.dataset.id === downId;
-    const still = Math.hypot(event.clientX - downX, event.clientY - downY) < 4;
-    const id = downId;
-    downId = null;
-    if (sameTarget && still) select(id);
-  });
-
-  window.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') clear();
-  });
-
-  renderInspector(null);
-
-  return {
-    setNodes(next) {
-      nodes = next;
-    },
-    select,
-    clear,
-    reposition: placeBox,
-  };
+function place(el: HTMLElement, box: OverlayBox) {
+  el.hidden = false;
+  el.style.left = `${box.x}px`;
+  el.style.top = `${box.y}px`;
+  el.style.width = `${box.width}px`;
+  el.style.height = `${box.height}px`;
 }
 
 function byId(id: string): string {

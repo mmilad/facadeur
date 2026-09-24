@@ -1,6 +1,6 @@
 /**
  * Fixed viewport over a stage positioned with CSS translate + scale.
- * Pan by dragging empty canvas. Zoom with the wheel, toward the cursor.
+ * Pan by dragging, including over viewport frames. Zoom with the wheel, toward the cursor.
  * The dot grid is a viewport background locked to the same tx/ty/scale.
  */
 
@@ -18,9 +18,12 @@ export interface StageState {
 
 export interface StageController {
   getScale: () => number;
+  /** True after the pointer has moved far enough to pan, until it is released. */
+  isPanning: () => boolean;
   setTransform: (nextScale: number, nextTx: number, nextTy: number) => void;
   onChange: (listener: (state: StageState) => void) => () => void;
-  onBackgroundClick: (listener: () => void) => () => void;
+  /** A press that did not turn into a pan. The listener decides select versus clear. */
+  onClick: (listener: (event: PointerEvent) => void) => () => void;
   fit: (element: HTMLElement, padding?: number) => void;
 }
 
@@ -29,7 +32,7 @@ export function createStage(viewport: HTMLElement, stage: HTMLElement): StageCon
   let tx = 0;
   let ty = 0;
   const listeners = new Set<(state: StageState) => void>();
-  const backgroundClicks = new Set<() => void>();
+  const clicks = new Set<(event: PointerEvent) => void>();
 
   let dragging = false;
   let moved = false;
@@ -84,14 +87,12 @@ export function createStage(viewport: HTMLElement, stage: HTMLElement): StageCon
 
   function onPointerDown(event: PointerEvent) {
     if (event.button !== 0) return;
-    if (event.target instanceof Element && event.target.closest('[data-id]')) return;
     dragging = true;
     moved = false;
     startX = event.clientX;
     startY = event.clientY;
     originTx = tx;
     originTy = ty;
-    viewport.classList.add('is-panning');
     viewport.setPointerCapture(event.pointerId);
   }
 
@@ -101,6 +102,7 @@ export function createStage(viewport: HTMLElement, stage: HTMLElement): StageCon
     const dy = event.clientY - startY;
     if (!moved && Math.hypot(dx, dy) < 4) return;
     moved = true;
+    viewport.classList.add('is-panning');
     tx = originTx + dx;
     ty = originTy + dy;
     apply();
@@ -115,7 +117,7 @@ export function createStage(viewport: HTMLElement, stage: HTMLElement): StageCon
       viewport.releasePointerCapture(event.pointerId);
     }
     if (wasClick) {
-      for (const listener of backgroundClicks) listener();
+      for (const listener of clicks) listener(event);
     }
   }
 
@@ -131,15 +133,18 @@ export function createStage(viewport: HTMLElement, stage: HTMLElement): StageCon
     getScale() {
       return scale;
     },
+    isPanning() {
+      return dragging && moved;
+    },
     setTransform,
     onChange(listener) {
       listeners.add(listener);
       listener({ scale, tx, ty });
       return () => listeners.delete(listener);
     },
-    onBackgroundClick(listener) {
-      backgroundClicks.add(listener);
-      return () => backgroundClicks.delete(listener);
+    onClick(listener) {
+      clicks.add(listener);
+      return () => clicks.delete(listener);
     },
     fit(element, padding = 72) {
       const vw = viewport.clientWidth;

@@ -67,7 +67,7 @@ export function createRenderContext(documents: readonly DocumentFile[]): RenderC
 
 /**
  * Paint a document's root children into `parent`.
- * The root frame itself stays the canvas (the editor draws the artboard around it).
+ * The root frame itself stays the canvas (the editor draws viewport frames around it).
  * A non-frame root is painted directly.
  */
 export function renderDocument(
@@ -81,8 +81,12 @@ export function renderDocument(
   return ctx.records;
 }
 
-export function renderNode(node: NestedNode, ctx: RenderContext): HTMLElement {
-  const el = elementFor(tagFor(node, ctx));
+export function renderNode(
+  node: NestedNode,
+  ctx: RenderContext,
+  owner: Document = document,
+): HTMLElement {
+  const el = elementFor(tagFor(node, ctx), owner);
   paint(el, node, ctx);
   return el;
 }
@@ -171,7 +175,7 @@ function repaintComponent(parent: HTMLElement, componentId: string, ctx: RenderC
   const selector = `[data-component="${cssString(componentId)}"]`;
   const elements = [...parent.querySelectorAll(selector)];
   for (const el of elements) {
-    if (!(el instanceof HTMLElement) || !el.dataset.id) continue;
+    if (!isHtmlElement(el) || !el.dataset.id) continue;
     const resolved = resolveInstance(el.dataset.id, ctx);
     if (!resolved) continue;
     const childCtx: RenderContext = {
@@ -184,7 +188,7 @@ function repaintComponent(parent: HTMLElement, componentId: string, ctx: RenderC
     const tag = tagFor(resolved.instance, childCtx);
     let target = el;
     if (el.tagName.toLowerCase() !== tag) {
-      const replacement = elementFor(tag);
+      const replacement = elementFor(tag, el.ownerDocument);
       el.replaceWith(replacement);
       target = replacement;
     }
@@ -409,7 +413,7 @@ function reconcileChildren(
 ): void {
   const existing = new Map<string, HTMLElement>();
   for (const child of [...parent.children]) {
-    if (child instanceof HTMLElement && child.dataset.id) existing.set(child.dataset.id, child);
+    if (isHtmlElement(child) && child.dataset.id) existing.set(child.dataset.id, child);
   }
   const next: HTMLElement[] = [];
   for (const child of children) {
@@ -421,7 +425,7 @@ function reconcileChildren(
       el.remove();
       el = undefined;
     }
-    if (!el) el = elementFor(tag);
+    if (!el) el = elementFor(tag, parent.ownerDocument);
     existing.delete(id);
     paint(el, child, ctx);
     next.push(el);
@@ -442,8 +446,20 @@ function tagFor(node: NestedNode, ctx: RenderContext): string {
   return definition.root.tag ?? 'div';
 }
 
-function elementFor(tag: string): HTMLElement {
-  return document.createElement(tag);
+/**
+ * Elements are born in the parent's document so an iframe renderer stays inside that frame.
+ * `instanceof HTMLElement` is false for those nodes in the parent realm, so checks use nodeType.
+ */
+function elementFor(tag: string, owner: Document): HTMLElement {
+  return owner.createElement(tag);
+}
+
+function isHtmlElement(value: unknown): value is HTMLElement {
+  return isNode(value) && value.nodeType === Node.ELEMENT_NODE && 'dataset' in value;
+}
+
+function isNode(value: unknown): value is Node {
+  return typeof value === 'object' && value !== null && 'nodeType' in value;
 }
 
 function syncLeadText(parent: HTMLElement, text: string | null): void {
@@ -459,7 +475,7 @@ function syncLeadText(parent: HTMLElement, text: string | null): void {
     if (parent.firstChild !== first) parent.insertBefore(first, parent.firstChild);
     return;
   }
-  parent.insertBefore(document.createTextNode(text), parent.firstChild);
+  parent.insertBefore(parent.ownerDocument.createTextNode(text), parent.firstChild);
 }
 
 function syncVariants(el: HTMLElement, variants: Record<string, string>): void {
