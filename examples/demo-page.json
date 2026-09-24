@@ -1,0 +1,156 @@
+{
+  "id": "specimen",
+  "name": "Specimen",
+  "artboard": {
+    "width": 1040,
+    "height": 860
+  },
+  "children": [
+    {
+      "id": "kicker",
+      "tagName": "p",
+      "text": "facadeur",
+      "attributes": { "class": "spec-kicker" },
+      "x": 56,
+      "y": 40
+    },
+    {
+      "id": "heading",
+      "tagName": "h1",
+      "text": "Specimen",
+      "attributes": { "class": "spec-title" },
+      "x": 56,
+      "y": 64
+    },
+    {
+      "id": "lede",
+      "tagName": "p",
+      "text": "Button, input, and card. Each one is a JSON node rendered to real DOM.",
+      "attributes": { "class": "spec-lede" },
+      "x": 56,
+      "y": 136,
+      "width": 480
+    },
+    {
+      "id": "label-button",
+      "tagName": "p",
+      "text": "Button",
+      "attributes": { "class": "spec-label" },
+      "x": 56,
+      "y": 200
+    },
+    {
+      "id": "btn-primary",
+      "type": "button",
+      "x": 56,
+      "y": 232,
+      "props": { "label": "Primary" },
+      "variants": { "tone": "primary", "size": "md" }
+    },
+    {
+      "id": "btn-secondary",
+      "type": "button",
+      "x": 188,
+      "y": 232,
+      "props": { "label": "Secondary" },
+      "variants": { "tone": "secondary", "size": "md" }
+    },
+    {
+      "id": "btn-ghost",
+      "type": "button",
+      "x": 348,
+      "y": 232,
+      "props": { "label": "Ghost" },
+      "variants": { "tone": "ghost", "size": "md" }
+    },
+    {
+      "id": "btn-small",
+      "type": "button",
+      "x": 470,
+      "y": 237,
+      "props": { "label": "Small" },
+      "variants": { "tone": "primary", "size": "sm" }
+    },
+    {
+      "id": "label-input",
+      "tagName": "p",
+      "text": "Input",
+      "attributes": { "class": "spec-label" },
+      "x": 56,
+      "y": 316
+    },
+    {
+      "id": "input-email",
+      "type": "input",
+      "x": 56,
+      "y": 348,
+      "width": 300,
+      "props": {
+        "label": "Email",
+        "value": "ada@atelier.test",
+        "name": "email"
+      }
+    },
+    {
+      "id": "input-search",
+      "type": "input",
+      "x": 380,
+      "y": 348,
+      "width": 300,
+      "props": {
+        "label": "Search",
+        "placeholder": "Search components",
+        "name": "q"
+      }
+    },
+    {
+      "id": "label-card",
+      "tagName": "p",
+      "text": "Card",
+      "attributes": { "class": "spec-label" },
+      "x": 56,
+      "y": 468
+    },
+    {
+      "id": "card-notes",
+      "type": "card",
+      "x": 56,
+      "y": 500,
+      "width": 420,
+      "props": {
+        "eyebrow": "Layout",
+        "title": "Field notes",
+        "body": "Props fill the template. Click the title, or click the card padding to select the card itself."
+      }
+    },
+    {
+      "id": "card-signin",
+      "type": "card",
+      "x": 524,
+      "y": 500,
+      "width": 460,
+      "props": {
+        "eyebrow": "Composition",
+        "title": "Sign in",
+        "body": "Children stay JSON. This card nests an input and a button."
+      },
+      "children": [
+        {
+          "id": "signin-email",
+          "type": "input",
+          "props": {
+            "label": "Work email",
+            "value": "ada@atelier.test",
+            "name": "work-email"
+          }
+        },
+        {
+          "id": "signin-continue",
+          "type": "button",
+          "props": { "label": "Continue" },
+          "variants": { "tone": "primary", "size": "sm" }
+        }
+      ]
+    }
+  ]
+}
