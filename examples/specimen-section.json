@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "id": "specimen-section",
+  "name": "Specimen section",
+  "kind": "section",
+  "root": {
+    "id": "root",
+    "type": "frame",
+    "tag": "div",
+    "layout": { "width": 1040, "height": 860 },
+    "children": [
+      {
+        "id": "kicker",
+        "type": "text",
+        "tag": "p",
+        "text": "facadeur",
+        "attributes": { "class": "spec-kicker" },
+        "layout": { "position": "absolute", "x": 56, "y": 40 }
+      },
+      {
+        "id": "heading",
+        "type": "text",
+        "tag": "h1",
+        "text": "Specimen",
+        "attributes": { "class": "spec-title" },
+        "layout": { "position": "absolute", "x": 56, "y": 64 }
+      },
+      {
+        "id": "lede",
+        "type": "text",
+        "tag": "p",
+        "text": "Button, input, and card. Each one is a JSON node rendered to real DOM.",
+        "attributes": { "class": "spec-lede" },
+        "layout": { "position": "absolute", "x": 56, "y": 136, "width": 480 }
+      },
+      {
+        "id": "label-button",
+        "type": "text",
+        "tag": "p",
+        "text": "Button",
+        "attributes": { "class": "spec-label" },
+        "layout": { "position": "absolute", "x": 56, "y": 200 }
+      },
+      {
+        "id": "btn-primary",
+        "type": "instance",
+        "component": "button",
+        "layout": { "position": "absolute", "x": 56, "y": 232 },
+        "fields": { "label": "Primary" },
+        "variants": { "tone": "primary", "size": "md" }
+      },
+      {
+        "id": "btn-secondary",
+        "type": "instance",
+        "component": "button",
+        "layout": { "position": "absolute", "x": 188, "y": 232 },
+        "fields": { "label": "Secondary" },
+        "variants": { "tone": "secondary", "size": "md" }
+      },
+      {
+        "id": "btn-ghost",
+        "type": "instance",
+        "component": "button",
+        "layout": { "position": "absolute", "x": 348, "y": 232 },
+        "fields": { "label": "Ghost" },
+        "variants": { "tone": "ghost", "size": "md" }
+      },
+      {
+        "id": "btn-small",
+        "type": "instance",
+        "component": "button",
+        "layout": { "position": "absolute", "x": 470, "y": 237 },
+        "fields": { "label": "Small" },
+        "variants": { "tone": "primary", "size": "sm" }
+      },
+      {
+        "id": "label-input",
+        "type": "text",
+        "tag": "p",
+        "text": "Input",
+        "attributes": { "class": "spec-label" },
+        "layout": { "position": "absolute", "x": 56, "y": 316 }
+      },
+      {
+        "id": "input-email",
+        "type": "instance",
+        "component": "input",
+        "layout": { "position": "absolute", "x": 56, "y": 348, "width": 300 },
+        "fields": { "label": "Email", "value": "ada@atelier.test", "name": "email" }
+      },
+      {
+        "id": "input-search",
+        "type": "instance",
+        "component": "input",
+        "layout": { "position": "absolute", "x": 380, "y": 348, "width": 300 },
+        "fields": { "label": "Search", "placeholder": "Search components", "name": "q" }
+      },
+      {
+        "id": "label-card",
+        "type": "text",
+        "tag": "p",
+        "text": "Card",
+        "attributes": { "class": "spec-label" },
+        "layout": { "position": "absolute", "x": 56, "y": 468 }
+      },
+      {
+        "id": "card-notes",
+        "type": "instance",
+        "component": "card",
+        "layout": { "position": "absolute", "x": 56, "y": 500, "width": 420 },
+        "fields": {
+          "eyebrow": "Layout",
+          "title": "Field notes",
+          "body": "Props fill the template. Click the title, or click the card padding to select the card itself."
+        }
+      },
+      {
+        "id": "card-signin",
+        "type": "instance",
+        "component": "sign-in",
+        "layout": { "position": "absolute", "x": 524, "y": 500, "width": 460 }
+      }
+    ]
+  }
+}

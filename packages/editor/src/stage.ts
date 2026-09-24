@@ -1,10 +1,7 @@
 /**
  * Fixed viewport over a stage positioned with CSS translate + scale.
  * Pan by dragging empty canvas. Zoom with the wheel, toward the cursor.
- * The dot grid is a viewport background locked to the same tx/ty/scale,
- * so panning moves the camera over one infinite surface. Dot radius stays
- * in CSS pixels (it does not scale with background-size); spacing does.
- * Content stays real DOM, so hit testing follows the transform.
+ * The dot grid is a viewport background locked to the same tx/ty/scale.
  */
 
 const MIN_SCALE = 0.2;
@@ -13,12 +10,26 @@ const GRID_BASE = 20;
 const GRID_MIN_SCREEN = 14;
 const GRID_MAX_SCREEN = 28;
 
-export function createStage(viewport, stage) {
+export interface StageState {
+  scale: number;
+  tx: number;
+  ty: number;
+}
+
+export interface StageController {
+  getScale: () => number;
+  setTransform: (nextScale: number, nextTx: number, nextTy: number) => void;
+  onChange: (listener: (state: StageState) => void) => () => void;
+  onBackgroundClick: (listener: () => void) => () => void;
+  fit: (element: HTMLElement, padding?: number) => void;
+}
+
+export function createStage(viewport: HTMLElement, stage: HTMLElement): StageController {
   let scale = 1;
   let tx = 0;
   let ty = 0;
-  const listeners = new Set();
-  const backgroundClicks = new Set();
+  const listeners = new Set<(state: StageState) => void>();
+  const backgroundClicks = new Set<() => void>();
 
   let dragging = false;
   let moved = false;
@@ -42,19 +53,18 @@ export function createStage(viewport, stage) {
   function paintGrid() {
     const step = gridStep(scale);
     const size = step * scale;
-    // Tile center sits on world multiples of `step`. World origin is at (tx, ty).
     viewport.style.backgroundSize = `${size}px ${size}px`;
     viewport.style.backgroundPosition = `${tx - size / 2}px ${ty - size / 2}px`;
   }
 
-  function setTransform(nextScale, nextTx, nextTy) {
+  function setTransform(nextScale: number, nextTx: number, nextTy: number) {
     scale = clamp(nextScale, MIN_SCALE, MAX_SCALE);
     tx = nextTx;
     ty = nextTy;
     apply();
   }
 
-  function onWheel(event) {
+  function onWheel(event: WheelEvent) {
     event.preventDefault();
     const rect = viewport.getBoundingClientRect();
     const mx = event.clientX - rect.left;
@@ -72,9 +82,9 @@ export function createStage(viewport, stage) {
     apply();
   }
 
-  function onPointerDown(event) {
+  function onPointerDown(event: PointerEvent) {
     if (event.button !== 0) return;
-    if (event.target.closest('[data-id]')) return;
+    if (event.target instanceof Element && event.target.closest('[data-id]')) return;
     dragging = true;
     moved = false;
     startX = event.clientX;
@@ -85,7 +95,7 @@ export function createStage(viewport, stage) {
     viewport.setPointerCapture(event.pointerId);
   }
 
-  function onPointerMove(event) {
+  function onPointerMove(event: PointerEvent) {
     if (!dragging) return;
     const dx = event.clientX - startX;
     const dy = event.clientY - startY;
@@ -96,12 +106,12 @@ export function createStage(viewport, stage) {
     apply();
   }
 
-  function endDrag(event) {
+  function endDrag(event: PointerEvent) {
     if (!dragging) return;
     const wasClick = !moved;
     dragging = false;
     viewport.classList.remove('is-panning');
-    if (event?.pointerId != null && viewport.hasPointerCapture(event.pointerId)) {
+    if (viewport.hasPointerCapture(event.pointerId)) {
       viewport.releasePointerCapture(event.pointerId);
     }
     if (wasClick) {
@@ -148,7 +158,7 @@ export function createStage(viewport, stage) {
   };
 }
 
-function gridStep(scale) {
+function gridStep(scale: number): number {
   let step = GRID_BASE;
   let guard = 0;
   while (step * scale < GRID_MIN_SCREEN && guard < 8) {
@@ -163,6 +173,6 @@ function gridStep(scale) {
   return step;
 }
 
-function clamp(value, min, max) {
+function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }

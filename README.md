@@ -1,55 +1,48 @@
 ﻿# facadeur
 
-Design-system foundation: a JSON DSL rendered as real DOM on a zoomable stage.
+Design-system foundation: a JSON document rendered as real DOM on a zoomable stage.
 
-A page is data. Each node is either an element (`tagName`, `text`, `attributes`, `children`) or a component instance (`type`, `props`, optional `variants`). The renderer expands component instances through JSON templates, then builds DOM the same way a small `buildElement(config)` would. The result sits on a stage you can pan and zoom. Nodes stay selectable because they are elements, not pixels on a canvas.
+A document has a kind (`atom`, `component`, `section`, or `page`) and a tree of `frame`, `text`, `image`, and `instance` nodes. The HTML tag is a property. Instances point at another document and may only override fields and variants. Pages contain sections. The file on disk is nested JSON; the editor's store keeps a flat map of nodes and runs every change as a command.
 
-This is a proof of concept. It is meant to show that the substrate can work, not to be a product.
+This repository is the M1 foundation plus the original stage. It is not the product UI yet.
 
-## Run the demo
-
-ES modules do not load from `file://`. Serve the repository root:
+## Run the stage
 
 ```bash
-python3 -m http.server 8080
+pnpm install
+pnpm dev
 ```
 
-Open <http://localhost:8080>.
-
-Any static file server works the same way. From the page you can:
+Open the URL Vite prints (http://localhost:5173). From the page you can:
 
 - Scroll over the stage to zoom toward the cursor.
-- Drag empty canvas to pan. The dot grid moves and zooms with the stage, like a camera over an infinite surface.
+- Drag empty canvas to pan. The dot grid moves and zooms with the stage.
 - Click a button, a card, a title inside a card, or a label to select that node.
-- Read the selected `data-id`, props, and variants in the sidebar.
+- Read the selected id, fields, and variants in the sidebar.
 - Click empty background, or press Escape, to clear the selection.
 - Use **Reset view** to fit the sheet again.
+
+## Checks
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test
+```
+
+`pnpm schema` rewrites `schema/document.schema.json` from the TypeBox schema in `@facadeur/core`.
 
 ## Layout
 
 ```
-index.html              demo shell
-src/main.js             loads the page and wires the stage
-src/render.js           JSON tree → DOM
-src/stage.js            pan and zoom
-src/selection.js        hit testing, outline, sidebar
-src/styles.css
-examples/demo-page.json specimen page
-examples/components.json  button, input, and card templates
-docs/dsl.md             what a node may contain
-schema/node.schema.json page, node, and catalog
+packages/core           types, JSON Schema, flat model, commands, DocumentStore
+packages/store-yjs      Yjs DocumentStore, one transaction per command, undo/redo
+packages/renderer-dom   document JSON to DOM
+packages/editor         Vite stage (pan, zoom, grid, selection)
+examples/               specimen page, section, and the button, input, card, sign-in documents
+schema/                 generated JSON Schema
+docs/dsl.md             the document format
+docs/plan.md            milestones
 ```
 
-## DSL
-
-See [docs/dsl.md](docs/dsl.md). The schema matches the fields the renderer reads: element fields, component `type` / `props` / `variants`, placement (`x`, `y`, `width`, `height`), and the component catalog. Strings in a template may use `{{prop}}` placeholders. The page JSON itself has no functions.
-
-Three components ship with the demo:
-
-- **button** — label, plus `tone` and `size` variants
-- **input** — label, value, placeholder, and name (static; the field is read-only)
-- **card** — eyebrow, title, and body, with optional child nodes
-
-## Not in this POC
-
-Events and triggers, multi-select, resize behavior, inline editing, design tokens, codegen to React or Web Components, persistence, undo, and collaboration. The runtime does not grow hooks for those.
+The stage still renders the specimen: a page whose only child is a section instance, which instances the atoms and components. React panels, tokens, and the style engine are later milestones.

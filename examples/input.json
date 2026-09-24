@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "id": "input",
+  "name": "Input",
+  "kind": "atom",
+  "fields": [
+    { "name": "label", "type": "text", "default": "Label" },
+    { "name": "value", "type": "text", "default": "" },
+    { "name": "placeholder", "type": "text", "default": "" },
+    { "name": "name", "type": "text", "default": "" }
+  ],
+  "root": {
+    "id": "root",
+    "type": "frame",
+    "tag": "label",
+    "attributes": { "class": "ds-field" },
+    "children": [
+      {
+        "id": "label",
+        "type": "text",
+        "tag": "span",
+        "bindings": [{ "field": "label", "target": "text" }]
+      },
+      {
+        "id": "control",
+        "type": "frame",
+        "tag": "input",
+        "attributes": {
+          "class": "ds-field__control",
+          "type": "text",
+          "readonly": "readonly",
+          "tabindex": "-1",
+          "autocomplete": "off"
+        },
+        "bindings": [
+          { "field": "value", "target": "attribute", "name": "value" },
+          { "field": "placeholder", "target": "attribute", "name": "placeholder" },
+          { "field": "name", "target": "attribute", "name": "name" }
+        ]
+      }
+    ]
+  }
+}
