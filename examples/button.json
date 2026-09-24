@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "id": "button",
+  "name": "Button",
+  "kind": "atom",
+  "fields": [{ "name": "label", "type": "text", "default": "Button" }],
+  "variants": [
+    {
+      "name": "tone",
+      "values": ["primary", "secondary", "ghost"],
+      "default": "primary"
+    },
+    { "name": "size", "values": ["sm", "md"], "default": "md" }
+  ],
+  "root": {
+    "id": "root",
+    "type": "frame",
+    "tag": "button",
+    "attributes": { "class": "ds-button", "type": "button" },
+    "bindings": [{ "field": "label", "target": "text" }]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "@facadeur/editor",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@facadeur/core": "workspace:*",
+    "@facadeur/renderer-dom": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.5"
+  }
+}

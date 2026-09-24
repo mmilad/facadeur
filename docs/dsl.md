@@ -1,125 +1,148 @@
 # Facadeur DSL
 
-A page is a JSON document. The renderer walks it and builds DOM. There are two node kinds: **elements** and **component instances**. Component instances expand through a catalog of JSON templates. The JSON contains data only — no functions, and no events.
+A facadeur document is JSON. The editor never edits the DOM in place: it runs commands against this document, and the renderer builds DOM from the result. The file on disk is a nested tree. In memory the same document is a flat map of nodes whose children are ordered id lists. Conversion either way is lossless.
 
-The demo page is `examples/demo-page.json`. The catalog is `examples/components.json`. The schema for a page, a node, and a catalog is `schema/node.schema.json`.
+Examples live in `examples/`. The JSON Schema generated from `packages/core` is `schema/document.schema.json`.
 
-## Page
+## Document
 
 ```json
 {
-  "id": "specimen",
-  "name": "Specimen",
-  "artboard": { "width": 1040, "height": 860 },
+  "version": 1,
+  "id": "button",
+  "name": "Button",
+  "kind": "atom",
+  "fields": [{ "name": "label", "type": "text", "default": "Button" }],
+  "variants": [{ "name": "tone", "values": ["primary", "ghost"], "default": "primary" }],
+  "root": { "id": "root", "type": "frame", "tag": "button", "children": [] }
+}
+```
+
+| Field               | Required | Meaning                                                                                                             |
+| ------------------- | -------- | ------------------------------------------------------------------------------------------------------------------- |
+| `version`           | yes      | `1`.                                                                                                                |
+| `id`                | yes      | Stable document id. Also the id an instance uses in `component`.                                                    |
+| `name`              | yes      | Human label.                                                                                                        |
+| `kind`              | yes      | `atom`, `component`, `section`, or `page`. The list is configurable in code; the published schema names these four. |
+| `fields`            | no       | Variable fields of an atom or component: `name`, `type`, `default`.                                                 |
+| `variants`          | no       | Variant axes: `name`, `values`, optional `default`.                                                                 |
+| `settings.artboard` | no       | `{ "width", "height" }` in pixels. The page sheet. Not a node.                                                      |
+| `root`              | yes      | The canvas node. Nesting rules apply to what is inside it.                                                          |
+
+Field types are `text`, `richText`, `image`, `link`, `boolean`, `enum`, `number`, and `token`. Enum fields also carry `options`. `richText` is reserved; nothing renders rich text yet.
+
+## Kinds
+
+| Kind        | Root                  | What it may contain                                      |
+| ----------- | --------------------- | -------------------------------------------------------- |
+| `atom`      | frame, text, or image | Only primitives: `frame`, `text`, `image`. No instances. |
+| `component` | frame, text, or image | Primitives, plus instances of atoms and components.      |
+| `section`   | frame, text, or image | Same as a component. Not sections or pages.              |
+| `page`      | frame (the canvas)    | Only instances of sections.                              |
+
+The page root is the canvas, not a section. Its children are the sections. A page does not store the section's inner nodes; those live in the section document.
+
+## Nodes
+
+Every node has a stable `id`. The HTML tag is a property, `tag`, not a separate node type.
+
+### frame
+
+A container. Children are nested in the file and stored as an ordered id list in memory. A `text` binding on the frame itself writes that string onto the element, which is how a button keeps its label without an extra child.
+
+```json
+{
+  "id": "root",
+  "type": "frame",
+  "tag": "section",
+  "attributes": { "class": "hero" },
+  "layout": { "position": "absolute", "x": 56, "y": 64, "width": 480 },
   "children": []
 }
 ```
 
-| Field | Required | Meaning |
-| --- | --- | --- |
-| `id` | no | Page id. Not rendered as a DOM id. |
-| `name` | yes | Label shown in the demo chrome. |
-| `artboard` | no | `{ "width", "height" }` in stage pixels. The demo draws this as the sheet behind the nodes. It is not itself a node. |
-| `children` | yes | Top-level nodes, painted on the artboard. |
-
-## Element
-
-A literal HTML element.
+### text
 
 ```json
-{
-  "id": "heading",
-  "tagName": "h1",
-  "text": "Specimen",
-  "attributes": { "class": "spec-title" },
-  "x": 56,
-  "y": 64,
-  "width": 480,
-  "children": []
-}
+{ "id": "title", "type": "text", "tag": "h1", "text": "Specimen" }
 ```
 
-| Field | Required | Meaning |
-| --- | --- | --- |
-| `id` | no | Stable id. Written to `data-id`. Generated (`n1`, `n2`, …) when omitted. |
-| `tagName` | no | HTML tag. Defaults to `div`. |
-| `text` | no | Text content, inserted before children. |
-| `attributes` | no | Map of attribute name to string. Applied with `setAttribute`. |
-| `children` | no | Nested nodes, elements or component instances. |
-| `x`, `y` | no | Stage position in pixels. Sets `position: absolute; left; top`. |
-| `width`, `height` | no | Pixel size, written as inline style. |
+`text` is the literal string. A binding can replace it when the node sits inside an atom or component.
 
-`tagName`, `text`, `attributes`, and `children` are the whole element vocabulary. The renderer does not read an `events` field. Attribute names that start with `on` are skipped, so the JSON cannot install handlers.
+### image
 
-## Component instance
+```json
+{ "id": "photo", "type": "image", "tag": "img", "src": "cover.png", "alt": "Cover" }
+```
 
-A reference to a catalog entry, plus the data that fills it.
+### instance
+
+A reference to another document. An instance may override field values and variant values, and it may be placed with `layout`. It has no children, no attributes, and no style of its own. There is no detach.
 
 ```json
 {
   "id": "btn-primary",
-  "type": "button",
-  "props": { "label": "Primary" },
+  "type": "instance",
+  "component": "button",
+  "fields": { "label": "Primary" },
   "variants": { "tone": "primary", "size": "md" },
-  "x": 56,
-  "y": 232,
-  "children": []
+  "layout": { "position": "absolute", "x": 56, "y": 232 }
 }
 ```
 
-| Field | Required | Meaning |
-| --- | --- | --- |
-| `id` | no | Stable id of the instance root. |
-| `type` | yes | Catalog key, such as `button`, `card`, or `input`. |
-| `props` | no | Map of string, number, or boolean values. |
-| `variants` | no | Map of axis name to string, for example `{ "tone": "ghost", "size": "sm" }`. |
-| `children` | no | Extra nodes appended after the template's own children. |
-| `x`, `y`, `width`, `height` | no | Same placement fields as an element, applied to the instance root. |
+`component` is the target document id. It can point at an atom, a component, or — on a page — a section, following the kind rules above.
 
-`props` and `variants` are data. They are not a place for callbacks.
+## Fields and bindings
 
-An unknown `type` still renders a selectable element whose text is `Unknown component: …`.
-
-## Catalog
-
-`examples/components.json` is an object keyed by component type:
+A field is defined on the document that owns the nodes. A child node binds to it:
 
 ```json
+{ "field": "label", "target": "text" }
+{ "field": "value", "target": "attribute", "name": "value" }
+```
+
+`target` is `text`, `attribute`, `style`, `visible`, `src`, or `alt`. `attribute` and `style` require `name`. Attribute names that start with `on` are rejected, so a document cannot install event handlers.
+
+An instance's `fields` object replaces those defaults for that instance only. Omitted fields use the definition's `default`.
+
+## Variants
+
+An axis lists its allowed strings. An instance's `variants` object picks one value per axis. Omitted axes use the axis `default`, then the first value. Variants are data in this milestone. The specimen stage reflects them with `data-variant-*` attributes. The style engine that turns axes into style overrides comes later.
+
+## Layout
+
+`layout.position` is `auto` (the normal case) or `absolute`. Absolute nodes use `x` and `y` as pixel offsets from the parent frame. `width` and `height` are pixel sizes. Gap, padding, and margin are not in the schema: spacing will be tokens, and tokens are a later milestone.
+
+## Flat model
+
+```text
 {
-  "button": {
-    "defaults": { "label": "Button", "tone": "primary", "size": "md" },
-    "template": {
-      "tagName": "button",
-      "attributes": {
-        "class": "ds-button ds-button--{{tone}} ds-button--{{size}}",
-        "type": "button"
-      },
-      "text": "{{label}}"
-    }
+  id, name, kind, rootId,
+  fields, variants, settings,
+  nodes: {
+    "<id>": { type, children: ["<child-id>", ...] }
   }
 }
 ```
 
-The template is an element tree. Strings may contain `{{name}}` placeholders. The renderer fills them from `defaults`, then instance `props`, then instance `variants`. A missing name becomes an empty string. Numbers and booleans are stringified. Placeholder names are `[A-Za-z0-9_-]` plus dots.
+Only frames have `children`. Ids are unique inside one document. `toFlat` / `toNested` in `@facadeur/core` convert between the two shapes.
 
-Class names in the templates are styled by `src/styles.css` in this demo. There is no token system.
+## Commands
 
-## Ids
+Documents change only through commands. Each command is one transaction in the Yjs store. Undo and redo walk those transactions.
 
-Every rendered element gets a `data-id`.
+`insert`, `remove`, `move`, `setProp`, `setStyle`, `setField`, `setVariant`, `defineField`, `removeField`, `defineVariant`, `removeVariant`.
 
-- A page node uses its `id` as written: `btn-primary`, `card-notes`.
-- A node inside a component template is prefixed with the instance id: template id `title` on instance `card-notes` becomes `card-notes/title`.
-- Nested template nodes keep gaining prefixes: `card-notes/footer/note`.
-- Children supplied on the instance keep the ids the author wrote: `signin-email`, `signin-continue`.
-- Their own template nodes are still prefixed: `signin-email/control`.
+`setField` and `setVariant` apply to instances. `setStyle` writes a style map on a primitive node; it does not apply to instances. Painting that map is the style engine's job. `move.index` is the index in the destination child list after the node has been taken out of its current parent.
 
-Ids should be unique in the document. Prefer an explicit `id` on anything you expect to select.
+## Ids in the DOM
 
-## Selection
+The renderer writes `data-id`.
 
-Selection is a viewer concern, not a field in the JSON. Click a rendered node to read its `data-id`. Component instances show the authored `props` and `variants` from the page. Elements show tag, text, and attributes. Template nodes also record the instance id they sit inside.
+- A node in the open document uses its id.
+- A node inside an expanded instance is prefixed with the instance id: `card-notes/title`.
+- Nested instances keep gaining prefixes: `card-signin/email/control`.
 
-## Out of scope
+## Out of scope here
 
-Events, triggers, multi-select, resize behavior, inline editing, design tokens, code generation, persistence, undo, and collaboration are not part of this DSL. Do not add them to a node and expect the renderer to honor them.
+Tokens, the style engine, iframe viewports, slots, codegen, and multiplayer sync. The Yjs document already reserves empty `tokens` and `fonts` maps so those can arrive without a new top-level shape.

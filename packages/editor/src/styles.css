@@ -7,9 +7,9 @@
   --white: #fffcf7;
   --accent: #9c4221;
   --sidebar: #fbf7f1;
-  --sans: Inter, "Source Sans 3", "Segoe UI", sans-serif;
-  --serif: "Noto Serif Display", "Liberation Serif", Georgia, serif;
-  --mono: "JetBrains Mono", "Cascadia Mono", ui-monospace, monospace;
+  --sans: Inter, 'Source Sans 3', 'Segoe UI', sans-serif;
+  --serif: 'Noto Serif Display', 'Liberation Serif', Georgia, serif;
+  --mono: 'JetBrains Mono', 'Cascadia Mono', ui-monospace, monospace;
   color: var(--ink);
   background: var(--paper);
   font-family: var(--sans);
@@ -243,10 +243,22 @@ input {
   transform: scale(calc(1 / var(--stage-scale, 1)));
 }
 
-.handle-nw { left: -4px; top: -4px; }
-.handle-ne { right: -4px; top: -4px; }
-.handle-sw { left: -4px; bottom: -4px; }
-.handle-se { right: -4px; bottom: -4px; }
+.handle-nw {
+  left: -4px;
+  top: -4px;
+}
+.handle-ne {
+  right: -4px;
+  top: -4px;
+}
+.handle-sw {
+  left: -4px;
+  bottom: -4px;
+}
+.handle-se {
+  right: -4px;
+  bottom: -4px;
+}
 
 .spec-kicker {
   margin: 0;
@@ -296,21 +308,21 @@ input {
   color: var(--ink);
 }
 
-.ds-button--sm {
+.ds-button[data-variant-size='sm'] {
   padding: 6px 11px;
   font-size: 12px;
 }
 
-.ds-button--primary {
+.ds-button[data-variant-tone='primary'] {
   background: var(--ink);
   color: var(--paper);
 }
 
-.ds-button--secondary {
+.ds-button[data-variant-tone='secondary'] {
   border-color: var(--ink);
 }
 
-.ds-button--ghost {
+.ds-button[data-variant-tone='ghost'] {
   color: #3f3832;
 }
 

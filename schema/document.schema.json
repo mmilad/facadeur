@@ -1,0 +1,624 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "title": "Facadeur document",
+  "description": "Nested facadeur document. Nodes are frame, text, image, or instance. Instances override fields and variants only.",
+  "$id": "https://github.com/mmilad/facadeur/schema/document.schema.json",
+  "type": "object",
+  "required": ["version", "id", "name", "kind", "root"],
+  "properties": {
+    "version": {
+      "const": 1,
+      "type": "number"
+    },
+    "id": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+      "type": "string"
+    },
+    "name": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "kind": {
+      "anyOf": [
+        {
+          "const": "atom",
+          "type": "string"
+        },
+        {
+          "const": "component",
+          "type": "string"
+        },
+        {
+          "const": "section",
+          "type": "string"
+        },
+        {
+          "const": "page",
+          "type": "string"
+        }
+      ]
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": ["name", "type"],
+        "properties": {
+          "name": {
+            "minLength": 1,
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+            "type": "string"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "const": "text",
+                "type": "string"
+              },
+              {
+                "const": "richText",
+                "type": "string"
+              },
+              {
+                "const": "image",
+                "type": "string"
+              },
+              {
+                "const": "link",
+                "type": "string"
+              },
+              {
+                "const": "boolean",
+                "type": "string"
+              },
+              {
+                "const": "enum",
+                "type": "string"
+              },
+              {
+                "const": "number",
+                "type": "string"
+              },
+              {
+                "const": "token",
+                "type": "string"
+              }
+            ]
+          },
+          "default": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
+          },
+          "options": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "variants": {
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": ["name", "values"],
+        "properties": {
+          "name": {
+            "minLength": 1,
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+            "type": "string"
+          },
+          "values": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "default": {
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      }
+    },
+    "settings": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "artboard": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": ["width", "height"],
+          "properties": {
+            "width": {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            "height": {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "root": {
+      "$id": "T0",
+      "anyOf": [
+        {
+          "additionalProperties": false,
+          "type": "object",
+          "required": ["id", "type"],
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+              "type": "string"
+            },
+            "name": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "tag": {
+              "pattern": "^[A-Za-z][A-Za-z0-9-]*$",
+              "type": "string"
+            },
+            "attributes": {
+              "type": "object",
+              "patternProperties": {
+                "^(.*)$": {
+                  "type": "string"
+                }
+              }
+            },
+            "layout": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "position": {
+                  "anyOf": [
+                    {
+                      "const": "auto",
+                      "type": "string"
+                    },
+                    {
+                      "const": "absolute",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                },
+                "width": {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                "height": {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                }
+              }
+            },
+            "bindings": {
+              "type": "array",
+              "items": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": ["field", "target"],
+                "properties": {
+                  "field": {
+                    "minLength": 1,
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+                    "type": "string"
+                  },
+                  "target": {
+                    "anyOf": [
+                      {
+                        "const": "text",
+                        "type": "string"
+                      },
+                      {
+                        "const": "attribute",
+                        "type": "string"
+                      },
+                      {
+                        "const": "style",
+                        "type": "string"
+                      },
+                      {
+                        "const": "visible",
+                        "type": "string"
+                      },
+                      {
+                        "const": "src",
+                        "type": "string"
+                      },
+                      {
+                        "const": "alt",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "name": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "style": {
+              "type": "object",
+              "patternProperties": {
+                "^(.*)$": {
+                  "type": "string"
+                }
+              }
+            },
+            "type": {
+              "const": "frame",
+              "type": "string"
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "T0"
+              }
+            }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "type": "object",
+          "required": ["id", "type"],
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+              "type": "string"
+            },
+            "name": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "tag": {
+              "pattern": "^[A-Za-z][A-Za-z0-9-]*$",
+              "type": "string"
+            },
+            "attributes": {
+              "type": "object",
+              "patternProperties": {
+                "^(.*)$": {
+                  "type": "string"
+                }
+              }
+            },
+            "layout": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "position": {
+                  "anyOf": [
+                    {
+                      "const": "auto",
+                      "type": "string"
+                    },
+                    {
+                      "const": "absolute",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                },
+                "width": {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                "height": {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                }
+              }
+            },
+            "bindings": {
+              "type": "array",
+              "items": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": ["field", "target"],
+                "properties": {
+                  "field": {
+                    "minLength": 1,
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+                    "type": "string"
+                  },
+                  "target": {
+                    "anyOf": [
+                      {
+                        "const": "text",
+                        "type": "string"
+                      },
+                      {
+                        "const": "attribute",
+                        "type": "string"
+                      },
+                      {
+                        "const": "style",
+                        "type": "string"
+                      },
+                      {
+                        "const": "visible",
+                        "type": "string"
+                      },
+                      {
+                        "const": "src",
+                        "type": "string"
+                      },
+                      {
+                        "const": "alt",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "name": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "style": {
+              "type": "object",
+              "patternProperties": {
+                "^(.*)$": {
+                  "type": "string"
+                }
+              }
+            },
+            "type": {
+              "const": "text",
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "type": "object",
+          "required": ["id", "type"],
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+              "type": "string"
+            },
+            "name": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "tag": {
+              "pattern": "^[A-Za-z][A-Za-z0-9-]*$",
+              "type": "string"
+            },
+            "attributes": {
+              "type": "object",
+              "patternProperties": {
+                "^(.*)$": {
+                  "type": "string"
+                }
+              }
+            },
+            "layout": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "position": {
+                  "anyOf": [
+                    {
+                      "const": "auto",
+                      "type": "string"
+                    },
+                    {
+                      "const": "absolute",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                },
+                "width": {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                "height": {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                }
+              }
+            },
+            "bindings": {
+              "type": "array",
+              "items": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": ["field", "target"],
+                "properties": {
+                  "field": {
+                    "minLength": 1,
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+                    "type": "string"
+                  },
+                  "target": {
+                    "anyOf": [
+                      {
+                        "const": "text",
+                        "type": "string"
+                      },
+                      {
+                        "const": "attribute",
+                        "type": "string"
+                      },
+                      {
+                        "const": "style",
+                        "type": "string"
+                      },
+                      {
+                        "const": "visible",
+                        "type": "string"
+                      },
+                      {
+                        "const": "src",
+                        "type": "string"
+                      },
+                      {
+                        "const": "alt",
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "name": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "style": {
+              "type": "object",
+              "patternProperties": {
+                "^(.*)$": {
+                  "type": "string"
+                }
+              }
+            },
+            "type": {
+              "const": "image",
+              "type": "string"
+            },
+            "src": {
+              "type": "string"
+            },
+            "alt": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "type": "object",
+          "required": ["id", "type", "component"],
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+              "type": "string"
+            },
+            "name": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "layout": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "position": {
+                  "anyOf": [
+                    {
+                      "const": "auto",
+                      "type": "string"
+                    },
+                    {
+                      "const": "absolute",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                },
+                "width": {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                "height": {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                }
+              }
+            },
+            "type": {
+              "const": "instance",
+              "type": "string"
+            },
+            "component": {
+              "minLength": 1,
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+              "type": "string"
+            },
+            "fields": {
+              "type": "object",
+              "patternProperties": {
+                "^[A-Za-z][A-Za-z0-9_-]*$": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
+                }
+              }
+            },
+            "variants": {
+              "type": "object",
+              "patternProperties": {
+                "^[A-Za-z][A-Za-z0-9_-]*$": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

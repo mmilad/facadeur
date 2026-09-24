@@ -1,12 +1,23 @@
-/**
- * Click a rendered node to select it. The outline and corner handles are
- * chrome only — they are not part of the JSON tree and do not resize.
- * Clicking empty stage background clears the selection (wired by the stage).
- */
+import type { RenderedNode } from '@facadeur/renderer-dom';
 
 const HANDLES = ['nw', 'ne', 'sw', 'se'];
 
-export function createSelection({ stage, inspector, getScale }) {
+export interface SelectionController {
+  setNodes: (next: Map<string, RenderedNode>) => void;
+  select: (id: string) => void;
+  clear: () => void;
+  reposition: () => void;
+}
+
+export function createSelection({
+  stage,
+  inspector,
+  getScale,
+}: {
+  stage: HTMLElement;
+  inspector: HTMLElement;
+  getScale: () => number;
+}): SelectionController {
   const box = document.createElement('div');
   box.className = 'selection-box';
   box.hidden = true;
@@ -17,19 +28,17 @@ export function createSelection({ stage, inspector, getScale }) {
   }
   stage.append(box);
 
-  let nodes = new Map();
-  let selectedId = null;
-  let selectedEl = null;
+  let nodes = new Map<string, RenderedNode>();
+  let selectedEl: HTMLElement | null = null;
 
-  function select(id) {
+  function select(id: string) {
     const record = nodes.get(id);
     const el = stage.querySelector(byId(id));
-    if (!record || !el) {
+    if (!record || !(el instanceof HTMLElement)) {
       clear();
       return;
     }
     if (selectedEl) delete selectedEl.dataset.selected;
-    selectedId = id;
     selectedEl = el;
     el.dataset.selected = 'true';
     placeBox();
@@ -37,7 +46,6 @@ export function createSelection({ stage, inspector, getScale }) {
   }
 
   function clear() {
-    selectedId = null;
     if (selectedEl) delete selectedEl.dataset.selected;
     selectedEl = null;
     box.hidden = true;
@@ -59,7 +67,7 @@ export function createSelection({ stage, inspector, getScale }) {
     box.style.height = `${rect.height / scale}px`;
   }
 
-  function renderInspector(record) {
+  function renderInspector(record: RenderedNode | null) {
     inspector.replaceChildren();
     if (!record) {
       const empty = document.createElement('p');
@@ -76,51 +84,48 @@ export function createSelection({ stage, inspector, getScale }) {
 
     const meta = document.createElement('dl');
     meta.className = 'kv';
-    addRow(meta, 'Kind', record.kind);
-    if (record.type) addRow(meta, 'Type', record.type);
-    addRow(meta, 'Tag', record.tagName);
+    addRow(meta, 'Type', record.nodeType);
+    addRow(meta, 'Tag', record.tag);
+    if (record.name) addRow(meta, 'Name', record.name);
+    if (record.component) addRow(meta, 'Component', record.component);
     if (record.ownerId) addRow(meta, 'Inside', record.ownerId);
-    if (record.kind === 'element' && record.text) addRow(meta, 'Text', record.text);
+    if (record.text) addRow(meta, 'Text', record.text);
     inspector.append(meta);
 
-    inspector.append(sectionTitle('Props'));
-    if (record.props && Object.keys(record.props).length) {
-      inspector.append(objectList(record.props));
-    } else {
-      inspector.append(emptyNote('None'));
+    if (record.fields && Object.keys(record.fields).length) {
+      inspector.append(sectionTitle('Fields'));
+      inspector.append(objectList(record.fields));
     }
-
     if (record.variants && Object.keys(record.variants).length) {
       inspector.append(sectionTitle('Variants'));
       inspector.append(objectList(record.variants));
     }
-
-    if (record.kind === 'element' && record.attributes && Object.keys(record.attributes).length) {
+    if (record.nodeType !== 'instance' && Object.keys(record.attributes).length) {
       inspector.append(sectionTitle('Attributes'));
       inspector.append(objectList(record.attributes));
     }
   }
 
-  let downId = null;
+  let downId: string | null = null;
   let downX = 0;
   let downY = 0;
 
   stage.addEventListener('pointerdown', (event) => {
     if (event.button !== 0) return;
-    const hit = event.target.closest('[data-id]');
-    if (!hit || !stage.contains(hit)) {
+    const hit = event.target instanceof Element ? event.target.closest('[data-id]') : null;
+    if (!(hit instanceof HTMLElement) || !stage.contains(hit)) {
       downId = null;
       return;
     }
-    downId = hit.dataset.id;
+    downId = hit.dataset.id ?? null;
     downX = event.clientX;
     downY = event.clientY;
   });
 
   stage.addEventListener('pointerup', (event) => {
     if (!downId) return;
-    const hit = event.target.closest('[data-id]');
-    const sameTarget = hit && hit.dataset.id === downId;
+    const hit = event.target instanceof Element ? event.target.closest('[data-id]') : null;
+    const sameTarget = hit instanceof HTMLElement && hit.dataset.id === downId;
     const still = Math.hypot(event.clientX - downX, event.clientY - downY) < 4;
     const id = downId;
     downId = null;
@@ -143,25 +148,18 @@ export function createSelection({ stage, inspector, getScale }) {
   };
 }
 
-function byId(id) {
+function byId(id: string): string {
   const escaped = String(id).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
   return `[data-id="${escaped}"]`;
 }
 
-function sectionTitle(text) {
+function sectionTitle(text: string): HTMLHeadingElement {
   const heading = document.createElement('h3');
   heading.textContent = text;
   return heading;
 }
 
-function emptyNote(text) {
-  const p = document.createElement('p');
-  p.className = 'inspector-none';
-  p.textContent = text;
-  return p;
-}
-
-function objectList(data) {
+function objectList(data: Record<string, unknown>): HTMLDListElement {
   const list = document.createElement('dl');
   list.className = 'kv';
   for (const [key, value] of Object.entries(data)) {
@@ -170,7 +168,7 @@ function objectList(data) {
   return list;
 }
 
-function addRow(list, key, value) {
+function addRow(list: HTMLDListElement, key: string, value: string) {
   const dt = document.createElement('dt');
   dt.textContent = key;
   const dd = document.createElement('dd');

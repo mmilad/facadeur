@@ -17,6 +17,7 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 ## Entscheidungen
 
 ### Tech-Stack
+
 - TypeScript, pnpm-Workspaces als Monorepo.
 - Editor-UI: Vite + React. Der Inhalt der Bühne wird **nicht** mit React gerendert, sondern mit unserem eigenen Renderer.
 - Next.js ist Ausgabeziel (Codegen) und später eventuell Produkthülle (Accounts, Cloud, Marketing) mit eingebettetem Editor, aber nicht die Basis des Editors.
@@ -25,6 +26,7 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 - Dokumentzustand im Editor: **Yjs** (CRDT) als lokaler Store von Anfang an, vorerst ohne Server. Undo/Redo über den `Y.UndoManager`. Später kommt nur noch ein Sync-Server dazu (siehe „Kollaboration“).
 
 ### Pakete
+
 - `packages/core` – Typen, Schema, Validierung, Befehle (Commands), `DocumentStore`-Schnittstelle.
 - `packages/store-yjs` – `DocumentStore`-Implementierung auf Yjs, Umwandlung zwischen Dateiformat und Y-Dokument.
 - `packages/tokens` – DTCG-Parser, Referenzauflösung, Ausgabe als CSS Custom Properties.
@@ -34,28 +36,34 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 - `packages/codegen-react` – später.
 
 ### Arten (kinds) und Hierarchie
+
 - Jedes Dokument hat ein `kind`: `atom`, `component`, `section`, `page`. Die Liste ist konfigurierbar (zusammenlegen oder weiter aufteilen), mit Verschachtelungsregeln pro Art.
 - Standardregeln: Atome enthalten nur Grundbausteine. Komponenten enthalten Grundbausteine, Atome und Komponenten. Sektionen enthalten alles außer Sektionen und Pages. **Pages enthalten nur Sektionen.**
 - Jede Art hat einen eigenen Arbeitsbereich im Editor, die Ansicht ist aber überall gleich aufgebaut.
 
 ### Grundbausteine
+
 - `frame` (Container mit Auto Layout), `text`, `image`, `instance` (eingesetzte Komponente). Später `slot`.
 - Das HTML-Tag ist eine Eigenschaft (`tag`), z. B. `section`, `nav`, `a`, `button`, `input`.
 
 ### Instanzen
+
 - Eine Instanz verweist auf eine Komponente und darf **nur** Feldwerte und Varianten überschreiben.
 - **Kein Detach**, keine Stil-Overrides einzelner Kind-Elemente.
 - Eine Komponente wird **nur in ihrer eigenen Ansicht** bearbeitet, nicht an der Stelle, wo sie eingesetzt ist. Doppelklick auf eine Instanz kann höchstens zur Komponente springen.
 
 ### Variable Felder (Component Properties)
+
 - Eine Komponente definiert Felder: `name`, `type` (`text`, `richText` später, `image`, `link`, `boolean`, `enum`, `number`, `token`), `default`.
 - Felder werden an Text, Attribute, Stile oder Sichtbarkeit von Kind-Knoten gebunden.
 - Instanzen überschreiben Werte. Codegen macht daraus typisierte Props/Inputs.
 
 ### Varianten
+
 - Eine Komponente definiert Varianten-Achsen (z. B. `size: sm|md|lg`, `intent: primary|secondary`). Varianten überschreiben Stile des Stil-Blocks. Auch Zustände wie `:hover`, `:focus-visible`, `:disabled` gehören in den Stil-Block.
 
 ### Tokens
+
 - Format: W3C DTCG (`$value`, `$type`). Ein Eintrag ist ein Token oder eine Token-Gruppe. Referenzen wie `{color.blue.500}`.
 - Drei Ebenen: primitive, semantische und Komponenten-Tokens.
 - Im Editor werden Tokens zu CSS Custom Properties auf einer Root-Regel.
@@ -63,19 +71,23 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 - Themes/Modi (Dark Mode, Marken): **nicht jetzt**, als spätere Verbesserung vorgesehen.
 
 ### Schriften
+
 - Eigener Bereich: Familien, Gewichte, Quelle (Datei oder Google Fonts), Fallbacks.
 - Typo-Skala als Tokens, Werte pro Breakpoint. Daraus entstehen echte `@media`-Regeln.
 
 ### Viewports
+
 - Breakpoints sind konfigurierbar (Standard: mobile 375, tablet 768, desktop 1440).
 - **Ein iframe pro Viewport-Frame**, damit echte Media Queries greifen. Die iframes sind same-origin; der Editor greift direkt über `contentDocument` zu (kein `postMessage`), aber immer über eine dünne Schnittstelle (`FrameHost`), damit später Isolation möglich bleibt.
 - Die Style-Engine läuft pro iframe. Auswahl- und Hover-Rahmen zeichnet der Editor **über** den iframes, nie in ihnen.
 
 ### Stile
+
 - Jede Komponente hat einen eigenen Stil-Block, der Tokens referenziert. Varianten und Breakpoints überschreiben ihn.
 - Kein Tailwind im Kern. Generatoren erzeugen CSS (später optional CSS Modules o. Ä.).
 
 ### Datenmodell und Kollaboration
+
 - **Flaches Modell im Speicher:** Knoten liegen in einer Map nach stabiler ID, Kinder sind geordnete ID-Listen (`Y.Map` pro Knoten, `Y.Array` für Kinder). Tokens, Schriften und Einstellungen liegen ebenfalls als Maps im Y-Dokument.
 - **Dateiformat bleibt lesbar:** Auf der Platte wird verschachteltes, gut lesbares JSON gespeichert (für Git und Agenten). Beim Laden wird es in das flache Modell umgewandelt, beim Speichern zurück. Die Umwandlung ist verlustfrei und getestet.
 - **Nur Befehle ändern das Dokument.** Jeder Befehl läuft als eine Yjs-Transaktion. Keine direkten Zugriffe auf das Y-Dokument aus UI-Komponenten.
@@ -83,6 +95,7 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 - **Später:** eigener Sync-Dienst neben Next.js (Hocuspocus o. Ä., oder Liveblocks/PartyKit), da Serverless-Hosting wie Vercel keine WebSockets offenhält. Präsenz (Cursor, Auswahl) über Yjs Awareness.
 
 ### Editor-Verhalten
+
 - **Layout:** Jeder Frame ist standardmäßig Auto Layout (Richtung, gap, padding, Ausrichtung, wrap). Freie Positionierung (`position: absolute` relativ zum Eltern-Frame) ist eine explizite Option pro Element.
 - **Größen:** pro Achse `hug` (fit-content), `fill` (flex: 1 bzw. stretch) oder `fixed` (px oder Token), plus min/max. Prozent nur als erweiterter Wert. Jeder Wert kann pro Breakpoint überschrieben werden.
 - **Abstände:** nur Tokens (Spacing-Skala). Freie Werte sind vorerst nicht erlaubt.
@@ -92,53 +105,62 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 - **Befehle:** Jede Änderung ist ein Befehl (insert, remove, move, setProp, setStyle, setField …), ausgeführt als Yjs-Transaktion. Undo/Redo über `Y.UndoManager` (nur eigene Änderungen, auch später im Mehrbenutzerbetrieb).
 
 ### Projektvorlage
+
 - Beim Anlegen eines Projekts optional mitinitialisieren: Standard-Tokens (Farben, Spacing-Skala, Radius, Schatten), Standard-Schrift mit Typo-Skala und vordefinierte Atome: `button`, `link`, `input`, `textarea` (weitere später, z. B. `checkbox`, `select`).
 
 ### Außerhalb des Umfangs (vorerst)
+
 - MCP-Server: nur dokumentieren, nicht bauen.
 - Themes/Modi, Slots, freie Abstandswerte, Cloud.
 - Sync-Server und Mehrbenutzer (das Datenmodell ist aber schon darauf ausgelegt).
 - Später: Playwright Visual Regression, Accessibility-Prüfungen in Atomen.
 
 ## Bekannte Bugs in style-controller (bei Übernahme beheben)
+
 - `children`, die an `Rule` übergeben werden, werden nie eingefügt.
 - `delete` prüft `if (indexInChildren)`: Index 0 wird übersprungen, bei -1 wird die letzte Regel gelöscht.
 
 ## Meilensteine
 
 ### M0 – POC (erledigt)
+
 - [x] JSON-DSL, Renderer zu echtem DOM, zoombare/pannbare Bühne, Auswahl mit Sidebar (PR #1)
 - [x] Hintergrund-Raster bewegt sich mit Pan/Zoom
 
 ### M1 – Fundament
-- [ ] Monorepo mit pnpm-Workspaces, TypeScript, Vite, ESLint/Prettier, Vitest
-- [ ] POC nach `packages/editor` bzw. `packages/renderer-dom` überführen (oder als Referenz unter `legacy/` behalten)
-- [ ] `core`: Typen und Schema für Dokument, Knoten (`frame`, `text`, `image`, `instance`), `kind`, Verschachtelungsregeln
-- [ ] `core`: flaches Modell (Knoten-Map nach ID, Kinder als ID-Listen) und verlustfreie Umwandlung von/zu verschachteltem Dateiformat, mit Tests
-- [ ] `core`: `DocumentStore`-Schnittstelle und Befehls-Typen
-- [ ] `store-yjs`: Yjs-Implementierung von `DocumentStore`, Befehle als Transaktionen, `Y.UndoManager`, Tests
-- [ ] JSON-Schema-Export und Validierung (Ajv), Beispiele unter `examples/` validieren im Test
-- [ ] `docs/dsl.md` auf das neue Modell aktualisieren
-- [ ] CI (GitHub Actions): Lint, Typecheck, Tests
+
+- [x] Monorepo mit pnpm-Workspaces, TypeScript, Vite, ESLint/Prettier, Vitest
+- [x] POC nach `packages/editor` bzw. `packages/renderer-dom` überführen (oder als Referenz unter `legacy/` behalten)
+- [x] `core`: Typen und Schema für Dokument, Knoten (`frame`, `text`, `image`, `instance`), `kind`, Verschachtelungsregeln
+- [x] `core`: flaches Modell (Knoten-Map nach ID, Kinder als ID-Listen) und verlustfreie Umwandlung von/zu verschachteltem Dateiformat, mit Tests
+- [x] `core`: `DocumentStore`-Schnittstelle und Befehls-Typen
+- [x] `store-yjs`: Yjs-Implementierung von `DocumentStore`, Befehle als Transaktionen, `Y.UndoManager`, Tests
+- [x] JSON-Schema-Export und Validierung (Ajv), Beispiele unter `examples/` validieren im Test
+- [x] `docs/dsl.md` auf das neue Modell aktualisieren
+- [x] CI (GitHub Actions): Lint, Typecheck, Tests
 
 ### M2 – Tokens und Schriften
+
 - [ ] `tokens`: DTCG laden, Gruppen, Referenzen auflösen, Zyklen erkennen
 - [ ] Ausgabe als CSS Custom Properties
 - [ ] Schriften-Modell (Familien, Quellen, Fallbacks) und Typo-Skala mit Breakpoint-Werten zu `@media`
 - [ ] Standard-Token-Set und Standard-Schrift als Vorlage
 
 ### M3 – Style-Engine und Renderer
+
 - [ ] `style-engine` auf Basis von style-controller, Bugs beheben, Tests
 - [ ] Stil-Block pro Komponente mit Varianten, Zuständen und Breakpoint-Overrides
 - [ ] Komponenten setzen/überschreiben Tokens für Kinder
 - [ ] `renderer-dom`: gezielte Updates pro Knoten statt Neurendern
 
 ### M4 – Viewports mit iframes
+
 - [ ] `FrameHost`-Schnittstelle, ein iframe pro Viewport, same-origin
 - [ ] Breakpoints konfigurierbar, Frames nebeneinander auf der Bühne
 - [ ] Auswahl-/Hover-Overlays über den iframes, korrekt bei Zoom/Pan
 
 ### M5 – Editor-Grundgerüst
+
 - [ ] React-Shell: Bühne, Ebenenliste, Eigenschaften-Panel, Asset-Liste (Atome/Komponenten/Sektionen/Pages), Token- und Schriften-Bereich
 - [ ] Befehle über `store-yjs` anbinden, Undo/Redo (Strg+Z / Strg+Shift+Z)
 - [ ] Renderer und Style-Engine abonnieren Änderungen des Stores und aktualisieren gezielt
@@ -146,6 +168,7 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 - [ ] Arbeitsbereiche pro `kind`
 
 ### M6 – Bauen im Editor
+
 - [ ] Einfüge-Werkzeuge (F/T/I), Drag aus Asset-Liste, Einfügelinie
 - [ ] Auswahl-Logik (Klick, Doppelklick, Strg+Klick, Esc, Hover)
 - [ ] Umsortieren per Drag (Bühne und Ebenenliste), In Frame einpacken
@@ -155,6 +178,7 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 - [ ] Leere Frames mit Mindestgröße im Editor
 
 ### M7 – Komponenten-Features
+
 - [ ] Variable Felder definieren (Typ, Default) und an Text/Attribute/Stile/Sichtbarkeit binden
 - [ ] Varianten-Achsen definieren und bearbeiten
 - [ ] Instanzen: nur Feld- und Variantenwerte überschreibbar, kein Detach, Bearbeiten nur in eigener Ansicht
@@ -162,21 +186,32 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 - [ ] Vordefinierte Atome `button`, `link`, `input`, `textarea` in der Projektvorlage
 
 ### M8 – Codegen React (Next.js)
+
 - [ ] Komponenten zu React-Komponenten mit typisierten Props aus Feldern und Varianten
 - [ ] Tokens und Schriften zu CSS, Stil-Blöcke zu CSS
 - [ ] Beispiel-Next.js-Projekt, das die Ausgabe nutzt
 
 ### Später – Kollaboration
+
 - [ ] Sync-Dienst (Hocuspocus o. Ä.) neben Next.js, Persistenz der Y-Dokumente
 - [ ] Präsenz: Cursor und Auswahl anderer Nutzer über Yjs Awareness
 - [ ] Live-Updates von Tokens und Schriften in allen offenen Editoren
 - [ ] Accounts, Projekte, Rechte (Next.js)
 
 ### Später
+
 - [ ] MCP-Server (zuerst nur Doku unter `docs/mcp.md`)
 - [ ] Themes/Modi, Slots, weitere Generatoren (Web Components, Angular)
 - [ ] Visual Regression (Playwright), Accessibility-Checks
 
 ## Entscheidungslog
+
 - 2026-09-24: Grundsatzentscheidungen oben festgehalten (iframes pro Viewport, Auto Layout als Standard, Abstände nur über Tokens, Instanzen ohne Detach, Vite + React statt Next.js für den Editor).
 - 2026-09-24: Yjs von Anfang an als lokaler Store mit flachem Datenmodell, damit Echtzeit-Zusammenarbeit später nur einen Sync-Server braucht. Sync-Dienst läuft getrennt von Next.js/Vercel.
+- 2026-09-24: Schema in `core` mit TypeBox (Draft 2020-12), Validierung mit Ajv. TypeBox ist das Schema, das wir exportieren; ein zweites Zod-Modell würde nur driften.
+- 2026-09-24: POC liegt in `packages/renderer-dom` und `packages/editor` (Vite, noch ohne React). Die React-Shell bleibt M5. Die Bühne (Pan/Zoom, Raster, Auswahl) ist die bisherige, auf das neue Dokument umgestellt.
+- 2026-09-24: Dateiformat hat ein verschachteltes `root`. Das Wurzel-Frame ist die Arbeitsfläche des Dokuments; Verschachtelungsregeln gelten für alles darunter. Eine Page enthält deshalb als Kinder nur Sektions-Instanzen, das Wurzel-Frame selbst ist der Canvas und kein Inhalt. „Atome enthalten nur Grundbausteine“ heißt: `frame`, `text`, `image`, keine Instanzen. Instanzen sind das Mittel, um Atome und Komponenten einzusetzen.
+- 2026-09-24: Felder und Varianten-Achsen stehen im Schema an Atom und Komponente (der Button ist ein Atom und braucht `label`, `tone`, `size`). Instanzen haben keine Kinder, keine Attribute und keinen Stil; nur `layout` plus Feld- und Variantenwerte. Die alte Sign-in-Karte mit Kindern an der Instanz ist eine eigene Komponente `sign-in`.
+- 2026-09-24: `style` an Primitiv-Knoten ist Daten (`setStyle`). Anwenden macht die Style-Engine in M3. Die Specimen-Bühne zeigt Varianten über `data-variant-*`, damit der POC-Look ohne Style-Engine bleibt. Abstände (gap, padding, margin) fehlen im Schema, damit keine freien Zahlen die Token-Regel unterlaufen. Absolute Platzierung (`x`, `y`, `width`, `height`) ist drin, weil die Bühne und die freie Position sie brauchen.
+- 2026-09-24: `undo`/`redo` gehören zur `DocumentStore`-Schnittstelle, damit die UI den `Y.UndoManager` nicht anfasst. Nur Transaktionen mit Origin `facadeur` landen im Undo-Stack (`captureTimeout: 0`, ein Befehl = ein Schritt). Laden ist nicht rückgängig zu machen. `tokens` und `fonts` sind leere Y.Maps, reserviert für M2.
+- 2026-09-24: Standard-Kinds sind `atom | component | section | page`. `defaultNestingRules` ist austauschbar; `createDocumentSchema({ kinds })` baut ein Schema für eine andere Liste. Das committete JSON Schema zählt die vier Standard-Kinds.

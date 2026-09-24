@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "id": "sign-in",
+  "name": "Sign in",
+  "kind": "component",
+  "fields": [
+    { "name": "eyebrow", "type": "text", "default": "Composition" },
+    { "name": "title", "type": "text", "default": "Sign in" },
+    {
+      "name": "body",
+      "type": "text",
+      "default": "Children stay JSON. This card nests an input and a button."
+    }
+  ],
+  "root": {
+    "id": "root",
+    "type": "frame",
+    "tag": "article",
+    "attributes": { "class": "ds-card" },
+    "children": [
+      {
+        "id": "eyebrow",
+        "type": "text",
+        "tag": "p",
+        "attributes": { "class": "ds-card__eyebrow" },
+        "bindings": [{ "field": "eyebrow", "target": "text" }]
+      },
+      {
+        "id": "title",
+        "type": "text",
+        "tag": "h2",
+        "attributes": { "class": "ds-card__title" },
+        "bindings": [{ "field": "title", "target": "text" }]
+      },
+      {
+        "id": "body",
+        "type": "text",
+        "tag": "p",
+        "attributes": { "class": "ds-card__body" },
+        "bindings": [{ "field": "body", "target": "text" }]
+      },
+      {
+        "id": "email",
+        "type": "instance",
+        "component": "input",
+        "fields": {
+          "label": "Work email",
+          "value": "ada@atelier.test",
+          "name": "work-email"
+        }
+      },
+      {
+        "id": "continue",
+        "type": "instance",
+        "component": "button",
+        "fields": { "label": "Continue" },
+        "variants": { "tone": "primary", "size": "sm" }
+      }
+    ]
+  }
+}
