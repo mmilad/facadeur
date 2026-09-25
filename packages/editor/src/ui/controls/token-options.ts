@@ -9,15 +9,7 @@ export function dimensionTokenOptions(
   return catalogTokenOptions(tokens, current, emptyLabel);
 }
 
-export function colorTokenOptions(
-  tokens: readonly string[],
-  current?: string,
-  emptyLabel = 'None',
-): SelectOption[] {
-  return catalogTokenOptions(tokens, current, emptyLabel);
-}
-
-function catalogTokenOptions(
+export function catalogTokenOptions(
   tokens: readonly string[],
   current?: string,
   emptyLabel = 'None',
@@ -27,4 +19,20 @@ function catalogTokenOptions(
     { value: '', label: emptyLabel },
     ...list.map((token) => ({ value: token, label: token })),
   ];
+}
+
+export function colorTokenOptions(
+  tokens: readonly string[],
+  current?: string,
+  emptyLabel = 'None',
+): SelectOption[] {
+  return catalogTokenOptions(tokens, current, emptyLabel);
+}
+
+export function shadowTokenOptions(
+  tokens: readonly string[],
+  current?: string,
+  emptyLabel = 'None',
+): SelectOption[] {
+  return catalogTokenOptions(tokens, current, emptyLabel);
 }

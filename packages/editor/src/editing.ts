@@ -45,18 +45,39 @@ export type DropZone = 'before' | 'inside' | 'after';
 
 /** Dimension tokens as `{path}` references, for gap, padding, and margin. */
 export function dimensionTokenRefs(tree: unknown): string[] {
-  const index = readTokenTree(tree);
-  return [...index.tokens.values()]
-    .filter((token) => token.type === 'dimension')
-    .map((token) => `{${token.path}}`)
-    .sort((left, right) => left.localeCompare(right));
+  return tokenRefsByType(tree, 'dimension');
 }
 
 /** Color tokens as `{path}` references for style and token editors. */
 export function colorTokenRefs(tree: unknown): string[] {
+  return tokenRefsByType(tree, 'color');
+}
+
+/** Typography composite tokens as `{path}` references. */
+export function typographyTokenRefs(tree: unknown): string[] {
+  return tokenRefsByType(tree, 'typography');
+}
+
+export function shadowTokenRefs(tree: unknown): string[] {
+  return tokenRefsByType(tree, 'shadow');
+}
+
+export function fontFamilyTokenRefs(tree: unknown): string[] {
+  return tokenRefsByType(tree, 'fontFamily');
+}
+
+export function fontWeightTokenRefs(tree: unknown): string[] {
+  return tokenRefsByType(tree, 'fontWeight');
+}
+
+export function numberTokenRefs(tree: unknown): string[] {
+  return tokenRefsByType(tree, 'number');
+}
+
+function tokenRefsByType(tree: unknown, type: string): string[] {
   const index = readTokenTree(tree);
   return [...index.tokens.values()]
-    .filter((token) => token.type === 'color')
+    .filter((token) => token.type === type)
     .map((token) => `{${token.path}}`)
     .sort((left, right) => left.localeCompare(right));
 }

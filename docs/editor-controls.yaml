@@ -83,6 +83,7 @@ controls:
       - key: size|weight|lineHeight
         ui: combobox|number
         options: typography / dimension tokens
+    notes: implemented (TypographyControl + TypographyStyleControl); StyleFields + typography token rows; catalog helpers in editing.ts
 
   - id: shadow
     path: ui/controls/shadow
@@ -92,6 +93,7 @@ controls:
       - key: value
         ui: combobox | structured later
         emit: setStyle / style block
+    notes: implemented (ShadowControl); StyleFields + shadow token ref rows; shadowTokenRefs in editing.ts
 
   - id: css_declarations
     path: ui/controls/generic
