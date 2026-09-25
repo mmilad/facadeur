@@ -33,7 +33,7 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 - `packages/style-engine` – Live-Stile über `CSSStyleRule`/`insertRule`, basiert auf `mmilad/style-controller` (siehe unten).
 - `packages/renderer-dom` – JSON zu DOM, stabile `data-id` pro Knoten, gezielte Updates.
 - `packages/editor` – Vite + React App (Bühne, Panels, Werkzeuge).
-- `packages/codegen-react` – später.
+- `packages/codegen-react` – React-Komponenten und CSS aus den Dokumenten, für Next.js.
 
 ### Arten (kinds) und Hierarchie
 
@@ -187,9 +187,9 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 
 ### M8 – Codegen React (Next.js)
 
-- [ ] Komponenten zu React-Komponenten mit typisierten Props aus Feldern und Varianten
-- [ ] Tokens und Schriften zu CSS, Stil-Blöcke zu CSS
-- [ ] Beispiel-Next.js-Projekt, das die Ausgabe nutzt
+- [x] Komponenten zu React-Komponenten mit typisierten Props aus Feldern und Varianten
+- [x] Tokens und Schriften zu CSS, Stil-Blöcke zu CSS
+- [x] Beispiel-Next.js-Projekt, das die Ausgabe nutzt
 
 ### Später – Kollaboration
 
@@ -251,3 +251,8 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 - 2026-09-25: Varianten-Achsen schreiben `styles.variants` und, am ausgewählten Kind, `styles.children`. Jeder Wert setzt Deklarationen und die Zustände `hover`, `focus-visible` und `disabled`. Dieselben Zustände gibt es an der Basis des Stil-Blocks. Instanzen bleiben bei `setField` und `setVariant`; es gibt kein Detach. Ein Doppelklick, der nicht tiefer als die bereits gewählte Instanz kommt, öffnet die Komponente und wählt ihre Wurzel. Ein Doppelklick in der Ebenenliste öffnet sie direkt.
 - 2026-09-25: Einfügen, Platzieren und Ziehen fragen die Verschachtelungsregeln, bevor eine Einfügelinie erscheint. Eine Page nimmt keine Frames, Texte oder Bilder an und keine Instanz, die keine Sektion ist. Die Werkzeuge F, T und I sind dort aus. Ein verbotenes Ziel setzt eine Meldung, der Befehl läuft nicht.
 - 2026-09-25: Die Projektvorlage bleibt die Design-Datei. Daneben starten `button`, `link`, `input` und `textarea` (`starterAtomIds`). `link` bindet Beschriftung und `href` und hat die Achse `tone`. `textarea` folgt `input`, mit dem Feld `rows` und der Achse `resize` am Control.
+- 2026-09-25: M8. `packages/codegen-react` liest die verschachtelten Dokumente und schreibt pro Dokument eine React-Komponente. Props sind die Felder und die Varianten-Achsen. Eine Achse wird eine String-Literal-Union. Die Wurzel setzt `data-component` und `data-variant-*`, Kinder setzen `data-node`. Eine Instanz wird der Aufruf der erzeugten Komponente mit den Feld- und Variantenwerten aus dem Dokument. `nodeId` ist die Instanz-Id und landet auf `data-node`, damit `[data-component="…"] [data-node="…"]` dasselbe Element trifft wie der Renderer. Jede Komponente nimmt zusätzlich `className` und mischt es mit dem Klassen-Attribut aus dem Dokument. Ein boolesches Feld an einem booleschen Attribut wird ein React-Boolean (`hidden={open}`), nicht der HTML-String, den der DOM-Renderer schreibt.
+- 2026-09-25: CSS bleibt am bestehenden Compiler. Tokens und Schriften kommen aus `renderDesignCss`. Stil-Blöcke und Layout kommen aus `compileDocument` mit `address: 'instance'` und werden als ein Stylesheet serialisiert, inklusive `@media (min-width)`. Breakpoints stammen aus dem Design-Dokument, sonst aus den Standardwerten. Es gibt kein zweites Stilmodell.
+- 2026-09-25: Eine Page wird in der Ausgabe als echtes Wurzel-Element erzeugt. Im Editor bleibt das Wurzel-Frame der Page die unbemalte Arbeitsfläche. Next.js hat kein Artboard-iframe, also braucht die Page ein Element, an dem `data-component` und das Layout hängen.
+- 2026-09-25: `richText` bleibt ein String-Kind, wie der Renderer. Kein HTML. Ein Default, dessen Laufzeittyp nicht zum Feldtyp passt, bricht die Generierung ab, damit die erzeugte Datei typisiert bleibt. Felder ohne Bindung stehen in den Props, werden im Funktionsrumpf aber nicht gelesen.
+- 2026-09-25: Die Ausgabe liegt unter `examples/next/generated` und ist eingecheckt. `pnpm codegen` schreibt sie neu aus den Beispieldokumenten; die Projektvorlage ist das Design, keine Komponente. Die Beispiel-App ist `examples/next`. Dateien und Regeln sind nach Dokument-Id sortiert, damit dieselbe Menge Dokumente immer dieselbe Ausgabe ergibt.

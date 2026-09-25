@@ -18,7 +18,8 @@
     "format": "prettier --write .",
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "vitest run",
-    "schema": "tsx scripts/export-schema.ts"
+    "schema": "tsx scripts/export-schema.ts",
+    "codegen": "tsx packages/codegen-react/src/cli.ts --design examples/project-template.json --out examples/next/generated examples/button.json examples/card.json examples/input.json examples/sign-in.json examples/specimen-page.json examples/specimen-section.json"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",

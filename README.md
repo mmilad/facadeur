@@ -4,7 +4,7 @@ Design-system foundation: a JSON document rendered as real DOM on a zoomable sta
 
 A document has a kind (`atom`, `component`, `section`, or `page`) and a tree of `frame`, `text`, `image`, and `instance` nodes. The HTML tag is a property. Instances point at another document and may only override fields and variants. Pages contain sections. The file on disk is nested JSON; the editor's store keeps a flat map of nodes and runs every change as a command.
 
-This repository is the M5 editor: document model, Yjs store, tokens, fonts, a live style engine, a DOM renderer that patches nodes in place, viewport frames, and a React shell around that stage. The specimen page is the document that opens first.
+This repository is the design-system editor through code generation: document model, Yjs store, tokens, fonts, a live style engine, a DOM renderer that patches nodes in place, viewport frames, a React shell around that stage, and a React generator for Next.js. The specimen page is the document that opens first.
 
 ## Run the editor
 
@@ -25,6 +25,15 @@ Open the URL Vite prints (http://localhost:5173). The specimen page is open in t
 - **Open** reads a document JSON (File System Access API, or a file input). **Save** writes the open document back, or downloads it when the browser has neither the file API nor the dev server.
 - Hover shows the click target in the frame under the pointer. Escape clears the selection. **Reset view** fits the frames again.
 
+## Generate React for Next.js
+
+```bash
+pnpm codegen
+pnpm --filter @facadeur/example-next dev
+```
+
+`pnpm codegen` reads the example documents and `examples/project-template.json`, then writes React components and CSS to `examples/next/generated`. The example app imports that output. Open the URL Next prints (http://localhost:3000). The page renders Button (tone and size props), Input, Sign in, and Card from the generated components. Tokens, fonts, and style blocks are the generated stylesheets.
+
 ## Checks
 
 ```bash
@@ -44,7 +53,9 @@ packages/tokens         DTCG parser, reference resolution, CSS custom properties
 packages/style-engine   live CSSStyleRules, component style blocks, auto layout
 packages/renderer-dom   document JSON to DOM, targeted updates from the store
 packages/editor         Vite + React shell (stage, layers, properties, assets, tokens, fonts)
+packages/codegen-react  React components and CSS from documents
 examples/               specimen page, section, atoms, and examples/project-template.json
+examples/next           Next.js app that renders the generated components
 schema/                 generated JSON Schema
 docs/dsl.md             the document format
 docs/plan.md            milestones
