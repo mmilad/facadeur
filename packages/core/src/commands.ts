@@ -29,6 +29,8 @@ import type {
 import {
   assertStyleMap,
   collectTokenRefs,
+  omitVariantAxis,
+  omitVariantValues,
   parseStyleBlock,
   parseTokenInterface,
 } from './style-block.js';
@@ -182,6 +184,7 @@ export function applyCommand(
     case 'setStyleBlock':
       if (command.style === null) delete next.styles;
       else next.styles = parseStyleBlock(command.style);
+      adoptTokenReads(next);
       break;
     case 'setTokenInterface':
       if (command.tokenInterface === null) delete next.tokenInterface;
@@ -213,7 +216,7 @@ function insertNode(
   assertIndex(index, parent.children.length);
   Object.assign(doc.nodes, subtree);
   parent.children.splice(index, 0, rootId);
-  adoptLayoutReads(doc);
+  adoptTokenReads(doc);
 }
 
 function removeNode(doc: FlatDocument, nodeId: string): void {
@@ -296,11 +299,11 @@ function setProp(doc: FlatDocument, command: Extract<Command, { type: 'setProp' 
     applyElementProp(node, command.prop, command.value);
   }
   doc.nodes[node.id] = makeFlatNode(node);
-  if (command.prop === 'layout') adoptLayoutReads(doc);
+  if (command.prop === 'layout') adoptTokenReads(doc);
 }
 
-/** Layout tokens must be listed in `tokenInterface.reads`. Add any the command introduced. */
-function adoptLayoutReads(doc: FlatDocument): void {
+/** Token references a command introduces must be listed in `tokenInterface.reads`. */
+function adoptTokenReads(doc: FlatDocument): void {
   const reads = new Set(doc.tokenInterface?.reads ?? []);
   let changed = false;
   for (const ref of collectTokenRefs(doc)) {
@@ -334,6 +337,7 @@ function setStyle(doc: FlatDocument, command: Extract<Command, { type: 'setStyle
   if (Object.keys(style).length) assertStyleMap(style);
   node.style = style;
   doc.nodes[node.id] = makeFlatNode(node);
+  adoptTokenReads(doc);
 }
 
 function setField(doc: FlatDocument, command: Extract<Command, { type: 'setField' }>): void {
@@ -389,13 +393,29 @@ function removeField(doc: FlatDocument, name: string): void {
     throw new DocumentError('unknown-field', `Field "${name}" is not defined`);
   }
   doc.fields.splice(index, 1);
+  for (const node of Object.values(doc.nodes)) {
+    if (node.type === 'instance' || !node.bindings?.some((binding) => binding.field === name)) {
+      continue;
+    }
+    const bindings = node.bindings.filter((binding) => binding.field !== name);
+    if (bindings.length) node.bindings = bindings;
+    else delete node.bindings;
+    doc.nodes[node.id] = makeFlatNode(node);
+  }
 }
 
 function defineVariant(doc: FlatDocument, axis: VariantAxis): void {
   assertVariantAxis(axis);
-  const index = doc.variants.findIndex((item) => item.name === axis.name);
+  const previous = doc.variants.find((item) => item.name === axis.name);
+  const index = previous ? doc.variants.indexOf(previous) : -1;
   if (index === -1) doc.variants.push(axis);
   else doc.variants[index] = axis;
+  if (!previous || !doc.styles) return;
+  const removed = previous.values.some((value) => !axis.values.includes(value));
+  if (!removed) return;
+  const pruned = omitVariantValues(doc.styles, axis.name, new Set(axis.values));
+  if (pruned) doc.styles = pruned;
+  else delete doc.styles;
 }
 
 function removeVariant(doc: FlatDocument, name: string): void {
@@ -404,6 +424,10 @@ function removeVariant(doc: FlatDocument, name: string): void {
     throw new DocumentError('unknown-variant', `Variant "${name}" is not defined`);
   }
   doc.variants.splice(index, 1);
+  if (!doc.styles) return;
+  const pruned = omitVariantAxis(doc.styles, name);
+  if (pruned) doc.styles = pruned;
+  else delete doc.styles;
 }
 
 function setFont(doc: FlatDocument, font: FontFamily): void {

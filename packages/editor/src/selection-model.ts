@@ -144,6 +144,23 @@ export function resolveClick(input: {
   return chain[1] ?? chain[0] ?? null;
 }
 
+/**
+ * A double-click that cannot go deeper than the selected instance opens that
+ * component. The first click of the gesture selects the instance; the second jumps.
+ */
+export function instanceOpenTarget(
+  doc: FlatDocument,
+  chain: readonly string[],
+  selectedId: string | null,
+): string | null {
+  if (!selectedId) return null;
+  const deepest = chain[chain.length - 1];
+  if (!deepest || deepest !== selectedId) return null;
+  const node = doc.nodes[deepest];
+  if (node?.type !== 'instance') return null;
+  return node.component;
+}
+
 export function selectionParent(doc: FlatDocument, nodeId: string | null): string | null {
   if (!nodeId) return null;
   return findParent(doc, nodeId)?.id ?? null;

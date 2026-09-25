@@ -8,6 +8,7 @@ import specimenPage from '../../../examples/specimen-page.json';
 import specimenSection from '../../../examples/specimen-section.json';
 import {
   documentChain,
+  instanceOpenTarget,
   nodeIdForHit,
   renderIdForNode,
   resolveClick,
@@ -63,5 +64,8 @@ describe('selection model', () => {
     expect(
       resolveClick({ doc: page, chain: pageChain, selectedId: 'specimen-section', mode: 'deeper' }),
     ).toBe('specimen-section');
+    expect(instanceOpenTarget(page, pageChain, 'specimen-section')).toBe('specimen-section');
+    expect(instanceOpenTarget(page, pageChain, 'root')).toBeNull();
+    expect(instanceOpenTarget(page, pageChain, null)).toBeNull();
   });
 });

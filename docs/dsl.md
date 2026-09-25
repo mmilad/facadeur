@@ -231,6 +231,8 @@ Ids match `[a-z][a-z0-9]*`. Widths are positive integers and unique. When the do
 
 `examples/project-template.json` is an optional starter: the default palette, a 4px spacing scale, radius, shadows, the Inter family, and a type scale. `createProjectTemplate()` in `@facadeur/tokens` returns the same fragment. Spacing steps are `space.0` through `space.24` (the name is the step on a 4px grid, so `space.4` is 16px). `space.gap`, `space.inset`, and `space.stack` are the aliases gap, padding, and margin should use. Component tokens reference those aliases.
 
+A new project also starts with four atoms, listed by `starterAtomIds`: `button`, `link`, `input`, and `textarea` (`examples/button.json`, `examples/link.json`, `examples/input.json`, `examples/textarea.json`). They define fields and, where it matters, variant axes. `link` binds `label` and `href`. `textarea` follows `input`, adds a `rows` field, and uses a `resize` axis on the control.
+
 ## Flat model
 
 ```text
@@ -250,7 +252,7 @@ Only frames have `children`. Ids are unique inside one document. `toFlat` / `toN
 
 Documents change only through commands. Each command is one transaction in the Yjs store. Undo and redo walk those transactions.
 
-`insert`, `remove`, `move`, `wrap`, `setProp`, `setStyle`, `setField`, `setVariant`, `defineField`, `removeField`, `defineVariant`, `removeVariant`, `setToken`, `removeToken`, `setTokenGroup`, `removeTokenGroup`, `setFont`, `removeFont`, `setBreakpoints`, `setStyleBlock`, `setTokenInterface`. `wrap` puts the node in a new frame at the same index. A layout command that introduces a token reference adds that path to `tokenInterface.reads`.
+`insert`, `remove`, `move`, `wrap`, `setProp`, `setStyle`, `setField`, `setVariant`, `defineField`, `removeField`, `defineVariant`, `removeVariant`, `setToken`, `removeToken`, `setTokenGroup`, `removeTokenGroup`, `setFont`, `removeFont`, `setBreakpoints`, `setStyleBlock`, `setTokenInterface`. `wrap` puts the node in a new frame at the same index. A command that introduces a token reference (`insert`, layout, `setStyle`, `setStyleBlock`) adds that path to `tokenInterface.reads`. `removeField` also drops bindings that named the field. `removeVariant`, and `defineVariant` when a value disappears, drop the matching style-block layers on the root and on children. Sections and pages cannot define fields or variant axes.
 
 `setField` and `setVariant` apply to instances. `setStyle` writes a style map on a primitive node; it does not apply to instances. `setStyleBlock` replaces the document style block. `setTokenInterface` replaces `reads` / `sets`. The style engine paints both. `move.index` is the index in the destination child list after the node has been taken out of its current parent. `setToken` replaces one token and creates missing groups along the path. `setBreakpoints` with an empty list clears the document's breakpoints, and CSS falls back to the defaults. The store resolves token references before it commits, so a cycle or a missing target never lands in the document.
 

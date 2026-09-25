@@ -29,6 +29,23 @@ export function canonicalizeStyleBlock(style: StyleBlock | undefined): StyleBloc
   return parseStyleBlock(style);
 }
 
+/**
+ * Drop one variant axis from the style block, including child rules.
+ * Returns undefined when nothing paintable remains.
+ */
+export function omitVariantAxis(style: StyleBlock, axis: string): StyleBlock | undefined {
+  return finishPrune(pruneStyle(style, axis, null));
+}
+
+/** Drop variant values that are no longer on the axis. `keep` is the values that remain. */
+export function omitVariantValues(
+  style: StyleBlock,
+  axis: string,
+  keep: ReadonlySet<string>,
+): StyleBlock | undefined {
+  return finishPrune(pruneStyle(style, axis, keep));
+}
+
 export function canonicalizeTokenInterface(
   value: TokenInterface | undefined,
 ): TokenInterface | undefined {
@@ -391,6 +408,60 @@ function parseLayer(record: Record<string, unknown>, label: string): StyleLayer 
     throw new DocumentError('schema', `${label} must set declarations or states`);
   }
   return layer;
+}
+
+function finishPrune(style: StyleBlock): StyleBlock | undefined {
+  if (!styleHasContent(style)) return undefined;
+  return parseStyleBlock(style);
+}
+
+function pruneStyle(
+  style: StyleBlock,
+  axis: string,
+  keepValues: ReadonlySet<string> | null,
+): StyleBlock {
+  const next = structuredClone(style);
+  const variants = pruneVariantMap(next.variants, axis, keepValues);
+  if (variants) next.variants = variants;
+  else delete next.variants;
+  if (next.children) {
+    for (const id of Object.keys(next.children)) {
+      const child = next.children[id];
+      if (!child) continue;
+      const childVariants = pruneVariantMap(child.variants, axis, keepValues);
+      if (childVariants) child.variants = childVariants;
+      else delete child.variants;
+      if (!styleHasContent(child)) delete next.children[id];
+    }
+    if (!Object.keys(next.children).length) delete next.children;
+  }
+  return next;
+}
+
+function pruneVariantMap(
+  variants: StyleChild['variants'] | undefined,
+  axis: string,
+  keepValues: ReadonlySet<string> | null,
+): StyleChild['variants'] | undefined {
+  if (!variants) return undefined;
+  const next: NonNullable<StyleChild['variants']> = {};
+  for (const [name, values] of Object.entries(variants)) {
+    if (name === axis && keepValues === null) continue;
+    const kept: Record<string, StyleLayer> = {};
+    for (const [value, layer] of Object.entries(values)) {
+      if (name === axis && keepValues && !keepValues.has(value)) continue;
+      kept[value] = layer;
+    }
+    if (Object.keys(kept).length) next[name] = kept;
+  }
+  return Object.keys(next).length ? next : undefined;
+}
+
+function styleHasContent(style: StyleBlock | StyleChild): boolean {
+  const children = 'children' in style ? style.children : undefined;
+  return Boolean(
+    style.declarations || style.states || style.variants || style.breakpoints || children,
+  );
 }
 
 function collectBlockRefs(block: StyleBlock, refs: Set<string>): void {

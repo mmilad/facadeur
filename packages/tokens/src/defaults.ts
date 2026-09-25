@@ -230,6 +230,9 @@ export interface ProjectTemplate {
   breakpoints: Breakpoint[];
 }
 
+/** Atoms created with a new project, beside the design file. */
+export const starterAtomIds = ['button', 'link', 'input', 'textarea'] as const;
+
 /** Optional starter for a new project: tokens, one family, and the default breakpoints. */
 export function createProjectTemplate(): ProjectTemplate {
   return {

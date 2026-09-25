@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { toFlat, type DocumentFile } from '@facadeur/core';
+import specimenPage from '../../../examples/specimen-page.json';
 import specimenSection from '../../../examples/specimen-section.json';
 import {
   dimensionTokenRefs,
@@ -7,12 +8,16 @@ import {
   emphasizeInsertLine,
   layerDropTarget,
   placeInParent,
+  placementAllowed,
   prefersInsideFrame,
+  refusalMessage,
   sameSlot,
+  toolAllowed,
   writeLayoutFields,
 } from '../src/editing.js';
 
 const section = toFlat(specimenSection as DocumentFile);
+const page = toFlat(specimenPage as DocumentFile);
 
 describe('editing', () => {
   it('places an insert line before the sibling whose center is past the pointer', () => {
@@ -84,5 +89,24 @@ describe('editing', () => {
       color: { ink: { $type: 'color', $value: '#111111' } },
     });
     expect(refs).toEqual(['{space.4}']);
+  });
+
+  it('refuses placements the nesting rules do not allow', () => {
+    expect(toolAllowed('page', 'frame')).toBe(false);
+    expect(toolAllowed('page', 'text')).toBe(false);
+    expect(toolAllowed('page', 'image')).toBe(false);
+    expect(toolAllowed('atom', 'frame')).toBe(true);
+    expect(toolAllowed('section', 'text')).toBe(true);
+    expect(placementAllowed(page, 'root', 'frame')).toBe(false);
+    expect(placementAllowed(page, 'root', 'instance', 'atom')).toBe(false);
+    expect(placementAllowed(page, 'root', 'instance', 'section')).toBe(true);
+    expect(placementAllowed(section, 'intro', 'instance', 'section')).toBe(false);
+    expect(placementAllowed(section, 'intro', 'instance', 'atom')).toBe(true);
+    expect(
+      dropParentId(page, ['root', 'specimen-section'], null, false, (id) =>
+        placementAllowed(page, id, 'frame'),
+      ),
+    ).toBeNull();
+    expect(refusalMessage('page', 'text')).toBe('Pages can only contain sections.');
   });
 });

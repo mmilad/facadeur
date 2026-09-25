@@ -179,11 +179,11 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 
 ### M7 – Komponenten-Features
 
-- [ ] Variable Felder definieren (Typ, Default) und an Text/Attribute/Stile/Sichtbarkeit binden
-- [ ] Varianten-Achsen definieren und bearbeiten
-- [ ] Instanzen: nur Feld- und Variantenwerte überschreibbar, kein Detach, Bearbeiten nur in eigener Ansicht
-- [ ] Pages nur aus Sektionen (Regeln im Editor durchsetzen)
-- [ ] Vordefinierte Atome `button`, `link`, `input`, `textarea` in der Projektvorlage
+- [x] Variable Felder definieren (Typ, Default) und an Text/Attribute/Stile/Sichtbarkeit binden
+- [x] Varianten-Achsen definieren und bearbeiten
+- [x] Instanzen: nur Feld- und Variantenwerte überschreibbar, kein Detach, Bearbeiten nur in eigener Ansicht
+- [x] Pages nur aus Sektionen (Regeln im Editor durchsetzen)
+- [x] Vordefinierte Atome `button`, `link`, `input`, `textarea` in der Projektvorlage
 
 ### M8 – Codegen React (Next.js)
 
@@ -246,3 +246,8 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 - 2026-09-25: Gap, Padding und Margin wählen nur Dimensions-Tokens. Feste Größe ist px, ein Dimensions-Token oder Prozent. Breakpoint-Overrides schreiben `layout.breakpoints`. Die Basis bleibt ohne Query. Pfeiltasten ändern nur `x`/`y` der Basis, und nur wenn `position` dort `absolute` ist (Shift 10px). Fehlen `x`/`y`, ist der Start der `offset` im ersten Frame, damit das Element nicht auf 0 springt. Absolute nur in einem Breakpoint schiebt die Tastatur nicht; das steht im Panel.
 - 2026-09-25: Leere Frames (keine Kinder, kein Text) bekommen im Editor `data-empty`. Das Mindestmaß 64px und der gestrichelte Rahmen stehen im iframe-Shell-Stylesheet, nicht in der Style-Engine und nicht im JSON. Der Button bleibt ohne Markierung, weil seine Beschriftung Text am Frame ist.
 - 2026-09-25: Die Einfügelinie liegt im Bühnen-Overlay und wird mit der Bühne skaliert. Ihre kurze Seite ist mindestens vier Bildschirmpixel, sonst ist sie beim Fit über drei Viewports nicht zu sehen.
+- 2026-09-25: M7. Felder und Varianten-Achsen bleiben an Atom und Komponente. `defineField` und `defineVariant` lehnen Sektion und Page ab. `removeField` entfernt Bindings, die das Feld nennen, damit das Dokument in einem Befehl gültig bleibt. `removeVariant`, und `defineVariant` wenn ein Wert wegfällt, streichen die passenden Lagen im Stil-Block (Wurzel und Kinder). `setStyle` und `setStyleBlock` tragen neue Token-Pfade in `tokenInterface.reads` ein, wie das Layout.
+- 2026-09-25: Der Editor legt Felder der Typen `text`, `image`, `link`, `boolean`, `enum`, `number` und `token` an. `richText` bleibt im Schema und wird nicht angeboten. Bindings nutzen die bestehenden Ziele, auch `src` und `alt`, damit ein Bild ohne zweites Modell an ein Feld kommt. Sichtbarkeit ist `visible` (versteckt, wenn der Wert `false` ist).
+- 2026-09-25: Varianten-Achsen schreiben `styles.variants` und, am ausgewählten Kind, `styles.children`. Jeder Wert setzt Deklarationen und die Zustände `hover`, `focus-visible` und `disabled`. Dieselben Zustände gibt es an der Basis des Stil-Blocks. Instanzen bleiben bei `setField` und `setVariant`; es gibt kein Detach. Ein Doppelklick, der nicht tiefer als die bereits gewählte Instanz kommt, öffnet die Komponente und wählt ihre Wurzel. Ein Doppelklick in der Ebenenliste öffnet sie direkt.
+- 2026-09-25: Einfügen, Platzieren und Ziehen fragen die Verschachtelungsregeln, bevor eine Einfügelinie erscheint. Eine Page nimmt keine Frames, Texte oder Bilder an und keine Instanz, die keine Sektion ist. Die Werkzeuge F, T und I sind dort aus. Ein verbotenes Ziel setzt eine Meldung, der Befehl läuft nicht.
+- 2026-09-25: Die Projektvorlage bleibt die Design-Datei. Daneben starten `button`, `link`, `input` und `textarea` (`starterAtomIds`). `link` bindet Beschriftung und `href` und hat die Achse `tone`. `textarea` folgt `input`, mit dem Feld `rows` und der Achse `resize` am Control.

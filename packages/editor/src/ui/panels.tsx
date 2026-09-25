@@ -10,9 +10,23 @@ import {
   type FlatNode,
   type FontFamily,
 } from '@facadeur/core';
-import { layerDropTarget, layerInsertAt, type DropZone } from '../editing.js';
+import {
+  layerDropTarget,
+  layerInsertAt,
+  placementAllowed,
+  refusalMessage,
+  toolAllowed,
+  type DropZone,
+} from '../editing.js';
 import { documentToJson, saveJsonFile } from '../files.js';
-import type { EditorSession, EditorSnapshot, EditorTool } from '../session.js';
+import type { EditorDrag, EditorSession, EditorSnapshot, EditorTool } from '../session.js';
+import {
+  ComponentFields,
+  ComponentVariants,
+  NodeBindings,
+  NodeVariantStyles,
+  ownsComponentFeatures,
+} from './component-panel.js';
 import { LayoutPanel } from './layout-panel.js';
 import { formatTokenValue, parseEditedValue, withTokenValue } from '../token-edit.js';
 import { TextControl } from './fields.js';
@@ -55,21 +69,34 @@ const TOOLS = [
   ['image', 'Image', 'I'],
 ] as const;
 
-export function ToolBar({ session, tool }: { session: EditorSession; tool: EditorTool }) {
+export function ToolBar({
+  session,
+  tool,
+  kind,
+}: {
+  session: EditorSession;
+  tool: EditorTool;
+  kind: string;
+}) {
   return (
     <div className="tool-row" role="toolbar" aria-label="Tools">
-      {TOOLS.map(([id, label, key]) => (
-        <button
-          key={id}
-          type="button"
-          className={tool === id ? 'tool is-active' : 'tool'}
-          aria-pressed={tool === id}
-          onClick={() => session.setTool(id)}
-        >
-          <span>{label}</span>
-          <span className="tool-key">{key}</span>
-        </button>
-      ))}
+      {TOOLS.map(([id, label, key]) => {
+        const allowed = id === 'select' || toolAllowed(kind, id);
+        return (
+          <button
+            key={id}
+            type="button"
+            className={tool === id ? 'tool is-active' : 'tool'}
+            aria-pressed={tool === id}
+            disabled={!allowed}
+            title={allowed ? undefined : refusalMessage(kind, id)}
+            onClick={() => session.setTool(id)}
+          >
+            <span>{label}</span>
+            <span className="tool-key">{key}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -174,6 +201,10 @@ export function LayersPanel({ session, snap }: { session: EditorSession; snap: E
             selectedId={snap.selectedNodeId}
             over={over}
             onSelect={(id) => session.selectNode(id)}
+            onOpenInstance={(nodeId) => {
+              const node = snap.document.nodes[nodeId];
+              if (node?.type === 'instance') session.openAsset(node.component, 'root');
+            }}
             onDragStart={(id, event) => {
               event.dataTransfer.setData('text/plain', id);
               event.dataTransfer.effectAllowed = 'move';
@@ -184,19 +215,40 @@ export function LayersPanel({ session, snap }: { session: EditorSession; snap: E
               setOver(null);
             }}
             onDragOver={(id, type, event) => {
-              if (!session.getSnapshot().drag) return;
+              const drag = session.getSnapshot().drag;
+              if (!drag) return;
+              const zone = zoneFor(event, type);
+              if (!layerDropLegal(snap, drag, id, zone)) return;
               event.preventDefault();
               event.stopPropagation();
-              const zone = zoneFor(event, type);
               if (over?.id !== id || over.zone !== zone) setOver({ id, zone });
             }}
             onDrop={(id, event) => {
-              event.preventDefault();
-              event.stopPropagation();
               const drag = session.getSnapshot().drag;
               const zone = over?.id === id ? over.zone : zoneFor(event, 'frame');
               setOver(null);
               if (!drag) return;
+              if (!layerDropLegal(snap, drag, id, zone)) {
+                event.preventDefault();
+                session.endDrag();
+                const node = drag.kind === 'node' ? snap.document.nodes[drag.nodeId] : undefined;
+                const instanceKind =
+                  drag.kind === 'asset'
+                    ? dragKind(snap, drag.assetId)
+                    : node?.type === 'instance'
+                      ? dragKind(snap, node.component)
+                      : undefined;
+                session.setNotice(
+                  refusalMessage(
+                    snap.document.kind,
+                    drag.kind === 'asset' ? 'instance' : (node?.type ?? 'node'),
+                    instanceKind,
+                  ),
+                );
+                return;
+              }
+              event.preventDefault();
+              event.stopPropagation();
               if (drag.kind === 'node') {
                 const target = layerDropTarget(snap.document, drag.nodeId, id, zone);
                 session.endDrag();
@@ -244,12 +296,36 @@ function zoneFor(event: DragEvent, type: string): DropZone {
   return ratio < 0.5 ? 'before' : 'after';
 }
 
+function layerDropLegal(
+  snap: EditorSnapshot,
+  drag: EditorDrag,
+  targetId: string,
+  zone: DropZone,
+): boolean {
+  if (drag.kind === 'node') {
+    const spot = layerDropTarget(snap.document, drag.nodeId, targetId, zone);
+    if (!spot) return false;
+    const node = snap.document.nodes[drag.nodeId];
+    if (!node) return false;
+    const instanceKind = node.type === 'instance' ? dragKind(snap, node.component) : undefined;
+    return placementAllowed(snap.document, spot.parentId, node.type, instanceKind);
+  }
+  const spot = layerInsertAt(snap.document, targetId, zone);
+  if (!spot) return false;
+  return placementAllowed(snap.document, spot.parentId, 'instance', dragKind(snap, drag.assetId));
+}
+
+function dragKind(snap: EditorSnapshot, assetId: string): string | undefined {
+  return snap.catalog.find((item) => item.id === assetId)?.kind;
+}
+
 function LayerRows({
   item,
   depth,
   selectedId,
   over,
   onSelect,
+  onOpenInstance,
   onDragStart,
   onDragEnd,
   onDragOver,
@@ -260,6 +336,7 @@ function LayerRows({
   selectedId: string | null;
   over: { id: string; zone: DropZone } | null;
   onSelect: (id: string) => void;
+  onOpenInstance: (id: string) => void;
   onDragStart: (id: string, event: DragEvent) => void;
   onDragEnd: () => void;
   onDragOver: (id: string, type: string, event: DragEvent) => void;
@@ -287,6 +364,7 @@ function LayerRows({
         onDragOver={(event) => onDragOver(item.id, item.type, event)}
         onDrop={(event) => onDrop(item.id, event)}
         onClick={() => onSelect(item.id)}
+        onDoubleClick={() => onOpenInstance(item.id)}
       >
         <span className="layer-type">{item.type}</span>
         <span className="layer-name">{item.name}</span>
@@ -299,6 +377,7 @@ function LayerRows({
           selectedId={selectedId}
           over={over}
           onSelect={onSelect}
+          onOpenInstance={onOpenInstance}
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
           onDragOver={onDragOver}
@@ -344,8 +423,20 @@ export function Inspector({ session, snap }: { session: EditorSession; snap: Edi
 
 function Properties({ session, snap }: { session: EditorSession; snap: EditorSnapshot }) {
   const node = snap.selectedNode;
+  const showDefinitions =
+    ownsComponentFeatures(snap.document.kind) && (!node || node.id === snap.document.rootId);
   if (!node) {
-    return <p className="inspector-empty">Select a layer or an element on the stage.</p>;
+    return (
+      <div className="properties">
+        <p className="inspector-empty">Select a layer or an element on the stage.</p>
+        {showDefinitions ? (
+          <>
+            <ComponentFields session={session} snap={snap} />
+            <ComponentVariants session={session} snap={snap} />
+          </>
+        ) : null}
+      </div>
+    );
   }
   return (
     <div className="properties">
@@ -433,14 +524,17 @@ function Properties({ session, snap }: { session: EditorSession; snap: EditorSna
             />
           ))
         : null}
-      <LayoutPanel session={session} snap={snap} node={node} />
-      {node.type !== 'instance' ? <StyleFields session={session} node={node} /> : null}
       {node.type === 'instance' ? (
         <InstanceFields session={session} node={node} snap={snap} />
       ) : null}
-      {node.id === snap.document.rootId && snap.document.fields.length ? (
-        <DocumentFields session={session} snap={snap} />
+      {showDefinitions ? <ComponentFields session={session} snap={snap} /> : null}
+      {node.type !== 'instance' ? <NodeBindings session={session} snap={snap} node={node} /> : null}
+      {showDefinitions ? <ComponentVariants session={session} snap={snap} /> : null}
+      {node.type !== 'instance' && node.id !== snap.document.rootId ? (
+        <NodeVariantStyles session={session} snap={snap} nodeId={node.id} />
       ) : null}
+      {node.type !== 'instance' ? <StyleFields session={session} node={node} /> : null}
+      <LayoutPanel session={session} snap={snap} node={node} />
     </div>
   );
 }
@@ -545,6 +639,15 @@ function InstanceFields({
   }
   return (
     <div className="stack">
+      <p className="meta">Overrides only. Edit the component in its own workspace.</p>
+      <button
+        type="button"
+        className="text-button"
+        name="open-component"
+        onClick={() => session.openAsset(node.component, 'root')}
+      >
+        Open {target.name}
+      </button>
       {target.fields.length ? <h3>Fields</h3> : null}
       {target.fields.map((field) => (
         <FieldOverride key={field.name} session={session} node={node} field={field} />
@@ -591,6 +694,35 @@ function FieldOverride({
   field: FieldDefinition;
 }) {
   const override = node.fields?.[field.name];
+  if (field.type === 'enum' && field.options?.length) {
+    const current = typeof override === 'string' ? override : '';
+    return (
+      <label className="field">
+        <span>{field.name}</span>
+        <select
+          name={`field-${field.name}`}
+          value={current}
+          onChange={(event) =>
+            session.execute({
+              type: 'setField',
+              nodeId: node.id,
+              field: field.name,
+              value: event.target.value || null,
+            })
+          }
+        >
+          <option value="">
+            Default ({field.default === undefined ? 'none' : String(field.default)})
+          </option>
+          {field.options.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </label>
+    );
+  }
   if (field.type === 'boolean') {
     const checked = typeof override === 'boolean' ? override : field.default === true;
     return (
@@ -633,38 +765,6 @@ function FieldOverride({
         }
       }}
     />
-  );
-}
-
-function DocumentFields({ session, snap }: { session: EditorSession; snap: EditorSnapshot }) {
-  return (
-    <div className="stack">
-      <h3>Fields</h3>
-      {snap.document.fields.map((field) => (
-        <TextControl
-          key={field.name}
-          label={`${field.name} default`}
-          name={`default-${field.name}`}
-          value={field.default === undefined ? '' : String(field.default)}
-          onCommit={(raw) => {
-            try {
-              const value = raw === '' ? undefined : parseField(field, raw);
-              session.execute({
-                type: 'defineField',
-                field: {
-                  name: field.name,
-                  type: field.type,
-                  ...(field.options ? { options: [...field.options] } : {}),
-                  ...(value !== undefined ? { default: value } : {}),
-                },
-              });
-            } catch (error) {
-              session.setNotice(error instanceof Error ? error.message : 'Invalid field', 'error');
-            }
-          }}
-        />
-      ))}
-    </div>
   );
 }
 

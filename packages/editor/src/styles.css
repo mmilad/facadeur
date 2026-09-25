@@ -24,9 +24,15 @@
 }
 
 html,
-body {
+body,
+#root {
   height: 100%;
   margin: 0;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
 }
 
 body {
@@ -42,7 +48,9 @@ input {
 .app {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .topbar {
@@ -111,6 +119,7 @@ input {
   position: relative;
   flex: 1;
   min-width: 0;
+  min-height: 0;
   overflow: hidden;
   cursor: grab;
   background-color: var(--canvas);
@@ -515,10 +524,34 @@ input {
   background: #f3e6dc;
 }
 
+.tool:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .tool-key {
   font-family: var(--mono);
   font-size: 10px;
   color: var(--muted);
+}
+
+.fold {
+  margin: 0 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+
+.fold summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.binding-row {
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--line);
 }
 
 .asset-name,

@@ -103,7 +103,19 @@ export function validateLibraries(doc: FlatDocument): void {
   assertStyleContract(doc);
 }
 
+/** Sections and pages do not own component properties. Atoms and components do. */
+export function assertDefinitionKind(doc: FlatDocument): void {
+  if (doc.kind !== 'section' && doc.kind !== 'page') return;
+  if (doc.fields.length) {
+    throw new DocumentError('schema', `${doc.kind} documents cannot define fields`);
+  }
+  if (doc.variants.length) {
+    throw new DocumentError('schema', `${doc.kind} documents cannot define variants`);
+  }
+}
+
 export function validateDefinitions(doc: FlatDocument): void {
+  assertDefinitionKind(doc);
   const names = new Set<string>();
   for (const field of doc.fields) {
     assertFieldDefinition(field);

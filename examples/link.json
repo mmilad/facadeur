@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "id": "link",
+  "name": "Link",
+  "kind": "atom",
+  "fields": [
+    { "name": "label", "type": "text", "default": "Link" },
+    { "name": "href", "type": "link", "default": "#" }
+  ],
+  "variants": [{ "name": "tone", "values": ["default", "muted"], "default": "default" }],
+  "tokenInterface": {
+    "reads": ["color.accent.default", "color.accent.hover", "color.text.secondary", "type.label"]
+  },
+  "styles": {
+    "declarations": {
+      "color": "{color.accent.default}",
+      "font": "{type.label}",
+      "textDecoration": "underline",
+      "textUnderlineOffset": "0.15em"
+    },
+    "states": {
+      "hover": { "color": "{color.accent.hover}" },
+      "focus-visible": {
+        "outline": "2px solid {color.accent.default}",
+        "outlineOffset": "2px"
+      }
+    },
+    "variants": {
+      "tone": {
+        "muted": {
+          "declarations": { "color": "{color.text.secondary}" },
+          "states": {
+            "hover": { "color": "{color.accent.default}" }
+          }
+        }
+      }
+    }
+  },
+  "root": {
+    "id": "root",
+    "type": "frame",
+    "tag": "a",
+    "layout": {
+      "direction": "row",
+      "align": "center",
+      "width": { "mode": "hug" },
+      "height": { "mode": "hug" }
+    },
+    "bindings": [
+      { "field": "label", "target": "text" },
+      { "field": "href", "target": "attribute", "name": "href" }
+    ]
+  }
+}
