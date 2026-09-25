@@ -84,8 +84,8 @@
       "align": "stretch",
       "gap": "{space.stack.lg}",
       "padding": "{space.inset.lg}",
-      "width": { "mode": "fixed", "size": 1040 },
-      "height": { "mode": "hug", "min": 860 }
+      "width": { "mode": "fill" },
+      "height": { "mode": "hug" }
     },
     "children": [
       {
@@ -273,12 +273,14 @@
             "type": "frame",
             "tag": "div",
             "layout": {
-              "direction": "row",
-              "align": "start",
-              "wrap": true,
+              "direction": "column",
+              "align": "stretch",
               "gap": "{space.gap.lg}",
               "width": { "mode": "fill" },
-              "height": { "mode": "hug" }
+              "height": { "mode": "hug" },
+              "breakpoints": {
+                "desktop": { "direction": "row", "align": "start" }
+              }
             },
             "children": [
               {
@@ -286,8 +288,11 @@
                 "type": "instance",
                 "component": "card",
                 "layout": {
-                  "width": { "mode": "fixed", "size": 420 },
-                  "height": { "mode": "hug" }
+                  "width": { "mode": "fill" },
+                  "height": { "mode": "hug" },
+                  "breakpoints": {
+                    "desktop": { "width": { "mode": "fixed", "size": 420 } }
+                  }
                 },
                 "fields": {
                   "eyebrow": "Layout",
@@ -299,7 +304,13 @@
                 "id": "card-signin",
                 "type": "instance",
                 "component": "sign-in",
-                "layout": { "width": { "mode": "fixed", "size": 460 }, "height": { "mode": "hug" } }
+                "layout": {
+                  "width": { "mode": "fill" },
+                  "height": { "mode": "hug" },
+                  "breakpoints": {
+                    "desktop": { "width": { "mode": "fixed", "size": 460 } }
+                  }
+                }
               }
             ]
           }

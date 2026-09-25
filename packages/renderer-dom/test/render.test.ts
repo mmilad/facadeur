@@ -116,4 +116,51 @@ describe('renderer', () => {
     expect(label?.getAttribute('class')).toBe('label');
     expect(host.querySelector('[data-id="missing"]')?.textContent).toBe('Unknown component: nope');
   });
+
+  it('builds nodes in the document that hosts the parent', () => {
+    const iframe = document.createElement('iframe');
+    document.body.append(iframe);
+    const frameDocument = iframe.contentDocument;
+    if (!frameDocument?.body) throw new Error('iframe has no document');
+    const documents = examples();
+    const page = documents.find((entry) => entry.id === 'specimen');
+    if (!page) throw new Error('missing page');
+    renderDocument(page, documents, frameDocument.body);
+    const heading = frameDocument.querySelector('[data-id="specimen-section/intro/heading"]');
+    expect(heading?.ownerDocument).toBe(frameDocument);
+    expect(heading?.textContent).toBe('Specimen');
+    expect(document.body.contains(heading)).toBe(false);
+    iframe.remove();
+  });
+
+  it('patches a node inside an iframe instead of appending a second copy', () => {
+    const iframe = document.createElement('iframe');
+    document.body.append(iframe);
+    const body = iframe.contentDocument?.body;
+    if (!body) throw new Error('iframe has no document');
+    const before: DocumentFile = {
+      version: 1,
+      id: 'sheet',
+      name: 'Sheet',
+      kind: 'section',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [{ id: 'title', type: 'text', tag: 'h1', text: 'Before' }],
+      },
+    };
+    const after: DocumentFile = {
+      ...before,
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [{ id: 'title', type: 'text', tag: 'h1', text: 'After' }],
+      },
+    };
+    renderDocument(before, [before], body);
+    renderDocument(after, [after], body);
+    expect(body.querySelectorAll('[data-id="title"]')).toHaveLength(1);
+    expect(body.querySelector('[data-id="title"]')?.textContent).toBe('After');
+    iframe.remove();
+  });
 });

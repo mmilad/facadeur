@@ -262,6 +262,10 @@ The renderer writes `data-id`. The document root frame is the canvas and is not 
 - A node inside an expanded instance is prefixed with the instance id: `card-notes/title`. The component root frame is that instance element, so it does not add a second `root` segment.
 - Nested instances and frames keep gaining prefixes: `card-signin/email/control`, `specimen-section/intro/heading`.
 
+## Viewports
+
+The editor shows one same-origin iframe per breakpoint. The iframe's width is that breakpoint's `minWidth`, so the `@media (min-width)` rules from tokens and style blocks match the frame. Frame height follows the content. Selection and hover are drawn by the editor above the iframes.
+
 ## Out of scope here
 
-Iframe viewports, slots, codegen, and multiplayer sync. Media queries are real `@media` rules on the document that hosts the style engine. They follow the browser viewport until each viewport has its own iframe.
+Slots, codegen, and multiplayer sync.

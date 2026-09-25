@@ -155,9 +155,9 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 
 ### M4 – Viewports mit iframes
 
-- [ ] `FrameHost`-Schnittstelle, ein iframe pro Viewport, same-origin
-- [ ] Breakpoints konfigurierbar, Frames nebeneinander auf der Bühne
-- [ ] Auswahl-/Hover-Overlays über den iframes, korrekt bei Zoom/Pan
+- [x] `FrameHost`-Schnittstelle, ein iframe pro Viewport, same-origin
+- [x] Breakpoints konfigurierbar, Frames nebeneinander auf der Bühne
+- [x] Auswahl-/Hover-Overlays über den iframes, korrekt bei Zoom/Pan
 
 ### M5 – Editor-Grundgerüst
 
@@ -228,3 +228,8 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 - 2026-09-24: Frames sind Flexbox. Die Standardrichtung ist `column` (die CSS-Anfangrichtung wäre `row`; Sektionen, Karten und Formulare stapeln). `gap`, `padding` und `margin` sind nur Token-Referenzen. `width` und `height` sind `{ mode: hug | fill | fixed }`, nicht mehr nackte Pixel. `fixed.size` ist px, ein Token oder `{ unit: "%", value }`. Absolut nur bei `position: "absolute"`. Breakpoint-Overrides werden `@media (min-width)` ab dem nächstgrößeren Breakpoint; die Basis bleibt ohne Query. Fill/Hug eines Kindes wird gegen die Basis-Richtung des Eltern-Frames berechnet, nicht gegen eine Richtung, die erst in einer Query gilt. Die Beispiele nutzen Auto Layout; absolute Platzierung bleibt im Schema und im Konvertierungstest die ausdrückliche Ausnahme.
 - 2026-09-24: Der Renderer schreibt `data-node` (lokale Id) und patched über `data-id`. `setStyle` und Layout-Änderungen bauen das Element nicht neu. `DocumentStore`-Events aktualisieren den betroffenen Teilbaum. Die Bühne erzeugt die Style-Engine auf `document` und malt das Specimen daraus. Die früheren Klassen-Styles für Button, Input und Card in `styles.css` entfallen.
 - 2026-09-24: `data-id` enthält jedes Frame unter der Instanz (`specimen-section/intro/heading`). Das Wurzel-Frame der Komponente ist das Instanz-Element und fügt kein zweites `root` an. Ein Stylesheet braucht einen Browsing Context: `createHTMLDocument()` hat in jsdom keins, ein iframe-Dokument schon. Die Engine hängt ihr `<style>` an das übergebene `Document` und läuft später einmal pro iframe.
+- 2026-09-24: M4. `FrameHost` in `packages/editor` kapselt ein same-origin iframe. `contentDocument` und `contentWindow` gibt es nur dort; der übrige Editor spricht die Schnittstelle an, kein `postMessage`. Pro Breakpoint eine Style-Engine und ein Renderer, alle am selben `DocumentStore`. Ein Befehl malt jeden Viewport. Tokens und Schriften kommen über `setDesign` in jedes iframe.
+- 2026-09-24: Die Bühne liest Breakpoints aus dem offenen Dokument, sonst aus der Projektvorlage, sonst mobile 375, tablet 768, desktop 1440. Die iframe-Breite ist `minWidth`, damit echte `@media (min-width)` greifen. Die Höhe folgt der Content-Box. Ein Label steht über jedem Frame und bleibt in Bildschirmgröße lesbar (`font-size` geteilt durch den Bühnen-Scale). `settings.artboard` bleibt das Blattmaß im Dokument; die Bühne zeichnet kein einzelnes Sheet mehr.
+- 2026-09-24: Auswahl und Hover liegen im Overlay auf der Bühne, nie im iframe. `overlayBox` rechnet iframe-lokale `getBoundingClientRect`-Werte plus die Bildschirmbox des iframes in Bühnenkoordinaten um. Ein Klick setzt dieselbe `data-id` in jedem Frame; Hover zeigt nur das Ziel unter dem Zeiger. `instanceof HTMLElement` gilt nicht über das iframe-Realm, deshalb prüft Renderer und Overlay `nodeType`.
+- 2026-09-24: iframes haben `pointer-events: none`. Wheel und Drag treffen die Bühne, auch über einem Frame. Bewegung unter 4px ist ein Klick und wählt per `elementFromPoint` im Frame-Dokument; eine größere Bewegung schwenkt. Doppelklick, Strg+Klick und Esc-zum-Eltern bleiben M6. Der Renderer erzeugt Knoten im `ownerDocument` des Parents.
+- 2026-09-24: Das Specimen füllt die Frame-Breite (`width: fill` statt fest 1040, ohne Mindesthöhe 860). Die Card-Reihe ist bis desktop eine Spalte, ab desktop eine Zeile; die Karten sind darunter `fill` und auf desktop fest 420/460. Die Typo-Skala bleibt die bestehende `@media`-Stufe (display 40/48/56). So unterscheiden sich Layout und Schrift zwischen den drei Frames.

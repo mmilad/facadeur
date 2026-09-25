@@ -1,6 +1,4 @@
 import { validateCatalog, type DocumentFile } from '@facadeur/core';
-import { createDomRenderer, type RenderedNode } from '@facadeur/renderer-dom';
-import { createStyleEngine } from '@facadeur/style-engine';
 import { createDocumentStore } from '@facadeur/store-yjs';
 import { createProjectTemplate } from '@facadeur/tokens';
 import button from '../../../examples/button.json';
@@ -11,9 +9,10 @@ import specimenPage from '../../../examples/specimen-page.json';
 import specimenSection from '../../../examples/specimen-section.json';
 import { createSelection } from './selection.js';
 import { createStage } from './stage.js';
+import { createViewportBoard } from './viewports.js';
 import './styles.css';
 
-/** Keeps the renderer, stores, and style engine alive after main() returns. */
+/** Keeps the board, stores, and engines alive after main() returns. */
 const session: object[] = [];
 
 const pageName = document.querySelector('#page-name');
@@ -52,62 +51,88 @@ function main() {
     return;
   }
 
-  const page = documents.find((document) => document.id === 'specimen');
+  const page = documents.find((entry) => entry.id === 'specimen');
   if (!page) {
     showBootError(new Error('Specimen page is missing'));
     return;
   }
 
   pageName.textContent = page.name;
-  const board = document.createElement('div');
-  board.className = 'artboard';
-  const artboard = page.settings?.artboard ?? { width: 960, height: 640 };
-  board.style.width = `${artboard.width}px`;
-  board.style.height = `${artboard.height}px`;
-  stageEl.append(board);
 
-  let records: Map<string, RenderedNode>;
+  let untouched = true;
   try {
-    const styles = createStyleEngine(document);
-    styles.setDesign(createProjectTemplate());
-    const renderer = createDomRenderer({ parent: board, catalog: documents, styles });
-    records = renderer.mount(page);
+    const design = createProjectTemplate();
     const stores = documents.map((entry) => createDocumentStore(entry));
-    for (const store of stores) renderer.connect(store);
-    session.push(styles, renderer, ...stores);
+    let onLayout = () => {};
+    const board = createViewportBoard({
+      parent: stageEl,
+      documents,
+      page,
+      stores,
+      design,
+      onLayout: () => onLayout(),
+    });
+    const stage = createStage(viewport, stageEl);
+    const selection = createSelection({
+      stage: stageEl,
+      inspector,
+      getScale: () => stage.getScale(),
+      frames: () => board.frames(),
+    });
+    onLayout = () => selection.reposition();
+    session.push(board, ...stores);
+
+    const fit = () => {
+      board.syncHeights();
+      stage.fit(board.element);
+      stageEl.classList.add('is-ready');
+    };
+
+    stage.onChange(({ scale }) => {
+      zoomReadout.textContent = `${Math.round(scale * 100)}%`;
+      selection.reposition();
+    });
+    stage.onClick((event) => {
+      const hit = selection.hitAt(event.clientX, event.clientY);
+      if (hit) selection.select(hit.id);
+      else selection.clear();
+    });
+
+    viewport.addEventListener('pointermove', (event) => {
+      if (stage.isPanning()) {
+        selection.clearHover();
+        return;
+      }
+      selection.hoverAt(event.clientX, event.clientY);
+    });
+    viewport.addEventListener('pointerdown', () => {
+      untouched = false;
+    });
+    viewport.addEventListener('wheel', () => {
+      untouched = false;
+    });
+
+    stageEl.addEventListener('pointerdown', (event) => {
+      if (
+        event.target instanceof Element &&
+        event.target.closest('input, button, textarea, select')
+      ) {
+        event.preventDefault();
+      }
+    });
+
+    resetView.addEventListener('click', () => {
+      untouched = true;
+      fit();
+    });
+    fit();
+    void board.whenFontsReady().then(() => {
+      if (untouched) fit();
+      else selection.reposition();
+    });
   } catch (error) {
     showBootError(error);
-    return;
   }
-  const stage = createStage(viewport, stageEl);
-  const selection = createSelection({
-    stage: stageEl,
-    inspector,
-    getScale: () => stage.getScale(),
-  });
-  selection.setNodes(records);
-
-  stage.onChange(({ scale }) => {
-    zoomReadout.textContent = `${Math.round(scale * 100)}%`;
-    selection.reposition();
-  });
-  stage.onBackgroundClick(() => selection.clear());
-
-  stageEl.addEventListener('pointerdown', (event) => {
-    if (
-      event.target instanceof Element &&
-      event.target.closest('input, button, textarea, select')
-    ) {
-      event.preventDefault();
-    }
-  });
-
-  const fit = () => {
-    stage.fit(board);
-    stageEl.classList.add('is-ready');
-  };
-  resetView.addEventListener('click', fit);
-  fit();
 }
 
 main();
