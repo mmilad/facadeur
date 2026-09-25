@@ -13,7 +13,8 @@ function contentHeight(frameDocument: Document): number {
   let bottom = 0;
   for (const child of body.children) {
     if (child.nodeType !== Node.ELEMENT_NODE) continue;
-    bottom = Math.max(bottom, child.getBoundingClientRect().bottom);
+    const rect = child.getBoundingClientRect();
+    bottom = Math.max(bottom, rect.bottom);
   }
   return bottom;
 }
@@ -72,6 +73,7 @@ export function createFrameHost(options: FrameHostOptions): FrameHost {
   let mounted = false;
   let destroyed = false;
   let observer: ResizeObserver | undefined;
+  let mutations: MutationObserver | undefined;
   let syncing = false;
 
   function contentDocument(): Document {
@@ -117,8 +119,9 @@ export function createFrameHost(options: FrameHostOptions): FrameHost {
   }
 
   function watch(frameDocument: Document): void {
-    if (typeof ResizeObserver === 'undefined' || !frameDocument.body) return;
-    observer = new ResizeObserver(() => {
+    const body = frameDocument.body;
+    if (!body) return;
+    const measure = () => {
       if (syncing) return;
       syncing = true;
       try {
@@ -126,8 +129,17 @@ export function createFrameHost(options: FrameHostOptions): FrameHost {
       } finally {
         syncing = false;
       }
-    });
-    observer.observe(frameDocument.body);
+    };
+    if (typeof ResizeObserver !== 'undefined') {
+      observer = new ResizeObserver(measure);
+      observer.observe(body);
+    }
+    // The first measure often runs before the renderer inserts the root.
+    // A clipped body does not resize, so watch the tree as well.
+    if (typeof MutationObserver !== 'undefined') {
+      mutations = new MutationObserver(measure);
+      mutations.observe(body, { childList: true, subtree: true, characterData: true });
+    }
   }
 
   return {
@@ -156,6 +168,8 @@ export function createFrameHost(options: FrameHostOptions): FrameHost {
       destroyed = true;
       observer?.disconnect();
       observer = undefined;
+      mutations?.disconnect();
+      mutations = undefined;
       element.remove();
       mounted = false;
     },

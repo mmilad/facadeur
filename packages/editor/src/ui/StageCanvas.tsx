@@ -124,6 +124,13 @@ export function StageCanvas({
     fitRef.current = fit;
     untouchedRef.current = true;
     fit();
+    // Layout and fonts settle after the first measure. Refit while the user has not panned.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (boardRef.current !== board || !untouchedRef.current) return;
+        fit();
+      });
+    });
     void board.whenFontsReady().then(() => {
       if (boardRef.current !== board) return;
       if (untouchedRef.current) fit();

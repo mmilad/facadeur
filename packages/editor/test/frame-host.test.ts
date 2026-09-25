@@ -46,4 +46,31 @@ describe('FrameHost', () => {
     expect(host.element.isConnected).toBe(false);
     expect(() => host.contentDocument()).toThrow(/no document/i);
   });
+
+  it('remeasures when a node is inserted after the first height sync', async () => {
+    const host = createFrameHost({ id: 'mobile', width: 375 });
+    host.mount(document.body);
+    host.syncHeight();
+
+    const block = host.contentDocument().createElement('div');
+    block.getBoundingClientRect = () =>
+      ({
+        x: 0,
+        y: 0,
+        left: 0,
+        top: 0,
+        right: 80,
+        bottom: 36,
+        width: 80,
+        height: 36,
+        toJSON() {
+          return {};
+        },
+      }) as DOMRect;
+    host.contentDocument().body.append(block);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(Number.parseFloat(host.element.style.height)).toBeGreaterThanOrEqual(36);
+    host.destroy();
+  });
 });
