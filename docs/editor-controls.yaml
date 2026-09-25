@@ -162,7 +162,18 @@ controls:
     value_from: focusViewportId + editTarget
     catalogs: [breakpoints]
     emit: session.setFocusViewport / setEditTarget
-    notes: ViewportEditBar in RightRail above Properties and Tokens; not a document style command
+    notes: |
+      ViewportEditBar in RightRail above Properties when editing assets; duplicated in center
+      design-domain stage (Colors, Fonts, Spacing, …) for token/font overrides. Not a document style command.
+
+  - id: design_domains
+    path: ui/design-domain-stage
+    when: left tree Design domain row selected (colors, fonts, spacing, radius, shadow, typography)
+    value_from: snap.design tokens/fonts filtered by domain
+    emit: session.executeDesign
+    notes: |
+      Phase 3 (2026-09-25 UX audit §3). Replaces Design → Tokens/Fonts and retired right-rail
+      Tokens/Fonts tabs. Center stage hosts full domain editors (design-panels); Properties rail unchanged.
 
   - id: viewport_chrome
     path: ui/viewport-panel
