@@ -6,9 +6,11 @@ shell:
     tools: Select, Frame, Text, Image as compact icon buttons (keyboard shortcuts unchanged)
   left_rail:
     - project_tree: Design (Tokens, Fonts) then Atoms / Components / Sections / Pages
-    - layers: below the tree in the same column
+    - viewports: breakpoint rows above Layers; selection clears node selection (UX audit §1)
+    - layers: below viewports in the same column
   right_rail:
     default: Properties inspector only (no Tokens / Fonts tabs)
+    viewport_selected: Viewport options only (chrome + breakpoint list); hides ViewportEditBar
     design_surface: Tokens or Fonts open from the left Design tree; same column as the inspector, with a section heading
   viewport_context:
     component: ViewportEditBar
@@ -161,6 +163,15 @@ controls:
     catalogs: [breakpoints]
     emit: session.setFocusViewport / setEditTarget
     notes: ViewportEditBar in RightRail above Properties and Tokens; not a document style command
+
+  - id: viewport_chrome
+    path: ui/viewport-panel
+    value_from: selectedViewportId + session viewportChrome map
+    emit: session.setViewportChrome / setBreakpoints (list only)
+    notes: |
+      Phase 1 (2026-09-25 UX audit §1). Preview-only stage chrome (outer pad, title bar,
+      inner iframe px inset, alignment). Persisted in editor session per document+breakpoint id,
+      not in document JSON — does not mutate the component tree or DSL layout.
 
 non_goals_for_controls:
   - owning Yjs / DocumentStore

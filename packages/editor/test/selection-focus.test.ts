@@ -22,6 +22,7 @@ function mountedFrame(id: string, minWidth: number): ViewportFrame {
     host,
     renderer: { destroy() {} } as DomRenderer,
     styles: { destroy() {} } as StyleEngine,
+    column,
   };
 }
 

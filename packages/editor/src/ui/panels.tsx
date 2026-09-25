@@ -46,6 +46,7 @@ import {
 import { editorBreakpoints, viewportEditContext } from '../viewport-edit.js';
 import { TextControl } from './fields.js';
 import { OverrideCue, ViewportEditBar } from './viewport-bar.js';
+import { ViewportLayersList, ViewportOptionsPanel } from './viewport-panel.js';
 
 export type EditorSurface = 'properties' | 'tokens' | 'fonts';
 
@@ -93,6 +94,7 @@ export function LayersPanel({ session, snap }: { session: EditorSession; snap: E
   return (
     <section className="side-block side-block-grow" aria-label="Layers">
       <h2>Layers</h2>
+      <ViewportLayersList session={session} snap={snap} />
       <div className="side-scroll">
         {snap.layers ? (
           <LayerRows
@@ -297,7 +299,8 @@ export function RightRail({
   snap: EditorSnapshot;
   surface: EditorSurface;
 }) {
-  const showViewportBar = surface === 'properties' || surface === 'tokens';
+  const showViewportBar =
+    !snap.selectedViewportId && (surface === 'properties' || surface === 'tokens');
   const railLabel =
     surface === 'properties' ? 'Inspector' : surface === 'tokens' ? 'Tokens' : 'Fonts';
   return (
@@ -305,9 +308,17 @@ export function RightRail({
       {surface !== 'properties' ? <h2>{railLabel}</h2> : null}
       {showViewportBar ? <ViewportEditBar session={session} snap={snap} /> : null}
       <div className="side-scroll">
-        {surface === 'properties' ? <Properties session={session} snap={snap} /> : null}
-        {surface === 'tokens' ? <TokensPanel session={session} snap={snap} /> : null}
-        {surface === 'fonts' ? <FontsPanel session={session} snap={snap} /> : null}
+        {snap.selectedViewportId ? (
+          <ViewportOptionsPanel session={session} snap={snap} />
+        ) : surface === 'properties' ? (
+          <Properties session={session} snap={snap} />
+        ) : null}
+        {!snap.selectedViewportId && surface === 'tokens' ? (
+          <TokensPanel session={session} snap={snap} />
+        ) : null}
+        {!snap.selectedViewportId && surface === 'fonts' ? (
+          <FontsPanel session={session} snap={snap} />
+        ) : null}
       </div>
     </section>
   );

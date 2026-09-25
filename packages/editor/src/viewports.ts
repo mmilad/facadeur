@@ -9,12 +9,15 @@ import { createDomRenderer, type DomRenderer } from '@facadeur/renderer-dom';
 import { createStyleEngine, type StyleEngine } from '@facadeur/style-engine';
 import { activeBreakpoints, type DesignInput } from '@facadeur/tokens';
 import { createFrameHost, type FrameHost } from './frame-host.js';
+import { resolvedViewportChrome, type ViewportChromeSettings } from './viewport-chrome.js';
 
 export interface ViewportFrame {
   breakpoint: Breakpoint;
   host: FrameHost;
   renderer: DomRenderer;
   styles: StyleEngine;
+  /** Stage column element for this breakpoint. */
+  column: HTMLElement;
 }
 
 export interface ViewportBoard {
@@ -26,6 +29,8 @@ export interface ViewportBoard {
   syncHeights(): void;
   /** Resolves after each frame's fonts settle, then measures heights again. */
   whenFontsReady(): Promise<void>;
+  /** Apply session-only chrome without rebuilding frames. */
+  applyChrome(getChrome: (breakpointId: string) => ViewportChromeSettings | undefined): void;
   destroy(): void;
 }
 
@@ -42,6 +47,7 @@ export function createViewportBoard(options: {
   paintRoot?: boolean;
   /** After a height sync or a breakpoint rebuild. */
   onLayout?: () => void;
+  getChrome?: (breakpointId: string) => ViewportChromeSettings | undefined;
 }): ViewportBoard {
   const parent = options.parent;
   const stores = options.stores;
@@ -56,7 +62,28 @@ export function createViewportBoard(options: {
   let signature = '';
   let destroyed = false;
   let rebuildQueued = false;
+  let getChrome = options.getChrome;
   const unsubscribers: (() => void)[] = [];
+
+  function paintChrome(frame: ViewportFrame): void {
+    const chrome = resolvedViewportChrome(frame.breakpoint, getChrome?.(frame.breakpoint.id));
+    frame.column.style.padding = `${chrome.outerPaddingPx}px`;
+    const title = frame.column.querySelector('.viewport-chrome-title');
+    if (title) title.textContent = chrome.title;
+    frame.host.setPreviewChrome({
+      innerPaddingPx: chrome.innerPaddingPx,
+      contentAlign: chrome.contentAlign,
+    });
+    const body = frame.column.querySelector('.viewport-chrome-body');
+    if (body instanceof HTMLElement) {
+      body.classList.toggle('is-align-center', chrome.contentAlign === 'center');
+    }
+  }
+
+  function paintAllChrome(): void {
+    for (const frame of frames) paintChrome(frame);
+    syncHeights();
+  }
 
   function pageDocument(): DocumentFile {
     const store = stores.find((item) => item.getDocument().id === pageId);
@@ -98,24 +125,32 @@ export function createViewportBoard(options: {
       column.className = 'viewport-frame';
       column.dataset.breakpoint = breakpoint.id;
 
-      const slot = parent.ownerDocument.createElement('div');
-      slot.className = 'viewport-label-slot';
-      const label = parent.ownerDocument.createElement('p');
-      label.className = 'viewport-label';
-      label.textContent = `${breakpoint.id} · ${breakpoint.minWidth}`;
-      slot.append(label);
+      const chrome = parent.ownerDocument.createElement('div');
+      chrome.className = 'viewport-chrome';
+
+      const bar = parent.ownerDocument.createElement('div');
+      bar.className = 'viewport-chrome-bar';
+
+      const title = parent.ownerDocument.createElement('p');
+      title.className = 'viewport-chrome-title';
+
+      const body = parent.ownerDocument.createElement('div');
+      body.className = 'viewport-chrome-body';
 
       const screen = parent.ownerDocument.createElement('div');
       screen.className = 'viewport-screen';
+
+      bar.append(title);
+      chrome.append(bar, body);
+      column.append(chrome);
 
       const host = createFrameHost({
         id: breakpoint.id,
         width: breakpoint.minWidth,
         ownerDocument: parent.ownerDocument,
       });
-      host.element.title = `${breakpoint.id} viewport, ${breakpoint.minWidth}`;
-      column.append(slot, screen);
-      // The iframe only gets a document once it is connected.
+      host.element.title = `${breakpoint.id} viewport, ${breakpoint.minWidth}px`;
+      body.append(screen);
       row.append(column);
       host.mount(screen);
 
@@ -129,7 +164,9 @@ export function createViewportBoard(options: {
       });
       renderer.mount(page);
       for (const store of stores) renderer.connect(store);
-      frames.push({ breakpoint, host, renderer, styles });
+      const frame: ViewportFrame = { breakpoint, host, renderer, styles, column };
+      frames.push(frame);
+      paintChrome(frame);
     }
   }
 
@@ -189,6 +226,10 @@ export function createViewportBoard(options: {
         }),
       );
       if (!destroyed) syncHeights();
+    },
+    applyChrome(nextGetChrome) {
+      getChrome = nextGetChrome;
+      paintAllChrome();
     },
     destroy() {
       if (destroyed) return;

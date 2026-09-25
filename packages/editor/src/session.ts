@@ -13,6 +13,7 @@ import { createDocumentStore, type YjsDocumentStore } from '@facadeur/store-yjs'
 import type { DesignInput } from '@facadeur/tokens';
 import type { JsonFileHandle } from './files.js';
 import { layerTree, nodeIdForHit, renderIdForNode, type LayerItem } from './selection-model.js';
+import { chromeStorageKey, type ViewportChromeSettings } from './viewport-chrome.js';
 import type { StyleEditMode } from './viewport-edit.js';
 
 export type EditorTool = 'select' | 'frame' | 'text' | 'image';
@@ -43,6 +44,10 @@ export interface EditorSnapshot {
   selectedNode: FlatNode | null;
   /** Breakpoint id of the frame the user last clicked. Null until then. */
   focusViewportId: string | null;
+  /** When set, the right rail edits viewport chrome instead of node properties. */
+  selectedViewportId: string | null;
+  /** Per-breakpoint editor chrome for the open document (session memory, not in DSL). */
+  viewportChrome: Readonly<Record<string, ViewportChromeSettings>>;
   /**
    * Where style, layout, and token edits land.
    * Stays on base until the user switches to the focused viewport's override.
@@ -74,6 +79,10 @@ export interface EditorSession {
   selectRendered: (renderedId: string | null) => void;
   /** Last clicked viewport frame. Does not change the selection or the edit target. */
   setFocusViewport: (breakpointId: string | null) => void;
+  /** Select a viewport row (Layers or stage). Clears the node selection. */
+  selectViewport: (breakpointId: string | null) => void;
+  /** Update preview-only chrome for one breakpoint on the open document. */
+  setViewportChrome: (breakpointId: string, patch: Partial<ViewportChromeSettings>) => void;
   /** Base, or a min-width override for the focused viewport. */
   setEditTarget: (target: StyleEditMode) => void;
   setTool: (tool: EditorTool) => void;
@@ -125,6 +134,8 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   let selectedNodeId: string | null = null;
   let selectedRenderId: string | null = null;
   let focusViewportId: string | null = null;
+  let selectedViewportId: string | null = null;
+  const viewportChromeStore = new Map<string, ViewportChromeSettings>();
   let editTarget: StyleEditMode = 'base';
   let notice: EditorNotice | null = null;
   let zoomLabel = '100%';
@@ -197,6 +208,20 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     selectedRenderId = null;
   }
 
+  function clearViewportSelection() {
+    selectedViewportId = null;
+  }
+
+  function viewportChromeForOpenDocument(): Record<string, ViewportChromeSettings> {
+    const prefix = `${openId}:`;
+    const out: Record<string, ViewportChromeSettings> = {};
+    for (const [key, value] of viewportChromeStore) {
+      if (!key.startsWith(prefix)) continue;
+      out[key.slice(prefix.length)] = value;
+    }
+    return out;
+  }
+
   function refreshSelection() {
     if (!selectedNodeId) return;
     const doc = openFlat();
@@ -244,6 +269,8 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       selectedRenderId,
       selectedNode,
       focusViewportId,
+      selectedViewportId,
+      viewportChrome: viewportChromeForOpenDocument(),
       editTarget,
       componentTarget,
       canUndo: history.some((store) => store.canUndo()),
@@ -322,6 +349,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
           openId = next;
           lastOpen.set(kind, next);
           clearSelection();
+          clearViewportSelection();
           tool = 'select';
           drag = null;
         }
@@ -347,6 +375,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
         selectedRenderId = renderIdForNode(doc, doc.rootId, doc.kind !== 'page');
       } else {
         clearSelection();
+        clearViewportSelection();
       }
       publish();
     },
@@ -360,6 +389,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       if (!doc.nodes[nodeId]) return;
       const renderId = renderIdForNode(doc, nodeId, paintRoot());
       if (selectedNodeId === nodeId && selectedRenderId === renderId) return;
+      clearViewportSelection();
       selectedNodeId = nodeId;
       selectedRenderId = renderId;
       publish();
@@ -381,6 +411,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     selectRendered(renderedId) {
       if (!renderedId) {
         clearSelection();
+        clearViewportSelection();
         publish();
         return;
       }
@@ -393,6 +424,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       }
       const renderId = renderIdForNode(doc, nodeId, paintRoot());
       if (selectedNodeId === nodeId && selectedRenderId === renderId) return;
+      clearViewportSelection();
       selectedNodeId = nodeId;
       selectedRenderId = renderId;
       publish();
@@ -401,6 +433,26 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       const next = breakpointId && breakpointId.length > 0 ? breakpointId : null;
       if (focusViewportId === next) return;
       focusViewportId = next;
+      publish();
+    },
+    selectViewport(breakpointId) {
+      const next = breakpointId && breakpointId.length > 0 ? breakpointId : null;
+      if (selectedViewportId === next && !selectedNodeId && focusViewportId === next) return;
+      clearSelection();
+      selectedViewportId = next;
+      focusViewportId = next;
+      publish();
+    },
+    setViewportChrome(breakpointId, patch) {
+      if (!breakpointId) return;
+      const key = chromeStorageKey(openId, breakpointId);
+      const previous = viewportChromeStore.get(key) ?? {
+        title: '',
+        outerPaddingPx: 12,
+        innerPaddingPx: 0,
+        contentAlign: 'start' as const,
+      };
+      viewportChromeStore.set(key, { ...previous, ...patch });
       publish();
     },
     setEditTarget(target) {
@@ -461,6 +513,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
         workspace = kind;
         lastOpen.set(kind, file.id);
         clearSelection();
+        clearViewportSelection();
         tool = 'select';
         drag = null;
         generation += 1;
