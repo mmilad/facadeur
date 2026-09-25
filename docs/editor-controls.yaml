@@ -51,7 +51,7 @@ controls:
       - key: width|height
         ui: size_axis # hug/fill/fixed + min/max
         options: dimension tokens for fixed/token mode
-    notes: parent supplies writingBreakpointId / override cue; implemented in ui/controls/layout (LayoutPanel)
+    notes: parent supplies writingBreakpointId / override cue; implemented (LayoutPanel → LayoutControl)
 
   - id: appearance_color
     path: ui/controls/color
@@ -61,6 +61,7 @@ controls:
       - key: value
         ui: color_input + optional token combobox mode
         emit: setStyle | setStyleBlock path # parent decides
+    notes: implemented (ColorControl); StyleFields + color rows in TokensPanel; colorTokenRefs in editing.ts
 
   - id: spacing
     path: ui/controls/spacing
@@ -69,7 +70,7 @@ controls:
     fields:
       - key: token
         ui: combobox
-    notes: may be folded into layout rather than standalone
+    notes: implemented (SpacingControl); LayoutControl imports shared spacing editor
 
   - id: typography
     path: ui/controls/typography

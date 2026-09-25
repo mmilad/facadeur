@@ -8,6 +8,7 @@ import {
   type FontFamily,
 } from '@facadeur/core';
 import {
+  colorTokenRefs,
   layerDropTarget,
   layerInsertAt,
   placementAllowed,
@@ -25,6 +26,7 @@ import {
   NodeVariantStyles,
   ownsComponentFeatures,
 } from './component-panel.js';
+import { ColorControl, isColorStyleProperty } from './controls/color/index.js';
 import { LayoutPanel } from './layout-panel.js';
 import {
   formatTokenValue,
@@ -436,7 +438,7 @@ function Properties({ session, snap }: { session: EditorSession; snap: EditorSna
       {node.type !== 'instance' ? (
         <NodeStyleBlock session={session} snap={snap} nodeId={node.id} />
       ) : null}
-      {node.type !== 'instance' ? <StyleFields session={session} node={node} /> : null}
+      {node.type !== 'instance' ? <StyleFields session={session} snap={snap} node={node} /> : null}
       <LayoutPanel session={session} snap={snap} node={node} />
     </div>
   );
@@ -461,14 +463,18 @@ function commitAttribute(
 
 function StyleFields({
   session,
+  snap,
   node,
 }: {
   session: EditorSession;
+  snap: EditorSnapshot;
   node: Exclude<FlatNode, { type: 'instance' }>;
 }) {
   const [property, setProperty] = useState('');
   const [value, setValue] = useState('');
+  const colorTokens = useMemo(() => colorTokenRefs(snap.design.tokens), [snap.design.tokens]);
   const entries = Object.entries(node.style ?? {});
+  const addingColor = isColorStyleProperty(property);
   return (
     <div className="stack">
       <h3>Node style</h3>
@@ -476,21 +482,39 @@ function StyleFields({
         Always Base. It overrides the style block, and breakpoint rules stay above it.
       </p>
       {entries.length === 0 ? <p className="meta">No style overrides.</p> : null}
-      {entries.map(([key, current]) => (
-        <TextControl
-          key={key}
-          label={key}
-          value={current}
-          onCommit={(next) =>
-            session.execute({
-              type: 'setStyle',
-              nodeId: node.id,
-              property: key,
-              value: next.trim() ? next : null,
-            })
-          }
-        />
-      ))}
+      {entries.map(([key, current]) =>
+        isColorStyleProperty(key) ? (
+          <ColorControl
+            key={key}
+            name={`style-${key}`}
+            label={key}
+            value={current}
+            colorTokens={colorTokens}
+            onCommit={(next) =>
+              session.execute({
+                type: 'setStyle',
+                nodeId: node.id,
+                property: key,
+                value: next?.trim() ? next.trim() : null,
+              })
+            }
+          />
+        ) : (
+          <TextControl
+            key={key}
+            label={key}
+            value={current}
+            onCommit={(next) =>
+              session.execute({
+                type: 'setStyle',
+                nodeId: node.id,
+                property: key,
+                value: next.trim() ? next : null,
+              })
+            }
+          />
+        ),
+      )}
       <label className="field">
         <span>Add property</span>
         <span className="pair">
@@ -500,14 +524,25 @@ function StyleFields({
             placeholder="property"
             onChange={(event) => setProperty(event.target.value)}
           />
-          <input
-            name="style-value"
-            value={value}
-            placeholder="value"
-            onChange={(event) => setValue(event.target.value)}
-          />
+          {!addingColor ? (
+            <input
+              name="style-value"
+              value={value}
+              placeholder="value"
+              onChange={(event) => setValue(event.target.value)}
+            />
+          ) : null}
         </span>
       </label>
+      {addingColor ? (
+        <ColorControl
+          name="style-add-value"
+          label="Value"
+          value={value}
+          colorTokens={colorTokens}
+          onCommit={(next) => setValue(next ?? '')}
+        />
+      ) : null}
       <button
         type="button"
         className="text-button"
@@ -696,6 +731,7 @@ function TokensPanel({ session, snap }: { session: EditorSession; snap: EditorSn
     editTarget: snap.editTarget,
   });
   const writingId = ctx.writingBreakpointId;
+  const colorTokens = useMemo(() => colorTokenRefs(snap.design.tokens), [snap.design.tokens]);
   const needle = query.trim().toLowerCase();
   const visible = needle ? tokens.filter((token) => token.path.includes(needle)) : tokens;
   let group = '';
@@ -732,42 +768,49 @@ function TokensPanel({ session, snap }: { session: EditorSession; snap: EditorSn
         const override = writingId ? token.breakpoints[writingId] : undefined;
         const shownValue = writingId ? override : token.value;
         const text = shownValue === undefined ? '' : formatTokenValue(shownValue);
-        const swatchSource = shownValue ?? token.value;
-        const hex = typeof swatchSource === 'string' && /^#[0-9a-fA-F]{6}$/.test(swatchSource);
         const previous = shownValue === undefined ? token.value : shownValue;
+        const colorString =
+          token.type === 'color' && typeof previous === 'string' ? previous : null;
         return (
           <div key={token.path}>
             {heading ? <h3>{nextGroup}</h3> : null}
             <div className="token-row">
-              {hex ? (
-                <input
-                  className="swatch"
-                  type="color"
-                  aria-label={`${token.path} color`}
-                  value={swatchSource}
-                  onChange={(event) =>
-                    commitToken(session, snap, token.path, previous, event.target.value, writingId)
-                  }
-                />
-              ) : null}
-              <TextControl
-                label={`${token.path} · ${token.type}`}
-                name={`token-${token.path}`}
-                value={text}
-                placeholder={
-                  writingId && override === undefined ? formatTokenValue(token.value) : undefined
-                }
-                multiline={typeof previous === 'object' && previous !== null}
-                onCommit={(next) => {
-                  if (writingId && next.trim() === '') {
-                    if (override !== undefined) {
-                      resetTokenBreakpoint(session, snap, token.path, writingId);
+              {colorString !== null ? (
+                <ColorControl
+                  name={`token-${token.path}`}
+                  label={`${token.path} · ${token.type}`}
+                  value={text}
+                  colorTokens={colorTokens}
+                  onCommit={(next) => {
+                    if (writingId && (next === null || next.trim() === '')) {
+                      if (override !== undefined) {
+                        resetTokenBreakpoint(session, snap, token.path, writingId);
+                      }
+                      return;
                     }
-                    return;
+                    commitToken(session, snap, token.path, previous, next ?? '', writingId);
+                  }}
+                />
+              ) : (
+                <TextControl
+                  label={`${token.path} · ${token.type}`}
+                  name={`token-${token.path}`}
+                  value={text}
+                  placeholder={
+                    writingId && override === undefined ? formatTokenValue(token.value) : undefined
                   }
-                  commitToken(session, snap, token.path, previous, next, writingId);
-                }}
-              />
+                  multiline={typeof previous === 'object' && previous !== null}
+                  onCommit={(next) => {
+                    if (writingId && next.trim() === '') {
+                      if (override !== undefined) {
+                        resetTokenBreakpoint(session, snap, token.path, writingId);
+                      }
+                      return;
+                    }
+                    commitToken(session, snap, token.path, previous, next, writingId);
+                  }}
+                />
+              )}
             </div>
             {ctx.overrideViewport && token.breakpoints[ctx.overrideViewport.id] !== undefined ? (
               <OverrideCue

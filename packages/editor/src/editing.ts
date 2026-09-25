@@ -52,6 +52,15 @@ export function dimensionTokenRefs(tree: unknown): string[] {
     .sort((left, right) => left.localeCompare(right));
 }
 
+/** Color tokens as `{path}` references for style and token editors. */
+export function colorTokenRefs(tree: unknown): string[] {
+  const index = readTokenTree(tree);
+  return [...index.tokens.values()]
+    .filter((token) => token.type === 'color')
+    .map((token) => `{${token.path}}`)
+    .sort((left, right) => left.localeCompare(right));
+}
+
 export function insertDraft(tool: InsertTool, id: string): InsertNode {
   if (tool === 'frame') return { id, type: 'frame', name: 'Frame' };
   if (tool === 'text') return { id, type: 'text', name: 'Text', text: 'Text' };

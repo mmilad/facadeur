@@ -6,6 +6,22 @@ export function dimensionTokenOptions(
   current?: string,
   emptyLabel = 'None',
 ): SelectOption[] {
+  return catalogTokenOptions(tokens, current, emptyLabel);
+}
+
+export function colorTokenOptions(
+  tokens: readonly string[],
+  current?: string,
+  emptyLabel = 'None',
+): SelectOption[] {
+  return catalogTokenOptions(tokens, current, emptyLabel);
+}
+
+function catalogTokenOptions(
+  tokens: readonly string[],
+  current?: string,
+  emptyLabel = 'None',
+): SelectOption[] {
   const list = current && !tokens.includes(current) ? [current, ...tokens] : [...tokens];
   return [
     { value: '', label: emptyLabel },
