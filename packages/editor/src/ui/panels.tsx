@@ -1,12 +1,6 @@
 import { createId } from '@facadeur/core';
 import { useMemo, useState, type DragEvent } from 'react';
-import {
-  readTokenTree,
-  type FieldDefinition,
-  type FieldValue,
-  type FlatNode,
-  type FontFamily,
-} from '@facadeur/core';
+import { readTokenTree, type FlatNode, type FontFamily } from '@facadeur/core';
 import {
   colorTokenRefs,
   dimensionTokenRefs,
@@ -32,6 +26,7 @@ import {
   ownsComponentFeatures,
 } from './component-panel.js';
 import { ColorControl, isColorStyleProperty } from './controls/color/index.js';
+import { InstanceOverridesControl } from './controls/instance/index.js';
 import { ShadowControl, isShadowStyleProperty } from './controls/shadow/index.js';
 import {
   isTypographyStyleProperty,
@@ -647,144 +642,22 @@ function InstanceFields({
     return <p className="meta">Unknown component {node.component}.</p>;
   }
   return (
-    <div className="stack">
-      <p className="meta">Overrides only. Open the master to edit it.</p>
-      <button
-        type="button"
-        className="text-button"
-        name="open-component"
-        onClick={() => session.openAsset(node.component, 'root')}
-      >
-        Open {target.name}
-      </button>
-      {target.fields.length ? <h3>Fields</h3> : null}
-      {target.fields.map((field) => (
-        <FieldOverride key={field.name} session={session} node={node} field={field} />
-      ))}
-      {target.variants.length ? <h3>Variants</h3> : null}
-      {target.variants.map((axis) => {
-        const current = node.variants?.[axis.name] ?? '';
-        return (
-          <label key={axis.name} className="field">
-            <span>{axis.name}</span>
-            <select
-              name={`variant-${axis.name}`}
-              value={current}
-              onChange={(event) =>
-                session.execute({
-                  type: 'setVariant',
-                  nodeId: node.id,
-                  axis: axis.name,
-                  value: event.target.value || null,
-                })
-              }
-            >
-              <option value="">Default ({axis.default ?? axis.values[0]})</option>
-              {axis.values.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          </label>
-        );
-      })}
-    </div>
-  );
-}
-
-function FieldOverride({
-  session,
-  node,
-  field,
-}: {
-  session: EditorSession;
-  node: Extract<FlatNode, { type: 'instance' }>;
-  field: FieldDefinition;
-}) {
-  const override = node.fields?.[field.name];
-  if (field.type === 'enum' && field.options?.length) {
-    const current = typeof override === 'string' ? override : '';
-    return (
-      <label className="field">
-        <span>{field.name}</span>
-        <select
-          name={`field-${field.name}`}
-          value={current}
-          onChange={(event) =>
-            session.execute({
-              type: 'setField',
-              nodeId: node.id,
-              field: field.name,
-              value: event.target.value || null,
-            })
-          }
-        >
-          <option value="">
-            Default ({field.default === undefined ? 'none' : String(field.default)})
-          </option>
-          {field.options.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-      </label>
-    );
-  }
-  if (field.type === 'boolean') {
-    const checked = typeof override === 'boolean' ? override : field.default === true;
-    return (
-      <label className="field field-check">
-        <span>{field.name}</span>
-        <input
-          type="checkbox"
-          name={`field-${field.name}`}
-          checked={checked}
-          onChange={(event) =>
-            session.execute({
-              type: 'setField',
-              nodeId: node.id,
-              field: field.name,
-              value: event.target.checked,
-            })
-          }
-        />
-      </label>
-    );
-  }
-  const shown = override === undefined || override === null ? '' : String(override);
-  const placeholder = field.default === undefined ? undefined : String(field.default);
-  return (
-    <TextControl
-      label={field.name}
-      name={`field-${field.name}`}
-      value={shown}
-      placeholder={placeholder}
-      onCommit={(raw) => {
-        try {
-          session.execute({
-            type: 'setField',
-            nodeId: node.id,
-            field: field.name,
-            value: raw === '' ? null : parseField(field, raw),
-          });
-        } catch (error) {
-          session.setNotice(error instanceof Error ? error.message : 'Invalid field', 'error');
-        }
-      }}
+    <InstanceOverridesControl
+      masterName={target.name}
+      fields={target.fields}
+      variants={target.variants}
+      fieldOverrides={node.fields}
+      variantOverrides={node.variants}
+      onOpenMaster={() => session.openAsset(node.component, 'root')}
+      onSetField={(field, value) =>
+        session.execute({ type: 'setField', nodeId: node.id, field, value })
+      }
+      onSetVariant={(axis, value) =>
+        session.execute({ type: 'setVariant', nodeId: node.id, axis, value })
+      }
+      onInvalid={(message) => session.setNotice(message, 'error')}
     />
   );
-}
-
-function parseField(field: FieldDefinition, raw: string): FieldValue {
-  if (field.type === 'number') {
-    const value = Number(raw);
-    if (!Number.isFinite(value)) throw new Error(`${field.name} must be a number`);
-    return value;
-  }
-  if (field.type === 'boolean') return raw === 'true';
-  return raw;
 }
 
 function TokensPanel({ session, snap }: { session: EditorSession; snap: EditorSnapshot }) {

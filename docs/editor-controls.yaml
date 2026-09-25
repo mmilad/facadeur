@@ -103,6 +103,7 @@ controls:
       - key: map
         ui: record_field
         emit: setStyle / setStyleBlock
+    notes: implemented (CssDeclarationsControl); style block editors in component-panel; node StyleFields add-property unchanged
 
   - id: fields_editor
     path: ui/controls/data
@@ -113,6 +114,7 @@ controls:
       - key: list
         ui: array_field + add_popover
         emit: defineField / removeField
+    notes: implemented (FieldsEditorControl); ComponentFields panel wrapper
 
   - id: bindings_editor
     path: ui/controls/data
@@ -120,6 +122,7 @@ controls:
     value_from: node.bindings
     catalogs: [document.fields, bind targets]
     emit: binding commands
+    notes: implemented (BindingsEditorControl); NodeBindings panel wrapper
 
   - id: variants_editor
     path: ui/controls/variants
@@ -127,6 +130,7 @@ controls:
     value_from: document.variants + styles.variants
     catalogs: []
     emit: defineVariant / style block variant layers
+    notes: implemented (VariantsEditorControl + VariantStyleLayers); ComponentVariants / NodeVariantStyles wrappers
 
   - id: instance_overrides
     path: ui/controls/instance
@@ -134,6 +138,7 @@ controls:
     value_from: node.fields + node.variants
     catalogs: [componentTarget.fields, componentTarget.variants]
     emit: setField / setVariant
+    notes: implemented (InstanceOverridesControl); InstanceFields panel wrapper
 
   - id: viewport_context
     path: ui/controls/viewport
