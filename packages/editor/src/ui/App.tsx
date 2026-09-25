@@ -4,20 +4,20 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { documentToJson, openJsonFile, parseDocumentText, saveJsonFile } from '../files.js';
 import { isEditableTarget } from '../keyboard.js';
 import type { EditorSession } from '../session.js';
-import { Inspector, LayersPanel, ToolBar, type InspectorPanel } from './panels.js';
+import { LayersPanel, RightRail, ToolBar, type EditorSurface } from './panels.js';
 import { ProjectTree } from './project-tree.js';
 import { StageCanvas } from './StageCanvas.js';
 
 export function App({ session }: { session: EditorSession }) {
   const snap = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
-  const [panel, setPanel] = useState<InspectorPanel>('properties');
+  const [surface, setSurface] = useState<EditorSurface>('properties');
   const seenOpenId = useRef(snap.openId);
   useEditorKeys(session);
 
   useEffect(() => {
     if (seenOpenId.current === snap.openId) return;
     seenOpenId.current = snap.openId;
-    setPanel('properties');
+    setSurface('properties');
   }, [snap.openId]);
 
   return (
@@ -25,6 +25,7 @@ export function App({ session }: { session: EditorSession }) {
       <header className="topbar">
         <div className="brand">facadeur</div>
         <div className="topbar-name">{snap.document.name}</div>
+        <ToolBar session={session} tool={snap.tool} kind={snap.document.kind} />
         <div className="topbar-spacer" />
         <button
           type="button"
@@ -63,16 +64,15 @@ export function App({ session }: { session: EditorSession }) {
       ) : null}
       <div className="workspace">
         <aside className="side side-left">
-          <ToolBar session={session} tool={snap.tool} kind={snap.document.kind} />
           <ProjectTree
             session={session}
             snap={snap}
-            panel={panel}
+            surface={surface}
             onOpenAsset={(id) => {
               session.openAsset(id);
-              setPanel('properties');
+              setSurface('properties');
             }}
-            onOpenDesign={(next) => setPanel(next)}
+            onOpenDesign={(next) => setSurface(next)}
           />
           <LayersPanel session={session} snap={snap} />
         </aside>
@@ -86,7 +86,7 @@ export function App({ session }: { session: EditorSession }) {
           tool={snap.tool}
         />
         <aside className="side side-right">
-          <Inspector session={session} snap={snap} panel={panel} onPanel={setPanel} />
+          <RightRail session={session} snap={snap} surface={surface} />
         </aside>
       </div>
     </div>
