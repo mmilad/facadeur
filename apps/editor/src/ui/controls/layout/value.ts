@@ -1,6 +1,6 @@
 import type { AxisSize, Layout, LayoutOverride, Spacing } from '@facadeur/core';
-import { layoutLayer } from '../../../editing.js';
-import type { LayoutPatch } from '../../../editing.js';
+import { layoutLayer } from '../../../domain/editing.js';
+import type { LayoutPatch } from '../../../domain/editing.js';
 
 export type LayoutControlValue = {
   isFrame: boolean;

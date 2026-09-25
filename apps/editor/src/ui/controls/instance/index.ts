@@ -1,1 +1,1 @@
-export { InstanceOverridesControl } from './instance-overrides-control.js';
+export { InstanceOverridesControl } from './InstanceOverridesControl.js';

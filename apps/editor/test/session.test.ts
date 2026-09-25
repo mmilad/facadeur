@@ -9,7 +9,7 @@ import signIn from '../../../examples/sign-in.json';
 import textarea from '../../../examples/textarea.json';
 import specimenPage from '../../../examples/specimen-page.json';
 import specimenSection from '../../../examples/specimen-section.json';
-import { createEditorSession } from '../src/session.js';
+import { createEditorSession } from '../src/domain/session.js';
 
 const documents = validateCatalog([
   button,

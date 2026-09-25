@@ -20,7 +20,7 @@ import {
   sameSlot,
   toolAllowed,
   writeLayoutFields,
-} from '../src/editing.js';
+} from '../src/domain/editing.js';
 
 const section = toFlat(specimenSection as DocumentFile);
 const page = toFlat(specimenPage as DocumentFile);

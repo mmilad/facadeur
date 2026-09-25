@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { describe, expect, it } from 'vitest';
-import { createFrameHost } from '../src/frame-host.js';
+import { createFrameHost } from '../src/domain/frame-host.js';
 
 describe('FrameHost', () => {
   it('exposes a same-origin document only after mount, and only through the host', () => {

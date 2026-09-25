@@ -1,1 +1,1 @@
-export { SpacingControl, boxWith } from './spacing-control.js';
+export { SpacingControl, boxWith } from './SpacingControl.js';

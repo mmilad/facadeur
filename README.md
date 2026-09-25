@@ -13,7 +13,7 @@ pnpm install
 pnpm dev
 ```
 
-Open the URL Vite prints (http://localhost:5173). The specimen page is open. From there you can:
+Open http://localhost:3001 (Next.js). The specimen page is open. From there you can:
 
 - Browse the project tree in the left column: Design (Tokens, Schriften), then Atoms, Components, Sections, and Pages. Click an asset to open it on the stage. The layers list under the tree follows the open document. Search filters the tree. **Neu anlegen** adds an empty document of that kind. Drag a row onto the stage to insert an instance when nesting allows it. Nesting rules still apply when a command would break them.
 - Three frames sit side by side: mobile 375, tablet 768, desktop 1440. Each iframe is that wide, so real media queries change type size and, on desktop, the card row.
@@ -60,7 +60,7 @@ pnpm test
 ## Layout
 
 ```
-apps/editor             Vite + React shell (stage, layers, properties, assets, tokens, fonts)
+apps/editor             Next.js + React shell (stage, layers, properties, assets, tokens, fonts)
 apps/storybook          Storybook 8 + Vite; generated CSF3 stories for @facadeur/ui
 packages/core           types, JSON Schema, flat model, commands, DocumentStore
 packages/store-yjs      Yjs DocumentStore, one transaction per command, undo/redo

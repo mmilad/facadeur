@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { fieldDefinitionFromDraft, variantAxisFromDraft } from '../src/definitions.js';
+import { fieldDefinitionFromDraft, variantAxisFromDraft } from '../src/domain/definitions.js';
 import {
   readStyleDeclarations,
   shownDeclarations,
   writeStyleDeclaration,
-} from '../src/style-edit.js';
+} from '../src/domain/style-edit.js';
 
 describe('component definitions', () => {
   it('builds a field and a variant axis from editor drafts', () => {
