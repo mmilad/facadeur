@@ -1,0 +1,347 @@
+.eu-form {
+  --eu-bg: #f6f1ea;
+  --eu-bg-elevated: #fffdf9;
+  --eu-border: #d8cfc4;
+  --eu-fg: #2a241c;
+  --eu-fg-muted: #6b6258;
+  --eu-accent: #3d5a80;
+  --eu-accent-hover: #2f4766;
+  --eu-danger: #b42318;
+  --eu-radius: 6px;
+  --eu-focus-ring: 0 0 0 2px #fffdf9, 0 0 0 4px #3d5a80;
+  --eu-gap-compact: 6px;
+  --eu-gap-comfortable: 10px;
+  --eu-font-size: 12px;
+  --eu-label-size: 11px;
+  --eu-control-height: 28px;
+
+  color: var(--eu-fg);
+  font-size: var(--eu-font-size);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+.eu-form--comfortable {
+  --eu-control-height: 32px;
+}
+
+.eu-stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.eu-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.eu-grid {
+  display: grid;
+  gap: var(--eu-gap-compact);
+}
+
+.eu-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--eu-gap-compact);
+}
+
+.eu-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.eu-section__title {
+  margin: 0;
+  font-size: var(--eu-label-size);
+  font-weight: 500;
+  color: var(--eu-fg-muted);
+  letter-spacing: 0.01em;
+}
+
+.eu-divider {
+  border: 0;
+  border-top: 1px solid var(--eu-border);
+  margin: 4px 0;
+}
+
+.eu-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.eu-field__label {
+  font-size: var(--eu-label-size);
+  color: var(--eu-fg-muted);
+  font-weight: 500;
+}
+
+.eu-field__hint {
+  font-size: 11px;
+  color: var(--eu-fg-muted);
+}
+
+.eu-field__error {
+  font-size: 11px;
+  color: var(--eu-danger);
+}
+
+.eu-control {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--eu-control-height);
+  padding: 4px 8px;
+  border: 1px solid var(--eu-border);
+  border-radius: var(--eu-radius);
+  background: var(--eu-bg-elevated);
+  color: var(--eu-fg);
+  font: inherit;
+}
+
+.eu-control:focus-visible {
+  outline: none;
+  box-shadow: var(--eu-focus-ring);
+}
+
+.eu-control[aria-invalid='true'] {
+  border-color: var(--eu-danger);
+  box-shadow: 0 0 0 1px var(--eu-danger);
+}
+
+.eu-control:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.eu-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--eu-control-height);
+  min-width: var(--eu-control-height);
+  height: var(--eu-control-height);
+  padding: 0;
+  border: 1px solid var(--eu-border);
+  border-radius: var(--eu-radius);
+  background: var(--eu-bg-elevated);
+  color: var(--eu-fg-muted);
+  cursor: pointer;
+  font: inherit;
+  line-height: 1;
+}
+
+.eu-icon-button:hover:not(:disabled) {
+  border-color: var(--eu-accent);
+  color: var(--eu-accent);
+}
+
+.eu-icon-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.eu-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.eu-search-clear {
+  position: absolute;
+  right: 4px;
+}
+
+.eu-segmented {
+  display: inline-flex;
+  border: 1px solid var(--eu-border);
+  border-radius: var(--eu-radius);
+  overflow: hidden;
+}
+
+.eu-segmented button {
+  border: 0;
+  border-right: 1px solid var(--eu-border);
+  background: var(--eu-bg);
+  padding: 4px 10px;
+  font: inherit;
+  font-size: var(--eu-label-size);
+  cursor: pointer;
+  color: var(--eu-fg-muted);
+}
+
+.eu-segmented button:last-child {
+  border-right: 0;
+}
+
+.eu-segmented button[aria-pressed='true'] {
+  background: var(--eu-bg-elevated);
+  color: var(--eu-fg);
+  font-weight: 600;
+}
+
+.eu-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.eu-toggle input {
+  appearance: none;
+  width: 36px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--eu-border);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.eu-toggle input::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.15s;
+}
+
+.eu-toggle input:checked {
+  background: var(--eu-accent);
+}
+
+.eu-toggle input:checked::after {
+  transform: translateX(16px);
+}
+
+.eu-color-swatch {
+  width: var(--eu-control-height);
+  min-width: var(--eu-control-height);
+  height: var(--eu-control-height);
+  border: 1px solid var(--eu-border);
+  border-radius: var(--eu-radius);
+  padding: 0;
+  cursor: pointer;
+}
+
+.eu-color-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 220px;
+  padding: 8px;
+}
+
+.eu-color-channels {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.eu-array-row,
+.eu-record-row {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.eu-array-row__body,
+.eu-record-row__fields {
+  flex: 1;
+  min-width: 0;
+}
+
+.eu-popover-content,
+.eu-dialog-content {
+  background: var(--eu-bg-elevated);
+  border: 1px solid var(--eu-border);
+  border-radius: var(--eu-radius);
+  box-shadow: 0 8px 24px rgb(42 36 28 / 12%);
+  z-index: 50;
+}
+
+.eu-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgb(42 36 28 / 35%);
+  z-index: 40;
+}
+
+.eu-dialog-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(420px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  z-index: 50;
+  padding: 16px;
+}
+
+.eu-dialog__title {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.eu-dialog__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.eu-button {
+  min-height: var(--eu-control-height);
+  padding: 0 12px;
+  border: 1px solid var(--eu-border);
+  border-radius: var(--eu-radius);
+  background: var(--eu-bg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.eu-button--primary {
+  background: var(--eu-accent);
+  border-color: var(--eu-accent);
+  color: #fff;
+}
+
+.eu-combobox-list {
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  max-height: 200px;
+  overflow: auto;
+}
+
+.eu-combobox-option {
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.eu-combobox-option[data-highlighted='true'],
+.eu-combobox-option:hover {
+  background: var(--eu-bg);
+}
+
+.eu-help-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--eu-border);
+  font-size: 10px;
+  color: var(--eu-fg-muted);
+  cursor: help;
+}

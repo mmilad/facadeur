@@ -3,8 +3,18 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { facadeurExamplesPlugin } from './vite.files.js';
 
+const rootDir = fileURLToPath(new URL('.', import.meta.url));
+
 export default defineConfig({
   plugins: [react(), facadeurExamplesPlugin()],
+  build: {
+    rollupOptions: {
+      input: {
+        main: `${rootDir}/index.html`,
+        formDemo: `${rootDir}/form-demo.html`,
+      },
+    },
+  },
   server: {
     host: true,
     port: 5173,
