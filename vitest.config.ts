@@ -15,7 +15,12 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['packages/*/test/**/*.test.ts', 'packages/*/test/**/*.test.tsx'],
+    include: [
+      'packages/*/test/**/*.test.ts',
+      'packages/*/test/**/*.test.tsx',
+      'apps/*/test/**/*.test.ts',
+      'apps/*/test/**/*.test.tsx',
+    ],
     environment: 'node',
   },
 });

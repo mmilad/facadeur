@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import '../generated/styles/tokens.css';
-import '../generated/styles/components.css';
+import '@facadeur/ui/styles/tokens.css';
+import '@facadeur/ui/styles/components.css';
 import './globals.css';
 
 export const metadata = {

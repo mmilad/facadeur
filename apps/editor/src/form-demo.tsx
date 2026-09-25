@@ -68,7 +68,7 @@ function FormDemoApp() {
     <div style={{ padding: 24, maxWidth: 720, margin: '0 auto' }}>
       <h1 style={{ fontSize: 18, marginBottom: 8 }}>Editor form kit (v1)</h1>
       <p style={{ color: '#6b6258', marginBottom: 16 }}>
-        Dev demo for primitives under <code>packages/editor/src/ui/form</code>.
+        Dev demo for primitives under <code>apps/editor/src/ui/form</code>.
       </p>
       <Form
         value={value}

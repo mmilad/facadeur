@@ -32,8 +32,10 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 - `packages/tokens` – DTCG-Parser, Referenzauflösung, Ausgabe als CSS Custom Properties.
 - `packages/style-engine` – Live-Stile über `CSSStyleRule`/`insertRule`, basiert auf `mmilad/style-controller` (siehe unten).
 - `packages/renderer-dom` – JSON zu DOM, stabile `data-id` pro Knoten, gezielte Updates.
-- `packages/editor` – Vite + React App (Bühne, Panels, Werkzeuge).
-- `packages/codegen-react` – React-Komponenten und CSS aus den Dokumenten, für Next.js.
+- `apps/editor` – Vite + React App (Bühne, Panels, Werkzeuge).
+- `packages/ui` – generiertes React-Designsystem (Komponenten + CSS) aus `pnpm codegen`.
+- `apps/storybook` – Storybook-App; listet alle generierten CSF3-Stories aus `@facadeur/ui`.
+- `packages/codegen-react` – React-Komponenten, CSS und Storybook-Stories aus den Dokumenten.
 
 ### Arten (kinds) und Hierarchie
 
@@ -61,6 +63,12 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 ### Varianten
 
 - Eine Komponente definiert Varianten-Achsen (z. B. `size: sm|md|lg`, `intent: primary|secondary`). Varianten überschreiben Stile des Stil-Blocks. Auch Zustände wie `:hover`, `:focus-visible`, `:disabled` gehören in den Stil-Block.
+
+### Codegen-Ausgabe (Monorepo)
+
+- `pnpm codegen` schreibt **`packages/ui`** (Komponenten, Barrel, Token- und Komponenten-CSS) und **`apps/storybook/src/stories/generated`** (CSF3-Stories mit Args aus Feld- und Varianten-Defaults).
+- Die Ausgabe ist eingecheckt und folgt dem Monorepo-Muster wie facadeur selbst (`apps/*`, `packages/*`). Storybook ist die primäre Vorschau; `examples/next` importiert `@facadeur/ui`.
+- Sortierung nach Dokument-Id bleibt, damit dieselbe Katalogmenge immer dieselbe Ausgabe liefert.
 
 ### Tokens
 
@@ -259,7 +267,8 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 - 2026-09-25: CSS bleibt am bestehenden Compiler. Tokens und Schriften kommen aus `renderDesignCss`. Stil-Blöcke und Layout kommen aus `compileDocument` mit `address: 'instance'` und werden als ein Stylesheet serialisiert, inklusive `@media (min-width)`. Breakpoints stammen aus dem Design-Dokument, sonst aus den Standardwerten. Es gibt kein zweites Stilmodell.
 - 2026-09-25: Eine Page wird in der Ausgabe als echtes Wurzel-Element erzeugt. Im Editor bleibt das Wurzel-Frame der Page die unbemalte Arbeitsfläche. Next.js hat kein Artboard-iframe, also braucht die Page ein Element, an dem `data-component` und das Layout hängen.
 - 2026-09-25: `richText` bleibt ein String-Kind, wie der Renderer. Kein HTML. Ein Default, dessen Laufzeittyp nicht zum Feldtyp passt, bricht die Generierung ab, damit die erzeugte Datei typisiert bleibt. Felder ohne Bindung stehen in den Props, werden im Funktionsrumpf aber nicht gelesen.
-- 2026-09-25: Die Ausgabe liegt unter `examples/next/generated` und ist eingecheckt. `pnpm codegen` schreibt sie neu aus den Beispieldokumenten; die Projektvorlage ist das Design, keine Komponente. Die Beispiel-App ist `examples/next`. Dateien und Regeln sind nach Dokument-Id sortiert, damit dieselbe Menge Dokumente immer dieselbe Ausgabe ergibt.
+- 2026-09-26: Codegen-Ausgabe ist ein Monorepo-Schnitt im Haupt-Repo: `packages/ui` plus generierte Stories unter `apps/storybook`. Kein flaches `examples/next/generated` mehr. `@facadeur/codegen-react` CLI: `--out packages/ui`, optional `--storybook apps/storybook`. Der Editor liegt unter `apps/editor`.
+- 2026-09-25: Die Ausgabe lag unter `examples/next/generated` und war eingecheckt. `pnpm codegen` schrieb sie aus den Beispieldokumenten; die Projektvorlage war das Design. (Ersetzt durch Monorepo-Ausgabe oben.)
 - 2026-09-25: Die linke Spalte ist ein Projektbaum, kein Arbeitsbereich-Umschalter. Oben der Baum: Design (Tokens, Schriften), dann Atoms, Components, Sections und Pages mit den Assets darunter. Unten bleibt die Ebenenliste des offenen Dokuments. Ein Klick auf ein Asset öffnet es auf der Bühne. Tokens und Schriften öffnen den bestehenden Bereich im rechten Panel. Suche filtert den ganzen Baum. „Neu anlegen“ legt pro Art ein leeres Frame-Dokument an und öffnet es. Ziehen einer Baumzeile auf die Bühne erzeugt eine Instanz, wenn die Verschachtelung das erlaubt. Ein Doppelklick auf eine Instanz öffnet den Master wie bisher; der Baum klappt die Art auf und rückt die Zeile ins Blickfeld.
 - 2026-09-25: Ein ausgewählter Knoten wird in jedem Viewport-Frame umrandet. Farbe A (Akzent) ist der Frame, in den zuletzt geklickt wurde. Farbe B ist derselbe Knoten in den anderen Frames. Höchstens ein Fokus-Viewport. Ein Klick in einen Frame setzt diesen Fokus und färbt sein Label; die Ebenenliste ändert ihn nicht. Vor dem ersten Klick ist kein Frame primär. Griffe gibt es nur am primären Umriss.
 - 2026-09-25: Die Basis ist der Breakpoint mit der kleinsten `minWidth` (mobil, Standard 375) und bleibt ohne Media Query. Der Inspector bleibt auf Basis, bis auf den Override des Fokus-Viewports umgeschaltet wird. Ein Klick auf einen Frame wechselt das Ziel nicht von selbst. Der Basis-Frame hat keinen Override. Im Override-Modus schreibt der Editor nur diesen Breakpoint: Stil-Deklarationen und Zustände nach `styles` bzw. `styles.children` → `breakpoints` (das bestehende `@media (min-width)`), Layout nach `layout.breakpoints`, Tokens nach `$extensions.facadeur.breakpoints`. Andere Breakpoints und die Basis bleiben unangetastet. `node.style` bleibt die Basis-Überschreibung ohne Query und liegt unter den Breakpoint-Regeln. Eine Eigenschaft mit Override am fokussierten Viewport zeigt „Override bei 768“ (die `minWidth` des Fokus-Frames) und lässt sich einzeln zurücksetzen. Varianten bleiben an der Basis, weil Breakpoints dort nicht geschachtelt sind. Schriften haben keine Viewport-Werte; Größen laufen über Typografie-Tokens.

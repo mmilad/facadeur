@@ -1,5 +1,6 @@
 /// <reference types="next" />
 /// <reference types="next/image-types/global" />
+/// <reference path="./.next/types/routes.d.ts" />
 
-// This file is pulled in by tsconfig so `tsc` can see Next's types.
-// It does not reference `.next/types`, which only exists after `next dev` or `next build`.
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.

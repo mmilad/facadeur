@@ -1,6 +1,6 @@
 # Editor form kit (v1)
 
-Reusable controlled form primitives for editor chrome (inspector, sidebars, popovers). Lives under `packages/editor/src/ui/form/`.
+Reusable controlled form primitives for editor chrome (inspector, sidebars, popovers). Lives under `apps/editor/src/ui/form/`.
 
 ## Folder map
 

@@ -10,7 +10,7 @@ const FILE_NAME = /^[a-z0-9][a-z0-9-]*\.json$/;
  * `PUT /__facadeur/examples` with `{ filename, text }` writes `examples/<filename>`.
  */
 export function facadeurExamplesPlugin(): Plugin {
-  const examplesDir = path.resolve(fileURLToPath(new URL('../../examples', import.meta.url)));
+  const examplesDir = path.resolve(fileURLToPath(new URL('../../../examples', import.meta.url)));
   return {
     name: 'facadeur-examples',
     configureServer(server) {

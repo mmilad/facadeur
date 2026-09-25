@@ -8,26 +8,34 @@ async function main(): Promise<void> {
   const args = process.argv.slice(2);
   let designPath: string | undefined;
   let out: string | undefined;
+  let storybook: string | undefined;
   const files: string[] = [];
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
     if (arg === '--design') designPath = args[(index += 1)];
     else if (arg === '--out') out = args[(index += 1)];
+    else if (arg === '--storybook') storybook = args[(index += 1)];
     else if (arg?.startsWith('--')) throw new Error(`Unknown option ${arg}`);
     else if (arg) files.push(arg);
   }
   if (!out || files.length === 0) {
     throw new Error(
-      'Usage: facadeur-codegen --out <dir> [--design <document.json>] <document.json>...',
+      'Usage: facadeur-codegen --out <ui-dir> [--storybook <app-dir>] [--design <document.json>] <document.json>...',
     );
   }
   const documents = validateCatalog(files.map((file) => JSON.parse(readFileSync(file, 'utf8'))));
   const design = designPath
     ? designFromDocument(validateDocumentFile(JSON.parse(readFileSync(designPath, 'utf8'))))
     : undefined;
-  const generated = generateReact({ documents, ...(design ? { design } : {}) });
-  const directory = resolve(out);
-  for (const file of generated) {
+  const { ui, stories } = generateReact({ documents, ...(design ? { design } : {}) });
+  await writeFiles(resolve(out), ui);
+  if (storybook) {
+    await writeFiles(resolve(storybook), stories);
+  }
+}
+
+async function writeFiles(directory: string, files: { path: string; contents: string }[]) {
+  for (const file of files) {
     const target = resolve(directory, file.path);
     mkdirSync(dirname(target), { recursive: true });
     writeFileSync(target, await formatGenerated(file.path, file.contents));

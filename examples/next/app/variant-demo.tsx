@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, type ButtonSize, type ButtonTone } from '../generated';
+import { Button, type ButtonSize, type ButtonTone } from '@facadeur/ui';
 
 const tones: ButtonTone[] = ['primary', 'secondary', 'ghost'];
 const sizes: ButtonSize[] = ['sm', 'md'];

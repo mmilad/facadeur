@@ -19,7 +19,8 @@
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "vitest run",
     "schema": "tsx scripts/export-schema.ts",
-    "codegen": "tsx packages/codegen-react/src/cli.ts --design examples/project-template.json --out examples/next/generated examples/button.json examples/card.json examples/input.json examples/sign-in.json examples/specimen-page.json examples/specimen-section.json"
+    "codegen": "tsx packages/codegen-react/src/cli.ts --design examples/project-template.json --out packages/ui --storybook apps/storybook examples/button.json examples/card.json examples/input.json examples/sign-in.json examples/specimen-page.json examples/specimen-section.json",
+    "storybook": "pnpm --filter @facadeur/storybook dev"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",

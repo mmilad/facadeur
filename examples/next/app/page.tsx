@@ -1,4 +1,4 @@
-import { Card, Input, SignIn } from '../generated';
+import { Card, Input, SignIn } from '@facadeur/ui';
 import { VariantDemo } from './variant-demo';
 
 export default function Page() {
