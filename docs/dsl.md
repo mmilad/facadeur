@@ -268,6 +268,12 @@ The renderer writes `data-id`. The document root frame is the canvas and is not 
 
 The editor shows one same-origin iframe per breakpoint. The iframe's width is that breakpoint's `minWidth`, so the `@media (min-width)` rules from tokens and style blocks match the frame. Frame height follows the content. Selection and hover are drawn by the editor above the iframes.
 
+## Codegen
+
+`@facadeur/codegen-react` reads these documents and emits one React component per document, plus CSS. Props are the fields and variant axes. The component root sets `data-component` and `data-variant-*`. Children set `data-node`. An instance becomes a call to the generated component, with that instance's field and variant overrides. `nodeId` is the instance id and is written to `data-node`, so the style-engine selectors apply to the same element the renderer paints.
+
+Tokens and fonts become the design stylesheet (`renderDesignCss`). Style blocks and layout become a second stylesheet from `compileDocument` with `address: 'instance'`. `pnpm codegen` writes both, and the components, to `examples/next/generated`. The Next.js example in `examples/next` imports that output.
+
 ## Out of scope here
 
-Slots, codegen, and multiplayer sync.
+Slots and multiplayer sync.

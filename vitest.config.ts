@@ -11,6 +11,7 @@ export default defineConfig({
       '@facadeur/renderer-dom': `${root}packages/renderer-dom/src/index.ts`,
       '@facadeur/tokens': `${root}packages/tokens/src/index.ts`,
       '@facadeur/style-engine': `${root}packages/style-engine/src/index.ts`,
+      '@facadeur/codegen-react': `${root}packages/codegen-react/src/index.ts`,
     },
   },
   test: {
