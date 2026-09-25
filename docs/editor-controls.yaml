@@ -6,9 +6,11 @@ shell:
     tools: Select, Frame, Text, Image as compact icon buttons (keyboard shortcuts unchanged)
   left_rail:
     - project_tree: Design (Tokens, Fonts) then Atoms / Components / Sections / Pages
-    - layers: below the tree in the same column
+    - viewports: breakpoint rows above Layers; selection clears node selection (UX audit §1)
+    - layers: below viewports in the same column
   right_rail:
     default: Properties inspector only (no Tokens / Fonts tabs)
+    viewport_selected: Viewport options only (chrome + breakpoint list); hides ViewportEditBar
     design_surface: Tokens or Fonts open from the left Design tree; same column as the inspector, with a section heading
   viewport_context:
     component: ViewportEditBar
