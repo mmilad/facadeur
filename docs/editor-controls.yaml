@@ -51,7 +51,7 @@ controls:
       - key: width|height
         ui: size_axis # hug/fill/fixed + min/max
         options: dimension tokens for fixed/token mode
-    notes: parent supplies writingBreakpointId / override cue
+    notes: parent supplies writingBreakpointId / override cue; implemented in ui/controls/layout (LayoutPanel)
 
   - id: appearance_color
     path: ui/controls/color
