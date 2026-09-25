@@ -1,10 +1,7 @@
 import { createId } from '@facadeur/core';
 import { useMemo, useState, type DragEvent } from 'react';
 import {
-  defaultKinds,
-  defaultNestingRules,
   readTokenTree,
-  type DefaultKind,
   type FieldDefinition,
   type FieldValue,
   type FlatNode,
@@ -31,36 +28,7 @@ import { LayoutPanel } from './layout-panel.js';
 import { formatTokenValue, parseEditedValue, withTokenValue } from '../token-edit.js';
 import { TextControl } from './fields.js';
 
-const WORKSPACE_LABEL: Record<DefaultKind, string> = {
-  atom: 'Atoms',
-  component: 'Components',
-  section: 'Sections',
-  page: 'Pages',
-};
-
-export function WorkspaceTabs({
-  session,
-  workspace,
-}: {
-  session: EditorSession;
-  workspace: DefaultKind;
-}) {
-  return (
-    <nav className="workspaces" aria-label="Workspaces">
-      {defaultKinds.map((kind) => (
-        <button
-          key={kind}
-          type="button"
-          className={kind === workspace ? 'workspace is-active' : 'workspace'}
-          aria-pressed={kind === workspace}
-          onClick={() => session.setWorkspace(kind)}
-        >
-          {WORKSPACE_LABEL[kind]}
-        </button>
-      ))}
-    </nav>
-  );
-}
+export type InspectorPanel = 'properties' | 'tokens' | 'fonts';
 
 const TOOLS = [
   ['select', 'Select', 'V'],
@@ -99,93 +67,6 @@ export function ToolBar({
       })}
     </div>
   );
-}
-
-export function AssetList({ session, snap }: { session: EditorSession; snap: EditorSnapshot }) {
-  const rule = defaultNestingRules[snap.workspace];
-  const openRule = defaultNestingRules[kindOf(snap.document.kind)];
-  const instances = rule.instanceKinds.length
-    ? `Instances of ${rule.instanceKinds.join(' and ')}.`
-    : 'No instances.';
-  const listed = new Set(snap.assets.map((asset) => asset.id));
-  const placeable = snap.catalog.filter(
-    (asset) =>
-      asset.id !== snap.openId &&
-      openRule.instanceKinds.includes(asset.kind) &&
-      !listed.has(asset.id),
-  );
-  return (
-    <section className="side-block" aria-label="Assets">
-      <h2>Assets</h2>
-      <p className="side-note">
-        {rule.nodeTypes.join(', ')}. {instances}
-      </p>
-      <div className="side-scroll">
-        {snap.assets.length === 0 ? (
-          <p className="inspector-empty">No {WORKSPACE_LABEL[snap.workspace].toLowerCase()} yet.</p>
-        ) : (
-          <ul className="asset-list">
-            {snap.assets.map((asset) => (
-              <li key={asset.id}>
-                <button
-                  type="button"
-                  className={asset.id === snap.openId ? 'asset is-active' : 'asset'}
-                  aria-current={asset.id === snap.openId ? 'true' : undefined}
-                  draggable={canPlace(snap, asset.kind, asset.id)}
-                  onDragStart={(event) => startAssetDrag(session, event, asset.id)}
-                  onDragEnd={() => session.endDrag()}
-                  onClick={() => session.openAsset(asset.id)}
-                >
-                  <span className="asset-name">{asset.name}</span>
-                  <span className="asset-id">{asset.id}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        {placeable.length ? (
-          <>
-            <h3 className="place-title">Place</h3>
-            <p className="side-note">Drag onto the stage. Dropping creates an instance.</p>
-            <ul className="asset-list">
-              {placeable.map((asset) => (
-                <li key={asset.id}>
-                  <button
-                    type="button"
-                    className="asset"
-                    draggable
-                    onDragStart={(event) => startAssetDrag(session, event, asset.id)}
-                    onDragEnd={() => session.endDrag()}
-                    onClick={() => session.openAsset(asset.id)}
-                  >
-                    <span className="asset-name">{asset.name}</span>
-                    <span className="asset-id">{asset.kind}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </>
-        ) : null}
-      </div>
-    </section>
-  );
-}
-
-function canPlace(snap: EditorSnapshot, kind: DefaultKind, id: string): boolean {
-  if (id === snap.openId) return false;
-  const rule = defaultNestingRules[kindOf(snap.document.kind)];
-  return rule.instanceKinds.includes(kind);
-}
-
-function kindOf(kind: string): DefaultKind {
-  if (kind === 'atom' || kind === 'component' || kind === 'section' || kind === 'page') return kind;
-  return 'component';
-}
-
-function startAssetDrag(session: EditorSession, event: DragEvent, assetId: string) {
-  event.dataTransfer.setData('text/plain', assetId);
-  event.dataTransfer.effectAllowed = 'copy';
-  session.beginDrag({ kind: 'asset', assetId });
 }
 
 export function LayersPanel({ session, snap }: { session: EditorSession; snap: EditorSnapshot }) {
@@ -388,8 +269,17 @@ function LayerRows({
   );
 }
 
-export function Inspector({ session, snap }: { session: EditorSession; snap: EditorSnapshot }) {
-  const [tab, setTab] = useState<'properties' | 'tokens' | 'fonts'>('properties');
+export function Inspector({
+  session,
+  snap,
+  panel,
+  onPanel,
+}: {
+  session: EditorSession;
+  snap: EditorSnapshot;
+  panel: InspectorPanel;
+  onPanel: (panel: InspectorPanel) => void;
+}) {
   return (
     <section className="side-block side-block-grow inspector" aria-label="Inspector">
       <div className="tabs" role="tablist">
@@ -397,25 +287,25 @@ export function Inspector({ session, snap }: { session: EditorSession; snap: Edi
           [
             ['properties', 'Properties'],
             ['tokens', 'Tokens'],
-            ['fonts', 'Fonts'],
+            ['fonts', 'Schriften'],
           ] as const
         ).map(([id, label]) => (
           <button
             key={id}
             type="button"
             role="tab"
-            className={tab === id ? 'tab is-active' : 'tab'}
-            aria-selected={tab === id}
-            onClick={() => setTab(id)}
+            className={panel === id ? 'tab is-active' : 'tab'}
+            aria-selected={panel === id}
+            onClick={() => onPanel(id)}
           >
             {label}
           </button>
         ))}
       </div>
       <div className="side-scroll">
-        {tab === 'properties' ? <Properties session={session} snap={snap} /> : null}
-        {tab === 'tokens' ? <TokensPanel session={session} snap={snap} /> : null}
-        {tab === 'fonts' ? <FontsPanel session={session} snap={snap} /> : null}
+        {panel === 'properties' ? <Properties session={session} snap={snap} /> : null}
+        {panel === 'tokens' ? <TokensPanel session={session} snap={snap} /> : null}
+        {panel === 'fonts' ? <FontsPanel session={session} snap={snap} /> : null}
       </div>
     </section>
   );
@@ -639,7 +529,7 @@ function InstanceFields({
   }
   return (
     <div className="stack">
-      <p className="meta">Overrides only. Edit the component in its own workspace.</p>
+      <p className="meta">Overrides only. Open the master to edit it.</p>
       <button
         type="button"
         className="text-button"

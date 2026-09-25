@@ -13,9 +13,9 @@ pnpm install
 pnpm dev
 ```
 
-Open the URL Vite prints (http://localhost:5173). The specimen page is open in the Pages workspace. From there you can:
+Open the URL Vite prints (http://localhost:5173). The specimen page is open. From there you can:
 
-- Switch workspace (Atoms, Components, Sections, Pages). The asset list filters to that kind and opens a document of that kind. Nesting rules still apply when a command would break them.
+- Browse the project tree in the left column: Design (Tokens, Schriften), then Atoms, Components, Sections, and Pages. Click an asset to open it on the stage. The layers list under the tree follows the open document. Search filters the tree. **Neu anlegen** adds an empty document of that kind. Drag a row onto the stage to insert an instance when nesting allows it. Nesting rules still apply when a command would break them.
 - Three frames sit side by side: mobile 375, tablet 768, desktop 1440. Each iframe is that wide, so real media queries change type size and, on desktop, the card row.
 - Scroll over the stage, including over a frame, to zoom toward the cursor. Drag to pan. The dot grid moves with the stage.
 - Click an element to select the node that belongs to the open document. A click inside an instance selects that instance. The same id is outlined in every frame. The layers list selects the same node.

@@ -544,8 +544,8 @@ export function StageCanvas({
     <div className="viewport" ref={viewportRef}>
       <div className="stage" ref={stageRef} />
       <p className="hint">
-        Scroll to zoom · drag the canvas to pan · F T I insert · double-click drills in, and opens
-        an instance
+        Scroll to zoom · drag the canvas to pan · F T I insert · double-click drills in and opens
+        the master in the project tree
       </p>
     </div>
   );

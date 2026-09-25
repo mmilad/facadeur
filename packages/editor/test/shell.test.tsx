@@ -56,12 +56,45 @@ describe('editor shell', () => {
 
     expect(host.textContent).toContain('Specimen');
     expect(host.textContent).toContain('specimen-section');
+    expect(host.querySelector('nav.workspaces')).toBeNull();
+    expect(host.querySelector('[data-asset-id="button"]')).toBeInstanceOf(HTMLButtonElement);
+    expect(host.querySelector('[data-asset-id="card"]')).toBeInstanceOf(HTMLButtonElement);
+    expect(host.querySelector('[data-asset-id="specimen"]')).toBeInstanceOf(HTMLButtonElement);
+    expect(host.querySelector('[data-design="tokens"]')).toBeInstanceOf(HTMLButtonElement);
+    expect(host.querySelector('[data-design="fonts"]')?.textContent).toContain('Schriften');
+    const sectionRow = host.querySelector('[data-asset-id="specimen-section"]');
+    expect(sectionRow).toBeInstanceOf(HTMLButtonElement);
+    expect((sectionRow as HTMLButtonElement).draggable).toBe(true);
+    expect((host.querySelector('[data-asset-id="button"]') as HTMLButtonElement).draggable).toBe(
+      false,
+    );
+    await act(async () => {
+      const event = new Event('dragstart', { bubbles: true });
+      Object.defineProperty(event, 'dataTransfer', {
+        value: {
+          setData() {},
+          effectAllowed: 'copy',
+        },
+      });
+      sectionRow?.dispatchEvent(event);
+    });
+    expect(session.getSnapshot().drag).toEqual({ kind: 'asset', assetId: 'specimen-section' });
+    await act(async () => {
+      sectionRow?.dispatchEvent(new Event('dragend', { bubbles: true }));
+    });
+    expect(session.getSnapshot().drag).toBeNull();
+
     const frameTool = [...host.querySelectorAll('button.tool')].find((button) =>
       button.textContent?.includes('Frame'),
     );
     expect(frameTool).toBeInstanceOf(HTMLButtonElement);
     expect((frameTool as HTMLButtonElement).disabled).toBe(true);
 
+    const sectionsToggle = host.querySelector('button[name="toggle-section"]');
+    await act(async () => {
+      (sectionsToggle as HTMLButtonElement).click();
+    });
+    expect(host.querySelector('[data-asset-id="specimen-section"]')).toBeNull();
     const sectionLayer = [...host.querySelectorAll('button.layer')].find((button) =>
       button.textContent?.includes('specimen-section'),
     );
@@ -70,15 +103,14 @@ describe('editor shell', () => {
     });
     expect(session.getSnapshot().openId).toBe('specimen-section');
     expect(session.getSnapshot().selectedNodeId).toBe('root');
-    await act(async () => {
-      session.setWorkspace('page');
-    });
+    const revealed = host.querySelector('[data-asset-id="specimen-section"]');
+    expect(revealed?.className).toContain('is-active');
+    expect(host.querySelector('[data-asset-id="button"]')).toBeInstanceOf(HTMLButtonElement);
+    expect(host.querySelector('[data-asset-id="specimen"]')).toBeInstanceOf(HTMLButtonElement);
 
-    const atoms = [...host.querySelectorAll('button')].find(
-      (button) => button.textContent === 'Atoms',
-    );
+    const buttonAsset = host.querySelector('[data-asset-id="button"]');
     await act(async () => {
-      atoms?.click();
+      (buttonAsset as HTMLButtonElement).click();
     });
     expect(session.getSnapshot().openId).toBe('button');
     const frame = document.querySelector('iframe');
@@ -123,4 +155,58 @@ describe('editor shell', () => {
       'Button',
     );
   });
+
+  it('searches the tree, opens tokens and fonts, and creates an asset', async () => {
+    const session: EditorSession = createEditorSession({
+      documents,
+      design: createProjectTemplateDocument(),
+    });
+    const view = document.createElement('div');
+    host = view;
+    document.body.append(view);
+    root = createRoot(view);
+    await act(async () => {
+      root?.render(<App session={session} />);
+    });
+
+    const search = view.querySelector('input[name="asset-search"]');
+    expect(search).toBeInstanceOf(HTMLInputElement);
+    await act(async () => {
+      setInput(search as HTMLInputElement, 'card');
+    });
+    expect(view.querySelector('[data-asset-id="card"]')).toBeInstanceOf(HTMLButtonElement);
+    expect(view.querySelector('[data-asset-id="button"]')).toBeNull();
+    expect(view.querySelector('[data-asset-id="specimen"]')).toBeNull();
+    expect(view.querySelector('[data-design="tokens"]')).toBeNull();
+
+    await act(async () => {
+      setInput(search as HTMLInputElement, '');
+    });
+    await act(async () => {
+      (view.querySelector('[data-design="tokens"]') as HTMLButtonElement).click();
+    });
+    expect(view.querySelector('input[name="token-filter"]')).toBeInstanceOf(HTMLInputElement);
+    expect(session.getSnapshot().openId).toBe('specimen');
+
+    await act(async () => {
+      (view.querySelector('[data-design="fonts"]') as HTMLButtonElement).click();
+    });
+    expect(view.querySelector('input[name="font-sans-family"]')).toBeInstanceOf(HTMLInputElement);
+
+    await act(async () => {
+      (view.querySelector('button[name="create-atom"]') as HTMLButtonElement).click();
+    });
+    const created = session.getSnapshot();
+    expect(created.openId).toBe('new-atom');
+    expect(created.document.kind).toBe('atom');
+    expect(created.document.name).toBe('New atom');
+    expect(view.querySelector('[data-asset-id="new-atom"]')?.className).toContain('is-active');
+    expect(view.querySelector('input[name="token-filter"]')).toBeNull();
+  });
 });
+
+function setInput(input: HTMLInputElement, value: string) {
+  const prototype = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  prototype?.set?.call(input, value);
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+}
