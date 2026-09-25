@@ -38,7 +38,18 @@ export function ownsComponentFeatures(kind: string): boolean {
   return kind === 'atom' || kind === 'component';
 }
 
-export function ComponentDefinitions({
+export function ComponentFields({
+  session,
+  snap,
+}: {
+  session: EditorSession;
+  snap: EditorSnapshot;
+}) {
+  if (!ownsComponentFeatures(snap.document.kind)) return null;
+  return <FieldDefinitions session={session} snap={snap} />;
+}
+
+export function ComponentVariants({
   session,
   snap,
 }: {
@@ -48,7 +59,6 @@ export function ComponentDefinitions({
   if (!ownsComponentFeatures(snap.document.kind)) return null;
   return (
     <div className="stack">
-      <FieldDefinitions session={session} snap={snap} />
       <VariantDefinitions session={session} snap={snap} />
       <p className="meta">States live on the style block, above node style overrides.</p>
       {styleStateNames.map((state) => (

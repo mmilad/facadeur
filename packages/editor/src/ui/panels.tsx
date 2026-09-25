@@ -21,7 +21,8 @@ import {
 import { documentToJson, saveJsonFile } from '../files.js';
 import type { EditorDrag, EditorSession, EditorSnapshot, EditorTool } from '../session.js';
 import {
-  ComponentDefinitions,
+  ComponentFields,
+  ComponentVariants,
   NodeBindings,
   NodeVariantStyles,
   ownsComponentFeatures,
@@ -428,7 +429,12 @@ function Properties({ session, snap }: { session: EditorSession; snap: EditorSna
     return (
       <div className="properties">
         <p className="inspector-empty">Select a layer or an element on the stage.</p>
-        {showDefinitions ? <ComponentDefinitions session={session} snap={snap} /> : null}
+        {showDefinitions ? (
+          <>
+            <ComponentFields session={session} snap={snap} />
+            <ComponentVariants session={session} snap={snap} />
+          </>
+        ) : null}
       </div>
     );
   }
@@ -521,8 +527,9 @@ function Properties({ session, snap }: { session: EditorSession; snap: EditorSna
       {node.type === 'instance' ? (
         <InstanceFields session={session} node={node} snap={snap} />
       ) : null}
-      {showDefinitions ? <ComponentDefinitions session={session} snap={snap} /> : null}
+      {showDefinitions ? <ComponentFields session={session} snap={snap} /> : null}
       {node.type !== 'instance' ? <NodeBindings session={session} snap={snap} node={node} /> : null}
+      {showDefinitions ? <ComponentVariants session={session} snap={snap} /> : null}
       {node.type !== 'instance' && node.id !== snap.document.rootId ? (
         <NodeVariantStyles session={session} snap={snap} nodeId={node.id} />
       ) : null}
