@@ -3,6 +3,7 @@ import type { DesignInput } from '@facadeur/tokens';
 import { assignCatalog, renderComponent, type ComponentFile } from './component.js';
 import { renderComponentCss, renderTokenCss } from './css.js';
 import { CodegenError } from './names.js';
+import { generateStories } from './stories.js';
 
 export interface GeneratedFile {
   path: string;
@@ -16,8 +17,13 @@ export interface GenerateReactOptions {
   design?: DesignInput;
 }
 
-/** Turn facadeur documents into React components and the CSS they use. */
-export function generateReact(options: GenerateReactOptions): GeneratedFile[] {
+export interface GenerateReactOutput {
+  ui: GeneratedFile[];
+  stories: GeneratedFile[];
+}
+
+/** Turn facadeur documents into React components, CSS, and Storybook stories. */
+export function generateReact(options: GenerateReactOptions): GenerateReactOutput {
   const documents = [...options.documents].sort((left, right) =>
     left.id.localeCompare(right.id, 'en'),
   );
@@ -31,7 +37,7 @@ export function generateReact(options: GenerateReactOptions): GeneratedFile[] {
   const catalog = assignCatalog(documents);
   const components = documents.map((document) => renderComponent(document, catalog));
   const breakpoints = options.design?.breakpoints;
-  return [
+  const ui: GeneratedFile[] = [
     { path: 'styles/tokens.css', contents: renderTokenCss(options.design) },
     {
       path: 'styles/components.css',
@@ -40,8 +46,8 @@ export function generateReact(options: GenerateReactOptions): GeneratedFile[] {
     ...components.map(toFile),
     { path: 'index.ts', contents: renderIndex(components) },
   ];
+  return { ui, stories: generateStories(documents, components) };
 }
-
 export function designFromDocument(document: DocumentFile): DesignInput {
   return {
     ...(document.tokens ? { tokens: document.tokens } : {}),

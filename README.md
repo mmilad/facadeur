@@ -25,14 +25,27 @@ Open the URL Vite prints (http://localhost:5173). The specimen page is open. Fro
 - **Open** reads a document JSON (File System Access API, or a file input). **Save** writes the open document back, or downloads it when the browser has neither the file API nor the dev server.
 - Hover shows the click target in the frame under the pointer. Escape clears the selection. **Reset view** fits the frames again.
 
-## Generate React for Next.js
+## Generate React and Storybook
 
 ```bash
 pnpm codegen
+pnpm storybook
+```
+
+`pnpm codegen` reads the example documents and `examples/project-template.json`, then writes:
+
+- **`packages/ui`** — React components, barrel export, token and component CSS (`@facadeur/ui`)
+- **`apps/storybook/src/stories/generated`** — CSF3 stories (args from field and variant defaults)
+
+Storybook opens at http://localhost:6006 and lists every generated atom, component, section, and page.
+
+The thin Next.js sample still consumes the same package:
+
+```bash
 pnpm --filter @facadeur/example-next dev
 ```
 
-`pnpm codegen` reads the example documents and `examples/project-template.json`, then writes React components and CSS to `examples/next/generated`. The example app imports that output. Open the URL Next prints (http://localhost:3000). The page renders Button (tone and size props), Input, Sign in, and Card from the generated components. Tokens, fonts, and style blocks are the generated stylesheets.
+Open the URL Next prints (http://localhost:3000). The page renders Button (tone and size props), Input, Sign in, and Card from `@facadeur/ui`.
 
 ## Checks
 
@@ -47,15 +60,17 @@ pnpm test
 ## Layout
 
 ```
+apps/editor             Vite + React shell (stage, layers, properties, assets, tokens, fonts)
+apps/storybook          Storybook 8 + Vite; generated CSF3 stories for @facadeur/ui
 packages/core           types, JSON Schema, flat model, commands, DocumentStore
 packages/store-yjs      Yjs DocumentStore, one transaction per command, undo/redo
 packages/tokens         DTCG parser, reference resolution, CSS custom properties, project template
 packages/style-engine   live CSSStyleRules, component style blocks, auto layout
 packages/renderer-dom   document JSON to DOM, targeted updates from the store
-packages/editor         Vite + React shell (stage, layers, properties, assets, tokens, fonts)
-packages/codegen-react  React components and CSS from documents
+packages/ui             generated React design system (from pnpm codegen)
+packages/codegen-react  React components, CSS, and Storybook stories from documents
 examples/               specimen page, section, atoms, and examples/project-template.json
-examples/next           Next.js app that renders the generated components
+examples/next           Next.js app that imports @facadeur/ui
 schema/                 generated JSON Schema
 docs/dsl.md             the document format
 docs/plan.md            milestones

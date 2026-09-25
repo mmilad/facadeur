@@ -41,7 +41,7 @@ function source(files: { path: string; contents: string }[], path: string): stri
 
 describe('generateReact', () => {
   const { documents, design } = loadCatalog();
-  const files = generateReact({ documents, design });
+  const { ui: files } = generateReact({ documents, design });
 
   it('types button fields and variants and paints the instance selectors', () => {
     const button = source(files, 'components/Button.tsx');
@@ -122,15 +122,31 @@ describe('generateReact', () => {
 
   it('sorts documents by id so the same catalog always matches', () => {
     const reversed = generateReact({ documents: [...documents].reverse(), design });
-    expect(reversed.map((file) => file.path)).toEqual(files.map((file) => file.path));
-    expect(reversed.map((file) => file.contents)).toEqual(files.map((file) => file.contents));
+    expect(reversed.ui.map((file) => file.path)).toEqual(files.map((file) => file.path));
+    expect(reversed.ui.map((file) => file.contents)).toEqual(files.map((file) => file.contents));
   });
 
-  it('matches the committed Next.js example', async () => {
+  it('matches the committed UI package', async () => {
     for (const file of files) {
       const formatted = await formatGenerated(file.path, file.contents);
-      expect(readRepoFile(`examples/next/generated/${file.path}`)).toBe(formatted);
+      expect(readRepoFile(`packages/ui/${file.path}`)).toBe(formatted);
     }
+  });
+
+  it('emits a CSF3 story per component', () => {
+    const { stories } = generateReact({ documents, design });
+    expect(stories.map((file) => file.path)).toEqual([
+      'src/stories/generated/Button.stories.tsx',
+      'src/stories/generated/Card.stories.tsx',
+      'src/stories/generated/Input.stories.tsx',
+      'src/stories/generated/SignIn.stories.tsx',
+      'src/stories/generated/Specimen.stories.tsx',
+      'src/stories/generated/SpecimenSection.stories.tsx',
+    ]);
+    const button = source(stories, 'src/stories/generated/Button.stories.tsx');
+    expect(button).toContain("title: 'Atoms/Button'");
+    expect(button).toContain('tone:');
+    expect(button).toContain('export const Default: Story = {};');
   });
 });
 
@@ -222,7 +238,7 @@ describe('bindings outside the examples', () => {
     },
   };
 
-  const files = generateReact({ documents: [host, note] });
+  const { ui: files } = generateReact({ documents: [host, note] });
 
   it('emits typed props, style bindings, and instance overrides', () => {
     const component = source(files, 'components/Note.tsx');
