@@ -85,3 +85,5 @@ Built-in **+** (append `defaultItem`) and **×** (remove row). Paths look like `
 ## Future `ui/controls/*`
 
 Domain controls (layout, font, shadow, tokens) should compose these primitives and `Form` / `SchemaForm`, not reimplement inputs. Keep document commands in panel code; pass `onCommit` from the panel when a change should create an undo step.
+
+See [`docs/editor-controls.yaml`](./editor-controls.yaml) for the control matrix and data-flow contract (read `EditorSnapshot`, write via `session.execute` / `executeDesign`, catalogs as props — no store inside controls).
