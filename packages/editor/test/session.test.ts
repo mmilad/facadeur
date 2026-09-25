@@ -4,12 +4,23 @@ import { createProjectTemplateDocument } from '@facadeur/tokens';
 import button from '../../../examples/button.json';
 import card from '../../../examples/card.json';
 import input from '../../../examples/input.json';
+import link from '../../../examples/link.json';
 import signIn from '../../../examples/sign-in.json';
+import textarea from '../../../examples/textarea.json';
 import specimenPage from '../../../examples/specimen-page.json';
 import specimenSection from '../../../examples/specimen-section.json';
 import { createEditorSession } from '../src/session.js';
 
-const documents = validateCatalog([button, input, card, signIn, specimenSection, specimenPage]);
+const documents = validateCatalog([
+  button,
+  link,
+  input,
+  textarea,
+  card,
+  signIn,
+  specimenSection,
+  specimenPage,
+]);
 
 function session() {
   return createEditorSession({
@@ -33,7 +44,10 @@ describe('editor session', () => {
     expect(atoms.workspace).toBe('atom');
     expect(atoms.openId).toBe('button');
     expect(atoms.paintRoot).toBe(true);
-    expect(atoms.assets.map((asset) => asset.id)).toEqual(['button', 'input']);
+    expect(atoms.assets.map((asset) => asset.id)).toEqual(['button', 'link', 'input', 'textarea']);
+    editor.openAsset('link', 'root');
+    expect(editor.getSnapshot().selectedNodeId).toBe('root');
+    expect(editor.getSnapshot().workspace).toBe('atom');
 
     editor.setWorkspace('page');
     expect(editor.getSnapshot().openId).toBe('specimen');
@@ -98,7 +112,13 @@ describe('editor session', () => {
     const snap = editor.getSnapshot();
     expect(snap.openId).toBe('badge');
     expect(snap.workspace).toBe('atom');
-    expect(snap.assets.map((asset) => asset.name)).toEqual(['Button', 'Input', 'Badge']);
+    expect(snap.assets.map((asset) => asset.name)).toEqual([
+      'Button',
+      'Link',
+      'Input',
+      'Textarea',
+      'Badge',
+    ]);
     expect(editor.filenameFor('specimen')).toBe('specimen-page.json');
     expect(editor.filenameFor('badge')).toBe('badge.json');
   });

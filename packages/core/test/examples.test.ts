@@ -26,6 +26,15 @@ describe('examples', () => {
     for (const document of documents) {
       expect(toNested(toFlat(document))).toEqual(document);
     }
+    for (const id of ['button', 'link', 'input', 'textarea']) {
+      const atom = documents.find((document) => document.id === id);
+      expect(atom?.kind).toBe('atom');
+      expect(atom?.fields?.length).toBeGreaterThan(0);
+    }
+    const link = documents.find((document) => document.id === 'link');
+    expect(link?.fields?.map((field) => field.name)).toEqual(['label', 'href']);
+    const textarea = documents.find((document) => document.id === 'textarea');
+    expect(textarea?.variants?.[0]?.name).toBe('resize');
     const page = documents.find((document) => document.id === 'specimen');
     expect(page?.kind).toBe('page');
     expect(page?.root).toMatchObject({

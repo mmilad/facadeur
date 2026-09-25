@@ -61,7 +61,7 @@ export interface EditorSession {
   subscribe: (listener: () => void) => () => void;
   getSnapshot: () => EditorSnapshot;
   setWorkspace: (kind: DefaultKind) => void;
-  openAsset: (id: string) => void;
+  openAsset: (id: string, focus?: 'root') => void;
   selectNode: (nodeId: string | null) => void;
   selectRendered: (renderedId: string | null) => void;
   setTool: (tool: EditorTool) => void;
@@ -312,16 +312,26 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       }
       publish();
     },
-    openAsset(id) {
+    openAsset(id, focus) {
       const store = assetStores.get(id);
-      if (!store) return;
-      const kind = kindOf(store.getDocument());
+      if (!store) {
+        notice = { tone: 'error', text: `Unknown component "${id}"` };
+        publish();
+        return;
+      }
+      const doc = store.getDocument();
+      const kind = kindOf(doc);
       openId = id;
       workspace = kind;
       lastOpen.set(kind, id);
-      clearSelection();
       tool = 'select';
       drag = null;
+      if (focus === 'root') {
+        selectedNodeId = doc.rootId;
+        selectedRenderId = renderIdForNode(doc, doc.rootId, doc.kind !== 'page');
+      } else {
+        clearSelection();
+      }
       publish();
     },
     selectNode(nodeId) {

@@ -95,11 +95,14 @@ export {
   canonicalizeTokenInterface,
   collectTokenRefs,
   isFontFamilyRef,
+  omitVariantAxis,
+  omitVariantValues,
   parseStyleBlock,
   parseTokenInterface,
   refsInText,
 } from './style-block.js';
 export {
+  assertDefinitionKind,
   assertFieldDefinition,
   assertVariantAxis,
   compileDocumentValidator,

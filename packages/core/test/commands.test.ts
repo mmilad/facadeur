@@ -273,4 +273,59 @@ describe('applyCommand', () => {
       }),
     ).not.toThrow();
   });
+
+  it('removes bindings with a field and variant styles with an axis', () => {
+    let doc = component();
+    doc = applyCommand(doc, {
+      type: 'setStyleBlock',
+      style: {
+        declarations: { color: '{color.ink}' },
+        variants: {
+          tone: {
+            loud: {
+              declarations: { color: 'blue' },
+              states: { hover: { color: 'navy' } },
+            },
+            quiet: { declarations: { color: 'gray' } },
+          },
+        },
+        children: {
+          title: {
+            variants: { tone: { loud: { declarations: { fontWeight: '700' } } } },
+          },
+        },
+      },
+    });
+    expect(doc.tokenInterface?.reads).toEqual(['color.ink']);
+    expect(doc.nodes.title).toMatchObject({ bindings: [{ field: 'title', target: 'text' }] });
+
+    doc = applyCommand(doc, { type: 'removeField', name: 'title' });
+    expect(doc.fields).toEqual([]);
+    expect(doc.nodes.title).not.toHaveProperty('bindings');
+
+    doc = applyCommand(doc, {
+      type: 'defineVariant',
+      axis: { name: 'tone', values: ['quiet'], default: 'quiet' },
+    });
+    expect(doc.styles?.variants).toEqual({ tone: { quiet: { declarations: { color: 'gray' } } } });
+    expect(doc.styles?.children).toBeUndefined();
+
+    doc = applyCommand(doc, { type: 'removeVariant', name: 'tone' });
+    expect(doc.variants).toEqual([]);
+    expect(doc.styles?.variants).toBeUndefined();
+    expect(doc.styles?.declarations).toEqual({ color: '{color.ink}' });
+
+    expect(() =>
+      applyCommand(toFlat(file('page')), {
+        type: 'defineField',
+        field: { name: 'label', type: 'text', default: 'No' },
+      }),
+    ).toThrow(/cannot define fields/);
+    expect(() =>
+      applyCommand(toFlat(file('section')), {
+        type: 'defineVariant',
+        axis: { name: 'tone', values: ['quiet'] },
+      }),
+    ).toThrow(/cannot define variants/);
+  });
 });

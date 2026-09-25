@@ -1,4 +1,5 @@
 import { createId, findParent } from '@facadeur/core';
+import { placementAllowed, refusalMessage, toolAllowed } from '../editing.js';
 import { useEffect, useSyncExternalStore } from 'react';
 import { documentToJson, openJsonFile, parseDocumentText, saveJsonFile } from '../files.js';
 import { isEditableTarget } from '../keyboard.js';
@@ -54,7 +55,7 @@ export function App({ session }: { session: EditorSession }) {
       ) : null}
       <div className="workspace">
         <aside className="side side-left">
-          <ToolBar session={session} tool={snap.tool} />
+          <ToolBar session={session} tool={snap.tool} kind={snap.document.kind} />
           <AssetList session={session} snap={snap} />
           <LayersPanel session={session} snap={snap} />
         </aside>
@@ -90,6 +91,11 @@ function useEditorKeys(session: EditorSession) {
         const snap = session.getSnapshot();
         const nodeId = snap.selectedNodeId;
         if (!nodeId || nodeId === snap.document.rootId) return;
+        const parent = findParent(snap.document, nodeId);
+        if (!parent || !placementAllowed(snap.document, parent.id, 'frame')) {
+          session.setNotice(refusalMessage(snap.document.kind, 'frame'));
+          return;
+        }
         const frameId = createId();
         session.execute({ type: 'wrap', nodeId, frameId });
         if (session.getSnapshot().document.nodes[frameId]) session.selectNode(frameId);
@@ -106,10 +112,15 @@ function useEditorKeys(session: EditorSession) {
         session.selectNode(findParent(snap.document, snap.selectedNodeId)?.id ?? null);
         return;
       }
-      if (key === 'f') session.setTool('frame');
-      else if (key === 't') session.setTool('text');
-      else if (key === 'i') session.setTool('image');
-      else if (key === 'v') session.setTool('select');
+      if (key === 'f' || key === 't' || key === 'i') {
+        const tool = key === 'f' ? 'frame' : key === 't' ? 'text' : 'image';
+        const snap = session.getSnapshot();
+        if (!toolAllowed(snap.document.kind, tool)) {
+          session.setNotice(refusalMessage(snap.document.kind, tool));
+          return;
+        }
+        session.setTool(tool);
+      } else if (key === 'v') session.setTool('select');
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);

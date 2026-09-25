@@ -4,6 +4,7 @@ export {
   createProjectTemplateDocument,
   defaultFonts,
   defaultTokenTree,
+  starterAtomIds,
   type ProjectTemplate,
 } from './defaults.js';
 export { fontCustomProperty, tokenCustomProperty, typographyCustomProperty } from './names.js';

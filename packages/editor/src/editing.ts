@@ -1,12 +1,15 @@
 import {
+  defaultNestingRules,
   findParent,
   isInsideSubtree,
   readTokenTree,
   type AxisSize,
+  type DefaultKind,
   type FlatDocument,
   type InsertNode,
   type Layout,
   type LayoutOverride,
+  type NodeType,
   type SizeValue,
 } from '@facadeur/core';
 
@@ -94,6 +97,7 @@ export function dropParentId(
   chain: readonly string[],
   draggedId: string | null,
   intoDeepestFrame: boolean,
+  accepts?: (parentId: string) => boolean,
 ): string | null {
   const root = doc.nodes[doc.rootId];
   if (!chain.length) return root?.type === 'frame' ? doc.rootId : null;
@@ -108,7 +112,8 @@ export function dropParentId(
   while (candidate) {
     const frame = doc.nodes[candidate];
     const insideDrag = draggedId !== null && isInsideSubtree(doc, draggedId, candidate);
-    if (!insideDrag && frame?.type === 'frame') return candidate;
+    const allowed = !accepts || accepts(candidate);
+    if (!insideDrag && frame?.type === 'frame' && allowed) return candidate;
     candidate = findParent(doc, candidate)?.id ?? null;
   }
   return null;
@@ -329,4 +334,49 @@ function emptyOverride(value: LayoutOverride): boolean {
 function emptyLayout(layout: Layout): boolean {
   if (!emptyOverride(layout)) return false;
   return !layout.breakpoints || Object.keys(layout.breakpoints).length === 0;
+}
+
+/**
+ * A new child is legal when the kind's nesting rule allows that node type
+ * under a frame. Instance targets must be a kind the rule lists.
+ * The root's own type is not checked here: the root already exists.
+ */
+export function placementAllowed(
+  doc: FlatDocument,
+  parentId: string,
+  nodeType: NodeType,
+  instanceKind?: string,
+): boolean {
+  const rule = ruleFor(doc.kind);
+  if (!rule) return false;
+  const parent = doc.nodes[parentId];
+  if (parent?.type !== 'frame') return false;
+  if (!rule.nodeTypes.includes(nodeType)) return false;
+  if (nodeType !== 'instance') return true;
+  return Boolean(instanceKind && rule.instanceKinds.includes(instanceKind));
+}
+
+export function toolAllowed(kind: string, tool: InsertTool): boolean {
+  const rule = ruleFor(kind);
+  return Boolean(rule?.nodeTypes.includes(tool));
+}
+
+export function refusalMessage(kind: string, nodeType: string, instanceKind?: string): string {
+  if (kind === 'page') return 'Pages can only contain sections.';
+  if (kind === 'atom' && nodeType === 'instance') {
+    return 'Atoms can only contain frames, text, and images.';
+  }
+  if (nodeType === 'instance' && instanceKind) {
+    return `A ${kind} cannot contain an instance of ${instanceKind}.`;
+  }
+  return `A ${kind} cannot contain a ${nodeType}.`;
+}
+
+function ruleFor(kind: string) {
+  if (!isDefaultKind(kind)) return undefined;
+  return defaultNestingRules[kind];
+}
+
+function isDefaultKind(kind: string): kind is DefaultKind {
+  return kind === 'atom' || kind === 'component' || kind === 'section' || kind === 'page';
 }

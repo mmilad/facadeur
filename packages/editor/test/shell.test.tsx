@@ -9,13 +9,24 @@ import { afterEach, describe, expect, it } from 'vitest';
 import button from '../../../examples/button.json';
 import card from '../../../examples/card.json';
 import input from '../../../examples/input.json';
+import link from '../../../examples/link.json';
 import signIn from '../../../examples/sign-in.json';
+import textarea from '../../../examples/textarea.json';
 import specimenPage from '../../../examples/specimen-page.json';
 import specimenSection from '../../../examples/specimen-section.json';
 import { createEditorSession, type EditorSession } from '../src/session.js';
 import { App } from '../src/ui/App.js';
 
-const documents = validateCatalog([button, input, card, signIn, specimenSection, specimenPage]);
+const documents = validateCatalog([
+  button,
+  link,
+  input,
+  textarea,
+  card,
+  signIn,
+  specimenSection,
+  specimenPage,
+]);
 
 describe('editor shell', () => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -45,6 +56,23 @@ describe('editor shell', () => {
 
     expect(host.textContent).toContain('Specimen');
     expect(host.textContent).toContain('specimen-section');
+    const frameTool = [...host.querySelectorAll('button.tool')].find((button) =>
+      button.textContent?.includes('Frame'),
+    );
+    expect(frameTool).toBeInstanceOf(HTMLButtonElement);
+    expect((frameTool as HTMLButtonElement).disabled).toBe(true);
+
+    const sectionLayer = [...host.querySelectorAll('button.layer')].find((button) =>
+      button.textContent?.includes('specimen-section'),
+    );
+    await act(async () => {
+      sectionLayer?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    });
+    expect(session.getSnapshot().openId).toBe('specimen-section');
+    expect(session.getSnapshot().selectedNodeId).toBe('root');
+    await act(async () => {
+      session.setWorkspace('page');
+    });
 
     const atoms = [...host.querySelectorAll('button')].find(
       (button) => button.textContent === 'Atoms',

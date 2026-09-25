@@ -1,11 +1,13 @@
-import { createId, type FlatDocument } from '@facadeur/core';
+import { createId, type FlatDocument, type NodeType } from '@facadeur/core';
 import { useEffect, useRef } from 'react';
 import {
   dropParentId,
   emphasizeInsertLine,
   insertDraft,
+  placementAllowed,
   placeInParent,
   prefersInsideFrame,
+  refusalMessage,
   sameSlot,
   writeLayoutFields,
   type Box,
@@ -16,11 +18,12 @@ import { isEditableTarget } from '../keyboard.js';
 import { dataIdSelector, createSelection, type SelectionController } from '../selection.js';
 import {
   documentChain,
+  instanceOpenTarget,
   renderIdForNode,
   resolveClick,
   type SelectMode,
 } from '../selection-model.js';
-import type { EditorSession, EditorTool } from '../session.js';
+import type { EditorDrag, EditorSession, EditorSnapshot, EditorTool } from '../session.js';
 import { createStage, type StageController } from '../stage.js';
 import { createViewportBoard, type ViewportBoard, type ViewportFrame } from '../viewports.js';
 
@@ -107,7 +110,12 @@ export function StageCanvas({
       session.selectNode(target);
     }
 
-    function measure(clientX: number, clientY: number, draggedId: string | null): Drop | null {
+    function measure(
+      clientX: number,
+      clientY: number,
+      draggedId: string | null,
+      subject: PlaceSubject,
+    ): Drop | null {
       const board = boardRef.current;
       if (!board) return null;
       const frame = selection.frameAt(clientX, clientY);
@@ -122,7 +130,9 @@ export function StageCanvas({
         ? documentChain(snap.document, hit.id, snap.paintRoot)
         : [snap.document.rootId];
       const into = hit ? insideHit(frame, hit.id, local, snap.document, snap.paintRoot) : false;
-      const parentId = dropParentId(snap.document, chain, draggedId, into);
+      const parentId = dropParentId(snap.document, chain, draggedId, into, (id) =>
+        placementAllowed(snap.document, id, subject.type, subject.instanceKind),
+      );
       if (!parentId) return null;
       const parent = snap.document.nodes[parentId];
       if (parent?.type !== 'frame') return null;
@@ -168,9 +178,16 @@ export function StageCanvas({
       const chain = hit ? documentChain(snap.document, hit.id, snap.paintRoot) : [];
       const selected = snap.selectedNode;
       const append = !fromDrag && selected?.type === 'frame' && chain.includes(selected.id);
-      const drop = append ? null : measure(clientX, clientY, null);
-      const parentId = append ? selected.id : drop?.parentId;
-      if (!parentId) return;
+      const subject: PlaceSubject = { type: toolName };
+      const drop = append ? null : measure(clientX, clientY, null, subject);
+      const parentId = append && selected ? selected.id : drop?.parentId;
+      const legal = parentId !== undefined && placementAllowed(snap.document, parentId, toolName);
+      if (!parentId || !legal) {
+        if (selection.frameAt(clientX, clientY)) {
+          session.setNotice(refusalMessage(snap.document.kind, toolName));
+        }
+        return;
+      }
       const id = createId();
       session.execute({
         type: 'insert',
@@ -203,7 +220,8 @@ export function StageCanvas({
         gesture.moved = true;
         selection.clearHover();
         const ignore = gesture.mode === 'reorder' ? gesture.nodeId : null;
-        pending = measure(event.clientX, event.clientY, ignore);
+        const subject = gestureSubject(session.getSnapshot(), gesture);
+        pending = subject ? measure(event.clientX, event.clientY, ignore, subject) : null;
         selection.showInsert(pending?.line ?? null);
         return;
       }
@@ -268,6 +286,15 @@ export function StageCanvas({
         lastClick = { time: now, x: event.clientX, y: event.clientY };
         const mode: SelectMode =
           event.ctrlKey || event.metaKey ? 'deepest' : deeper ? 'deeper' : 'context';
+        if (mode === 'deeper') {
+          const hit = selection.hitAt(event.clientX, event.clientY);
+          const chain = hit ? documentChain(snap.document, hit.id, snap.paintRoot) : [];
+          const componentId = instanceOpenTarget(snap.document, chain, snap.selectedNodeId);
+          if (componentId) {
+            session.openAsset(componentId, 'root');
+            return;
+          }
+        }
         choose(event, mode);
         return;
       }
@@ -298,7 +325,8 @@ export function StageCanvas({
       if (event.dataTransfer)
         event.dataTransfer.dropEffect = drag.kind === 'node' ? 'move' : 'copy';
       const ignore = drag.kind === 'node' ? drag.nodeId : null;
-      pending = measure(event.clientX, event.clientY, ignore);
+      const subject = dragSubject(session.getSnapshot(), drag);
+      pending = subject ? measure(event.clientX, event.clientY, ignore, subject) : null;
       selection.showInsert(pending?.line ?? null);
     };
 
@@ -306,12 +334,28 @@ export function StageCanvas({
       const drag = session.getSnapshot().drag;
       if (!drag) return;
       event.preventDefault();
+      const subject = dragSubject(session.getSnapshot(), drag);
       const drop =
-        pending ?? measure(event.clientX, event.clientY, drag.kind === 'node' ? drag.nodeId : null);
+        pending ??
+        (subject
+          ? measure(
+              event.clientX,
+              event.clientY,
+              drag.kind === 'node' ? drag.nodeId : null,
+              subject,
+            )
+          : null);
       pending = null;
       selection.showInsert(null);
       session.endDrag();
-      if (!drop) return;
+      if (!drop) {
+        if (subject && selection.frameAt(event.clientX, event.clientY)) {
+          session.setNotice(
+            refusalMessage(session.getSnapshot().document.kind, subject.type, subject.instanceKind),
+          );
+        }
+        return;
+      }
       if (drag.kind === 'node') {
         const doc = session.getSnapshot().document;
         if (!sameSlot(doc, drag.nodeId, drop.parentId, drop.index)) {
@@ -500,7 +544,8 @@ export function StageCanvas({
     <div className="viewport" ref={viewportRef}>
       <div className="stage" ref={stageRef} />
       <p className="hint">
-        Scroll to zoom · drag the canvas to pan · F T I insert · double-click drills in
+        Scroll to zoom · drag the canvas to pan · F T I insert · double-click drills in, and opens
+        an instance
       </p>
     </div>
   );
@@ -519,6 +564,36 @@ interface Gesture {
   moved: boolean;
   mode: 'insert' | 'reorder';
   nodeId: string | null;
+}
+
+interface PlaceSubject {
+  type: NodeType;
+  instanceKind?: string;
+}
+
+function gestureSubject(snap: EditorSnapshot, gesture: Gesture): PlaceSubject | null {
+  if (gesture.mode === 'insert') {
+    if (snap.tool === 'select') return null;
+    return { type: snap.tool };
+  }
+  if (!gesture.nodeId) return null;
+  return nodeSubject(snap, gesture.nodeId);
+}
+
+function dragSubject(snap: EditorSnapshot, drag: EditorDrag): PlaceSubject | null {
+  if (drag.kind === 'asset') {
+    const kind = snap.catalog.find((item) => item.id === drag.assetId)?.kind;
+    return { type: 'instance', instanceKind: kind };
+  }
+  return nodeSubject(snap, drag.nodeId);
+}
+
+function nodeSubject(snap: EditorSnapshot, nodeId: string): PlaceSubject | null {
+  const node = snap.document.nodes[nodeId];
+  if (!node) return null;
+  if (node.type !== 'instance') return { type: node.type };
+  const kind = snap.catalog.find((item) => item.id === node.component)?.kind;
+  return { type: 'instance', instanceKind: kind };
 }
 
 function insideHit(
