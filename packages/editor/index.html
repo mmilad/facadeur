@@ -10,25 +10,7 @@
     />
   </head>
   <body>
-    <div class="app">
-      <header class="topbar">
-        <div class="brand">facadeur</div>
-        <div class="topbar-name" id="page-name"></div>
-        <div class="topbar-spacer"></div>
-        <span class="zoom-readout" id="zoom-readout">100%</span>
-        <button type="button" class="text-button" id="reset-view">Reset view</button>
-      </header>
-      <div class="workspace">
-        <div class="viewport" id="viewport">
-          <div class="stage" id="stage"></div>
-          <p class="hint">Scroll to zoom · drag to pan · click a viewport to select</p>
-        </div>
-        <aside class="sidebar" id="sidebar" aria-label="Selection">
-          <h2>Selection</h2>
-          <div id="inspector" aria-live="polite"></div>
-        </aside>
-      </div>
-    </div>
-    <script type="module" src="/src/main.ts"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

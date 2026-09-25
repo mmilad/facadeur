@@ -161,11 +161,11 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 
 ### M5 – Editor-Grundgerüst
 
-- [ ] React-Shell: Bühne, Ebenenliste, Eigenschaften-Panel, Asset-Liste (Atome/Komponenten/Sektionen/Pages), Token- und Schriften-Bereich
-- [ ] Befehle über `store-yjs` anbinden, Undo/Redo (Strg+Z / Strg+Shift+Z)
-- [ ] Renderer und Style-Engine abonnieren Änderungen des Stores und aktualisieren gezielt
-- [ ] Laden/Speichern der JSON-Dateien (File System Access API oder kleiner Dev-Server)
-- [ ] Arbeitsbereiche pro `kind`
+- [x] React-Shell: Bühne, Ebenenliste, Eigenschaften-Panel, Asset-Liste (Atome/Komponenten/Sektionen/Pages), Token- und Schriften-Bereich
+- [x] Befehle über `store-yjs` anbinden, Undo/Redo (Strg+Z / Strg+Shift+Z)
+- [x] Renderer und Style-Engine abonnieren Änderungen des Stores und aktualisieren gezielt
+- [x] Laden/Speichern der JSON-Dateien (File System Access API oder kleiner Dev-Server)
+- [x] Arbeitsbereiche pro `kind`
 
 ### M6 – Bauen im Editor
 
@@ -233,3 +233,9 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 - 2026-09-24: Auswahl und Hover liegen im Overlay auf der Bühne, nie im iframe. `overlayBox` rechnet iframe-lokale `getBoundingClientRect`-Werte plus die Bildschirmbox des iframes in Bühnenkoordinaten um. Ein Klick setzt dieselbe `data-id` in jedem Frame; Hover zeigt nur das Ziel unter dem Zeiger. `instanceof HTMLElement` gilt nicht über das iframe-Realm, deshalb prüft Renderer und Overlay `nodeType`.
 - 2026-09-24: iframes haben `pointer-events: none`. Wheel und Drag treffen die Bühne, auch über einem Frame. Bewegung unter 4px ist ein Klick und wählt per `elementFromPoint` im Frame-Dokument; eine größere Bewegung schwenkt. Doppelklick, Strg+Klick und Esc-zum-Eltern bleiben M6. Der Renderer erzeugt Knoten im `ownerDocument` des Parents.
 - 2026-09-24: Das Specimen füllt die Frame-Breite (`width: fill` statt fest 1040, ohne Mindesthöhe 860). Die Card-Reihe ist bis desktop eine Spalte, ab desktop eine Zeile; die Karten sind darunter `fill` und auf desktop fest 420/460. Die Typo-Skala bleibt die bestehende `@media`-Stufe (display 40/48/56). So unterscheiden sich Layout und Schrift zwischen den drei Frames.
+- 2026-09-25: M5. Die Shell ist React. Die Bühne bleibt der bisherige Renderer (Pan/Zoom, same-origin iframes, Overlays über den Frames). React zeichnet Chrome und Panels und liest nur über `DocumentStore`. Die UI-Sprache bleibt Englisch, wie die bisherige Bühne.
+- 2026-09-25: Ein Arbeitsbereich ist ein `kind`. Die Asset-Liste filtert darauf; Wechseln öffnet das zuletzt geöffnete Dokument dieser Art, sonst das erste. Start ist die Page `specimen`. Jeder Befehl bekommt `resolveKind` aus dem Katalog, damit die Verschachtelungsregeln aus `core` auch an der Bühne gelten. Ein Klick in eine Instanz wählt die Instanz des offenen Dokuments, nicht die inneren Knoten — die gehören zum anderen Dokument und werden nur in dessen Arbeitsbereich bearbeitet.
+- 2026-09-25: Seiten lassen das Wurzel-Frame ungemalt (die iframe-Fläche ist die Arbeitsfläche). Atom, Komponente und Sektion setzen `paintRoot`: sonst wäre der Button eine leere Bühne, weil er selbst das Wurzel-Frame ist und keine Kinder hat. `compileDocument` gibt die Root-Regel nur dann aus. Selektoren auf der eigenen Bühne bleiben `data-id`. Der Scope beim Malen des offenen Dokuments sind seine Feld-Defaults, damit die Atom-Wurzel ihre Beschriftung zeigt. Instanzen ersetzen den Scope weiter mit ihren Overrides.
+- 2026-09-25: Token- und Schriften-Bereich bearbeiten ein Design-`DocumentStore`, gefüllt aus der Projektvorlage. Die Beispieldateien tragen den Token-Baum nicht in jedem Asset; die Style-Engine malt ihn über `setDesign`, und ein `setToken`/`setFont` aktualisiert jedes iframe, ohne die Frames neu zu bauen. Undo/Redo zielt auf den Store des letzten Befehls (Strg+Z, Strg+Shift+Z, auch Meta). Laden ist nicht undoable. Laden der Datei `project-template` ersetzt das Design, nicht die Asset-Liste.
+- 2026-09-25: Das Eigenschaften-Panel schreibt `setProp` (name, tag, text, src, alt, attributes), `setStyle`, an Instanzen `setField`/`setVariant`, und am Wurzelknoten den Default eines bestehenden Feldes über `defineField` (die Button-Beschriftung). Neue Felder, Varianten-Achsen, Auto Layout, Größen und freie Position bleiben M6/M7.
+- 2026-09-25: Speichern nutzt die File System Access API und merkt sich den Handle. Fehlt die API, schreibt `PUT /__facadeur/examples` im Vite-Dev-Server nach `examples/<datei>.json`. Sonst startet ein Download. Öffnen nutzt dieselbe API oder ein `<input type="file">`. Der Dateiname des Specimen bleibt `specimen-page.json`.

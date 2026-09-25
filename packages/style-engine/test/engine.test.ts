@@ -42,6 +42,16 @@ describe('component style block', () => {
     expect(compiled).toContain('gap: var(--button-gap)');
     expect(compiled).toContain('padding-inline: var(--button-padding-x)');
   });
+
+  it('emits the frame root on the canvas only when paintRoot is set', () => {
+    const painted = text(
+      compileDocument(button as DocumentFile, { address: 'canvas', paintRoot: true }),
+    );
+    expect(painted).toContain('[data-id="root"]');
+    expect(painted).toContain('display: flex');
+    const hidden = text(compileDocument(button as DocumentFile, { address: 'canvas' }));
+    expect(hidden).not.toContain('[data-id="root"]');
+  });
 });
 
 describe('style engine and renderer', () => {

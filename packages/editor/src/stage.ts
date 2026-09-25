@@ -25,6 +25,7 @@ export interface StageController {
   /** A press that did not turn into a pan. The listener decides select versus clear. */
   onClick: (listener: (event: PointerEvent) => void) => () => void;
   fit: (element: HTMLElement, padding?: number) => void;
+  destroy: () => void;
 }
 
 export function createStage(viewport: HTMLElement, stage: HTMLElement): StageController {
@@ -145,6 +146,13 @@ export function createStage(viewport: HTMLElement, stage: HTMLElement): StageCon
     onClick(listener) {
       clicks.add(listener);
       return () => clicks.delete(listener);
+    },
+    destroy() {
+      viewport.removeEventListener('wheel', onWheel);
+      viewport.removeEventListener('pointerdown', onPointerDown);
+      viewport.removeEventListener('pointermove', onPointerMove);
+      viewport.removeEventListener('pointerup', endDrag);
+      viewport.removeEventListener('pointercancel', endDrag);
     },
     fit(element, padding = 72) {
       const vw = viewport.clientWidth;

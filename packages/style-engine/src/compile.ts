@@ -25,9 +25,14 @@ export interface CompileOptions {
   /**
    * `instance` scopes rules with `data-component`, so every instance shares them.
    * `canvas` scopes the open document with `data-id`. Its frame root is the artboard
-   * and is not painted, so that root emits no rule.
+   * and is not painted, so that root emits no rule — unless `paintRoot` is set.
    */
   address?: 'instance' | 'canvas';
+  /**
+   * Paint the frame root on the canvas. Pages leave this off. An atom, component,
+   * or section root is the component itself, so the open workspace has to show it.
+   */
+  paintRoot?: boolean;
   /** Used when the document does not list breakpoints. Defaults to mobile, tablet, desktop. */
   breakpoints?: readonly Breakpoint[];
 }
@@ -54,7 +59,8 @@ export function compileDocument(
   const address = options.address ?? 'instance';
   const breakpoints = resolveBreakpoints(document, options.breakpoints);
   const rules: CompiledRule[] = [];
-  const rootRendered = !(address === 'canvas' && document.root.type === 'frame');
+  const rootRendered =
+    options.paintRoot === true || !(address === 'canvas' && document.root.type === 'frame');
   walk(document, document.root, {
     address,
     breakpoints,

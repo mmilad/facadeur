@@ -35,7 +35,10 @@ export interface RenderContext {
 }
 
 export interface DocumentStyles {
-  setDocument(document: DocumentFile, options?: { address?: 'instance' | 'canvas' }): void;
+  setDocument(
+    document: DocumentFile,
+    options?: { address?: 'instance' | 'canvas'; paintRoot?: boolean },
+  ): void;
   removeDocument?(id: string): void;
 }
 
@@ -67,17 +70,19 @@ export function createRenderContext(documents: readonly DocumentFile[]): RenderC
 
 /**
  * Paint a document's root children into `parent`.
- * The root frame itself stays the canvas (the editor draws viewport frames around it).
- * A non-frame root is painted directly.
+ * The root frame itself stays the canvas (the editor draws viewport frames around it),
+ * unless `paintRoot` is set. A non-frame root is painted directly.
  */
 export function renderDocument(
   document: DocumentFile,
   documents: readonly DocumentFile[],
   parent: HTMLElement,
+  options: { paintRoot?: boolean } = {},
 ): Map<string, RenderedNode> {
   const ctx = createRenderContext(documents);
   ctx.catalog.set(document.id, document);
-  paintCanvas(parent, document, ctx);
+  ctx.scope = resolveFields(document.fields, undefined);
+  paintCanvas(parent, document, ctx, options.paintRoot === true);
   return ctx.records;
 }
 
@@ -95,8 +100,11 @@ export function createDomRenderer(options: {
   parent: HTMLElement;
   catalog: readonly DocumentFile[];
   styles?: DocumentStyles;
+  /** When set, the root node is painted. Pages omit this: the root frame is the canvas. */
+  paintRoot?: boolean;
 }): DomRenderer {
   const parent = options.parent;
+  const paintRoot = options.paintRoot === true;
   const catalog = new Map<string, DocumentFile>();
   for (const document of options.catalog) catalog.set(document.id, document);
   const records = new Map<string, RenderedNode>();
@@ -117,14 +125,19 @@ export function createDomRenderer(options: {
 
   function syncStyles(document: DocumentFile): void {
     const address = document.id === mountedId ? 'canvas' : 'instance';
-    options.styles?.setDocument(document, { address });
+    options.styles?.setDocument(document, {
+      address,
+      ...(document.id === mountedId && paintRoot ? { paintRoot: true } : {}),
+    });
   }
 
   function paintMounted(): void {
     if (!mountedId) return;
     const document = catalog.get(mountedId);
     if (!document) return;
-    paintCanvas(parent, document, context());
+    const ctx = context();
+    ctx.scope = resolveFields(document.fields, undefined);
+    paintCanvas(parent, document, ctx, paintRoot);
   }
 
   const renderer: DomRenderer = {
@@ -163,8 +176,13 @@ export function createDomRenderer(options: {
   return renderer;
 }
 
-function paintCanvas(parent: HTMLElement, document: DocumentFile, ctx: RenderContext): void {
-  if (document.root.type === 'frame') {
+function paintCanvas(
+  parent: HTMLElement,
+  document: DocumentFile,
+  ctx: RenderContext,
+  paintRoot: boolean,
+): void {
+  if (document.root.type === 'frame' && !paintRoot) {
     reconcileChildren(parent, document.root.children ?? [], ctx);
     return;
   }
