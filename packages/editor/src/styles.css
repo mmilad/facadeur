@@ -811,6 +811,29 @@ input {
   gap: 2px;
 }
 
+.property-tabs,
+.property-subtabs {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  flex-wrap: wrap;
+  margin: 0 0 10px;
+  padding: 4px 0 6px;
+  background: var(--sidebar);
+}
+
+.property-subtabs {
+  top: 36px;
+  margin-top: 0;
+}
+
+.property-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+}
+
 .properties h3,
 .place-title {
   margin: 14px 0 8px;

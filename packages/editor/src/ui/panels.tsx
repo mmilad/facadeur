@@ -1,5 +1,5 @@
 import { createId } from '@facadeur/core';
-import { useMemo, useState, type DragEvent } from 'react';
+import { useEffect, useMemo, useState, type DragEvent } from 'react';
 import { readTokenTree, type FlatNode, type FontFamily } from '@facadeur/core';
 import {
   colorTokenRefs,
@@ -49,6 +49,22 @@ import { OverrideCue, ViewportEditBar } from './viewport-bar.js';
 import { ViewportLayersList, ViewportOptionsPanel } from './viewport-panel.js';
 
 export type EditorSurface = 'properties' | 'tokens' | 'fonts';
+
+type PropertyPrimaryTab = 'content' | 'style' | 'layout' | 'data';
+type PropertyStyleSubTab = 'declarations' | 'variants' | 'overrides';
+
+const PROPERTY_PRIMARY_TABS = [
+  ['content', 'Content'],
+  ['style', 'Style'],
+  ['layout', 'Layout'],
+  ['data', 'Data'],
+] as const;
+
+const PROPERTY_STYLE_SUBTABS = [
+  ['declarations', 'Declarations'],
+  ['variants', 'Variants'],
+  ['overrides', 'Overrides'],
+] as const;
 
 const TOOLS = [
   ['select', 'Select', 'V'],
@@ -328,21 +344,141 @@ function Properties({ session, snap }: { session: EditorSession; snap: EditorSna
   const node = snap.selectedNode;
   const showDefinitions =
     ownsComponentFeatures(snap.document.kind) && (!node || node.id === snap.document.rootId);
-  if (!node) {
-    return (
-      <div className="properties">
-        <p className="inspector-empty">Select a layer or an element on the stage.</p>
-        {showDefinitions ? (
-          <>
-            <ComponentFields session={session} snap={snap} />
-            <ComponentVariants session={session} snap={snap} />
-          </>
-        ) : null}
-      </div>
-    );
-  }
+  const [primaryTab, setPrimaryTab] = useState<PropertyPrimaryTab>('content');
+  const [styleSubTab, setStyleSubTab] = useState<PropertyStyleSubTab>('declarations');
+  const selectionKey = node?.id ?? '__none__';
+
+  useEffect(() => {
+    setPrimaryTab('content');
+    setStyleSubTab('declarations');
+  }, [selectionKey]);
+
+  const editableStyle = node && node.type !== 'instance';
+
   return (
     <div className="properties">
+      <div className="tabs property-tabs" role="tablist" aria-label="Properties sections">
+        {PROPERTY_PRIMARY_TABS.map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            name={`property-tab-${id}`}
+            className={primaryTab === id ? 'tab is-active' : 'tab'}
+            aria-selected={primaryTab === id}
+            onClick={() => setPrimaryTab(id)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      {primaryTab === 'content' ? (
+        <div role="tabpanel" className="property-panel">
+          {!node ? (
+            <p className="inspector-empty">Select a layer or an element on the stage.</p>
+          ) : (
+            <PropertiesContent
+              session={session}
+              snap={snap}
+              node={node}
+              showDefinitions={showDefinitions}
+            />
+          )}
+        </div>
+      ) : null}
+      {primaryTab === 'style' ? (
+        <div role="tabpanel" className="property-panel">
+          {!editableStyle ? (
+            <p className="inspector-empty">
+              {node?.type === 'instance'
+                ? 'Style is edited on the master component.'
+                : 'Select a layer to edit style.'}
+            </p>
+          ) : (
+            <>
+              <div className="tabs property-subtabs" role="tablist" aria-label="Style sections">
+                {PROPERTY_STYLE_SUBTABS.map(([id, label]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    role="tab"
+                    name={`property-style-tab-${id}`}
+                    className={styleSubTab === id ? 'tab is-active' : 'tab'}
+                    aria-selected={styleSubTab === id}
+                    onClick={() => setStyleSubTab(id)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {styleSubTab === 'declarations' ? (
+                <NodeStyleBlock session={session} snap={snap} nodeId={node.id} />
+              ) : null}
+              {styleSubTab === 'variants' ? (
+                node.id !== snap.document.rootId ? (
+                  <NodeVariantStyles session={session} snap={snap} nodeId={node.id} />
+                ) : (
+                  <p className="meta">
+                    Variant styles for child layers appear when a nested node is selected.
+                  </p>
+                )
+              ) : null}
+              {styleSubTab === 'overrides' ? (
+                <StyleFields session={session} snap={snap} node={node} />
+              ) : null}
+            </>
+          )}
+        </div>
+      ) : null}
+      {primaryTab === 'layout' ? (
+        <div role="tabpanel" className="property-panel">
+          {!node ? (
+            <p className="inspector-empty">Select a layer to edit layout.</p>
+          ) : (
+            <LayoutPanel session={session} snap={snap} node={node} />
+          )}
+        </div>
+      ) : null}
+      {primaryTab === 'data' ? (
+        <div role="tabpanel" className="property-panel">
+          {!node ? (
+            showDefinitions ? (
+              <>
+                <ComponentFields session={session} snap={snap} />
+                <ComponentVariants session={session} snap={snap} />
+              </>
+            ) : (
+              <p className="inspector-empty">Select a layer to edit data bindings.</p>
+            )
+          ) : node.type === 'instance' ? (
+            <p className="inspector-empty">
+              Instance field and variant overrides live on the Content tab.
+            </p>
+          ) : (
+            <>
+              <NodeBindings session={session} snap={snap} node={node} />
+              {showDefinitions ? <ComponentVariants session={session} snap={snap} /> : null}
+            </>
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function PropertiesContent({
+  session,
+  snap,
+  node,
+  showDefinitions,
+}: {
+  session: EditorSession;
+  snap: EditorSnapshot;
+  node: FlatNode;
+  showDefinitions: boolean;
+}) {
+  return (
+    <>
       <p className="inspector-id">{node.id}</p>
       <dl className="kv">
         <dt>Type</dt>
@@ -431,17 +567,7 @@ function Properties({ session, snap }: { session: EditorSession; snap: EditorSna
         <InstanceFields session={session} node={node} snap={snap} />
       ) : null}
       {showDefinitions ? <ComponentFields session={session} snap={snap} /> : null}
-      {node.type !== 'instance' ? <NodeBindings session={session} snap={snap} node={node} /> : null}
-      {showDefinitions ? <ComponentVariants session={session} snap={snap} /> : null}
-      {node.type !== 'instance' && node.id !== snap.document.rootId ? (
-        <NodeVariantStyles session={session} snap={snap} nodeId={node.id} />
-      ) : null}
-      {node.type !== 'instance' ? (
-        <NodeStyleBlock session={session} snap={snap} nodeId={node.id} />
-      ) : null}
-      {node.type !== 'instance' ? <StyleFields session={session} snap={snap} node={node} /> : null}
-      <LayoutPanel session={session} snap={snap} node={node} />
-    </div>
+    </>
   );
 }
 

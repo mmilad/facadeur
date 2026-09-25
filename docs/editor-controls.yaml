@@ -9,7 +9,7 @@ shell:
     - viewports: breakpoint rows above Layers; selection clears node selection (UX audit §1)
     - layers: below viewports in the same column
   right_rail:
-    default: Properties inspector only (no Tokens / Fonts tabs)
+    default: Properties inspector with Content / Style / Layout / Data tabs (no Tokens / Fonts tabs)
     viewport_selected: Viewport options only (chrome + breakpoint list); hides ViewportEditBar
     design_surface: Tokens or Fonts open from the left Design tree; same column as the inspector, with a section heading
   viewport_context:
