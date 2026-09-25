@@ -2,7 +2,7 @@ import { defaultKinds, defaultNestingRules, type DefaultKind } from '@facadeur/c
 import { useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from 'react';
 import { blankAsset } from '../new-asset.js';
 import type { EditorSession, EditorSnapshot } from '../session.js';
-import type { EditorSurface } from './panels.js';
+import { DESIGN_DOMAIN_ITEMS, type DesignDomain, type EditorSurface } from './design-domain.js';
 
 const KIND_LABEL: Record<DefaultKind, string> = {
   atom: 'Atoms',
@@ -11,23 +11,18 @@ const KIND_LABEL: Record<DefaultKind, string> = {
   page: 'Pages',
 };
 
-const DESIGN_ITEMS = [
-  { id: 'tokens' as const, label: 'Tokens', keys: ['tokens', 'token'] },
-  { id: 'fonts' as const, label: 'Fonts', keys: ['schriften', 'schrift', 'fonts', 'font'] },
-];
-
 export function ProjectTree({
   session,
   snap,
   surface,
   onOpenAsset,
-  onOpenDesign,
+  onOpenDesignDomain,
 }: {
   session: EditorSession;
   snap: EditorSnapshot;
   surface: EditorSurface;
   onOpenAsset: (id: string) => void;
-  onOpenDesign: (surface: 'tokens' | 'fonts') => void;
+  onOpenDesignDomain: (domain: DesignDomain) => void;
 }) {
   const [query, setQuery] = useState('');
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -47,7 +42,7 @@ export function ProjectTree({
   const designLabelHit = needle.length > 0 && 'design'.includes(needle);
   const designItems = useMemo(
     () =>
-      DESIGN_ITEMS.filter(
+      DESIGN_DOMAIN_ITEMS.filter(
         (item) =>
           !needle ||
           designLabelHit ||
@@ -112,9 +107,9 @@ export function ProjectTree({
                 key={item.id}
                 type="button"
                 className={surface === item.id ? 'asset is-active' : 'asset'}
-                data-design={item.id}
+                data-design-domain={item.id}
                 aria-pressed={surface === item.id}
-                onClick={() => onOpenDesign(item.id)}
+                onClick={() => onOpenDesignDomain(item.id)}
               >
                 <span className="asset-name">{item.label}</span>
               </button>

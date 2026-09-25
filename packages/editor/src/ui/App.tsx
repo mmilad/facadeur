@@ -4,7 +4,9 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { documentToJson, openJsonFile, parseDocumentText, saveJsonFile } from '../files.js';
 import { isEditableTarget } from '../keyboard.js';
 import type { EditorSession } from '../session.js';
-import { LayersPanel, RightRail, ToolBar, type EditorSurface } from './panels.js';
+import { isDesignDomain, type EditorSurface } from './design-domain.js';
+import { DesignDomainStage } from './design-domain-stage.js';
+import { LayersPanel, RightRail, ToolBar } from './panels.js';
 import { ProjectTree } from './project-tree.js';
 import { StageCanvas } from './StageCanvas.js';
 
@@ -72,21 +74,25 @@ export function App({ session }: { session: EditorSession }) {
               session.openAsset(id);
               setSurface('properties');
             }}
-            onOpenDesign={(next) => setSurface(next)}
+            onOpenDesignDomain={(domain) => setSurface(domain)}
           />
           <LayersPanel session={session} snap={snap} />
         </aside>
-        <StageCanvas
-          session={session}
-          openId={snap.openId}
-          generation={snap.generation}
-          designRevision={snap.designRevision}
-          selectedRenderId={snap.selectedRenderId}
-          focusViewportId={snap.focusViewportId}
-          selectedViewportId={snap.selectedViewportId}
-          chromeRevision={snap.revision}
-          tool={snap.tool}
-        />
+        {isDesignDomain(surface) ? (
+          <DesignDomainStage session={session} snap={snap} domain={surface} />
+        ) : (
+          <StageCanvas
+            session={session}
+            openId={snap.openId}
+            generation={snap.generation}
+            designRevision={snap.designRevision}
+            selectedRenderId={snap.selectedRenderId}
+            focusViewportId={snap.focusViewportId}
+            selectedViewportId={snap.selectedViewportId}
+            chromeRevision={snap.revision}
+            tool={snap.tool}
+          />
+        )}
         <aside className="side side-right">
           <RightRail session={session} snap={snap} surface={surface} />
         </aside>

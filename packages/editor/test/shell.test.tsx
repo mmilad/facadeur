@@ -60,8 +60,9 @@ describe('editor shell', () => {
     expect(host.querySelector('[data-asset-id="button"]')).toBeInstanceOf(HTMLButtonElement);
     expect(host.querySelector('[data-asset-id="card"]')).toBeInstanceOf(HTMLButtonElement);
     expect(host.querySelector('[data-asset-id="specimen"]')).toBeInstanceOf(HTMLButtonElement);
-    expect(host.querySelector('[data-design="tokens"]')).toBeInstanceOf(HTMLButtonElement);
-    expect(host.querySelector('[data-design="fonts"]')?.textContent).toContain('Fonts');
+    expect(host.querySelector('[data-design-domain="colors"]')).toBeInstanceOf(HTMLButtonElement);
+    expect(host.querySelector('[data-design-domain="fonts"]')?.textContent).toContain('Fonts');
+    expect(host.querySelector('[data-design-domain="spacing"]')?.textContent).toContain('Spacing');
     const sectionRow = host.querySelector('[data-asset-id="specimen-section"]');
     expect(sectionRow).toBeInstanceOf(HTMLButtonElement);
     expect((sectionRow as HTMLButtonElement).draggable).toBe(true);
@@ -164,7 +165,7 @@ describe('editor shell', () => {
     );
   });
 
-  it('searches the tree, opens tokens and fonts, and creates an asset', async () => {
+  it('searches the tree, opens design domains on the stage, and creates an asset', async () => {
     const session: EditorSession = createEditorSession({
       documents,
       design: createProjectTemplateDocument(),
@@ -185,20 +186,23 @@ describe('editor shell', () => {
     expect(view.querySelector('[data-asset-id="card"]')).toBeInstanceOf(HTMLButtonElement);
     expect(view.querySelector('[data-asset-id="button"]')).toBeNull();
     expect(view.querySelector('[data-asset-id="specimen"]')).toBeNull();
-    expect(view.querySelector('[data-design="tokens"]')).toBeNull();
+    expect(view.querySelector('[data-design-domain="colors"]')).toBeNull();
 
     await act(async () => {
       setInput(search as HTMLInputElement, '');
     });
     await act(async () => {
-      (view.querySelector('[data-design="tokens"]') as HTMLButtonElement).click();
+      (view.querySelector('[data-design-domain="colors"]') as HTMLButtonElement).click();
     });
+    expect(view.querySelector('.design-domain-stage[data-design-domain="colors"]')).toBeTruthy();
     expect(view.querySelector('input[name="token-filter"]')).toBeInstanceOf(HTMLInputElement);
+    expect(view.querySelector('iframe')).toBeNull();
     expect(session.getSnapshot().openId).toBe('specimen');
 
     await act(async () => {
-      (view.querySelector('[data-design="fonts"]') as HTMLButtonElement).click();
+      (view.querySelector('[data-design-domain="fonts"]') as HTMLButtonElement).click();
     });
+    expect(view.querySelector('.design-domain-stage[data-design-domain="fonts"]')).toBeTruthy();
     expect(view.querySelector('input[name="font-sans-family"]')).toBeInstanceOf(HTMLInputElement);
 
     await act(async () => {
