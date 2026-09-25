@@ -39,7 +39,7 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 
 - Jedes Dokument hat ein `kind`: `atom`, `component`, `section`, `page`. Die Liste ist konfigurierbar (zusammenlegen oder weiter aufteilen), mit Verschachtelungsregeln pro Art.
 - Standardregeln: Atome enthalten nur Grundbausteine. Komponenten enthalten Grundbausteine, Atome und Komponenten. Sektionen enthalten alles außer Sektionen und Pages. **Pages enthalten nur Sektionen.**
-- Jede Art hat einen eigenen Arbeitsbereich im Editor, die Ansicht ist aber überall gleich aufgebaut.
+- Im Editor teilen sich alle Arten einen Projektbaum in der linken Spalte (Design mit Tokens und Schriften, darunter Atoms, Components, Sections, Pages). Die Ebenenliste des offenen Dokuments sitzt darunter. Es gibt keinen Arbeitsbereich-Umschalter, der den Baum ersetzt.
 
 ### Grundbausteine
 
@@ -191,6 +191,10 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 - [x] Tokens und Schriften zu CSS, Stil-Blöcke zu CSS
 - [x] Beispiel-Next.js-Projekt, das die Ausgabe nutzt
 
+### Editor-Navigation
+
+- [x] Linke Spalte: ein Projektbaum (Tokens, Schriften, Atoms, Components, Sections, Pages) oben, Ebenenliste des offenen Dokuments unten; Suche und „Neu anlegen“ pro Art
+
 ### Später – Kollaboration
 
 - [ ] Sync-Dienst (Hocuspocus o. Ä.) neben Next.js, Persistenz der Y-Dokumente
@@ -256,3 +260,4 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 - 2026-09-25: Eine Page wird in der Ausgabe als echtes Wurzel-Element erzeugt. Im Editor bleibt das Wurzel-Frame der Page die unbemalte Arbeitsfläche. Next.js hat kein Artboard-iframe, also braucht die Page ein Element, an dem `data-component` und das Layout hängen.
 - 2026-09-25: `richText` bleibt ein String-Kind, wie der Renderer. Kein HTML. Ein Default, dessen Laufzeittyp nicht zum Feldtyp passt, bricht die Generierung ab, damit die erzeugte Datei typisiert bleibt. Felder ohne Bindung stehen in den Props, werden im Funktionsrumpf aber nicht gelesen.
 - 2026-09-25: Die Ausgabe liegt unter `examples/next/generated` und ist eingecheckt. `pnpm codegen` schreibt sie neu aus den Beispieldokumenten; die Projektvorlage ist das Design, keine Komponente. Die Beispiel-App ist `examples/next`. Dateien und Regeln sind nach Dokument-Id sortiert, damit dieselbe Menge Dokumente immer dieselbe Ausgabe ergibt.
+- 2026-09-25: Die linke Spalte ist ein Projektbaum, kein Arbeitsbereich-Umschalter. Oben der Baum: Design (Tokens, Schriften), dann Atoms, Components, Sections und Pages mit den Assets darunter. Unten bleibt die Ebenenliste des offenen Dokuments. Ein Klick auf ein Asset öffnet es auf der Bühne. Tokens und Schriften öffnen den bestehenden Bereich im rechten Panel. Suche filtert den ganzen Baum. „Neu anlegen“ legt pro Art ein leeres Frame-Dokument an und öffnet es. Ziehen einer Baumzeile auf die Bühne erzeugt eine Instanz, wenn die Verschachtelung das erlaubt. Ein Doppelklick auf eine Instanz öffnet den Master wie bisher; der Baum klappt die Art auf und rückt die Zeile ins Blickfeld.

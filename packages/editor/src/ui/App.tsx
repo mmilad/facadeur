@@ -1,21 +1,29 @@
 import { createId, findParent } from '@facadeur/core';
 import { placementAllowed, refusalMessage, toolAllowed } from '../editing.js';
-import { useEffect, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { documentToJson, openJsonFile, parseDocumentText, saveJsonFile } from '../files.js';
 import { isEditableTarget } from '../keyboard.js';
 import type { EditorSession } from '../session.js';
-import { AssetList, Inspector, LayersPanel, ToolBar, WorkspaceTabs } from './panels.js';
+import { Inspector, LayersPanel, ToolBar, type InspectorPanel } from './panels.js';
+import { ProjectTree } from './project-tree.js';
 import { StageCanvas } from './StageCanvas.js';
 
 export function App({ session }: { session: EditorSession }) {
   const snap = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
+  const [panel, setPanel] = useState<InspectorPanel>('properties');
+  const seenOpenId = useRef(snap.openId);
   useEditorKeys(session);
+
+  useEffect(() => {
+    if (seenOpenId.current === snap.openId) return;
+    seenOpenId.current = snap.openId;
+    setPanel('properties');
+  }, [snap.openId]);
 
   return (
     <div className="app">
       <header className="topbar">
         <div className="brand">facadeur</div>
-        <WorkspaceTabs session={session} workspace={snap.workspace} />
         <div className="topbar-name">{snap.document.name}</div>
         <div className="topbar-spacer" />
         <button
@@ -56,7 +64,16 @@ export function App({ session }: { session: EditorSession }) {
       <div className="workspace">
         <aside className="side side-left">
           <ToolBar session={session} tool={snap.tool} kind={snap.document.kind} />
-          <AssetList session={session} snap={snap} />
+          <ProjectTree
+            session={session}
+            snap={snap}
+            panel={panel}
+            onOpenAsset={(id) => {
+              session.openAsset(id);
+              setPanel('properties');
+            }}
+            onOpenDesign={(next) => setPanel(next)}
+          />
           <LayersPanel session={session} snap={snap} />
         </aside>
         <StageCanvas
@@ -68,7 +85,7 @@ export function App({ session }: { session: EditorSession }) {
           tool={snap.tool}
         />
         <aside className="side side-right">
-          <Inspector session={session} snap={snap} />
+          <Inspector session={session} snap={snap} panel={panel} onPanel={setPanel} />
         </aside>
       </div>
     </div>
