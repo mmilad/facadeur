@@ -1,0 +1,145 @@
+# facadeur editor controls — alignment draft
+version: 1
+data_flow:
+  read: EditorSnapshot # document + design + selection + viewport edit context
+  write_document: session.execute(Command)
+  write_design: session.executeDesign(Command)
+  form: controlled primitives only # no store
+  control: value + catalogs/options in, onCommit out # no DocumentStore import
+
+catalogs: # derived once per snap; pass as props or CatalogContext
+  tokens_by_type: [color, dimension, number, fontFamily, fontWeight, shadow, typography]
+  fonts: design.fonts # id + family
+  breakpoints: design.settings.breakpoints
+  static_enums:
+    flex_direction: [row, column]
+    justify: [start, center, end, space-between]
+    align: [start, center, end, stretch]
+    size_mode: [hug, fill, fixed]
+
+controls:
+  - id: layout
+    path: ui/controls/layout
+    when: selected node is not instance
+    value_from: node.layout # + viewport layer (base vs breakpoints[id])
+    catalogs: [tokens_by_type.dimension, static_enums]
+    fields:
+      - key: direction
+        ui: segmented|select
+        emit: setProp layout
+      - key: gap
+        ui: combobox
+        options: dimension tokens
+        emit: setProp layout
+      - key: padding
+        ui: token | sides record
+        options: dimension tokens
+        emit: setProp layout
+      - key: justify
+        ui: select
+        options: static_enums.justify
+      - key: align
+        ui: select
+        options: static_enums.align
+      - key: wrap
+        ui: toggle
+      - key: position
+        ui: toggle # auto | absolute
+      - key: x|y
+        ui: number
+        when: position absolute
+      - key: width|height
+        ui: size_axis # hug/fill/fixed + min/max
+        options: dimension tokens for fixed/token mode
+    notes: parent supplies writingBreakpointId / override cue
+
+  - id: appearance_color
+    path: ui/controls/color
+    value_from: style declaration or token ref string
+    catalogs: [tokens_by_type.color]
+    fields:
+      - key: value
+        ui: color_input + optional token combobox mode
+        emit: setStyle | setStyleBlock path # parent decides
+
+  - id: spacing
+    path: ui/controls/spacing
+    value_from: gap|padding|margin slices
+    catalogs: [tokens_by_type.dimension]
+    fields:
+      - key: token
+        ui: combobox
+    notes: may be folded into layout rather than standalone
+
+  - id: typography
+    path: ui/controls/typography
+    value_from: styles declarations or typography tokens
+    catalogs: [fonts, tokens_by_type.typography, tokens_by_type.dimension]
+    fields:
+      - key: family
+        ui: combobox
+        options: fonts | fontFamily tokens
+      - key: size|weight|lineHeight
+        ui: combobox|number
+        options: typography / dimension tokens
+
+  - id: shadow
+    path: ui/controls/shadow
+    value_from: box-shadow declaration or shadow token
+    catalogs: [tokens_by_type.shadow]
+    fields:
+      - key: value
+        ui: combobox | structured later
+        emit: setStyle / style block
+
+  - id: css_declarations
+    path: ui/controls/generic
+    value_from: Record<string,string>
+    catalogs: []
+    fields:
+      - key: map
+        ui: record_field
+        emit: setStyle / setStyleBlock
+
+  - id: fields_editor
+    path: ui/controls/data
+    when: master atom|component root
+    value_from: document.fields
+    catalogs: [static field types]
+    fields:
+      - key: list
+        ui: array_field + add_popover
+        emit: defineField / removeField
+
+  - id: bindings_editor
+    path: ui/controls/data
+    when: non-instance node on master
+    value_from: node.bindings
+    catalogs: [document.fields, bind targets]
+    emit: binding commands
+
+  - id: variants_editor
+    path: ui/controls/variants
+    when: master
+    value_from: document.variants + styles.variants
+    catalogs: []
+    emit: defineVariant / style block variant layers
+
+  - id: instance_overrides
+    path: ui/controls/instance
+    when: selected instance
+    value_from: node.fields + node.variants
+    catalogs: [componentTarget.fields, componentTarget.variants]
+    emit: setField / setVariant
+
+  - id: viewport_context
+    path: ui/controls/viewport
+    value_from: focusViewportId + editTarget
+    catalogs: [breakpoints]
+    emit: session.setFocusViewport / setEditTarget
+    notes: strip above inspector; not a document style command
+
+non_goals_for_controls:
+  - owning Yjs / DocumentStore
+  - one Form wrapping entire sidebar
+  - fetching options internally from network
