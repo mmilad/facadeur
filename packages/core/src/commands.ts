@@ -26,7 +26,12 @@ import type {
   TokenInterface,
   VariantAxis,
 } from './schema.js';
-import { assertStyleMap, parseStyleBlock, parseTokenInterface } from './style-block.js';
+import {
+  assertStyleMap,
+  collectTokenRefs,
+  parseStyleBlock,
+  parseTokenInterface,
+} from './style-block.js';
 import {
   removeGroupFromTree,
   removeTokenFromTree,
@@ -77,6 +82,7 @@ export type Command =
   | { type: 'insert'; parentId: string; index?: number; node: InsertNode }
   | { type: 'remove'; nodeId: string }
   | { type: 'move'; nodeId: string; parentId: string; index: number }
+  | { type: 'wrap'; nodeId: string; frameId?: string }
   | { type: 'setProp'; nodeId: string; prop: NodeProp; value: unknown }
   | { type: 'setStyle'; nodeId: string; property: string; value: string | null }
   | { type: 'setField'; nodeId: string; field: string; value: FieldValue | null }
@@ -124,6 +130,9 @@ export function applyCommand(
       break;
     case 'move':
       moveNode(next, command);
+      break;
+    case 'wrap':
+      wrapNode(next, command, ctx);
       break;
     case 'setProp':
       setProp(next, command);
@@ -204,6 +213,7 @@ function insertNode(
   assertIndex(index, parent.children.length);
   Object.assign(doc.nodes, subtree);
   parent.children.splice(index, 0, rootId);
+  adoptLayoutReads(doc);
 }
 
 function removeNode(doc: FlatDocument, nodeId: string): void {
@@ -244,6 +254,37 @@ function moveNode(doc: FlatDocument, command: Extract<Command, { type: 'move' }>
   target.children.splice(command.index, 0, command.nodeId);
 }
 
+function wrapNode(
+  doc: FlatDocument,
+  command: Extract<Command, { type: 'wrap' }>,
+  ctx: CommandContext,
+): void {
+  if (command.nodeId === doc.rootId) {
+    throw new DocumentError('nesting', 'The document root cannot be wrapped');
+  }
+  const node = doc.nodes[command.nodeId];
+  const parent = findParent(doc, command.nodeId);
+  if (!node || !parent) {
+    throw new DocumentError('missing-node', `Node "${command.nodeId}" is not in the document`);
+  }
+  const frameId = command.frameId ?? (ctx.createId ?? createId)();
+  if (!ID_PATTERN.test(frameId)) {
+    throw new DocumentError('invalid-id', `Invalid id "${frameId}"`);
+  }
+  if (doc.nodes[frameId]) {
+    throw new DocumentError('duplicate-id', `Duplicate id "${frameId}"`);
+  }
+  const index = parent.children.indexOf(command.nodeId);
+  const frame: FrameNode = {
+    id: frameId,
+    type: 'frame',
+    name: 'Frame',
+    children: [command.nodeId],
+  };
+  doc.nodes[frameId] = frame;
+  parent.children.splice(index, 1, frameId);
+}
+
 function setProp(doc: FlatDocument, command: Extract<Command, { type: 'setProp' }>): void {
   const node = requireNode(doc, command.nodeId);
   if (!PROPS[node.type].includes(command.prop)) {
@@ -255,6 +296,23 @@ function setProp(doc: FlatDocument, command: Extract<Command, { type: 'setProp' 
     applyElementProp(node, command.prop, command.value);
   }
   doc.nodes[node.id] = makeFlatNode(node);
+  if (command.prop === 'layout') adoptLayoutReads(doc);
+}
+
+/** Layout tokens must be listed in `tokenInterface.reads`. Add any the command introduced. */
+function adoptLayoutReads(doc: FlatDocument): void {
+  const reads = new Set(doc.tokenInterface?.reads ?? []);
+  let changed = false;
+  for (const ref of collectTokenRefs(doc)) {
+    if (reads.has(ref)) continue;
+    reads.add(ref);
+    changed = true;
+  }
+  if (!changed) return;
+  doc.tokenInterface = {
+    ...(doc.tokenInterface ?? {}),
+    reads: [...reads].sort(),
+  };
 }
 
 function setStyle(doc: FlatDocument, command: Extract<Command, { type: 'setStyle' }>): void {

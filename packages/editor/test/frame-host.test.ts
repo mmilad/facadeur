@@ -15,7 +15,9 @@ describe('FrameHost', () => {
     const frameDocument = host.contentDocument();
     expect(frameDocument).toBe(host.element.contentDocument);
     expect(frameDocument.defaultView).toBe(host.contentWindow());
-    expect(frameDocument.getElementById('facadeur-frame-shell')).not.toBeNull();
+    const shell = frameDocument.getElementById('facadeur-frame-shell');
+    expect(shell?.textContent).toContain('[data-empty="true"]');
+    expect(shell?.textContent).toContain('min-width: 64px');
     expect(host.element.ownerDocument).toBe(document);
 
     host.setWidth(768);

@@ -353,6 +353,9 @@ function paintInstance(
   } else {
     reconcileChildren(el, [], ctx);
   }
+  if (root.type === 'frame' && (root.children ?? []).length === 0 && !text) {
+    el.dataset.empty = 'true';
+  } else delete el.dataset.empty;
   syncLeadText(el, text);
 }
 
@@ -392,7 +395,12 @@ function paintElement(
     // The instance element already stands for the component root frame.
     // Every frame under it adds its own segment so data-id stays addressable.
     reconcileChildren(el, node.children ?? [], { ...ctx, path: id });
-  } else reconcileChildren(el, [], ctx);
+  } else {
+    reconcileChildren(el, [], ctx);
+  }
+  if (node.type === 'frame' && (node.children ?? []).length === 0 && !text) {
+    el.dataset.empty = 'true';
+  } else delete el.dataset.empty;
   syncLeadText(el, text);
 }
 

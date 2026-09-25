@@ -14,6 +14,10 @@ import type { DesignInput } from '@facadeur/tokens';
 import type { JsonFileHandle } from './files.js';
 import { layerTree, nodeIdForHit, renderIdForNode, type LayerItem } from './selection-model.js';
 
+export type EditorTool = 'select' | 'frame' | 'text' | 'image';
+
+export type EditorDrag = { kind: 'node'; nodeId: string } | { kind: 'asset'; assetId: string };
+
 export interface AssetSummary {
   id: string;
   name: string;
@@ -42,6 +46,10 @@ export interface EditorSnapshot {
   canRedo: boolean;
   notice: EditorNotice | null;
   zoomLabel: string;
+  /** Every document in the catalog, not only the current workspace. */
+  catalog: AssetSummary[];
+  tool: EditorTool;
+  drag: EditorDrag | null;
   /** Bumps when a store is added or replaced. The stage remounts. */
   generation: number;
   /** Bumps when the design store changes. The stage calls setDesign. */
@@ -56,6 +64,9 @@ export interface EditorSession {
   openAsset: (id: string) => void;
   selectNode: (nodeId: string | null) => void;
   selectRendered: (renderedId: string | null) => void;
+  setTool: (tool: EditorTool) => void;
+  beginDrag: (drag: EditorDrag) => void;
+  endDrag: () => void;
   execute: (command: Command) => void;
   executeDesign: (command: Command) => void;
   undo: () => void;
@@ -103,6 +114,8 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   let selectedRenderId: string | null = null;
   let notice: EditorNotice | null = null;
   let zoomLabel = '100%';
+  let tool: EditorTool = 'select';
+  let drag: EditorDrag | null = null;
   let generation = 0;
   let designRevision = 0;
   let revision = 0;
@@ -195,11 +208,14 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       componentTarget = assetStores.get(selectedNode.component)?.getDocument() ?? null;
     }
     const assets: AssetSummary[] = [];
+    const catalog: AssetSummary[] = [];
     for (const id of order) {
       const store = assetStores.get(id);
       if (!store) continue;
       const doc = store.getDocument();
-      if (!isKind(doc.kind) || doc.kind !== workspace) continue;
+      if (!isKind(doc.kind)) continue;
+      catalog.push({ id: doc.id, name: doc.name, kind: doc.kind });
+      if (doc.kind !== workspace) continue;
       assets.push({ id: doc.id, name: doc.name, kind: doc.kind });
     }
     return {
@@ -218,6 +234,9 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       canRedo: redoStore?.canRedo() ?? false,
       notice,
       zoomLabel,
+      catalog,
+      tool,
+      drag,
       generation,
       designRevision,
       revision,
@@ -287,6 +306,8 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
           openId = next;
           lastOpen.set(kind, next);
           clearSelection();
+          tool = 'select';
+          drag = null;
         }
       }
       publish();
@@ -299,6 +320,8 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       workspace = kind;
       lastOpen.set(kind, id);
       clearSelection();
+      tool = 'select';
+      drag = null;
       publish();
     },
     selectNode(nodeId) {
@@ -313,6 +336,20 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       if (selectedNodeId === nodeId && selectedRenderId === renderId) return;
       selectedNodeId = nodeId;
       selectedRenderId = renderId;
+      publish();
+    },
+    setTool(next) {
+      if (tool === next) return;
+      tool = next;
+      publish();
+    },
+    beginDrag(next) {
+      drag = next;
+      publish();
+    },
+    endDrag() {
+      if (!drag) return;
+      drag = null;
       publish();
     },
     selectRendered(renderedId) {
@@ -387,6 +424,8 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
         workspace = kind;
         lastOpen.set(kind, file.id);
         clearSelection();
+        tool = 'select';
+        drag = null;
         generation += 1;
         notice = null;
         publish();

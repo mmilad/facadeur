@@ -86,6 +86,69 @@ function layerItem(doc: FlatDocument, node: FlatNode): LayerItem {
   };
 }
 
+export type SelectMode = 'context' | 'deeper' | 'deepest';
+
+/**
+ * Document node ids from the root down to the deepest node a rendered id can
+ * name. Instance interiors collapse to the instance: they belong to another document.
+ */
+export function documentChain(doc: FlatDocument, renderedId: string, paintRoot: boolean): string[] {
+  const deepest = nodeIdForHit(doc, renderedId, paintRoot);
+  if (!deepest) return [];
+  const chain: string[] = [];
+  let current: string | undefined = deepest;
+  const guard = new Set<string>();
+  while (current) {
+    if (guard.has(current)) break;
+    guard.add(current);
+    chain.push(current);
+    current = findParent(doc, current)?.id;
+  }
+  chain.reverse();
+  return chain;
+}
+
+/**
+ * Click selects the direct child of the current context (the parent of the
+ * selection, or the root). Double-click walks one step down the hit chain.
+ * Ctrl/Cmd+click selects the deepest document node. The chain never enters an instance.
+ */
+export function resolveClick(input: {
+  doc: FlatDocument;
+  chain: readonly string[];
+  selectedId: string | null;
+  mode: SelectMode;
+}): string | null {
+  const { doc, chain, selectedId, mode } = input;
+  if (!chain.length) return null;
+  const deepest = chain[chain.length - 1] ?? null;
+  if (mode === 'deepest') return deepest;
+  if (mode === 'deeper') {
+    const anchor =
+      selectedId && chain.includes(selectedId)
+        ? selectedId
+        : resolveClick({ doc, chain, selectedId, mode: 'context' });
+    if (!anchor) return null;
+    const index = chain.indexOf(anchor);
+    if (index >= 0 && index < chain.length - 1) return chain[index + 1] ?? anchor;
+    return anchor;
+  }
+  let context = doc.rootId;
+  if (selectedId && selectedId !== doc.rootId && doc.nodes[selectedId]) {
+    const parent = findParent(doc, selectedId);
+    if (parent && chain.includes(parent.id)) context = parent.id;
+  }
+  const index = chain.indexOf(context);
+  if (index >= 0 && index < chain.length - 1) return chain[index + 1] ?? null;
+  if (deepest === context) return context;
+  return chain[1] ?? chain[0] ?? null;
+}
+
+export function selectionParent(doc: FlatDocument, nodeId: string | null): string | null {
+  if (!nodeId) return null;
+  return findParent(doc, nodeId)?.id ?? null;
+}
+
 function layerName(node: FlatNode): string {
   if (node.name) return node.name;
   if (node.type === 'instance') return node.component;

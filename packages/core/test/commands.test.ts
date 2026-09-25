@@ -79,6 +79,31 @@ describe('applyCommand', () => {
     expect(doc.nodes.label).toBeUndefined();
   });
 
+  it('wraps a node in a frame as one command and refuses the root', () => {
+    let doc = component();
+    doc = applyCommand(doc, { type: 'wrap', nodeId: 'title', frameId: 'around' });
+    expect(doc.nodes.root).toMatchObject({ children: ['around'] });
+    expect(doc.nodes.around).toMatchObject({ type: 'frame', name: 'Frame', children: ['title'] });
+    expect(doc.nodes.title).toMatchObject({ type: 'text' });
+    expect(() => applyCommand(doc, { type: 'wrap', nodeId: 'root' })).toThrow(/root/i);
+  });
+
+  it('lists a new layout token in tokenInterface.reads', () => {
+    let doc = component();
+    doc = applyCommand(doc, {
+      type: 'setTokenInterface',
+      tokenInterface: { reads: ['color.ink'] },
+    });
+    doc = applyCommand(doc, {
+      type: 'setProp',
+      nodeId: 'root',
+      prop: 'layout',
+      value: { gap: '{space.4}', direction: 'row' },
+    });
+    expect(doc.nodes.root).toMatchObject({ layout: { gap: '{space.4}', direction: 'row' } });
+    expect(doc.tokenInterface?.reads).toEqual(['color.ink', 'space.4']);
+  });
+
   it('treats a same-parent move index as the position after removal', () => {
     let doc = component();
     doc = applyCommand(doc, {

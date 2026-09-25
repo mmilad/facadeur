@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { createId } from '@facadeur/core';
+import { useMemo, useState, type DragEvent } from 'react';
 import {
   defaultKinds,
   defaultNestingRules,
@@ -9,8 +10,10 @@ import {
   type FlatNode,
   type FontFamily,
 } from '@facadeur/core';
+import { layerDropTarget, layerInsertAt, type DropZone } from '../editing.js';
 import { documentToJson, saveJsonFile } from '../files.js';
-import type { EditorSession, EditorSnapshot } from '../session.js';
+import type { EditorSession, EditorSnapshot, EditorTool } from '../session.js';
+import { LayoutPanel } from './layout-panel.js';
 import { formatTokenValue, parseEditedValue, withTokenValue } from '../token-edit.js';
 import { TextControl } from './fields.js';
 
@@ -45,11 +48,45 @@ export function WorkspaceTabs({
   );
 }
 
+const TOOLS = [
+  ['select', 'Select', 'V'],
+  ['frame', 'Frame', 'F'],
+  ['text', 'Text', 'T'],
+  ['image', 'Image', 'I'],
+] as const;
+
+export function ToolBar({ session, tool }: { session: EditorSession; tool: EditorTool }) {
+  return (
+    <div className="tool-row" role="toolbar" aria-label="Tools">
+      {TOOLS.map(([id, label, key]) => (
+        <button
+          key={id}
+          type="button"
+          className={tool === id ? 'tool is-active' : 'tool'}
+          aria-pressed={tool === id}
+          onClick={() => session.setTool(id)}
+        >
+          <span>{label}</span>
+          <span className="tool-key">{key}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function AssetList({ session, snap }: { session: EditorSession; snap: EditorSnapshot }) {
   const rule = defaultNestingRules[snap.workspace];
+  const openRule = defaultNestingRules[kindOf(snap.document.kind)];
   const instances = rule.instanceKinds.length
     ? `Instances of ${rule.instanceKinds.join(' and ')}.`
     : 'No instances.';
+  const listed = new Set(snap.assets.map((asset) => asset.id));
+  const placeable = snap.catalog.filter(
+    (asset) =>
+      asset.id !== snap.openId &&
+      openRule.instanceKinds.includes(asset.kind) &&
+      !listed.has(asset.id),
+  );
   return (
     <section className="side-block" aria-label="Assets">
       <h2>Assets</h2>
@@ -67,6 +104,9 @@ export function AssetList({ session, snap }: { session: EditorSession; snap: Edi
                   type="button"
                   className={asset.id === snap.openId ? 'asset is-active' : 'asset'}
                   aria-current={asset.id === snap.openId ? 'true' : undefined}
+                  draggable={canPlace(snap, asset.kind, asset.id)}
+                  onDragStart={(event) => startAssetDrag(session, event, asset.id)}
+                  onDragEnd={() => session.endDrag()}
                   onClick={() => session.openAsset(asset.id)}
                 >
                   <span className="asset-name">{asset.name}</span>
@@ -76,12 +116,53 @@ export function AssetList({ session, snap }: { session: EditorSession; snap: Edi
             ))}
           </ul>
         )}
+        {placeable.length ? (
+          <>
+            <h3 className="place-title">Place</h3>
+            <p className="side-note">Drag onto the stage. Dropping creates an instance.</p>
+            <ul className="asset-list">
+              {placeable.map((asset) => (
+                <li key={asset.id}>
+                  <button
+                    type="button"
+                    className="asset"
+                    draggable
+                    onDragStart={(event) => startAssetDrag(session, event, asset.id)}
+                    onDragEnd={() => session.endDrag()}
+                    onClick={() => session.openAsset(asset.id)}
+                  >
+                    <span className="asset-name">{asset.name}</span>
+                    <span className="asset-id">{asset.kind}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null}
       </div>
     </section>
   );
 }
 
+function canPlace(snap: EditorSnapshot, kind: DefaultKind, id: string): boolean {
+  if (id === snap.openId) return false;
+  const rule = defaultNestingRules[kindOf(snap.document.kind)];
+  return rule.instanceKinds.includes(kind);
+}
+
+function kindOf(kind: string): DefaultKind {
+  if (kind === 'atom' || kind === 'component' || kind === 'section' || kind === 'page') return kind;
+  return 'component';
+}
+
+function startAssetDrag(session: EditorSession, event: DragEvent, assetId: string) {
+  event.dataTransfer.setData('text/plain', assetId);
+  event.dataTransfer.effectAllowed = 'copy';
+  session.beginDrag({ kind: 'asset', assetId });
+}
+
 export function LayersPanel({ session, snap }: { session: EditorSession; snap: EditorSnapshot }) {
+  const [over, setOver] = useState<{ id: string; zone: DropZone } | null>(null);
   return (
     <section className="side-block side-block-grow" aria-label="Layers">
       <h2>Layers</h2>
@@ -91,7 +172,62 @@ export function LayersPanel({ session, snap }: { session: EditorSession; snap: E
             item={snap.layers}
             depth={0}
             selectedId={snap.selectedNodeId}
+            over={over}
             onSelect={(id) => session.selectNode(id)}
+            onDragStart={(id, event) => {
+              event.dataTransfer.setData('text/plain', id);
+              event.dataTransfer.effectAllowed = 'move';
+              session.beginDrag({ kind: 'node', nodeId: id });
+            }}
+            onDragEnd={() => {
+              session.endDrag();
+              setOver(null);
+            }}
+            onDragOver={(id, type, event) => {
+              if (!session.getSnapshot().drag) return;
+              event.preventDefault();
+              event.stopPropagation();
+              const zone = zoneFor(event, type);
+              if (over?.id !== id || over.zone !== zone) setOver({ id, zone });
+            }}
+            onDrop={(id, event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              const drag = session.getSnapshot().drag;
+              const zone = over?.id === id ? over.zone : zoneFor(event, 'frame');
+              setOver(null);
+              if (!drag) return;
+              if (drag.kind === 'node') {
+                const target = layerDropTarget(snap.document, drag.nodeId, id, zone);
+                session.endDrag();
+                if (!target) return;
+                session.execute({
+                  type: 'move',
+                  nodeId: drag.nodeId,
+                  parentId: target.parentId,
+                  index: target.index,
+                });
+                session.selectNode(drag.nodeId);
+                return;
+              }
+              const target = layerInsertAt(snap.document, id, zone);
+              session.endDrag();
+              if (!target) return;
+              const asset = snap.catalog.find((item) => item.id === drag.assetId);
+              const nodeId = createId();
+              session.execute({
+                type: 'insert',
+                parentId: target.parentId,
+                index: target.index,
+                node: {
+                  id: nodeId,
+                  type: 'instance',
+                  component: drag.assetId,
+                  ...(asset ? { name: asset.name } : {}),
+                },
+              });
+              if (session.getSnapshot().document.nodes[nodeId]) session.selectNode(nodeId);
+            }}
           />
         ) : (
           <p className="inspector-empty">This document has no nodes.</p>
@@ -101,23 +237,55 @@ export function LayersPanel({ session, snap }: { session: EditorSession; snap: E
   );
 }
 
+function zoneFor(event: DragEvent, type: string): DropZone {
+  const rect = event.currentTarget.getBoundingClientRect();
+  const ratio = rect.height > 0 ? (event.clientY - rect.top) / rect.height : 0.5;
+  if (type === 'frame' && ratio > 0.28 && ratio < 0.72) return 'inside';
+  return ratio < 0.5 ? 'before' : 'after';
+}
+
 function LayerRows({
   item,
   depth,
   selectedId,
+  over,
   onSelect,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDrop,
 }: {
   item: NonNullable<EditorSnapshot['layers']>;
   depth: number;
   selectedId: string | null;
+  over: { id: string; zone: DropZone } | null;
   onSelect: (id: string) => void;
+  onDragStart: (id: string, event: DragEvent) => void;
+  onDragEnd: () => void;
+  onDragOver: (id: string, type: string, event: DragEvent) => void;
+  onDrop: (id: string, event: DragEvent) => void;
 }) {
+  const mark = over?.id === item.id ? over.zone : null;
+  const className = [
+    'layer',
+    item.id === selectedId ? 'is-active' : '',
+    mark === 'before' ? 'is-insert-before' : '',
+    mark === 'after' ? 'is-insert-after' : '',
+    mark === 'inside' ? 'is-insert-inside' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
   return (
     <>
       <button
         type="button"
-        className={item.id === selectedId ? 'layer is-active' : 'layer'}
+        className={className}
         style={{ paddingLeft: 8 + depth * 14 }}
+        draggable={depth > 0}
+        onDragStart={(event) => onDragStart(item.id, event)}
+        onDragEnd={onDragEnd}
+        onDragOver={(event) => onDragOver(item.id, item.type, event)}
+        onDrop={(event) => onDrop(item.id, event)}
         onClick={() => onSelect(item.id)}
       >
         <span className="layer-type">{item.type}</span>
@@ -129,7 +297,12 @@ function LayerRows({
           item={child}
           depth={depth + 1}
           selectedId={selectedId}
+          over={over}
           onSelect={onSelect}
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+          onDragOver={onDragOver}
+          onDrop={onDrop}
         />
       ))}
     </>
@@ -260,6 +433,7 @@ function Properties({ session, snap }: { session: EditorSession; snap: EditorSna
             />
           ))
         : null}
+      <LayoutPanel session={session} snap={snap} node={node} />
       {node.type !== 'instance' ? <StyleFields session={session} node={node} /> : null}
       {node.type === 'instance' ? (
         <InstanceFields session={session} node={node} snap={snap} />

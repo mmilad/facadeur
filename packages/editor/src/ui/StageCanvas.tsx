@@ -1,8 +1,27 @@
+import { createId, type FlatDocument } from '@facadeur/core';
 import { useEffect, useRef } from 'react';
-import { createSelection, type SelectionController } from '../selection.js';
-import type { EditorSession } from '../session.js';
+import {
+  dropParentId,
+  insertDraft,
+  placeInParent,
+  prefersInsideFrame,
+  sameSlot,
+  writeLayoutFields,
+  type Box,
+  type InsertTool,
+} from '../editing.js';
+import { overlayBox, pointInFrame, type OverlayBox } from '../geometry.js';
+import { isEditableTarget } from '../keyboard.js';
+import { dataIdSelector, createSelection, type SelectionController } from '../selection.js';
+import {
+  documentChain,
+  renderIdForNode,
+  resolveClick,
+  type SelectMode,
+} from '../selection-model.js';
+import type { EditorSession, EditorTool } from '../session.js';
 import { createStage, type StageController } from '../stage.js';
-import { createViewportBoard, type ViewportBoard } from '../viewports.js';
+import { createViewportBoard, type ViewportBoard, type ViewportFrame } from '../viewports.js';
 
 export function StageCanvas({
   session,
@@ -10,12 +29,14 @@ export function StageCanvas({
   generation,
   designRevision,
   selectedRenderId,
+  tool,
 }: {
   session: EditorSession;
   openId: string;
   generation: number;
   designRevision: number;
   selectedRenderId: string | null;
+  tool: EditorTool;
 }) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -29,6 +50,7 @@ export function StageCanvas({
     const viewport = viewportRef.current;
     const stageEl = stageRef.current;
     if (!viewport || !stageEl) return;
+    const stageElement = stageEl;
 
     const stage = createStage(viewport, stageEl);
     stageControllerRef.current = stage;
@@ -36,27 +58,327 @@ export function StageCanvas({
       stage: stageEl,
       getScale: () => stage.getScale(),
       frames: () => boardRef.current?.frames() ?? [],
-      onSelect: (renderedId) => session.selectRendered(renderedId),
     });
     selectionRef.current = selection;
+
+    let pending: Drop | null = null;
+    let gesture: Gesture | null = null;
+    let lastClick = { time: 0, x: 0, y: 0 };
 
     const stopZoom = stage.onChange(({ scale }) => {
       session.setZoom(scale);
       selection.reposition();
     });
     const stopClick = stage.onClick((event) => {
-      const hit = selection.hitAt(event.clientX, event.clientY);
-      if (hit) session.selectRendered(hit.id);
-      else session.selectRendered(null);
+      const snap = session.getSnapshot();
+      if (snap.tool !== 'select') return;
+      choose(event, event.ctrlKey || event.metaKey ? 'deepest' : 'context');
     });
+
+    stage.setClaimsPan((event) => claimsPan(event));
+
+    function claimsPan(event: PointerEvent): boolean {
+      if (event.button !== 0) return true;
+      const snap = session.getSnapshot();
+      if (snap.tool !== 'select') return false;
+      const hit = selection.hitAt(event.clientX, event.clientY);
+      if (!hit) return true;
+      const chain = documentChain(snap.document, hit.id, snap.paintRoot);
+      const target = resolveClick({
+        doc: snap.document,
+        chain,
+        selectedId: snap.selectedNodeId,
+        mode: 'context',
+      });
+      return !target || target === snap.document.rootId;
+    }
+
+    function choose(event: { clientX: number; clientY: number }, mode: SelectMode) {
+      const snap = session.getSnapshot();
+      const hit = selection.hitAt(event.clientX, event.clientY);
+      const chain = hit ? documentChain(snap.document, hit.id, snap.paintRoot) : [];
+      const target = resolveClick({
+        doc: snap.document,
+        chain,
+        selectedId: snap.selectedNodeId,
+        mode,
+      });
+      session.selectNode(target);
+    }
+
+    function measure(clientX: number, clientY: number, draggedId: string | null): Drop | null {
+      const board = boardRef.current;
+      if (!board) return null;
+      const frame = selection.frameAt(clientX, clientY);
+      if (!frame) return null;
+      const scale = stage.getScale() || 1;
+      const frameRect = frame.host.element.getBoundingClientRect();
+      const local = pointInFrame({ clientX, clientY, frame: frameRect, scale });
+      if (!local) return null;
+      const snap = session.getSnapshot();
+      const hit = selection.hitAt(clientX, clientY);
+      const chain = hit
+        ? documentChain(snap.document, hit.id, snap.paintRoot)
+        : [snap.document.rootId];
+      const into = hit ? insideHit(frame, hit.id, local, snap.document, snap.paintRoot) : false;
+      const parentId = dropParentId(snap.document, chain, draggedId, into);
+      if (!parentId) return null;
+      const parent = snap.document.nodes[parentId];
+      if (parent?.type !== 'frame') return null;
+      const docEl = frame.host.contentDocument();
+      const parentRender = renderIdForNode(snap.document, parentId, snap.paintRoot);
+      const parentEl = parentRender
+        ? docEl.querySelector(dataIdSelector(parentRender))
+        : docEl.body;
+      if (!isElement(parentEl)) return null;
+      const direction = parent.layout?.direction === 'row' ? 'row' : 'column';
+      const siblings = parent.children.flatMap((id) => {
+        if (id === draggedId) return [];
+        const renderId = renderIdForNode(snap.document, id, snap.paintRoot);
+        if (!renderId) return [];
+        const el = docEl.querySelector(dataIdSelector(renderId));
+        if (!isElement(el)) return [];
+        return [{ id, rect: boxOf(el) }];
+      });
+      const placed = placeInParent({
+        direction,
+        pointer: local,
+        parent: boxOf(parentEl),
+        siblings,
+      });
+      const line = overlayBox({
+        element: {
+          left: placed.line.left,
+          top: placed.line.top,
+          width: placed.line.width,
+          height: placed.line.height,
+        },
+        frame: frameRect,
+        stage: stageElement.getBoundingClientRect(),
+        scale,
+      });
+      return { parentId, index: placed.index, line };
+    }
+
+    function placeTool(toolName: InsertTool, clientX: number, clientY: number, fromDrag: boolean) {
+      const snap = session.getSnapshot();
+      const hit = selection.hitAt(clientX, clientY);
+      const chain = hit ? documentChain(snap.document, hit.id, snap.paintRoot) : [];
+      const selected = snap.selectedNode;
+      const append = !fromDrag && selected?.type === 'frame' && chain.includes(selected.id);
+      const drop = append ? null : measure(clientX, clientY, null);
+      const parentId = append ? selected.id : drop?.parentId;
+      if (!parentId) return;
+      const id = createId();
+      session.execute({
+        type: 'insert',
+        parentId,
+        ...(append || !drop ? {} : { index: drop.index }),
+        node: insertDraft(toolName, id),
+      });
+      if (session.getSnapshot().document.nodes[id]) session.selectNode(id);
+    }
+
+    function readOffset(nodeId: string): { x: number; y: number } {
+      const snap = session.getSnapshot();
+      const renderId = renderIdForNode(snap.document, nodeId, snap.paintRoot);
+      const frame = boardRef.current?.frames()[0];
+      if (!renderId || !frame) return { x: 0, y: 0 };
+      const el = frame.host.contentDocument().querySelector(dataIdSelector(renderId));
+      if (!isElement(el)) return { x: 0, y: 0 };
+      return { x: el.offsetLeft, y: el.offsetTop };
+    }
 
     const onPointerMove = (event: PointerEvent) => {
       if (stage.isPanning()) {
         selection.clearHover();
+        selection.showInsert(null);
         return;
       }
-      selection.hoverAt(event.clientX, event.clientY);
+      if (gesture && gesture.pointerId === event.pointerId) {
+        const distance = Math.hypot(event.clientX - gesture.startX, event.clientY - gesture.startY);
+        if (!gesture.moved && distance < 4) return;
+        gesture.moved = true;
+        selection.clearHover();
+        const ignore = gesture.mode === 'reorder' ? gesture.nodeId : null;
+        pending = measure(event.clientX, event.clientY, ignore);
+        selection.showInsert(pending?.line ?? null);
+        return;
+      }
+      if (session.getSnapshot().drag) return;
+      const hit = selection.hitAt(event.clientX, event.clientY);
+      const frame = selection.frameAt(event.clientX, event.clientY);
+      if (!hit || !frame) {
+        selection.hoverRendered(null, null);
+        return;
+      }
+      const snap = session.getSnapshot();
+      const chain = documentChain(snap.document, hit.id, snap.paintRoot);
+      const mode = event.ctrlKey || event.metaKey ? 'deepest' : 'context';
+      const target = resolveClick({
+        doc: snap.document,
+        chain,
+        selectedId: snap.selectedNodeId,
+        mode,
+      });
+      const renderId = target ? renderIdForNode(snap.document, target, snap.paintRoot) : null;
+      selection.hoverRendered(renderId, frame.host.id);
     };
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.button !== 0 || claimsPan(event)) return;
+      const snap = session.getSnapshot();
+      const hit = selection.hitAt(event.clientX, event.clientY);
+      const chain = hit ? documentChain(snap.document, hit.id, snap.paintRoot) : [];
+      const target = resolveClick({
+        doc: snap.document,
+        chain,
+        selectedId: snap.selectedNodeId,
+        mode: 'context',
+      });
+      gesture = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        moved: false,
+        mode: snap.tool === 'select' ? 'reorder' : 'insert',
+        nodeId: snap.tool === 'select' ? target : null,
+      };
+      viewport.setPointerCapture(event.pointerId);
+    };
+
+    const endGesture = (event: PointerEvent) => {
+      if (!gesture || gesture.pointerId !== event.pointerId) return;
+      const current = gesture;
+      gesture = null;
+      if (viewport.hasPointerCapture(event.pointerId))
+        viewport.releasePointerCapture(event.pointerId);
+      selection.showInsert(null);
+      const snap = session.getSnapshot();
+      if (!current.moved) {
+        if (snap.tool === 'frame' || snap.tool === 'text' || snap.tool === 'image') {
+          placeTool(snap.tool, event.clientX, event.clientY, false);
+          return;
+        }
+        const now = performance.now();
+        const distance = Math.hypot(event.clientX - lastClick.x, event.clientY - lastClick.y);
+        const deeper = now - lastClick.time < 400 && distance < 4;
+        lastClick = { time: now, x: event.clientX, y: event.clientY };
+        const mode: SelectMode =
+          event.ctrlKey || event.metaKey ? 'deepest' : deeper ? 'deeper' : 'context';
+        choose(event, mode);
+        return;
+      }
+      const drop = pending;
+      pending = null;
+      if (!drop) return;
+      if (current.mode === 'reorder' && current.nodeId) {
+        if (!sameSlot(snap.document, current.nodeId, drop.parentId, drop.index)) {
+          session.execute({
+            type: 'move',
+            nodeId: current.nodeId,
+            parentId: drop.parentId,
+            index: drop.index,
+          });
+        }
+        session.selectNode(current.nodeId);
+        return;
+      }
+      if (snap.tool === 'frame' || snap.tool === 'text' || snap.tool === 'image') {
+        placeTool(snap.tool, event.clientX, event.clientY, true);
+      }
+    };
+
+    const onDragOver = (event: DragEvent) => {
+      const drag = session.getSnapshot().drag;
+      if (!drag) return;
+      event.preventDefault();
+      if (event.dataTransfer)
+        event.dataTransfer.dropEffect = drag.kind === 'node' ? 'move' : 'copy';
+      const ignore = drag.kind === 'node' ? drag.nodeId : null;
+      pending = measure(event.clientX, event.clientY, ignore);
+      selection.showInsert(pending?.line ?? null);
+    };
+
+    const onDrop = (event: DragEvent) => {
+      const drag = session.getSnapshot().drag;
+      if (!drag) return;
+      event.preventDefault();
+      const drop =
+        pending ?? measure(event.clientX, event.clientY, drag.kind === 'node' ? drag.nodeId : null);
+      pending = null;
+      selection.showInsert(null);
+      session.endDrag();
+      if (!drop) return;
+      if (drag.kind === 'node') {
+        const doc = session.getSnapshot().document;
+        if (!sameSlot(doc, drag.nodeId, drop.parentId, drop.index)) {
+          session.execute({
+            type: 'move',
+            nodeId: drag.nodeId,
+            parentId: drop.parentId,
+            index: drop.index,
+          });
+        }
+        session.selectNode(drag.nodeId);
+        return;
+      }
+      const asset = session.getSnapshot().catalog.find((item) => item.id === drag.assetId);
+      const id = createId();
+      session.execute({
+        type: 'insert',
+        parentId: drop.parentId,
+        index: drop.index,
+        node: {
+          id,
+          type: 'instance',
+          component: drag.assetId,
+          ...(asset ? { name: asset.name } : {}),
+        },
+      });
+      if (session.getSnapshot().document.nodes[id]) session.selectNode(id);
+    };
+
+    const onDragLeave = (event: DragEvent) => {
+      if (event.target !== viewport) return;
+      selection.showInsert(null);
+      pending = null;
+    };
+
+    const onWindowDragEnd = () => {
+      selection.showInsert(null);
+      pending = null;
+    };
+
+    const onKey = (event: KeyboardEvent) => {
+      if (isEditableTarget(event.target)) return;
+      const target = event.target;
+      if (isElement(target) && (target.tagName === 'BUTTON' || target.tagName === 'A')) return;
+      if (
+        event.key !== 'ArrowLeft' &&
+        event.key !== 'ArrowRight' &&
+        event.key !== 'ArrowUp' &&
+        event.key !== 'ArrowDown'
+      ) {
+        return;
+      }
+      const snap = session.getSnapshot();
+      const node = snap.selectedNode;
+      if (!node?.layout || node.layout.position !== 'absolute') return;
+      event.preventDefault();
+      const step = event.shiftKey ? 10 : 1;
+      const dx = event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0;
+      const dy = event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0;
+      const seeded =
+        node.layout.x === undefined || node.layout.y === undefined ? readOffset(node.id) : null;
+      const layout = writeLayoutFields(node.layout, null, {
+        x: (node.layout.x ?? seeded?.x ?? 0) + dx,
+        y: (node.layout.y ?? seeded?.y ?? 0) + dy,
+      });
+      if (!layout) return;
+      session.execute({ type: 'setProp', nodeId: node.id, prop: 'layout', value: layout });
+    };
+
     const markTouched = () => {
       untouchedRef.current = false;
     };
@@ -70,8 +392,16 @@ export function StageCanvas({
     };
 
     viewport.addEventListener('pointermove', onPointerMove);
+    viewport.addEventListener('pointerdown', onPointerDown);
+    viewport.addEventListener('pointerup', endGesture);
+    viewport.addEventListener('pointercancel', endGesture);
     viewport.addEventListener('pointerdown', markTouched);
     viewport.addEventListener('wheel', markTouched, { passive: true });
+    viewport.addEventListener('dragover', onDragOver);
+    viewport.addEventListener('drop', onDrop);
+    viewport.addEventListener('dragleave', onDragLeave);
+    window.addEventListener('dragend', onWindowDragEnd);
+    window.addEventListener('keydown', onKey);
     stageEl.addEventListener('pointerdown', onStagePointerDown);
     session.setFitHandler(() => fitRef.current());
 
@@ -79,8 +409,16 @@ export function StageCanvas({
       stopZoom();
       stopClick();
       viewport.removeEventListener('pointermove', onPointerMove);
+      viewport.removeEventListener('pointerdown', onPointerDown);
+      viewport.removeEventListener('pointerup', endGesture);
+      viewport.removeEventListener('pointercancel', endGesture);
       viewport.removeEventListener('pointerdown', markTouched);
       viewport.removeEventListener('wheel', markTouched);
+      viewport.removeEventListener('dragover', onDragOver);
+      viewport.removeEventListener('drop', onDrop);
+      viewport.removeEventListener('dragleave', onDragLeave);
+      window.removeEventListener('dragend', onWindowDragEnd);
+      window.removeEventListener('keydown', onKey);
       stageEl.removeEventListener('pointerdown', onStagePointerDown);
       session.setFitHandler(null);
       selection.destroy();
@@ -152,10 +490,64 @@ export function StageCanvas({
     selectionRef.current?.show(selectedRenderId);
   }, [selectedRenderId, openId, generation]);
 
+  useEffect(() => {
+    viewportRef.current?.classList.toggle('is-inserting', tool !== 'select');
+  }, [tool]);
+
   return (
     <div className="viewport" ref={viewportRef}>
       <div className="stage" ref={stageRef} />
-      <p className="hint">Scroll to zoom · drag to pan · click to select</p>
+      <p className="hint">
+        Scroll to zoom · drag the canvas to pan · F T I insert · double-click drills in
+      </p>
     </div>
+  );
+}
+
+interface Drop {
+  parentId: string;
+  index: number;
+  line: OverlayBox;
+}
+
+interface Gesture {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  moved: boolean;
+  mode: 'insert' | 'reorder';
+  nodeId: string | null;
+}
+
+function insideHit(
+  frame: ViewportFrame,
+  renderedId: string,
+  pointer: { x: number; y: number },
+  doc: FlatDocument,
+  paintRoot: boolean,
+): boolean {
+  const chain = documentChain(doc, renderedId, paintRoot);
+  const deepest = chain[chain.length - 1];
+  if (!deepest) return false;
+  const node = doc.nodes[deepest];
+  if (node?.type !== 'frame') return false;
+  const el = frame.host.contentDocument().querySelector(dataIdSelector(renderedId));
+  if (!isElement(el)) return node.type === 'frame' && node.children.length === 0;
+  const rect = boxOf(el);
+  const empty = node.children.length === 0;
+  return prefersInsideFrame(rect, pointer, empty);
+}
+
+function boxOf(el: HTMLElement): Box {
+  const rect = el.getBoundingClientRect();
+  return { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
+}
+
+function isElement(value: unknown): value is HTMLElement {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'nodeType' in value &&
+    (value as Node).nodeType === Node.ELEMENT_NODE
   );
 }
