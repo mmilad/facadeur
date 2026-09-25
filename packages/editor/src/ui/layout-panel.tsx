@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  defaultBreakpoints,
   type AxisSize,
-  type Breakpoint,
   type FlatNode,
   type LayoutOverride,
   type SizeValue,
@@ -17,6 +15,8 @@ import {
   type LayoutPatch,
 } from '../editing.js';
 import type { EditorSession, EditorSnapshot } from '../session.js';
+import { editorBreakpoints, viewportEditContext } from '../viewport-edit.js';
+import { OverrideCue } from './viewport-bar.js';
 
 const JUSTIFY = ['start', 'center', 'end', 'space-between'] as const;
 const ALIGN = ['start', 'center', 'end', 'stretch'] as const;
@@ -30,13 +30,35 @@ export function LayoutPanel({
   snap: EditorSnapshot;
   node: FlatNode;
 }) {
-  const [breakpoint, setBreakpoint] = useState('base');
-  const breakpoints = breakpointList(snap);
-  const active = breakpoints.some((item) => item.id === breakpoint) ? breakpoint : 'base';
-  const breakpointId = active === 'base' ? null : active;
+  const ctx = viewportEditContext({
+    breakpoints: editorBreakpoints(snap.document, snap.design),
+    focusId: snap.focusViewportId,
+    editTarget: snap.editTarget,
+  });
+  const breakpointId = ctx.writingBreakpointId;
   const layer = layoutLayer(node.layout, breakpointId);
   const base = node.layout ?? {};
   const tokens = dimensionTokenRefs(snap.design.tokens);
+  const cueViewport = ctx.overrideViewport;
+
+  function cue(key: keyof LayoutOverride) {
+    if (!cueViewport) return null;
+    const override = node.layout?.breakpoints?.[cueViewport.id];
+    if (!override || override[key] === undefined) return null;
+    return (
+      <OverrideCue
+        minWidth={cueViewport.minWidth}
+        onReset={() =>
+          session.execute({
+            type: 'setProp',
+            nodeId: node.id,
+            prop: 'layout',
+            value: writeLayoutFields(node.layout, cueViewport.id, { [key]: null }),
+          })
+        }
+      />
+    );
+  }
 
   function shown<Key extends keyof LayoutOverride>(key: Key): LayoutOverride[Key] | undefined {
     if (layer[key] !== undefined) return layer[key];
@@ -60,22 +82,7 @@ export function LayoutPanel({
   return (
     <div className="stack">
       <h3>Layout</h3>
-      <label className="field">
-        <span>Breakpoint</span>
-        <select
-          name="layout-breakpoint"
-          value={active}
-          onChange={(event) => setBreakpoint(event.target.value)}
-        >
-          <option value="base">Base</option>
-          {breakpoints.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.id} · {item.minWidth}
-            </option>
-          ))}
-        </select>
-      </label>
-      {breakpointId ? (
+      {cueViewport && node.layout?.breakpoints?.[cueViewport.id] ? (
         <button
           type="button"
           className="text-button"
@@ -84,11 +91,11 @@ export function LayoutPanel({
               type: 'setProp',
               nodeId: node.id,
               prop: 'layout',
-              value: clearLayoutBreakpoint(node.layout, breakpointId),
+              value: clearLayoutBreakpoint(node.layout, cueViewport.id),
             })
           }
         >
-          Reset {breakpointId}
+          Reset layout {cueViewport.id}
         </button>
       ) : null}
       {node.type === 'frame' ? (
@@ -112,6 +119,7 @@ export function LayoutPanel({
               <option value="row">Row</option>
             </select>
           </label>
+          {cue('direction')}
           <TokenField
             label="Gap"
             name="layout-gap"
@@ -119,11 +127,13 @@ export function LayoutPanel({
             tokens={tokens}
             onChange={(gap) => commit({ gap })}
           />
+          {cue('gap')}
           <PaddingFields
             padding={shown('padding')}
             tokens={tokens}
             onChange={(padding) => commit({ padding })}
           />
+          {cue('padding')}
           <ChoiceField
             label="Justify"
             name="layout-justify"
@@ -135,6 +145,7 @@ export function LayoutPanel({
               })
             }
           />
+          {cue('justify')}
           <ChoiceField
             label="Align"
             name="layout-align"
@@ -146,6 +157,7 @@ export function LayoutPanel({
               })
             }
           />
+          {cue('align')}
           <label className="field field-check">
             <span>Wrap</span>
             <input
@@ -159,6 +171,7 @@ export function LayoutPanel({
               }}
             />
           </label>
+          {cue('wrap')}
         </>
       ) : null}
       <TokenField
@@ -168,6 +181,7 @@ export function LayoutPanel({
         tokens={tokens}
         onChange={(next) => commit({ margin: next })}
       />
+      {cue('margin')}
       {margin && typeof margin === 'object' ? (
         <PaddingFields
           padding={margin}
@@ -190,6 +204,7 @@ export function LayoutPanel({
           }}
         />
       </label>
+      {cue('position')}
       {free ? (
         <div className="pair">
           <NumberField
@@ -205,9 +220,10 @@ export function LayoutPanel({
             onCommit={(y) => commit({ y })}
           />
         </div>
-      ) : (
-        <p className="meta">Arrow keys move only free-positioned elements.</p>
-      )}
+      ) : null}
+      {cue('x')}
+      {cue('y')}
+      {!free ? <p className="meta">Arrow keys move only free-positioned elements.</p> : null}
       <h3>Sizing</h3>
       <AxisFields
         label="Width"
@@ -216,6 +232,7 @@ export function LayoutPanel({
         tokens={tokens}
         onChange={(width) => commit({ width })}
       />
+      {cue('width')}
       <AxisFields
         label="Height"
         name="height"
@@ -223,16 +240,9 @@ export function LayoutPanel({
         tokens={tokens}
         onChange={(height) => commit({ height })}
       />
+      {cue('height')}
     </div>
   );
-}
-
-function breakpointList(snap: EditorSnapshot): Breakpoint[] {
-  const own = snap.document.settings.breakpoints;
-  if (own?.length) return own;
-  const design = snap.design.settings.breakpoints;
-  if (design?.length) return design;
-  return defaultBreakpoints;
 }
 
 function PaddingFields({

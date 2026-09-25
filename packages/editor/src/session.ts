@@ -13,6 +13,7 @@ import { createDocumentStore, type YjsDocumentStore } from '@facadeur/store-yjs'
 import type { DesignInput } from '@facadeur/tokens';
 import type { JsonFileHandle } from './files.js';
 import { layerTree, nodeIdForHit, renderIdForNode, type LayerItem } from './selection-model.js';
+import type { StyleEditMode } from './viewport-edit.js';
 
 export type EditorTool = 'select' | 'frame' | 'text' | 'image';
 
@@ -40,6 +41,13 @@ export interface EditorSnapshot {
   selectedNodeId: string | null;
   selectedRenderId: string | null;
   selectedNode: FlatNode | null;
+  /** Breakpoint id of the frame the user last clicked. Null until then. */
+  focusViewportId: string | null;
+  /**
+   * Where style, layout, and token edits land.
+   * Stays on base until the user switches to the focused viewport's override.
+   */
+  editTarget: StyleEditMode;
   /** Definition of the selected instance, when that document is in the catalog. */
   componentTarget: FlatDocument | null;
   canUndo: boolean;
@@ -64,6 +72,10 @@ export interface EditorSession {
   openAsset: (id: string, focus?: 'root') => void;
   selectNode: (nodeId: string | null) => void;
   selectRendered: (renderedId: string | null) => void;
+  /** Last clicked viewport frame. Does not change the selection or the edit target. */
+  setFocusViewport: (breakpointId: string | null) => void;
+  /** Base, or a min-width override for the focused viewport. */
+  setEditTarget: (target: StyleEditMode) => void;
   setTool: (tool: EditorTool) => void;
   beginDrag: (drag: EditorDrag) => void;
   endDrag: () => void;
@@ -112,6 +124,8 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   let openId = options.documents[0]?.id ?? '';
   let selectedNodeId: string | null = null;
   let selectedRenderId: string | null = null;
+  let focusViewportId: string | null = null;
+  let editTarget: StyleEditMode = 'base';
   let notice: EditorNotice | null = null;
   let zoomLabel = '100%';
   let tool: EditorTool = 'select';
@@ -229,6 +243,8 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       selectedNodeId,
       selectedRenderId,
       selectedNode,
+      focusViewportId,
+      editTarget,
       componentTarget,
       canUndo: history.some((store) => store.canUndo()),
       canRedo: redoStore?.canRedo() ?? false,
@@ -379,6 +395,17 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       if (selectedNodeId === nodeId && selectedRenderId === renderId) return;
       selectedNodeId = nodeId;
       selectedRenderId = renderId;
+      publish();
+    },
+    setFocusViewport(breakpointId) {
+      const next = breakpointId && breakpointId.length > 0 ? breakpointId : null;
+      if (focusViewportId === next) return;
+      focusViewportId = next;
+      publish();
+    },
+    setEditTarget(target) {
+      if (editTarget === target) return;
+      editTarget = target;
       publish();
     },
     execute(command) {

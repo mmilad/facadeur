@@ -21,12 +21,20 @@ import {
   ComponentFields,
   ComponentVariants,
   NodeBindings,
+  NodeStyleBlock,
   NodeVariantStyles,
   ownsComponentFeatures,
 } from './component-panel.js';
 import { LayoutPanel } from './layout-panel.js';
-import { formatTokenValue, parseEditedValue, withTokenValue } from '../token-edit.js';
+import {
+  formatTokenValue,
+  parseEditedValue,
+  withTokenBreakpoint,
+  withTokenValue,
+} from '../token-edit.js';
+import { editorBreakpoints, viewportEditContext } from '../viewport-edit.js';
 import { TextControl } from './fields.js';
+import { OverrideCue, ViewportEditBar } from './viewport-bar.js';
 
 export type InspectorPanel = 'properties' | 'tokens' | 'fonts';
 
@@ -318,6 +326,7 @@ function Properties({ session, snap }: { session: EditorSession; snap: EditorSna
   if (!node) {
     return (
       <div className="properties">
+        <ViewportEditBar session={session} snap={snap} />
         <p className="inspector-empty">Select a layer or an element on the stage.</p>
         {showDefinitions ? (
           <>
@@ -330,6 +339,7 @@ function Properties({ session, snap }: { session: EditorSession; snap: EditorSna
   }
   return (
     <div className="properties">
+      <ViewportEditBar session={session} snap={snap} />
       <p className="inspector-id">{node.id}</p>
       <dl className="kv">
         <dt>Type</dt>
@@ -423,6 +433,9 @@ function Properties({ session, snap }: { session: EditorSession; snap: EditorSna
       {node.type !== 'instance' && node.id !== snap.document.rootId ? (
         <NodeVariantStyles session={session} snap={snap} nodeId={node.id} />
       ) : null}
+      {node.type !== 'instance' ? (
+        <NodeStyleBlock session={session} snap={snap} nodeId={node.id} />
+      ) : null}
       {node.type !== 'instance' ? <StyleFields session={session} node={node} /> : null}
       <LayoutPanel session={session} snap={snap} node={node} />
     </div>
@@ -458,7 +471,10 @@ function StyleFields({
   const entries = Object.entries(node.style ?? {});
   return (
     <div className="stack">
-      <h3>Style</h3>
+      <h3>Node style</h3>
+      <p className="meta">
+        Always Base. It overrides the style block, and breakpoint rules stay above it.
+      </p>
       {entries.length === 0 ? <p className="meta">No style overrides.</p> : null}
       {entries.map(([key, current]) => (
         <TextControl
@@ -674,13 +690,24 @@ function TokensPanel({ session, snap }: { session: EditorSession; snap: EditorSn
     const indexed = readTokenTree(snap.design.tokens);
     return [...indexed.tokens.values()].sort((left, right) => left.path.localeCompare(right.path));
   }, [snap.design]);
+  const ctx = viewportEditContext({
+    breakpoints: editorBreakpoints(snap.document, snap.design),
+    focusId: snap.focusViewportId,
+    editTarget: snap.editTarget,
+  });
+  const writingId = ctx.writingBreakpointId;
   const needle = query.trim().toLowerCase();
   const visible = needle ? tokens.filter((token) => token.path.includes(needle)) : tokens;
   let group = '';
   return (
     <div className="stack">
+      <ViewportEditBar session={session} snap={snap} />
       <div className="panel-head">
-        <p className="meta">Project tokens. Edits update every viewport.</p>
+        <p className="meta">
+          {writingId
+            ? `Token overrides at ${writingId}. $value stays the base.`
+            : 'Project tokens. Base edits $value and update every viewport that has no override.'}
+        </p>
         <button
           type="button"
           className="text-button"
@@ -702,8 +729,12 @@ function TokensPanel({ session, snap }: { session: EditorSession; snap: EditorSn
         const nextGroup = token.path.split('.')[0] ?? '';
         const heading = nextGroup !== group;
         group = nextGroup;
-        const text = formatTokenValue(token.value);
-        const hex = typeof token.value === 'string' && /^#[0-9a-fA-F]{6}$/.test(token.value);
+        const override = writingId ? token.breakpoints[writingId] : undefined;
+        const shownValue = writingId ? override : token.value;
+        const text = shownValue === undefined ? '' : formatTokenValue(shownValue);
+        const swatchSource = shownValue ?? token.value;
+        const hex = typeof swatchSource === 'string' && /^#[0-9a-fA-F]{6}$/.test(swatchSource);
+        const previous = shownValue === undefined ? token.value : shownValue;
         return (
           <div key={token.path}>
             {heading ? <h3>{nextGroup}</h3> : null}
@@ -713,9 +744,9 @@ function TokensPanel({ session, snap }: { session: EditorSession; snap: EditorSn
                   className="swatch"
                   type="color"
                   aria-label={`${token.path} color`}
-                  value={token.value as string}
+                  value={swatchSource}
                   onChange={(event) =>
-                    commitToken(session, snap, token.path, token.value, event.target.value)
+                    commitToken(session, snap, token.path, previous, event.target.value, writingId)
                   }
                 />
               ) : null}
@@ -723,10 +754,29 @@ function TokensPanel({ session, snap }: { session: EditorSession; snap: EditorSn
                 label={`${token.path} · ${token.type}`}
                 name={`token-${token.path}`}
                 value={text}
-                multiline={typeof token.value === 'object' && token.value !== null}
-                onCommit={(next) => commitToken(session, snap, token.path, token.value, next)}
+                placeholder={
+                  writingId && override === undefined ? formatTokenValue(token.value) : undefined
+                }
+                multiline={typeof previous === 'object' && previous !== null}
+                onCommit={(next) => {
+                  if (writingId && next.trim() === '') {
+                    if (override !== undefined) {
+                      resetTokenBreakpoint(session, snap, token.path, writingId);
+                    }
+                    return;
+                  }
+                  commitToken(session, snap, token.path, previous, next, writingId);
+                }}
               />
             </div>
+            {ctx.overrideViewport && token.breakpoints[ctx.overrideViewport.id] !== undefined ? (
+              <OverrideCue
+                minWidth={ctx.overrideViewport.minWidth}
+                onReset={() =>
+                  resetTokenBreakpoint(session, snap, token.path, ctx.overrideViewport?.id ?? '')
+                }
+              />
+            ) : null}
           </div>
         );
       })}
@@ -740,13 +790,31 @@ function commitToken(
   path: string,
   previous: Parameters<typeof parseEditedValue>[1],
   text: string,
+  breakpointId: string | null,
 ) {
   try {
     const value = parseEditedValue(text, previous);
+    const token = breakpointId
+      ? withTokenBreakpoint(snap.design.tokens, path, breakpointId, value)
+      : withTokenValue(snap.design.tokens, path, value);
+    session.executeDesign({ type: 'setToken', path, token });
+  } catch (error) {
+    session.setNotice(error instanceof Error ? error.message : 'Invalid token', 'error');
+  }
+}
+
+function resetTokenBreakpoint(
+  session: EditorSession,
+  snap: EditorSnapshot,
+  path: string,
+  breakpointId: string,
+) {
+  if (!breakpointId) return;
+  try {
     session.executeDesign({
       type: 'setToken',
       path,
-      token: withTokenValue(snap.design.tokens, path, value),
+      token: withTokenBreakpoint(snap.design.tokens, path, breakpointId, null),
     });
   } catch (error) {
     session.setNotice(error instanceof Error ? error.message : 'Invalid token', 'error');
@@ -757,7 +825,10 @@ function FontsPanel({ session, snap }: { session: EditorSession; snap: EditorSna
   return (
     <div className="stack">
       <div className="panel-head">
-        <p className="meta">Project fonts. The last fallback must be a generic family.</p>
+        <p className="meta">
+          Project fonts. The last fallback must be a generic family. Font files are shared across
+          viewports; type size changes live on typography tokens.
+        </p>
         <button
           type="button"
           className="text-button"

@@ -4,8 +4,12 @@ import type { ViewportFrame } from './viewports.js';
 const HANDLES = ['nw', 'ne', 'sw', 'se'];
 
 export interface SelectionController {
-  /** Move the outline to a rendered id. */
-  show: (renderedId: string | null) => void;
+  /**
+   * Outline a rendered id in every frame.
+   * `focusFrameId` is the frame the user clicked: that box is primary, the rest secondary.
+   * Omit it to keep the previous focus. `null` clears the primary frame.
+   */
+  show: (renderedId: string | null, focusFrameId?: string | null) => void;
   /** Deepest node under the pointer, if it sits inside a viewport frame. */
   hitAt: (clientX: number, clientY: number) => { id: string } | null;
   /** Viewport frame under the pointer, when the pointer is inside one. */
@@ -44,11 +48,13 @@ export function createSelection({
 
   const selectionBoxes: HTMLDivElement[] = [];
   let selectedId: string | null = null;
+  let focusFrameId: string | null = null;
   let hoverId: string | null = null;
   let hoverFrameId: string | null = null;
 
-  function show(renderedId: string | null) {
+  function show(renderedId: string | null, nextFocus?: string | null) {
     selectedId = renderedId;
+    if (nextFocus !== undefined) focusFrameId = nextFocus;
     if (hoverId && hoverId === renderedId) clearHover();
     placeBoxes();
   }
@@ -102,6 +108,10 @@ export function createSelection({
     }
     list.forEach((frame, index) => {
       const box = selectionBox(index);
+      const primary = focusFrameId !== null && frame.host.id === focusFrameId;
+      box.classList.toggle('is-primary', primary);
+      box.classList.toggle('is-secondary', !primary);
+      box.dataset.focus = primary ? 'primary' : 'secondary';
       const node = frame.host.contentDocument().querySelector(byId(id));
       if (!isHtmlElement(node)) {
         box.hidden = true;

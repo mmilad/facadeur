@@ -33,6 +33,7 @@ export function StageCanvas({
   generation,
   designRevision,
   selectedRenderId,
+  focusViewportId,
   tool,
 }: {
   session: EditorSession;
@@ -40,6 +41,7 @@ export function StageCanvas({
   generation: number;
   designRevision: number;
   selectedRenderId: string | null;
+  focusViewportId: string | null;
   tool: EditorTool;
 }) {
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -246,7 +248,10 @@ export function StageCanvas({
     };
 
     const onPointerDown = (event: PointerEvent) => {
-      if (event.button !== 0 || claimsPan(event)) return;
+      if (event.button !== 0) return;
+      const frame = selection.frameAt(event.clientX, event.clientY);
+      if (frame) session.setFocusViewport(frame.breakpoint.id);
+      if (claimsPan(event)) return;
       const snap = session.getSnapshot();
       const hit = selection.hitAt(event.clientX, event.clientY);
       const chain = hit ? documentChain(snap.document, hit.id, snap.paintRoot) : [];
@@ -533,8 +538,14 @@ export function StageCanvas({
   }, [session, designRevision]);
 
   useEffect(() => {
-    selectionRef.current?.show(selectedRenderId);
-  }, [selectedRenderId, openId, generation]);
+    selectionRef.current?.show(selectedRenderId, focusViewportId);
+    const frames = boardRef.current?.frames() ?? [];
+    for (const frame of frames) {
+      const column = frame.host.element.closest('.viewport-frame');
+      if (!(column instanceof HTMLElement)) continue;
+      column.classList.toggle('is-focus', frame.breakpoint.id === focusViewportId);
+    }
+  }, [selectedRenderId, focusViewportId, openId, generation]);
 
   useEffect(() => {
     viewportRef.current?.classList.toggle('is-inserting', tool !== 'select');

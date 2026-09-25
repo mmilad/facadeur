@@ -6,6 +6,7 @@
   --canvas: #e6dfd3;
   --white: #fffcf7;
   --accent: #9c4221;
+  --selection-secondary: #5b3cc4;
   --sidebar: #fbf7f1;
   --sans: Inter, 'Source Sans 3', 'Segoe UI', sans-serif;
   --serif: 'Noto Serif Display', 'Liberation Serif', Georgia, serif;
@@ -298,9 +299,67 @@ input {
   pointer-events: none;
 }
 
-.selection-box {
+.selection-box.is-primary {
+  z-index: 3;
+  border: calc(2px / var(--stage-scale, 1)) solid var(--accent);
+  box-shadow: 0 0 0 calc(1px / var(--stage-scale, 1)) #fff;
+}
+
+.selection-box.is-secondary {
   z-index: 2;
-  border: calc(1.5px / var(--stage-scale, 1)) solid var(--accent);
+  border: calc(2px / var(--stage-scale, 1)) solid var(--selection-secondary);
+  box-shadow: 0 0 0 calc(1px / var(--stage-scale, 1)) #fff;
+}
+
+.selection-box.is-secondary .handle {
+  display: none;
+}
+
+.viewport-frame.is-focus .viewport-label {
+  color: var(--accent);
+}
+
+.viewport-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--white);
+}
+
+.viewport-edit .meta {
+  margin: 0;
+}
+
+.viewport-edit-row {
+  display: flex;
+  gap: 4px;
+}
+
+.viewport-edit-row .text-button {
+  flex: 1;
+}
+
+.viewport-edit-row .text-button.is-active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.override-cue {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: -4px 0 8px;
+  color: var(--selection-secondary);
+  font-size: 12px;
+}
+
+.override-cue span {
+  font-weight: 600;
 }
 
 .hover-box {
