@@ -1,13 +1,14 @@
+import { createId, findParent } from '@facadeur/core';
 import { useEffect, useSyncExternalStore } from 'react';
 import { documentToJson, openJsonFile, parseDocumentText, saveJsonFile } from '../files.js';
 import { isEditableTarget } from '../keyboard.js';
 import type { EditorSession } from '../session.js';
-import { AssetList, Inspector, LayersPanel, WorkspaceTabs } from './panels.js';
+import { AssetList, Inspector, LayersPanel, ToolBar, WorkspaceTabs } from './panels.js';
 import { StageCanvas } from './StageCanvas.js';
 
 export function App({ session }: { session: EditorSession }) {
   const snap = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
-  useUndoKeys(session);
+  useEditorKeys(session);
 
   return (
     <div className="app">
@@ -53,6 +54,7 @@ export function App({ session }: { session: EditorSession }) {
       ) : null}
       <div className="workspace">
         <aside className="side side-left">
+          <ToolBar session={session} tool={snap.tool} />
           <AssetList session={session} snap={snap} />
           <LayersPanel session={session} snap={snap} />
         </aside>
@@ -62,6 +64,7 @@ export function App({ session }: { session: EditorSession }) {
           generation={snap.generation}
           designRevision={snap.designRevision}
           selectedRenderId={snap.selectedRenderId}
+          tool={snap.tool}
         />
         <aside className="side side-right">
           <Inspector session={session} snap={snap} />
@@ -71,15 +74,42 @@ export function App({ session }: { session: EditorSession }) {
   );
 }
 
-function useUndoKeys(session: EditorSession) {
+function useEditorKeys(session: EditorSession) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() !== 'z' || event.altKey) return;
-      if (!event.ctrlKey && !event.metaKey) return;
       if (isEditableTarget(event.target)) return;
-      event.preventDefault();
-      if (event.shiftKey) session.redo();
-      else session.undo();
+      const key = event.key.toLowerCase();
+      if (key === 'z' && (event.ctrlKey || event.metaKey) && !event.altKey) {
+        event.preventDefault();
+        if (event.shiftKey) session.redo();
+        else session.undo();
+        return;
+      }
+      if (key === 'g' && event.altKey && (event.ctrlKey || event.metaKey) && !event.shiftKey) {
+        event.preventDefault();
+        const snap = session.getSnapshot();
+        const nodeId = snap.selectedNodeId;
+        if (!nodeId || nodeId === snap.document.rootId) return;
+        const frameId = createId();
+        session.execute({ type: 'wrap', nodeId, frameId });
+        if (session.getSnapshot().document.nodes[frameId]) session.selectNode(frameId);
+        return;
+      }
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (key === 'escape') {
+        const snap = session.getSnapshot();
+        if (snap.tool !== 'select') {
+          session.setTool('select');
+          return;
+        }
+        if (!snap.selectedNodeId) return;
+        session.selectNode(findParent(snap.document, snap.selectedNodeId)?.id ?? null);
+        return;
+      }
+      if (key === 'f') session.setTool('frame');
+      else if (key === 't') session.setTool('text');
+      else if (key === 'i') session.setTool('image');
+      else if (key === 'v') session.setTool('select');
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);

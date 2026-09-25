@@ -169,13 +169,13 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 
 ### M6 – Bauen im Editor
 
-- [ ] Einfüge-Werkzeuge (F/T/I), Drag aus Asset-Liste, Einfügelinie
-- [ ] Auswahl-Logik (Klick, Doppelklick, Strg+Klick, Esc, Hover)
-- [ ] Umsortieren per Drag (Bühne und Ebenenliste), In Frame einpacken
-- [ ] Auto-Layout-Panel (Richtung, gap/padding nur Tokens, Ausrichtung, wrap)
-- [ ] Größen: hug/fill/fixed pro Achse, min/max, pro Breakpoint
-- [ ] Freie Positionierung als Option, Pfeiltasten nur dafür
-- [ ] Leere Frames mit Mindestgröße im Editor
+- [x] Einfüge-Werkzeuge (F/T/I), Drag aus Asset-Liste, Einfügelinie
+- [x] Auswahl-Logik (Klick, Doppelklick, Strg+Klick, Esc, Hover)
+- [x] Umsortieren per Drag (Bühne und Ebenenliste), In Frame einpacken
+- [x] Auto-Layout-Panel (Richtung, gap/padding nur Tokens, Ausrichtung, wrap)
+- [x] Größen: hug/fill/fixed pro Achse, min/max, pro Breakpoint
+- [x] Freie Positionierung als Option, Pfeiltasten nur dafür
+- [x] Leere Frames mit Mindestgröße im Editor
 
 ### M7 – Komponenten-Features
 
@@ -240,3 +240,9 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 - 2026-09-25: Das Eigenschaften-Panel schreibt `setProp` (name, tag, text, src, alt, attributes), `setStyle`, an Instanzen `setField`/`setVariant`, und am Wurzelknoten den Default eines bestehenden Feldes über `defineField` (die Button-Beschriftung). Neue Felder, Varianten-Achsen, Auto Layout, Größen und freie Position bleiben M6/M7.
 - 2026-09-25: Speichern nutzt die File System Access API und merkt sich den Handle. Fehlt die API, schreibt `PUT /__facadeur/examples` im Vite-Dev-Server nach `examples/<datei>.json`. Sonst startet ein Download. Öffnen nutzt dieselbe API oder ein `<input type="file">`. Der Dateiname des Specimen bleibt `specimen-page.json`.
 - 2026-09-25: `setDocument` merkt sich `paintRoot` zusammen mit Adresse und Breakpoints. Ein späteres `applyChange` ohne das Flag würde sonst die Root-Regel aus dem Live-Sheet werfen, und der Button bliebe ein ungestyltes natives `<button>` in der Standard-iframe-Höhe. Die Frame-Höhe misst die Kind-Rects (`getBoundingClientRect`), nicht `scrollHeight` (das bleibt bei leerem Inhalt auf 150px stehen). Ein `MutationObserver` misst nach, sobald der Renderer die Wurzel einfügt.
+- 2026-09-25: M6. Der Auswahlkontext ist der Elternknoten der Selektion, sonst die Wurzel. Ein Klick wählt das direkte Kind dieses Kontexts unter dem Zeiger. Liegt der Treffer außerhalb, fällt der Kontext auf die Wurzel zurück. Doppelklick geht eine Stufe die Trefferkette hinunter, Strg/Cmd+Klick wählt den tiefsten Dokumentknoten. Die Kette endet an der Instanz; ein Doppelklick springt nicht in die Komponente (das bleibt M7). Esc wählt den Elternknoten, an der Wurzel hebt er die Auswahl auf. Ist ein Einfügewerkzeug aktiv, bricht das erste Esc das Werkzeug ab, bevor es zum Elternknoten geht. V ist das Auswahlwerkzeug. Der Hover-Umriss ist das Klickziel, mit Strg/Cmd das tiefste Ziel.
+- 2026-09-25: Ziehen auf einem Knoten sortiert um (`move`). Ziehen auf leerer Bühne oder auf der Wurzel schwenkt wie bisher. F/T/I bleiben aktiv, bis Esc oder V. Ein Klick in den ausgewählten Frame hängt ans Ende an; ein Ziehen zeigt die Einfügelinie und fügt an diesem Index ein. Die Linie folgt der Hauptrichtung des Eltern-Frames (Zeile oder Spalte), nicht den umbrochenen Zeilen. Liegt der Zeiger in der Mitte eines Frames, fällt das Element hinein; am Rand daneben. Leere Frames gelten immer als innen. Die Asset-Liste ist ziehbar, wenn die Verschachtelung die Art erlaubt. Eine Place-Liste zeigt erlaubte Assets aus anderen Arbeitsbereichen, ohne das offene Dokument (keine Instanz seiner selbst über die Liste).
+- 2026-09-25: `wrap` ist ein eigener Befehl, damit „In Frame einpacken“ (Strg/Cmd+Alt+G) ein Undo-Schritt ist. Der neue Frame heißt `Frame` und übernimmt den Index des Knotens. Ein `setProp`/`insert`, das eine Token-Referenz einführt, ergänzt `tokenInterface.reads`, sonst scheitert die Layout-Änderung an der bestehenden Pflicht.
+- 2026-09-25: Gap, Padding und Margin wählen nur Dimensions-Tokens. Feste Größe ist px, ein Dimensions-Token oder Prozent. Breakpoint-Overrides schreiben `layout.breakpoints`. Die Basis bleibt ohne Query. Pfeiltasten ändern nur `x`/`y` der Basis, und nur wenn `position` dort `absolute` ist (Shift 10px). Fehlen `x`/`y`, ist der Start der `offset` im ersten Frame, damit das Element nicht auf 0 springt. Absolute nur in einem Breakpoint schiebt die Tastatur nicht; das steht im Panel.
+- 2026-09-25: Leere Frames (keine Kinder, kein Text) bekommen im Editor `data-empty`. Das Mindestmaß 64px und der gestrichelte Rahmen stehen im iframe-Shell-Stylesheet, nicht in der Style-Engine und nicht im JSON. Der Button bleibt ohne Markierung, weil seine Beschriftung Text am Frame ist.
+- 2026-09-25: Die Einfügelinie liegt im Bühnen-Overlay und wird mit der Bühne skaliert. Ihre kurze Seite ist mindestens vier Bildschirmpixel, sonst ist sie beim Fit über drei Viewports nicht zu sehen.

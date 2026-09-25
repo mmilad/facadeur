@@ -62,6 +62,18 @@ describe('editor shell', () => {
     const tag = host.querySelector('input[name="tag"]');
     expect(tag).toBeInstanceOf(HTMLInputElement);
     expect((tag as HTMLInputElement).value).toBe('button');
+    const direction = host.querySelector('select[name="layout-direction"]');
+    expect(direction).toBeInstanceOf(HTMLSelectElement);
+    expect((direction as HTMLSelectElement).value).toBe('row');
+
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'f', bubbles: true }));
+    });
+    expect(session.getSnapshot().tool).toBe('frame');
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    });
+    expect(session.getSnapshot().tool).toBe('select');
 
     await act(async () => {
       session.execute({

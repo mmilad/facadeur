@@ -24,6 +24,11 @@ export interface StageController {
   onChange: (listener: (state: StageState) => void) => () => void;
   /** A press that did not turn into a pan. The listener decides select versus clear. */
   onClick: (listener: (event: PointerEvent) => void) => () => void;
+  /**
+   * When this returns false, the press is not a pan. The stage does not capture
+   * the pointer, so the editor can select, insert, or reorder.
+   */
+  setClaimsPan: (guard: (event: PointerEvent) => boolean) => void;
   fit: (element: HTMLElement, padding?: number) => void;
   destroy: () => void;
 }
@@ -41,6 +46,7 @@ export function createStage(viewport: HTMLElement, stage: HTMLElement): StageCon
   let startY = 0;
   let originTx = 0;
   let originTy = 0;
+  let claimsPan: (event: PointerEvent) => boolean = () => true;
 
   function notify() {
     const state = { scale, tx, ty };
@@ -88,6 +94,7 @@ export function createStage(viewport: HTMLElement, stage: HTMLElement): StageCon
 
   function onPointerDown(event: PointerEvent) {
     if (event.button !== 0) return;
+    if (!claimsPan(event)) return;
     dragging = true;
     moved = false;
     startX = event.clientX;
@@ -146,6 +153,9 @@ export function createStage(viewport: HTMLElement, stage: HTMLElement): StageCon
     onClick(listener) {
       clicks.add(listener);
       return () => clicks.delete(listener);
+    },
+    setClaimsPan(guard) {
+      claimsPan = guard;
     },
     destroy() {
       viewport.removeEventListener('wheel', onWheel);

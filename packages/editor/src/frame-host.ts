@@ -28,6 +28,13 @@ const FRAME_SHELL_CSS = `
     color: #9c4221;
     font: 12px ui-monospace, monospace;
   }
+  /* Editor chrome only. Not part of the document and not emitted by the style engine. */
+  [data-empty="true"] {
+    min-width: 64px;
+    min-height: 64px;
+    outline: 1px dashed rgba(156, 66, 33, 0.75);
+    outline-offset: -1px;
+  }
 `;
 
 export interface FrameHostOptions {

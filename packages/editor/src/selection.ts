@@ -1,15 +1,19 @@
 import { overlayBox, pointInFrame, type OverlayBox } from './geometry.js';
-import { isEditableTarget } from './keyboard.js';
 import type { ViewportFrame } from './viewports.js';
 
 const HANDLES = ['nw', 'ne', 'sw', 'se'];
 
 export interface SelectionController {
-  /** Move the outline to a rendered id. Does not notify `onSelect`. */
+  /** Move the outline to a rendered id. */
   show: (renderedId: string | null) => void;
-  /** Node under the pointer, if it sits inside a viewport frame. */
+  /** Deepest node under the pointer, if it sits inside a viewport frame. */
   hitAt: (clientX: number, clientY: number) => { id: string } | null;
-  hoverAt: (clientX: number, clientY: number) => void;
+  /** Viewport frame under the pointer, when the pointer is inside one. */
+  frameAt: (clientX: number, clientY: number) => ViewportFrame | null;
+  /** Outline the click target. Pass the frame the pointer is over. */
+  hoverRendered: (renderedId: string | null, frameId: string | null) => void;
+  /** Line between siblings, in stage coordinates. */
+  showInsert: (box: OverlayBox | null) => void;
   clearHover: () => void;
   reposition: () => void;
   destroy: () => void;
@@ -19,13 +23,10 @@ export function createSelection({
   stage,
   getScale,
   frames,
-  onSelect,
 }: {
   stage: HTMLElement;
   getScale: () => number;
   frames: () => readonly ViewportFrame[];
-  /** Click and Escape. `show` does not call this. */
-  onSelect?: (renderedId: string | null) => void;
 }): SelectionController {
   const overlay = document.createElement('div');
   overlay.className = 'overlay-layer';
@@ -35,6 +36,11 @@ export function createSelection({
   hover.className = 'hover-box';
   hover.hidden = true;
   overlay.append(hover);
+
+  const insertLine = document.createElement('div');
+  insertLine.className = 'insert-line';
+  insertLine.hidden = true;
+  overlay.append(insertLine);
 
   const selectionBoxes: HTMLDivElement[] = [];
   let selectedId: string | null = null;
@@ -61,16 +67,22 @@ export function createSelection({
     return null;
   }
 
-  function hoverAt(clientX: number, clientY: number) {
-    const hit = hitAt(clientX, clientY);
-    if (!hit || hit.id === selectedId) {
+  function hoverRendered(renderedId: string | null, frameId: string | null) {
+    if (!renderedId || !frameId || renderedId === selectedId) {
       clearHover();
       return;
     }
-    const frame = frameUnder(clientX, clientY);
-    hoverId = hit.id;
-    hoverFrameId = frame?.host.id ?? null;
+    hoverId = renderedId;
+    hoverFrameId = frameId;
     placeHover();
+  }
+
+  function showInsert(box: OverlayBox | null) {
+    if (!box) {
+      insertLine.hidden = true;
+      return;
+    }
+    place(insertLine, box);
   }
 
   function clearHover() {
@@ -126,22 +138,17 @@ export function createSelection({
     });
   }
 
-  function onKey(event: KeyboardEvent) {
-    if (event.key !== 'Escape' || isEditableTarget(event.target)) return;
-    show(null);
-    onSelect?.(null);
-  }
-
-  window.addEventListener('keydown', onKey);
-
   return {
     show,
     hitAt,
-    hoverAt,
+    frameAt(clientX, clientY) {
+      return frameUnder(clientX, clientY) ?? null;
+    },
+    hoverRendered,
+    showInsert,
     clearHover,
     reposition: placeBoxes,
     destroy() {
-      window.removeEventListener('keydown', onKey);
       overlay.remove();
     },
   };
@@ -196,7 +203,11 @@ function place(el: HTMLElement, box: OverlayBox) {
   el.style.height = `${box.height}px`;
 }
 
-function byId(id: string): string {
+export function dataIdSelector(id: string): string {
   const escaped = String(id).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
   return `[data-id="${escaped}"]`;
+}
+
+function byId(id: string): string {
+  return dataIdSelector(id);
 }

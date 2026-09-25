@@ -58,6 +58,27 @@ describe('renderer', () => {
     expect(records.get('go')?.text).toBe('Continue');
     expect(records.get('go')?.fields).toMatchObject({ label: 'Continue' });
     expect(records.get('go/label')).toBeUndefined();
+    const hostEmpty = document.createElement('div');
+    renderDocument(
+      {
+        version: 1,
+        id: 'empty-doc',
+        name: 'Empty',
+        kind: 'atom',
+        root: {
+          id: 'root',
+          type: 'frame',
+          children: [{ id: 'box', type: 'frame' }],
+        },
+      },
+      [],
+      hostEmpty,
+      { paintRoot: true },
+    );
+    expect(hostEmpty.querySelector('[data-id="root"]')?.getAttribute('data-empty')).toBeNull();
+    expect(hostEmpty.querySelector('[data-id="root/box"]')?.getAttribute('data-empty')).toBe(
+      'true',
+    );
   });
 
   it('paints the specimen page with nested instance ids', () => {
