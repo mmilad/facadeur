@@ -114,6 +114,20 @@ export function dropParentId(
   return null;
 }
 
+/**
+ * The insert line is drawn in stage pixels, which the stage then scales.
+ * Thicken the short side so it stays about four screen pixels.
+ */
+export function emphasizeInsertLine(line: Box, scale: number): Box {
+  const thickness = Math.max(4 / (scale > 0 ? scale : 1), 2);
+  if (line.height <= line.width) {
+    const mid = line.top + line.height / 2;
+    return { ...line, top: mid - thickness / 2, height: thickness };
+  }
+  const mid = line.left + line.width / 2;
+  return { ...line, left: mid - thickness / 2, width: thickness };
+}
+
 /** Index and insert-line box among siblings already ordered and excluding the dragged node. */
 export function placeInParent(input: {
   direction: 'row' | 'column';

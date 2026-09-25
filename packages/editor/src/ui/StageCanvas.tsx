@@ -2,6 +2,7 @@ import { createId, type FlatDocument } from '@facadeur/core';
 import { useEffect, useRef } from 'react';
 import {
   dropParentId,
+  emphasizeInsertLine,
   insertDraft,
   placeInParent,
   prefersInsideFrame,
@@ -146,12 +147,13 @@ export function StageCanvas({
         parent: boxOf(parentEl),
         siblings,
       });
+      const readable = emphasizeInsertLine(placed.line, scale);
       const line = overlayBox({
         element: {
-          left: placed.line.left,
-          top: placed.line.top,
-          width: placed.line.width,
-          height: placed.line.height,
+          left: readable.left,
+          top: readable.top,
+          width: readable.width,
+          height: readable.height,
         },
         frame: frameRect,
         stage: stageElement.getBoundingClientRect(),

@@ -4,6 +4,7 @@ import specimenSection from '../../../examples/specimen-section.json';
 import {
   dimensionTokenRefs,
   dropParentId,
+  emphasizeInsertLine,
   layerDropTarget,
   placeInParent,
   prefersInsideFrame,
@@ -27,6 +28,9 @@ describe('editing', () => {
     expect(placed.index).toBe(1);
     expect(placed.line.height).toBe(2);
     expect(placed.line.top).toBe(59);
+    const emphasized = emphasizeInsertLine(placed.line, 0.5);
+    expect(emphasized.height).toBe(8);
+    expect(emphasized.top).toBe(56);
   });
 
   it('drops inside a frame at its center and beside it at the edge', () => {

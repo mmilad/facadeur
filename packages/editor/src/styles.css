@@ -328,10 +328,13 @@ input {
 
 .insert-line {
   position: absolute;
-  z-index: 3;
+  z-index: 6;
   background: var(--accent);
   border-radius: 999px;
   pointer-events: none;
+  box-shadow:
+    0 0 0 calc(1px / var(--stage-scale, 1)) #fff,
+    0 0 0 calc(2px / var(--stage-scale, 1)) var(--accent);
 }
 
 .ds-unknown {
