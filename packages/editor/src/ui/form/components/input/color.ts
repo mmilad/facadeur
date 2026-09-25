@@ -67,15 +67,26 @@ export function normalizeColor(input: string): string {
   return '#000000FF';
 }
 
+export type EyeDropperConstructor = new () => {
+  open: () => Promise<{ sRGBHex: string }>;
+};
+
+export type WindowWithEyeDropper = Window & {
+  EyeDropper?: EyeDropperConstructor;
+};
+
+function eyeDropperWindow(): WindowWithEyeDropper {
+  return window as WindowWithEyeDropper;
+}
+
 export function supportsEyeDropper(): boolean {
   return typeof window !== 'undefined' && 'EyeDropper' in window;
 }
 
 export async function pickColorWithEyeDropper(): Promise<string | null> {
   if (!supportsEyeDropper()) return null;
-  const EyeDropperCtor = (
-    window as unknown as { EyeDropper: new () => { open: () => Promise<{ sRGBHex: string }> } }
-  ).EyeDropper;
+  const EyeDropperCtor = eyeDropperWindow().EyeDropper;
+  if (!EyeDropperCtor) return null;
   const dropper = new EyeDropperCtor();
   const result = await dropper.open();
   return normalizeColor(result.sRGBHex);

@@ -7,6 +7,8 @@ import {
   normalizeColor,
   rgbaToHex,
   supportsEyeDropper,
+  type EyeDropperConstructor,
+  type WindowWithEyeDropper,
 } from '../../src/ui/form/components/input/color.js';
 
 describe('ColorInput color utils', () => {
@@ -22,11 +24,17 @@ describe('ColorInput color utils', () => {
   });
 
   it('reports eyedropper support based on the API', () => {
-    const original = window.EyeDropper;
-    window.EyeDropper = class {} as typeof EyeDropper;
+    const win = window as WindowWithEyeDropper;
+    const original = win.EyeDropper;
+    const StubEyeDropper = class {
+      open() {
+        return Promise.resolve({ sRGBHex: '#000000' });
+      }
+    } satisfies EyeDropperConstructor;
+    win.EyeDropper = StubEyeDropper;
     expect(supportsEyeDropper()).toBe(true);
-    delete (window as { EyeDropper?: typeof EyeDropper }).EyeDropper;
+    delete win.EyeDropper;
     expect(supportsEyeDropper()).toBe(false);
-    if (original) window.EyeDropper = original;
+    if (original) win.EyeDropper = original;
   });
 });
