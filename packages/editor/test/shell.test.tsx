@@ -203,6 +203,52 @@ describe('editor shell', () => {
     expect(view.querySelector('[data-asset-id="new-atom"]')?.className).toContain('is-active');
     expect(view.querySelector('input[name="token-filter"]')).toBeNull();
   });
+
+  it('shows a primary focus cue and writes a viewport style override from the inspector', async () => {
+    const session: EditorSession = createEditorSession({
+      documents,
+      design: createProjectTemplateDocument(),
+    });
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => {
+      root?.render(<App session={session} />);
+    });
+    await act(async () => {
+      session.openAsset('button', 'root');
+      session.setFocusViewport('tablet');
+    });
+
+    expect(host.querySelector('button[name="edit-base"]')?.getAttribute('aria-pressed')).toBe(
+      'true',
+    );
+    const viewportButton = host.querySelector('button[name="edit-viewport"]');
+    expect(viewportButton?.textContent).toContain('tablet · 768');
+    expect(host.textContent).toContain('Override bei 768');
+
+    const padding = host.querySelector(
+      'input[name="style-root-base-base-paddingInline"]',
+    ) as HTMLInputElement;
+    expect(padding.value).toBe('{button.padding.x}');
+
+    await act(async () => {
+      viewportButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(session.getSnapshot().editTarget).toBe('viewport');
+    expect(padding.value).toBe('{space.5}');
+
+    const reset = [...host.querySelectorAll('.override-cue button')].find((button) =>
+      button.textContent?.includes('Reset'),
+    );
+    await act(async () => {
+      reset?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    const styles = session.getSnapshot().document.styles;
+    expect(styles?.declarations?.paddingInline).toBe('{button.padding.x}');
+    expect(styles?.breakpoints?.tablet).toBeUndefined();
+    expect(styles?.breakpoints?.desktop).toBeUndefined();
+  });
 });
 
 function setInput(input: HTMLInputElement, value: string) {

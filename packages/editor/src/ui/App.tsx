@@ -82,6 +82,7 @@ export function App({ session }: { session: EditorSession }) {
           generation={snap.generation}
           designRevision={snap.designRevision}
           selectedRenderId={snap.selectedRenderId}
+          focusViewportId={snap.focusViewportId}
           tool={snap.tool}
         />
         <aside className="side side-right">

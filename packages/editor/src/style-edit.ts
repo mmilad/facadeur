@@ -9,6 +9,47 @@ export interface StyleEditTarget {
   axis?: string;
   value?: string;
   state?: StyleStateName;
+  /**
+   * Non-base breakpoint. Writes `breakpoints[id]` on the style owner.
+   * Ignored when `axis` is set: variants are not nested under breakpoints.
+   */
+  breakpointId?: string;
+}
+
+export interface ShownDeclaration {
+  property: string;
+  /** Value in the field. Viewport mode prefers the override, then the base. */
+  value: string;
+  /** True when the active viewport stores its own value for this property. */
+  overridden: boolean;
+}
+
+/**
+ * Base keys first, then properties that exist only on the viewport override,
+ * so a breakpoint-only value stays visible and resettable from Base.
+ */
+export function shownDeclarations(
+  base: StyleDeclarations,
+  override: StyleDeclarations,
+  writingViewport: boolean,
+): ShownDeclaration[] {
+  const keys: string[] = [];
+  const seen = new Set<string>();
+  for (const key of Object.keys(base)) {
+    seen.add(key);
+    keys.push(key);
+  }
+  for (const key of Object.keys(override)) {
+    if (seen.has(key)) continue;
+    keys.push(key);
+  }
+  return keys.map((property) => {
+    const overridden = Object.prototype.hasOwnProperty.call(override, property);
+    const value = writingViewport
+      ? (override[property] ?? base[property] ?? '')
+      : (base[property] ?? '');
+    return { property, value, overridden };
+  });
 }
 
 export function readStyleDeclarations(
@@ -57,6 +98,7 @@ function findLayer(
   if (!block) return undefined;
   const owner = ownerOf(block, rootId, target.nodeId, false);
   if (!owner) return undefined;
+  if (usesBreakpoint(target)) return owner.breakpoints?.[target.breakpointId ?? ''];
   if (target.axis && target.value !== undefined) {
     return owner.variants?.[target.axis]?.[target.value];
   }
@@ -66,10 +108,20 @@ function findLayer(
 function ensureLayer(block: StyleBlock, rootId: string, target: StyleEditTarget): StyleLayer {
   const owner = ownerOf(block, rootId, target.nodeId, true);
   if (!owner) return block;
+  if (usesBreakpoint(target)) {
+    const breakpointId = target.breakpointId ?? '';
+    const breakpoints = (owner.breakpoints ??= {});
+    return (breakpoints[breakpointId] ??= {});
+  }
   if (!target.axis || target.value === undefined) return owner;
   const variants = (owner.variants ??= {});
   const values = (variants[target.axis] ??= {});
   return (values[target.value] ??= {});
+}
+
+/** Breakpoint layers live on the owner. A variant target stays on that variant. */
+function usesBreakpoint(target: StyleEditTarget): boolean {
+  return Boolean(target.breakpointId) && !(target.axis && target.value !== undefined);
 }
 
 function ownerOf(
@@ -96,6 +148,7 @@ function compactBlock(block: StyleBlock): void {
 
 function compactOwner(owner: StyleChild): boolean {
   compactLayer(owner);
+  compactBreakpoints(owner);
   if (owner.variants) {
     for (const axis of Object.keys(owner.variants)) {
       const values = owner.variants[axis];
@@ -109,6 +162,15 @@ function compactOwner(owner: StyleChild): boolean {
     if (!Object.keys(owner.variants).length) delete owner.variants;
   }
   return !owner.declarations && !owner.states && !owner.variants && !owner.breakpoints;
+}
+
+function compactBreakpoints(owner: StyleChild): void {
+  if (!owner.breakpoints) return;
+  for (const id of Object.keys(owner.breakpoints)) {
+    const layer = owner.breakpoints[id];
+    if (!layer || compactLayer(layer)) delete owner.breakpoints[id];
+  }
+  if (!Object.keys(owner.breakpoints).length) delete owner.breakpoints;
 }
 
 function compactLayer(layer: StyleLayer): boolean {

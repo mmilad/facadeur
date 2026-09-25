@@ -52,6 +52,38 @@ export function withTokenValue(tree: TokenTree, path: string, value: JsonValue):
   return next;
 }
 
+/**
+ * Set or clear one `$extensions.facadeur.breakpoints` value.
+ * `$value` and every other breakpoint stay as stored. `null` removes that key.
+ */
+export function withTokenBreakpoint(
+  tree: TokenTree,
+  path: string,
+  breakpointId: string,
+  value: JsonValue | null,
+): TokenDefinition {
+  const node = tokenNode(tree, path);
+  const next = withTokenValue(tree, path, node.$value as JsonValue);
+  const extensions = isPlainObject(next.$extensions)
+    ? (structuredClone(next.$extensions) as Record<string, JsonValue>)
+    : {};
+  const facadeur = isPlainObject(extensions.facadeur)
+    ? { ...(extensions.facadeur as Record<string, JsonValue>) }
+    : {};
+  const breakpoints = isPlainObject(facadeur.breakpoints)
+    ? { ...(facadeur.breakpoints as Record<string, JsonValue>) }
+    : {};
+  if (value === null) delete breakpoints[breakpointId];
+  else breakpoints[breakpointId] = value;
+  if (Object.keys(breakpoints).length) facadeur.breakpoints = breakpoints;
+  else delete facadeur.breakpoints;
+  if (Object.keys(facadeur).length) extensions.facadeur = facadeur;
+  else delete extensions.facadeur;
+  if (Object.keys(extensions).length) next.$extensions = extensions;
+  else delete next.$extensions;
+  return next;
+}
+
 function tokenNode(tree: TokenTree, path: string): Record<string, unknown> {
   let cursor: unknown = tree;
   for (const part of path.split('.')) {

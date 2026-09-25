@@ -19,11 +19,14 @@ import {
 import type { EditorSession, EditorSnapshot } from '../session.js';
 import {
   readStyleDeclarations,
+  shownDeclarations,
   styleStateNames,
   writeStyleDeclaration,
   type StyleEditTarget,
 } from '../style-edit.js';
+import { editorBreakpoints, viewportEditContext } from '../viewport-edit.js';
 import { TextControl } from './fields.js';
+import { OverrideCue } from './viewport-bar.js';
 
 const TARGET_LABEL: Record<BindingTarget, string> = {
   text: 'Text',
@@ -86,6 +89,26 @@ export function NodeBindings({
 }) {
   if (!ownsComponentFeatures(snap.document.kind)) return null;
   return <BindingEditor session={session} node={node} fields={snap.document.fields} />;
+}
+
+export function NodeStyleBlock({
+  session,
+  snap,
+  nodeId,
+}: {
+  session: EditorSession;
+  snap: EditorSnapshot;
+  nodeId: string;
+}) {
+  return (
+    <div className="stack">
+      <h3>Style</h3>
+      <p className="meta">
+        Base has no media query. A viewport override writes only that breakpoint.
+      </p>
+      <DeclarationEditor session={session} snap={snap} target={{ nodeId }} />
+    </div>
+  );
 }
 
 export function NodeVariantStyles({
@@ -514,21 +537,73 @@ function DeclarationEditor({
 }) {
   const [property, setProperty] = useState('');
   const [value, setValue] = useState('');
-  const entries = readStyleDeclarations(snap.document.styles, snap.document.rootId, target);
-  const listed = Object.entries(entries);
+  const ctx = viewportEditContext({
+    breakpoints: editorBreakpoints(snap.document, snap.design),
+    focusId: snap.focusViewportId,
+    editTarget: snap.editTarget,
+  });
+  const layered = !target.axis;
+  const writingBreakpointId = layered ? ctx.writingBreakpointId : null;
+  const cueViewport = layered ? ctx.overrideViewport : null;
+  const baseEntries = readStyleDeclarations(snap.document.styles, snap.document.rootId, target);
+  const overrideEntries = cueViewport
+    ? readStyleDeclarations(snap.document.styles, snap.document.rootId, {
+        ...target,
+        breakpointId: cueViewport.id,
+      })
+    : {};
+  const listed = shownDeclarations(baseEntries, overrideEntries, writingBreakpointId !== null);
+  const writeTarget: StyleEditTarget = writingBreakpointId
+    ? { ...target, breakpointId: writingBreakpointId }
+    : target;
   return (
     <div className="stack">
+      {target.axis && snap.editTarget === 'viewport' ? (
+        <p className="meta">
+          Variant styles stay on Base. Breakpoints are not nested under variants.
+        </p>
+      ) : null}
       {listed.length === 0 ? <p className="meta">No declarations.</p> : null}
-      {listed.map(([key, current]) => (
-        <TextControl
-          key={key}
-          label={key}
-          name={declarationName(target, key)}
-          value={current}
-          onCommit={(next) =>
-            commitDeclaration(session, snap, target, key, next.trim() ? next : null)
-          }
-        />
+      {listed.map((item) => (
+        <div key={item.property}>
+          <TextControl
+            label={item.property}
+            name={declarationName(target, item.property)}
+            value={item.value}
+            placeholder={
+              item.overridden && writingBreakpointId === null
+                ? overrideEntries[item.property]
+                : undefined
+            }
+            onCommit={(next) => {
+              const trimmed = next.trim();
+              if (writingBreakpointId) {
+                if (!trimmed) {
+                  if (item.overridden)
+                    commitDeclaration(session, snap, writeTarget, item.property, null);
+                  return;
+                }
+                commitDeclaration(session, snap, writeTarget, item.property, trimmed);
+                return;
+              }
+              commitDeclaration(session, snap, target, item.property, trimmed ? trimmed : null);
+            }}
+          />
+          {item.overridden && cueViewport ? (
+            <OverrideCue
+              minWidth={cueViewport.minWidth}
+              onReset={() =>
+                commitDeclaration(
+                  session,
+                  snap,
+                  { ...target, breakpointId: cueViewport.id },
+                  item.property,
+                  null,
+                )
+              }
+            />
+          ) : null}
+        </div>
       ))}
       <label className="field">
         <span>Add property</span>
@@ -553,7 +628,7 @@ function DeclarationEditor({
         onClick={() => {
           const name = property.trim();
           if (!name || !value.trim()) return;
-          commitDeclaration(session, snap, target, name, value.trim());
+          commitDeclaration(session, snap, writeTarget, name, value.trim());
           if (session.getSnapshot().notice?.tone === 'error') return;
           setProperty('');
           setValue('');
