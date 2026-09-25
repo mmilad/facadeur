@@ -9,10 +9,15 @@ import {
 } from '@facadeur/core';
 import {
   colorTokenRefs,
+  dimensionTokenRefs,
+  fontFamilyTokenRefs,
+  fontWeightTokenRefs,
   layerDropTarget,
   layerInsertAt,
+  numberTokenRefs,
   placementAllowed,
   refusalMessage,
+  shadowTokenRefs,
   toolAllowed,
   type DropZone,
 } from '../editing.js';
@@ -27,6 +32,15 @@ import {
   ownsComponentFeatures,
 } from './component-panel.js';
 import { ColorControl, isColorStyleProperty } from './controls/color/index.js';
+import { ShadowControl, isShadowStyleProperty } from './controls/shadow/index.js';
+import {
+  isTypographyStyleProperty,
+  isTypographyValue,
+  projectFontRefs,
+  TypographyControl,
+  TypographyStyleControl,
+  type TypographyCatalogs,
+} from './controls/typography/index.js';
 import { LayoutPanel } from './layout-panel.js';
 import {
   formatTokenValue,
@@ -473,8 +487,22 @@ function StyleFields({
   const [property, setProperty] = useState('');
   const [value, setValue] = useState('');
   const colorTokens = useMemo(() => colorTokenRefs(snap.design.tokens), [snap.design.tokens]);
+  const shadowTokens = useMemo(() => shadowTokenRefs(snap.design.tokens), [snap.design.tokens]);
+  const typographyCatalogs = useMemo<TypographyCatalogs>(
+    () => ({
+      fontRefs: projectFontRefs(snap.design.fonts),
+      fontFamilyTokens: fontFamilyTokenRefs(snap.design.tokens),
+      fontWeightTokens: fontWeightTokenRefs(snap.design.tokens),
+      dimensionTokens: dimensionTokenRefs(snap.design.tokens),
+      numberTokens: numberTokenRefs(snap.design.tokens),
+    }),
+    [snap.design.fonts, snap.design.tokens],
+  );
   const entries = Object.entries(node.style ?? {});
   const addingColor = isColorStyleProperty(property);
+  const addingTypography = isTypographyStyleProperty(property);
+  const addingShadow = isShadowStyleProperty(property);
+  const addingSpecial = addingColor || addingTypography || addingShadow;
   return (
     <div className="stack">
       <h3>Node style</h3>
@@ -482,39 +510,60 @@ function StyleFields({
         Always Base. It overrides the style block, and breakpoint rules stay above it.
       </p>
       {entries.length === 0 ? <p className="meta">No style overrides.</p> : null}
-      {entries.map(([key, current]) =>
-        isColorStyleProperty(key) ? (
-          <ColorControl
-            key={key}
-            name={`style-${key}`}
-            label={key}
-            value={current}
-            colorTokens={colorTokens}
-            onCommit={(next) =>
-              session.execute({
-                type: 'setStyle',
-                nodeId: node.id,
-                property: key,
-                value: next?.trim() ? next.trim() : null,
-              })
-            }
-          />
-        ) : (
+      {entries.map(([key, current]) => {
+        const commitStyle = (next: string | null) =>
+          session.execute({
+            type: 'setStyle',
+            nodeId: node.id,
+            property: key,
+            value: next?.trim() ? next.trim() : null,
+          });
+        if (isColorStyleProperty(key)) {
+          return (
+            <ColorControl
+              key={key}
+              name={`style-${key}`}
+              label={key}
+              value={current}
+              colorTokens={colorTokens}
+              onCommit={commitStyle}
+            />
+          );
+        }
+        if (isShadowStyleProperty(key)) {
+          return (
+            <ShadowControl
+              key={key}
+              name={`style-${key}`}
+              label={key}
+              value={current}
+              shadowTokens={shadowTokens}
+              onCommit={commitStyle}
+            />
+          );
+        }
+        if (isTypographyStyleProperty(key)) {
+          return (
+            <TypographyStyleControl
+              key={key}
+              name={`style-${key}`}
+              label={key}
+              property={key}
+              value={current}
+              catalogs={typographyCatalogs}
+              onCommit={commitStyle}
+            />
+          );
+        }
+        return (
           <TextControl
             key={key}
             label={key}
             value={current}
-            onCommit={(next) =>
-              session.execute({
-                type: 'setStyle',
-                nodeId: node.id,
-                property: key,
-                value: next.trim() ? next : null,
-              })
-            }
+            onCommit={(next) => commitStyle(next.trim() ? next : null)}
           />
-        ),
-      )}
+        );
+      })}
       <label className="field">
         <span>Add property</span>
         <span className="pair">
@@ -524,7 +573,7 @@ function StyleFields({
             placeholder="property"
             onChange={(event) => setProperty(event.target.value)}
           />
-          {!addingColor ? (
+          {!addingSpecial ? (
             <input
               name="style-value"
               value={value}
@@ -540,6 +589,25 @@ function StyleFields({
           label="Value"
           value={value}
           colorTokens={colorTokens}
+          onCommit={(next) => setValue(next ?? '')}
+        />
+      ) : null}
+      {addingShadow ? (
+        <ShadowControl
+          name="style-add-value"
+          label="Value"
+          value={value}
+          shadowTokens={shadowTokens}
+          onCommit={(next) => setValue(next ?? '')}
+        />
+      ) : null}
+      {addingTypography ? (
+        <TypographyStyleControl
+          name="style-add-value"
+          label="Value"
+          property={property}
+          value={value}
+          catalogs={typographyCatalogs}
           onCommit={(next) => setValue(next ?? '')}
         />
       ) : null}
@@ -732,6 +800,17 @@ function TokensPanel({ session, snap }: { session: EditorSession; snap: EditorSn
   });
   const writingId = ctx.writingBreakpointId;
   const colorTokens = useMemo(() => colorTokenRefs(snap.design.tokens), [snap.design.tokens]);
+  const shadowTokens = useMemo(() => shadowTokenRefs(snap.design.tokens), [snap.design.tokens]);
+  const typographyCatalogs = useMemo<TypographyCatalogs>(
+    () => ({
+      fontRefs: projectFontRefs(snap.design.fonts),
+      fontFamilyTokens: fontFamilyTokenRefs(snap.design.tokens),
+      fontWeightTokens: fontWeightTokenRefs(snap.design.tokens),
+      dimensionTokens: dimensionTokenRefs(snap.design.tokens),
+      numberTokens: numberTokenRefs(snap.design.tokens),
+    }),
+    [snap.design.fonts, snap.design.tokens],
+  );
   const needle = query.trim().toLowerCase();
   const visible = needle ? tokens.filter((token) => token.path.includes(needle)) : tokens;
   let group = '';
@@ -771,6 +850,36 @@ function TokensPanel({ session, snap }: { session: EditorSession; snap: EditorSn
         const previous = shownValue === undefined ? token.value : shownValue;
         const colorString =
           token.type === 'color' && typeof previous === 'string' ? previous : null;
+        const shadowString =
+          token.type === 'shadow' && typeof previous === 'string' ? previous : null;
+        const typographyObject =
+          token.type === 'typography' && isTypographyValue(previous) ? previous : null;
+        const tokenLabel = `${token.path} · ${token.type}`;
+        const commitTokenValue = (next: string | null) => {
+          if (writingId && (next === null || next.trim() === '')) {
+            if (override !== undefined) {
+              resetTokenBreakpoint(session, snap, token.path, writingId);
+            }
+            return;
+          }
+          commitToken(session, snap, token.path, previous, next ?? '', writingId);
+        };
+        const commitTypographyValue = (next: Record<string, unknown> | null) => {
+          if (writingId && next === null) {
+            if (override !== undefined) {
+              resetTokenBreakpoint(session, snap, token.path, writingId);
+            }
+            return;
+          }
+          commitToken(
+            session,
+            snap,
+            token.path,
+            previous,
+            next === null ? '' : JSON.stringify(next),
+            writingId,
+          );
+        };
         return (
           <div key={token.path}>
             {heading ? <h3>{nextGroup}</h3> : null}
@@ -778,22 +887,31 @@ function TokensPanel({ session, snap }: { session: EditorSession; snap: EditorSn
               {colorString !== null ? (
                 <ColorControl
                   name={`token-${token.path}`}
-                  label={`${token.path} · ${token.type}`}
+                  label={tokenLabel}
                   value={text}
                   colorTokens={colorTokens}
-                  onCommit={(next) => {
-                    if (writingId && (next === null || next.trim() === '')) {
-                      if (override !== undefined) {
-                        resetTokenBreakpoint(session, snap, token.path, writingId);
-                      }
-                      return;
-                    }
-                    commitToken(session, snap, token.path, previous, next ?? '', writingId);
-                  }}
+                  onCommit={commitTokenValue}
+                />
+              ) : shadowString !== null ? (
+                <ShadowControl
+                  name={`token-${token.path}`}
+                  label={tokenLabel}
+                  value={text}
+                  shadowTokens={shadowTokens}
+                  onCommit={commitTokenValue}
+                />
+              ) : typographyObject !== null ? (
+                <TypographyControl
+                  namePrefix={`token-${token.path}`}
+                  label={tokenLabel}
+                  value={typographyObject}
+                  partial={writingId !== null && override !== undefined}
+                  catalogs={typographyCatalogs}
+                  onCommit={commitTypographyValue}
                 />
               ) : (
                 <TextControl
-                  label={`${token.path} · ${token.type}`}
+                  label={tokenLabel}
                   name={`token-${token.path}`}
                   value={text}
                   placeholder={

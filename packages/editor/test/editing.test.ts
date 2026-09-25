@@ -5,6 +5,11 @@ import specimenSection from '../../../examples/specimen-section.json';
 import {
   colorTokenRefs,
   dimensionTokenRefs,
+  fontFamilyTokenRefs,
+  fontWeightTokenRefs,
+  numberTokenRefs,
+  shadowTokenRefs,
+  typographyTokenRefs,
   dropParentId,
   emphasizeInsertLine,
   layerDropTarget,
@@ -98,6 +103,35 @@ describe('editing', () => {
       color: { ink: { $type: 'color', $value: '#111111' } },
     });
     expect(refs).toEqual(['{color.ink}']);
+  });
+
+  it('lists typed token refs for editors', () => {
+    const tree = {
+      space: { '4': { $type: 'dimension', $value: '16px' } },
+      color: { ink: { $type: 'color', $value: '#111111' } },
+      font: {
+        sans: { $type: 'fontFamily', $value: 'Inter' },
+        weight: { bold: { $type: 'fontWeight', $value: 700 } },
+      },
+      shadow: { md: { $type: 'shadow', $value: '{shadow.lg}' } },
+      type: {
+        body: {
+          $type: 'typography',
+          $value: {
+            fontFamily: '{font.sans}',
+            fontSize: '16px',
+            fontWeight: 400,
+            lineHeight: 1.5,
+          },
+        },
+      },
+      ratio: { tight: { $type: 'number', $value: 1.25 } },
+    };
+    expect(typographyTokenRefs(tree)).toEqual(['{type.body}']);
+    expect(shadowTokenRefs(tree)).toEqual(['{shadow.md}']);
+    expect(fontFamilyTokenRefs(tree)).toEqual(['{font.sans}']);
+    expect(fontWeightTokenRefs(tree)).toEqual(['{font.weight.bold}']);
+    expect(numberTokenRefs(tree)).toEqual(['{ratio.tight}']);
   });
 
   it('refuses placements the nesting rules do not allow', () => {
