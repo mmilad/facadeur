@@ -120,6 +120,10 @@ describe('editor shell', () => {
     const tag = host.querySelector('input[name="tag"]');
     expect(tag).toBeInstanceOf(HTMLInputElement);
     expect((tag as HTMLInputElement).value).toBe('button');
+    const layoutTab = host.querySelector('button[name="property-tab-layout"]');
+    await act(async () => {
+      layoutTab?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
     const direction = host.querySelector('select[name="layout-direction"]');
     expect(direction).toBeInstanceOf(HTMLSelectElement);
     expect((direction as HTMLSelectElement).value).toBe('row');
@@ -132,6 +136,12 @@ describe('editor shell', () => {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     });
     expect(session.getSnapshot().tool).toBe('select');
+
+    await act(async () => {
+      host!
+        .querySelector('button[name="property-tab-content"]')
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
 
     await act(async () => {
       session.execute({
@@ -223,8 +233,11 @@ describe('editor shell', () => {
     );
     const viewportButton = host.querySelector('button[name="edit-viewport"]');
     expect(viewportButton?.textContent).toContain('tablet · 768');
-    expect(host.textContent).toContain('Override bei 768');
 
+    const styleTab = host.querySelector('button[name="property-tab-style"]');
+    await act(async () => {
+      styleTab?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
     const padding = host.querySelector(
       'input[name="style-root-base-base-paddingInline"]',
     ) as HTMLInputElement;
@@ -235,6 +248,7 @@ describe('editor shell', () => {
     });
     expect(session.getSnapshot().editTarget).toBe('viewport');
     expect(padding.value).toBe('{space.5}');
+    expect(host.textContent).toContain('Override bei 768');
 
     const reset = [...host.querySelectorAll('.override-cue button')].find((button) =>
       button.textContent?.includes('Reset'),
