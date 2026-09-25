@@ -58,6 +58,8 @@ export interface FrameHost {
   /** Window inside the frame, for hit testing and layout. */
   contentWindow(): Window;
   setWidth(width: number): void;
+  /** Preview-only inset and alignment inside the iframe shell. Not part of the document. */
+  setPreviewChrome(options: { innerPaddingPx: number; contentAlign: 'start' | 'center' }): void;
   /** Grow the iframe to its content. Returns the applied height in CSS pixels. */
   syncHeight(): number;
   /** Insert the iframe and prepare its document. */
@@ -77,6 +79,7 @@ export function createFrameHost(options: FrameHostOptions): FrameHost {
   element.style.border = '0';
   element.style.width = `${options.width}px`;
   let width = options.width;
+  let previewChrome = { innerPaddingPx: 0, contentAlign: 'start' as 'start' | 'center' };
   let mounted = false;
   let destroyed = false;
   let observer: ResizeObserver | undefined;
@@ -116,6 +119,23 @@ export function createFrameHost(options: FrameHostOptions): FrameHost {
     style.id = SHELL_ID;
     style.textContent = FRAME_SHELL_CSS;
     head.append(style);
+  }
+
+  function applyPreviewChrome(frameDocument: Document): void {
+    const body = frameDocument.body;
+    if (!body) return;
+    const pad = previewChrome.innerPaddingPx;
+    body.style.boxSizing = 'border-box';
+    body.style.padding = pad > 0 ? `${pad}px` : '';
+    if (previewChrome.contentAlign === 'center') {
+      body.style.display = 'flex';
+      body.style.flexDirection = 'column';
+      body.style.alignItems = 'center';
+    } else {
+      body.style.display = '';
+      body.style.flexDirection = '';
+      body.style.alignItems = '';
+    }
   }
 
   function syncHeight(): number {
@@ -168,7 +188,17 @@ export function createFrameHost(options: FrameHostOptions): FrameHost {
       parent.append(element);
       mounted = true;
       ensureShell(contentDocument());
+      applyPreviewChrome(contentDocument());
       watch(contentDocument());
+    },
+    setPreviewChrome(options) {
+      previewChrome = {
+        innerPaddingPx: Math.max(0, Math.round(options.innerPaddingPx)),
+        contentAlign: options.contentAlign === 'center' ? 'center' : 'start',
+      };
+      if (!mounted || destroyed) return;
+      applyPreviewChrome(contentDocument());
+      syncHeight();
     },
     destroy() {
       if (destroyed) return;

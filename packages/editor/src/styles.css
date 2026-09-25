@@ -175,37 +175,62 @@ input {
   display: flex;
   flex-direction: column;
   flex: none;
+  box-sizing: border-box;
 }
 
-.viewport-label-slot {
-  position: relative;
-  height: calc(26px / var(--stage-scale, 1));
-  flex: none;
+.viewport-chrome {
+  display: flex;
+  flex-direction: column;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #f3ede3;
+  box-shadow:
+    0 0 0 1px rgba(48, 36, 22, 0.06),
+    0 16px 40px rgba(48, 36, 22, 0.1);
 }
 
-.viewport-label {
-  position: absolute;
-  left: 0;
-  bottom: calc(8px / var(--stage-scale, 1));
+.viewport-chrome-bar {
+  display: flex;
+  align-items: center;
+  min-height: calc(34px / var(--stage-scale, 1));
+  padding: calc(6px / var(--stage-scale, 1)) calc(12px / var(--stage-scale, 1));
+  border-bottom: calc(1px / var(--stage-scale, 1)) solid rgba(48, 36, 22, 0.08);
+  background: rgba(255, 252, 247, 0.92);
+}
+
+.viewport-chrome-title {
   margin: 0;
   font-size: calc(12px / var(--stage-scale, 1));
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted);
-  white-space: nowrap;
-  line-height: 1;
-  pointer-events: none;
-  user-select: none;
+  line-height: 1.2;
+}
+
+.viewport-chrome-body {
+  padding: calc(10px / var(--stage-scale, 1));
+  background: #ebe4d8;
+}
+
+.viewport-chrome-body.is-align-center {
+  display: flex;
+  justify-content: center;
+}
+
+.viewport-label-slot {
+  display: none;
+}
+
+.viewport-label {
+  display: none;
 }
 
 .viewport-screen {
-  border-radius: 16px;
+  border-radius: 12px;
   overflow: hidden;
   background: var(--white);
-  box-shadow:
-    0 0 0 1px rgba(48, 36, 22, 0.08),
-    0 22px 50px rgba(48, 36, 22, 0.12);
+  box-shadow: 0 0 0 calc(1px / var(--stage-scale, 1)) rgba(48, 36, 22, 0.08);
   line-height: 0;
 }
 
@@ -315,8 +340,52 @@ input {
   display: none;
 }
 
-.viewport-frame.is-focus .viewport-label {
+.viewport-frame.is-focus .viewport-chrome-title {
   color: var(--accent);
+}
+
+.viewport-frame.is-viewport-selected .viewport-chrome {
+  box-shadow:
+    0 0 0 calc(2px / var(--stage-scale, 1)) var(--accent),
+    0 16px 40px rgba(48, 36, 22, 0.12);
+}
+
+.viewport-layers {
+  margin-bottom: 10px;
+}
+
+.side-subhead {
+  margin: 0 0 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.viewport-layer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 6px;
+}
+
+.viewport-layer .layer-type {
+  text-transform: uppercase;
+}
+
+.viewport-add {
+  width: 100%;
+  justify-content: center;
+}
+
+.viewport-options .viewport-breakpoint-row {
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+
+.viewport-breakpoint-actions {
+  margin-top: 4px;
 }
 
 .viewport-edit {
