@@ -3,6 +3,7 @@ import { toFlat, type DocumentFile } from '@facadeur/core';
 import specimenPage from '../../../examples/specimen-page.json';
 import specimenSection from '../../../examples/specimen-section.json';
 import {
+  colorTokenRefs,
   dimensionTokenRefs,
   dropParentId,
   emphasizeInsertLine,
@@ -89,6 +90,14 @@ describe('editing', () => {
       color: { ink: { $type: 'color', $value: '#111111' } },
     });
     expect(refs).toEqual(['{space.4}']);
+  });
+
+  it('lists color tokens and no others', () => {
+    const refs = colorTokenRefs({
+      space: { '4': { $type: 'dimension', $value: '16px' } },
+      color: { ink: { $type: 'color', $value: '#111111' } },
+    });
+    expect(refs).toEqual(['{color.ink}']);
   });
 
   it('refuses placements the nesting rules do not allow', () => {

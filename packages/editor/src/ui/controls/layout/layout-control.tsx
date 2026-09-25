@@ -14,7 +14,7 @@ import {
 import '../../form/form.css';
 import { dimensionTokenOptions } from '../token-options.js';
 import { AxisSizeEditor } from './axis-size-editor.js';
-import { SpacingEditor } from './spacing-field.js';
+import { SpacingControl } from '../spacing/index.js';
 import type { LayoutControlValue } from './value.js';
 import {
   alignLayoutPatch,
@@ -82,7 +82,7 @@ export function LayoutControl({
             />
           </Field>
           {afterField?.('gap')}
-          <SpacingEditor
+          <SpacingControl
             legend="Padding"
             namePrefix="layout-padding"
             spacing={value.padding}
@@ -132,7 +132,7 @@ export function LayoutControl({
         </Field>
         {afterField?.('margin')}
         {margin && typeof margin === 'object' ? (
-          <SpacingEditor
+          <SpacingControl
             legend="Margin sides"
             namePrefix="layout-margin"
             spacing={margin}
