@@ -47,7 +47,7 @@ import { editorBreakpoints, viewportEditContext } from '../viewport-edit.js';
 import { TextControl } from './fields.js';
 import { OverrideCue, ViewportEditBar } from './viewport-bar.js';
 
-export type InspectorPanel = 'properties' | 'tokens' | 'fonts';
+export type EditorSurface = 'properties' | 'tokens' | 'fonts';
 
 const TOOLS = [
   ['select', 'Select', 'V'],
@@ -66,21 +66,21 @@ export function ToolBar({
   kind: string;
 }) {
   return (
-    <div className="tool-row" role="toolbar" aria-label="Tools">
+    <div className="topbar-tools" role="toolbar" aria-label="Tools">
       {TOOLS.map(([id, label, key]) => {
         const allowed = id === 'select' || toolAllowed(kind, id);
         return (
           <button
             key={id}
             type="button"
-            className={tool === id ? 'tool is-active' : 'tool'}
+            className={tool === id ? 'tool tool-compact is-active' : 'tool tool-compact'}
             aria-pressed={tool === id}
+            aria-label={label}
             disabled={!allowed}
-            title={allowed ? undefined : refusalMessage(kind, id)}
+            title={allowed ? `${label} (${key})` : refusalMessage(kind, id)}
             onClick={() => session.setTool(id)}
           >
-            <span>{label}</span>
-            <span className="tool-key">{key}</span>
+            {key}
           </button>
         );
       })}
@@ -288,43 +288,26 @@ function LayerRows({
   );
 }
 
-export function Inspector({
+export function RightRail({
   session,
   snap,
-  panel,
-  onPanel,
+  surface,
 }: {
   session: EditorSession;
   snap: EditorSnapshot;
-  panel: InspectorPanel;
-  onPanel: (panel: InspectorPanel) => void;
+  surface: EditorSurface;
 }) {
+  const showViewportBar = surface === 'properties' || surface === 'tokens';
+  const railLabel =
+    surface === 'properties' ? 'Inspector' : surface === 'tokens' ? 'Tokens' : 'Fonts';
   return (
-    <section className="side-block side-block-grow inspector" aria-label="Inspector">
-      <div className="tabs" role="tablist">
-        {(
-          [
-            ['properties', 'Properties'],
-            ['tokens', 'Tokens'],
-            ['fonts', 'Schriften'],
-          ] as const
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            className={panel === id ? 'tab is-active' : 'tab'}
-            aria-selected={panel === id}
-            onClick={() => onPanel(id)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+    <section className="side-block side-block-grow inspector" aria-label={railLabel}>
+      {surface !== 'properties' ? <h2>{railLabel}</h2> : null}
+      {showViewportBar ? <ViewportEditBar session={session} snap={snap} /> : null}
       <div className="side-scroll">
-        {panel === 'properties' ? <Properties session={session} snap={snap} /> : null}
-        {panel === 'tokens' ? <TokensPanel session={session} snap={snap} /> : null}
-        {panel === 'fonts' ? <FontsPanel session={session} snap={snap} /> : null}
+        {surface === 'properties' ? <Properties session={session} snap={snap} /> : null}
+        {surface === 'tokens' ? <TokensPanel session={session} snap={snap} /> : null}
+        {surface === 'fonts' ? <FontsPanel session={session} snap={snap} /> : null}
       </div>
     </section>
   );
@@ -337,7 +320,6 @@ function Properties({ session, snap }: { session: EditorSession; snap: EditorSna
   if (!node) {
     return (
       <div className="properties">
-        <ViewportEditBar session={session} snap={snap} />
         <p className="inspector-empty">Select a layer or an element on the stage.</p>
         {showDefinitions ? (
           <>
@@ -350,7 +332,6 @@ function Properties({ session, snap }: { session: EditorSession; snap: EditorSna
   }
   return (
     <div className="properties">
-      <ViewportEditBar session={session} snap={snap} />
       <p className="inspector-id">{node.id}</p>
       <dl className="kv">
         <dt>Type</dt>
@@ -689,7 +670,6 @@ function TokensPanel({ session, snap }: { session: EditorSession; snap: EditorSn
   let group = '';
   return (
     <div className="stack">
-      <ViewportEditBar session={session} snap={snap} />
       <div className="panel-head">
         <p className="meta">
           {writingId

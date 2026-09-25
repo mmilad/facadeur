@@ -61,7 +61,7 @@ describe('editor shell', () => {
     expect(host.querySelector('[data-asset-id="card"]')).toBeInstanceOf(HTMLButtonElement);
     expect(host.querySelector('[data-asset-id="specimen"]')).toBeInstanceOf(HTMLButtonElement);
     expect(host.querySelector('[data-design="tokens"]')).toBeInstanceOf(HTMLButtonElement);
-    expect(host.querySelector('[data-design="fonts"]')?.textContent).toContain('Schriften');
+    expect(host.querySelector('[data-design="fonts"]')?.textContent).toContain('Fonts');
     const sectionRow = host.querySelector('[data-asset-id="specimen-section"]');
     expect(sectionRow).toBeInstanceOf(HTMLButtonElement);
     expect((sectionRow as HTMLButtonElement).draggable).toBe(true);
@@ -84,9 +84,7 @@ describe('editor shell', () => {
     });
     expect(session.getSnapshot().drag).toBeNull();
 
-    const frameTool = [...host.querySelectorAll('button.tool')].find((button) =>
-      button.textContent?.includes('Frame'),
-    );
+    const frameTool = host.querySelector('.topbar-tools button.tool[aria-label="Frame"]');
     expect(frameTool).toBeInstanceOf(HTMLButtonElement);
     expect((frameTool as HTMLButtonElement).disabled).toBe(true);
 

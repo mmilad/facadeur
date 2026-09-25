@@ -1,5 +1,20 @@
 # facadeur editor controls — alignment draft
 version: 1
+
+shell:
+  header:
+    tools: Select, Frame, Text, Image as compact icon buttons (keyboard shortcuts unchanged)
+  left_rail:
+    - project_tree: Design (Tokens, Fonts) then Atoms / Components / Sections / Pages
+    - layers: below the tree in the same column
+  right_rail:
+    default: Properties inspector only (no Tokens / Fonts tabs)
+    design_surface: Tokens or Fonts open from the left Design tree; same column as the inspector, with a section heading
+  viewport_context:
+    component: ViewportEditBar
+    placement: RightRail above Properties and Tokens scroll content (not Fonts)
+    notes: Base vs viewport override editing; token overrides use OverrideCue per row
+
 data_flow:
   read: EditorSnapshot # document + design + selection + viewport edit context
   write_document: session.execute(Command)
@@ -145,7 +160,7 @@ controls:
     value_from: focusViewportId + editTarget
     catalogs: [breakpoints]
     emit: session.setFocusViewport / setEditTarget
-    notes: strip above inspector; not a document style command
+    notes: ViewportEditBar in RightRail above Properties and Tokens; not a document style command
 
 non_goals_for_controls:
   - owning Yjs / DocumentStore

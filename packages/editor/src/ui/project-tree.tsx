@@ -2,7 +2,7 @@ import { defaultKinds, defaultNestingRules, type DefaultKind } from '@facadeur/c
 import { useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from 'react';
 import { blankAsset } from '../new-asset.js';
 import type { EditorSession, EditorSnapshot } from '../session.js';
-import type { InspectorPanel } from './panels.js';
+import type { EditorSurface } from './panels.js';
 
 const KIND_LABEL: Record<DefaultKind, string> = {
   atom: 'Atoms',
@@ -13,21 +13,21 @@ const KIND_LABEL: Record<DefaultKind, string> = {
 
 const DESIGN_ITEMS = [
   { id: 'tokens' as const, label: 'Tokens', keys: ['tokens', 'token'] },
-  { id: 'fonts' as const, label: 'Schriften', keys: ['schriften', 'schrift', 'fonts', 'font'] },
+  { id: 'fonts' as const, label: 'Fonts', keys: ['schriften', 'schrift', 'fonts', 'font'] },
 ];
 
 export function ProjectTree({
   session,
   snap,
-  panel,
+  surface,
   onOpenAsset,
   onOpenDesign,
 }: {
   session: EditorSession;
   snap: EditorSnapshot;
-  panel: InspectorPanel;
+  surface: EditorSurface;
   onOpenAsset: (id: string) => void;
-  onOpenDesign: (panel: 'tokens' | 'fonts') => void;
+  onOpenDesign: (surface: 'tokens' | 'fonts') => void;
 }) {
   const [query, setQuery] = useState('');
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -111,9 +111,9 @@ export function ProjectTree({
               <button
                 key={item.id}
                 type="button"
-                className={panel === item.id ? 'asset is-active' : 'asset'}
+                className={surface === item.id ? 'asset is-active' : 'asset'}
                 data-design={item.id}
-                aria-pressed={panel === item.id}
+                aria-pressed={surface === item.id}
                 onClick={() => onOpenDesign(item.id)}
               >
                 <span className="asset-name">{item.label}</span>
@@ -192,7 +192,7 @@ function TreeGroup({
         </button>
         {onCreate ? (
           <button type="button" className="tree-create" name={`create-${id}`} onClick={onCreate}>
-            Neu anlegen
+            New
           </button>
         ) : null}
       </div>
