@@ -420,7 +420,7 @@ function VariantStyleGroup({
   return (
     <div className="stack">
       {axis.values.map((value) => (
-        <details key={value} className="fold">
+        <details key={value} className="fold" open>
           <summary>
             {axis.name} = {value}
           </summary>

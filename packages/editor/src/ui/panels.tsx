@@ -518,16 +518,16 @@ function Properties({ session, snap }: { session: EditorSession; snap: EditorSna
             />
           ))
         : null}
-      <LayoutPanel session={session} snap={snap} node={node} />
-      {node.type !== 'instance' ? <StyleFields session={session} node={node} /> : null}
-      {node.type !== 'instance' ? <NodeBindings session={session} snap={snap} node={node} /> : null}
-      {node.type !== 'instance' && node.id !== snap.document.rootId ? (
-        <NodeVariantStyles session={session} snap={snap} nodeId={node.id} />
-      ) : null}
       {node.type === 'instance' ? (
         <InstanceFields session={session} node={node} snap={snap} />
       ) : null}
       {showDefinitions ? <ComponentDefinitions session={session} snap={snap} /> : null}
+      {node.type !== 'instance' ? <NodeBindings session={session} snap={snap} node={node} /> : null}
+      {node.type !== 'instance' && node.id !== snap.document.rootId ? (
+        <NodeVariantStyles session={session} snap={snap} nodeId={node.id} />
+      ) : null}
+      {node.type !== 'instance' ? <StyleFields session={session} node={node} /> : null}
+      <LayoutPanel session={session} snap={snap} node={node} />
     </div>
   );
 }
