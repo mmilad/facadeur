@@ -79,4 +79,36 @@ describe('viewport board', () => {
     store.destroy();
     parent.remove();
   });
+
+  it('updates design CSS without rebuilding frames when breakpoints stay put', async () => {
+    const store = createDocumentStore(section);
+    const parent = document.createElement('div');
+    document.body.append(parent);
+    const breakpoints = [
+      { id: 'mobile', minWidth: 375 },
+      { id: 'tablet', minWidth: 768 },
+      { id: 'desktop', minWidth: 1440 },
+    ];
+    const board = createViewportBoard({
+      parent,
+      documents: [section],
+      page: section,
+      stores: [store],
+      design: { breakpoints, tokens: { color: { $type: 'color', ink: { $value: '#112233' } } } },
+    });
+    const first = board.frames()[0]?.host.element;
+    board.setDesign({
+      breakpoints,
+      tokens: { color: { $type: 'color', ink: { $value: '#abcdef' } } },
+    });
+    await Promise.resolve();
+    expect(board.frames()[0]?.host.element).toBe(first);
+    const css = [...(board.frames()[0]?.styles.controller.sheet.cssRules ?? [])]
+      .map((rule) => rule.cssText)
+      .join('\n');
+    expect(css).toContain('#abcdef');
+    board.destroy();
+    store.destroy();
+    parent.remove();
+  });
 });

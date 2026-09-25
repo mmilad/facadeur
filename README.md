@@ -4,25 +4,26 @@ Design-system foundation: a JSON document rendered as real DOM on a zoomable sta
 
 A document has a kind (`atom`, `component`, `section`, or `page`) and a tree of `frame`, `text`, `image`, and `instance` nodes. The HTML tag is a property. Instances point at another document and may only override fields and variants. Pages contain sections. The file on disk is nested JSON; the editor's store keeps a flat map of nodes and runs every change as a command.
 
-This repository is the M4 foundation: document model, Yjs store, tokens, fonts, a live style engine, a DOM renderer that patches nodes in place, and viewport frames. It is not the product UI yet. The stage paints the specimen once per breakpoint.
+This repository is the M5 editor: document model, Yjs store, tokens, fonts, a live style engine, a DOM renderer that patches nodes in place, viewport frames, and a React shell around that stage. The specimen page is the document that opens first.
 
-## Run the stage
+## Run the editor
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-Open the URL Vite prints (http://localhost:5173). From the page you can:
+Open the URL Vite prints (http://localhost:5173). The specimen page is open in the Pages workspace. From there you can:
 
+- Switch workspace (Atoms, Components, Sections, Pages). The asset list filters to that kind and opens a document of that kind. Nesting rules still apply when a command would break them.
 - Three frames sit side by side: mobile 375, tablet 768, desktop 1440. Each iframe is that wide, so real media queries change type size and, on desktop, the card row.
-- Scroll over the stage, including over a frame, to zoom toward the cursor.
-- Drag to pan, including over a frame. The dot grid moves and zooms with the stage.
-- Click a button, a card, a title, or a label to select that node. The same id is outlined in every frame.
-- Hover shows the click target in the frame under the pointer.
-- Read the selected id, fields, and variants in the sidebar.
-- Click empty background, or press Escape, to clear the selection.
-- Use **Reset view** to fit the frames again.
+- Scroll over the stage, including over a frame, to zoom toward the cursor. Drag to pan. The dot grid moves with the stage.
+- Click an element to select the node that belongs to the open document. A click inside an instance selects that instance. The same id is outlined in every frame. The layers list selects the same node.
+- Edit name, tag, text, image source, attributes, style overrides, instance fields and variants, and a root field's default in the properties panel. Each edit is a command.
+- Change a project token or font. Every viewport picks up the new CSS variables. **Save design** writes that document.
+- Undo with Ctrl+Z (Cmd+Z on macOS) and redo with Ctrl+Shift+Z.
+- **Open** reads a document JSON (File System Access API, or a file input). **Save** writes the open document back, or downloads it when the browser has neither the file API nor the dev server.
+- Hover shows the click target in the frame under the pointer. Escape clears the selection. **Reset view** fits the frames again.
 
 ## Checks
 
@@ -42,14 +43,14 @@ packages/store-yjs      Yjs DocumentStore, one transaction per command, undo/red
 packages/tokens         DTCG parser, reference resolution, CSS custom properties, project template
 packages/style-engine   live CSSStyleRules, component style blocks, auto layout
 packages/renderer-dom   document JSON to DOM, targeted updates from the store
-packages/editor         Vite stage (pan, zoom, viewport iframes, selection)
+packages/editor         Vite + React shell (stage, layers, properties, assets, tokens, fonts)
 examples/               specimen page, section, atoms, and examples/project-template.json
 schema/                 generated JSON Schema
 docs/dsl.md             the document format
 docs/plan.md            milestones
 ```
 
-The stage renders the specimen: a page whose only child is a section instance, which instances the atoms and components. Each viewport frame has its own renderer and style engine, all subscribed to the same document store. Styles come from each document's style block and the default token set. React panels are a later milestone. `examples/project-template.json` is the optional starter (colors, spacing, radius, shadows, Inter, type scale, breakpoints).
+The stage renders the open document: the specimen is a page whose only child is a section instance, which instances the atoms and components. Each viewport frame has its own renderer and style engine, subscribed to the asset stores. Project tokens and fonts live in a design store seeded from `examples/project-template.json` and are pushed into every frame with `setDesign`. Opening an atom, component, or section paints that document's root; a page keeps the root as the unpainted canvas.
 
 To print the default stylesheet:
 

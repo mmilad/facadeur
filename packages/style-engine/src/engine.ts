@@ -65,6 +65,7 @@ export function createStyleEngine(
       const compileOptions: CompileOptions = {
         address: options.address ?? stored?.address ?? 'instance',
         breakpoints: options.breakpoints ?? stored?.breakpoints ?? breakpoints,
+        paintRoot: options.paintRoot ?? stored?.paintRoot,
       };
       addresses.set(document.id, compileOptions);
       replaceDocument(sheet(), byDocument, document.id, compileDocument(document, compileOptions));

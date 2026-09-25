@@ -163,4 +163,19 @@ describe('renderer', () => {
     expect(body.querySelector('[data-id="title"]')?.textContent).toBe('After');
     iframe.remove();
   });
+
+  it('paints an atom root only when paintRoot is set', () => {
+    const documents = examples();
+    const button = documents.find((document) => document.id === 'button');
+    if (!button) throw new Error('missing button');
+    const hidden = document.createElement('div');
+    renderDocument(button, documents, hidden);
+    expect(hidden.querySelector('[data-id="root"]')).toBeNull();
+
+    const shown = document.createElement('div');
+    renderDocument(button, documents, shown, { paintRoot: true });
+    const root = shown.querySelector('[data-id="root"]');
+    expect(root?.tagName).toBe('BUTTON');
+    expect(root?.textContent).toBe('Button');
+  });
 });

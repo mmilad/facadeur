@@ -21,6 +21,8 @@ export interface ViewportBoard {
   /** The row of frames. Fit the stage to this element. */
   readonly element: HTMLElement;
   frames(): readonly ViewportFrame[];
+  /** Replace the project tokens, fonts, and breakpoint fallback, then repaint CSS. */
+  setDesign(design: DesignInput): void;
   syncHeights(): void;
   /** Resolves after each frame's fonts settle, then measures heights again. */
   whenFontsReady(): Promise<void>;
@@ -33,12 +35,19 @@ export function createViewportBoard(options: {
   page: DocumentFile;
   stores: readonly DocumentStore[];
   design: DesignInput;
+  /**
+   * Paint the open document's root. Off for pages, where the root frame is the
+   * canvas and only its children are content.
+   */
+  paintRoot?: boolean;
   /** After a height sync or a breakpoint rebuild. */
   onLayout?: () => void;
 }): ViewportBoard {
   const parent = options.parent;
   const stores = options.stores;
   const pageId = options.page.id;
+  const paintRoot = options.paintRoot === true;
+  let design = options.design;
   const row = parent.ownerDocument.createElement('div');
   row.className = 'viewport-frames';
   parent.append(row);
@@ -66,7 +75,7 @@ export function createViewportBoard(options: {
   function breakpointsNow(): Breakpoint[] {
     const page = pageDocument();
     const listed = page.settings?.breakpoints;
-    return activeBreakpoints(listed?.length ? listed : options.design.breakpoints);
+    return activeBreakpoints(listed?.length ? listed : design.breakpoints);
   }
 
   function destroyFrames(): void {
@@ -111,11 +120,12 @@ export function createViewportBoard(options: {
       host.mount(screen);
 
       const styles = createStyleEngine(host.contentDocument());
-      styles.setDesign(options.design);
+      styles.setDesign(design);
       const renderer = createDomRenderer({
         parent: host.contentDocument().body,
         catalog: documents,
         styles,
+        paintRoot,
       });
       renderer.mount(page);
       for (const store of stores) renderer.connect(store);
@@ -164,6 +174,11 @@ export function createViewportBoard(options: {
     element: row,
     frames() {
       return frames;
+    },
+    setDesign(next) {
+      design = next;
+      for (const frame of frames) frame.styles.setDesign(design);
+      scheduleRebuild();
     },
     syncHeights,
     async whenFontsReady() {

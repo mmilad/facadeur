@@ -1,29 +1,31 @@
-import type { RenderedNode } from '@facadeur/renderer-dom';
 import { overlayBox, pointInFrame, type OverlayBox } from './geometry.js';
+import { isEditableTarget } from './keyboard.js';
 import type { ViewportFrame } from './viewports.js';
 
 const HANDLES = ['nw', 'ne', 'sw', 'se'];
 
 export interface SelectionController {
-  select: (id: string) => void;
-  clear: () => void;
+  /** Move the outline to a rendered id. Does not notify `onSelect`. */
+  show: (renderedId: string | null) => void;
   /** Node under the pointer, if it sits inside a viewport frame. */
   hitAt: (clientX: number, clientY: number) => { id: string } | null;
   hoverAt: (clientX: number, clientY: number) => void;
   clearHover: () => void;
   reposition: () => void;
+  destroy: () => void;
 }
 
 export function createSelection({
   stage,
-  inspector,
   getScale,
   frames,
+  onSelect,
 }: {
   stage: HTMLElement;
-  inspector: HTMLElement;
   getScale: () => number;
   frames: () => readonly ViewportFrame[];
+  /** Click and Escape. `show` does not call this. */
+  onSelect?: (renderedId: string | null) => void;
 }): SelectionController {
   const overlay = document.createElement('div');
   overlay.className = 'overlay-layer';
@@ -39,22 +41,10 @@ export function createSelection({
   let hoverId: string | null = null;
   let hoverFrameId: string | null = null;
 
-  function select(id: string) {
-    const record = recordFor(id);
-    if (!record) {
-      clear();
-      return;
-    }
-    selectedId = id;
-    if (hoverId === id) clearHover();
+  function show(renderedId: string | null) {
+    selectedId = renderedId;
+    if (hoverId && hoverId === renderedId) clearHover();
     placeBoxes();
-    renderInspector(record);
-  }
-
-  function clear() {
-    selectedId = null;
-    for (const box of selectionBoxes) box.hidden = true;
-    renderInspector(null);
   }
 
   function hitAt(clientX: number, clientY: number): { id: string } | null {
@@ -128,14 +118,6 @@ export function createSelection({
     place(hover, boxFor(node, frame, stage.getBoundingClientRect(), getScale() || 1));
   }
 
-  function recordFor(id: string): RenderedNode | undefined {
-    for (const frame of frames()) {
-      const record = frame.renderer.records.get(id);
-      if (record) return record;
-    }
-    return undefined;
-  }
-
   function frameUnder(clientX: number, clientY: number): ViewportFrame | undefined {
     const scale = getScale() || 1;
     return frames().find((frame) => {
@@ -144,19 +126,24 @@ export function createSelection({
     });
   }
 
-  window.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') clear();
-  });
+  function onKey(event: KeyboardEvent) {
+    if (event.key !== 'Escape' || isEditableTarget(event.target)) return;
+    show(null);
+    onSelect?.(null);
+  }
 
-  renderInspector(null);
+  window.addEventListener('keydown', onKey);
 
   return {
-    select,
-    clear,
+    show,
     hitAt,
     hoverAt,
     clearHover,
     reposition: placeBoxes,
+    destroy() {
+      window.removeEventListener('keydown', onKey);
+      overlay.remove();
+    },
   };
 
   function selectionBox(index: number): HTMLDivElement {
@@ -173,45 +160,6 @@ export function createSelection({
     overlay.append(box);
     selectionBoxes[index] = box;
     return box;
-  }
-
-  function renderInspector(record: RenderedNode | null) {
-    inspector.replaceChildren();
-    if (!record) {
-      const empty = document.createElement('p');
-      empty.className = 'inspector-empty';
-      empty.textContent = 'Nothing selected. Click an element in a viewport.';
-      inspector.append(empty);
-      return;
-    }
-
-    const idEl = document.createElement('p');
-    idEl.className = 'inspector-id';
-    idEl.textContent = record.id;
-    inspector.append(idEl);
-
-    const meta = document.createElement('dl');
-    meta.className = 'kv';
-    addRow(meta, 'Type', record.nodeType);
-    addRow(meta, 'Tag', record.tag);
-    if (record.name) addRow(meta, 'Name', record.name);
-    if (record.component) addRow(meta, 'Component', record.component);
-    if (record.ownerId) addRow(meta, 'Inside', record.ownerId);
-    if (record.text) addRow(meta, 'Text', record.text);
-    inspector.append(meta);
-
-    if (record.fields && Object.keys(record.fields).length) {
-      inspector.append(sectionTitle('Fields'));
-      inspector.append(objectList(record.fields));
-    }
-    if (record.variants && Object.keys(record.variants).length) {
-      inspector.append(sectionTitle('Variants'));
-      inspector.append(objectList(record.variants));
-    }
-    if (record.nodeType !== 'instance' && Object.keys(record.attributes).length) {
-      inspector.append(sectionTitle('Attributes'));
-      inspector.append(objectList(record.attributes));
-    }
   }
 }
 
@@ -251,27 +199,4 @@ function place(el: HTMLElement, box: OverlayBox) {
 function byId(id: string): string {
   const escaped = String(id).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
   return `[data-id="${escaped}"]`;
-}
-
-function sectionTitle(text: string): HTMLHeadingElement {
-  const heading = document.createElement('h3');
-  heading.textContent = text;
-  return heading;
-}
-
-function objectList(data: Record<string, unknown>): HTMLDListElement {
-  const list = document.createElement('dl');
-  list.className = 'kv';
-  for (const [key, value] of Object.entries(data)) {
-    addRow(list, key, value == null ? '' : String(value));
-  }
-  return list;
-}
-
-function addRow(list: HTMLDListElement, key: string, value: string) {
-  const dt = document.createElement('dt');
-  dt.textContent = key;
-  const dd = document.createElement('dd');
-  dd.textContent = value;
-  list.append(dt, dd);
 }
