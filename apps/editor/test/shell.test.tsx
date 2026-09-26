@@ -195,6 +195,39 @@ describe('editor shell', () => {
     expect(resetView).toBeInstanceOf(HTMLButtonElement);
   });
 
+  it('shows unsaved badges for document and design edits', async () => {
+    const session: EditorSession = createEditorSession({
+      documents,
+      design: createProjectTemplateDocument(),
+    });
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => {
+      root?.render(<App session={session} />);
+    });
+
+    expect(host.querySelector('[data-unsaved="document"]')).toBeNull();
+    expect(host.querySelector('[data-unsaved="design"]')).toBeNull();
+
+    await act(async () => {
+      session.openAsset('specimen-section');
+      session.execute({ type: 'setProp', nodeId: 'heading', prop: 'text', value: 'Dirty' });
+    });
+    expect(host.querySelector('[data-unsaved="document"]')).toBeTruthy();
+    expect(host.querySelector('[data-unsaved="document"]')?.textContent).toContain('Document');
+    expect(host.querySelector('[data-unsaved="design"]')).toBeNull();
+
+    await act(async () => {
+      session.executeDesign({
+        type: 'setToken',
+        path: 'color.accent.default',
+        token: { $value: '#abcdef' },
+      });
+    });
+    expect(host.querySelector('[data-unsaved="design"]')?.textContent).toContain('Design');
+  });
+
   it('searches the tree, opens design domains on the stage, and creates an asset', async () => {
     const session: EditorSession = createEditorSession({
       documents,

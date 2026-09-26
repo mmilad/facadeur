@@ -4,12 +4,7 @@ import { createId, findParent } from '@facadeur/core';
 import { placementAllowed, refusalMessage, toolAllowed } from '../../domain/editing.js';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import {
-  documentToJson,
-  openJsonFile,
-  parseDocumentText,
-  saveJsonFile,
-} from '../../domain/files.js';
+import { openJsonFile, parseDocumentText } from '../../domain/files.js';
 import { isEditableTarget } from '../../domain/keyboard.js';
 import type { EditorSession } from '../../domain/session.js';
 import { isDesignDomain, type EditorSurface } from '../sidebar/design/design-domain.js';
@@ -20,6 +15,7 @@ import { RightRail } from '../sidebar/properties/RightRail.js';
 import { StageCanvas } from '../stage/StageCanvas.js';
 import { ResizableInspector } from './ResizableInspector.js';
 import { ToolBar } from './ToolBar.js';
+import { UnsavedIndicator } from './UnsavedIndicator.js';
 import { ZoomControls } from './ZoomControls.js';
 
 const SURFACE_PARAM = 'surface';
@@ -84,10 +80,16 @@ export function EditorShell({ session }: { session: EditorSession }) {
         <button type="button" className="text-button" onClick={() => session.fit()}>
           Reset view
         </button>
+        <UnsavedIndicator documentDirty={snap.documentDirty} designDirty={snap.designDirty} />
         <button type="button" className="text-button" onClick={() => void onOpen(session)}>
           Open
         </button>
-        <button type="button" className="text-button" onClick={() => void onSave(session)}>
+        <button
+          type="button"
+          className="text-button"
+          data-save="document"
+          onClick={() => void session.saveOpenDocument()}
+        >
           Save
         </button>
       </header>
@@ -214,22 +216,5 @@ async function onOpen(session: EditorSession) {
     session.setNotice(`Opened ${opened.name}`);
   } catch (error) {
     session.setNotice(error instanceof Error ? error.message : 'Could not open the file', 'error');
-  }
-}
-
-async function onSave(session: EditorSession) {
-  const snap = session.getSnapshot();
-  try {
-    const result = await saveJsonFile({
-      filename: session.filenameFor(snap.openId),
-      text: documentToJson(snap.document),
-      handle: session.fileHandle(snap.openId),
-    });
-    if (result.handle) session.rememberHandle(snap.openId, result.handle);
-    const verb = result.via === 'download' ? 'Downloaded' : 'Saved';
-    session.setNotice(`${verb} ${session.filenameFor(snap.openId)}`);
-  } catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') return;
-    session.setNotice(error instanceof Error ? error.message : 'Could not save', 'error');
   }
 }

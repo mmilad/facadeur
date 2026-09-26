@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import * as files from '../src/domain/files.js';
 import { readTokenTree, type DocumentFile, validateCatalog } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import button from '../../../examples/button.json';
@@ -121,5 +122,61 @@ describe('editor session', () => {
     ]);
     expect(editor.filenameFor('specimen')).toBe('specimen-page.json');
     expect(editor.filenameFor('badge')).toBe('badge.json');
+  });
+
+  it('tracks document and design dirty flags separately', () => {
+    const editor = session();
+    expect(editor.getSnapshot().documentDirty).toBe(false);
+    expect(editor.getSnapshot().designDirty).toBe(false);
+
+    editor.openAsset('specimen-section');
+    editor.execute({ type: 'setProp', nodeId: 'heading', prop: 'text', value: 'After' });
+    expect(editor.getSnapshot().documentDirty).toBe(true);
+    expect(editor.getSnapshot().designDirty).toBe(false);
+
+    editor.executeDesign({
+      type: 'setToken',
+      path: 'color.accent.default',
+      token: { $value: '#112233' },
+    });
+    expect(editor.getSnapshot().documentDirty).toBe(true);
+    expect(editor.getSnapshot().designDirty).toBe(true);
+
+    editor.undo();
+    expect(editor.getSnapshot().designDirty).toBe(false);
+    expect(editor.getSnapshot().documentDirty).toBe(true);
+  });
+
+  it('clears dirty after a successful save', async () => {
+    vi.spyOn(files, 'saveJsonFile').mockResolvedValue({ via: 'dev' });
+    const editor = session();
+    editor.openAsset('specimen-section');
+    editor.execute({ type: 'setProp', nodeId: 'heading', prop: 'text', value: 'Saved text' });
+    expect(editor.getSnapshot().documentDirty).toBe(true);
+
+    await editor.saveOpenDocument();
+    expect(editor.getSnapshot().documentDirty).toBe(false);
+
+    editor.executeDesign({
+      type: 'setToken',
+      path: 'color.accent.default',
+      token: { $value: '#445566' },
+    });
+    expect(editor.getSnapshot().designDirty).toBe(true);
+    await editor.saveDesign();
+    expect(editor.getSnapshot().designDirty).toBe(false);
+    vi.restoreAllMocks();
+  });
+
+  it('marks new assets dirty until saved', () => {
+    const editor = session();
+    editor.loadDocument({
+      version: 1,
+      id: 'badge',
+      name: 'Badge',
+      kind: 'atom',
+      root: { id: 'root', type: 'text', tag: 'span', text: 'New' },
+    });
+    expect(editor.getSnapshot().documentDirty).toBe(true);
   });
 });

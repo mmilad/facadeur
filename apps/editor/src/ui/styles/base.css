@@ -132,3 +132,22 @@ input {
   opacity: 0.45;
   cursor: default;
 }
+
+.unsaved-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.unsaved-badge {
+  border: 1px solid #d4a574;
+  background: #fff4e8;
+  color: #7a4518;
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
