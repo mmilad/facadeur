@@ -69,7 +69,11 @@ export function PropertiesPanel({
       {primaryTab === 'content' ? (
         <div role="tabpanel" className="property-panel">
           {!node ? (
-            <p className="inspector-empty">Select a layer or an element on the stage.</p>
+            showDefinitions ? (
+              <ComponentFields session={session} snap={snap} />
+            ) : (
+              <p className="inspector-empty">Select a layer or an element on the stage.</p>
+            )
           ) : (
             <ContentPanel
               session={session}
@@ -137,10 +141,7 @@ export function PropertiesPanel({
         <div role="tabpanel" className="property-panel">
           {!node ? (
             showDefinitions ? (
-              <>
-                <ComponentFields session={session} snap={snap} />
-                <ComponentVariants session={session} snap={snap} />
-              </>
+              <ComponentVariants session={session} snap={snap} />
             ) : (
               <p className="inspector-empty">Select a layer to edit data bindings.</p>
             )

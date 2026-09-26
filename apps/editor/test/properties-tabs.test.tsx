@@ -100,6 +100,34 @@ describe('properties inspector tabs', () => {
     expect(host.querySelector('select[name="tag"]')).toBeInstanceOf(HTMLSelectElement);
   });
 
+  it('mounts field definitions on Content and variant axes on Data (Spec C)', async () => {
+    const session: EditorSession = createEditorSession({
+      documents,
+      design: createProjectTemplateDocument(),
+    });
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => {
+      root?.render(<App session={session} />);
+    });
+    await act(async () => {
+      session.openAsset('button', 'root');
+      session.selectNode(null);
+    });
+
+    expect(host.querySelector('input[name="new-field-name"]')).toBeInstanceOf(HTMLInputElement);
+    expect(host.querySelector('input[name="new-axis-name"]')).toBeNull();
+
+    await act(async () => {
+      host!
+        .querySelector('button[name="property-tab-data"]')
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(host.querySelector('input[name="new-axis-name"]')).toBeInstanceOf(HTMLInputElement);
+    expect(host.querySelector('input[name="new-field-name"]')).toBeNull();
+  });
+
   it('does not show property tabs when a viewport is selected', async () => {
     const session: EditorSession = createEditorSession({
       documents,
