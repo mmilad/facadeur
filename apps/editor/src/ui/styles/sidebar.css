@@ -585,3 +585,17 @@ body.is-resizing-inspector {
   font-family: var(--mono);
   font-size: 12px;
 }
+
+.font-add-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+}
+
+.font-add-row .field {
+  flex: 1;
+  min-width: 160px;
+  margin: 0;
+}
