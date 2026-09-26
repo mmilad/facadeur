@@ -17,6 +17,7 @@ import { ResizableInspector } from './ResizableInspector.js';
 import { ResizableLeftRail } from './ResizableLeftRail.js';
 import { ToolBar } from './ToolBar.js';
 import { UnsavedIndicator } from './UnsavedIndicator.js';
+import { HistoryButtons } from './HistoryButtons.js';
 import { KindBadge } from './KindBadge.js';
 import { ZoomControls } from './ZoomControls.js';
 
@@ -63,22 +64,7 @@ export function EditorShell({ session }: { session: EditorSession }) {
         <KindBadge kind={snap.document.kind} />
         <ToolBar session={session} tool={snap.tool} kind={snap.document.kind} />
         <div className="topbar-spacer" />
-        <button
-          type="button"
-          className="text-button"
-          disabled={!snap.canUndo}
-          onClick={() => session.undo()}
-        >
-          Undo
-        </button>
-        <button
-          type="button"
-          className="text-button"
-          disabled={!snap.canRedo}
-          onClick={() => session.redo()}
-        >
-          Redo
-        </button>
+        <HistoryButtons session={session} canUndo={snap.canUndo} canRedo={snap.canRedo} />
         <ZoomControls session={session} label={snap.zoomLabel} />
         <button type="button" className="text-button" onClick={() => session.fit()}>
           Reset view
