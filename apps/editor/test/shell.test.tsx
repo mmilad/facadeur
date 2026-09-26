@@ -165,6 +165,36 @@ describe('editor shell', () => {
     );
   });
 
+  it('zooms from the topbar without changing reset view', async () => {
+    const session: EditorSession = createEditorSession({
+      documents,
+      design: createProjectTemplateDocument(),
+    });
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => {
+      root?.render(<App session={session} />);
+    });
+
+    expect(host.querySelector('.zoom-controls .zoom-readout')?.textContent).toBe('100%');
+    const viewport = host.querySelector('.viewport');
+    expect(viewport).toBeInstanceOf(HTMLDivElement);
+    Object.defineProperty(viewport, 'clientWidth', { value: 800, configurable: true });
+    Object.defineProperty(viewport, 'clientHeight', { value: 600, configurable: true });
+    const zoomIn = host.querySelector('.zoom-controls button[aria-label="Zoom in"]');
+    expect(zoomIn).toBeInstanceOf(HTMLButtonElement);
+    await act(async () => {
+      (zoomIn as HTMLButtonElement).click();
+    });
+    expect(session.getSnapshot().zoomLabel).toBe('110%');
+
+    const resetView = [...host.querySelectorAll('.topbar button.text-button')].find((button) =>
+      button.textContent?.includes('Reset view'),
+    );
+    expect(resetView).toBeInstanceOf(HTMLButtonElement);
+  });
+
   it('searches the tree, opens design domains on the stage, and creates an asset', async () => {
     const session: EditorSession = createEditorSession({
       documents,

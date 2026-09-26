@@ -476,6 +476,11 @@ export function StageCanvas({
     window.addEventListener('keydown', onKey);
     stageEl.addEventListener('pointerdown', onStagePointerDown);
     session.setFitHandler(() => fitRef.current());
+    session.setZoomByHandler((factor) => {
+      markTouched();
+      stage.zoomBy(factor);
+      selection.reposition();
+    });
 
     return () => {
       stopZoom();
@@ -493,6 +498,7 @@ export function StageCanvas({
       window.removeEventListener('keydown', onKey);
       stageEl.removeEventListener('pointerdown', onStagePointerDown);
       session.setFitHandler(null);
+      session.setZoomByHandler(null);
       selection.destroy();
       stage.destroy();
       selectionRef.current = null;
