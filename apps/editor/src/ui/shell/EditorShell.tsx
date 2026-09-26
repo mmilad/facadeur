@@ -17,6 +17,7 @@ import { ResizableInspector } from './ResizableInspector.js';
 import { ResizableLeftRail } from './ResizableLeftRail.js';
 import { ToolBar } from './ToolBar.js';
 import { UnsavedIndicator } from './UnsavedIndicator.js';
+import { KindBadge } from './KindBadge.js';
 import { ZoomControls } from './ZoomControls.js';
 
 const SURFACE_PARAM = 'surface';
@@ -59,6 +60,7 @@ export function EditorShell({ session }: { session: EditorSession }) {
       <header className="topbar">
         <div className="brand">facadeur</div>
         <div className="topbar-name">{snap.document.name}</div>
+        <KindBadge kind={snap.document.kind} />
         <ToolBar session={session} tool={snap.tool} kind={snap.document.kind} />
         <div className="topbar-spacer" />
         <button

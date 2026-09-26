@@ -66,7 +66,11 @@ export function createViewportBoard(options: {
   const unsubscribers: (() => void)[] = [];
 
   function paintChrome(frame: ViewportFrame): void {
-    const chrome = resolvedViewportChrome(frame.breakpoint, getChrome?.(frame.breakpoint.id));
+    const chrome = resolvedViewportChrome(
+      frame.breakpoint,
+      getChrome?.(frame.breakpoint.id),
+      pageDocument().kind,
+    );
     frame.column.style.padding = `${chrome.outerPaddingPx}px`;
     const title = frame.column.querySelector('.viewport-chrome-title');
     if (title) title.textContent = chrome.title;

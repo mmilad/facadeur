@@ -55,6 +55,7 @@ describe('editor shell', () => {
     });
 
     expect(host.textContent).toContain('Specimen');
+    expect(host.querySelector('.kind-badge')?.textContent).toBe('page');
     expect(host.textContent).toContain('specimen-section');
     expect(host.querySelector('nav.workspaces')).toBeNull();
     expect(host.querySelector('[data-asset-id="button"]')).toBeInstanceOf(HTMLButtonElement);
@@ -112,6 +113,7 @@ describe('editor shell', () => {
       (buttonAsset as HTMLButtonElement).click();
     });
     expect(session.getSnapshot().openId).toBe('button');
+    expect(host.querySelector('.kind-badge')?.textContent).toBe('atom');
     const frame = document.querySelector('iframe');
     expect(frame?.contentDocument?.body.textContent).toContain('Button');
 
