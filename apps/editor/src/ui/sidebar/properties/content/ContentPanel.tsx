@@ -53,9 +53,7 @@ export function ContentPanel({
             })
           }
         />
-      ) : (
-        <p className="meta">Component · {node.component}</p>
-      )}
+      ) : null}
       {node.type === 'text' ? (
         <TextControl
           label="Text"

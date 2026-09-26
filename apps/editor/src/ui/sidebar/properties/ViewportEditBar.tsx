@@ -23,12 +23,13 @@ export function ViewportEditBar({
     : ctx.focus
       ? `${ctx.focus.id} is Base`
       : 'Viewport';
-  const focusText = ctx.focus
-    ? `Focus ${ctx.focus.id} · ${ctx.focus.minWidth}`
-    : 'Click a viewport to set the focus.';
+  const editingStatus =
+    writingViewport && ctx.overrideViewport
+      ? `Editing: ${ctx.overrideViewport.id} override`
+      : 'Editing: Base';
   return (
     <div className="viewport-edit">
-      <p className="meta">{focusText}</p>
+      <p className="meta">{editingStatus}</p>
       <div className="viewport-edit-row" role="group" aria-label="Style edit target">
         <button
           type="button"
@@ -55,11 +56,6 @@ export function ViewportEditBar({
           {viewportLabel}
         </button>
       </div>
-      <p className="meta">
-        {writingViewport && ctx.overrideViewport
-          ? `Style, layout, and tokens write only ${ctx.overrideViewport.id} (min-width ${ctx.overrideViewport.minWidth}). Other breakpoints stay as they are.`
-          : 'Style, layout, and tokens edit Base, with no media query. Node style is always Base.'}
-      </p>
     </div>
   );
 }

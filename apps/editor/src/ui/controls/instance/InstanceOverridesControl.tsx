@@ -26,7 +26,7 @@ export function InstanceOverridesControl({
 }) {
   return (
     <Stack gap={12}>
-      <p className="meta">Overrides only. Open the master to edit it.</p>
+      <p className="meta">Field and variant overrides only.</p>
       <button type="button" className="text-button" name="open-component" onClick={onOpenMaster}>
         Open {masterName}
       </button>
