@@ -189,9 +189,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   function drillParentsForSnapshot(): DrillParent[] {
     return drillStack.map((frame) => {
       const live = assetStores.get(frame.documentId)?.getDocument();
-      return live
-        ? { ...frame, documentName: live.name }
-        : frame;
+      return live ? { ...frame, documentName: live.name } : frame;
     });
   }
 
