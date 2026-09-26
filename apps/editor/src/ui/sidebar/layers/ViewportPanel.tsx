@@ -58,7 +58,7 @@ export function ViewportOptionsPanel({
     return <p className="inspector-empty">Select a viewport under Layers or on the stage.</p>;
   }
   const stored = snap.viewportChrome[breakpoint.id];
-  const chrome = resolvedViewportChrome(breakpoint, stored);
+  const chrome = resolvedViewportChrome(breakpoint, stored, snap.document.kind);
   const canRemove = breakpoints.length > 1;
   return (
     <div className="viewport-options stack">

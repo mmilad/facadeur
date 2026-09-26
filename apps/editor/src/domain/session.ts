@@ -19,7 +19,11 @@ import {
   type SavedJsonBaselines,
 } from './save-state.js';
 import { layerTree, nodeIdForHit, renderIdForNode, type LayerItem } from './selection-model.js';
-import { chromeStorageKey, type ViewportChromeSettings } from './viewport-chrome.js';
+import {
+  chromeStorageKey,
+  defaultViewportChrome,
+  type ViewportChromeSettings,
+} from './viewport-chrome.js';
 import type { StyleEditMode } from './viewport-edit.js';
 
 export type EditorTool = 'select' | 'frame' | 'text' | 'image';
@@ -475,12 +479,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     setViewportChrome(breakpointId, patch) {
       if (!breakpointId) return;
       const key = chromeStorageKey(openId, breakpointId);
-      const previous = viewportChromeStore.get(key) ?? {
-        title: '',
-        outerPaddingPx: 12,
-        innerPaddingPx: 0,
-        contentAlign: 'start' as const,
-      };
+      const previous = viewportChromeStore.get(key) ?? defaultViewportChrome(kindOf(openFlat()));
       viewportChromeStore.set(key, { ...previous, ...patch });
       publish();
     },
