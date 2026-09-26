@@ -1,11 +1,5 @@
-import type {
-  Attr,
-  ComponentImport,
-  ElementNode,
-  PropSpec,
-  VariantTypeSpec,
-} from './component-types.js';
-import { quote } from './names.js';
+import { quote } from '../names.js';
+import type { Attr, ComponentImport, ElementNode, PropSpec, VariantTypeSpec } from './types.js';
 
 export function printFile(file: {
   id: string;

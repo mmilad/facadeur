@@ -1,8 +1,8 @@
-export type {
-  ComponentFile,
-  ComponentImport,
-  PropSpec,
-  VariantTypeSpec,
-} from './component-types.js';
-export { assignCatalog } from './catalog.js';
-export { renderComponent } from './render-tree.js';
+export {
+  assignCatalog,
+  renderComponent,
+  type ComponentFile,
+  type ComponentImport,
+  type PropSpec,
+  type VariantTypeSpec,
+} from './component/index.js';

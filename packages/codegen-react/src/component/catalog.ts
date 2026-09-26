@@ -1,7 +1,6 @@
 import type { DocumentFile, FieldDefinition, FieldValue } from '@facadeur/core';
-import { jsLiteral } from './jsx-literals.js';
-import type { CatalogEntry, PropSpec, VariantTypeSpec } from './component-types.js';
-import { CodegenError, componentName, propName, quote, variantTypeName } from './names.js';
+import { CodegenError, componentName, propName, quote, variantTypeName } from '../names.js';
+import type { CatalogEntry, PropSpec, VariantTypeSpec } from './types.js';
 
 export function assignCatalog(documents: readonly DocumentFile[]): Map<string, CatalogEntry> {
   const catalog = new Map<string, CatalogEntry>();
@@ -87,4 +86,11 @@ function fieldTypeName(field: FieldDefinition): string {
     return options.map((option) => quote(option)).join(' | ');
   }
   return 'string';
+}
+
+/** JS expression literal for field defaults and instance prop values. */
+export function jsLiteral(value: FieldValue): string {
+  if (typeof value === 'string') return quote(value);
+  if (typeof value === 'number') return Object.is(value, -0) ? '-0' : String(value);
+  return value ? 'true' : 'false';
 }

@@ -7,60 +7,21 @@ import {
   numericAttributeCode,
   reactAttributeName,
   reactStyleName,
-} from './attributes.js';
-import { assertDefault, variantTypeSpecs } from './catalog.js';
+} from '../attributes.js';
+import { CodegenError, quote } from '../names.js';
+import { assertDefault, jsLiteral } from './catalog.js';
 import type {
   Attr,
   Bound,
   CatalogEntry,
-  ComponentFile,
   ComponentImport,
   ElementNode,
   Expr,
   PropSpec,
   TextChild,
-} from './component-types.js';
-import { jsLiteral, jsxText } from './jsx-literals.js';
-import { CodegenError, quote } from './names.js';
-import { printElement, printFile } from './print-component.js';
+} from './types.js';
 
-export function renderComponent(
-  document: DocumentFile,
-  catalog: Map<string, CatalogEntry>,
-): ComponentFile {
-  const entry = catalog.get(document.id);
-  if (!entry) throw new CodegenError(`Missing catalog entry for "${document.id}"`);
-  const variantTypes = variantTypeSpecs(document, entry);
-  const imports = new Map<string, ComponentImport>();
-  const usedProps = new Set<string>();
-  let usesCssProperties = false;
-  const root = renderNode(document, document.root, catalog, entry, true, imports, usedProps, () => {
-    usesCssProperties = true;
-  });
-  const props = [...entry.fields.values(), ...entry.variants.values()];
-  const contents = printFile({
-    id: document.id,
-    component: entry.component,
-    props,
-    variantTypes,
-    imports: [...imports.values()].sort((left, right) => left.from.localeCompare(right.from, 'en')),
-    usesCssProperties,
-    usedProps,
-    body: printElement(root, 2),
-  });
-  return {
-    id: document.id,
-    component: entry.component,
-    path: `components/${entry.component}.tsx`,
-    props,
-    variantTypes,
-    imports: [...imports.values()],
-    usesCssProperties,
-    contents,
-  };
-}
-
-function renderNode(
+export function renderNode(
   document: DocumentFile,
   node: NestedNode,
   catalog: Map<string, CatalogEntry>,
@@ -374,4 +335,12 @@ function staticAttrValue(name: string, value: string): Attr['value'] {
 
 function isJsxName(name: string): boolean {
   return /^[A-Za-z_][A-Za-z0-9_.:-]*$/.test(name);
+}
+
+function jsxText(value: string): string {
+  if (value === '') return '{``}';
+  if (/[{}<>&]/.test(value) || /^\s|\s$/.test(value) || value.includes('\n')) {
+    return `{${quote(value)}}`;
+  }
+  return value;
 }
