@@ -32,15 +32,12 @@ const documents = validateCatalog([
 ]);
 
 describe('undo and redo affordances', () => {
+  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   afterEach(() => cleanup());
 
   it('names a disabled undo or redo as empty history', () => {
     render(
-      <HistoryButtons
-        session={{ undo: vi.fn(), redo: vi.fn() }}
-        canUndo={false}
-        canRedo={false}
-      />,
+      <HistoryButtons session={{ undo: vi.fn(), redo: vi.fn() }} canUndo={false} canRedo={false} />,
     );
 
     const undo = screen.getByRole('button', { name: 'Nothing to undo' });
