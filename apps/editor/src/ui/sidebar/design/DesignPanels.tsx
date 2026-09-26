@@ -8,7 +8,6 @@ import {
   numberTokenRefs,
   shadowTokenRefs,
 } from '../../../domain/editing.js';
-import { documentToJson, saveJsonFile } from '../../../domain/files.js';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
 import {
   formatTokenValue,
@@ -27,6 +26,7 @@ import {
   type TypographyCatalogs,
 } from '../../controls/typography/index.js';
 import { OverrideCue } from '../properties/ViewportEditBar.js';
+import { UnsavedIndicator } from '../../shell/UnsavedIndicator.js';
 import type { DesignDomain } from './design-domain.js';
 import { designDomainLabel, tokenMatchesDomain } from './design-domain.js';
 
@@ -79,10 +79,12 @@ export function TokensDomainPanel({
             ? `${domainTitle} overrides at ${writingId}. $value stays the base.`
             : `${domainTitle} tokens. Base edits $value and update every viewport that has no override.`}
         </p>
+        <UnsavedIndicator designDirty={snap.designDirty} />
         <button
           type="button"
           className="text-button"
-          onClick={() => void saveDesign(session, snap)}
+          data-save="design"
+          onClick={() => void session.saveDesign()}
         >
           Save design
         </button>
@@ -218,10 +220,12 @@ export function FontsDomainPanel({
           Project fonts. The last fallback must be a generic family. Font files are shared across
           viewports; type size changes live on typography tokens.
         </p>
+        <UnsavedIndicator designDirty={snap.designDirty} />
         <button
           type="button"
           className="text-button"
-          onClick={() => void saveDesign(session, snap)}
+          data-save="design"
+          onClick={() => void session.saveDesign()}
         >
           Save design
         </button>
@@ -318,21 +322,4 @@ function editedFont(
         : { type: 'file', files: font.source.files.map((file) => ({ ...file })) },
     fallbacks: patch.fallbacks ? [...patch.fallbacks] : [...font.fallbacks],
   };
-}
-
-async function saveDesign(session: EditorSession, snap: EditorSnapshot) {
-  const id = snap.design.id;
-  try {
-    const result = await saveJsonFile({
-      filename: session.filenameFor(id),
-      text: documentToJson(snap.design),
-      handle: session.fileHandle(id),
-    });
-    if (result.handle) session.rememberHandle(id, result.handle);
-    const verb = result.via === 'download' ? 'Downloaded' : 'Saved';
-    session.setNotice(`${verb} ${session.filenameFor(id)}`);
-  } catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') return;
-    session.setNotice(error instanceof Error ? error.message : 'Could not save', 'error');
-  }
 }

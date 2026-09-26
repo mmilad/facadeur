@@ -11,7 +11,13 @@ import {
 } from '@facadeur/core';
 import { createDocumentStore, type YjsDocumentStore } from '@facadeur/store-yjs';
 import type { DesignInput } from '@facadeur/tokens';
-import type { JsonFileHandle } from './files.js';
+import { documentToJson, saveJsonFile, type JsonFileHandle } from './files.js';
+import {
+  clearDocumentSaved,
+  isDocumentDirty,
+  markDocumentSaved,
+  type SavedJsonBaselines,
+} from './save-state.js';
 import { layerTree, nodeIdForHit, renderIdForNode, type LayerItem } from './selection-model.js';
 import { chromeStorageKey, type ViewportChromeSettings } from './viewport-chrome.js';
 import type { StyleEditMode } from './viewport-edit.js';
@@ -68,6 +74,10 @@ export interface EditorSnapshot {
   /** Bumps when the design store changes. The stage calls setDesign. */
   designRevision: number;
   revision: number;
+  /** Open document differs from the last successful save (or was never saved). */
+  documentDirty: boolean;
+  /** Design file differs from the last successful save (or was never saved). */
+  designDirty: boolean;
 }
 
 export interface EditorSession {
@@ -105,6 +115,10 @@ export interface EditorSession {
   filenameFor: (id: string) => string;
   fileHandle: (id: string) => JsonFileHandle | undefined;
   rememberHandle: (id: string, handle: JsonFileHandle) => void;
+  /** Persist the open document. Returns true when bytes were written. */
+  saveOpenDocument: () => Promise<boolean>;
+  /** Persist the design document. Returns true when bytes were written. */
+  saveDesign: () => Promise<boolean>;
 }
 
 export interface EditorSessionOptions {
@@ -148,10 +162,15 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   let designRevision = 0;
   let revision = 0;
   const designId = options.design.id;
+  const savedJson: SavedJsonBaselines = new Map();
   let snapshot: EditorSnapshot | null = null;
 
   const resolveKind = (componentId: string) => kinds.get(componentId);
   let designStore: YjsDocumentStore = createDocumentStore(options.design, { resolveKind });
+
+  function filenameFor(id: string) {
+    return sources[id] ?? `${id}.json`;
+  }
 
   function syncKinds() {
     kinds.clear();
@@ -286,6 +305,8 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       generation,
       designRevision,
       revision,
+      documentDirty: isDocumentDirty(savedJson, openId, document),
+      designDirty: isDocumentDirty(savedJson, designId, design),
     };
   }
 
@@ -326,6 +347,11 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     workspace = preferred.kind;
     lastOpen.set(preferred.kind, preferred.id);
   }
+  for (const id of order) {
+    const store = assetStores.get(id);
+    if (store) markDocumentSaved(savedJson, id, store.getDocument());
+  }
+  markDocumentSaved(savedJson, designId, designStore.getDocument());
   snapshot = build();
 
   return {
@@ -489,6 +515,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
           previous.destroy();
           watch(created, 'design');
           if (handle) handles.set(file.id, handle);
+          markDocumentSaved(savedJson, file.id, created.getDocument());
           designRevision += 1;
           notice = null;
           publish();
@@ -511,6 +538,11 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
         previous?.destroy();
         watch(created, 'asset');
         if (handle) handles.set(file.id, handle);
+        if (handle || previous) {
+          markDocumentSaved(savedJson, file.id, created.getDocument());
+        } else {
+          clearDocumentSaved(savedJson, file.id);
+        }
         const kind = kindOf(created.getDocument());
         openId = file.id;
         workspace = kind;
@@ -569,14 +601,61 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
         breakpoints: doc.settings.breakpoints,
       };
     },
-    filenameFor(id) {
-      return sources[id] ?? `${id}.json`;
-    },
+    filenameFor,
     fileHandle(id) {
       return handles.get(id);
     },
     rememberHandle(id, handle) {
       handles.set(id, handle);
+    },
+    async saveOpenDocument() {
+      const snap = build();
+      try {
+        const result = await saveJsonFile({
+          filename: filenameFor(snap.openId),
+          text: documentToJson(snap.document),
+          handle: handles.get(snap.openId),
+        });
+        if (result.handle) handles.set(snap.openId, result.handle);
+        markDocumentSaved(savedJson, snap.openId, snap.document);
+        const verb = result.via === 'download' ? 'Downloaded' : 'Saved';
+        notice = { tone: 'info', text: `${verb} ${filenameFor(snap.openId)}` };
+        publish();
+        return true;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return false;
+        notice = {
+          tone: 'error',
+          text: error instanceof Error ? error.message : 'Could not save',
+        };
+        publish();
+        return false;
+      }
+    },
+    async saveDesign() {
+      const snap = build();
+      const id = designId;
+      try {
+        const result = await saveJsonFile({
+          filename: filenameFor(id),
+          text: documentToJson(snap.design),
+          handle: handles.get(id),
+        });
+        if (result.handle) handles.set(id, result.handle);
+        markDocumentSaved(savedJson, id, snap.design);
+        const verb = result.via === 'download' ? 'Downloaded' : 'Saved';
+        notice = { tone: 'info', text: `${verb} ${filenameFor(id)}` };
+        publish();
+        return true;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return false;
+        notice = {
+          tone: 'error',
+          text: error instanceof Error ? error.message : 'Could not save',
+        };
+        publish();
+        return false;
+      }
     },
   };
 }
