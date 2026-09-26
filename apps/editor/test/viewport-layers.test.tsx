@@ -42,6 +42,33 @@ describe('viewport layers UX', () => {
     host = null;
   });
 
+  function viewportLayerButton(breakpointId: string): HTMLButtonElement | undefined {
+    return [...(host?.querySelectorAll('button.viewport-layer') ?? [])].find((button) =>
+      button.dataset.breakpoint === breakpointId,
+    ) as HTMLButtonElement | undefined;
+  }
+
+  it('shows resolved viewport chrome title in Layers rows', async () => {
+    const session: EditorSession = createEditorSession({
+      documents,
+      design: createProjectTemplateDocument(),
+    });
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => {
+      root?.render(<App session={session} />);
+    });
+
+    const tabletRow = viewportLayerButton('tablet');
+    expect(tabletRow?.querySelector('.layer-name')?.textContent).toBe('tablet · 768');
+
+    await act(async () => {
+      session.setViewportChrome('tablet', { title: 'Tablet preview' });
+    });
+    expect(tabletRow?.querySelector('.layer-name')?.textContent).toBe('Tablet preview');
+  });
+
   it('selects a viewport from Layers and shows chrome options in the inspector', async () => {
     const session: EditorSession = createEditorSession({
       documents,
