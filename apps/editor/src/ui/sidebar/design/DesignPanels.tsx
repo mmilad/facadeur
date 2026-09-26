@@ -1,5 +1,14 @@
-import { readTokenTree, type FontFamily } from '@facadeur/core';
+import { readTokenTree } from '@facadeur/core';
 import { useMemo, useState } from 'react';
+import {
+  assertFontId,
+  createDefaultFont,
+  editedFont,
+  parseFontFallbacks,
+  parseFontWeights,
+  suggestFontId,
+  tokenPathsReferencingFont,
+} from '../../../domain/font-edit.js';
 import {
   colorTokenRefs,
   dimensionTokenRefs,
@@ -19,6 +28,7 @@ import { editorBreakpoints, viewportEditContext } from '../../../domain/viewport
 import { ColorControl } from '../../controls/color/index.js';
 import { ShadowControl } from '../../controls/shadow/index.js';
 import { TextControl } from '../../controls/fields/index.js';
+import { Field, TextInput } from '../../form/index.js';
 import {
   isTypographyValue,
   projectFontRefs,
@@ -213,6 +223,47 @@ export function FontsDomainPanel({
   session: EditorSession;
   snap: EditorSnapshot;
 }) {
+  const [newFontId, setNewFontId] = useState(() =>
+    suggestFontId(snap.design.fonts.map((font) => font.id)),
+  );
+
+  function commitFont(
+    font: (typeof snap.design.fonts)[number],
+    patch: Parameters<typeof editedFont>[1],
+  ) {
+    try {
+      session.executeDesign({ type: 'setFont', font: editedFont(font, patch) });
+    } catch (error) {
+      session.setNotice(error instanceof Error ? error.message : 'Invalid font', 'error');
+    }
+  }
+
+  function removeFont(font: (typeof snap.design.fonts)[number]) {
+    const refs = tokenPathsReferencingFont(snap.design.tokens, font.id);
+    if (refs.length) {
+      session.setNotice(
+        `Cannot remove "${font.id}": {font.${font.id}} is referenced in ${refs.join(', ')}`,
+        'error',
+      );
+      return;
+    }
+    session.executeDesign({ type: 'removeFont', id: font.id });
+  }
+
+  function addFont() {
+    try {
+      const id = newFontId.trim();
+      assertFontId(id);
+      if (snap.design.fonts.some((font) => font.id === id)) {
+        throw new Error(`Font "${id}" already exists`);
+      }
+      session.executeDesign({ type: 'setFont', font: createDefaultFont(id) });
+      setNewFontId(suggestFontId([...snap.design.fonts.map((font) => font.id), id]));
+    } catch (error) {
+      session.setNotice(error instanceof Error ? error.message : 'Invalid font', 'error');
+    }
+  }
+
   return (
     <div className="stack design-domain-panel">
       <div className="panel-head">
@@ -230,6 +281,19 @@ export function FontsDomainPanel({
           Save design
         </button>
       </div>
+      <div className="font-add-row">
+        <Field label="New font id">
+          <TextInput
+            name="new-font-id"
+            value={newFontId}
+            placeholder="display"
+            onChange={setNewFontId}
+          />
+        </Field>
+        <button type="button" className="text-button" name="add-font" onClick={() => addFont()}>
+          Add font
+        </button>
+      </div>
       {snap.design.fonts.length === 0 ? <p className="inspector-empty">No fonts yet.</p> : null}
       {snap.design.fonts.map((font) => (
         <fieldset key={font.id} className="font-card">
@@ -241,10 +305,7 @@ export function FontsDomainPanel({
             onCommit={(family) => {
               const trimmed = family.trim();
               if (!trimmed || trimmed === font.family) return;
-              session.executeDesign({
-                type: 'setFont',
-                font: editedFont(font, { family: trimmed }),
-              });
+              commitFont(font, { family: trimmed });
             }}
           />
           <TextControl
@@ -252,17 +313,65 @@ export function FontsDomainPanel({
             name={`font-${font.id}-fallbacks`}
             value={font.fallbacks.join(', ')}
             onCommit={(text) => {
-              const fallbacks = text
-                .split(',')
-                .map((part) => part.trim())
-                .filter((part) => part.length > 0);
-              session.executeDesign({ type: 'setFont', font: editedFont(font, { fallbacks }) });
+              try {
+                const fallbacks = parseFontFallbacks(text);
+                if (fallbacks.join(', ') === font.fallbacks.join(', ')) return;
+                commitFont(font, { fallbacks });
+              } catch (error) {
+                session.setNotice(
+                  error instanceof Error ? error.message : 'Invalid fallbacks',
+                  'error',
+                );
+              }
             }}
           />
-          <p className="meta">
-            {font.source.type === 'google' ? `Google · ${font.source.family}` : 'File'} ·{' '}
-            {font.weights.join(', ')}
-          </p>
+          {font.source.type === 'google' ? (
+            <>
+              <TextControl
+                label="Google family"
+                name={`font-${font.id}-google-family`}
+                value={font.source.family}
+                onCommit={(family) => {
+                  if (font.source.type !== 'google') return;
+                  const trimmed = family.trim();
+                  if (!trimmed || trimmed === font.source.family) return;
+                  commitFont(font, { googleFamily: trimmed });
+                }}
+              />
+              <TextControl
+                label="Weights"
+                name={`font-${font.id}-weights`}
+                value={font.weights.join(', ')}
+                onCommit={(text) => {
+                  try {
+                    const weights = parseFontWeights(text);
+                    if (weights.join(',') === font.weights.join(',')) return;
+                    commitFont(font, { weights });
+                  } catch (error) {
+                    session.setNotice(
+                      error instanceof Error ? error.message : 'Invalid weights',
+                      'error',
+                    );
+                  }
+                }}
+              />
+            </>
+          ) : (
+            <>
+              <p className="meta">
+                Source: file · file list editing is not supported in the UI yet.
+              </p>
+              <p className="meta">Weights: {font.weights.join(', ')}</p>
+            </>
+          )}
+          <button
+            type="button"
+            className="text-button"
+            name={`remove-font-${font.id}`}
+            onClick={() => removeFont(font)}
+          >
+            Remove font
+          </button>
         </fieldset>
       ))}
     </div>
@@ -304,22 +413,4 @@ function resetTokenBreakpoint(
   } catch (error) {
     session.setNotice(error instanceof Error ? error.message : 'Invalid token', 'error');
   }
-}
-
-function editedFont(
-  font: FontFamily,
-  patch: { family?: string; fallbacks?: string[] },
-): FontFamily {
-  const family = patch.family ?? font.family;
-  return {
-    id: font.id,
-    family,
-    weights: [...font.weights],
-    ...(font.styles ? { styles: [...font.styles] } : {}),
-    source:
-      font.source.type === 'google'
-        ? { type: 'google', family: patch.family ?? font.source.family }
-        : { type: 'file', files: font.source.files.map((file) => ({ ...file })) },
-    fallbacks: patch.fallbacks ? [...patch.fallbacks] : [...font.fallbacks],
-  };
 }
