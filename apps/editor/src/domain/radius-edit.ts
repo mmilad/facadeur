@@ -35,7 +35,7 @@ export function suggestRadiusPath(existing: readonly string[]): string {
 }
 
 export function createDefaultRadiusToken(): TokenDefinition {
-  return { $type: 'dimension', $value: '0' };
+  return { $type: 'dimension', $value: '8px' };
 }
 
 export function tokenPathsReferencingRadius(tree: unknown, radiusPath: string): string[] {

@@ -12,7 +12,7 @@ import { tokenMatchesDomain } from '../src/ui/sidebar/design/design-domain.js';
 
 describe('radius-edit', () => {
   it('creates a default radius token', () => {
-    expect(createDefaultRadiusToken()).toEqual({ $type: 'dimension', $value: '0' });
+    expect(createDefaultRadiusToken()).toEqual({ $type: 'dimension', $value: '8px' });
   });
 
   it('validates radius paths with TOKEN_SEGMENT segments under radius.*', () => {

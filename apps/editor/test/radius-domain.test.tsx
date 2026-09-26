@@ -79,7 +79,7 @@ describe('radius domain panel', () => {
     const indexed = readTokenTree(session.getSnapshot().design.tokens);
     expect(indexed.tokens.get('radius.corner.xl')).toMatchObject({
       type: 'dimension',
-      value: '0',
+      value: '8px',
     });
     expect(host!.textContent).toContain('radius.corner.xl');
   });
