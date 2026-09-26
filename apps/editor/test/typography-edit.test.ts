@@ -18,8 +18,8 @@ describe('typography-edit', () => {
         fontFamily: '{font.sans}',
         fontSize: '16px',
         fontWeight: '{font.weight.regular}',
-        lineHeight: 1.5,
         letterSpacing: '0',
+        lineHeight: 1.5,
       },
     });
   });
@@ -29,6 +29,7 @@ describe('typography-edit', () => {
     expect(isValidTypographyTokenPath('type.custom2')).toBe(true);
     expect(isValidTypographyTokenPath('color.accent.default')).toBe(false);
     expect(isValidTypographyTokenPath('font.sans')).toBe(false);
+    expect(isValidTypographyTokenPath('typography.hero')).toBe(false);
     expect(isValidTypographyTokenPath('type.Bad')).toBe(false);
     expect(isValidTypographyTokenPath('hero')).toBe(false);
     expect(() => assertTypographyTokenPath('not-type')).toThrow(/type\./i);

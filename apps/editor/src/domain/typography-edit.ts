@@ -42,8 +42,8 @@ export function createDefaultTypographyToken(): TokenDefinition {
       fontFamily: '{font.sans}',
       fontSize: '16px',
       fontWeight: '{font.weight.regular}',
-      lineHeight: 1.5,
       letterSpacing: '0',
+      lineHeight: 1.5,
     },
   };
 }

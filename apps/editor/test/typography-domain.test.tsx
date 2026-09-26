@@ -83,8 +83,8 @@ describe('typography domain panel', () => {
         fontFamily: '{font.sans}',
         fontSize: '16px',
         fontWeight: '{font.weight.regular}',
-        lineHeight: 1.5,
         letterSpacing: '0',
+        lineHeight: 1.5,
       },
     });
     expect(host!.textContent).toContain('type.hero');
@@ -114,7 +114,7 @@ describe('typography domain panel', () => {
     expect(session.getSnapshot().notice?.text).toMatch(/\{type\.body\}/);
   });
 
-  it('rejects an invalid typography path on add', async () => {
+  it('rejects typography.* and other paths that do not start with type. on add', async () => {
     const session = createEditorSession({
       documents,
       design: createProjectTemplateDocument(),
@@ -122,16 +122,19 @@ describe('typography domain panel', () => {
     await openTypography(session);
 
     const pathInput = host!.querySelector('input[name="new-typography-path"]') as HTMLInputElement;
-    setInput(pathInput, 'font.custom');
-    await act(async () => {
-      (host!.querySelector('button[name="add-typography"]') as HTMLButtonElement).click();
-    });
 
-    expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has('font.custom')).toBe(
-      false,
-    );
-    expect(session.getSnapshot().notice?.tone).toBe('error');
-    expect(session.getSnapshot().notice?.text).toMatch(/type\./i);
+    for (const invalidPath of ['typography.hero', 'font.custom']) {
+      setInput(pathInput, invalidPath);
+      await act(async () => {
+        (host!.querySelector('button[name="add-typography"]') as HTMLButtonElement).click();
+      });
+
+      expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has(invalidPath)).toBe(
+        false,
+      );
+      expect(session.getSnapshot().notice?.tone).toBe('error');
+      expect(session.getSnapshot().notice?.text).toMatch(/type\./i);
+    }
   });
 
   it('rejects duplicate typography paths on add', async () => {
