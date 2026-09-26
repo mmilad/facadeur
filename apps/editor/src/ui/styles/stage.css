@@ -47,6 +47,11 @@
   letter-spacing: 0.01em;
 }
 
+.hint.insert-mode-cue {
+  color: var(--selection-secondary);
+  font-weight: 500;
+}
+
 .viewport-frames {
   display: flex;
   align-items: flex-start;
