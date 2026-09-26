@@ -4,8 +4,10 @@
  * The dot grid is a viewport background locked to the same tx/ty/scale.
  */
 
-const MIN_SCALE = 0.2;
-const MAX_SCALE = 4;
+export const MIN_SCALE = 0.2;
+export const MAX_SCALE = 4;
+/** Multiplicative step for toolbar zoom (+/-), ~10% per click. */
+export const ZOOM_STEP_FACTOR = 1.1;
 const GRID_BASE = 20;
 const GRID_MIN_SCREEN = 14;
 const GRID_MAX_SCREEN = 28;
@@ -30,6 +32,8 @@ export interface StageController {
    */
   setClaimsPan: (guard: (event: PointerEvent) => boolean) => void;
   fit: (element: HTMLElement, padding?: number) => void;
+  /** Zoom toward the viewport center; factor > 1 zooms in. */
+  zoomBy: (factor: number) => void;
   destroy: () => void;
 }
 
@@ -177,6 +181,20 @@ export function createStage(viewport: HTMLElement, stage: HTMLElement): StageCon
         1.25,
       );
       setTransform(nextScale, (vw - width * nextScale) / 2, (vh - height * nextScale) / 2);
+    },
+    zoomBy(factor) {
+      const vw = viewport.clientWidth;
+      const vh = viewport.clientHeight;
+      if (!vw || !vh || factor <= 0) return;
+      const mx = vw / 2;
+      const my = vh / 2;
+      const nextScale = clamp(scale * factor, MIN_SCALE, MAX_SCALE);
+      const stageX = (mx - tx) / scale;
+      const stageY = (my - ty) / scale;
+      tx = mx - stageX * nextScale;
+      ty = my - stageY * nextScale;
+      scale = nextScale;
+      apply();
     },
   };
 }

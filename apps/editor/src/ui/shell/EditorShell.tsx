@@ -20,6 +20,7 @@ import { RightRail } from '../sidebar/properties/RightRail.js';
 import { StageCanvas } from '../stage/StageCanvas.js';
 import { ResizableInspector } from './ResizableInspector.js';
 import { ToolBar } from './ToolBar.js';
+import { ZoomControls } from './ZoomControls.js';
 
 const SURFACE_PARAM = 'surface';
 
@@ -79,7 +80,7 @@ export function EditorShell({ session }: { session: EditorSession }) {
         >
           Redo
         </button>
-        <span className="zoom-readout">{snap.zoomLabel}</span>
+        <ZoomControls session={session} label={snap.zoomLabel} />
         <button type="button" className="text-button" onClick={() => session.fit()}>
           Reset view
         </button>

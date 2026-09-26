@@ -95,6 +95,8 @@ export interface EditorSession {
   loadDocument: (file: DocumentFile, handle?: JsonFileHandle) => void;
   setNotice: (text: string, tone?: EditorNotice['tone']) => void;
   setZoom: (scale: number) => void;
+  setZoomByHandler: (handler: ((factor: number) => void) | null) => void;
+  zoomBy: (factor: number) => void;
   setFitHandler: (handler: (() => void) | null) => void;
   fit: () => void;
   boardDocuments: () => DocumentFile[];
@@ -129,6 +131,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   const history: YjsDocumentStore[] = [];
   let redoStore: YjsDocumentStore | null = null;
   let fitHandler: (() => void) | null = null;
+  let zoomByHandler: ((factor: number) => void) | null = null;
   let workspace: DefaultKind = 'page';
   let openId = options.documents[0]?.id ?? '';
   let selectedNodeId: string | null = null;
@@ -533,6 +536,12 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       if (label === zoomLabel) return;
       zoomLabel = label;
       publish();
+    },
+    setZoomByHandler(handler) {
+      zoomByHandler = handler;
+    },
+    zoomBy(factor) {
+      zoomByHandler?.(factor);
     },
     setFitHandler(handler) {
       fitHandler = handler;
