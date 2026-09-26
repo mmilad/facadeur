@@ -18,17 +18,18 @@ export function ViewportLayersList({
       <div className="viewport-layer-list">
         {breakpoints.map((breakpoint) => {
           const active = snap.selectedViewportId === breakpoint.id;
+          const stored = snap.viewportChrome[breakpoint.id];
+          const title = resolvedViewportChrome(breakpoint, stored, snap.document.kind).title;
           return (
             <button
               key={breakpoint.id}
               type="button"
+              data-breakpoint={breakpoint.id}
               className={active ? 'layer viewport-layer is-active' : 'layer viewport-layer'}
               onClick={() => session.selectViewport(breakpoint.id)}
             >
               <span className="layer-type">viewport</span>
-              <span className="layer-name">
-                {breakpoint.id} · {breakpoint.minWidth}
-              </span>
+              <span className="layer-name">{title}</span>
             </button>
           );
         })}
