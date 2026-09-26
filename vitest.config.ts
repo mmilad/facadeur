@@ -4,6 +4,9 @@ import { defineConfig } from 'vitest/config';
 const root = fileURLToPath(new URL('.', import.meta.url));
 
 export default defineConfig({
+  esbuild: {
+    jsx: 'automatic',
+  },
   resolve: {
     alias: {
       '@facadeur/core': `${root}packages/core/src/index.ts`,
@@ -22,5 +25,6 @@ export default defineConfig({
       'apps/*/test/**/*.test.tsx',
     ],
     environment: 'node',
+    setupFiles: ['apps/editor/test/setup-next-mock.ts'],
   },
 });

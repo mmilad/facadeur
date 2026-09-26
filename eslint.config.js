@@ -10,6 +10,7 @@ export default tseslint.config(
       '**/.next/**',
       '**/storybook-static/**',
       'schema/**',
+      'apps/editor/next-env.d.ts',
     ],
   },
   eslint.configs.recommended,

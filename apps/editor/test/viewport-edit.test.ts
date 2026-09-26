@@ -15,10 +15,10 @@ import signIn from '../../../examples/sign-in.json';
 import specimenPage from '../../../examples/specimen-page.json';
 import specimenSection from '../../../examples/specimen-section.json';
 import textarea from '../../../examples/textarea.json';
-import { createEditorSession } from '../src/session.js';
-import { writeStyleDeclaration } from '../src/style-edit.js';
-import { withTokenBreakpoint } from '../src/token-edit.js';
-import { viewportEditContext } from '../src/viewport-edit.js';
+import { createEditorSession } from '../src/domain/session.js';
+import { writeStyleDeclaration } from '../src/domain/style-edit.js';
+import { withTokenBreakpoint } from '../src/domain/token-edit.js';
+import { viewportEditContext } from '../src/domain/viewport-edit.js';
 
 const documents = validateCatalog([
   button,

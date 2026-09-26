@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { defaultBreakpoints } from '@facadeur/core';
-import { resolvedViewportChrome } from '../src/viewport-chrome.js';
+import { resolvedViewportChrome } from '../src/domain/viewport-chrome.js';
 
 describe('viewport chrome settings', () => {
   it('fills defaults and clamps numeric chrome', () => {

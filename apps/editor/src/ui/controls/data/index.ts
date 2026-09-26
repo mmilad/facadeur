@@ -1,5 +1,5 @@
-export { FieldsEditorControl } from './fields-editor-control.js';
-export { BindingsEditorControl } from './bindings-editor-control.js';
+export { FieldsEditorControl } from './FieldsEditorControl.js';
+export { BindingsEditorControl } from './BindingsEditorControl.js';
 export {
   BINDING_TARGET_LABEL,
   bindingFieldOptions,

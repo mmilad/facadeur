@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
 import { createDocumentStore } from '@facadeur/store-yjs';
-import { createViewportBoard } from '../src/viewports.js';
+import { createViewportBoard } from '../src/domain/viewports.js';
 
 const section: DocumentFile = {
   version: 1,

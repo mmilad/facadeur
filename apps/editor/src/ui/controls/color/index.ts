@@ -1,4 +1,4 @@
-export { ColorControl } from './color-control.js';
+export { ColorControl } from './ColorControl.js';
 export {
   customColorDraft,
   inferColorMode,

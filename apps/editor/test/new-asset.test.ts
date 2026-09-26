@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { validateCatalog } from '@facadeur/core';
-import { blankAsset } from '../src/new-asset.js';
+import { blankAsset } from '../src/domain/new-asset.js';
 
 describe('blankAsset', () => {
   it('names a new frame document and avoids ids already in the catalog', () => {

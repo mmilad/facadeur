@@ -5,7 +5,7 @@ import type {
   FieldType,
   FieldValue,
 } from '@facadeur/core';
-import { creatableFieldTypes } from '../../../definitions.js';
+import { creatableFieldTypes } from '../../../domain/definitions.js';
 
 export const BINDING_TARGET_LABEL: Record<BindingTarget, string> = {
   text: 'Text',

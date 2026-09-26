@@ -1,1 +1,1 @@
-export { CssDeclarationsControl } from './css-declarations-control.js';
+export { CssDeclarationsControl } from './CssDeclarationsControl.js';

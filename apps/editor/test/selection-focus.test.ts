@@ -4,9 +4,9 @@
 import { describe, expect, it } from 'vitest';
 import type { DomRenderer } from '@facadeur/renderer-dom';
 import type { StyleEngine } from '@facadeur/style-engine';
-import { createFrameHost } from '../src/frame-host.js';
-import { createSelection } from '../src/selection.js';
-import type { ViewportFrame } from '../src/viewports.js';
+import { createFrameHost } from '../src/domain/frame-host.js';
+import { createSelection } from '../src/domain/selection.js';
+import type { ViewportFrame } from '../src/domain/viewports.js';
 
 function mountedFrame(id: string, minWidth: number): ViewportFrame {
   const host = createFrameHost({ id, width: minWidth });

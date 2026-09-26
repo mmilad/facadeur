@@ -1,4 +1,4 @@
-export { ShadowControl } from './shadow-control.js';
+export { ShadowControl } from './ShadowControl.js';
 export {
   customShadowDraft,
   inferShadowMode,
