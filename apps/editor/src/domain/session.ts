@@ -25,6 +25,12 @@ import {
   type ViewportChromeSettings,
 } from './viewport-chrome.js';
 import type { StyleEditMode } from './viewport-edit.js';
+import {
+  pushDrillFrame,
+  stackThroughParent,
+  type DrillParent,
+  type DrillStackFrame,
+} from './drill-navigation.js';
 
 export type EditorTool = 'select' | 'frame' | 'text' | 'image';
 
@@ -82,6 +88,8 @@ export interface EditorSnapshot {
   documentDirty: boolean;
   /** Design file differs from the last successful save (or was never saved). */
   designDirty: boolean;
+  /** Session drill-in parents shown in the top bar breadcrumb. */
+  drillParents: readonly DrillParent[];
 }
 
 export interface EditorSession {
@@ -89,6 +97,10 @@ export interface EditorSession {
   getSnapshot: () => EditorSnapshot;
   setWorkspace: (kind: DefaultKind) => void;
   openAsset: (id: string, focus?: 'root') => void;
+  /** Instance double-click drill: push parent and open the master document. */
+  drillToMaster: (componentId: string) => void;
+  /** Open a breadcrumb parent and reselect its instance when possible. */
+  navigateDrillParent: (index: number) => void;
   selectNode: (nodeId: string | null) => void;
   selectRendered: (renderedId: string | null) => void;
   /** Last clicked viewport frame. Does not change the selection or the edit target. */
@@ -167,7 +179,21 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   let revision = 0;
   const designId = options.design.id;
   const savedJson: SavedJsonBaselines = new Map();
+  let drillStack: DrillStackFrame[] = [];
   let snapshot: EditorSnapshot | null = null;
+
+  function resetDrillStack() {
+    drillStack = [];
+  }
+
+  function drillParentsForSnapshot(): DrillParent[] {
+    return drillStack.map((frame) => {
+      const live = assetStores.get(frame.documentId)?.getDocument();
+      return live
+        ? { ...frame, documentName: live.name }
+        : frame;
+    });
+  }
 
   const resolveKind = (componentId: string) => kinds.get(componentId);
   let designStore: YjsDocumentStore = createDocumentStore(options.design, { resolveKind });
@@ -311,7 +337,44 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       revision,
       documentDirty: isDocumentDirty(savedJson, openId, document),
       designDirty: isDocumentDirty(savedJson, designId, design),
+      drillParents: drillParentsForSnapshot(),
     };
+  }
+
+  function openAssetCore(id: string, focus?: 'root', keepDrillStack = false) {
+    if (!keepDrillStack) resetDrillStack();
+    const store = assetStores.get(id);
+    if (!store) {
+      notice = { tone: 'error', text: `Unknown component "${id}"` };
+      publish();
+      return;
+    }
+    const doc = store.getDocument();
+    const kind = kindOf(doc);
+    openId = id;
+    workspace = kind;
+    lastOpen.set(kind, id);
+    tool = 'select';
+    drag = null;
+    if (focus === 'root') {
+      selectedNodeId = doc.rootId;
+      selectedRenderId = renderIdForNode(doc, doc.rootId, doc.kind !== 'page');
+    } else {
+      clearSelection();
+      clearViewportSelection();
+    }
+    publish();
+  }
+
+  function applySelectNode(nodeId: string) {
+    const doc = openFlat();
+    if (!doc.nodes[nodeId]) return;
+    const renderId = renderIdForNode(doc, nodeId, paintRoot());
+    if (selectedNodeId === nodeId && selectedRenderId === renderId) return;
+    clearViewportSelection();
+    selectedNodeId = nodeId;
+    selectedRenderId = renderId;
+    publish();
   }
 
   function run(store: YjsDocumentStore, command: Command) {
@@ -390,27 +453,35 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       publish();
     },
     openAsset(id, focus) {
-      const store = assetStores.get(id);
-      if (!store) {
-        notice = { tone: 'error', text: `Unknown component "${id}"` };
+      openAssetCore(id, focus);
+    },
+    drillToMaster(componentId) {
+      const doc = openFlat();
+      const instanceId = selectedNodeId;
+      if (!instanceId) return;
+      const node = doc.nodes[instanceId];
+      if (node?.type !== 'instance' || node.component !== componentId) return;
+      if (!assetStores.has(componentId)) {
+        notice = { tone: 'error', text: `Unknown component "${componentId}"` };
         publish();
         return;
       }
-      const doc = store.getDocument();
-      const kind = kindOf(doc);
-      openId = id;
-      workspace = kind;
-      lastOpen.set(kind, id);
-      tool = 'select';
-      drag = null;
-      if (focus === 'root') {
-        selectedNodeId = doc.rootId;
-        selectedRenderId = renderIdForNode(doc, doc.rootId, doc.kind !== 'page');
-      } else {
-        clearSelection();
-        clearViewportSelection();
+      drillStack = pushDrillFrame(drillStack, {
+        documentId: openId,
+        documentName: doc.name,
+        instanceNodeId: instanceId,
+      });
+      openAssetCore(componentId, 'root', true);
+    },
+    navigateDrillParent(index) {
+      if (index < 0 || index >= drillStack.length) return;
+      const frame = drillStack[index]!;
+      drillStack = stackThroughParent(drillStack, index);
+      openAssetCore(frame.documentId, undefined, true);
+      const parentDoc = openFlat();
+      if (parentDoc.nodes[frame.instanceNodeId]) {
+        applySelectNode(frame.instanceNodeId);
       }
-      publish();
     },
     selectNode(nodeId) {
       if (!nodeId) {
@@ -418,14 +489,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
         publish();
         return;
       }
-      const doc = openFlat();
-      if (!doc.nodes[nodeId]) return;
-      const renderId = renderIdForNode(doc, nodeId, paintRoot());
-      if (selectedNodeId === nodeId && selectedRenderId === renderId) return;
-      clearViewportSelection();
-      selectedNodeId = nodeId;
-      selectedRenderId = renderId;
-      publish();
+      applySelectNode(nodeId);
     },
     setTool(next) {
       if (tool === next) return;
@@ -520,6 +584,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
           publish();
           return;
         }
+        resetDrillStack();
         const nextFiles = order.map((id) => {
           if (id === file.id) return file;
           const store = assetStores.get(id);

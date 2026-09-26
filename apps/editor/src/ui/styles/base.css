@@ -80,6 +80,60 @@ input {
   text-transform: uppercase;
 }
 
+.topbar-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  min-width: 0;
+  max-width: min(48vw, 520px);
+  overflow: hidden;
+}
+
+.topbar-breadcrumb-segment {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  flex-shrink: 1;
+  overflow: hidden;
+}
+
+.topbar-breadcrumb-parent {
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar-breadcrumb-parent:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+.topbar-breadcrumb-sep {
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  padding: 0 0.35em;
+  flex: none;
+}
+
+.topbar-breadcrumb-current {
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .kind-badge {
   font-family: var(--mono);
   font-size: 11px;
