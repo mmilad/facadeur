@@ -7,6 +7,8 @@ import {
   placementAllowed,
   placeInParent,
   prefersInsideFrame,
+  insertModeCue,
+  isInsertTool,
   refusalMessage,
   sameSlot,
   writeLayoutFields,
@@ -582,9 +584,14 @@ export function StageCanvas({
   return (
     <div className="viewport" ref={viewportRef}>
       <div className="stage" ref={stageRef} />
-      <p className="hint">
-        Scroll to zoom · drag the canvas to pan · F T I insert · double-click drills in and opens
-        the master in the project tree
+      <p
+        className={isInsertTool(tool) ? 'hint insert-mode-cue' : 'hint'}
+        role={isInsertTool(tool) ? 'status' : undefined}
+        data-testid={isInsertTool(tool) ? 'insert-mode-cue' : 'stage-hint'}
+      >
+        {isInsertTool(tool)
+          ? insertModeCue(tool)
+          : 'Scroll to zoom · drag the canvas to pan · F T I insert · double-click drills in and opens the master in the project tree'}
       </p>
     </div>
   );

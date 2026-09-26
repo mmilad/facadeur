@@ -133,10 +133,28 @@ describe('editor shell', () => {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'f', bubbles: true }));
     });
     expect(session.getSnapshot().tool).toBe('frame');
+    const insertCue = () => host!.querySelector('[data-testid="insert-mode-cue"]');
+    expect(insertCue()?.textContent).toContain('Frame tool');
+    expect(insertCue()?.textContent).toContain('Esc or V (Select)');
+    expect(host!.querySelector('[data-testid="stage-hint"]')).toBeNull();
     await act(async () => {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     });
     expect(session.getSnapshot().tool).toBe('select');
+    expect(insertCue()).toBeNull();
+    expect(host!.querySelector('[data-testid="stage-hint"]')?.textContent).toContain(
+      'F T I insert',
+    );
+
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 't', bubbles: true }));
+    });
+    expect(insertCue()?.textContent).toContain('Text tool');
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'v', bubbles: true }));
+    });
+    expect(session.getSnapshot().tool).toBe('select');
+    expect(insertCue()).toBeNull();
 
     await act(async () => {
       host!

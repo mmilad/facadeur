@@ -13,7 +13,25 @@ import {
   type SizeValue,
 } from '@facadeur/core';
 
+import type { EditorTool } from './session.js';
+
 export type InsertTool = 'frame' | 'text' | 'image';
+
+const INSERT_TOOL_LABELS: Record<InsertTool, string> = {
+  frame: 'Frame',
+  text: 'Text',
+  image: 'Image',
+};
+
+export function isInsertTool(tool: EditorTool): tool is InsertTool {
+  return tool === 'frame' || tool === 'text' || tool === 'image';
+}
+
+/** Shell copy for the persistent insert-mode cue (stage chrome only). */
+export function insertModeCue(tool: InsertTool): string {
+  const label = INSERT_TOOL_LABELS[tool];
+  return `${label} tool — click the stage to insert · Esc or V (Select) to exit`;
+}
 
 export interface Box {
   left: number;

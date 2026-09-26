@@ -18,6 +18,8 @@ import {
   prefersInsideFrame,
   refusalMessage,
   sameSlot,
+  insertModeCue,
+  isInsertTool,
   toolAllowed,
   writeLayoutFields,
 } from '../src/domain/editing.js';
@@ -132,6 +134,15 @@ describe('editing', () => {
     expect(fontFamilyTokenRefs(tree)).toEqual(['{font.sans}']);
     expect(fontWeightTokenRefs(tree)).toEqual(['{font.weight.bold}']);
     expect(numberTokenRefs(tree)).toEqual(['{ratio.tight}']);
+  });
+
+  it('describes insert mode for frame, text, and image tools', () => {
+    expect(isInsertTool('select')).toBe(false);
+    expect(isInsertTool('frame')).toBe(true);
+    expect(insertModeCue('frame')).toMatch(/Frame tool/);
+    expect(insertModeCue('frame')).toMatch(/Esc or V \(Select\)/);
+    expect(insertModeCue('text')).toMatch(/Text tool/);
+    expect(insertModeCue('image')).toMatch(/Image tool/);
   });
 
   it('refuses placements the nesting rules do not allow', () => {
