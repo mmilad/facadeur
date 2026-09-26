@@ -145,9 +145,7 @@ export function PropertiesPanel({
               <p className="inspector-empty">Select a layer to edit data bindings.</p>
             )
           ) : node.type === 'instance' ? (
-            <p className="inspector-empty">
-              Instance field and variant overrides live on the Content tab.
-            </p>
+            <p className="inspector-empty">Use the Content tab for field and variant overrides.</p>
           ) : (
             <>
               <NodeBindings session={session} snap={snap} node={node} />
