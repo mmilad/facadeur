@@ -348,6 +348,47 @@ describe('editor shell', () => {
     expect(styles?.breakpoints?.tablet).toBeUndefined();
     expect(styles?.breakpoints?.desktop).toBeUndefined();
   });
+
+  it('shows a drill breadcrumb and clears it when opening from the tree', async () => {
+    const session: EditorSession = createEditorSession({
+      documents,
+      design: createProjectTemplateDocument(),
+    });
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => {
+      root?.render(<App session={session} />);
+    });
+    const view = host;
+
+    expect(view.querySelector('.topbar-breadcrumb')).toBeNull();
+    await act(async () => {
+      session.selectNode('specimen-section');
+      session.drillToMaster('specimen-section');
+    });
+    const trail = view.querySelector('.topbar-breadcrumb');
+    expect(trail?.textContent).toContain('Specimen');
+    expect(trail?.textContent).toContain('›');
+    expect(trail?.textContent).toContain('Specimen section');
+    expect(view.querySelectorAll('.topbar-breadcrumb-parent')).toHaveLength(1);
+    expect(view.querySelector('.topbar-breadcrumb-current')?.textContent).toBe('Specimen section');
+    expect(view.querySelector('.kind-badge')?.textContent).toBe('section');
+
+    await act(async () => {
+      (view.querySelector('.topbar-breadcrumb-parent') as HTMLButtonElement).click();
+    });
+    expect(session.getSnapshot().openId).toBe('specimen');
+    expect(session.getSnapshot().selectedNodeId).toBe('specimen-section');
+    expect(view.querySelector('.topbar-breadcrumb')).toBeNull();
+
+    await act(async () => {
+      session.selectNode('specimen-section');
+      session.drillToMaster('specimen-section');
+      (view.querySelector('[data-asset-id="button"]') as HTMLButtonElement).click();
+    });
+    expect(view.querySelector('.topbar-breadcrumb')).toBeNull();
+  });
 });
 
 function setInput(input: HTMLInputElement, value: string) {

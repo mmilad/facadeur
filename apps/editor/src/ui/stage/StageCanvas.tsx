@@ -319,7 +319,7 @@ export function StageCanvas({
           const chain = hit ? documentChain(snap.document, hit.id, snap.paintRoot) : [];
           const componentId = instanceOpenTarget(snap.document, chain, snap.selectedNodeId);
           if (componentId) {
-            session.openAsset(componentId, 'root');
+            session.drillToMaster(componentId);
             return;
           }
         }
