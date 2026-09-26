@@ -55,7 +55,8 @@
 .viewport-frames {
   display: flex;
   align-items: flex-start;
-  gap: 72px;
+  /* P2-2: responsive horizontal gap between side-by-side viewport frames */
+  gap: clamp(24px, 4vw, 72px);
 }
 
 .viewport-frame {
