@@ -252,7 +252,7 @@ describe('editor shell', () => {
     });
     expect(session.getSnapshot().editTarget).toBe('viewport');
     expect(padding.textContent).toContain('space.5');
-    expect(host.textContent).toContain('Override bei 768');
+    expect(host.textContent).toContain('Override at 768');
 
     const reset = [...host.querySelectorAll('.override-cue button')].find((button) =>
       button.textContent?.includes('Reset'),

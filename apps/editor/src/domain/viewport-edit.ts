@@ -60,5 +60,5 @@ export function viewportEditContext(input: {
 
 /** Cue copy for a property that has a min-width override at the focused viewport. */
 export function overrideLabel(minWidth: number): string {
-  return `Override bei ${minWidth}`;
+  return `Override at ${minWidth}`;
 }

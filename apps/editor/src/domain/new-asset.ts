@@ -12,7 +12,7 @@ export interface AssetIdentity {
   name: string;
 }
 
-/** Empty frame document for "Neu anlegen". Ids and names stay unique in the catalog. */
+/** Empty frame document for "New". Ids and names stay unique in the catalog. */
 export function blankAsset(kind: DefaultKind, taken: readonly AssetIdentity[]): DocumentFile {
   const baseName = `New ${NOUN[kind]}`;
   const names = new Set(taken.map((asset) => asset.name));
