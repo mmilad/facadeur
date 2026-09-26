@@ -30,6 +30,7 @@ import { UnsavedIndicator } from '../../shell/UnsavedIndicator.js';
 import type { DesignDomain } from './design-domain.js';
 import { designDomainLabel, tokenMatchesDomain } from './design-domain.js';
 import { ColorTokenAddRow, RemoveColorTokenButton } from './ColorsTokenCrud.js';
+import { RemoveRadiusTokenButton, RadiusTokenAddRow } from './RadiusTokenCrud.js';
 import { RemoveSpacingTokenButton, SpacingTokenAddRow } from './SpacingTokenCrud.js';
 
 type TokenDomain = Exclude<DesignDomain, 'fonts'>;
@@ -93,6 +94,7 @@ export function TokensDomainPanel({
       </div>
       {domain === 'colors' ? <ColorTokenAddRow session={session} snap={snap} /> : null}
       {domain === 'spacing' ? <SpacingTokenAddRow session={session} snap={snap} /> : null}
+      {domain === 'radius' ? <RadiusTokenAddRow session={session} snap={snap} /> : null}
       <label className="field">
         <span>Filter</span>
         <input
@@ -200,6 +202,9 @@ export function TokensDomainPanel({
             ) : null}
             {domain === 'spacing' ? (
               <RemoveSpacingTokenButton session={session} snap={snap} path={token.path} />
+            ) : null}
+            {domain === 'radius' ? (
+              <RemoveRadiusTokenButton session={session} snap={snap} path={token.path} />
             ) : null}
             {ctx.overrideViewport && token.breakpoints[ctx.overrideViewport.id] !== undefined ? (
               <OverrideCue
