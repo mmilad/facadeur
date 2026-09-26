@@ -15,7 +15,11 @@ import {
 } from '../../domain/editing.js';
 import { overlayBox, pointInFrame, type OverlayBox } from '../../domain/geometry.js';
 import { isEditableTarget } from '../../domain/keyboard.js';
-import { dataIdSelector, createSelection, type SelectionController } from '../../domain/selection.js';
+import {
+  dataIdSelector,
+  createSelection,
+  type SelectionController,
+} from '../../domain/selection.js';
 import {
   documentChain,
   instanceOpenTarget,
@@ -23,9 +27,18 @@ import {
   resolveClick,
   type SelectMode,
 } from '../../domain/selection-model.js';
-import type { EditorDrag, EditorSession, EditorSnapshot, EditorTool } from '../../domain/session.js';
+import type {
+  EditorDrag,
+  EditorSession,
+  EditorSnapshot,
+  EditorTool,
+} from '../../domain/session.js';
 import { createStage, type StageController } from '../../domain/stage.js';
-import { createViewportBoard, type ViewportBoard, type ViewportFrame } from '../../domain/viewports.js';
+import {
+  createViewportBoard,
+  type ViewportBoard,
+  type ViewportFrame,
+} from '../../domain/viewports.js';
 
 export function StageCanvas({
   session,

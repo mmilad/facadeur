@@ -4,7 +4,12 @@ import { createId, findParent } from '@facadeur/core';
 import { placementAllowed, refusalMessage, toolAllowed } from '../../domain/editing.js';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { documentToJson, openJsonFile, parseDocumentText, saveJsonFile } from '../../domain/files.js';
+import {
+  documentToJson,
+  openJsonFile,
+  parseDocumentText,
+  saveJsonFile,
+} from '../../domain/files.js';
 import { isEditableTarget } from '../../domain/keyboard.js';
 import type { EditorSession } from '../../domain/session.js';
 import { isDesignDomain, type EditorSurface } from '../sidebar/design/design-domain.js';
@@ -28,8 +33,8 @@ export function EditorShell({ session }: { session: EditorSession }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [surface, setSurfaceState] = useState<EditorSurface>(
-    () => surfaceFromParam(searchParams.get(SURFACE_PARAM)),
+  const [surface, setSurfaceState] = useState<EditorSurface>(() =>
+    surfaceFromParam(searchParams.get(SURFACE_PARAM)),
   );
   const seenOpenId = useRef(snap.openId);
   useEditorKeys(session);

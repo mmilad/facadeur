@@ -1,5 +1,9 @@
 import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
-import { editorBreakpoints, overrideLabel, viewportEditContext } from '../../../domain/viewport-edit.js';
+import {
+  editorBreakpoints,
+  overrideLabel,
+  viewportEditContext,
+} from '../../../domain/viewport-edit.js';
 
 export function ViewportEditBar({
   session,

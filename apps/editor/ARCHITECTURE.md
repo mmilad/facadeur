@@ -16,13 +16,13 @@ Session, editing commands, selection, viewports, style/token edit helpers, files
 
 ## UI (`src/ui/`)
 
-| Area | Path | Role |
-|------|------|------|
-| Shell | `shell/` | Top bar, `EditorShell`, tools |
-| Stage | `stage/` | Canvas + design-domain stage |
-| Form kit | `form/` | Generic form components (unchanged contract) |
+| Area     | Path               | Role                                                      |
+| -------- | ------------------ | --------------------------------------------------------- |
+| Shell    | `shell/`           | Top bar, `EditorShell`, tools                             |
+| Stage    | `stage/`           | Canvas + design-domain stage                              |
+| Form kit | `form/`            | Generic form components (unchanged contract)              |
 | Controls | `controls/<name>/` | Domain controls (`Component.tsx`, `value.ts`, `index.ts`) |
-| Sidebar | `sidebar/` | Chrome around the tree and inspector |
+| Sidebar  | `sidebar/`         | Chrome around the tree and inspector                      |
 
 ### Properties inspector (`sidebar/properties/`)
 

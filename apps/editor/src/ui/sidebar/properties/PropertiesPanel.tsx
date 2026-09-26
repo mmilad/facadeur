@@ -28,7 +28,13 @@ const PROPERTY_STYLE_SUBTABS = [
   ['overrides', 'Overrides'],
 ] as const;
 
-export function PropertiesPanel({ session, snap }: { session: EditorSession; snap: EditorSnapshot }) {
+export function PropertiesPanel({
+  session,
+  snap,
+}: {
+  session: EditorSession;
+  snap: EditorSnapshot;
+}) {
   const node = snap.selectedNode;
   const showDefinitions =
     ownsComponentFeatures(snap.document.kind) && (!node || node.id === snap.document.rootId);
