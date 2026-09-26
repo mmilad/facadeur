@@ -1,7 +1,10 @@
 import type { FlatNode } from '@facadeur/core';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
+import { attributeEnumOptions, HtmlTagSelect } from '../../../controls/html/index.js';
 import { InstanceOverridesControl } from '../../../controls/instance/index.js';
 import { TextControl } from '../../../controls/fields/index.js';
+import { Field, Select } from '../../../form/index.js';
+import '../../../form/form.css';
 import { ComponentFields } from './ComponentFields.js';
 
 export function ContentPanel({
@@ -38,8 +41,7 @@ export function ContentPanel({
         }
       />
       {node.type !== 'instance' ? (
-        <TextControl
-          label="Tag"
+        <HtmlTagSelect
           name="tag"
           value={node.tag ?? ''}
           onCommit={(value) =>
@@ -91,15 +93,30 @@ export function ContentPanel({
         </>
       ) : null}
       {node.type !== 'instance' && node.attributes
-        ? Object.entries(node.attributes).map(([key, value]) => (
-            <TextControl
-              key={key}
-              label={key}
-              name={`attr-${key}`}
-              value={value}
-              onCommit={(next) => commitAttribute(session, node, key, next)}
-            />
-          ))
+        ? Object.entries(node.attributes).map(([key, value]) => {
+            const enumOptions = attributeEnumOptions(key);
+            if (enumOptions) {
+              return (
+                <Field key={key} label={key}>
+                  <Select
+                    name={`attr-${key}`}
+                    value={value}
+                    options={enumOptions.map((option) => ({ value: option, label: option }))}
+                    onCommit={(next) => commitAttribute(session, node, key, next)}
+                  />
+                </Field>
+              );
+            }
+            return (
+              <TextControl
+                key={key}
+                label={key}
+                name={`attr-${key}`}
+                value={value}
+                onCommit={(next) => commitAttribute(session, node, key, next)}
+              />
+            );
+          })
         : null}
       {node.type === 'instance' ? (
         <InstanceFields session={session} node={node} snap={snap} />

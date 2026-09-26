@@ -60,7 +60,7 @@ describe('properties inspector tabs', () => {
     expect(host.querySelector('button[name="property-tab-content"]')).toBeInstanceOf(
       HTMLButtonElement,
     );
-    expect(host.querySelector('input[name="tag"]')).toBeInstanceOf(HTMLInputElement);
+    expect(host.querySelector('select[name="tag"]')).toBeInstanceOf(HTMLSelectElement);
     expect(host.querySelector('select[name="layout-direction"]')).toBeNull();
 
     await act(async () => {
@@ -69,7 +69,7 @@ describe('properties inspector tabs', () => {
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
     expect(host.querySelector('select[name="layout-direction"]')).toBeInstanceOf(HTMLSelectElement);
-    expect(host.querySelector('input[name="tag"]')).toBeNull();
+    expect(host.querySelector('select[name="tag"]')).toBeNull();
   });
 
   it('resets to Content when selection changes', async () => {
@@ -92,12 +92,12 @@ describe('properties inspector tabs', () => {
         .querySelector('button[name="property-tab-data"]')
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
-    expect(host.querySelector('input[name="tag"]')).toBeNull();
+    expect(host.querySelector('select[name="tag"]')).toBeNull();
 
     await act(async () => {
       session.selectNode('root');
     });
-    expect(host.querySelector('input[name="tag"]')).toBeInstanceOf(HTMLInputElement);
+    expect(host.querySelector('select[name="tag"]')).toBeInstanceOf(HTMLSelectElement);
   });
 
   it('does not show property tabs when a viewport is selected', async () => {

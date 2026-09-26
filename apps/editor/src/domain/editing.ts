@@ -48,6 +48,17 @@ export function dimensionTokenRefs(tree: unknown): string[] {
   return tokenRefsByType(tree, 'dimension');
 }
 
+/** Dimension tokens under `radius.*` for corner radii. */
+export function radiusTokenRefs(tree: unknown): string[] {
+  return dimensionTokenRefs(tree).filter((ref) => tokenPath(ref).startsWith('radius.'));
+}
+
+function tokenPath(ref: string): string {
+  const trimmed = ref.trim();
+  if (trimmed.startsWith('{') && trimmed.endsWith('}')) return trimmed.slice(1, -1);
+  return trimmed;
+}
+
 /** Color tokens as `{path}` references for style and token editors. */
 export function colorTokenRefs(tree: unknown): string[] {
   return tokenRefsByType(tree, 'color');
