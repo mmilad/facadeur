@@ -14,6 +14,7 @@ import { ProjectTree } from '../sidebar/layers/ProjectTree.js';
 import { RightRail } from '../sidebar/properties/RightRail.js';
 import { StageCanvas } from '../stage/StageCanvas.js';
 import { ResizableInspector } from './ResizableInspector.js';
+import { ResizableLeftRail } from './ResizableLeftRail.js';
 import { ToolBar } from './ToolBar.js';
 import { UnsavedIndicator } from './UnsavedIndicator.js';
 import { ZoomControls } from './ZoomControls.js';
@@ -103,17 +104,21 @@ export function EditorShell({ session }: { session: EditorSession }) {
       ) : null}
       <div className="workspace">
         <aside className="side side-left">
-          <ProjectTree
-            session={session}
-            snap={snap}
-            surface={surface}
-            onOpenAsset={(id) => {
-              session.openAsset(id);
-              setSurface('properties');
-            }}
-            onOpenDesignDomain={(domain) => setSurface(domain)}
+          <ResizableLeftRail
+            project={
+              <ProjectTree
+                session={session}
+                snap={snap}
+                surface={surface}
+                onOpenAsset={(id) => {
+                  session.openAsset(id);
+                  setSurface('properties');
+                }}
+                onOpenDesignDomain={(domain) => setSurface(domain)}
+              />
+            }
+            layers={<LayersPanel session={session} snap={snap} />}
           />
-          <LayersPanel session={session} snap={snap} />
         </aside>
         {isDesignDomain(surface) ? (
           <DesignDomainStage session={session} snap={snap} domain={surface} />
