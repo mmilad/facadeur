@@ -95,7 +95,7 @@ describe('viewport layers UX', () => {
       session.openAsset('button', 'root');
     });
     expect(host.querySelector('.viewport-edit')).toBeTruthy();
-    expect(host.querySelector('input[name="tag"]')).toBeInstanceOf(HTMLInputElement);
+    expect(host.querySelector('select[name="tag"]')).toBeInstanceOf(HTMLSelectElement);
     expect(session.getSnapshot().selectedViewportId).toBeNull();
   });
 });

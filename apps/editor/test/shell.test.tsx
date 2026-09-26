@@ -118,9 +118,9 @@ describe('editor shell', () => {
     await act(async () => {
       session.selectNode('root');
     });
-    const tag = host.querySelector('input[name="tag"]');
-    expect(tag).toBeInstanceOf(HTMLInputElement);
-    expect((tag as HTMLInputElement).value).toBe('button');
+    const tag = host.querySelector('select[name="tag"]');
+    expect(tag).toBeInstanceOf(HTMLSelectElement);
+    expect((tag as HTMLSelectElement).value).toBe('button');
     const layoutTab = host.querySelector('button[name="property-tab-layout"]');
     await act(async () => {
       layoutTab?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -243,15 +243,15 @@ describe('editor shell', () => {
       styleTab?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
     const padding = host.querySelector(
-      'input[name="style-root-base-base-paddingInline"]',
-    ) as HTMLInputElement;
-    expect(padding.value).toBe('{button.padding.x}');
+      'button[name="style-root-base-base-paddingInline"]',
+    ) as HTMLButtonElement;
+    expect(padding.textContent).toContain('button.padding.x');
 
     await act(async () => {
       viewportButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
     expect(session.getSnapshot().editTarget).toBe('viewport');
-    expect(padding.value).toBe('{space.5}');
+    expect(padding.textContent).toContain('space.5');
     expect(host.textContent).toContain('Override bei 768');
 
     const reset = [...host.querySelectorAll('.override-cue button')].find((button) =>

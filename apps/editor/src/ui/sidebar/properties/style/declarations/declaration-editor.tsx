@@ -1,3 +1,14 @@
+import { useMemo } from 'react';
+import {
+  colorTokenRefs,
+  dimensionTokenRefs,
+  fontFamilyTokenRefs,
+  fontWeightTokenRefs,
+  numberTokenRefs,
+  radiusTokenRefs,
+  shadowTokenRefs,
+  typographyTokenRefs,
+} from '../../../../../domain/editing.js';
 import type { EditorSession, EditorSnapshot } from '../../../../../domain/session.js';
 import {
   readStyleDeclarations,
@@ -7,6 +18,7 @@ import {
 } from '../../../../../domain/style-edit.js';
 import { editorBreakpoints, viewportEditContext } from '../../../../../domain/viewport-edit.js';
 import { CssDeclarationsControl } from '../../../../controls/generic/index.js';
+import { projectFontRefs, type TypographyCatalogs } from '../../../../controls/typography/index.js';
 import { OverrideCue } from '../../ViewportEditBar.js';
 
 export function DeclarationEditor({
@@ -38,8 +50,28 @@ export function DeclarationEditor({
     ? { ...target, breakpointId: writingBreakpointId }
     : target;
 
+  const catalogs = useMemo(() => {
+    const typographyCatalogs: TypographyCatalogs = {
+      fontRefs: projectFontRefs(snap.design.fonts),
+      fontFamilyTokens: fontFamilyTokenRefs(snap.design.tokens),
+      fontWeightTokens: fontWeightTokenRefs(snap.design.tokens),
+      dimensionTokens: dimensionTokenRefs(snap.design.tokens),
+      numberTokens: numberTokenRefs(snap.design.tokens),
+    };
+    const radiusTokens = radiusTokenRefs(snap.design.tokens);
+    return {
+      colorTokens: colorTokenRefs(snap.design.tokens),
+      shadowTokens: shadowTokenRefs(snap.design.tokens),
+      typographyTokens: typographyTokenRefs(snap.design.tokens),
+      dimensionTokens: dimensionTokenRefs(snap.design.tokens),
+      radiusTokens: radiusTokens.length ? radiusTokens : dimensionTokenRefs(snap.design.tokens),
+      typographyCatalogs,
+    };
+  }, [snap.design.fonts, snap.design.tokens]);
+
   return (
     <CssDeclarationsControl
+      catalogs={catalogs}
       entries={listed.map((item) => ({
         ...item,
         placeholder:

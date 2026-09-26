@@ -42,8 +42,40 @@
 }
 
 .side-right {
-  width: 320px;
+  position: relative;
+  flex: none;
   border-left: 1px solid var(--line);
+}
+
+.inspector-rail {
+  display: flex;
+  flex-direction: row;
+  min-height: 0;
+}
+
+.inspector-rail > .side-block,
+.inspector-rail > section {
+  flex: 1;
+  min-width: 0;
+}
+
+.inspector-resize-handle {
+  flex: none;
+  width: 6px;
+  margin-left: -3px;
+  cursor: col-resize;
+  touch-action: none;
+  z-index: 2;
+}
+
+.inspector-resize-handle:hover,
+body.is-resizing-inspector .inspector-resize-handle {
+  background: color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+body.is-resizing-inspector {
+  cursor: col-resize;
+  user-select: none;
 }
 
 .side-block {
@@ -314,6 +346,16 @@
 
 .token-type {
   margin-left: 6px;
+}
+
+.declaration-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.properties .property-panel {
+  padding-top: 4px;
 }
 
 .inspector .side-scroll {

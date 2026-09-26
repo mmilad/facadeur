@@ -18,6 +18,7 @@ import { LayersPanel } from '../sidebar/layers/LayersPanel.js';
 import { ProjectTree } from '../sidebar/layers/ProjectTree.js';
 import { RightRail } from '../sidebar/properties/RightRail.js';
 import { StageCanvas } from '../stage/StageCanvas.js';
+import { ResizableInspector } from './ResizableInspector.js';
 import { ToolBar } from './ToolBar.js';
 
 const SURFACE_PARAM = 'surface';
@@ -126,9 +127,9 @@ export function EditorShell({ session }: { session: EditorSession }) {
             tool={snap.tool}
           />
         )}
-        <aside className="side side-right">
+        <ResizableInspector>
           <RightRail session={session} snap={snap} surface={surface} />
-        </aside>
+        </ResizableInspector>
       </div>
     </div>
   );
