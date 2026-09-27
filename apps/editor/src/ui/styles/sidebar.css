@@ -395,6 +395,12 @@ body.is-resizing-inspector {
 .asset.is-active,
 .layer.is-active {
   background: #f3e6dc;
+  box-shadow: inset 3px 0 var(--accent);
+}
+
+.asset.is-active .asset-id,
+.layer.is-active .layer-type {
+  color: var(--accent);
 }
 
 .layer.is-insert-before {
