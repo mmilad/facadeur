@@ -85,7 +85,7 @@ export function CssDeclarationsControl({
         </p>
       ) : null}
       {border ? (
-        <Section title="Border">
+        <Section title="Border" collapsible>
           <BorderControl
             namePrefix={declarationName('border')}
             value={border}
@@ -97,7 +97,7 @@ export function CssDeclarationsControl({
         </Section>
       ) : null}
       {borderRadius ? (
-        <Section title="Radius">
+        <Section title="Radius" collapsible>
           <BorderRadiusControl
             namePrefix={declarationName('radius')}
             value={borderRadius}
@@ -112,7 +112,7 @@ export function CssDeclarationsControl({
         <p className="meta">{emptyMessage}</p>
       ) : null}
       {visibleGroups.map((group) => (
-        <Section key={group.id} title={group.label}>
+        <Section key={group.id} title={group.label} collapsible defaultOpen={group.id !== 'layout'}>
           {group.items.map((item) => (
             <StyleDeclarationField
               key={item.property}
@@ -131,7 +131,7 @@ export function CssDeclarationsControl({
           ))}
         </Section>
       ))}
-      <Section title="Add property">
+      <Section title="Add property" collapsible defaultOpen={false}>
         <Stack gap={8}>
           <Field label="Property">
             <TextInput

@@ -25,14 +25,7 @@ export function Section({
             collapsible ? (
               <button
                 type="button"
-                className="eu-section__title"
-                style={{
-                  background: 'none',
-                  border: 0,
-                  padding: 0,
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                }}
+                className="eu-section__title eu-section__title--collapsible"
                 aria-expanded={open}
                 onClick={() => setOpen((value) => !value)}
               >

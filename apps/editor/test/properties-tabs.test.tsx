@@ -101,6 +101,9 @@ describe('properties inspector tabs', () => {
     expect(host.querySelector('.eu-section__title')?.textContent).toBe('Color');
     expect(host.textContent).toContain('Typography');
     expect(host.textContent).not.toContain('Other');
+    expect(
+      host.querySelector('.eu-section__title--collapsible[aria-expanded="false"]')?.textContent,
+    ).toBe('Add property');
   });
 
   it('puts layout declarations in the Layout group', async () => {
@@ -126,6 +129,9 @@ describe('properties inspector tabs', () => {
 
     expect(host.textContent).toContain('CSS layout');
     expect(host.textContent).not.toContain('Other');
+    expect(
+      host.querySelector('.eu-section__title--collapsible[aria-expanded="false"]')?.textContent,
+    ).toBe('CSS layout');
   });
 
   it('resets to Content when selection changes', async () => {

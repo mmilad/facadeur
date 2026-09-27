@@ -61,6 +61,33 @@
   letter-spacing: 0.01em;
 }
 
+.eu-section__title--collapsible {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.eu-section__title--collapsible::before {
+  width: 5px;
+  height: 5px;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  content: '';
+  transform: rotate(45deg) translateY(-1px);
+  transition: transform 120ms ease;
+}
+
+.eu-section__title--collapsible[aria-expanded='false']::before {
+  transform: rotate(-45deg) translate(-1px, 1px);
+}
+
 .instance-overrides-card {
   display: flex;
   flex-direction: column;
