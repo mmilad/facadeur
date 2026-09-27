@@ -41,6 +41,9 @@ describe('examples', () => {
     expect(link?.fields?.map((field) => field.name)).toEqual(['label', 'href']);
     const textarea = documents.find((document) => document.id === 'textarea');
     expect(textarea?.variants?.[0]?.name).toBe('resize');
+    const toggle = documents.find((document) => document.id === 'form-toggle');
+    expect(toggle?.styles?.children?.switch?.declarations?.borderRadius).toBe('{radius.full}');
+    expect(toggle?.styles?.children?.thumb?.declarations?.borderRadius).toBe('{radius.full}');
     const page = documents.find((document) => document.id === 'specimen');
     expect(page?.kind).toBe('page');
     expect(page?.root).toMatchObject({
