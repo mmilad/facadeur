@@ -72,6 +72,35 @@ describe('properties inspector tabs', () => {
     expect(host.querySelector('select[name="tag"]')).toBeNull();
   });
 
+  it('groups style declarations by purpose', async () => {
+    const session: EditorSession = createEditorSession({
+      documents,
+      design: createProjectTemplateDocument(),
+    });
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => {
+      root?.render(<App session={session} />);
+    });
+    await act(async () => {
+      session.openAsset('input', 'root');
+      session.selectNode('root');
+    });
+    await act(async () => {
+      host!
+        .querySelector('button[name="property-tab-style"]')
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(host.querySelector('button[name="property-tab-style"]')?.getAttribute('aria-selected')).toBe(
+      'true',
+    );
+    expect(host.querySelector('.eu-section__title')?.textContent).toBe('Color');
+    expect(host.textContent).toContain('Typography');
+    expect(host.textContent).not.toContain('Other');
+  });
+
   it('resets to Content when selection changes', async () => {
     const session: EditorSession = createEditorSession({
       documents,

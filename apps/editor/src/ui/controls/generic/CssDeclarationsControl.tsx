@@ -13,6 +13,7 @@ import {
 } from '../border/index.js';
 import { Field, Inline, Section, Stack, TextInput } from '../../form/index.js';
 import { StyleDeclarationField } from '../style/index.js';
+import { styleDeclarationKind } from '../style/declaration-kind.js';
 import type { TypographyCatalogs } from '../typography/index.js';
 import '../../form/form.css';
 
@@ -61,6 +62,7 @@ export function CssDeclarationsControl({
   const visibleEntries = entries.filter(
     (item) => !borderKeys.has(item.property) && !radiusKeys.has(item.property),
   );
+  const visibleGroups = groupDeclarations(visibleEntries);
 
   function replaceKeys(remove: readonly string[], set: Record<string, string>) {
     for (const key of remove) {
@@ -107,21 +109,25 @@ export function CssDeclarationsControl({
       {visibleEntries.length === 0 && !border && !borderRadius ? (
         <p className="meta">No declarations.</p>
       ) : null}
-      {visibleEntries.map((item) => (
-        <StyleDeclarationField
-          key={item.property}
-          property={item.property}
-          value={item.value}
-          placeholder={item.placeholder}
-          name={declarationName(item.property)}
-          colorTokens={catalogs.colorTokens}
-          shadowTokens={catalogs.shadowTokens}
-          typographyTokens={catalogs.typographyTokens}
-          dimensionTokens={catalogs.dimensionTokens}
-          typographyCatalogs={catalogs.typographyCatalogs}
-          onCommit={(next) => onCommitDeclaration(item.property, next, item.overridden)}
-          after={renderAfterRow?.(item.property, item.overridden)}
-        />
+      {visibleGroups.map((group) => (
+        <Section key={group.id} title={group.label}>
+          {group.items.map((item) => (
+            <StyleDeclarationField
+              key={item.property}
+              property={item.property}
+              value={item.value}
+              placeholder={item.placeholder}
+              name={declarationName(item.property)}
+              colorTokens={catalogs.colorTokens}
+              shadowTokens={catalogs.shadowTokens}
+              typographyTokens={catalogs.typographyTokens}
+              dimensionTokens={catalogs.dimensionTokens}
+              typographyCatalogs={catalogs.typographyCatalogs}
+              onCommit={(next) => onCommitDeclaration(item.property, next, item.overridden)}
+              after={renderAfterRow?.(item.property, item.overridden)}
+            />
+          ))}
+        </Section>
       ))}
       <Section title="Add property">
         <Stack gap={8}>
@@ -160,4 +166,53 @@ export function CssDeclarationsControl({
       </Section>
     </Stack>
   );
+}
+
+type DeclarationGroup = {
+  id: DeclarationGroupId;
+  label: string;
+  items: CssDeclarationEntry[];
+};
+
+type DeclarationGroupId = 'color' | 'typography' | 'spacing' | 'effects' | 'behavior' | 'other';
+
+const DECLARATION_GROUP_LABELS: Record<DeclarationGroupId, string> = {
+  color: 'Color',
+  typography: 'Typography',
+  spacing: 'Spacing',
+  effects: 'Effects',
+  behavior: 'Behavior',
+  other: 'Other',
+};
+
+function groupDeclarations(entries: CssDeclarationEntry[]): DeclarationGroup[] {
+  const groups: DeclarationGroup[] = [];
+  for (const entry of entries) {
+    const id = declarationGroupId(entry.property);
+    let group = groups.find((candidate) => candidate.id === id);
+    if (!group) {
+      group = { id, label: DECLARATION_GROUP_LABELS[id], items: [] };
+      groups.push(group);
+    }
+    group.items.push(entry);
+  }
+  return groups;
+}
+
+function declarationGroupId(property: string): DeclarationGroupId {
+  switch (styleDeclarationKind(property)) {
+    case 'color':
+      return 'color';
+    case 'typography':
+    case 'typography-token':
+      return 'typography';
+    case 'spacing':
+      return 'spacing';
+    case 'shadow':
+      return 'effects';
+    case 'enum':
+      return 'behavior';
+    default:
+      return 'other';
+  }
 }

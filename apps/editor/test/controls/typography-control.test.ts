@@ -8,6 +8,7 @@ import {
   parseTypographyFieldValue,
   projectFontRefs,
 } from '../../src/ui/controls/typography/value.js';
+import { styleDeclarationKind } from '../../src/ui/controls/style/declaration-kind.js';
 
 describe('typography control value', () => {
   it('detects token references', () => {
@@ -31,6 +32,10 @@ describe('typography control value', () => {
     expect(isTypographyStyleProperty('font-size')).toBe(true);
     expect(isTypographyStyleProperty('font-feature-settings')).toBe(true);
     expect(isTypographyStyleProperty('margin')).toBe(false);
+    expect(styleDeclarationKind('fontWeight')).toBe('typography');
+    expect(styleDeclarationKind('letterSpacing')).toBe('typography');
+    expect(styleDeclarationKind('borderColor')).toBe('color');
+    expect(styleDeclarationKind('textTransform')).toBe('enum');
   });
 
   it('formats and parses typography fields', () => {

@@ -42,13 +42,13 @@ export type StyleDeclarationKind =
   'color' | 'shadow' | 'typography' | 'typography-token' | 'spacing' | 'enum' | 'text';
 
 export function styleDeclarationKind(property: string): StyleDeclarationKind {
-  const name = property.trim();
+  const name = normalizeProperty(property);
   if (isColorStyleProperty(name)) return 'color';
   if (isShadowStyleProperty(name)) return 'shadow';
   if (TYPOGRAPHY_TOKEN_PROPERTIES.has(name)) return 'typography-token';
+  if (CSS_ENUM_OPTIONS[name] || CSS_ENUM_OPTIONS[toCamel(name)]) return 'enum';
   if (isTypographyStyleProperty(name)) return 'typography';
   if (SPACING_PROPERTY.test(name)) return 'spacing';
-  if (CSS_ENUM_OPTIONS[name] || CSS_ENUM_OPTIONS[toCamel(name)]) return 'enum';
   return 'text';
 }
 
@@ -61,4 +61,11 @@ export function enumOptionsForProperty(property: string): readonly string[] | nu
 
 function toCamel(property: string): string {
   return property.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase());
+}
+
+function normalizeProperty(property: string): string {
+  return property
+    .trim()
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .toLowerCase();
 }
