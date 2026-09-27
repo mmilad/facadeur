@@ -108,4 +108,27 @@ describe('variant overlays', () => {
       ],
     });
   });
+
+  it('rejects unknown targets and root removal during catalog validation', () => {
+    const invalid = {
+      ...specimen,
+      id: 'invalid-variant-targets',
+      variants: [
+        {
+          name: 'broken',
+          overrides: {
+            nodes: { 'root.missing': { text: 'Nope' } },
+          },
+        },
+      ],
+    } satisfies DocumentFile;
+    expect(() => validateCatalog([invalid])).toThrow(/targets unknown node/);
+
+    const removesRoot = {
+      ...specimen,
+      id: 'invalid-root-removal',
+      variants: [{ name: 'broken', overrides: { removed: ['root'] } }],
+    } satisfies DocumentFile;
+    expect(() => validateCatalog([removesRoot])).toThrow(/cannot remove the root/);
+  });
 });

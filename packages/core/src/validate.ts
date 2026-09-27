@@ -153,6 +153,7 @@ export function validateDefinitions(doc: FlatDocument): void {
   }
   for (const variant of doc.variantPresets ?? []) {
     assertVariantPreset(variant);
+    assertVariantTargets(doc, variant);
     if (variantNames.has(variant.name)) {
       throw new DocumentError('schema', `Duplicate variant "${variant.name}"`);
     }
@@ -229,7 +230,10 @@ export function assertFieldDefinition(field: FieldDefinition): void {
     throw new DocumentError('schema', `Only enum fields can have options ("${field.name}")`);
   }
   if (field.items && field.type !== 'array' && field.type !== 'object') {
-    throw new DocumentError('schema', `Only array and object fields can define items ("${field.name}")`);
+    throw new DocumentError(
+      'schema',
+      `Only array and object fields can define items ("${field.name}")`,
+    );
   }
   if ((field.type === 'array' || field.type === 'object') && field.items) {
     if (field.type === 'array' && field.items.type === 'object' && !field.items.fields?.length) {
@@ -312,6 +316,69 @@ export function assertVariantPreset(variant: VariantPreset): void {
       );
     }
   }
+}
+
+function assertVariantTargets(doc: FlatDocument, variant: VariantPreset): void {
+  const overrides = variant.overrides;
+  if (!overrides) return;
+  for (const target of Object.keys(overrides.nodes ?? {})) {
+    if (!hasNodeTarget(doc, target)) {
+      throw new DocumentError(
+        'schema',
+        `Variant "${variant.name}" targets unknown node "${target}" on "${doc.id}"`,
+      );
+    }
+  }
+  for (const target of overrides.removed ?? []) {
+    if (!hasNodeTarget(doc, target)) {
+      throw new DocumentError(
+        'schema',
+        `Variant "${variant.name}" removes unknown node "${target}" on "${doc.id}"`,
+      );
+    }
+    if (isRootTarget(doc, target)) {
+      throw new DocumentError(
+        'schema',
+        `Variant "${variant.name}" cannot remove the root node "${doc.rootId}"`,
+      );
+    }
+  }
+  for (const insertion of overrides.insertions ?? []) {
+    if (!hasNodeTarget(doc, insertion.parent)) {
+      throw new DocumentError(
+        'schema',
+        `Variant "${variant.name}" inserts under unknown node "${insertion.parent}" on "${doc.id}"`,
+      );
+    }
+    const parent = nodeForTarget(doc, insertion.parent);
+    if (parent?.type !== 'frame') {
+      throw new DocumentError(
+        'schema',
+        `Variant "${variant.name}" can only insert under a frame ("${insertion.parent}")`,
+      );
+    }
+  }
+}
+
+function hasNodeTarget(doc: FlatDocument, target: string): boolean {
+  return Boolean(nodeForTarget(doc, target));
+}
+
+function isRootTarget(doc: FlatDocument, target: string): boolean {
+  return target === doc.rootId || target === `${doc.rootId}`;
+}
+
+function nodeForTarget(doc: FlatDocument, target: string): FlatNode | undefined {
+  const direct = doc.nodes[target];
+  if (direct) return direct;
+  const parts = target.split('.');
+  if (parts[0] !== doc.rootId) return undefined;
+  let current = doc.nodes[doc.rootId];
+  for (const id of parts.slice(1)) {
+    if (!current || current.type !== 'frame' || !current.children.includes(id)) return undefined;
+    current = doc.nodes[id];
+  }
+  return current;
 }
 
 export function assertValueMatches(field: FieldDefinition, value: FieldValue): void {
