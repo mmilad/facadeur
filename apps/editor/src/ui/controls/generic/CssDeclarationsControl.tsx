@@ -36,6 +36,7 @@ export function CssDeclarationsControl({
   onCommitDeclaration,
   onAddDeclaration,
   renderAfterRow,
+  emptyMessage = 'No declarations.',
 }: {
   entries: CssDeclarationEntry[];
   variantViewportNote?: boolean;
@@ -44,6 +45,7 @@ export function CssDeclarationsControl({
   onCommitDeclaration: (property: string, raw: string, overridden: boolean) => void;
   onAddDeclaration: (property: string, value: string) => void;
   renderAfterRow?: (property: string, overridden: boolean) => ReactNode;
+  emptyMessage?: ReactNode;
 }) {
   const [property, setProperty] = useState('');
   const [value, setValue] = useState('');
@@ -107,7 +109,7 @@ export function CssDeclarationsControl({
         </Section>
       ) : null}
       {visibleEntries.length === 0 && !border && !borderRadius ? (
-        <p className="meta">No declarations.</p>
+        <p className="meta">{emptyMessage}</p>
       ) : null}
       {visibleGroups.map((group) => (
         <Section key={group.id} title={group.label}>

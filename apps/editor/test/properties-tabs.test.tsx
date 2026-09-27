@@ -11,6 +11,7 @@ import card from '../../../examples/card.json';
 import input from '../../../examples/input.json';
 import link from '../../../examples/link.json';
 import signIn from '../../../examples/sign-in.json';
+import formToggle from '../../../examples/form-toggle.json';
 import specimenPage from '../../../examples/specimen-page.json';
 import specimenSection from '../../../examples/specimen-section.json';
 import textarea from '../../../examples/textarea.json';
@@ -22,6 +23,7 @@ const documents = validateCatalog([
   link,
   input,
   textarea,
+  formToggle,
   card,
   signIn,
   specimenSection,
@@ -176,6 +178,37 @@ describe('properties inspector tabs', () => {
       'Root frame · Input',
     );
     expect(host.textContent).toContain('Component fields');
+  });
+
+  it('explains inherited styles for an empty variant override', async () => {
+    const session: EditorSession = createEditorSession({
+      documents,
+      design: createProjectTemplateDocument(),
+    });
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => {
+      root?.render(<App session={session} />);
+    });
+    await act(async () => {
+      session.openAsset('form-toggle', 'root');
+      session.selectNode('switch');
+    });
+    await act(async () => {
+      host!
+        .querySelector('button[name="property-tab-style"]')
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await act(async () => {
+      host!
+        .querySelector('button[name="property-style-tab-variants"]')
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(host.textContent).toContain(
+      'No overrides for this variant. It inherits the base styles.',
+    );
   });
 
   it('makes instance overrides and the master relationship explicit', async () => {

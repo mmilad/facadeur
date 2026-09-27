@@ -96,6 +96,7 @@ export function DeclarationEditor({
       onAddDeclaration={(property, value) => {
         commitDeclaration(session, snap, writeTarget, property, value);
       }}
+      emptyMessage={emptyMessage(target)}
       renderAfterRow={(property, overridden) =>
         overridden && cueViewport ? (
           <OverrideCue
@@ -114,6 +115,19 @@ export function DeclarationEditor({
       }
     />
   );
+}
+
+function emptyMessage(target: StyleEditTarget): string {
+  if (target.axis && target.state) {
+    return 'No overrides for this state. It inherits the variant styles.';
+  }
+  if (target.axis) {
+    return 'No overrides for this variant. It inherits the base styles.';
+  }
+  if (target.state) {
+    return 'No overrides for this state. It inherits the base styles.';
+  }
+  return 'No declarations.';
 }
 
 function commitDeclaration(
