@@ -22,7 +22,6 @@ export function ContentPanel({
 }) {
   return (
     <>
-      <p className="inspector-id">{node.id}</p>
       <dl className="kv">
         <dt>Type</dt>
         <dd>{node.type}</dd>

@@ -148,6 +148,7 @@ describe('properties inspector tabs', () => {
     expect(host.querySelector('.inspector-context-path')?.textContent).toBe(
       'Specimen section / fields / input-row',
     );
+    expect(host.querySelector('.inspector-id')).toBeNull();
   });
 
   it('labels the component root as the document being edited', async () => {
