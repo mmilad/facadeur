@@ -154,6 +154,7 @@ export function validateDefinitions(doc: FlatDocument): void {
   for (const variant of doc.variantPresets ?? []) {
     assertVariantPreset(variant);
     assertVariantTargets(doc, variant);
+    assertVariantFieldTargets(doc, variant);
     if (variantNames.has(variant.name)) {
       throw new DocumentError('schema', `Duplicate variant "${variant.name}"`);
     }
@@ -189,6 +190,26 @@ export function validateDefinitions(doc: FlatDocument): void {
       if (!binding.name.trim()) {
         throw new DocumentError('schema', `Event binding "${binding.event}" needs a native event`);
       }
+    }
+  }
+}
+
+function assertVariantFieldTargets(doc: FlatDocument, variant: VariantPreset): void {
+  const overrides = variant.overrides;
+  if (!overrides) return;
+  const fields = new Set(doc.fields.map((field) => field.name));
+  for (const fieldName of overrides.unsetFields ?? []) {
+    if (!fields.has(fieldName)) {
+      throw new DocumentError(
+        'unknown-field',
+        `Variant "${variant.name}" unsets unknown field "${fieldName}" on "${doc.id}"`,
+      );
+    }
+    if (overrides.fields && Object.prototype.hasOwnProperty.call(overrides.fields, fieldName)) {
+      throw new DocumentError(
+        'schema',
+        `Variant "${variant.name}" cannot set and unset field "${fieldName}" together`,
+      );
     }
   }
 }

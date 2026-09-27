@@ -472,6 +472,32 @@ describe('atom contracts', () => {
     expect(hostSource).toContain("variant='compact'");
   });
 
+  it('generates an undefined default when a named variant unsets an optional field', () => {
+    const component: DocumentFile = {
+      version: 1,
+      id: 'optional-variant-default',
+      name: 'Optional variant default',
+      kind: 'component',
+      fields: [{ name: 'title', type: 'text', default: 'Title' }],
+      variants: [
+        { name: 'default' },
+        { name: 'empty', overrides: { unsetFields: ['title'] } },
+      ],
+      root: {
+        id: 'root',
+        type: 'text',
+        bindings: [{ field: 'title', target: 'text' }],
+      },
+    };
+
+    const sourceText = source(
+      generateReact({ documents: [component] }).ui,
+      'components/OptionalVariantDefault.tsx',
+    );
+    expect(sourceText).toContain("title = variant === 'empty' ? undefined : 'Title'");
+    expect(sourceText).toContain('title?: string;');
+  });
+
   it('generates repeat maps and item display conditions', () => {
     const component: DocumentFile = {
       version: 1,

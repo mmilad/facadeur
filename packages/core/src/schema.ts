@@ -436,6 +436,8 @@ export const variantInsertionSchema = Type.Object(
 export const variantOverridesSchema = Type.Object(
   {
     fields: Type.Optional(Type.Record(idSchema, fieldValueSchema)),
+    /** Optional field defaults can be explicitly removed without duplicating the base definition. */
+    unsetFields: Type.Optional(Type.Array(idSchema, { uniqueItems: true })),
     nodes: Type.Optional(Type.Record(nodeTargetSchema, variantNodeOverrideSchema)),
     removed: Type.Optional(Type.Array(nodeTargetSchema, { uniqueItems: true })),
     insertions: Type.Optional(Type.Array(variantInsertionSchema)),

@@ -187,6 +187,58 @@ describe('variant overlays', () => {
     expect(roundTrip.root).toEqual(edited.root);
   });
 
+  it('derives and resolves removed optional field defaults without copying the definition', () => {
+    const base: DocumentFile = {
+      version: 1,
+      id: 'optional-field-variant',
+      name: 'Optional field variant',
+      kind: 'component',
+      fields: [
+        { name: 'title', type: 'text', default: 'Title' },
+        { name: 'description', type: 'text' },
+      ],
+      root: {
+        id: 'root',
+        type: 'text',
+        bindings: [{ field: 'title', target: 'text' }],
+      },
+    };
+    const edited = structuredClone(base);
+    delete edited.fields?.[0]?.default;
+
+    const derived = deriveVariantPreset(base, edited, 'untitled');
+    expect(derived.overrides).toEqual({ unsetFields: ['title'] });
+    expect(() => validateCatalog([{ ...base, variants: [derived] }])).not.toThrow();
+
+    const resolved = resolveVariantDocument({ ...base, variants: [derived] }, 'untitled');
+    expect(resolved.fields?.map(({ name, default: value }) => ({ name, default: value }))).toEqual([
+      { name: 'title', default: undefined },
+      { name: 'description', default: undefined },
+    ]);
+    expect(resolved.fields).toHaveLength(2);
+  });
+
+  it('rejects unknown and conflicting optional field unsets', () => {
+    const unknown = {
+      ...specimen,
+      id: 'unknown-field-unset',
+      variants: [{ name: 'broken', overrides: { unsetFields: ['missing'] } }],
+    } satisfies DocumentFile;
+    expect(() => validateCatalog([unknown])).toThrow(/unsets unknown field/);
+
+    const conflict = {
+      ...specimen,
+      id: 'conflicting-field-unset',
+      variants: [
+        {
+          name: 'broken',
+          overrides: { fields: { label: 'Changed' }, unsetFields: ['label'] },
+        },
+      ],
+    } satisfies DocumentFile;
+    expect(() => validateCatalog([conflict])).toThrow(/set and unset field/);
+  });
+
   it('rejects unknown targets and root removal during catalog validation', () => {
     const invalid = {
       ...specimen,

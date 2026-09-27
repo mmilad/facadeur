@@ -36,6 +36,16 @@ export function resolveVariantDocument(document: DocumentFile, name = 'default')
     }
     field.default = value;
   }
+  for (const fieldName of overrides.unsetFields ?? []) {
+    const field = fields.get(fieldName);
+    if (!field) {
+      throw new DocumentError(
+        'unknown-field',
+        `Variant "${name}" unsets unknown field "${fieldName}" on "${document.id}"`,
+      );
+    }
+    delete field.default;
+  }
 
   const removed = new Set(overrides.removed ?? []);
   next.root = applyNode(next.root, overrides.nodes ?? {}, removed, overrides.insertions ?? []);
@@ -70,18 +80,18 @@ export function deriveVariantPreset(
 
   const overrides: VariantOverrides = {};
   const fields: Record<string, NonNullable<VariantOverrides['fields']>[string]> = {};
+  const unsetFields: string[] = [];
   for (const [fieldName, baseField] of baseFields) {
     const editedField = editedFields.get(fieldName)!;
     if (sameValue(baseField.default, editedField.default)) continue;
     if (editedField.default === undefined) {
-      throw new DocumentError(
-        'schema',
-        `Variant "${name}" cannot clear the default of field "${fieldName}"`,
-      );
+      if (baseField.default !== undefined) unsetFields.push(fieldName);
+      continue;
     }
     fields[fieldName] = structuredClone(editedField.default);
   }
   if (Object.keys(fields).length) overrides.fields = fields;
+  if (unsetFields.length) overrides.unsetFields = unsetFields.sort();
 
   const baseEntries = collectNodes(base.root);
   const editedEntries = collectNodes(edited.root);

@@ -169,7 +169,12 @@ function applyVariantDefaults(entry: CatalogEntry, variantProp: string): void {
     const field = entry.document.fields?.find((candidate) => candidate.name === fieldName);
     if (!field) continue;
     const overrides = variants.flatMap((variant) => {
-      const value = variant.overrides?.fields?.[fieldName];
+      if (variant.overrides?.unsetFields?.includes(fieldName)) {
+        return [{ name: variant.name, value: 'undefined' }];
+      }
+      const values = variant.overrides?.fields;
+      if (!values || !Object.prototype.hasOwnProperty.call(values, fieldName)) return [];
+      const value = values[fieldName];
       if (value === undefined) return [];
       assertDefault(entry.document.id, field, value);
       return [{ name: variant.name, value: jsLiteral(value) }];
