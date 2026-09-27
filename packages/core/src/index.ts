@@ -111,7 +111,7 @@ export {
   type TokenTree,
 } from './token-tree.js';
 export { type DocumentChange, type DocumentStore } from './store.js';
-export { resolveVariantDocument, variantPresets } from './variants.js';
+export { deriveVariantPreset, resolveVariantDocument, variantPresets } from './variants.js';
 export {
   assertStyleContract,
   assertStyleMap,

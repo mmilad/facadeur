@@ -1,4 +1,14 @@
-import { DocumentError, type Command, type DefaultKind, type FlatDocument } from '@facadeur/core';
+import {
+  applyCommand,
+  deriveVariantPreset,
+  DocumentError,
+  resolveVariantDocument,
+  toFlat,
+  toNested,
+  type Command,
+  type DefaultKind,
+  type FlatDocument,
+} from '@facadeur/core';
 import { createDocumentStore, type YjsDocumentStore } from '@facadeur/store-yjs';
 import type { JsonFileHandle } from '../files.js';
 import { markDocumentSaved, type SavedJsonBaselines } from '../save-state.js';
@@ -221,6 +231,24 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     }
   }
 
+  function runWithActiveVariant(store: YjsDocumentStore, command: Command) {
+    const activeStore = assetStores.get(openId);
+    if (store !== activeStore || !activeVariantName || !variantEditableCommand(command)) {
+      run(store, command);
+      return;
+    }
+    try {
+      const base = toNested(store.getDocument());
+      const active = resolveVariantDocument(base, activeVariantName);
+      const edited = toNested(applyCommand(toFlat(active), command, { resolveKind }));
+      const preset = deriveVariantPreset(base, edited, activeVariantName);
+      run(store, { type: 'setVariantPreset', preset });
+    } catch (error) {
+      notice = { tone: 'error', text: errorText(error) };
+      publish();
+    }
+  }
+
   registerSessionAssetDocuments({
     documents: options.documents,
     designId,
@@ -337,7 +365,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       applySelectNode,
       paintRoot,
       openStore,
-      run,
+      run: runWithActiveVariant,
       loadDocument: bindLoadDocument({
         designId,
         getDesignStore: () => designStore,
@@ -409,4 +437,20 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       },
     }),
   };
+}
+
+function variantEditableCommand(command: Command): boolean {
+  switch (command.type) {
+    case 'insert':
+    case 'remove':
+    case 'move':
+    case 'wrap':
+    case 'setProp':
+    case 'setStyle':
+    case 'setField':
+    case 'setVariant':
+      return true;
+    default:
+      return false;
+  }
 }

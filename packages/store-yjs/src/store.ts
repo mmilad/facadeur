@@ -42,6 +42,7 @@ export function createDocumentStore(
       doc.getMap('settings'),
       doc.getArray('fields'),
       doc.getArray('variants'),
+      doc.getArray('variantPresets'),
       doc.getMap('nodes'),
       doc.getMap('tokens'),
       doc.getMap('fonts'),

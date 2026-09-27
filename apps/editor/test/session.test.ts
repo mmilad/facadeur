@@ -89,6 +89,39 @@ describe('editor session', () => {
     expect(editor.getSnapshot().notice?.text).toMatch(/unknown variant/i);
   });
 
+  it('persists edits made in the active variant as sparse overrides', () => {
+    const editor = session();
+    editor.openAsset('variant-component', 'root');
+    editor.setActiveVariant('compact');
+
+    editor.execute({ type: 'setProp', nodeId: 'root', prop: 'text', value: 'Compact text' });
+
+    const source = editor.getSnapshot().document;
+    expect(source.nodes.root).not.toHaveProperty('text');
+
+    const variant = editor.boardDocuments().find((document) => document.id === 'variant-component');
+    expect(variant?.variants).toEqual([
+      { name: 'default' },
+      {
+        name: 'compact',
+        overrides: {
+          fields: { label: 'Compact' },
+          nodes: { root: { text: 'Compact text' } },
+        },
+      },
+    ]);
+    expect(editor.getSnapshot().documentDirty).toBe(true);
+    expect(editor.getSnapshot().canUndo).toBe(true);
+
+    editor.undo();
+    expect(
+      editor.boardDocuments().find((document) => document.id === 'variant-component')?.variants,
+    ).toEqual([
+      { name: 'default' },
+      { name: 'compact', overrides: { fields: { label: 'Compact' } } },
+    ]);
+  });
+
   it('edits the open document through commands and undoes across stores', () => {
     const editor = session();
     editor.openAsset('specimen-section');
