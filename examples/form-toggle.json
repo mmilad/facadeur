@@ -4,7 +4,10 @@
   "name": "Toggle",
   "kind": "component",
   "group": "form",
-  "fields": [{ "name": "label", "type": "text", "default": "Enabled" }],
+  "fields": [
+    { "name": "label", "type": "text", "default": "Enabled" },
+    { "name": "value", "type": "text", "default": "On" }
+  ],
   "variants": [
     {
       "name": "state",
@@ -95,8 +98,8 @@
             "id": "state",
             "type": "text",
             "tag": "span",
-            "text": "On",
-            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } },
+            "bindings": [{ "field": "value", "target": "text" }]
           }
         ]
       }

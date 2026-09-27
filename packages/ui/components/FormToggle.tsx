@@ -7,6 +7,7 @@ export type FormToggleState = 'on' | 'off' | 'disabled';
 
 export interface FormToggleProps {
   label?: string;
+  value?: string;
   state?: FormToggleState;
   /** Instance id. Sets `data-node` so a parent style rule can address this element. */
   nodeId?: string;
@@ -15,6 +16,7 @@ export interface FormToggleProps {
 
 export function FormToggle({
   label = 'Enabled',
+  value = 'On',
   state = 'on',
   nodeId,
   className,
@@ -28,7 +30,7 @@ export function FormToggle({
     >
       <span data-node="label">{label}</span>
       <div data-node="switch">
-        <span data-node="state">On</span>
+        <span data-node="state">{value}</span>
       </div>
     </label>
   );

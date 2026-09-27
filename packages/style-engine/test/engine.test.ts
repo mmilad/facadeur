@@ -7,6 +7,7 @@ import { createDomRenderer } from '@facadeur/renderer-dom';
 import { createStyleEngine, type CompiledRule } from '@facadeur/style-engine';
 import { compileDocument } from '@facadeur/style-engine';
 import button from '../../../examples/button.json';
+import formSegmented from '../../../examples/form-segmented.json';
 import input from '../../../examples/input.json';
 import textarea from '../../../examples/textarea.json';
 import type { DocumentFile } from '@facadeur/core';
@@ -54,6 +55,19 @@ describe('component style block', () => {
       expect(control?.declarations).toContainEqual(['box-sizing', 'border-box']);
       expect(control?.declarations.some(([name]) => name === 'flex-direction')).toBe(false);
     }
+  });
+
+  it('applies the segmented selection state to the matching option', () => {
+    const compiled = text(compileDocument(formSegmented as DocumentFile));
+    expect(compiled).toContain(
+      '[data-component="form-segmented"][data-variant-state="start"] [data-node="start"]',
+    );
+    expect(compiled).toContain(
+      '[data-component="form-segmented"][data-variant-state="center"] [data-node="center"]',
+    );
+    expect(compiled).toContain(
+      '[data-component="form-segmented"][data-variant-state="end"] [data-node="end"]',
+    );
   });
 
   it('writes the painted canvas root into the live stylesheet', () => {

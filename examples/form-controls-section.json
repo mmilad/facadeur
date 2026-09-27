@@ -306,7 +306,7 @@
                   "width": { "mode": "fixed", "size": 180 },
                   "height": { "mode": "hug" }
                 },
-                "fields": { "label": "Use token" },
+                "fields": { "label": "Use token", "value": "On" },
                 "variants": { "state": "on" }
               },
               {
@@ -317,7 +317,7 @@
                   "width": { "mode": "fixed", "size": 180 },
                   "height": { "mode": "hug" }
                 },
-                "fields": { "label": "Use token" },
+                "fields": { "label": "Use token", "value": "Off" },
                 "variants": { "state": "off" }
               },
               {
@@ -328,7 +328,7 @@
                   "width": { "mode": "fixed", "size": 180 },
                   "height": { "mode": "hug" }
                 },
-                "fields": { "label": "Use token" },
+                "fields": { "label": "Use token", "value": "Disabled" },
                 "variants": { "state": "disabled" }
               }
             ]

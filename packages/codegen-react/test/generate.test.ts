@@ -162,6 +162,16 @@ describe('generateReact', () => {
     expect(button).toContain('tone:');
     expect(button).toContain('export const Default: Story = {};');
   });
+
+  it('keeps form control state data connected to the rendered control', () => {
+    const formToggle = source(
+      generateReact({ documents, design }).ui,
+      'components/FormToggle.tsx',
+    );
+    expect(formToggle).toContain('value?: string;');
+    expect(formToggle).toContain("data-node='state'");
+    expect(formToggle).toContain('{value}');
+  });
 });
 
 describe('bindings outside the examples', () => {

@@ -78,9 +78,14 @@ export function FormControlsSection({ nodeId, className }: FormControlsSectionPr
           />
           <FormSelect nodeId="select-disabled" label="Breakpoint" value="Base" state="disabled" />
           <FormSegmented nodeId="alignment" label="Alignment" state="start" />
-          <FormToggle nodeId="toggle-on" label="Use token" state="on" />
-          <FormToggle nodeId="toggle-off" label="Use token" state="off" />
-          <FormToggle nodeId="toggle-disabled" label="Use token" state="disabled" />
+          <FormToggle nodeId="toggle-on" label="Use token" value="On" state="on" />
+          <FormToggle nodeId="toggle-off" label="Use token" value="Off" state="off" />
+          <FormToggle
+            nodeId="toggle-disabled"
+            label="Use token"
+            value="Disabled"
+            state="disabled"
+          />
         </div>
       </section>
       <section data-node="field-definition">
