@@ -1,4 +1,10 @@
-import type { DefaultKind, FlatDocument } from '@facadeur/core';
+import {
+  resolveVariantDocument,
+  toFlat,
+  toNested,
+  type DefaultKind,
+  type FlatDocument,
+} from '@facadeur/core';
 import type { YjsDocumentStore } from '@facadeur/store-yjs';
 import { componentVariantsFor, publicEventsFor, publicFieldsFor } from '../component-contract.js';
 import { layerTree, nodeIdForHit, renderIdForNode } from '../selection-model.js';
@@ -45,8 +51,14 @@ export interface SnapshotBuildContext {
 
 export function buildEditorSnapshot(ctx: SnapshotBuildContext): EditorSnapshot {
   const document = ctx.document;
+  const activeDocument =
+    ctx.activeVariantName && document.kind === 'component'
+      ? toFlat(resolveVariantDocument(toNested(document), ctx.activeVariantName))
+      : document;
   const design = ctx.design;
-  const selectedNode = ctx.selectedNodeId ? (document.nodes[ctx.selectedNodeId] ?? null) : null;
+  const selectedNode = ctx.selectedNodeId
+    ? (activeDocument.nodes[ctx.selectedNodeId] ?? null)
+    : null;
   const assets: AssetSummary[] = [];
   const catalog: AssetSummary[] = [];
   const catalogDocuments = new Map<string, FlatDocument>();
@@ -72,8 +84,9 @@ export function buildEditorSnapshot(ctx: SnapshotBuildContext): EditorSnapshot {
     openId: ctx.openId,
     paintRoot: document.kind !== 'page',
     assets,
-    layers: layerTree(document),
+    layers: layerTree(activeDocument),
     document,
+    activeDocument,
     design,
     selectedNodeId: ctx.selectedNodeId,
     selectedRenderId: ctx.selectedRenderId,

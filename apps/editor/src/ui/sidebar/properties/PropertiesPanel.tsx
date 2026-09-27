@@ -36,13 +36,21 @@ export function PropertiesPanel({
   session: EditorSession;
   snap: EditorSnapshot;
 }) {
-  const node = snap.selectedNode;
+  const inspectorSnap = snap.activeVariantName
+    ? {
+        ...snap,
+        document: snap.activeDocument,
+        selectedNode: snap.activeDocument.nodes[snap.selectedNodeId ?? ''] ?? null,
+      }
+    : snap;
+  const node = inspectorSnap.selectedNode;
   const showDefinitions =
-    ownsComponentFeatures(snap.document.kind) && (!node || node.id === snap.document.rootId);
+    ownsComponentFeatures(inspectorSnap.document.kind) &&
+    (!node || node.id === inspectorSnap.document.rootId);
   const [primaryTab, setPrimaryTab] = useState<PropertyPrimaryTab>('content');
   const [styleSubTab, setStyleSubTab] = useState<PropertyStyleSubTab>('declarations');
   const selectionKey = node?.id ?? '__none__';
-  const isRoot = node?.id === snap.document.rootId;
+  const isRoot = node?.id === inspectorSnap.document.rootId;
 
   useEffect(() => {
     setPrimaryTab('content');
@@ -54,34 +62,34 @@ export function PropertiesPanel({
     ? node.type === 'instance'
       ? snap.componentTarget?.name || node.component
       : isRoot
-        ? snap.document.name
+        ? inspectorSnap.document.name
         : node.name || node.id
-    : snap.document.name;
+    : inspectorSnap.document.name;
   const contextKicker =
     node?.type === 'instance'
       ? 'Instance override'
       : isRoot
-        ? `${documentKindLabel(snap.document.kind)} root`
-      : node
-        ? 'Selected layer'
-        : snap.document.kind === 'component'
-          ? 'Component'
-          : snap.document.kind === 'page'
-            ? 'Page'
-            : snap.document.kind === 'section'
-              ? 'Section'
-              : 'Atom';
+        ? `${documentKindLabel(inspectorSnap.document.kind)} root`
+        : node
+          ? 'Selected layer'
+          : inspectorSnap.document.kind === 'component'
+            ? 'Component'
+            : inspectorSnap.document.kind === 'page'
+              ? 'Page'
+              : inspectorSnap.document.kind === 'section'
+                ? 'Section'
+                : 'Atom';
   const contextMeta =
     node?.type === 'instance'
-      ? `Local to ${snap.document.name} · edit master for shared changes`
+      ? `Local to ${inspectorSnap.document.name} · edit master for shared changes`
       : node
         ? isRoot
-          ? `Root frame · ${snap.document.name}`
-          : `${node.type} · ${snap.document.name}`
-        : snap.document.kind === 'component'
+          ? `Root frame · ${inspectorSnap.document.name}`
+          : `${node.type} · ${inspectorSnap.document.name}`
+        : inspectorSnap.document.kind === 'component'
           ? 'Master · select a layer to edit'
           : `Document · select a layer to edit`;
-  const contextPath = node ? selectionPath(snap.document, node) : [];
+  const contextPath = node ? selectionPath(inspectorSnap.document, node) : [];
 
   return (
     <div className="properties">
@@ -95,6 +103,7 @@ export function PropertiesPanel({
           </span>
         ) : null}
       </div>
+      <VariantTabs session={session} snap={snap} />
       <div className="tabs property-tabs" role="tablist" aria-label="Properties sections">
         {PROPERTY_PRIMARY_TABS.map(([id, label]) => (
           <button
@@ -114,14 +123,14 @@ export function PropertiesPanel({
         <div role="tabpanel" className="property-panel">
           {!node ? (
             showDefinitions ? (
-              <ComponentFields session={session} snap={snap} />
+              <ComponentFields session={session} snap={inspectorSnap} />
             ) : (
               <p className="inspector-empty">Select a layer or an element on the stage.</p>
             )
           ) : (
             <ContentPanel
               session={session}
-              snap={snap}
+              snap={inspectorSnap}
               node={node}
               showDefinitions={showDefinitions}
             />
@@ -154,11 +163,11 @@ export function PropertiesPanel({
                 ))}
               </div>
               {styleSubTab === 'declarations' ? (
-                <StyleDeclarationsPanel session={session} snap={snap} nodeId={node.id} />
+                <StyleDeclarationsPanel session={session} snap={inspectorSnap} nodeId={node.id} />
               ) : null}
               {styleSubTab === 'variants' ? (
-                node.id !== snap.document.rootId ? (
-                  <NodeVariantStylesPanel session={session} snap={snap} nodeId={node.id} />
+                node.id !== inspectorSnap.document.rootId ? (
+                  <NodeVariantStylesPanel session={session} snap={inspectorSnap} nodeId={node.id} />
                 ) : (
                   <p className="meta">
                     Variant styles for child layers appear when a nested node is selected.
@@ -166,7 +175,7 @@ export function PropertiesPanel({
                 )
               ) : null}
               {styleSubTab === 'overrides' ? (
-                <StyleOverridesPanel session={session} snap={snap} node={node} />
+                <StyleOverridesPanel session={session} snap={inspectorSnap} node={node} />
               ) : null}
             </>
           )}
@@ -177,7 +186,7 @@ export function PropertiesPanel({
           {!node ? (
             <p className="inspector-empty">Select a layer to edit layout.</p>
           ) : (
-            <LayoutPanel session={session} snap={snap} node={node} />
+            <LayoutPanel session={session} snap={inspectorSnap} node={node} />
           )}
         </div>
       ) : null}
@@ -185,7 +194,7 @@ export function PropertiesPanel({
         <div role="tabpanel" className="property-panel">
           {!node ? (
             showDefinitions ? (
-              <ComponentVariants session={session} snap={snap} />
+              <ComponentVariants session={session} snap={inspectorSnap} />
             ) : (
               <p className="inspector-empty">Select a layer to edit data bindings.</p>
             )
@@ -193,12 +202,49 @@ export function PropertiesPanel({
             <p className="inspector-empty">Use the Content tab for field and variant overrides.</p>
           ) : (
             <>
-              <NodeBindings session={session} snap={snap} node={node} />
-              {showDefinitions ? <ComponentVariants session={session} snap={snap} /> : null}
+              <NodeBindings session={session} snap={inspectorSnap} node={node} />
+              {showDefinitions ? (
+                <ComponentVariants session={session} snap={inspectorSnap} />
+              ) : null}
             </>
           )}
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function VariantTabs({ session, snap }: { session: EditorSession; snap: EditorSnapshot }) {
+  if (snap.document.kind !== 'component' || !snap.document.variantPresets?.length) return null;
+
+  const names = [
+    'default',
+    ...snap.document.variantPresets
+      .map((preset) => preset.name)
+      .filter((name) => name !== 'default'),
+  ];
+
+  return (
+    <div className="variant-tabs" role="tablist" aria-label="Component variants">
+      <span className="variant-tabs-label">Variant</span>
+      <div className="variant-tabs-list">
+        {names.map((name) => {
+          const active = (snap.activeVariantName ?? 'default') === name;
+          return (
+            <button
+              key={name}
+              type="button"
+              role="tab"
+              name={`variant-tab-${name}`}
+              className={active ? 'variant-tab is-active' : 'variant-tab'}
+              aria-selected={active}
+              onClick={() => session.setActiveVariant(name === 'default' ? null : name)}
+            >
+              {name}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

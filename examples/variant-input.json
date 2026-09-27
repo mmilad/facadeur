@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "id": "variant-input",
+  "name": "Variant input",
+  "kind": "component",
+  "group": "form",
+  "fields": [
+    { "name": "label", "type": "text", "default": "Email" },
+    { "name": "value", "type": "text", "default": "name@example.com" }
+  ],
+  "variants": [
+    { "name": "default" },
+    {
+      "name": "compact",
+      "overrides": {
+        "nodes": {
+          "control": {
+            "style": {
+              "font-size": "12px",
+              "padding": "4px 8px"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "root": {
+    "id": "root",
+    "type": "frame",
+    "tag": "label",
+    "children": [
+      {
+        "id": "label",
+        "type": "text",
+        "tag": "span",
+        "bindings": [{ "field": "label", "target": "text" }]
+      },
+      {
+        "id": "control",
+        "type": "text",
+        "tag": "input",
+        "attributes": { "type": "email" },
+        "bindings": [{ "field": "value", "target": "text" }]
+      }
+    ]
+  }
+}

@@ -552,6 +552,61 @@ body.is-resizing-inspector {
   background: var(--sidebar);
 }
 
+.variant-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0 0 8px;
+  padding: 8px 0 7px;
+  border-bottom: 1px solid var(--line);
+  background: var(--sidebar);
+}
+
+.variant-tabs + .property-tabs {
+  top: 62px;
+}
+
+.variant-tabs-label {
+  padding: 0 12px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.variant-tabs-list {
+  display: flex;
+  gap: 3px;
+  overflow-x: auto;
+  padding: 0 8px;
+}
+
+.variant-tab {
+  flex: none;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  padding: 5px 9px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.variant-tab:hover {
+  background: rgba(28, 25, 21, 0.06);
+  color: var(--ink);
+}
+
+.variant-tab.is-active {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--white);
+}
+
 .property-subtabs {
   top: 36px;
   margin-top: 0;

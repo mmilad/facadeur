@@ -10,6 +10,7 @@ import link from '../../../../examples/link.json';
 import media from '../../../../examples/media.json';
 import signIn from '../../../../examples/sign-in.json';
 import textarea from '../../../../examples/textarea.json';
+import variantInput from '../../../../examples/variant-input.json';
 import formControlsPage from '../../../../examples/form-controls-page.json';
 import formControlsSection from '../../../../examples/form-controls-section.json';
 import formFieldRow from '../../../../examples/form-field-row.json';
@@ -41,6 +42,7 @@ const sources: Record<string, string> = {
   'form-select': 'form-select.json',
   'form-text-input': 'form-text-input.json',
   'form-toggle': 'form-toggle.json',
+  'variant-input': 'variant-input.json',
   'project-template': 'project-template.json',
 };
 
@@ -58,6 +60,7 @@ export function EditorBootstrap() {
       formInput,
       formSelect,
       formToggle,
+      variantInput,
       formSegmented,
       formFieldRow,
       specimenSection,

@@ -4,7 +4,7 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
-import { validateCatalog } from '@facadeur/core';
+import { validateCatalog, type DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import button from '../../../examples/button.json';
 import card from '../../../examples/card.json';
@@ -18,6 +18,18 @@ import textarea from '../../../examples/textarea.json';
 import { createEditorSession, type EditorSession } from '../src/domain/session.js';
 import { App } from '../src/ui/shell/EditorShell.js';
 
+const variantComponent: DocumentFile = {
+  version: 1,
+  id: 'variant-component',
+  name: 'Variant component',
+  kind: 'component',
+  variants: [
+    { name: 'default' },
+    { name: 'compact', overrides: { nodes: { root: { text: 'Compact' } } } },
+  ],
+  root: { id: 'root', type: 'text', tag: 'span', text: 'Base' },
+};
+
 const documents = validateCatalog([
   button,
   link,
@@ -28,6 +40,7 @@ const documents = validateCatalog([
   signIn,
   specimenSection,
   specimenPage,
+  variantComponent,
 ]);
 
 describe('properties inspector tabs', () => {
@@ -74,6 +87,47 @@ describe('properties inspector tabs', () => {
     expect(host.querySelector('select[name="tag"]')).toBeNull();
   });
 
+  it('shows named variants above the inspector and resolves their values for editing', async () => {
+    const session: EditorSession = createEditorSession({
+      documents,
+      design: createProjectTemplateDocument(),
+    });
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => {
+      root?.render(<App session={session} />);
+    });
+    await act(async () => {
+      session.openAsset('variant-component', 'root');
+      session.selectNode('root');
+    });
+
+    expect(host.querySelector('button[name="variant-tab-default"]')).toBeInstanceOf(
+      HTMLButtonElement,
+    );
+    expect(host.querySelector('button[name="variant-tab-compact"]')).toBeInstanceOf(
+      HTMLButtonElement,
+    );
+    expect(host.querySelector('textarea[name="text"]')?.getAttribute('value')).toBeNull();
+    expect((host.querySelector('textarea[name="text"]') as HTMLTextAreaElement)?.value).toBe(
+      'Base',
+    );
+
+    await act(async () => {
+      host!
+        .querySelector('button[name="variant-tab-compact"]')
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(session.getSnapshot().activeVariantName).toBe('compact');
+    expect(session.getSnapshot().document.nodes.root).toMatchObject({ text: 'Base' });
+    expect(session.getSnapshot().activeDocument.nodes.root).toMatchObject({ text: 'Compact' });
+    expect((host.querySelector('textarea[name="text"]') as HTMLTextAreaElement)?.value).toBe(
+      'Compact',
+    );
+  });
+
   it('groups style declarations by purpose', async () => {
     const session: EditorSession = createEditorSession({
       documents,
@@ -95,9 +149,9 @@ describe('properties inspector tabs', () => {
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(host.querySelector('button[name="property-tab-style"]')?.getAttribute('aria-selected')).toBe(
-      'true',
-    );
+    expect(
+      host.querySelector('button[name="property-tab-style"]')?.getAttribute('aria-selected'),
+    ).toBe('true');
     expect(host.querySelector('.eu-section__title')?.textContent).toBe('Color');
     expect(host.textContent).toContain('Typography');
     expect(host.textContent).not.toContain('Other');
@@ -201,9 +255,7 @@ describe('properties inspector tabs', () => {
     });
 
     const context = host.querySelector('[data-testid="inspector-context"]');
-    expect(context?.querySelector('.inspector-context-kicker')?.textContent).toBe(
-      'Component root',
-    );
+    expect(context?.querySelector('.inspector-context-kicker')?.textContent).toBe('Component root');
     expect(context?.querySelector('.inspector-context-title')?.textContent).toBe('Input');
     expect(context?.querySelector('.inspector-context-meta')?.textContent).toBe(
       'Root frame · Input',

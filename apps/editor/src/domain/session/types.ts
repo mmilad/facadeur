@@ -36,6 +36,8 @@ export interface EditorSnapshot {
   assets: AssetSummary[];
   layers: LayerItem | null;
   document: FlatDocument;
+  /** The open document with the active named variant resolved for editing UI. */
+  activeDocument: FlatDocument;
   design: FlatDocument;
   selectedNodeId: string | null;
   selectedRenderId: string | null;
