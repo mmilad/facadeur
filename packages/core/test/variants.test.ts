@@ -56,4 +56,56 @@ describe('variant overlays', () => {
     expect(resolveVariantDocument(specimen, 'missing')).toEqual(specimen);
     expect(resolveVariantDocument(specimen, 'default')).toEqual(specimen);
   });
+
+  it('resolves dotted node paths while keeping id targets backwards compatible', () => {
+    const nested: DocumentFile = {
+      ...specimen,
+      id: 'nested-variant-specimen',
+      variants: [
+        { name: 'default' },
+        {
+          name: 'path-based',
+          overrides: {
+            nodes: { 'root.header.lede': { text: 'Path override' } },
+            removed: ['root.header.body'],
+            insertions: [
+              {
+                parent: 'root.header',
+                index: 0,
+                node: { id: 'badge', type: 'text', text: 'New' },
+              },
+            ],
+          },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'header',
+            type: 'frame',
+            children: [
+              { id: 'lede', type: 'text', text: 'Long' },
+              { id: 'body', type: 'text', text: 'Body' },
+            ],
+          },
+        ],
+      },
+    };
+
+    expect(() => validateCatalog([nested])).not.toThrow();
+    const resolved = resolveVariantDocument(nested, 'path-based');
+    expect(resolved.root).toMatchObject({
+      children: [
+        {
+          id: 'header',
+          children: [
+            { id: 'badge', text: 'New' },
+            { id: 'lede', text: 'Path override' },
+          ],
+        },
+      ],
+    });
+  });
 });

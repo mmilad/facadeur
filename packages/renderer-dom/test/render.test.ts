@@ -289,8 +289,20 @@ describe('renderer', () => {
         type: 'frame',
         repeat: { path: 'fields', as: 'field', key: 'id' },
         children: [
-          { id: 'input', type: 'instance', component: 'data-row', fieldBindings: { label: 'field.label' }, displayOn: { path: 'field.kind', equals: 'input' } },
-          { id: 'textarea', type: 'instance', component: 'data-row', fieldBindings: { label: 'field.label' }, displayOn: { path: 'field.kind', equals: 'textarea' } },
+          {
+            id: 'input',
+            type: 'instance',
+            component: 'data-row',
+            fieldBindings: { label: 'field.label' },
+            displayOn: { path: 'field.kind', equals: 'input' },
+          },
+          {
+            id: 'textarea',
+            type: 'instance',
+            component: 'data-row',
+            fieldBindings: { label: 'field.label' },
+            displayOn: { path: 'field.kind', equals: 'textarea' },
+          },
         ],
       },
     };
@@ -300,7 +312,12 @@ describe('renderer', () => {
       name: 'Data row',
       kind: 'atom',
       fields: [{ name: 'label', type: 'text', required: true }],
-      root: { id: 'root', type: 'text', tag: 'span', bindings: [{ field: 'label', target: 'text' }] },
+      root: {
+        id: 'root',
+        type: 'text',
+        tag: 'span',
+        bindings: [{ field: 'label', target: 'text' }],
+      },
     };
     expect(() => validateCatalog([form, row])).not.toThrow();
     const host = document.createElement('div');
@@ -311,5 +328,59 @@ describe('renderer', () => {
     expect(host.querySelector('[data-id="root/message/textarea"]')?.textContent).toBe('Message');
     expect(records.has('root/email/input')).toBe(true);
     expect(records.has('root/email/textarea')).toBe(false);
+  });
+
+  it('activates named component variants in DOM instances', () => {
+    const card: DocumentFile = {
+      version: 1,
+      id: 'variant-card',
+      name: 'Variant card',
+      kind: 'component',
+      variants: [
+        { name: 'default' },
+        {
+          name: 'compact',
+          overrides: {
+            nodes: { lede: { text: 'Compact' } },
+            removed: ['body'],
+          },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        tag: 'article',
+        children: [
+          { id: 'lede', type: 'text', text: 'Default' },
+          { id: 'body', type: 'text', text: 'Body' },
+        ],
+      },
+    };
+    const host: DocumentFile = {
+      version: 1,
+      id: 'variant-host',
+      name: 'Variant host',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'card',
+            type: 'instance',
+            component: 'variant-card',
+            variants: { variant: 'compact' },
+          },
+        ],
+      },
+    };
+    expect(() => validateCatalog([host, card])).not.toThrow();
+    const element = document.createElement('div');
+    renderDocument(host, [host, card], element, { paintRoot: true });
+    const cardElement = element.querySelector('[data-component="variant-card"]');
+    expect(cardElement?.tagName).toBe('ARTICLE');
+    expect(cardElement?.getAttribute('data-variant')).toBe('compact');
+    expect(cardElement?.textContent).toBe('Compact');
+    expect(cardElement?.querySelector('[data-node="body"]')).toBeNull();
   });
 });

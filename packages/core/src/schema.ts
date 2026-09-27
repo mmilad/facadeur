@@ -28,12 +28,7 @@ const dataPathSchema = Type.String({
   pattern: '^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$',
 });
 
-export type FieldValue =
-  | string
-  | number
-  | boolean
-  | FieldValue[]
-  | { [key: string]: FieldValue };
+export type FieldValue = string | number | boolean | FieldValue[] | { [key: string]: FieldValue };
 
 export const fieldValueSchema = Type.Unsafe<FieldValue>({
   anyOf: [
@@ -208,6 +203,13 @@ export const exposeSchema = Type.Object(
   },
   { additionalProperties: false },
 );
+
+/** Stable node target used by variant overlays. IDs remain valid for compatibility;
+ * dotted paths disambiguate nested targets such as `root.header.lede`. */
+const nodeTargetSchema = Type.String({
+  minLength: 1,
+  pattern: '^[A-Za-z][A-Za-z0-9_-]*(\\.[A-Za-z][A-Za-z0-9_-]*)*$',
+});
 
 /** Maps a semantic atom event to a native event on the node. */
 export const eventBindingSchema = Type.Object(
@@ -417,7 +419,7 @@ export const variantNodeOverrideSchema = Type.Object(
 
 export const variantInsertionSchema = Type.Object(
   {
-    parent: idSchema,
+    parent: nodeTargetSchema,
     index: Type.Optional(Type.Integer({ minimum: 0 })),
     node: Type.Unknown(),
   },
@@ -427,8 +429,8 @@ export const variantInsertionSchema = Type.Object(
 export const variantOverridesSchema = Type.Object(
   {
     fields: Type.Optional(Type.Record(idSchema, fieldValueSchema)),
-    nodes: Type.Optional(Type.Record(idSchema, variantNodeOverrideSchema)),
-    removed: Type.Optional(Type.Array(idSchema, { uniqueItems: true })),
+    nodes: Type.Optional(Type.Record(nodeTargetSchema, variantNodeOverrideSchema)),
+    removed: Type.Optional(Type.Array(nodeTargetSchema, { uniqueItems: true })),
     insertions: Type.Optional(Type.Array(variantInsertionSchema)),
   },
   { additionalProperties: false },

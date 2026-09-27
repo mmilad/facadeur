@@ -9,17 +9,16 @@ import {
 
 /** Return named overlay variants without exposing the legacy axis definitions. */
 export function variantPresets(document: DocumentFile): VariantPreset[] {
-  return (document.variants ?? []).filter((variant): variant is VariantPreset => !isVariantAxis(variant));
+  return (document.variants ?? []).filter(
+    (variant): variant is VariantPreset => !isVariantAxis(variant),
+  );
 }
 
 /**
  * Resolve a named component variant into a renderable document.
  * The source document is never mutated: `removed` only affects the returned tree.
  */
-export function resolveVariantDocument(
-  document: DocumentFile,
-  name = 'default',
-): DocumentFile {
+export function resolveVariantDocument(document: DocumentFile, name = 'default'): DocumentFile {
   const preset = variantPresets(document).find((variant) => variant.name === name);
   if (!preset?.overrides) return structuredClone(document);
 
@@ -47,38 +46,55 @@ function applyNode(
   nodeOverrides: Record<string, VariantNodeOverride>,
   removed: Set<string>,
   insertions: readonly { parent: string; index?: number; node: unknown }[],
+  path = node.id,
 ): NestedNode {
-  if (removed.has(node.id)) {
-    throw new DocumentError('schema', `Variant cannot remove the root or an inserted node "${node.id}"`);
+  if (matchesTarget(removed, node.id, path)) {
+    throw new DocumentError(
+      'schema',
+      `Variant cannot remove the root or an inserted node "${path}"`,
+    );
   }
 
   let next = structuredClone(node);
   if (next.type === 'frame') {
     const children = (next.children ?? [])
-      .filter((child) => !removed.has(child.id))
-      .map((child) => applyNode(child, nodeOverrides, removed, insertions));
-    const additions = insertions.filter((insertion) => insertion.parent === next.id);
+      .filter((child) => !matchesTarget(removed, child.id, joinPath(path, child.id)))
+      .map((child) =>
+        applyNode(child, nodeOverrides, removed, insertions, joinPath(path, child.id)),
+      );
+    const additions = insertions.filter((insertion) =>
+      matchesTarget(new Set([insertion.parent]), next.id, path),
+    );
     for (const insertion of additions) {
       const child = insertion.node as NestedNode;
       if (!child || typeof child !== 'object' || typeof child.id !== 'string') {
-        throw new DocumentError('schema', `Variant insertion under "${next.id}" is invalid`);
+        throw new DocumentError('schema', `Variant insertion under "${path}" is invalid`);
       }
-      if (removed.has(child.id)) continue;
+      const childPath = joinPath(path, child.id);
+      if (matchesTarget(removed, child.id, childPath)) continue;
       const index = insertion.index ?? children.length;
       if (index < 0 || index > children.length) {
         throw new DocumentError(
           'schema',
-          `Variant insertion under "${next.id}" has an invalid index ${index}`,
+          `Variant insertion under "${path}" has an invalid index ${index}`,
         );
       }
-      children.splice(index, 0, applyNode(child, nodeOverrides, removed, insertions));
+      children.splice(index, 0, applyNode(child, nodeOverrides, removed, insertions, childPath));
     }
     next.children = children.length ? children : undefined;
   }
 
-  const override = nodeOverrides[next.id];
+  const override = nodeOverrides[path] ?? nodeOverrides[next.id];
   if (override) next = applyOverride(next, override);
   return next;
+}
+
+function matchesTarget(targets: ReadonlySet<string>, id: string, path: string): boolean {
+  return targets.has(id) || targets.has(path);
+}
+
+function joinPath(parent: string, id: string): string {
+  return `${parent}.${id}`;
 }
 
 function applyOverride(node: NestedNode, override: VariantNodeOverride): NestedNode {

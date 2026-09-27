@@ -7,9 +7,8 @@ import type {
   FieldDefinition,
   FieldValue,
   NestedNode,
-  VariantAxis,
 } from '@facadeur/core';
-import { isVariantAxis, toNested } from '@facadeur/core';
+import { isVariantAxis, resolveVariantDocument, toNested, variantPresets } from '@facadeur/core';
 
 export interface RenderedNode {
   id: string;
@@ -206,7 +205,7 @@ function paintCanvas(
     const root = parent.firstElementChild;
     if (isHtmlElement(root) && root.dataset.id === document.root.id) {
       root.dataset.component = document.id;
-      syncVariants(root, resolveVariants(document.variants?.filter(isVariantAxis), undefined));
+      syncVariants(root, resolveVariants(document, undefined));
     }
   }
 }
@@ -281,7 +280,7 @@ function walkRendered(
   const last = index === parts.length - 1;
   if (node.type === 'instance') {
     if (last) return { instance: node, ...parent };
-    const definition = ctx.catalog.get(node.component);
+    const definition = definitionForInstance(node, ctx);
     if (!definition || definition.root.type !== 'frame') return null;
     const nextId = parts[index + 1];
     const child = (definition.root.children ?? []).find((entry) => entry.id === nextId);
@@ -289,13 +288,10 @@ function walkRendered(
     const path = joinId(parent.path, node.id);
     return walkRendered(child, parts, index + 1, ctx, {
       path,
-      scope: resolveFields(
-        definition.fields,
-        {
-          ...(node.fields ?? {}),
-          ...resolveFieldBindings(node.fieldBindings, parent.scope),
-        },
-      ),
+      scope: resolveFields(definition.fields, {
+        ...(node.fields ?? {}),
+        ...resolveFieldBindings(node.fieldBindings, parent.scope),
+      }),
       ownerId: path,
       depth: parent.depth + 1,
     });
@@ -329,13 +325,23 @@ function paint(el: HTMLElement, node: NestedNode, ctx: RenderContext): void {
   else paintElement(el, node, ctx);
 }
 
+function definitionForInstance(
+  node: Extract<NestedNode, { type: 'instance' }>,
+  ctx: RenderContext,
+): DocumentFile | undefined {
+  const base = ctx.catalog.get(node.component);
+  if (!base) return undefined;
+  const selected = node.variants?.variant;
+  return selected ? resolveVariantDocument(base, selected) : base;
+}
+
 function paintInstance(
   el: HTMLElement,
   node: Extract<NestedNode, { type: 'instance' }>,
   ctx: RenderContext,
 ): void {
   const id = joinId(ctx.path, node.id);
-  const definition = ctx.catalog.get(node.component);
+  const definition = definitionForInstance(node, ctx);
   if (!definition || ctx.depth >= MAX_DEPTH) {
     paintUnknown(el, id, node, ctx);
     return;
@@ -344,7 +350,7 @@ function paintInstance(
     ...(node.fields ?? {}),
     ...resolveFieldBindings(node.fieldBindings, ctx.scope),
   });
-  const variants = resolveVariants(definition.variants?.filter(isVariantAxis), node.variants);
+  const variants = resolveVariants(definition, node.variants);
   const root = definition.root;
   el.dataset.id = id;
   el.dataset.type = 'instance';
@@ -568,7 +574,7 @@ function tagFor(node: NestedNode, ctx: RenderContext): string {
   if (node.type !== 'instance') {
     return node.tag ?? (node.type === 'text' ? 'span' : node.type === 'image' ? 'img' : 'div');
   }
-  const definition = ctx.catalog.get(node.component);
+  const definition = definitionForInstance(node, ctx);
   if (!definition || ctx.depth >= MAX_DEPTH || definition.root.type === 'instance') return 'div';
   return definition.root.tag ?? 'div';
 }
@@ -607,12 +613,17 @@ function syncLeadText(parent: HTMLElement, text: string | null): void {
 
 function syncVariants(el: HTMLElement, variants: Record<string, string>): void {
   for (const attribute of [...el.attributes]) {
+    if (attribute.name === 'data-variant') {
+      if (variants.variant === undefined) el.removeAttribute(attribute.name);
+      continue;
+    }
     if (!attribute.name.startsWith('data-variant-')) continue;
     const axis = attribute.name.slice('data-variant-'.length);
     if (variants[axis] === undefined) el.removeAttribute(attribute.name);
   }
   for (const [axis, value] of Object.entries(variants)) {
-    el.setAttribute(`data-variant-${axis}`, value);
+    if (axis === 'variant') el.setAttribute('data-variant', value);
+    else el.setAttribute(`data-variant-${axis}`, value);
   }
 }
 
@@ -657,14 +668,15 @@ function resolveFields(
 }
 
 function resolveVariants(
-  axes: VariantAxis[] | undefined,
+  document: DocumentFile,
   overrides: Record<string, string> | undefined,
 ): Record<string, string> {
   const resolved: Record<string, string> = {};
-  for (const axis of axes ?? []) {
+  for (const axis of (document.variants ?? []).filter(isVariantAxis)) {
     const fallback = axis.default ?? axis.values[0];
     if (fallback !== undefined) resolved[axis.name] = fallback;
   }
+  if (variantPresets(document).length) resolved.variant = overrides?.variant ?? 'default';
   for (const [name, value] of Object.entries(overrides ?? {})) resolved[name] = value;
   return resolved;
 }
