@@ -27,7 +27,7 @@ export function FormControlsSection({ nodeId, className }: FormControlsSectionPr
         </p>
       </header>
       <section data-node="text-inputs">
-        <h2 data-node="text-input-title">Text input states</h2>
+        <h2 data-node="text-input-title">Text field states</h2>
         <div data-node="text-input-row">
           <FormTextInput
             nodeId="input-default"

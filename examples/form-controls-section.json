@@ -152,7 +152,7 @@
             "id": "text-input-title",
             "type": "text",
             "tag": "h2",
-            "text": "Text input states",
+            "text": "Text field states",
             "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
           },
           {
