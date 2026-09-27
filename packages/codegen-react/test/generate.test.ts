@@ -523,4 +523,70 @@ describe('atom contracts', () => {
     expect(sourceText).toContain("import { RepeatRow } from './RepeatRow';");
     expect(sourceText).toContain('label={item?.label}');
   });
+
+  it('nests repeat contexts for section data and child rows', () => {
+    const component: DocumentFile = {
+      version: 1,
+      id: 'nested-repeat-demo',
+      name: 'Nested repeat demo',
+      kind: 'component',
+      fields: [
+        {
+          name: 'sections',
+          type: 'array',
+          items: {
+            type: 'object',
+            fields: [
+              {
+                name: 'rows',
+                type: 'array',
+                items: {
+                  type: 'object',
+                  fields: [{ name: 'label', type: 'text', required: true }],
+                },
+              },
+            ],
+          },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        tag: 'main',
+        repeat: { path: 'sections', as: 'section' },
+        children: [
+          {
+            id: 'rows',
+            type: 'frame',
+            tag: 'ul',
+            repeat: { path: 'section.rows', as: 'row', key: 'label' },
+            children: [
+              {
+                id: 'label',
+                type: 'instance',
+                component: 'nested-row',
+                fieldBindings: { label: 'row.label' },
+              },
+            ],
+          },
+        ],
+      },
+    };
+    const row: DocumentFile = {
+      version: 1,
+      id: 'nested-row',
+      name: 'Nested row',
+      kind: 'atom',
+      fields: [{ name: 'label', type: 'text', required: true }],
+      root: { id: 'root', type: 'text', tag: 'li', bindings: [{ field: 'label', target: 'text' }] },
+    };
+    const sourceText = source(
+      generateReact({ documents: [component, row] }).ui,
+      'components/NestedRepeatDemo.tsx',
+    );
+    expect(sourceText).toContain('{sections.map((section, sectionIndex) => (');
+    expect(sourceText).toContain('{section?.rows.map((row, rowIndex) => (');
+    expect(sourceText).toContain('key={row?.label}');
+    expect(sourceText).toContain('label={row?.label}');
+  });
 });

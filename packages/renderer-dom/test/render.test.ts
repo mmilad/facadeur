@@ -423,4 +423,67 @@ describe('renderer', () => {
     );
     expect(element.querySelector('[data-id="root/video/image"]')).toBeNull();
   });
+
+  it('keeps nested repeat scopes available to descendant rows', () => {
+    const nested: DocumentFile = {
+      version: 1,
+      id: 'nested-repeat-render',
+      name: 'Nested repeat render',
+      kind: 'component',
+      fields: [
+        {
+          name: 'sections',
+          type: 'array',
+          default: [{ rows: [{ label: 'One' }, { label: 'Two' }] }],
+          items: {
+            type: 'object',
+            fields: [
+              {
+                name: 'rows',
+                type: 'array',
+                items: {
+                  type: 'object',
+                  fields: [{ name: 'label', type: 'text', required: true }],
+                },
+              },
+            ],
+          },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        repeat: { path: 'sections', as: 'section' },
+        children: [
+          {
+            id: 'rows',
+            type: 'frame',
+            repeat: { path: 'section.rows', as: 'row', key: 'label' },
+            children: [
+              {
+                id: 'label',
+                type: 'instance',
+                component: 'nested-render-row',
+                fieldBindings: { label: 'row.label' },
+              },
+            ],
+          },
+        ],
+      },
+    };
+    const row: DocumentFile = {
+      version: 1,
+      id: 'nested-render-row',
+      name: 'Nested render row',
+      kind: 'atom',
+      fields: [{ name: 'label', type: 'text', required: true }],
+      root: { id: 'root', type: 'text', bindings: [{ field: 'label', target: 'text' }] },
+    };
+    expect(() => validateCatalog([nested, row])).not.toThrow();
+    const element = document.createElement('div');
+    renderDocument(nested, [nested, row], element, { paintRoot: true });
+    expect(element.querySelectorAll('[data-node="label"]')).toHaveLength(2);
+    expect(element.textContent).toContain('One');
+    expect(element.textContent).toContain('Two');
+  });
 });
