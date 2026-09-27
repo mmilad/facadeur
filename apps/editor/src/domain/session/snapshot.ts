@@ -1,6 +1,6 @@
 import type { DefaultKind, FlatDocument } from '@facadeur/core';
 import type { YjsDocumentStore } from '@facadeur/store-yjs';
-import { publicEventsFor, publicFieldsFor } from '../component-contract.js';
+import { componentVariantsFor, publicEventsFor, publicFieldsFor } from '../component-contract.js';
 import { layerTree, nodeIdForHit, renderIdForNode } from '../selection-model.js';
 import { isDocumentDirty, type SavedJsonBaselines } from '../save-state.js';
 import type { ViewportChromeSettings } from '../viewport-chrome.js';
@@ -65,6 +65,7 @@ export function buildEditorSnapshot(ctx: SnapshotBuildContext): EditorSnapshot {
   }
   const componentFields = componentTarget ? publicFieldsFor(componentTarget, catalogDocuments) : [];
   const componentEvents = componentTarget ? publicEventsFor(componentTarget, catalogDocuments) : [];
+  const componentVariants = componentTarget ? componentVariantsFor(componentTarget) : [];
   return {
     workspace: ctx.workspace,
     openId: ctx.openId,
@@ -83,6 +84,7 @@ export function buildEditorSnapshot(ctx: SnapshotBuildContext): EditorSnapshot {
     componentTarget,
     componentFields,
     componentEvents,
+    componentVariants,
     canUndo: ctx.canUndo,
     canRedo: ctx.canRedo,
     notice: ctx.notice,

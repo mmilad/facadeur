@@ -1,4 +1,24 @@
-import type { EventDefinition, FieldDefinition, FlatDocument } from '@facadeur/core';
+import {
+  resolveVariantDocument,
+  toFlat,
+  toNested,
+  variantPresets,
+  type EventDefinition,
+  type FieldDefinition,
+  type FlatDocument,
+  type VariantPreset,
+} from '@facadeur/core';
+
+export interface ComponentVariantContract {
+  /** The stable name used by instances and generated components. */
+  name: string;
+  /** True only for the immutable base contract. */
+  isDefault: boolean;
+  /** Sparse changes authored for this variant, if any. */
+  overrides?: VariantPreset['overrides'];
+  /** The default document resolved with this variant's overlay applied. */
+  document: FlatDocument;
+}
 
 /**
  * Return the fields a component makes public to its instances.
@@ -38,6 +58,31 @@ export function publicEventsFor(
     if (resolved) events.set(name, { ...resolved, name });
   }
   return [...events.values()];
+}
+
+/**
+ * Return the named variants available on a component.
+ *
+ * A default entry is always present. Presets retain their sparse overrides,
+ * while `document` gives editor consumers a ready-to-render resolved view.
+ * The source document remains untouched.
+ */
+export function componentVariantsFor(document: FlatDocument): ComponentVariantContract[] {
+  const nested = toNested(document);
+  const presets = variantPresets(nested);
+  const names = [
+    'default',
+    ...presets.filter((preset) => preset.name !== 'default').map((preset) => preset.name),
+  ];
+  return names.map((name) => {
+    const preset = presets.find((candidate) => candidate.name === name);
+    return {
+      name,
+      isDefault: name === 'default',
+      ...(preset?.overrides ? { overrides: preset.overrides } : {}),
+      document: toFlat(resolveVariantDocument(nested, name)),
+    };
+  });
 }
 
 function resolveField(

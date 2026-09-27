@@ -57,6 +57,8 @@ export interface EditorSnapshot {
   componentFields: import('@facadeur/core').FieldDefinition[];
   /** Public events of the selected component, including recursive expose paths. */
   componentEvents: import('@facadeur/core').EventDefinition[];
+  /** Default plus named component variants with resolved editor documents. */
+  componentVariants: import('../component-contract.js').ComponentVariantContract[];
   canUndo: boolean;
   canRedo: boolean;
   notice: EditorNotice | null;

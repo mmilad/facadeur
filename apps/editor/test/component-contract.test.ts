@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { toFlat, type DocumentFile } from '@facadeur/core';
-import { publicEventsFor, publicFieldsFor } from '../src/domain/component-contract.js';
+import {
+  componentVariantsFor,
+  publicEventsFor,
+  publicFieldsFor,
+} from '../src/domain/component-contract.js';
 
 function catalogOf(...files: DocumentFile[]) {
   return new Map(files.map((file) => [file.id, toFlat(file)]));
@@ -153,5 +157,32 @@ describe('component public contract', () => {
     const events = publicEventsFor(toFlat(outer), catalogOf(atom, inner, outer));
     expect(events).toHaveLength(1);
     expect(events[0]).toMatchObject({ name: 'valueChanged', payload: { value: 'text' } });
+  });
+
+  it('always exposes the default variant and resolves sparse preset overlays', () => {
+    const component: DocumentFile = {
+      version: 1,
+      id: 'variant-component',
+      name: 'Variant component',
+      kind: 'component',
+      fields: [{ name: 'label', type: 'text', default: 'Base' }],
+      variants: [
+        { name: 'default' },
+        { name: 'compact', overrides: { fields: { label: 'Compact' } } },
+      ],
+      root: {
+        id: 'root',
+        type: 'text',
+        tag: 'span',
+        bindings: [{ field: 'label', target: 'text' }],
+      },
+    };
+
+    const variants = componentVariantsFor(toFlat(component));
+    expect(variants.map((variant) => variant.name)).toEqual(['default', 'compact']);
+    expect(variants[0]?.isDefault).toBe(true);
+    expect(variants[0]?.document.fields[0]?.default).toBe('Base');
+    expect(variants[1]?.overrides?.fields?.label).toBe('Compact');
+    expect(variants[1]?.document.fields[0]?.default).toBe('Compact');
   });
 });
