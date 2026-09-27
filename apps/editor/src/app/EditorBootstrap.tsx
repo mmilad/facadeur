@@ -12,6 +12,7 @@ import textarea from '../../../../examples/textarea.json';
 import formControlsPage from '../../../../examples/form-controls-page.json';
 import formControlsSection from '../../../../examples/form-controls-section.json';
 import formFieldRow from '../../../../examples/form-field-row.json';
+import formInput from '../../../../examples/form-input.json';
 import formSegmented from '../../../../examples/form-segmented.json';
 import formSelect from '../../../../examples/form-select.json';
 import formTextInput from '../../../../examples/form-text-input.json';
@@ -33,6 +34,7 @@ const sources: Record<string, string> = {
   'form-controls': 'form-controls-page.json',
   'form-controls-section': 'form-controls-section.json',
   'form-field-row': 'form-field-row.json',
+  'form-input': 'form-input.json',
   'form-segmented': 'form-segmented.json',
   'form-select': 'form-select.json',
   'form-text-input': 'form-text-input.json',
@@ -50,6 +52,7 @@ export function EditorBootstrap() {
       card,
       signIn,
       formTextInput,
+      formInput,
       formSelect,
       formToggle,
       formSegmented,
