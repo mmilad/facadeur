@@ -103,6 +103,31 @@ describe('properties inspector tabs', () => {
     expect(host.textContent).not.toContain('Other');
   });
 
+  it('puts layout declarations in the Layout group', async () => {
+    const session: EditorSession = createEditorSession({
+      documents,
+      design: createProjectTemplateDocument(),
+    });
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => {
+      root?.render(<App session={session} />);
+    });
+    await act(async () => {
+      session.openAsset('input', 'root');
+      session.selectNode('control');
+    });
+    await act(async () => {
+      host!
+        .querySelector('button[name="property-tab-style"]')
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(host.textContent).toContain('Layout');
+    expect(host.textContent).not.toContain('Other');
+  });
+
   it('resets to Content when selection changes', async () => {
     const session: EditorSession = createEditorSession({
       documents,

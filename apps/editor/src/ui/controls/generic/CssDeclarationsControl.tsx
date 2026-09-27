@@ -176,11 +176,19 @@ type DeclarationGroup = {
   items: CssDeclarationEntry[];
 };
 
-type DeclarationGroupId = 'color' | 'typography' | 'spacing' | 'effects' | 'behavior' | 'other';
+type DeclarationGroupId =
+  | 'color'
+  | 'typography'
+  | 'layout'
+  | 'spacing'
+  | 'effects'
+  | 'behavior'
+  | 'other';
 
 const DECLARATION_GROUP_LABELS: Record<DeclarationGroupId, string> = {
   color: 'Color',
   typography: 'Typography',
+  layout: 'Layout',
   spacing: 'Spacing',
   effects: 'Effects',
   behavior: 'Behavior',
@@ -202,6 +210,7 @@ function groupDeclarations(entries: CssDeclarationEntry[]): DeclarationGroup[] {
 }
 
 function declarationGroupId(property: string): DeclarationGroupId {
+  if (isLayoutProperty(property)) return 'layout';
   switch (styleDeclarationKind(property)) {
     case 'color':
       return 'color';
@@ -217,4 +226,52 @@ function declarationGroupId(property: string): DeclarationGroupId {
     default:
       return 'other';
   }
+}
+
+const LAYOUT_PROPERTIES = new Set([
+  'align-content',
+  'align-items',
+  'align-self',
+  'aspect-ratio',
+  'box-sizing',
+  'display',
+  'flex',
+  'flex-basis',
+  'flex-direction',
+  'flex-flow',
+  'flex-grow',
+  'flex-shrink',
+  'flex-wrap',
+  'height',
+  'inset',
+  'inset-block',
+  'inset-block-end',
+  'inset-block-start',
+  'inset-inline',
+  'inset-inline-end',
+  'inset-inline-start',
+  'justify-content',
+  'justify-items',
+  'justify-self',
+  'left',
+  'max-height',
+  'max-width',
+  'min-height',
+  'min-width',
+  'order',
+  'position',
+  'right',
+  'top',
+  'bottom',
+  'width',
+  'z-index',
+]);
+
+function isLayoutProperty(property: string): boolean {
+  return LAYOUT_PROPERTIES.has(
+    property
+      .trim()
+      .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+      .toLowerCase(),
+  );
 }
