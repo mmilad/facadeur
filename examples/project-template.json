@@ -361,7 +361,7 @@
           "$value": "{color.bg.canvas}"
         },
         "border": {
-          "$value": "{color.border.default}"
+          "$value": "{color.neutral.400}"
         },
         "text": {
           "$value": "{color.text.primary}"
@@ -378,7 +378,7 @@
       },
       "radius": {
         "$type": "dimension",
-        "$value": "{radius.md}"
+        "$value": "{radius.sm}"
       }
     },
     "radius": {

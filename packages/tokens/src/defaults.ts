@@ -226,11 +226,11 @@ export const defaultTokenTree: TokenTree = {
       x: { $value: '{space.3}' },
       y: { $value: '{space.1}' },
     },
-    radius: { $type: 'dimension', $value: '{radius.md}' },
+    radius: { $type: 'dimension', $value: '{radius.sm}' },
     color: {
       $type: 'color',
       bg: { $value: '{color.bg.canvas}' },
-      border: { $value: '{color.border.default}' },
+      border: { $value: '{color.neutral.400}' },
       text: { $value: '{color.text.primary}' },
     },
   },
