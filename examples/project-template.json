@@ -349,7 +349,7 @@
         }
       }
     },
-      "input": {
+    "input": {
       "$extensions": {
         "facadeur": {
           "tier": "component"
@@ -358,7 +358,7 @@
       "color": {
         "$type": "color",
         "bg": {
-          "$value": "{color.bg.canvas}"
+          "$value": "{color.bg.muted}"
         },
         "border": {
           "$value": "{color.neutral.400}"
@@ -379,6 +379,10 @@
       "radius": {
         "$type": "dimension",
         "$value": "{radius.sm}"
+      },
+      "shadow": {
+        "$type": "shadow",
+        "$value": "{shadow.sm}"
       }
     },
     "radius": {

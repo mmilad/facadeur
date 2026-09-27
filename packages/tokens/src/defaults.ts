@@ -229,10 +229,11 @@ export const defaultTokenTree: TokenTree = {
     radius: { $type: 'dimension', $value: '{radius.sm}' },
     color: {
       $type: 'color',
-      bg: { $value: '{color.bg.canvas}' },
+      bg: { $value: '{color.bg.muted}' },
       border: { $value: '{color.neutral.400}' },
       text: { $value: '{color.text.primary}' },
     },
+    shadow: { $type: 'shadow', $value: '{shadow.sm}' },
   },
 };
 

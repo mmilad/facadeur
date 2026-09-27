@@ -54,12 +54,13 @@
   --font-weight-medium: 500;
   --font-weight-regular: 400;
   --font-weight-semibold: 600;
-  --input-color-bg: var(--color-bg-canvas);
+  --input-color-bg: var(--color-bg-muted);
   --input-color-border: var(--color-neutral-400);
   --input-color-text: var(--color-text-primary);
   --input-padding-x: var(--space-3);
   --input-padding-y: var(--space-1);
   --input-radius: var(--radius-sm);
+  --input-shadow: var(--shadow-sm);
   --radius-full: 999px;
   --radius-lg: 12px;
   --radius-md: 8px;
