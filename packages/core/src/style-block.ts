@@ -1,4 +1,4 @@
-import { defaultBreakpoints, type Breakpoint } from './schema.js';
+import { defaultBreakpoints, isVariantAxis, type Breakpoint } from './schema.js';
 import { DocumentError } from './errors.js';
 import { layoutTokenRefs } from './layout.js';
 import type { FlatDocument } from './flat.js';
@@ -197,7 +197,11 @@ function assertStyleBlock(
   block: StyleBlock,
   breakpoints: readonly Breakpoint[],
 ): void {
-  const axes = new Map(doc.variants.map((axis) => [axis.name, new Set(axis.values)]));
+  const axes = new Map(
+    doc.variants
+      .filter(isVariantAxis)
+      .map((axis) => [axis.name, new Set<string>(axis.values)] as const),
+  );
   const nodeIds = new Set(Object.keys(doc.nodes));
   assertLayerVariants(block, axes, 'Style block');
   for (const id of Object.keys(block.breakpoints ?? {})) assertBreakpoint(id, breakpoints, 'Style');

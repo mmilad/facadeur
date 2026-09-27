@@ -1,4 +1,10 @@
-import type { DocumentFile, FieldValue, NestedNode } from '@facadeur/core';
+import {
+  isVariantAxis,
+  variantPresets,
+  type DocumentFile,
+  type FieldValue,
+  type NestedNode,
+} from '@facadeur/core';
 import {
   booleanAttributeValue,
   isBooleanAttribute,
@@ -52,6 +58,12 @@ export function renderNode(
         value: { kind: 'expr', code: prop.name },
       });
     }
+    if (owner.namedVariant) {
+      attrs.push({
+        name: 'data-variant',
+        value: { kind: 'expr', code: owner.namedVariant.name },
+      });
+    }
   } else {
     attrs.push({ name: 'data-node', value: { kind: 'literal', value: node.id } });
   }
@@ -98,7 +110,28 @@ export function renderNode(
     }
   }
 
-  return { tag, attrs, children: childNodes, void: isVoidTag(tag) };
+  return {
+    tag,
+    attrs,
+    children: childNodes,
+    void: isVoidTag(tag),
+    ...(node.displayOn ? { condition: conditionForNode(node.displayOn, owner) } : {}),
+  };
+}
+
+function conditionForNode(
+  condition: NonNullable<Exclude<NestedNode, { type: 'instance' }>['displayOn']>,
+  owner: CatalogEntry,
+): string {
+  const prop = owner.fields.get(condition.path);
+  if (!prop) {
+    throw new CodegenError(
+      `Display condition "${condition.path}" needs a repeat/data context that is not available on "${owner.document.id}"`,
+    );
+  }
+  if (condition.truthy !== undefined) return condition.truthy ? prop.name : `!${prop.name}`;
+  if (condition.equals !== undefined) return `${prop.name} === ${jsLiteral(condition.equals)}`;
+  throw new CodegenError(`Display condition "${condition.path}" is missing a predicate`);
 }
 
 function renderInstance(
@@ -160,7 +193,7 @@ function renderInstance(
     if (directField) assertDefault(node.component, directField, value);
     attrs.push(valueAttr(prop.name, value));
   }
-  for (const axis of target.document.variants ?? []) {
+  for (const axis of (target.document.variants ?? []).filter(isVariantAxis)) {
     const value = node.variants?.[axis.name];
     if (value === undefined) continue;
     const prop = target.variants.get(axis.name);
@@ -176,7 +209,20 @@ function renderInstance(
     }
     attrs.push({ name: prop.name, value: { kind: 'literal', value } });
   }
+  if (target.namedVariant) {
+    const value = node.variants?.variant;
+    if (value !== undefined) {
+      const presets = variantPresets(target.document);
+      if (!presets.some((preset) => preset.name === value)) {
+        throw new CodegenError(
+          `Instance "${node.id}" uses "${value}" for variant on "${node.component}", expected ${presets.map((preset) => preset.name).join(', ')}`,
+        );
+      }
+      attrs.push({ name: target.namedVariant.name, value: { kind: 'literal', value } });
+    }
+  }
   for (const name of Object.keys(node.variants ?? {})) {
+    if (name === 'variant' && target.namedVariant) continue;
     if (!target.variants.has(name)) {
       throw new CodegenError(
         `Instance "${node.id}" sets unknown variant "${name}" on "${node.component}"`,

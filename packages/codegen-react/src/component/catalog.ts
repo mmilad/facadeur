@@ -1,4 +1,11 @@
-import type { DocumentFile, FieldDefinition, FieldValue, NestedNode } from '@facadeur/core';
+import {
+  isVariantAxis,
+  variantPresets,
+  type DocumentFile,
+  type FieldDefinition,
+  type FieldValue,
+  type NestedNode,
+} from '@facadeur/core';
 import { CodegenError, componentName, propName, quote, variantTypeName } from '../names.js';
 import type { CatalogEntry, PropSpec, VariantTypeSpec } from './types.js';
 
@@ -15,7 +22,7 @@ export function assignCatalog(documents: readonly DocumentFile[]): Map<string, C
       fields.set(field.name, spec);
     }
     const variants = new Map<string, PropSpec>();
-    for (const axis of document.variants ?? []) {
+    for (const axis of (document.variants ?? []).filter(isVariantAxis)) {
       const name = propName(axis.name, used);
       const values = [...axis.values];
       const fallback = axis.default ?? values[0];
@@ -44,7 +51,17 @@ export function assignCatalog(documents: readonly DocumentFile[]): Map<string, C
         eventPayload: payload,
       });
     }
-    catalog.set(document.id, { document, component, fields, variants, events });
+    const presets = variantPresets(document).filter((variant) => variant.name !== 'default');
+    const namedVariant = presets.length
+      ? {
+          source: 'variant',
+          name: propName('variant', used),
+          type: variantTypeName(component, 'variant', typeNames),
+          fieldType: 'variant' as const,
+          defaultExpr: quote('default'),
+        }
+      : undefined;
+    catalog.set(document.id, { document, component, fields, variants, events, namedVariant });
   }
   for (const document of documents) {
     const entry = catalog.get(document.id);
@@ -78,6 +95,7 @@ export function assignCatalog(documents: readonly DocumentFile[]): Map<string, C
         name: propName(`on-${name}`, used),
       });
     }
+    if (entry.namedVariant) applyVariantDefaults(entry, entry.namedVariant.name);
   }
   return catalog;
 }
@@ -130,7 +148,7 @@ function findNode(node: NestedNode, id: string | undefined): NestedNode | undefi
 
 export function variantTypeSpecs(document: DocumentFile, entry: CatalogEntry): VariantTypeSpec[] {
   const specs: VariantTypeSpec[] = [];
-  for (const axis of document.variants ?? []) {
+  for (const axis of (document.variants ?? []).filter(isVariantAxis)) {
     const prop = entry.variants.get(axis.name);
     if (!prop) continue;
     const values = [...axis.values];
@@ -138,7 +156,31 @@ export function variantTypeSpecs(document: DocumentFile, entry: CatalogEntry): V
     if (fallback && !values.includes(fallback)) values.push(fallback);
     specs.push({ name: prop.type, union: values.map((value) => quote(value)).join(' | ') });
   }
+  if (entry.namedVariant) {
+    const values = ['default', ...variantPresets(document).map((variant) => variant.name)];
+    specs.push({ name: entry.namedVariant.type, union: [...new Set(values)].map(quote).join(' | ') });
+  }
   return specs;
+}
+
+function applyVariantDefaults(entry: CatalogEntry, variantProp: string): void {
+  const variants = variantPresets(entry.document).filter((variant) => variant.name !== 'default');
+  for (const [fieldName, prop] of entry.fields) {
+    const field = entry.document.fields?.find((candidate) => candidate.name === fieldName);
+    if (!field) continue;
+    const overrides = variants.flatMap((variant) => {
+      const value = variant.overrides?.fields?.[fieldName];
+      if (value === undefined) return [];
+      assertDefault(entry.document.id, field, value);
+      return [{ name: variant.name, value: jsLiteral(value) }];
+    });
+    if (!overrides.length) continue;
+    let expression = prop.defaultExpr ?? 'undefined';
+    for (const override of [...overrides].reverse()) {
+      expression = `${variantProp} === ${quote(override.name)} ? ${override.value} : ${expression}`;
+    }
+    prop.variantDefaultExpr = expression;
+  }
 }
 
 function fieldProp(documentId: string, field: FieldDefinition, used: Set<string>): PropSpec {

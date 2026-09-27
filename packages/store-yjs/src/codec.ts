@@ -10,6 +10,7 @@ import {
 import type {
   Binding,
   DocumentSettings,
+  DisplayOn,
   EventBinding,
   EventDefinition,
   Expose,
@@ -22,6 +23,7 @@ import type {
   IconDefinition,
   JsonValue,
   VariantAxis,
+  VariantPreset,
 } from '@facadeur/core';
 import { isPlainObject } from '@facadeur/core';
 import * as Y from 'yjs';
@@ -33,6 +35,7 @@ export function patchDocument(doc: Y.Doc, next: FlatDocument): void {
   syncFields(doc.getArray<Y.Map<unknown>>('fields'), next.fields);
   syncEvents(doc.getArray<Y.Map<unknown>>('events'), next.events ?? []);
   syncVariants(doc.getArray<Y.Map<unknown>>('variants'), next.variants);
+  syncJsonArray(doc.getArray<unknown>('variantPresets'), (next.variantPresets ?? []) as unknown as JsonValue[]);
   syncNodes(doc.getMap<Y.Map<unknown>>('nodes'), next);
   syncJsonObject(doc.getMap('tokens'), next.tokens);
   syncFonts(doc.getMap('fonts'), next.fonts);
@@ -63,6 +66,7 @@ export function readDocument(doc: Y.Doc): FlatDocument {
       ? { events: readEvents(doc.getArray<Y.Map<unknown>>('events')) }
       : {}),
     variants: readVariants(doc.getArray<Y.Map<unknown>>('variants')),
+    ...readVariantPresets(doc.getArray<unknown>('variantPresets')),
     settings: readSettings(doc.getMap('settings')),
     tokens: readJsonObject(doc.getMap('tokens')),
     fonts: readFonts(doc.getMap('fonts')),
@@ -80,6 +84,7 @@ export function ensureDocumentMaps(doc: Y.Doc): void {
   doc.getArray('fields');
   doc.getArray('events');
   doc.getArray('variants');
+  doc.getArray('variantPresets');
   doc.getMap('nodes');
   doc.getMap('tokens');
   doc.getMap('fonts');
@@ -248,6 +253,7 @@ function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
       'alt',
       'children',
       'eventBindings',
+      'displayOn',
     ]) {
       if (map.has(key)) map.delete(key);
     }
@@ -257,6 +263,7 @@ function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
   syncScalar(map, 'name', node.name);
   syncScalar(map, 'tag', node.tag);
   syncStringMap(map, 'attributes', node.attributes);
+  syncJsonObject(ensureMap(map, 'displayOn'), (node.displayOn ?? {}) as Record<string, JsonValue>);
   syncLayout(map, node.layout);
   syncBindings(map, node.bindings);
   syncEventBindings(map, node.eventBindings);
@@ -299,6 +306,7 @@ function readNode(map: Y.Map<unknown>): FlatNode {
   }
   const tag = optionalString(map.get('tag'));
   const attributes = readStringMap(map.get('attributes'));
+  const displayOn = readDisplayOn(map.get('displayOn'));
   const bindings = readBindings(map.get('bindings'));
   const eventBindings = readEventBindings(map.get('eventBindings'));
   const style = readStringMap(map.get('style'));
@@ -307,6 +315,7 @@ function readNode(map: Y.Map<unknown>): FlatNode {
     ...(name !== undefined ? { name } : {}),
     ...(tag !== undefined ? { tag } : {}),
     ...(attributes ? { attributes } : {}),
+    ...(displayOn ? { displayOn } : {}),
     ...(layout ? { layout } : {}),
     ...(bindings ? { bindings } : {}),
     ...(eventBindings ? { eventBindings } : {}),
@@ -367,6 +376,11 @@ function readExposeValue(value: unknown): Expose | undefined {
   return readJsonObject(value) as unknown as Expose;
 }
 
+function readDisplayOn(value: unknown): DisplayOn | undefined {
+  if (!(value instanceof Y.Map) || value.size === 0) return undefined;
+  return readJsonObject(value) as unknown as DisplayOn;
+}
+
 function readVariants(list: Y.Array<Y.Map<unknown>>): VariantAxis[] {
   return list.toArray().map((map) => {
     const values = map.get('values');
@@ -377,6 +391,15 @@ function readVariants(list: Y.Array<Y.Map<unknown>>): VariantAxis[] {
     if (map.has('default')) axis.default = stringValue(map.get('default'));
     return axis;
   });
+}
+
+function readVariantPresets(list: Y.Array<unknown>): { variantPresets?: VariantPreset[] } {
+  const presets = readJsonArray(list).filter(isVariantPresetJson) as unknown as VariantPreset[];
+  return presets.length ? { variantPresets: presets } : {};
+}
+
+function isVariantPresetJson(value: JsonValue): boolean {
+  return isPlainObject(value) && typeof value.name === 'string';
 }
 
 function readSettings(settings: Y.Map<unknown>): DocumentSettings {

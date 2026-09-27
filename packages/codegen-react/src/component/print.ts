@@ -44,7 +44,12 @@ export function printFile(file: {
   lines.push(`export function ${file.component}({`);
   for (const prop of file.props) {
     if (prop.fieldType !== 'variant' && !file.usedProps.has(prop.name)) continue;
-    const initializer = prop.defaultExpr !== undefined ? ` = ${prop.defaultExpr}` : '';
+    const initializer =
+      prop.variantDefaultExpr !== undefined
+        ? ` = ${prop.variantDefaultExpr}`
+        : prop.defaultExpr !== undefined
+          ? ` = ${prop.defaultExpr}`
+          : '';
     lines.push(`  ${prop.name}${initializer},`);
   }
   lines.push('  nodeId,');
@@ -64,13 +69,15 @@ export function printElement(element: ElementNode, indent: number): string {
   const inlineAttrs = attrs.length ? ` ${attrs.join(' ')}` : '';
   if (element.void || element.children.length === 0) {
     const one = `${pad}<${element.tag}${inlineAttrs} />`;
-    if (attrs.length <= 3 && one.length <= 100) return one;
-    return `${pad}<${element.tag}\n${attrs.map((attr) => `${pad}  ${attr}`).join('\n')}\n${pad}/>`;
+    const rendered = attrs.length <= 3 && one.length <= 100
+      ? one
+      : `${pad}<${element.tag}\n${attrs.map((attr) => `${pad}  ${attr}`).join('\n')}\n${pad}/>`;
+    return wrapCondition(element.condition, rendered, pad);
   }
   const only = element.children[0];
   if (element.children.length === 1 && only && 'text' in only && !only.text.includes('\n')) {
     const one = `${pad}<${element.tag}${inlineAttrs}>${only.text}</${element.tag}>`;
-    if (attrs.length <= 2 && one.length <= 100) return one;
+    if (attrs.length <= 2 && one.length <= 100) return wrapCondition(element.condition, one, pad);
   }
   const open =
     attrs.length === 0
@@ -79,7 +86,16 @@ export function printElement(element: ElementNode, indent: number): string {
   const children = element.children
     .map((child) => ('text' in child ? `${pad}  ${child.text}` : printElement(child, indent + 1)))
     .join('\n');
-  return `${open}\n${children}\n${pad}</${element.tag}>`;
+  return wrapCondition(element.condition, `${open}\n${children}\n${pad}</${element.tag}>`, pad);
+}
+
+function wrapCondition(condition: string | undefined, body: string, pad: string): string {
+  if (!condition) return body;
+  const indented = body
+    .split('\n')
+    .map((line) => `${pad}  ${line.slice(pad.length)}`)
+    .join('\n');
+  return `${pad}{${condition} && (\n${indented}\n${pad})}`;
 }
 
 function printAttr(attr: Attr): string {

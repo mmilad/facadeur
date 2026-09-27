@@ -7,6 +7,7 @@ export interface PropSpec {
   type: string;
   fieldType: FieldType | 'variant' | 'event';
   defaultExpr?: string;
+  variantDefaultExpr?: string;
   required?: boolean;
   eventPayload?: Record<string, FieldType>;
 }
@@ -38,6 +39,7 @@ export interface CatalogEntry {
   fields: Map<string, PropSpec>;
   variants: Map<string, PropSpec>;
   events: Map<string, PropSpec>;
+  namedVariant?: PropSpec;
 }
 
 export interface Attr {
@@ -57,6 +59,7 @@ export interface ElementNode {
   attrs: Attr[];
   children: Array<ElementNode | TextChild>;
   void: boolean;
+  condition?: string;
 }
 
 export interface Expr {

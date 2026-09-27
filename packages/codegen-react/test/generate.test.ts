@@ -385,4 +385,68 @@ describe('atom contracts', () => {
     expect(sourceText).toContain('value={value}');
     expect(sourceText).toContain('onCommit={onCommit}');
   });
+
+  it('generates named variant branches from overlay overrides', () => {
+    const component: DocumentFile = {
+      version: 1,
+      id: 'variant-demo',
+      name: 'Variant demo',
+      kind: 'component',
+      fields: [{ name: 'label', type: 'text', default: 'Base' }],
+      variants: [
+        { name: 'default' },
+        {
+          name: 'compact',
+          overrides: {
+            fields: { label: 'Compact' },
+            removed: ['body'],
+            insertions: [
+              {
+                parent: 'root',
+                node: { id: 'badge', type: 'text', tag: 'span', text: 'Compact' },
+              },
+            ],
+          },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        tag: 'section',
+        children: [
+          { id: 'body', type: 'text', tag: 'p', text: 'Body' },
+          { id: 'label', type: 'text', tag: 'h2', bindings: [{ field: 'label', target: 'text' }] },
+        ],
+      },
+    };
+
+    const generated = generateReact({ documents: [component] });
+    const sourceText = source(generated.ui, 'components/VariantDemo.tsx');
+    expect(sourceText).toContain("export type VariantDemoVariant = 'default' | 'compact';");
+    expect(sourceText).toContain('variant?: VariantDemoVariant;');
+    expect(sourceText).toContain("variant === 'compact'");
+    expect(sourceText).toContain("data-variant={variant}");
+    expect(sourceText).toContain('Compact');
+    expect(sourceText).toContain('data-node=\'badge\'');
+    expect(sourceText).toContain('data-node=\'label\'');
+    expect(sourceText.match(/data-node='body'/g)).toHaveLength(1);
+
+    const host: DocumentFile = {
+      version: 1,
+      id: 'variant-host',
+      name: 'Variant host',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'frame',
+        tag: 'div',
+        children: [{ id: 'demo', type: 'instance', component: 'variant-demo', variants: { variant: 'compact' } }],
+      },
+    };
+    const hostSource = source(
+      generateReact({ documents: [host, component] }).ui,
+      'components/VariantHost.tsx',
+    );
+    expect(hostSource).toContain("variant='compact'");
+  });
 });

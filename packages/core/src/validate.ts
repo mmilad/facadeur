@@ -16,7 +16,10 @@ import {
   type FieldDefinition,
   type FieldValue,
   type NestedNode,
+  type VariantPreset,
+  isVariantAxis,
 } from './schema.js';
+import { variantPresets } from './variants.js';
 import { readTokenTree } from './token-tree.js';
 import { assertStyleContract } from './style-block.js';
 
@@ -115,6 +118,9 @@ export function assertDefinitionKind(doc: FlatDocument): void {
   if (doc.variants.length) {
     throw new DocumentError('schema', `${doc.kind} documents cannot define variants`);
   }
+  if (doc.variantPresets?.length) {
+    throw new DocumentError('schema', `${doc.kind} documents cannot define variants`);
+  }
 }
 
 export function validateDefinitions(doc: FlatDocument): void {
@@ -137,13 +143,30 @@ export function validateDefinitions(doc: FlatDocument): void {
     eventNames.add(event.name);
   }
   if (doc.expose) assertExpose(doc.expose);
-  const axes = new Set<string>();
+  const variantNames = new Set<string>();
   for (const axis of doc.variants) {
     assertVariantAxis(axis);
-    if (axes.has(axis.name)) {
-      throw new DocumentError('schema', `Duplicate variant axis "${axis.name}"`);
+    if (variantNames.has(axis.name)) {
+      throw new DocumentError('schema', `Duplicate variant "${axis.name}"`);
     }
-    axes.add(axis.name);
+    variantNames.add(axis.name);
+  }
+  for (const variant of doc.variantPresets ?? []) {
+    assertVariantPreset(variant);
+    if (variantNames.has(variant.name)) {
+      throw new DocumentError('schema', `Duplicate variant "${variant.name}"`);
+    }
+    variantNames.add(variant.name);
+    for (const [name, value] of Object.entries(variant.overrides?.fields ?? {})) {
+      const field = doc.fields.find((entry) => entry.name === name);
+      if (!field) {
+        throw new DocumentError(
+          'unknown-field',
+          `Variant "${variant.name}" overrides unknown field "${name}"`,
+        );
+      }
+      assertValueMatches(field, value);
+    }
   }
   for (const node of Object.values(doc.nodes)) {
     if (node.type === 'instance') continue;
@@ -258,6 +281,30 @@ export function assertVariantAxis(axis: {
   }
 }
 
+export function assertVariantPreset(variant: VariantPreset): void {
+  const overrides = variant.overrides;
+  if (!overrides) return;
+  for (const node of Object.values(overrides.nodes ?? {})) {
+    if (!node.displayOn) continue;
+    const hasEquals = node.displayOn.equals !== undefined;
+    const hasTruthy = node.displayOn.truthy !== undefined;
+    if (hasEquals === hasTruthy) {
+      throw new DocumentError(
+        'schema',
+        `Variant "${variant.name}" displayOn needs exactly one of equals or truthy`,
+      );
+    }
+  }
+  for (const insertion of overrides.insertions ?? []) {
+    if (!insertion.node || typeof insertion.node !== 'object') {
+      throw new DocumentError(
+        'schema',
+        `Variant "${variant.name}" contains an invalid insertion node`,
+      );
+    }
+  }
+}
+
 export function assertValueMatches(field: FieldDefinition, value: FieldValue): void {
   const label = `Field "${field.name}"`;
   switch (field.type) {
@@ -299,8 +346,20 @@ function validateInstanceOverrides(doc: FlatDocument, catalog: Map<string, Docum
       }
       assertValueMatches(field, value);
     }
-    const axes = new Map((target.variants ?? []).map((axis) => [axis.name, axis]));
+    const axes = new Map(
+      (target.variants ?? []).filter(isVariantAxis).map((axis) => [axis.name, axis]),
+    );
+    const presets = variantPresets(target);
     for (const [name, value] of Object.entries(node.variants ?? {})) {
+      if (name === 'variant' && presets.length > 0) {
+        if (!presets.some((preset) => preset.name === value)) {
+          throw new DocumentError(
+            'unknown-variant',
+            `Instance "${node.id}" uses "${value}" for variant on "${node.component}", expected ${presets.map((preset) => preset.name).join(', ')}`,
+          );
+        }
+        continue;
+      }
       const axis = axes.get(name);
       if (!axis) {
         throw new DocumentError(

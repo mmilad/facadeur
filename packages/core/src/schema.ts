@@ -344,6 +344,64 @@ export const bindingSchema = Type.Object(
   { additionalProperties: false },
 );
 
+const dataPathSchema = Type.String({
+  minLength: 1,
+  pattern: '^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$',
+});
+
+export const displayOnSchema = Type.Object(
+  {
+    path: dataPathSchema,
+    equals: Type.Optional(fieldValueSchema),
+    truthy: Type.Optional(Type.Boolean()),
+  },
+  { additionalProperties: false },
+);
+
+export const variantNodeOverrideSchema = Type.Object(
+  {
+    text: Type.Optional(Type.String()),
+    src: Type.Optional(Type.String()),
+    alt: Type.Optional(Type.String()),
+    attributes: Type.Optional(Type.Record(Type.String({ minLength: 1 }), Type.String())),
+    fields: Type.Optional(Type.Record(idSchema, fieldValueSchema)),
+    variants: Type.Optional(Type.Record(idSchema, Type.String())),
+    layout: Type.Optional(layoutSchema),
+    bindings: Type.Optional(Type.Array(bindingSchema)),
+    eventBindings: Type.Optional(Type.Array(eventBindingSchema)),
+    style: Type.Optional(Type.Record(Type.String({ minLength: 1 }), Type.String())),
+    displayOn: Type.Optional(displayOnSchema),
+  },
+  { additionalProperties: false },
+);
+
+export const variantInsertionSchema = Type.Object(
+  {
+    parent: idSchema,
+    index: Type.Optional(Type.Integer({ minimum: 0 })),
+    node: Type.Unknown(),
+  },
+  { additionalProperties: false },
+);
+
+export const variantOverridesSchema = Type.Object(
+  {
+    fields: Type.Optional(Type.Record(idSchema, fieldValueSchema)),
+    nodes: Type.Optional(Type.Record(idSchema, variantNodeOverrideSchema)),
+    removed: Type.Optional(Type.Array(idSchema, { uniqueItems: true })),
+    insertions: Type.Optional(Type.Array(variantInsertionSchema)),
+  },
+  { additionalProperties: false },
+);
+
+export const variantPresetSchema = Type.Object(
+  {
+    name: idSchema,
+    overrides: Type.Optional(variantOverridesSchema),
+  },
+  { additionalProperties: false },
+);
+
 const stringMapSchema = Type.Record(Type.String({ minLength: 1 }), Type.String());
 
 const sharedNodeProps = {
@@ -351,6 +409,7 @@ const sharedNodeProps = {
   name: Type.Optional(Type.String({ minLength: 1 })),
   tag: Type.Optional(Type.String({ pattern: '^[A-Za-z][A-Za-z0-9-]*$' })),
   attributes: Type.Optional(stringMapSchema),
+  displayOn: Type.Optional(displayOnSchema),
   layout: Type.Optional(layoutSchema),
   bindings: Type.Optional(Type.Array(bindingSchema)),
   eventBindings: Type.Optional(Type.Array(eventBindingSchema)),
@@ -495,7 +554,7 @@ function documentProperties<Kind extends TSchema>(kind: Kind) {
     fields: Type.Optional(Type.Array(fieldDefinitionSchema)),
     events: Type.Optional(Type.Array(eventDefinitionSchema)),
     expose: Type.Optional(exposeSchema),
-    variants: Type.Optional(Type.Array(variantAxisSchema)),
+    variants: Type.Optional(Type.Array(Type.Union([variantAxisSchema, variantPresetSchema]))),
     settings: Type.Optional(settingsSchema),
     fonts: Type.Optional(Type.Array(fontFamilySchema, { minItems: 1 })),
     icons: Type.Optional(Type.Array(iconDefinitionSchema, { minItems: 1 })),
@@ -531,6 +590,12 @@ export type EventBinding = Static<typeof eventBindingSchema>;
 export type Expose = Static<typeof exposeSchema>;
 export type ExposePath = Static<typeof exposePathSchema>;
 export type VariantAxis = Static<typeof variantAxisSchema>;
+export type DisplayOn = Static<typeof displayOnSchema>;
+export type VariantNodeOverride = Static<typeof variantNodeOverrideSchema>;
+export type VariantInsertion = Static<typeof variantInsertionSchema>;
+export type VariantOverrides = Static<typeof variantOverridesSchema>;
+export type VariantPreset = Static<typeof variantPresetSchema>;
+export type VariantDefinition = VariantAxis | VariantPreset;
 export type Layout = Static<typeof layoutSchema>;
 export type LayoutOverride = Static<typeof layoutOverrideSchema>;
 export type AxisSize = Static<typeof axisSizeSchema>;
@@ -553,6 +618,14 @@ export type FontSource = Static<typeof fontSourceSchema>;
 export type FontFamily = Static<typeof fontFamilySchema>;
 export type IconDefinition = Static<typeof iconDefinitionSchema>;
 export type Breakpoint = Static<typeof breakpointSchema>;
+
+export function isVariantAxis(variant: VariantDefinition): variant is VariantAxis {
+  return 'values' in variant;
+}
+
+export function isVariantPreset(variant: VariantDefinition): variant is VariantPreset {
+  return !isVariantAxis(variant);
+}
 
 /** Viewports used when a document does not set its own breakpoints. */
 export const defaultBreakpoints: Breakpoint[] = [

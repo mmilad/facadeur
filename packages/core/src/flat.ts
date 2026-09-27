@@ -6,6 +6,7 @@ import type {
   Binding,
   DocumentFile,
   DocumentSettings,
+  DisplayOn,
   EventBinding,
   EventDefinition,
   Expose,
@@ -16,7 +17,9 @@ import type {
   StyleBlock,
   TokenInterface,
   VariantAxis,
+  VariantPreset,
 } from './schema.js';
+import { isVariantAxis, isVariantPreset } from './schema.js';
 import { canonicalizeStyleBlock, canonicalizeTokenInterface } from './style-block.js';
 import { canonicalizeTokenTree, type TokenTree } from './token-tree.js';
 
@@ -25,6 +28,7 @@ export interface FlatNodeBase {
   name?: string;
   tag?: string;
   attributes?: Record<string, string>;
+  displayOn?: DisplayOn;
   layout?: Layout;
   bindings?: Binding[];
   eventBindings?: EventBinding[];
@@ -73,6 +77,7 @@ export interface FlatDocument {
   events?: EventDefinition[];
   expose?: Expose;
   variants: VariantAxis[];
+  variantPresets?: VariantPreset[];
   settings: DocumentSettings;
   /** DTCG tree. Empty when the file omits tokens. References stay unresolved. */
   tokens: TokenTree;
@@ -98,7 +103,10 @@ export function toFlat(file: DocumentFile): FlatDocument {
     fields: file.fields ?? [],
     events: file.events ?? [],
     ...(file.expose ? { expose: cloneExpose(file.expose) } : {}),
-    variants: file.variants ?? [],
+    variants: (file.variants ?? []).filter(isVariantAxis),
+    ...((file.variants ?? []).filter(isVariantPreset).length
+      ? { variantPresets: (file.variants ?? []).filter(isVariantPreset).map(clonePreset) }
+      : {}),
     settings: file.settings ?? {},
     tokens: (file.tokens ?? {}) as TokenTree,
     fonts: file.fonts ?? [],
@@ -122,7 +130,8 @@ export function toNested(doc: FlatDocument): DocumentFile {
   if (doc.fields.length) file.fields = doc.fields;
   if (doc.events?.length) file.events = doc.events;
   if (doc.expose) file.expose = cloneExpose(doc.expose);
-  if (doc.variants.length) file.variants = doc.variants;
+  const variants = [...doc.variants, ...(doc.variantPresets ?? [])];
+  if (variants.length) file.variants = variants;
   if (doc.settings.artboard || doc.settings.breakpoints?.length) {
     const settings: DocumentSettings = {};
     if (doc.settings.artboard) {
@@ -174,6 +183,9 @@ export function canonicalizeFlat(doc: FlatDocument): FlatDocument {
     ...(doc.events?.length ? { events: doc.events.map(cloneEvent) } : {}),
     ...(doc.expose ? { expose: cloneExpose(doc.expose) } : {}),
     variants: doc.variants.map(cloneVariant),
+    ...((doc.variantPresets?.length ?? 0) > 0
+      ? { variantPresets: doc.variantPresets?.map(clonePreset) }
+      : {}),
     settings,
     tokens: canonicalizeTokenTree(doc.tokens),
     fonts: cloneFonts(doc.fonts),
@@ -342,6 +354,7 @@ function sharedFromNested(node: Exclude<NestedNode, { type: 'instance' }>): Flat
     ...(node.name !== undefined ? { name: node.name } : {}),
     ...(node.tag !== undefined ? { tag: node.tag } : {}),
     ...(node.attributes ? { attributes: node.attributes } : {}),
+    ...(node.displayOn ? { displayOn: { ...node.displayOn } } : {}),
     ...(node.layout ? { layout: node.layout } : {}),
     ...(node.bindings ? { bindings: node.bindings } : {}),
     ...(node.eventBindings ? { eventBindings: cloneEventBindings(node.eventBindings) } : {}),
@@ -355,6 +368,7 @@ function sharedFlat(node: Exclude<FlatNode, InstanceNode>): FlatNodeBase {
   if (node.tag) base.tag = node.tag;
   const attributes = sortStringRecord(node.attributes);
   if (attributes) base.attributes = attributes;
+  if (node.displayOn) base.displayOn = { ...node.displayOn };
   const layout = cleanLayout(node.layout);
   if (layout) base.layout = layout;
   if (node.bindings?.length) base.bindings = node.bindings.map(cloneBinding);
@@ -369,6 +383,7 @@ function sharedToNested(node: Exclude<FlatNode, InstanceNode>): {
   name?: string;
   tag?: string;
   attributes?: Record<string, string>;
+  displayOn?: DisplayOn;
   layout?: Layout;
   bindings?: Binding[];
   eventBindings?: EventBinding[];
@@ -379,6 +394,7 @@ function sharedToNested(node: Exclude<FlatNode, InstanceNode>): {
     ...(node.name !== undefined ? { name: node.name } : {}),
     ...(node.tag !== undefined ? { tag: node.tag } : {}),
     ...(node.attributes ? { attributes: { ...node.attributes } } : {}),
+    ...(node.displayOn ? { displayOn: { ...node.displayOn } } : {}),
     ...(node.layout ? { layout: { ...node.layout } } : {}),
     ...(node.bindings ? { bindings: node.bindings.map(cloneBinding) } : {}),
     ...(node.eventBindings ? { eventBindings: cloneEventBindings(node.eventBindings) } : {}),
@@ -454,10 +470,30 @@ function cloneExpose(expose: Expose): Expose {
   };
 }
 
-function cloneVariant(axis: VariantAxis): VariantAxis {
+function cloneVariant(variant: VariantAxis): VariantAxis {
   return {
-    name: axis.name,
-    values: [...axis.values],
-    ...(axis.default !== undefined ? { default: axis.default } : {}),
+    name: variant.name,
+    values: [...variant.values],
+    ...(variant.default !== undefined ? { default: variant.default } : {}),
+  };
+}
+
+function clonePreset(variant: VariantPreset): VariantPreset {
+  return {
+    name: variant.name,
+    ...(variant.overrides
+      ? {
+          overrides: {
+            ...(variant.overrides.fields ? { fields: { ...variant.overrides.fields } } : {}),
+            ...(variant.overrides.nodes
+              ? { nodes: structuredClone(variant.overrides.nodes) }
+              : {}),
+            ...(variant.overrides.removed ? { removed: [...variant.overrides.removed] } : {}),
+            ...(variant.overrides.insertions
+              ? { insertions: structuredClone(variant.overrides.insertions) }
+              : {}),
+          },
+        }
+      : {}),
   };
 }

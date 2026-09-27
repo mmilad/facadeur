@@ -40,10 +40,17 @@ export {
   createDocumentSchema,
   documentFileSchema,
   documentJsonSchema,
+  displayOnSchema,
   eventBindingSchema,
   eventDefinitionSchema,
   exposePathSchema,
   exposeSchema,
+  isVariantAxis,
+  isVariantPreset,
+  variantInsertionSchema,
+  variantNodeOverrideSchema,
+  variantOverridesSchema,
+  variantPresetSchema,
   fieldTypes,
   type Binding,
   type BindingTarget,
@@ -52,6 +59,7 @@ export {
   type DocumentFile,
   type DocumentSchemaOptions,
   type DocumentSettings,
+  type DisplayOn,
   type EventDefinition,
   type EventBinding,
   type Expose,
@@ -79,6 +87,11 @@ export {
   type TokenInterface,
   type TokenType,
   type VariantAxis,
+  type VariantDefinition,
+  type VariantInsertion,
+  type VariantNodeOverride,
+  type VariantOverrides,
+  type VariantPreset,
 } from './schema.js';
 export {
   readTokenTree,
@@ -97,6 +110,7 @@ export {
   type TokenTree,
 } from './token-tree.js';
 export { type DocumentChange, type DocumentStore } from './store.js';
+export { resolveVariantDocument, variantPresets } from './variants.js';
 export {
   assertStyleContract,
   assertStyleMap,
@@ -115,6 +129,7 @@ export {
   assertEventDefinition,
   assertExpose,
   assertFieldDefinition,
+  assertVariantPreset,
   assertVariantAxis,
   compileDocumentValidator,
   validateCatalog,

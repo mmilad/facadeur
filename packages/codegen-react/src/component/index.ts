@@ -1,4 +1,4 @@
-import type { DocumentFile } from '@facadeur/core';
+import { resolveVariantDocument, variantPresets, type DocumentFile } from '@facadeur/core';
 import { CodegenError } from '../names.js';
 import { variantTypeSpecs } from './catalog.js';
 import { printElement, printFile } from './print.js';
@@ -18,10 +18,33 @@ export function renderComponent(
   const imports = new Map<string, ComponentImport>();
   const usedProps = new Set<string>();
   let usesCssProperties = false;
-  const root = renderNode(document, document.root, catalog, entry, true, imports, usedProps, () => {
-    usesCssProperties = true;
+  const names = entry.namedVariant
+    ? ['default', ...variantPresets(document).filter((variant) => variant.name !== 'default').map((variant) => variant.name)]
+    : ['default'];
+  const roots = names.map((name) => {
+    const effective = resolveVariantDocument(document, name);
+    return renderNode(
+      effective,
+      effective.root,
+      catalog,
+      entry,
+      true,
+      imports,
+      usedProps,
+      () => {
+        usesCssProperties = true;
+      },
+    );
   });
-  const props = [...entry.fields.values(), ...entry.variants.values(), ...entry.events.values()];
+  const body = entry.namedVariant
+    ? renderVariantBranches(roots, names, entry.namedVariant.name)
+    : printElement(roots[0]!, 2);
+  const props = [
+    ...(entry.namedVariant ? [entry.namedVariant] : []),
+    ...entry.fields.values(),
+    ...entry.variants.values(),
+    ...entry.events.values(),
+  ];
   const contents = printFile({
     id: document.id,
     component: entry.component,
@@ -30,7 +53,7 @@ export function renderComponent(
     imports: [...imports.values()].sort((left, right) => left.from.localeCompare(right.from, 'en')),
     usesCssProperties,
     usedProps,
-    body: printElement(root, 2),
+    body,
   });
   return {
     id: document.id,
@@ -42,4 +65,23 @@ export function renderComponent(
     usesCssProperties,
     contents,
   };
+}
+
+function renderVariantBranches(
+  roots: readonly ReturnType<typeof renderNode>[],
+  names: readonly string[],
+  prop: string,
+): string {
+  let expression = `(${quoteBranch(roots[0]!)})`;
+  for (let index = 1; index < roots.length; index += 1) {
+    const root = roots[index];
+    const name = names[index];
+    if (!root || !name) continue;
+    expression = `${prop} === '${name}' ? (${quoteBranch(root)}) : ${expression}`;
+  }
+  return `  ${expression}`;
+}
+
+function quoteBranch(root: ReturnType<typeof renderNode>): string {
+  return `\n${printElement(root, 2)}\n  `;
 }

@@ -26,6 +26,7 @@ import type {
   TokenInterface,
   VariantAxis,
 } from './schema.js';
+import { isVariantAxis } from './schema.js';
 import {
   assertStyleMap,
   collectTokenRefs,
@@ -406,7 +407,9 @@ function removeField(doc: FlatDocument, name: string): void {
 
 function defineVariant(doc: FlatDocument, axis: VariantAxis): void {
   assertVariantAxis(axis);
-  const previous = doc.variants.find((item) => item.name === axis.name);
+  const previous = doc.variants.find(
+    (item): item is VariantAxis => isVariantAxis(item) && item.name === axis.name,
+  );
   const index = previous ? doc.variants.indexOf(previous) : -1;
   if (index === -1) doc.variants.push(axis);
   else doc.variants[index] = axis;
@@ -419,7 +422,7 @@ function defineVariant(doc: FlatDocument, axis: VariantAxis): void {
 }
 
 function removeVariant(doc: FlatDocument, name: string): void {
-  const index = doc.variants.findIndex((item) => item.name === name);
+  const index = doc.variants.findIndex((item) => isVariantAxis(item) && item.name === name);
   if (index === -1) {
     throw new DocumentError('unknown-variant', `Variant "${name}" is not defined`);
   }
