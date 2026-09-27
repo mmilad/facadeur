@@ -43,9 +43,9 @@ describe('viewport layers UX', () => {
   });
 
   function viewportLayerButton(breakpointId: string): HTMLButtonElement | undefined {
-    return [...(host?.querySelectorAll('button.viewport-layer') ?? [])].find(
+    return [...(host?.querySelectorAll<HTMLButtonElement>('button.viewport-layer') ?? [])].find(
       (button) => button.dataset.breakpoint === breakpointId,
-    ) as HTMLButtonElement | undefined;
+    );
   }
 
   it('shows resolved viewport chrome title in Layers rows', async () => {
