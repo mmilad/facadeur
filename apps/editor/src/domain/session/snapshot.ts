@@ -1,5 +1,6 @@
 import type { DefaultKind, FlatDocument } from '@facadeur/core';
 import type { YjsDocumentStore } from '@facadeur/store-yjs';
+import { publicFieldsFor } from '../component-contract.js';
 import { layerTree, nodeIdForHit, renderIdForNode } from '../selection-model.js';
 import { isDocumentDirty, type SavedJsonBaselines } from '../save-state.js';
 import type { ViewportChromeSettings } from '../viewport-chrome.js';
@@ -45,21 +46,24 @@ export function buildEditorSnapshot(ctx: SnapshotBuildContext): EditorSnapshot {
   const document = ctx.document;
   const design = ctx.design;
   const selectedNode = ctx.selectedNodeId ? (document.nodes[ctx.selectedNodeId] ?? null) : null;
-  let componentTarget: FlatDocument | null = null;
-  if (selectedNode?.type === 'instance') {
-    componentTarget = ctx.assetStores.get(selectedNode.component)?.getDocument() ?? null;
-  }
   const assets: AssetSummary[] = [];
   const catalog: AssetSummary[] = [];
+  const catalogDocuments = new Map<string, FlatDocument>();
   for (const id of ctx.order) {
     const store = ctx.assetStores.get(id);
     if (!store) continue;
     const doc = store.getDocument();
+    catalogDocuments.set(doc.id, doc);
     if (!isKind(doc.kind)) continue;
     catalog.push({ id: doc.id, name: doc.name, kind: doc.kind, group: doc.group });
     if (doc.kind !== ctx.workspace) continue;
     assets.push({ id: doc.id, name: doc.name, kind: doc.kind });
   }
+  let componentTarget: FlatDocument | null = null;
+  if (selectedNode?.type === 'instance') {
+    componentTarget = catalogDocuments.get(selectedNode.component) ?? null;
+  }
+  const componentFields = componentTarget ? publicFieldsFor(componentTarget, catalogDocuments) : [];
   return {
     workspace: ctx.workspace,
     openId: ctx.openId,
@@ -76,6 +80,7 @@ export function buildEditorSnapshot(ctx: SnapshotBuildContext): EditorSnapshot {
     viewportChrome: ctx.viewportChrome,
     editTarget: ctx.editTarget,
     componentTarget,
+    componentFields,
     canUndo: ctx.canUndo,
     canRedo: ctx.canRedo,
     notice: ctx.notice,

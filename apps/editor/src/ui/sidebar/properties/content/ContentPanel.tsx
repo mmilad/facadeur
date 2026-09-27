@@ -136,7 +136,7 @@ function InstanceFields({
   return (
     <InstanceOverridesControl
       masterName={target.name}
-      fields={target.fields}
+      fields={snap.componentFields}
       variants={target.variants}
       fieldOverrides={node.fields}
       variantOverrides={node.variants}

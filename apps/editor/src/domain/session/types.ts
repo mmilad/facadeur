@@ -53,6 +53,8 @@ export interface EditorSnapshot {
   editTarget: StyleEditMode;
   /** Definition of the selected instance, when that document is in the catalog. */
   componentTarget: FlatDocument | null;
+  /** Public fields of the selected component, including recursive expose paths. */
+  componentFields: import('@facadeur/core').FieldDefinition[];
   canUndo: boolean;
   canRedo: boolean;
   notice: EditorNotice | null;
