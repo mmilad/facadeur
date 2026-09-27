@@ -475,14 +475,24 @@ describe('atom contracts', () => {
         tag: 'ul',
         repeat: { path: 'items', as: 'item', key: 'id' },
         children: [
-          { id: 'input', type: 'text', tag: 'li', text: 'Input', displayOn: { path: 'item.kind', equals: 'input' } },
+          { id: 'input', type: 'instance', component: 'repeat-row', fieldBindings: { label: 'item.label' }, displayOn: { path: 'item.kind', equals: 'input' } },
         ],
       },
     };
-    const generated = generateReact({ documents: [component] });
+    const row: DocumentFile = {
+      version: 1,
+      id: 'repeat-row',
+      name: 'Repeat row',
+      kind: 'atom',
+      fields: [{ name: 'label', type: 'text', required: true }],
+      root: { id: 'root', type: 'text', tag: 'li', bindings: [{ field: 'label', target: 'text' }] },
+    };
+    const generated = generateReact({ documents: [component, row] });
     const sourceText = source(generated.ui, 'components/RepeatDemo.tsx');
     expect(sourceText).toContain('{items.map((item, itemIndex) => (');
     expect(sourceText).toContain('key={item?.id}');
     expect(sourceText).toContain("item?.kind === 'input'");
+    expect(sourceText).toContain("import { RepeatRow } from './RepeatRow';");
+    expect(sourceText).toContain('label={item?.label}');
   });
 });

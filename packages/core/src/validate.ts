@@ -380,6 +380,14 @@ function validateInstanceOverrides(doc: FlatDocument, catalog: Map<string, Docum
       }
       assertValueMatches(field, value);
     }
+    for (const name of Object.keys(node.fieldBindings ?? {})) {
+      if (!fields.has(name)) {
+        throw new DocumentError(
+          'unknown-field',
+          `Instance "${node.id}" binds unknown field "${name}" on "${node.component}"`,
+        );
+      }
+    }
     const axes = new Map(
       (target.variants ?? []).filter(isVariantAxis).map((axis) => [axis.name, axis]),
     );

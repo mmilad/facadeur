@@ -244,6 +244,7 @@ function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
     syncLayout(map, node.layout);
     syncScalar(map, 'component', node.component);
     syncValueMap(map, 'fields', node.fields);
+    syncStringMap(map, 'fieldBindings', node.fieldBindings);
     syncStringMap(map, 'variants', node.variants);
     syncJsonObject(ensureMap(map, 'expose'), (node.expose ?? {}) as Record<string, JsonValue>);
     for (const key of [
@@ -257,6 +258,7 @@ function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
       'children',
       'eventBindings',
       'repeat',
+      'fieldBindings',
     ]) {
       if (map.has(key)) map.delete(key);
     }
@@ -295,6 +297,7 @@ function readNode(map: Y.Map<unknown>): FlatNode {
   const layout = readLayout(map.get('layout'));
   if (type === 'instance') {
     const fields = readValueMap(map.get('fields'));
+    const fieldBindings = readStringMap(map.get('fieldBindings'));
     const variants = readStringMap(map.get('variants'));
     const displayOn = readDisplayOn(map.get('displayOn'));
     const expose = readExposeValue(map.get('expose'));
@@ -306,6 +309,7 @@ function readNode(map: Y.Map<unknown>): FlatNode {
       ...(layout ? { layout } : {}),
       component: stringValue(map.get('component')),
       ...(fields ? { fields } : {}),
+      ...(fieldBindings ? { fieldBindings } : {}),
       ...(variants ? { variants } : {}),
       ...(expose ? { expose } : {}),
     });

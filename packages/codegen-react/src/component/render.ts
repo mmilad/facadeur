@@ -225,8 +225,22 @@ function renderInstance(
     usedProps.add(source.name);
     attrs.push({ name: destination.name, value: { kind: 'expr', code: source.name } });
   }
+  const boundFields = new Set<string>();
+  for (const [fieldName, path] of Object.entries(node.fieldBindings ?? {})) {
+    const prop = target.fields.get(fieldName);
+    if (!prop) {
+      throw new CodegenError(
+        `Instance "${node.id}" binds unknown field "${fieldName}" on "${node.component}"`,
+      );
+    }
+    boundFields.add(fieldName);
+    attrs.push({
+      name: prop.name,
+      value: { kind: 'expr', code: dataExpression(path, owner, dataScope, usedProps) },
+    });
+  }
   for (const [fieldName, value] of Object.entries(node.fields ?? {})) {
-    if (forwardedFields.has(fieldName)) continue;
+    if (forwardedFields.has(fieldName) || boundFields.has(fieldName)) continue;
     const prop = target.fields.get(fieldName);
     if (!prop) {
       throw new CodegenError(

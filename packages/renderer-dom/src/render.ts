@@ -289,7 +289,13 @@ function walkRendered(
     const path = joinId(parent.path, node.id);
     return walkRendered(child, parts, index + 1, ctx, {
       path,
-      scope: resolveFields(definition.fields, node.fields),
+      scope: resolveFields(
+        definition.fields,
+        {
+          ...(node.fields ?? {}),
+          ...resolveFieldBindings(node.fieldBindings, parent.scope),
+        },
+      ),
       ownerId: path,
       depth: parent.depth + 1,
     });
@@ -334,7 +340,10 @@ function paintInstance(
     paintUnknown(el, id, node, ctx);
     return;
   }
-  const scope = resolveFields(definition.fields, node.fields);
+  const scope = resolveFields(definition.fields, {
+    ...(node.fields ?? {}),
+    ...resolveFieldBindings(node.fieldBindings, ctx.scope),
+  });
   const variants = resolveVariants(definition.variants?.filter(isVariantAxis), node.variants);
   const root = definition.root;
   el.dataset.id = id;
@@ -723,6 +732,18 @@ function readAttributes(el: HTMLElement): Record<string, string> {
 
 function joinId(path: string | null, id: string): string {
   return path ? `${path}/${id}` : id;
+}
+
+function resolveFieldBindings(
+  bindings: Record<string, string> | undefined,
+  scope: Record<string, FieldValue>,
+): Record<string, FieldValue> {
+  const resolved: Record<string, FieldValue> = {};
+  for (const [field, path] of Object.entries(bindings ?? {})) {
+    const value = resolvePath(scope, path);
+    if (value !== undefined) resolved[field] = value;
+  }
+  return resolved;
 }
 
 function matchesDisplay(condition: DisplayOn, scope: Record<string, FieldValue>): boolean {

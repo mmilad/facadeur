@@ -493,6 +493,7 @@ export const nestedNodeSchema = Type.Recursive((Self) =>
         type: Type.Literal('instance'),
         component: idSchema,
         fields: Type.Optional(Type.Record(idSchema, fieldValueSchema)),
+        fieldBindings: Type.Optional(Type.Record(idSchema, dataPathSchema)),
         variants: Type.Optional(Type.Record(idSchema, Type.String())),
         expose: Type.Optional(exposeSchema),
       },

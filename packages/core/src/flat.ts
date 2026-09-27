@@ -62,6 +62,7 @@ export interface InstanceNode {
   layout?: Layout;
   component: string;
   fields?: Record<string, FieldValue>;
+  fieldBindings?: Record<string, string>;
   variants?: Record<string, string>;
   expose?: Expose;
 }
@@ -243,6 +244,7 @@ export function flattenSubtree(
     ...(node.layout ? { layout: node.layout } : {}),
     component: node.component,
     ...(node.fields ? { fields: node.fields } : {}),
+    ...(node.fieldBindings ? { fieldBindings: { ...node.fieldBindings } } : {}),
     ...(node.variants ? { variants: node.variants } : {}),
     ...(node.expose ? { expose: cloneExpose(node.expose) } : {}),
   });
@@ -262,6 +264,7 @@ export function makeFlatNode(node: FlatNode): FlatNode {
       ...(layout ? { layout } : {}),
       component: node.component,
       ...(fields ? { fields } : {}),
+      ...(node.fieldBindings ? { fieldBindings: { ...node.fieldBindings } } : {}),
       ...(variants ? { variants } : {}),
     };
   }
@@ -356,6 +359,7 @@ function expandNode(doc: FlatDocument, id: string, stack: Set<string>): NestedNo
       ...(node.layout ? { layout: { ...node.layout } } : {}),
       component: node.component,
       ...(node.fields ? { fields: { ...node.fields } } : {}),
+      ...(node.fieldBindings ? { fieldBindings: { ...node.fieldBindings } } : {}),
       ...(node.variants ? { variants: { ...node.variants } } : {}),
       ...(node.expose ? { expose: cloneExpose(node.expose) } : {}),
     };
