@@ -39,6 +39,7 @@
 
 .side-left {
   border-right: 1px solid var(--line);
+  min-width: 0;
   overflow: hidden;
 }
 
@@ -150,19 +151,26 @@ body.is-resizing-left-rail {
 .side-right {
   position: relative;
   flex: none;
+  min-height: 0;
+  min-width: 0;
   border-left: 1px solid var(--line);
+  overflow: hidden;
 }
 
 .inspector-rail {
   display: flex;
   flex-direction: row;
+  height: 100%;
   min-height: 0;
+  min-width: 0;
 }
 
 .inspector-rail > .side-block,
 .inspector-rail > section {
   flex: 1;
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .inspector-resize-handle {
