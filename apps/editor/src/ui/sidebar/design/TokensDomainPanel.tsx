@@ -35,7 +35,7 @@ import { RemoveSpacingTokenButton, SpacingTokenAddRow } from './SpacingTokenCrud
 import { RemoveShadowTokenButton, ShadowTokenAddRow } from './ShadowTokenCrud.js';
 import { RemoveTypographyTokenButton, TypographyTokenAddRow } from './TypographyTokenCrud.js';
 
-type TokenDomain = Exclude<DesignDomain, 'fonts'>;
+type TokenDomain = Exclude<DesignDomain, 'fonts' | 'icons'>;
 
 export function TokensDomainPanel({
   session,

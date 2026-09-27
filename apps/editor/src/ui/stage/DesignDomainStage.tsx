@@ -1,5 +1,9 @@
 import type { EditorSession, EditorSnapshot } from '../../domain/session.js';
-import { FontsDomainPanel, TokensDomainPanel } from '../sidebar/design/DesignPanels.js';
+import {
+  FontsDomainPanel,
+  IconsDomainPanel,
+  TokensDomainPanel,
+} from '../sidebar/design/DesignPanels.js';
 import { designDomainLabel, type DesignDomain } from '../sidebar/design/design-domain.js';
 import { ViewportEditBar } from '../sidebar/properties/ViewportEditBar.js';
 
@@ -26,6 +30,8 @@ export function DesignDomainStage({
         <ViewportEditBar session={session} snap={snap} />
         {domain === 'fonts' ? (
           <FontsDomainPanel session={session} snap={snap} />
+        ) : domain === 'icons' ? (
+          <IconsDomainPanel session={session} snap={snap} />
         ) : (
           <TokensDomainPanel session={session} snap={snap} domain={domain} />
         )}

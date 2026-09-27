@@ -14,6 +14,7 @@ import { Field, TextInput } from '../../form/index.js';
 import { UnsavedIndicator } from '../../shell/UnsavedIndicator.js';
 
 export { TokensDomainPanel } from './TokensDomainPanel.js';
+export { IconsDomainPanel } from './IconsDomainPanel.js';
 
 export function FontsDomainPanel({
   session,

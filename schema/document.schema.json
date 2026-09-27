@@ -336,6 +336,39 @@
         }
       }
     },
+    "icons": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "src"
+        ],
+        "properties": {
+          "id": {
+            "minLength": 1,
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+            "type": "string"
+          },
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "src": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "category": {
+            "minLength": 1,
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+            "type": "string"
+          }
+        }
+      }
+    },
     "tokens": {
       "$ref": "#/$defs/dtcgNode"
     },

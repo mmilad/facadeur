@@ -121,6 +121,16 @@ export const fontFamilySchema = Type.Object(
   { additionalProperties: false },
 );
 
+export const iconDefinitionSchema = Type.Object(
+  {
+    id: idSchema,
+    name: Type.String({ minLength: 1 }),
+    src: Type.String({ minLength: 1 }),
+    category: Type.Optional(idSchema),
+  },
+  { additionalProperties: false },
+);
+
 export const breakpointSchema = Type.Object(
   {
     id: Type.String({ pattern: '^[a-z][a-z0-9]*$' }),
@@ -450,6 +460,7 @@ function documentProperties<Kind extends TSchema>(kind: Kind) {
     variants: Type.Optional(Type.Array(variantAxisSchema)),
     settings: Type.Optional(settingsSchema),
     fonts: Type.Optional(Type.Array(fontFamilySchema, { minItems: 1 })),
+    icons: Type.Optional(Type.Array(iconDefinitionSchema, { minItems: 1 })),
     tokens: Type.Optional(tokenTreeSchema),
     styles: Type.Optional(styleBlockSchema),
     tokenInterface: Type.Optional(tokenInterfaceSchema),
@@ -498,6 +509,7 @@ export type FontStyle = Static<typeof fontStyleSchema>;
 export type FontFaceFile = Static<typeof fontFaceFileSchema>;
 export type FontSource = Static<typeof fontSourceSchema>;
 export type FontFamily = Static<typeof fontFamilySchema>;
+export type IconDefinition = Static<typeof iconDefinitionSchema>;
 export type Breakpoint = Static<typeof breakpointSchema>;
 
 /** Viewports used when a document does not set its own breakpoints. */

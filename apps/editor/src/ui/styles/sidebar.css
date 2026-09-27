@@ -399,6 +399,7 @@ body.is-resizing-inspector {
 }
 
 .tool-icon {
+  display: block;
   width: 16px;
   height: 16px;
   fill: none;

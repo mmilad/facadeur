@@ -53,6 +53,7 @@ export {
   type FieldValue,
   type FontFaceFile,
   type FontFamily,
+  type IconDefinition,
   type FontSource,
   type FontStyle,
   type AxisSize,

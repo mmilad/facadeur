@@ -1,4 +1,5 @@
-export type DesignDomain = 'colors' | 'fonts' | 'spacing' | 'radius' | 'shadow' | 'typography';
+export type DesignDomain =
+  'colors' | 'fonts' | 'icons' | 'spacing' | 'radius' | 'shadow' | 'typography';
 
 export type EditorSurface = 'properties' | DesignDomain;
 
@@ -9,6 +10,7 @@ export const DESIGN_DOMAIN_ITEMS: {
 }[] = [
   { id: 'colors', label: 'Colors', keys: ['colors', 'color'] },
   { id: 'fonts', label: 'Fonts', keys: ['fonts', 'font', 'schriften', 'schrift'] },
+  { id: 'icons', label: 'Icons', keys: ['icons', 'icon', 'symbol'] },
   { id: 'spacing', label: 'Spacing', keys: ['spacing', 'space'] },
   { id: 'radius', label: 'Radius', keys: ['radius', 'corner', 'rounded'] },
   { id: 'shadow', label: 'Shadow', keys: ['shadow', 'elevation'] },
@@ -26,7 +28,7 @@ export function designDomainLabel(domain: DesignDomain): string {
 export function tokenMatchesDomain(
   path: string,
   type: string,
-  domain: Exclude<DesignDomain, 'fonts'>,
+  domain: Exclude<DesignDomain, 'fonts' | 'icons'>,
 ): boolean {
   switch (domain) {
     case 'colors':

@@ -1,7 +1,7 @@
 import { DocumentError } from './errors.js';
 import { cloneBreakpoints, cloneFonts } from './libraries.js';
 import { canonicalizeLayout } from './layout.js';
-import type { FontFamily } from './schema.js';
+import type { FontFamily, IconDefinition } from './schema.js';
 import type {
   Binding,
   DocumentFile,
@@ -70,6 +70,7 @@ export interface FlatDocument {
   /** DTCG tree. Empty when the file omits tokens. References stay unresolved. */
   tokens: TokenTree;
   fonts: FontFamily[];
+  icons?: IconDefinition[];
   /** Component style block: base, variants, states, breakpoints. */
   styles?: StyleBlock;
   /** Tokens this component reads, and tokens it sets for descendants. */
@@ -92,6 +93,7 @@ export function toFlat(file: DocumentFile): FlatDocument {
     settings: file.settings ?? {},
     tokens: (file.tokens ?? {}) as TokenTree,
     fonts: file.fonts ?? [],
+    ...(file.icons?.length ? { icons: file.icons } : {}),
     ...(file.styles ? { styles: file.styles } : {}),
     ...(file.tokenInterface ? { tokenInterface: file.tokenInterface } : {}),
     nodes,
@@ -124,6 +126,7 @@ export function toNested(doc: FlatDocument): DocumentFile {
     file.settings = settings;
   }
   if (doc.fonts.length) file.fonts = cloneFonts(doc.fonts);
+  if (doc.icons?.length) file.icons = doc.icons.map((icon) => ({ ...icon }));
   if (Object.keys(doc.tokens).length) file.tokens = canonicalizeTokenTree(doc.tokens);
   if (doc.styles) file.styles = doc.styles;
   if (doc.tokenInterface) file.tokenInterface = doc.tokenInterface;
@@ -161,6 +164,7 @@ export function canonicalizeFlat(doc: FlatDocument): FlatDocument {
     settings,
     tokens: canonicalizeTokenTree(doc.tokens),
     fonts: cloneFonts(doc.fonts),
+    ...(doc.icons?.length ? { icons: doc.icons.map((icon) => ({ ...icon })) } : {}),
     ...(styles ? { styles } : {}),
     ...(tokenInterface ? { tokenInterface } : {}),
     nodes,

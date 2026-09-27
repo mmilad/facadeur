@@ -16,6 +16,7 @@ import type {
   FontFamily,
   FontSource,
   FontStyle,
+  IconDefinition,
   JsonValue,
   VariantAxis,
 } from '@facadeur/core';
@@ -31,6 +32,7 @@ export function patchDocument(doc: Y.Doc, next: FlatDocument): void {
   syncNodes(doc.getMap<Y.Map<unknown>>('nodes'), next);
   syncJsonObject(doc.getMap('tokens'), next.tokens);
   syncFonts(doc.getMap('fonts'), next.fonts);
+  syncIcons(doc.getArray<Y.Map<unknown>>('icons'), next.icons ?? []);
   syncJsonObject(doc.getMap('styles'), (next.styles ?? {}) as Record<string, JsonValue>);
   syncJsonObject(
     doc.getMap('tokenInterface'),
@@ -56,6 +58,7 @@ export function readDocument(doc: Y.Doc): FlatDocument {
     settings: readSettings(doc.getMap('settings')),
     tokens: readJsonObject(doc.getMap('tokens')),
     fonts: readFonts(doc.getMap('fonts')),
+    icons: readIcons(doc.getArray<Y.Map<unknown>>('icons')),
     ...readStyleBlock(doc.getMap('styles')),
     ...readTokenInterface(doc.getMap('tokenInterface')),
     nodes,
@@ -70,6 +73,7 @@ export function ensureDocumentMaps(doc: Y.Doc): void {
   doc.getMap('nodes');
   doc.getMap('tokens');
   doc.getMap('fonts');
+  doc.getArray('icons');
   doc.getMap('styles');
   doc.getMap('tokenInterface');
 }
@@ -360,6 +364,34 @@ function syncFonts(fonts: Y.Map<unknown>, list: FontFamily[]): void {
     ensureArray<string>(fonts, '$order'),
     list.map((font) => font.id),
   );
+}
+
+function syncIcons(list: Y.Array<Y.Map<unknown>>, icons: IconDefinition[]): void {
+  const byId = new Map<string, Y.Map<unknown>>();
+  for (const map of list.toArray()) {
+    const id = map.get('id');
+    if (typeof id === 'string') byId.set(id, map);
+  }
+  const desired = icons.map((icon) => {
+    const map = byId.get(icon.id) ?? new Y.Map<unknown>();
+    syncScalar(map, 'id', icon.id);
+    syncScalar(map, 'name', icon.name);
+    syncScalar(map, 'src', icon.src);
+    syncScalar(map, 'category', icon.category);
+    return map;
+  });
+  reconcile(list, desired);
+}
+
+function readIcons(list: Y.Array<Y.Map<unknown>>): IconDefinition[] {
+  return list.toArray().flatMap((map) => {
+    const id = map.get('id');
+    const name = map.get('name');
+    const src = map.get('src');
+    if (typeof id !== 'string' || typeof name !== 'string' || typeof src !== 'string') return [];
+    const category = optionalString(map.get('category'));
+    return [{ id, name, src, ...(category ? { category } : {}) }];
+  });
 }
 
 function writeFont(map: Y.Map<unknown>, font: FontFamily): void {

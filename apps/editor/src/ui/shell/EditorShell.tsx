@@ -63,7 +63,12 @@ export function EditorShell({ session }: { session: EditorSession }) {
         <div className="brand">facadeur</div>
         <DocumentBreadcrumb session={session} snap={snap} />
         <KindBadge kind={snap.document.kind} />
-        <ToolBar session={session} tool={snap.tool} kind={snap.document.kind} />
+        <ToolBar
+          session={session}
+          tool={snap.tool}
+          kind={snap.document.kind}
+          icons={snap.design.icons}
+        />
         <div className="topbar-spacer" />
         <HistoryButtons session={session} canUndo={snap.canUndo} canRedo={snap.canRedo} />
         <ZoomControls session={session} label={snap.zoomLabel} />

@@ -3,6 +3,7 @@ export {
   createProjectTemplate,
   createProjectTemplateDocument,
   defaultFonts,
+  defaultIcons,
   defaultTokenTree,
   starterAtomIds,
   type ProjectTemplate,
