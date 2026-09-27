@@ -58,7 +58,7 @@
   --input-color-border: var(--color-border-default);
   --input-color-text: var(--color-text-primary);
   --input-padding-x: var(--space-3);
-  --input-padding-y: var(--space-2);
+  --input-padding-y: var(--space-1);
   --input-radius: var(--radius-md);
   --radius-full: 999px;
   --radius-lg: 12px;

@@ -87,7 +87,7 @@
     }
   ],
   "tokens": {
-    "button": {
+      "button": {
       "$extensions": {
         "facadeur": {
           "tier": "component"
@@ -349,7 +349,7 @@
         }
       }
     },
-    "input": {
+      "input": {
       "$extensions": {
         "facadeur": {
           "tier": "component"
@@ -373,7 +373,7 @@
           "$value": "{space.3}"
         },
         "y": {
-          "$value": "{space.2}"
+          "$value": "{space.1}"
         }
       },
       "radius": {

@@ -224,7 +224,7 @@ export const defaultTokenTree: TokenTree = {
     padding: {
       $type: 'dimension',
       x: { $value: '{space.3}' },
-      y: { $value: '{space.2}' },
+      y: { $value: '{space.1}' },
     },
     radius: { $type: 'dimension', $value: '{radius.md}' },
     color: {
