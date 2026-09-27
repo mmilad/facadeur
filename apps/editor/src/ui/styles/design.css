@@ -25,10 +25,23 @@
 }
 
 .design-domain-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  padding: 16px 20px 24px;
+}
+
+.design-domain-body > .viewport-edit {
+  flex: none;
+}
+
+.design-domain-body > .design-domain-panel {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding: 16px 20px 24px;
 }
 
 .design-domain-panel {

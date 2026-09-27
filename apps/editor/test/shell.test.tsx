@@ -1,6 +1,9 @@
 /**
  * @vitest-environment jsdom
  */
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { validateCatalog } from '@facadeur/core';
@@ -29,6 +32,22 @@ const documents = validateCatalog([
 ]);
 
 describe('editor shell', () => {
+  const stylesDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '../src/ui/styles');
+
+  it('uses viewport-height shell layout and independent sidebar scroll styles', () => {
+    const baseCss = readFileSync(path.join(stylesDir, 'base.css'), 'utf8');
+    const shellCss = readFileSync(path.join(stylesDir, 'shell.css'), 'utf8');
+    const sidebarCss = readFileSync(path.join(stylesDir, 'sidebar.css'), 'utf8');
+
+    expect(baseCss).toContain('height: 100vh');
+    expect(baseCss).toContain('height: 100dvh');
+    expect(baseCss.indexOf('height: 100vh')).toBeLessThan(baseCss.indexOf('height: 100dvh'));
+    expect(baseCss).toMatch(/html\s*\{[\s\S]*?overflow:\s*hidden/);
+    expect(baseCss).toMatch(/body,\s*\n#__next\s*\{[\s\S]*?overflow:\s*hidden/);
+    expect(shellCss).toMatch(/\.workspace\s*\{[\s\S]*?overflow:\s*hidden/);
+    expect(sidebarCss).toMatch(/\.side-scroll\s*\{[\s\S]*?overflow:\s*auto/);
+  });
+
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   let root: Root | null = null;
   let host: HTMLDivElement | null = null;
@@ -40,6 +59,25 @@ describe('editor shell', () => {
     host?.remove();
     root = null;
     host = null;
+  });
+
+  it('renders shell regions that participate in the height layout', async () => {
+    const session: EditorSession = createEditorSession({
+      documents,
+      design: createProjectTemplateDocument(),
+    });
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => {
+      root?.render(<App session={session} />);
+    });
+
+    expect(host.querySelector('.app')).toBeInstanceOf(HTMLDivElement);
+    expect(host.querySelector('.workspace')).toBeInstanceOf(HTMLDivElement);
+    expect(host.querySelector('aside.side-left')).toBeInstanceOf(HTMLElement);
+    expect(host.querySelector('aside.side-right.inspector-rail')).toBeInstanceOf(HTMLElement);
+    expect(host.querySelector('.side-scroll')).toBeInstanceOf(HTMLDivElement);
   });
 
   it('follows the store from the panels and undoes with Ctrl+Z', async () => {
