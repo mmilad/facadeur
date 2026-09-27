@@ -55,6 +55,8 @@ export interface EditorSnapshot {
   componentTarget: FlatDocument | null;
   /** Public fields of the selected component, including recursive expose paths. */
   componentFields: import('@facadeur/core').FieldDefinition[];
+  /** Public events of the selected component, including recursive expose paths. */
+  componentEvents: import('@facadeur/core').EventDefinition[];
   canUndo: boolean;
   canRedo: boolean;
   notice: EditorNotice | null;
