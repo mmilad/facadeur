@@ -1,0 +1,58 @@
+import { describe, expect, it } from 'vitest';
+import { validateCatalog, type DocumentFile } from '../src/index.js';
+
+const atom: DocumentFile = {
+  version: 1,
+  id: 'control',
+  name: 'Control',
+  kind: 'atom',
+  fields: [{ name: 'value', type: 'text' }],
+  events: [{ name: 'change', payload: { value: 'text' } }],
+  root: { id: 'root', type: 'text', tag: 'span' },
+};
+
+function wrapper(overrides: Partial<DocumentFile> = {}): DocumentFile {
+  return {
+    version: 1,
+    id: 'wrapper',
+    name: 'Wrapper',
+    kind: 'component',
+    expose: {
+      fields: { value: 'control.value' },
+      events: { change: 'control.change' },
+    },
+    root: {
+      id: 'root',
+      type: 'frame',
+      tag: 'label',
+      children: [{ id: 'control', type: 'instance', component: 'control' }],
+    },
+    ...overrides,
+  };
+}
+
+describe('component contracts', () => {
+  it('validates exposed fields and events against nested child contracts', () => {
+    expect(() => validateCatalog([atom, wrapper()])).not.toThrow();
+  });
+
+  it('rejects an exposed event that does not exist on the child', () => {
+    const invalid = wrapper({ expose: { events: { change: 'control.commit' } } });
+    expect(() => validateCatalog([atom, invalid])).toThrow(/does not resolve a child event/);
+  });
+
+  it('rejects an invalid exposed field path even when no instance override uses it', () => {
+    const invalid = wrapper({ expose: { fields: { value: 'control.missing' } } });
+    expect(() => validateCatalog([atom, invalid])).toThrow(/does not resolve a child field/);
+  });
+
+  it('does not treat repeated aliases to one child path as a cycle', () => {
+    const aliases = wrapper({
+      expose: {
+        fields: { value: 'control.value', currentValue: 'control.value' },
+        events: { change: 'control.change', changed: 'control.change' },
+      },
+    });
+    expect(() => validateCatalog([atom, aliases])).not.toThrow();
+  });
+});

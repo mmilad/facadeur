@@ -210,9 +210,34 @@ export function validateCatalog(files: readonly unknown[]): DocumentFile[] {
     validateTree(flat, {
       resolveKind: (componentId) => byId.get(componentId)?.kind,
     });
+    validateExposedContracts(document, byId);
     validateInstanceOverrides(flat, byId);
   }
   return documents;
+}
+
+function validateExposedContracts(
+  document: DocumentFile,
+  catalog: Map<string, DocumentFile>,
+): void {
+  for (const [name, path] of Object.entries(document.expose?.fields ?? {})) {
+    const field = resolveExposedField(document, path, catalog, new Set());
+    if (!field) {
+      throw new DocumentError(
+        'unknown-field',
+        `Exposed field "${name}" on "${document.id}" does not resolve a child field`,
+      );
+    }
+  }
+  for (const [name, path] of Object.entries(document.expose?.events ?? {})) {
+    const event = resolveExposedEvent(document, path, catalog, new Set());
+    if (!event) {
+      throw new DocumentError(
+        'unknown-event',
+        `Exposed event "${name}" on "${document.id}" does not resolve a child event`,
+      );
+    }
+  }
 }
 
 export function assertFieldDefinition(field: FieldDefinition): void {
@@ -493,7 +518,7 @@ function exposedFields(
 ): Map<string, FieldDefinition> {
   const fields = new Map((document.fields ?? []).map((field) => [field.name, field]));
   for (const [name, path] of Object.entries(document.expose?.fields ?? {})) {
-    const field = resolveExposedField(document, path, catalog, seen);
+    const field = resolveExposedField(document, path, catalog, new Set(seen));
     if (field) fields.set(name, field);
   }
   return fields;
@@ -520,6 +545,29 @@ function resolveExposedField(
   if (direct) return direct;
   const nested = child.expose?.fields?.[member];
   return nested ? resolveExposedField(child, nested, catalog, seen) : undefined;
+}
+
+function resolveExposedEvent(
+  document: DocumentFile,
+  path: string,
+  catalog: Map<string, DocumentFile>,
+  seen: Set<string>,
+): EventDefinition | undefined {
+  const key = `${document.id}:${path}`;
+  if (seen.has(key)) throw new DocumentError('schema', `Cyclic expose path "${path}"`);
+  seen.add(key);
+  const [nodeId, ...rest] = path.split('.');
+  const node = findNestedNode(document.root, nodeId);
+  if (!node || node.type !== 'instance' || rest.length === 0) {
+    throw new DocumentError('schema', `Expose path "${path}" on "${document.id}" is invalid`);
+  }
+  const child = catalog.get(node.component);
+  if (!child) return undefined;
+  const member = rest.join('.');
+  const direct = child.events?.find((event) => event.name === member);
+  if (direct) return direct;
+  const nested = child.expose?.events?.[member];
+  return nested ? resolveExposedEvent(child, nested, catalog, seen) : undefined;
 }
 
 function findNestedNode(node: NestedNode, id: string | undefined): NestedNode | undefined {
