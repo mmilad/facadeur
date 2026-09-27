@@ -7,7 +7,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Input } from '@facadeur/ui';
 
 const meta = {
-  title: 'Atoms/Input',
+  title: 'Components/Input',
   component: Input,
   tags: ['autodocs'],
   args: {

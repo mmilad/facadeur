@@ -231,7 +231,7 @@ Ids match `[a-z][a-z0-9]*`. Widths are positive integers and unique. When the do
 
 `examples/project-template.json` is an optional starter: the default palette, a 4px spacing scale, radius, shadows, the Inter family, and a type scale. `createProjectTemplate()` in `@facadeur/tokens` returns the same fragment. Spacing steps are `space.0` through `space.24` (the name is the step on a 4px grid, so `space.4` is 16px). `space.gap`, `space.inset`, and `space.stack` are the aliases gap, padding, and margin should use. Component tokens reference those aliases.
 
-A new project also starts with four atoms, listed by `starterAtomIds`: `button`, `link`, `input`, and `textarea` (`examples/button.json`, `examples/link.json`, `examples/input.json`, `examples/textarea.json`). They define fields and, where it matters, variant axes. `link` binds `label` and `href`. `textarea` follows `input`, adds a `rows` field, and uses a `resize` axis on the control.
+A new project also starts with two atoms, listed by `starterAtomIds`: `button` and `link`. The form controls `input` and `textarea` are listed separately by `starterFormIds` and live in the `form` group (`examples/button.json`, `examples/link.json`, `examples/input.json`, `examples/textarea.json`). They define fields and, where it matters, variant axes. `link` binds `label` and `href`. `textarea` follows `input`, adds a `rows` field, and uses a `resize` axis on the control.
 
 ## Flat model
 

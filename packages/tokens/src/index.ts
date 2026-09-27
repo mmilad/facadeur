@@ -6,6 +6,7 @@ export {
   defaultIcons,
   defaultTokenTree,
   starterAtomIds,
+  starterFormIds,
   type ProjectTemplate,
 } from './defaults.js';
 export { fontCustomProperty, tokenCustomProperty, typographyCustomProperty } from './names.js';

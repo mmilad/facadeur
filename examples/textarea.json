@@ -2,7 +2,8 @@
   "version": 1,
   "id": "textarea",
   "name": "Textarea",
-  "kind": "atom",
+  "kind": "component",
+  "group": "form",
   "fields": [
     { "name": "label", "type": "text", "default": "Label" },
     { "name": "value", "type": "text", "default": "" },

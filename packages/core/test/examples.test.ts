@@ -26,10 +26,16 @@ describe('examples', () => {
     for (const document of documents) {
       expect(toNested(toFlat(document))).toEqual(document);
     }
-    for (const id of ['button', 'link', 'input', 'textarea']) {
+    for (const id of ['button', 'link']) {
       const atom = documents.find((document) => document.id === id);
       expect(atom?.kind).toBe('atom');
       expect(atom?.fields?.length).toBeGreaterThan(0);
+    }
+    for (const id of ['input', 'textarea']) {
+      const control = documents.find((document) => document.id === id);
+      expect(control?.kind).toBe('component');
+      expect(control?.group).toBe('form');
+      expect(control?.fields?.length).toBeGreaterThan(0);
     }
     const link = documents.find((document) => document.id === 'link');
     expect(link?.fields?.map((field) => field.name)).toEqual(['label', 'href']);

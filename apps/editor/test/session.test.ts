@@ -45,7 +45,7 @@ describe('editor session', () => {
     expect(atoms.workspace).toBe('atom');
     expect(atoms.openId).toBe('button');
     expect(atoms.paintRoot).toBe(true);
-    expect(atoms.assets.map((asset) => asset.id)).toEqual(['button', 'link', 'input', 'textarea']);
+    expect(atoms.assets.map((asset) => asset.id)).toEqual(['button', 'link']);
     editor.openAsset('link', 'root');
     expect(editor.getSnapshot().selectedNodeId).toBe('root');
     expect(editor.getSnapshot().workspace).toBe('atom');
@@ -116,8 +116,6 @@ describe('editor session', () => {
     expect(snap.assets.map((asset) => asset.name)).toEqual([
       'Button',
       'Link',
-      'Input',
-      'Textarea',
       'Badge',
     ]);
     expect(editor.filenameFor('specimen')).toBe('specimen-page.json');
