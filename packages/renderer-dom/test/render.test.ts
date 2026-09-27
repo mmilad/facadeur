@@ -106,6 +106,36 @@ describe('renderer', () => {
         nativeControls.querySelector(`[data-id="root/${id}"]`)?.getAttribute('data-empty'),
       ).toBeNull();
     }
+
+    const fixedEmpty = document.createElement('div');
+    renderDocument(
+      {
+        version: 1,
+        id: 'fixed-empty',
+        name: 'Fixed empty',
+        kind: 'component',
+        root: {
+          id: 'root',
+          type: 'frame',
+          children: [
+            {
+              id: 'thumb',
+              type: 'frame',
+              layout: {
+                width: { mode: 'fixed', size: 16 },
+                height: { mode: 'fixed', size: 16 },
+              },
+            },
+          ],
+        },
+      },
+      [],
+      fixedEmpty,
+      { paintRoot: true },
+    );
+    expect(fixedEmpty.querySelector('[data-id="root/thumb"]')?.getAttribute('data-empty')).toBe(
+      null,
+    );
   });
 
   it('paints the specimen page with nested instance ids', () => {

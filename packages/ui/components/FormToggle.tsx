@@ -29,7 +29,10 @@ export function FormToggle({
       className={className}
     >
       <span data-node="label">{label}</span>
-      <div data-node="switch">
+      <div data-node="control">
+        <div data-node="switch">
+          <span data-node="thumb" />
+        </div>
         <span data-node="state">{value}</span>
       </div>
     </label>

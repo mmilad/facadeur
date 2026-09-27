@@ -24,7 +24,6 @@
       "editor.color.textmuted",
       "space.0",
       "space.2",
-      "space.3",
       "space.4",
       "type.body",
       "type.caption"
@@ -39,31 +38,54 @@
           "margin": "{space.0}"
         }
       },
+      "control": {
+        "declarations": {
+          "alignItems": "center",
+          "display": "flex",
+          "gap": "{space.2}"
+        }
+      },
       "switch": {
         "declarations": {
+          "alignItems": "center",
           "background": "{color.accent.default}",
+          "border": "2px solid transparent",
           "borderRadius": "999px",
-          "color": "{color.text.inverse}",
-          "font": "{type.caption}",
-          "paddingBlock": "{space.2}",
-          "paddingInline": "{space.3}"
+          "display": "flex",
+          "height": "20px",
+          "justifyContent": "flex-end",
+          "width": "36px"
         },
         "variants": {
           "state": {
             "off": {
               "declarations": {
                 "background": "{color.bg.muted}",
-                "color": "{editor.color.textmuted}"
+                "justifyContent": "flex-start"
               }
             },
             "disabled": {
               "declarations": {
                 "background": "{color.bg.muted}",
-                "color": "{editor.color.textmuted}",
                 "opacity": "0.6"
               }
             }
           }
+        }
+      },
+      "thumb": {
+        "declarations": {
+          "background": "{color.text.inverse}",
+          "borderRadius": "999px",
+          "flex": "0 0 16px",
+          "height": "16px",
+          "width": "16px"
+        }
+      },
+      "state": {
+        "declarations": {
+          "color": "{editor.color.textmuted}",
+          "font": "{type.caption}"
         }
       }
     }
@@ -89,11 +111,39 @@
         "bindings": [{ "field": "label", "target": "text" }]
       },
       {
-        "id": "switch",
+        "id": "control",
         "type": "frame",
         "tag": "div",
-        "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } },
+        "layout": {
+          "direction": "row",
+          "align": "center",
+          "gap": "{space.2}",
+          "width": { "mode": "hug" },
+          "height": { "mode": "hug" }
+        },
         "children": [
+          {
+            "id": "switch",
+            "type": "frame",
+            "tag": "div",
+            "layout": {
+              "direction": "row",
+              "align": "center",
+              "width": { "mode": "fixed", "size": 36 },
+              "height": { "mode": "fixed", "size": 20 }
+            },
+            "children": [
+              {
+                "id": "thumb",
+                "type": "frame",
+                "tag": "span",
+                "layout": {
+                  "width": { "mode": "fixed", "size": 16 },
+                  "height": { "mode": "fixed", "size": 16 }
+                }
+              }
+            ]
+          },
           {
             "id": "state",
             "type": "text",

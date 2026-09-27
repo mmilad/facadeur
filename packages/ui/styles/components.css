@@ -790,7 +790,46 @@
   margin: var(--space-0);
 }
 
+[data-component='form-toggle'] [data-node='control'] {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  box-sizing: border-box;
+  position: relative;
+  justify-content: flex-start;
+  align-items: center;
+  gap: var(--space-2);
+  width: fit-content;
+  height: fit-content;
+}
+
 [data-component='form-toggle'] [data-node='switch'] {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  box-sizing: border-box;
+  position: relative;
+  justify-content: flex-end;
+  align-items: center;
+  width: 36px;
+  flex: 0 0 auto;
+  height: 20px;
+  background: var(--color-accent-default);
+  border: 2px solid transparent;
+  border-radius: 999px;
+}
+
+[data-component='form-toggle'][data-variant-state='off'] [data-node='switch'] {
+  background: var(--color-bg-muted);
+  justify-content: flex-start;
+}
+
+[data-component='form-toggle'][data-variant-state='disabled'] [data-node='switch'] {
+  background: var(--color-bg-muted);
+  opacity: 0.6;
+}
+
+[data-component='form-toggle'] [data-node='thumb'] {
   display: flex;
   flex-direction: column;
   flex-wrap: nowrap;
@@ -798,34 +837,22 @@
   position: relative;
   justify-content: flex-start;
   align-items: stretch;
-  width: fit-content;
-  height: fit-content;
-  background: var(--color-accent-default);
+  width: 16px;
+  flex: 0 0 16px;
+  height: 16px;
+  background: var(--color-text-inverse);
   border-radius: 999px;
-  color: var(--color-text-inverse);
-  font-family: var(--type-caption--font-family);
-  font-size: var(--type-caption--font-size);
-  font-weight: var(--type-caption--font-weight);
-  line-height: var(--type-caption--line-height);
-  letter-spacing: var(--type-caption--letter-spacing);
-  padding-block: var(--space-2);
-  padding-inline: var(--space-3);
-}
-
-[data-component='form-toggle'][data-variant-state='off'] [data-node='switch'] {
-  background: var(--color-bg-muted);
-  color: var(--editor-color-textmuted);
-}
-
-[data-component='form-toggle'][data-variant-state='disabled'] [data-node='switch'] {
-  background: var(--color-bg-muted);
-  color: var(--editor-color-textmuted);
-  opacity: 0.6;
 }
 
 [data-component='form-toggle'] [data-node='state'] {
   width: fit-content;
   height: fit-content;
+  color: var(--editor-color-textmuted);
+  font-family: var(--type-caption--font-family);
+  font-size: var(--type-caption--font-size);
+  font-weight: var(--type-caption--font-weight);
+  line-height: var(--type-caption--line-height);
+  letter-spacing: var(--type-caption--letter-spacing);
 }
 
 [data-component='input'] {

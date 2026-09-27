@@ -59,6 +59,14 @@ function isNativeControlElement(element: Element): boolean {
   return tag === 'input' || tag === 'select' || tag === 'textarea';
 }
 
+function hasFixedBox(node: NestedNode): boolean {
+  return (
+    node.type === 'frame' &&
+    node.layout?.width?.mode === 'fixed' &&
+    node.layout?.height?.mode === 'fixed'
+  );
+}
+
 export function createRenderContext(documents: readonly DocumentFile[]): RenderContext {
   const catalog = new Map<string, DocumentFile>();
   for (const document of documents) catalog.set(document.id, document);
@@ -362,7 +370,8 @@ function paintInstance(
     root.type === 'frame' &&
     (root.children ?? []).length === 0 &&
     !text &&
-    !isNativeControlElement(el)
+    !isNativeControlElement(el) &&
+    !hasFixedBox(root)
   ) {
     el.dataset.empty = 'true';
   } else delete el.dataset.empty;
@@ -412,7 +421,8 @@ function paintElement(
     node.type === 'frame' &&
     (node.children ?? []).length === 0 &&
     !text &&
-    !isNativeControlElement(el)
+    !isNativeControlElement(el) &&
+    !hasFixedBox(node)
   ) {
     el.dataset.empty = 'true';
   } else delete el.dataset.empty;
