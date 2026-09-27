@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "id": "media",
+  "name": "Media",
+  "kind": "component",
+  "group": "content",
+  "fields": [
+    {
+      "name": "kind",
+      "type": "enum",
+      "options": ["image", "video"],
+      "default": "image",
+      "required": true
+    },
+    {
+      "name": "src",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "alt",
+      "type": "text"
+    },
+    {
+      "name": "ratio",
+      "type": "text"
+    }
+  ],
+  "root": {
+    "id": "root",
+    "type": "frame",
+    "tag": "div",
+    "children": [
+      {
+        "id": "image",
+        "type": "image",
+        "displayOn": { "path": "kind", "equals": "image" },
+        "bindings": [
+          { "field": "src", "target": "src" },
+          { "field": "alt", "target": "alt" },
+          { "field": "ratio", "target": "style", "name": "aspect-ratio" }
+        ]
+      },
+      {
+        "id": "video",
+        "type": "frame",
+        "tag": "video",
+        "attributes": { "controls": "true" },
+        "displayOn": { "path": "kind", "equals": "video" },
+        "bindings": [
+          { "field": "src", "target": "attribute", "name": "src" },
+          { "field": "ratio", "target": "style", "name": "aspect-ratio" }
+        ]
+      }
+    ]
+  }
+}

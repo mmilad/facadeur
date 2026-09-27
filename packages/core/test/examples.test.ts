@@ -44,6 +44,15 @@ describe('examples', () => {
     const toggle = documents.find((document) => document.id === 'form-toggle');
     expect(toggle?.styles?.children?.switch?.declarations?.borderRadius).toBe('{radius.full}');
     expect(toggle?.styles?.children?.thumb?.declarations?.borderRadius).toBe('{radius.full}');
+    const media = documents.find((document) => document.id === 'media');
+    expect(media?.fields?.find((field) => field.name === 'src')?.required).toBe(true);
+    expect(media?.fields?.find((field) => field.name === 'alt')?.required).toBeUndefined();
+    expect(media?.root).toMatchObject({
+      children: [
+        { type: 'image', displayOn: { path: 'kind', equals: 'image' } },
+        { type: 'frame', tag: 'video', displayOn: { path: 'kind', equals: 'video' } },
+      ],
+    });
     const page = documents.find((document) => document.id === 'specimen');
     expect(page?.kind).toBe('page');
     expect(page?.root).toMatchObject({

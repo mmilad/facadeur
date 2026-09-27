@@ -383,4 +383,44 @@ describe('renderer', () => {
     expect(cardElement?.textContent).toBe('Compact');
     expect(cardElement?.querySelector('[data-node="body"]')).toBeNull();
   });
+
+  it('renders the data-driven media example with mutually exclusive branches', () => {
+    const media = examples().find((document) => document.id === 'media');
+    if (!media) throw new Error('missing media example');
+    const host: DocumentFile = {
+      version: 1,
+      id: 'media-host',
+      name: 'Media host',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'image',
+            type: 'instance',
+            component: 'media',
+            fields: { src: '/cover.png', alt: 'Cover', kind: 'image' },
+          },
+          {
+            id: 'video',
+            type: 'instance',
+            component: 'media',
+            fields: { src: '/intro.mp4', kind: 'video' },
+          },
+        ],
+      },
+    };
+    expect(() => validateCatalog([host, media])).not.toThrow();
+    const element = document.createElement('div');
+    renderDocument(host, [host, media], element, { paintRoot: true });
+    expect(element.querySelector('[data-id="root/image/image"]')?.getAttribute('src')).toBe(
+      '/cover.png',
+    );
+    expect(element.querySelector('[data-id="root/image/video"]')).toBeNull();
+    expect(element.querySelector('[data-id="root/video/video"]')?.getAttribute('src')).toBe(
+      '/intro.mp4',
+    );
+    expect(element.querySelector('[data-id="root/video/image"]')).toBeNull();
+  });
 });

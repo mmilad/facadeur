@@ -971,6 +971,26 @@
   opacity: 0.5;
 }
 
+[data-component='media'] {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  box-sizing: border-box;
+  position: relative;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+[data-component='media'] [data-node='video'] {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  box-sizing: border-box;
+  position: relative;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
 [data-component='sign-in'] {
   display: flex;
   flex-direction: column;

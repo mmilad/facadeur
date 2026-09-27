@@ -140,7 +140,7 @@ export function renderNode(
     children: childNodes,
     void: isVoidTag(tag),
     ...(node.displayOn
-      ? { condition: conditionForNode(node.displayOn, owner, dataScope) }
+      ? { condition: conditionForNode(node.displayOn, owner, dataScope, usedProps) }
       : {}),
     ...(repeat ? { repeat } : {}),
   };
@@ -150,8 +150,9 @@ function conditionForNode(
   condition: DisplayOn,
   owner: CatalogEntry,
   dataScope: ReadonlyMap<string, string>,
+  usedProps: Set<string>,
 ): string {
-  const value = dataExpression(condition.path, owner, dataScope, new Set());
+  const value = dataExpression(condition.path, owner, dataScope, usedProps);
   if (condition.truthy !== undefined) return condition.truthy ? value : `!${value}`;
   if (condition.equals !== undefined) return `${value} === ${jsLiteral(condition.equals)}`;
   throw new CodegenError(`Display condition "${condition.path}" is missing a predicate`);
@@ -293,7 +294,7 @@ function renderInstance(
     children: [],
     void: true,
     ...(node.displayOn
-      ? { condition: conditionForNode(node.displayOn, owner, dataScope) }
+      ? { condition: conditionForNode(node.displayOn, owner, dataScope, usedProps) }
       : {}),
   };
 }
@@ -305,7 +306,8 @@ function exposedMemberName(
 ): string | undefined {
   const members = kind === 'field' ? target.fields : target.events;
   if (members.has(path)) return path;
-  const mappings = kind === 'field' ? target.document.expose?.fields : target.document.expose?.events;
+  const mappings =
+    kind === 'field' ? target.document.expose?.fields : target.document.expose?.events;
   return Object.entries(mappings ?? {}).find(([, mappedPath]) => mappedPath === path)?.[0];
 }
 
@@ -339,11 +341,12 @@ function eventAttributes(
       continue;
     }
     const entries = Object.entries(payload).map(([key, type]) => {
-      const value = type === 'boolean'
-        ? 'event.currentTarget.checked'
-        : type === 'number'
-          ? 'Number(event.currentTarget.value)'
-          : 'event.currentTarget.value';
+      const value =
+        type === 'boolean'
+          ? 'event.currentTarget.checked'
+          : type === 'number'
+            ? 'Number(event.currentTarget.value)'
+            : 'event.currentTarget.value';
       return `${key}: ${value}`;
     });
     attrs.push({

@@ -55,10 +55,35 @@ function renderStory(document: DocumentFile, file: ComponentFile): string {
 function renderArgs(props: readonly PropSpec[]): string[] {
   const lines: string[] = [];
   for (const prop of props) {
-    if (prop.defaultExpr === undefined) continue;
-    lines.push(`    ${prop.name}: ${prop.defaultExpr},`);
+    const value = prop.defaultExpr ?? (prop.required ? requiredStoryValue(prop) : undefined);
+    if (value !== undefined) lines.push(`    ${prop.name}: ${value},`);
   }
   return lines;
+}
+
+function requiredStoryValue(prop: PropSpec): string | undefined {
+  switch (prop.fieldType) {
+    case 'boolean':
+      return 'false';
+    case 'number':
+      return '0';
+    case 'array':
+      return '[]';
+    case 'object':
+      return '{}';
+    case 'enum': {
+      const first = prop.type.split('|')[0]?.trim();
+      return first && first.startsWith("'") ? first : "'Example'";
+    }
+    case 'text':
+    case 'richText':
+    case 'image':
+    case 'link':
+    case 'token':
+      return prop.source === 'src' ? "'/placeholder-media'" : "'Example'";
+    default:
+      return undefined;
+  }
 }
 
 function quote(value: string): string {

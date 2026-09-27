@@ -7,6 +7,7 @@ import button from '../../../../examples/button.json';
 import card from '../../../../examples/card.json';
 import input from '../../../../examples/input.json';
 import link from '../../../../examples/link.json';
+import media from '../../../../examples/media.json';
 import signIn from '../../../../examples/sign-in.json';
 import textarea from '../../../../examples/textarea.json';
 import formControlsPage from '../../../../examples/form-controls-page.json';
@@ -25,6 +26,7 @@ import { EditorShell } from '../ui/shell/EditorShell';
 const sources: Record<string, string> = {
   button: 'button.json',
   link: 'link.json',
+  media: 'media.json',
   input: 'input.json',
   textarea: 'textarea.json',
   card: 'card.json',
@@ -47,6 +49,7 @@ export function EditorBootstrap() {
     const documents = validateCatalog([
       button,
       link,
+      media,
       input,
       textarea,
       card,

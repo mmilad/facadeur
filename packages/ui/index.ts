@@ -25,6 +25,8 @@ export { FormToggle } from './components/FormToggle';
 export type { FormToggleProps, FormToggleState } from './components/FormToggle';
 export { Input } from './components/Input';
 export type { InputProps } from './components/Input';
+export { Media } from './components/Media';
+export type { MediaProps } from './components/Media';
 export { SignIn } from './components/SignIn';
 export type { SignInProps } from './components/SignIn';
 export { Specimen } from './components/Specimen';

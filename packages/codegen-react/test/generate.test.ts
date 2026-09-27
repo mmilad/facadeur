@@ -19,6 +19,7 @@ const componentFiles = [
   'form-toggle.json',
   'form-segmented.json',
   'form-field-row.json',
+  'media.json',
   'specimen-page.json',
   'specimen-section.json',
   'form-controls-page.json',
@@ -156,6 +157,7 @@ describe('generateReact', () => {
       'src/stories/generated/FormTextInput.stories.tsx',
       'src/stories/generated/FormToggle.stories.tsx',
       'src/stories/generated/Input.stories.tsx',
+      'src/stories/generated/Media.stories.tsx',
       'src/stories/generated/SignIn.stories.tsx',
       'src/stories/generated/Specimen.stories.tsx',
       'src/stories/generated/SpecimenSection.stories.tsx',
@@ -165,13 +167,24 @@ describe('generateReact', () => {
     expect(button).toContain("title: 'Atoms/Button'");
     expect(button).toContain('tone:');
     expect(button).toContain('export const Default: Story = {};');
+    const mediaStory = source(stories, 'src/stories/generated/Media.stories.tsx');
+    expect(mediaStory).toContain("src: '/placeholder-media'");
+  });
+
+  it('generates a data-driven media switch with optional metadata', () => {
+    const media = source(files, 'components/Media.tsx');
+    expect(media).toContain("kind?: 'image' | 'video';");
+    expect(media).toContain('src: string;');
+    expect(media).toContain('alt?: string;');
+    expect(media).toContain('ratio?: string;');
+    expect(media).toContain("kind === 'video'");
+    expect(media).toContain('<img');
+    expect(media).toContain('<video');
+    expect(media).toContain('src={src}');
   });
 
   it('keeps form control state data connected to the rendered control', () => {
-    const formToggle = source(
-      generateReact({ documents, design }).ui,
-      'components/FormToggle.tsx',
-    );
+    const formToggle = source(generateReact({ documents, design }).ui, 'components/FormToggle.tsx');
     expect(formToggle).toContain('value?: string;');
     expect(formToggle).toContain("data-node='state'");
     expect(formToggle).toContain('{value}');
@@ -343,7 +356,9 @@ describe('atom contracts', () => {
     expect(sourceText).toContain('value: string;');
     expect(sourceText).toContain('disabled?: boolean;');
     expect(sourceText).toContain('onCommit?: (payload: { value: string }) => void;');
-    expect(sourceText).toContain('onChange={(event) => onCommit?.({ value: event.currentTarget.value })}');
+    expect(sourceText).toContain(
+      'onChange={(event) => onCommit?.({ value: event.currentTarget.value })}',
+    );
   });
 
   it('forwards exposed inputs and events through a composed component', () => {
@@ -425,10 +440,10 @@ describe('atom contracts', () => {
     expect(sourceText).toContain("export type VariantDemoVariant = 'default' | 'compact';");
     expect(sourceText).toContain('variant?: VariantDemoVariant;');
     expect(sourceText).toContain("variant === 'compact'");
-    expect(sourceText).toContain("data-variant={variant}");
+    expect(sourceText).toContain('data-variant={variant}');
     expect(sourceText).toContain('Compact');
-    expect(sourceText).toContain('data-node=\'badge\'');
-    expect(sourceText).toContain('data-node=\'label\'');
+    expect(sourceText).toContain("data-node='badge'");
+    expect(sourceText).toContain("data-node='label'");
     expect(sourceText.match(/data-node='body'/g)).toHaveLength(1);
 
     const host: DocumentFile = {
@@ -440,7 +455,14 @@ describe('atom contracts', () => {
         id: 'root',
         type: 'frame',
         tag: 'div',
-        children: [{ id: 'demo', type: 'instance', component: 'variant-demo', variants: { variant: 'compact' } }],
+        children: [
+          {
+            id: 'demo',
+            type: 'instance',
+            component: 'variant-demo',
+            variants: { variant: 'compact' },
+          },
+        ],
       },
     };
     const hostSource = source(
@@ -475,7 +497,13 @@ describe('atom contracts', () => {
         tag: 'ul',
         repeat: { path: 'items', as: 'item', key: 'id' },
         children: [
-          { id: 'input', type: 'instance', component: 'repeat-row', fieldBindings: { label: 'item.label' }, displayOn: { path: 'item.kind', equals: 'input' } },
+          {
+            id: 'input',
+            type: 'instance',
+            component: 'repeat-row',
+            fieldBindings: { label: 'item.label' },
+            displayOn: { path: 'item.kind', equals: 'input' },
+          },
         ],
       },
     };
