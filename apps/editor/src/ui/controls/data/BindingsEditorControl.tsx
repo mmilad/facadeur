@@ -6,6 +6,7 @@ import {
 } from '@facadeur/core';
 import { Field, Select, Stack, TextInput } from '../../form/index.js';
 import '../../form/form.css';
+import { fieldDisplayLabel } from './field-label.js';
 import {
   BINDING_TARGET_LABEL,
   bindingFieldOptions,
@@ -87,7 +88,10 @@ function BindingRow({
         <Select
           name={`binding-field-${index}`}
           value={binding.field}
-          options={options.map((field) => ({ value: field.name, label: field.name }))}
+          options={options.map((field) => ({
+            value: field.name,
+            label: fieldDisplayLabel(field.name),
+          }))}
           onCommit={(field) => commit({ ...binding, field })}
         />
       </Field>

@@ -1,6 +1,7 @@
 import type { FieldDefinition, FieldValue, VariantAxis } from '@facadeur/core';
 import { Field, Select, Stack, TextInput, Toggle } from '../../form/index.js';
 import '../../form/form.css';
+import { fieldDisplayLabel } from '../data/field-label.js';
 import { parseInstanceFieldValue } from '../data/value.js';
 
 export function InstanceOverridesControl({
@@ -89,7 +90,7 @@ function InstanceFieldOverride({
   if (field.type === 'enum' && field.options?.length) {
     const current = typeof override === 'string' ? override : '';
     return (
-      <Field label={field.name}>
+          <Field label={fieldDisplayLabel(field.name)}>
         <Select
           name={`field-${field.name}`}
           value={current}
@@ -108,7 +109,7 @@ function InstanceFieldOverride({
   if (field.type === 'boolean') {
     const checked = typeof override === 'boolean' ? override : field.default === true;
     return (
-      <Field label={field.name}>
+      <Field label={fieldDisplayLabel(field.name)}>
         <Toggle
           name={`field-${field.name}`}
           label="On"
@@ -121,7 +122,7 @@ function InstanceFieldOverride({
   const shown = override === undefined || override === null ? '' : String(override);
   const placeholder = field.default === undefined ? undefined : String(field.default);
   return (
-    <Field label={field.name}>
+    <Field label={fieldDisplayLabel(field.name)}>
       <TextInput
         name={`field-${field.name}`}
         value={shown}

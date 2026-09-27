@@ -9,6 +9,7 @@ import {
 } from '../../../domain/definitions.js';
 import { Field, Section, Select, Stack, TextInput, Toggle } from '../../form/index.js';
 import '../../form/form.css';
+import { fieldDisplayLabel } from './field-label.js';
 import { fieldTypeOptions } from './value.js';
 
 export function FieldsEditorControl({
@@ -54,7 +55,7 @@ function FieldDefinitionCard({
 }) {
   const types = fieldTypeOptions(field);
   return (
-    <Section title={field.name} collapsible defaultOpen={false}>
+    <Section title={fieldDisplayLabel(field.name)} collapsible defaultOpen={false}>
       <Stack gap={8}>
         <Field label="Type">
           <Select

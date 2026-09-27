@@ -217,7 +217,7 @@ describe('editor shell', () => {
     expect(frame?.contentDocument?.body.textContent).toContain('Go');
     await act(async () => {
       const fieldToggle = [...host!.querySelectorAll('button.eu-section__title')].find(
-        (button) => button.textContent === 'label',
+        (button) => button.textContent === 'Label',
       );
       fieldToggle?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });

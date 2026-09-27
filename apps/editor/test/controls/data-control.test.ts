@@ -7,6 +7,7 @@ import {
   parseInstanceFieldValue,
   patchBindingAt,
 } from '../../src/ui/controls/data/value.js';
+import { fieldDisplayLabel } from '../../src/ui/controls/data/field-label.js';
 import {
   variantAxisFromValuesText,
   variantAxisWithDefault,
@@ -48,6 +49,11 @@ describe('data control helpers', () => {
   it('parses instance field values', () => {
     expect(parseInstanceFieldValue({ name: 'n', type: 'number' }, '3')).toBe(3);
     expect(() => parseInstanceFieldValue({ name: 'n', type: 'number' }, 'x')).toThrow();
+  });
+
+  it('humanizes field names without changing their stored keys', () => {
+    expect(fieldDisplayLabel('hasIcon')).toBe('Show leading icon');
+    expect(fieldDisplayLabel('control_value')).toBe('Control value');
   });
 });
 
