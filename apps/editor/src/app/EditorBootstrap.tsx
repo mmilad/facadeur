@@ -9,13 +9,13 @@ import input from '../../../../examples/input.json';
 import link from '../../../../examples/link.json';
 import signIn from '../../../../examples/sign-in.json';
 import textarea from '../../../../examples/textarea.json';
-import editorControlsPage from '../../../../examples/editor-controls-page.json';
-import editorControlsSection from '../../../../examples/editor-controls-section.json';
-import editorFieldRow from '../../../../examples/editor-field-row.json';
-import editorSegmented from '../../../../examples/editor-segmented.json';
-import editorSelect from '../../../../examples/editor-select.json';
-import editorTextInput from '../../../../examples/editor-text-input.json';
-import editorToggle from '../../../../examples/editor-toggle.json';
+import formControlsPage from '../../../../examples/form-controls-page.json';
+import formControlsSection from '../../../../examples/form-controls-section.json';
+import formFieldRow from '../../../../examples/form-field-row.json';
+import formSegmented from '../../../../examples/form-segmented.json';
+import formSelect from '../../../../examples/form-select.json';
+import formTextInput from '../../../../examples/form-text-input.json';
+import formToggle from '../../../../examples/form-toggle.json';
 import specimenPage from '../../../../examples/specimen-page.json';
 import specimenSection from '../../../../examples/specimen-section.json';
 import { createEditorSession } from '../domain/session';
@@ -30,13 +30,13 @@ const sources: Record<string, string> = {
   'sign-in': 'sign-in.json',
   'specimen-section': 'specimen-section.json',
   specimen: 'specimen-page.json',
-  'editor-controls': 'editor-controls-page.json',
-  'editor-controls-section': 'editor-controls-section.json',
-  'editor-field-row': 'editor-field-row.json',
-  'editor-segmented': 'editor-segmented.json',
-  'editor-select': 'editor-select.json',
-  'editor-text-input': 'editor-text-input.json',
-  'editor-toggle': 'editor-toggle.json',
+  'form-controls': 'form-controls-page.json',
+  'form-controls-section': 'form-controls-section.json',
+  'form-field-row': 'form-field-row.json',
+  'form-segmented': 'form-segmented.json',
+  'form-select': 'form-select.json',
+  'form-text-input': 'form-text-input.json',
+  'form-toggle': 'form-toggle.json',
   'project-template': 'project-template.json',
 };
 
@@ -49,15 +49,15 @@ export function EditorBootstrap() {
       textarea,
       card,
       signIn,
-      editorTextInput,
-      editorSelect,
-      editorToggle,
-      editorSegmented,
-      editorFieldRow,
+      formTextInput,
+      formSelect,
+      formToggle,
+      formSegmented,
+      formFieldRow,
       specimenSection,
-      editorControlsSection,
+      formControlsSection,
       specimenPage,
-      editorControlsPage,
+      formControlsPage,
     ]);
     return createEditorSession({
       documents,

@@ -1,16 +1,15 @@
 {
   "version": 1,
-  "id": "editor-field-row",
-  "name": "Editor field row",
-  "kind": "atom",
+  "id": "form-field-row",
+  "name": "Field row",
+  "kind": "component",
+  "group": "form",
   "fields": [
     { "name": "name", "type": "text", "default": "label" },
     { "name": "type", "type": "text", "default": "text" },
     { "name": "value", "type": "text", "default": "Button" }
   ],
-  "variants": [
-    { "name": "state", "values": ["default", "selected"], "default": "default" }
-  ],
+  "variants": [{ "name": "state", "values": ["default", "selected"], "default": "default" }],
   "tokenInterface": {
     "reads": [
       "color.bg.muted",
@@ -31,7 +30,7 @@
   "styles": {
     "declarations": {
       "background": "{editor.color.surface}",
-          "borderBottom": "1px solid {editor.color.bordersubtle}",
+      "borderBottom": "1px solid {editor.color.bordersubtle}",
       "font": "{type.body}",
       "paddingBlock": "{editor.padding.y}",
       "paddingInline": "{editor.padding.x}"

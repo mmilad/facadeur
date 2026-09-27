@@ -4,17 +4,19 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react';
-import { EditorToggle } from '@facadeur/ui';
+import { FormFieldRow } from '@facadeur/ui';
 
 const meta = {
-  title: 'Atoms/EditorToggle',
-  component: EditorToggle,
+  title: 'Components/FormFieldRow',
+  component: FormFieldRow,
   tags: ['autodocs'],
   args: {
-    label: 'Enabled',
-    state: 'on',
+    name: 'label',
+    type: 'text',
+    value: 'Button',
+    state: 'default',
   },
-} satisfies Meta<typeof EditorToggle>;
+} satisfies Meta<typeof FormFieldRow>;
 
 export default meta;
 

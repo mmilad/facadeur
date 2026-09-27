@@ -4,13 +4,20 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react';
-import { EditorControls } from '@facadeur/ui';
+import { FormTextInput } from '@facadeur/ui';
 
 const meta = {
-  title: 'Pages/EditorControls',
-  component: EditorControls,
+  title: 'Components/FormTextInput',
+  component: FormTextInput,
   tags: ['autodocs'],
-} satisfies Meta<typeof EditorControls>;
+  args: {
+    label: 'Label',
+    value: 'Value',
+    placeholder: 'Placeholder',
+    hint: 'Optional hint',
+    state: 'default',
+  },
+} satisfies Meta<typeof FormTextInput>;
 
 export default meta;
 

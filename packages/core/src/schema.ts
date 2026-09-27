@@ -445,6 +445,7 @@ function documentProperties<Kind extends TSchema>(kind: Kind) {
     id: idSchema,
     name: Type.String({ minLength: 1 }),
     kind,
+    group: Type.Optional(idSchema),
     fields: Type.Optional(Type.Array(fieldDefinitionSchema)),
     variants: Type.Optional(Type.Array(variantAxisSchema)),
     settings: Type.Optional(settingsSchema),

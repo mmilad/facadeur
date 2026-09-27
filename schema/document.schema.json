@@ -5,7 +5,13 @@
   "description": "Nested facadeur document. Nodes are frame, text, image, or instance. Tokens are a DTCG tree. Fonts list families and their sources. A style block paints the component. Instances override fields and variants only.",
   "$id": "https://github.com/mmilad/facadeur/schema/document.schema.json",
   "type": "object",
-  "required": ["version", "id", "name", "kind", "root"],
+  "required": [
+    "version",
+    "id",
+    "name",
+    "kind",
+    "root"
+  ],
   "properties": {
     "version": {
       "const": 1,
@@ -40,12 +46,20 @@
         }
       ]
     },
+    "group": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+      "type": "string"
+    },
     "fields": {
       "type": "array",
       "items": {
         "additionalProperties": false,
         "type": "object",
-        "required": ["name", "type"],
+        "required": [
+          "name",
+          "type"
+        ],
         "properties": {
           "name": {
             "minLength": 1,
@@ -117,7 +131,10 @@
       "items": {
         "additionalProperties": false,
         "type": "object",
-        "required": ["name", "values"],
+        "required": [
+          "name",
+          "values"
+        ],
         "properties": {
           "name": {
             "minLength": 1,
@@ -146,7 +163,10 @@
         "artboard": {
           "additionalProperties": false,
           "type": "object",
-          "required": ["width", "height"],
+          "required": [
+            "width",
+            "height"
+          ],
           "properties": {
             "width": {
               "exclusiveMinimum": 0,
@@ -164,7 +184,10 @@
           "items": {
             "additionalProperties": false,
             "type": "object",
-            "required": ["id", "minWidth"],
+            "required": [
+              "id",
+              "minWidth"
+            ],
             "properties": {
               "id": {
                 "pattern": "^[a-z][a-z0-9]*$",
@@ -185,7 +208,13 @@
       "items": {
         "additionalProperties": false,
         "type": "object",
-        "required": ["id", "family", "weights", "source", "fallbacks"],
+        "required": [
+          "id",
+          "family",
+          "weights",
+          "source",
+          "fallbacks"
+        ],
         "properties": {
           "id": {
             "pattern": "^[a-z][a-z0-9]*$",
@@ -225,7 +254,10 @@
               {
                 "additionalProperties": false,
                 "type": "object",
-                "required": ["type", "files"],
+                "required": [
+                  "type",
+                  "files"
+                ],
                 "properties": {
                   "type": {
                     "const": "file",
@@ -237,7 +269,11 @@
                     "items": {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": ["weight", "style", "url"],
+                      "required": [
+                        "weight",
+                        "style",
+                        "url"
+                      ],
                       "properties": {
                         "weight": {
                           "minimum": 1,
@@ -272,7 +308,10 @@
               {
                 "additionalProperties": false,
                 "type": "object",
-                "required": ["type", "family"],
+                "required": [
+                  "type",
+                  "family"
+                ],
                 "properties": {
                   "type": {
                     "const": "google",
@@ -628,7 +667,10 @@
         {
           "additionalProperties": false,
           "type": "object",
-          "required": ["id", "type"],
+          "required": [
+            "id",
+            "type"
+          ],
           "properties": {
             "id": {
               "minLength": 1,
@@ -676,7 +718,9 @@
                 "width": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["mode"],
+                  "required": [
+                    "mode"
+                  ],
                   "properties": {
                     "mode": {
                       "anyOf": [
@@ -707,7 +751,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -735,7 +782,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -763,7 +813,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -783,7 +836,9 @@
                 "height": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["mode"],
+                  "required": [
+                    "mode"
+                  ],
                   "properties": {
                     "mode": {
                       "anyOf": [
@@ -814,7 +869,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -842,7 +900,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -870,7 +931,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -1034,7 +1098,9 @@
                         "width": {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["mode"],
+                          "required": [
+                            "mode"
+                          ],
                           "properties": {
                             "mode": {
                               "anyOf": [
@@ -1065,7 +1131,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -1093,7 +1162,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -1121,7 +1193,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -1141,7 +1216,9 @@
                         "height": {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["mode"],
+                          "required": [
+                            "mode"
+                          ],
                           "properties": {
                             "mode": {
                               "anyOf": [
@@ -1172,7 +1249,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -1200,7 +1280,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -1228,7 +1311,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -1375,7 +1461,10 @@
               "items": {
                 "additionalProperties": false,
                 "type": "object",
-                "required": ["field", "target"],
+                "required": [
+                  "field",
+                  "target"
+                ],
                 "properties": {
                   "field": {
                     "minLength": 1,
@@ -1440,7 +1529,10 @@
         {
           "additionalProperties": false,
           "type": "object",
-          "required": ["id", "type"],
+          "required": [
+            "id",
+            "type"
+          ],
           "properties": {
             "id": {
               "minLength": 1,
@@ -1488,7 +1580,9 @@
                 "width": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["mode"],
+                  "required": [
+                    "mode"
+                  ],
                   "properties": {
                     "mode": {
                       "anyOf": [
@@ -1519,7 +1613,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -1547,7 +1644,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -1575,7 +1675,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -1595,7 +1698,9 @@
                 "height": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["mode"],
+                  "required": [
+                    "mode"
+                  ],
                   "properties": {
                     "mode": {
                       "anyOf": [
@@ -1626,7 +1731,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -1654,7 +1762,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -1682,7 +1793,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -1846,7 +1960,9 @@
                         "width": {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["mode"],
+                          "required": [
+                            "mode"
+                          ],
                           "properties": {
                             "mode": {
                               "anyOf": [
@@ -1877,7 +1993,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -1905,7 +2024,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -1933,7 +2055,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -1953,7 +2078,9 @@
                         "height": {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["mode"],
+                          "required": [
+                            "mode"
+                          ],
                           "properties": {
                             "mode": {
                               "anyOf": [
@@ -1984,7 +2111,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -2012,7 +2142,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -2040,7 +2173,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -2187,7 +2323,10 @@
               "items": {
                 "additionalProperties": false,
                 "type": "object",
-                "required": ["field", "target"],
+                "required": [
+                  "field",
+                  "target"
+                ],
                 "properties": {
                   "field": {
                     "minLength": 1,
@@ -2249,7 +2388,10 @@
         {
           "additionalProperties": false,
           "type": "object",
-          "required": ["id", "type"],
+          "required": [
+            "id",
+            "type"
+          ],
           "properties": {
             "id": {
               "minLength": 1,
@@ -2297,7 +2439,9 @@
                 "width": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["mode"],
+                  "required": [
+                    "mode"
+                  ],
                   "properties": {
                     "mode": {
                       "anyOf": [
@@ -2328,7 +2472,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -2356,7 +2503,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -2384,7 +2534,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -2404,7 +2557,9 @@
                 "height": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["mode"],
+                  "required": [
+                    "mode"
+                  ],
                   "properties": {
                     "mode": {
                       "anyOf": [
@@ -2435,7 +2590,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -2463,7 +2621,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -2491,7 +2652,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -2655,7 +2819,9 @@
                         "width": {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["mode"],
+                          "required": [
+                            "mode"
+                          ],
                           "properties": {
                             "mode": {
                               "anyOf": [
@@ -2686,7 +2852,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -2714,7 +2883,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -2742,7 +2914,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -2762,7 +2937,9 @@
                         "height": {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["mode"],
+                          "required": [
+                            "mode"
+                          ],
                           "properties": {
                             "mode": {
                               "anyOf": [
@@ -2793,7 +2970,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -2821,7 +3001,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -2849,7 +3032,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -2996,7 +3182,10 @@
               "items": {
                 "additionalProperties": false,
                 "type": "object",
-                "required": ["field", "target"],
+                "required": [
+                  "field",
+                  "target"
+                ],
                 "properties": {
                   "field": {
                     "minLength": 1,
@@ -3061,7 +3250,11 @@
         {
           "additionalProperties": false,
           "type": "object",
-          "required": ["id", "type", "component"],
+          "required": [
+            "id",
+            "type",
+            "component"
+          ],
           "properties": {
             "id": {
               "minLength": 1,
@@ -3097,7 +3290,9 @@
                 "width": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["mode"],
+                  "required": [
+                    "mode"
+                  ],
                   "properties": {
                     "mode": {
                       "anyOf": [
@@ -3128,7 +3323,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -3156,7 +3354,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -3184,7 +3385,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -3204,7 +3408,9 @@
                 "height": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["mode"],
+                  "required": [
+                    "mode"
+                  ],
                   "properties": {
                     "mode": {
                       "anyOf": [
@@ -3235,7 +3441,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -3263,7 +3472,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -3291,7 +3503,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -3455,7 +3670,9 @@
                         "width": {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["mode"],
+                          "required": [
+                            "mode"
+                          ],
                           "properties": {
                             "mode": {
                               "anyOf": [
@@ -3486,7 +3703,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -3514,7 +3734,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -3542,7 +3765,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -3562,7 +3788,9 @@
                         "height": {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["mode"],
+                          "required": [
+                            "mode"
+                          ],
                           "properties": {
                             "mode": {
                               "anyOf": [
@@ -3593,7 +3821,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -3621,7 +3852,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -3649,7 +3883,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -3862,7 +4099,11 @@
       "additionalProperties": false,
       "properties": {
         "tier": {
-          "enum": ["primitive", "semantic", "component"]
+          "enum": [
+            "primitive",
+            "semantic",
+            "component"
+          ]
         },
         "breakpoints": {
           "type": "object",

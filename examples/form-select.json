@@ -1,21 +1,25 @@
 {
   "version": 1,
-  "id": "editor-segmented",
-  "name": "Editor segmented control",
-  "kind": "atom",
-  "fields": [{ "name": "label", "type": "text", "default": "Alignment" }],
+  "id": "form-select",
+  "name": "Select",
+  "kind": "component",
+  "group": "form",
+  "fields": [
+    { "name": "label", "type": "text", "default": "Property" },
+    { "name": "value", "type": "text", "default": "Choose value" }
+  ],
   "variants": [
     {
       "name": "state",
-      "values": ["start", "center", "end"],
-      "default": "start"
+      "values": ["default", "focused", "disabled"],
+      "default": "default"
     }
   ],
   "tokenInterface": {
     "reads": [
-      "color.bg.muted",
-      "color.text.primary",
       "editor.color.border",
+      "editor.color.canvas",
+      "editor.color.focus",
       "editor.color.surface",
       "editor.color.text",
       "editor.color.textmuted",
@@ -38,39 +42,42 @@
           "margin": "{space.0}"
         }
       },
-      "options": {
+      "control": {
         "declarations": {
-          "background": "{color.bg.muted}",
+          "alignItems": "center",
+          "background": "{editor.color.surface}",
           "border": "1px solid {editor.color.border}",
           "borderRadius": "{editor.radius}",
-          "display": "flex",
-          "font": "{type.caption}",
-          "paddingBlock": "{editor.padding.y}",
-          "paddingInline": "{editor.padding.x}"
-        }
-      },
-      "start": {
-        "declarations": {
-          "background": "{editor.color.surface}",
-          "borderRadius": "{editor.radius}",
           "color": "{editor.color.text}",
-          "fontWeight": "600",
+          "display": "flex",
+          "font": "{type.body}",
+          "justifyContent": "space-between",
           "paddingBlock": "{editor.padding.y}",
           "paddingInline": "{editor.padding.x}"
+        },
+        "variants": {
+          "state": {
+            "focused": {
+              "declarations": {
+                "borderColor": "{editor.color.focus}",
+                "boxShadow": "0 0 0 2px {editor.color.focus}"
+              }
+            },
+            "disabled": {
+              "declarations": {
+                "background": "{editor.color.canvas}",
+                "color": "{editor.color.textmuted}",
+                "cursor": "not-allowed",
+                "opacity": "0.65"
+              }
+            }
+          }
         }
       },
-      "center": {
+      "chevron": {
         "declarations": {
           "color": "{editor.color.textmuted}",
-          "paddingBlock": "{editor.padding.y}",
-          "paddingInline": "{editor.padding.x}"
-        }
-      },
-      "end": {
-        "declarations": {
-          "color": "{editor.color.textmuted}",
-          "paddingBlock": "{editor.padding.y}",
-          "paddingInline": "{editor.padding.x}"
+          "font": "{type.body}"
         }
       }
     }
@@ -78,7 +85,7 @@
   "root": {
     "id": "root",
     "type": "frame",
-    "tag": "div",
+    "tag": "label",
     "layout": {
       "direction": "column",
       "align": "stretch",
@@ -95,36 +102,29 @@
         "bindings": [{ "field": "label", "target": "text" }]
       },
       {
-        "id": "options",
+        "id": "control",
         "type": "frame",
         "tag": "div",
         "layout": {
           "direction": "row",
           "align": "center",
-          "gap": "{space.0}",
-          "width": { "mode": "hug" },
+          "justify": "space-between",
+          "width": { "mode": "fill" },
           "height": { "mode": "hug" }
         },
         "children": [
           {
-            "id": "start",
+            "id": "value",
             "type": "text",
             "tag": "span",
-            "text": "Start",
-            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } },
+            "bindings": [{ "field": "value", "target": "text" }]
           },
           {
-            "id": "center",
+            "id": "chevron",
             "type": "text",
             "tag": "span",
-            "text": "Center",
-            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
-          },
-          {
-            "id": "end",
-            "type": "text",
-            "tag": "span",
-            "text": "End",
+            "text": "⌄",
             "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
           }
         ]

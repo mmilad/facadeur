@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "editor-controls",
-  "name": "Editor controls",
+  "id": "form-controls",
+  "name": "Form controls",
   "kind": "page",
   "settings": {
     "artboard": { "width": 1180, "height": 1080 },
@@ -17,9 +17,9 @@
     "tag": "div",
     "children": [
       {
-        "id": "editor-controls-section",
+        "id": "form-controls-section",
         "type": "instance",
-        "component": "editor-controls-section"
+        "component": "form-controls-section"
       }
     ]
   }

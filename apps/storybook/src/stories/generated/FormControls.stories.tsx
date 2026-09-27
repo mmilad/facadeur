@@ -4,18 +4,13 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react';
-import { EditorSelect } from '@facadeur/ui';
+import { FormControls } from '@facadeur/ui';
 
 const meta = {
-  title: 'Atoms/EditorSelect',
-  component: EditorSelect,
+  title: 'Pages/FormControls',
+  component: FormControls,
   tags: ['autodocs'],
-  args: {
-    label: 'Property',
-    value: 'Choose value',
-    state: 'default',
-  },
-} satisfies Meta<typeof EditorSelect>;
+} satisfies Meta<typeof FormControls>;
 
 export default meta;
 

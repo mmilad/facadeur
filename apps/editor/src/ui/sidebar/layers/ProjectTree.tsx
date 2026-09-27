@@ -1,7 +1,15 @@
 import { defaultKinds, defaultNestingRules, type DefaultKind } from '@facadeur/core';
-import { useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type DragEvent,
+  type MutableRefObject,
+  type ReactNode,
+} from 'react';
 import { blankAsset } from '../../../domain/new-asset.js';
-import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
+import type { AssetSummary, EditorSession, EditorSnapshot } from '../../../domain/session.js';
 import {
   DESIGN_DOMAIN_ITEMS,
   type DesignDomain,
@@ -61,9 +69,38 @@ export function ProjectTree({
       defaultKinds.map((kind) => {
         const assets = snap.catalog.filter((asset) => asset.kind === kind);
         const labelHit = Boolean(needle) && KIND_LABEL[kind].toLowerCase().includes(needle);
-        const visible =
-          needle && !labelHit ? assets.filter((asset) => assetMatches(asset, needle)) : assets;
-        return { kind, assets: visible, show: !needle || labelHit || visible.length > 0 };
+        const directAssets = assets.filter((asset) => !asset.group);
+        const directVisible =
+          needle && !labelHit
+            ? directAssets.filter((asset) => assetMatches(asset, needle))
+            : directAssets;
+        const groupNames = [
+          ...new Set(assets.flatMap((asset) => (asset.group ? [asset.group] : []))),
+        ];
+        const subgroups = groupNames.map((group) => {
+          const groupedAssets = assets.filter((asset) => asset.group === group);
+          const groupLabelHit = Boolean(needle) && group.includes(needle);
+          const visible =
+            needle && !labelHit && !groupLabelHit
+              ? groupedAssets.filter((asset) => assetMatches(asset, needle))
+              : groupedAssets;
+          return {
+            id: group,
+            label: titleCase(group),
+            assets: visible,
+            show: !needle || labelHit || groupLabelHit || visible.length > 0,
+          };
+        });
+        return {
+          kind,
+          assets: directVisible,
+          subgroups,
+          show:
+            !needle ||
+            labelHit ||
+            directVisible.length > 0 ||
+            subgroups.some((group) => group.show),
+        };
       }),
     [needle, snap.catalog],
   );
@@ -130,26 +167,32 @@ export function ProjectTree({
               onToggle={() => toggle(group.kind)}
               onCreate={() => create(group.kind)}
             >
-              {group.assets.map((asset) => {
-                const open = asset.id === snap.openId;
-                return (
-                  <button
-                    key={asset.id}
-                    type="button"
-                    ref={open ? activeRef : undefined}
-                    className={open ? 'asset is-active' : 'asset'}
-                    data-asset-id={asset.id}
-                    aria-current={open ? 'true' : undefined}
-                    draggable={canPlace(snap, asset.kind, asset.id)}
-                    onDragStart={(event) => startAssetDrag(session, event, asset.id)}
-                    onDragEnd={() => session.endDrag()}
-                    onClick={() => onOpenAsset(asset.id)}
+              <AssetRows
+                assets={group.assets}
+                snap={snap}
+                session={session}
+                activeRef={activeRef}
+                onOpenAsset={onOpenAsset}
+              />
+              {group.subgroups.map((subgroup) =>
+                subgroup.show ? (
+                  <TreeGroup
+                    key={subgroup.id}
+                    id={`${group.kind}:${subgroup.id}`}
+                    label={subgroup.label}
+                    open={isOpen(`${group.kind}:${subgroup.id}`, needle, expanded)}
+                    onToggle={() => toggle(`${group.kind}:${subgroup.id}`)}
                   >
-                    <span className="asset-name">{asset.name}</span>
-                    <span className="asset-id">{asset.id}</span>
-                  </button>
-                );
-              })}
+                    <AssetRows
+                      assets={subgroup.assets}
+                      snap={snap}
+                      session={session}
+                      activeRef={activeRef}
+                      onOpenAsset={onOpenAsset}
+                    />
+                  </TreeGroup>
+                ) : null,
+              )}
             </TreeGroup>
           ) : null,
         )}
@@ -157,6 +200,41 @@ export function ProjectTree({
       </div>
     </section>
   );
+}
+
+function AssetRows({
+  assets,
+  snap,
+  session,
+  activeRef,
+  onOpenAsset,
+}: {
+  assets: AssetSummary[];
+  snap: EditorSnapshot;
+  session: EditorSession;
+  activeRef: MutableRefObject<HTMLButtonElement | null>;
+  onOpenAsset: (id: string) => void;
+}) {
+  return assets.map((asset) => {
+    const open = asset.id === snap.openId;
+    return (
+      <button
+        key={asset.id}
+        type="button"
+        ref={open ? activeRef : undefined}
+        className={open ? 'asset is-active' : 'asset'}
+        data-asset-id={asset.id}
+        aria-current={open ? 'true' : undefined}
+        draggable={canPlace(snap, asset.kind, asset.id)}
+        onDragStart={(event) => startAssetDrag(session, event, asset.id)}
+        onDragEnd={() => session.endDrag()}
+        onClick={() => onOpenAsset(asset.id)}
+      >
+        <span className="asset-name">{asset.name}</span>
+        <span className="asset-id">{asset.id}</span>
+      </button>
+    );
+  });
 }
 
 function TreeGroup({
@@ -207,6 +285,10 @@ function isOpen(id: string, needle: string, expanded: Record<string, boolean>): 
 
 function assetMatches(asset: { name: string; id: string }, needle: string): boolean {
   return asset.name.toLowerCase().includes(needle) || asset.id.toLowerCase().includes(needle);
+}
+
+function titleCase(value: string): string {
+  return value.replace(/[-_]+/g, ' ').replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
 function canPlace(snap: EditorSnapshot, kind: DefaultKind, id: string): boolean {

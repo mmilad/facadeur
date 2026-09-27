@@ -1,8 +1,9 @@
 {
   "version": 1,
-  "id": "editor-toggle",
-  "name": "Editor toggle",
-  "kind": "atom",
+  "id": "form-toggle",
+  "name": "Toggle",
+  "kind": "component",
+  "group": "form",
   "fields": [{ "name": "label", "type": "text", "default": "Enabled" }],
   "variants": [
     {

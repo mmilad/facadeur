@@ -1,8 +1,9 @@
 {
   "version": 1,
-  "id": "editor-text-input",
-  "name": "Editor text input",
-  "kind": "atom",
+  "id": "form-text-input",
+  "name": "Text input",
+  "kind": "component",
+  "group": "form",
   "fields": [
     { "name": "label", "type": "text", "default": "Label" },
     { "name": "value", "type": "text", "default": "Value" },

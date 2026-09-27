@@ -4,20 +4,17 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react';
-import { EditorTextInput } from '@facadeur/ui';
+import { FormSegmented } from '@facadeur/ui';
 
 const meta = {
-  title: 'Atoms/EditorTextInput',
-  component: EditorTextInput,
+  title: 'Components/FormSegmented',
+  component: FormSegmented,
   tags: ['autodocs'],
   args: {
-    label: 'Label',
-    value: 'Value',
-    placeholder: 'Placeholder',
-    hint: 'Optional hint',
-    state: 'default',
+    label: 'Alignment',
+    state: 'start',
   },
-} satisfies Meta<typeof EditorTextInput>;
+} satisfies Meta<typeof FormSegmented>;
 
 export default meta;
 

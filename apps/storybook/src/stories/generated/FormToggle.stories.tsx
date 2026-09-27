@@ -4,17 +4,17 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react';
-import { EditorSegmented } from '@facadeur/ui';
+import { FormToggle } from '@facadeur/ui';
 
 const meta = {
-  title: 'Atoms/EditorSegmented',
-  component: EditorSegmented,
+  title: 'Components/FormToggle',
+  component: FormToggle,
   tags: ['autodocs'],
   args: {
-    label: 'Alignment',
-    state: 'start',
+    label: 'Enabled',
+    state: 'on',
   },
-} satisfies Meta<typeof EditorSegmented>;
+} satisfies Meta<typeof FormToggle>;
 
 export default meta;
 

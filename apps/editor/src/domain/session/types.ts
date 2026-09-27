@@ -21,6 +21,7 @@ export interface AssetSummary {
   id: string;
   name: string;
   kind: DefaultKind;
+  group?: string;
 }
 
 export interface EditorNotice {

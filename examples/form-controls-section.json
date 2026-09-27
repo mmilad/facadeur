@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "editor-controls-section",
-  "name": "Editor controls section",
+  "id": "form-controls-section",
+  "name": "Form controls section",
   "kind": "section",
   "tokenInterface": {
     "reads": [
@@ -171,32 +171,44 @@
               {
                 "id": "input-default",
                 "type": "instance",
-                "component": "editor-text-input",
-                "layout": { "width": { "mode": "fixed", "size": 250 }, "height": { "mode": "hug" } },
+                "component": "form-text-input",
+                "layout": {
+                  "width": { "mode": "fixed", "size": 250 },
+                  "height": { "mode": "hug" }
+                },
                 "fields": { "label": "Label", "value": "Button", "hint": "Default" },
                 "variants": { "state": "default" }
               },
               {
                 "id": "input-focused",
                 "type": "instance",
-                "component": "editor-text-input",
-                "layout": { "width": { "mode": "fixed", "size": 250 }, "height": { "mode": "hug" } },
+                "component": "form-text-input",
+                "layout": {
+                  "width": { "mode": "fixed", "size": 250 },
+                  "height": { "mode": "hug" }
+                },
                 "fields": { "label": "Label", "value": "Button", "hint": "Focused" },
                 "variants": { "state": "focused" }
               },
               {
                 "id": "input-invalid",
                 "type": "instance",
-                "component": "editor-text-input",
-                "layout": { "width": { "mode": "fixed", "size": 250 }, "height": { "mode": "hug" } },
+                "component": "form-text-input",
+                "layout": {
+                  "width": { "mode": "fixed", "size": 250 },
+                  "height": { "mode": "hug" }
+                },
                 "fields": { "label": "Label", "value": "Button", "hint": "Invalid value" },
                 "variants": { "state": "invalid" }
               },
               {
                 "id": "input-disabled",
                 "type": "instance",
-                "component": "editor-text-input",
-                "layout": { "width": { "mode": "fixed", "size": 250 }, "height": { "mode": "hug" } },
+                "component": "form-text-input",
+                "layout": {
+                  "width": { "mode": "fixed", "size": 250 },
+                  "height": { "mode": "hug" }
+                },
                 "fields": { "label": "Label", "value": "Disabled", "hint": "Disabled" },
                 "variants": { "state": "disabled" }
               }
@@ -239,56 +251,77 @@
               {
                 "id": "select-default",
                 "type": "instance",
-                "component": "editor-select",
-                "layout": { "width": { "mode": "fixed", "size": 250 }, "height": { "mode": "hug" } },
+                "component": "form-select",
+                "layout": {
+                  "width": { "mode": "fixed", "size": 250 },
+                  "height": { "mode": "hug" }
+                },
                 "fields": { "label": "Token", "value": "color.text.primary" },
                 "variants": { "state": "default" }
               },
               {
                 "id": "select-focused",
                 "type": "instance",
-                "component": "editor-select",
-                "layout": { "width": { "mode": "fixed", "size": 250 }, "height": { "mode": "hug" } },
+                "component": "form-select",
+                "layout": {
+                  "width": { "mode": "fixed", "size": 250 },
+                  "height": { "mode": "hug" }
+                },
                 "fields": { "label": "Property", "value": "border color" },
                 "variants": { "state": "focused" }
               },
               {
                 "id": "select-disabled",
                 "type": "instance",
-                "component": "editor-select",
-                "layout": { "width": { "mode": "fixed", "size": 250 }, "height": { "mode": "hug" } },
+                "component": "form-select",
+                "layout": {
+                  "width": { "mode": "fixed", "size": 250 },
+                  "height": { "mode": "hug" }
+                },
                 "fields": { "label": "Breakpoint", "value": "Base" },
                 "variants": { "state": "disabled" }
               },
               {
                 "id": "alignment",
                 "type": "instance",
-                "component": "editor-segmented",
-                "layout": { "width": { "mode": "fixed", "size": 270 }, "height": { "mode": "hug" } },
+                "component": "form-segmented",
+                "layout": {
+                  "width": { "mode": "fixed", "size": 270 },
+                  "height": { "mode": "hug" }
+                },
                 "fields": { "label": "Alignment" },
                 "variants": { "state": "start" }
               },
               {
                 "id": "toggle-on",
                 "type": "instance",
-                "component": "editor-toggle",
-                "layout": { "width": { "mode": "fixed", "size": 180 }, "height": { "mode": "hug" } },
+                "component": "form-toggle",
+                "layout": {
+                  "width": { "mode": "fixed", "size": 180 },
+                  "height": { "mode": "hug" }
+                },
                 "fields": { "label": "Use token" },
                 "variants": { "state": "on" }
               },
               {
                 "id": "toggle-off",
                 "type": "instance",
-                "component": "editor-toggle",
-                "layout": { "width": { "mode": "fixed", "size": 180 }, "height": { "mode": "hug" } },
+                "component": "form-toggle",
+                "layout": {
+                  "width": { "mode": "fixed", "size": 180 },
+                  "height": { "mode": "hug" }
+                },
                 "fields": { "label": "Use token" },
                 "variants": { "state": "off" }
               },
               {
                 "id": "toggle-disabled",
                 "type": "instance",
-                "component": "editor-toggle",
-                "layout": { "width": { "mode": "fixed", "size": 180 }, "height": { "mode": "hug" } },
+                "component": "form-toggle",
+                "layout": {
+                  "width": { "mode": "fixed", "size": 180 },
+                  "height": { "mode": "hug" }
+                },
                 "fields": { "label": "Use token" },
                 "variants": { "state": "disabled" }
               }
@@ -347,28 +380,52 @@
                   "height": { "mode": "hug" }
                 },
                 "children": [
-                  { "id": "column-name", "type": "text", "tag": "span", "text": "Name", "layout": { "width": { "mode": "fixed", "size": 150 }, "height": { "mode": "hug" } } },
-                  { "id": "column-type", "type": "text", "tag": "span", "text": "Type", "layout": { "width": { "mode": "fixed", "size": 100 }, "height": { "mode": "hug" } } },
-                  { "id": "column-default", "type": "text", "tag": "span", "text": "Default", "layout": { "width": { "mode": "fill" }, "height": { "mode": "hug" } } }
+                  {
+                    "id": "column-name",
+                    "type": "text",
+                    "tag": "span",
+                    "text": "Name",
+                    "layout": {
+                      "width": { "mode": "fixed", "size": 150 },
+                      "height": { "mode": "hug" }
+                    }
+                  },
+                  {
+                    "id": "column-type",
+                    "type": "text",
+                    "tag": "span",
+                    "text": "Type",
+                    "layout": {
+                      "width": { "mode": "fixed", "size": 100 },
+                      "height": { "mode": "hug" }
+                    }
+                  },
+                  {
+                    "id": "column-default",
+                    "type": "text",
+                    "tag": "span",
+                    "text": "Default",
+                    "layout": { "width": { "mode": "fill" }, "height": { "mode": "hug" } }
+                  }
                 ]
               },
               {
                 "id": "field-label",
                 "type": "instance",
-                "component": "editor-field-row",
+                "component": "form-field-row",
                 "fields": { "name": "label", "type": "text", "value": "Button" }
               },
               {
                 "id": "field-tone",
                 "type": "instance",
-                "component": "editor-field-row",
+                "component": "form-field-row",
                 "fields": { "name": "tone", "type": "enum", "value": "primary" },
                 "variants": { "state": "selected" }
               },
               {
                 "id": "field-disabled",
                 "type": "instance",
-                "component": "editor-field-row",
+                "component": "form-field-row",
                 "fields": { "name": "disabled", "type": "boolean", "value": "false" }
               }
             ]

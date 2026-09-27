@@ -56,7 +56,7 @@ export function buildEditorSnapshot(ctx: SnapshotBuildContext): EditorSnapshot {
     if (!store) continue;
     const doc = store.getDocument();
     if (!isKind(doc.kind)) continue;
-    catalog.push({ id: doc.id, name: doc.name, kind: doc.kind });
+    catalog.push({ id: doc.id, name: doc.name, kind: doc.kind, group: doc.group });
     if (doc.kind !== ctx.workspace) continue;
     assets.push({ id: doc.id, name: doc.name, kind: doc.kind });
   }

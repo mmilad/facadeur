@@ -49,6 +49,7 @@ export function readDocument(doc: Y.Doc): FlatDocument {
     id: stringValue(meta.get('id')),
     name: stringValue(meta.get('name')),
     kind: stringValue(meta.get('kind')),
+    ...(optionalString(meta.get('group')) ? { group: optionalString(meta.get('group')) } : {}),
     rootId: stringValue(meta.get('rootId')),
     fields: readFields(doc.getArray<Y.Map<unknown>>('fields')),
     variants: readVariants(doc.getArray<Y.Map<unknown>>('variants')),
@@ -78,6 +79,7 @@ function syncMeta(meta: Y.Map<unknown>, doc: FlatDocument): void {
   syncScalar(meta, 'id', doc.id);
   syncScalar(meta, 'name', doc.name);
   syncScalar(meta, 'kind', doc.kind);
+  syncScalar(meta, 'group', doc.group);
   syncScalar(meta, 'rootId', doc.rootId);
 }
 

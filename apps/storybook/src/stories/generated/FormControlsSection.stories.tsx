@@ -4,13 +4,13 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react';
-import { EditorControlsSection } from '@facadeur/ui';
+import { FormControlsSection } from '@facadeur/ui';
 
 const meta = {
-  title: 'Sections/EditorControlsSection',
-  component: EditorControlsSection,
+  title: 'Sections/FormControlsSection',
+  component: FormControlsSection,
   tags: ['autodocs'],
-} satisfies Meta<typeof EditorControlsSection>;
+} satisfies Meta<typeof FormControlsSection>;
 
 export default meta;
 

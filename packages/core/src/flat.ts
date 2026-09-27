@@ -62,6 +62,7 @@ export interface FlatDocument {
   id: string;
   name: string;
   kind: string;
+  group?: string;
   rootId: string;
   fields: FieldDefinition[];
   variants: VariantAxis[];
@@ -84,6 +85,7 @@ export function toFlat(file: DocumentFile): FlatDocument {
     id: file.id,
     name: file.name,
     kind: file.kind,
+    ...(file.group ? { group: file.group } : {}),
     rootId,
     fields: file.fields ?? [],
     variants: file.variants ?? [],
@@ -105,6 +107,7 @@ export function toNested(doc: FlatDocument): DocumentFile {
     kind: doc.kind as DocumentFile['kind'],
     root: nested,
   };
+  if (doc.group) file.group = doc.group;
   if (doc.fields.length) file.fields = doc.fields;
   if (doc.variants.length) file.variants = doc.variants;
   if (doc.settings.artboard || doc.settings.breakpoints?.length) {
@@ -151,6 +154,7 @@ export function canonicalizeFlat(doc: FlatDocument): FlatDocument {
     id: doc.id,
     name: doc.name,
     kind: doc.kind,
+    ...(doc.group ? { group: doc.group } : {}),
     rootId: doc.rootId,
     fields: doc.fields.map(cloneField),
     variants: doc.variants.map(cloneVariant),
