@@ -9,6 +9,8 @@ import { FormSegmented } from './FormSegmented';
 import { FormSelect } from './FormSelect';
 import { FormTextInput } from './FormTextInput';
 import { FormToggle } from './FormToggle';
+import { Input } from './Input';
+import { Textarea } from './Textarea';
 
 export interface FormControlsSectionProps {
   /** Instance id. Sets `data-node` so a parent style rule can address this element. */
@@ -26,6 +28,13 @@ export function FormControlsSection({ nodeId, className }: FormControlsSectionPr
           A small, token-driven control language for the editor inspector.
         </p>
       </header>
+      <section data-node="native-text-controls">
+        <h2 data-node="native-text-controls-title">Native text controls</h2>
+        <div data-node="native-text-controls-row">
+          <Input nodeId="native-input" label="Input" value="Value" />
+          <Textarea nodeId="native-textarea" label="Textarea" value="Write a message" rows={3} />
+        </div>
+      </section>
       <section data-node="text-inputs">
         <h2 data-node="text-input-title">Text field states</h2>
         <div data-node="text-input-row">

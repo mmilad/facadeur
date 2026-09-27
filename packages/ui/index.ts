@@ -29,3 +29,5 @@ export { Specimen } from './components/Specimen';
 export type { SpecimenProps } from './components/Specimen';
 export { SpecimenSection } from './components/SpecimenSection';
 export type { SpecimenSectionProps } from './components/SpecimenSection';
+export { Textarea } from './components/Textarea';
+export type { TextareaProps, TextareaResize } from './components/Textarea';

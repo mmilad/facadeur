@@ -59,6 +59,13 @@
           "margin": "{space.0}"
         }
       },
+      "native-text-controls-title": {
+        "declarations": {
+          "color": "{color.text.primary}",
+          "font": "{type.heading}",
+          "margin": "{space.0}"
+        }
+      },
       "selection-title": {
         "declarations": {
           "color": "{color.text.primary}",
@@ -133,6 +140,62 @@
             "tag": "p",
             "text": "A small, token-driven control language for the editor inspector.",
             "layout": { "width": { "mode": "fill", "max": 680 }, "height": { "mode": "hug" } }
+          }
+        ]
+      },
+      {
+        "id": "native-text-controls",
+        "type": "frame",
+        "tag": "section",
+        "layout": {
+          "direction": "column",
+          "align": "stretch",
+          "gap": "{space.gap.md}",
+          "width": { "mode": "fill" },
+          "height": { "mode": "hug" }
+        },
+        "children": [
+          {
+            "id": "native-text-controls-title",
+            "type": "text",
+            "tag": "h2",
+            "text": "Native text controls",
+            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+          },
+          {
+            "id": "native-text-controls-row",
+            "type": "frame",
+            "tag": "div",
+            "layout": {
+              "direction": "row",
+              "align": "start",
+              "wrap": true,
+              "gap": "{space.gap.md}",
+              "width": { "mode": "fill" },
+              "height": { "mode": "hug" }
+            },
+            "children": [
+              {
+                "id": "native-input",
+                "type": "instance",
+                "component": "input",
+                "layout": {
+                  "width": { "mode": "fixed", "size": 250 },
+                  "height": { "mode": "hug" }
+                },
+                "fields": { "label": "Input", "value": "Value" }
+              },
+              {
+                "id": "native-textarea",
+                "type": "instance",
+                "component": "textarea",
+                "layout": {
+                  "width": { "mode": "fixed", "size": 250 },
+                  "height": { "mode": "hug" }
+                },
+                "fields": { "label": "Textarea", "value": "Write a message", "rows": 3 }
+              }
+            ]
           }
         ]
       },

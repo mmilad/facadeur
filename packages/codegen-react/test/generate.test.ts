@@ -11,6 +11,7 @@ const componentFiles = [
   'button.json',
   'card.json',
   'input.json',
+  'textarea.json',
   'sign-in.json',
   'form-text-input.json',
   'form-select.json',
@@ -156,6 +157,7 @@ describe('generateReact', () => {
       'src/stories/generated/SignIn.stories.tsx',
       'src/stories/generated/Specimen.stories.tsx',
       'src/stories/generated/SpecimenSection.stories.tsx',
+      'src/stories/generated/Textarea.stories.tsx',
     ]);
     const button = source(stories, 'src/stories/generated/Button.stories.tsx');
     expect(button).toContain("title: 'Atoms/Button'");
