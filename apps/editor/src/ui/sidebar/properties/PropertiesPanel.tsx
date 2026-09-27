@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { findParent, type FlatDocument, type FlatNode } from '@facadeur/core';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
+import { AddPopover, Field, TextInput } from '../../form/index.js';
 import { ComponentFields } from './content/ComponentFields.js';
 import { ComponentVariants } from './content/ComponentVariants.js';
 import { ContentPanel } from './content/ContentPanel.js';
@@ -215,6 +216,7 @@ export function PropertiesPanel({
 }
 
 function VariantTabs({ session, snap }: { session: EditorSession; snap: EditorSnapshot }) {
+  const [newName, setNewName] = useState('');
   if (snap.document.kind !== 'component' || !snap.document.variantPresets?.length) return null;
 
   const names = [
@@ -223,10 +225,38 @@ function VariantTabs({ session, snap }: { session: EditorSession; snap: EditorSn
       .map((preset) => preset.name)
       .filter((name) => name !== 'default'),
   ];
+  function addVariant() {
+    const name = newName.trim();
+    if (!/^[A-Za-z][A-Za-z0-9_-]*$/.test(name)) {
+      session.setNotice(
+        'Variant names start with a letter and use letters, numbers, _ or -',
+        'error',
+      );
+      return;
+    }
+    if (names.includes(name)) {
+      session.setNotice(`Variant "${name}" already exists`, 'error');
+      return;
+    }
+    session.execute({ type: 'setVariantPreset', preset: { name } });
+    setNewName('');
+  }
 
   return (
     <div className="variant-tabs" role="tablist" aria-label="Component variants">
-      <span className="variant-tabs-label">Variant</span>
+      <div className="variant-tabs-head">
+        <span className="variant-tabs-label">Variant</span>
+        <AddPopover label="Add variant" onConfirm={addVariant}>
+          <Field label="Name">
+            <TextInput
+              name="new-variant-name"
+              value={newName}
+              placeholder="compact"
+              onChange={setNewName}
+            />
+          </Field>
+        </AddPopover>
+      </div>
       <div className="variant-tabs-list">
         {names.map((name) => {
           const active = (snap.activeVariantName ?? 'default') === name;
