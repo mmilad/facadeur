@@ -124,7 +124,7 @@ describe('properties inspector tabs', () => {
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(host.textContent).toContain('Layout');
+    expect(host.textContent).toContain('CSS layout');
     expect(host.textContent).not.toContain('Other');
   });
 

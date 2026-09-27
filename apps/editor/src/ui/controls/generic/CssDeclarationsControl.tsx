@@ -188,7 +188,7 @@ type DeclarationGroupId =
 const DECLARATION_GROUP_LABELS: Record<DeclarationGroupId, string> = {
   color: 'Color',
   typography: 'Typography',
-  layout: 'Layout',
+  layout: 'CSS layout',
   spacing: 'Spacing',
   effects: 'Effects',
   behavior: 'Behavior',

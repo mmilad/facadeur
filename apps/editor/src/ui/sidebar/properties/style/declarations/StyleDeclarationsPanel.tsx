@@ -14,7 +14,8 @@ export function StyleDeclarationsPanel({
     <div className="stack">
       <h3>Style</h3>
       <p className="meta">
-        Base has no media query. A viewport override writes only that breakpoint.
+        Use Layout for structure and sizing. CSS layout rules here are advanced overrides. Base
+        has no media query; a viewport override writes only that breakpoint.
       </p>
       <DeclarationEditor session={session} snap={snap} target={{ nodeId }} />
     </div>
