@@ -9,6 +9,7 @@ const examplesDir = fileURLToPath(new URL('../../../examples/', import.meta.url)
 
 const componentFiles = [
   'button.json',
+  'form-input.json',
   'card.json',
   'input.json',
   'textarea.json',
@@ -149,6 +150,7 @@ describe('generateReact', () => {
       'src/stories/generated/FormControls.stories.tsx',
       'src/stories/generated/FormControlsSection.stories.tsx',
       'src/stories/generated/FormFieldRow.stories.tsx',
+      'src/stories/generated/FormInput.stories.tsx',
       'src/stories/generated/FormSegmented.stories.tsx',
       'src/stories/generated/FormSelect.stories.tsx',
       'src/stories/generated/FormTextInput.stories.tsx',
@@ -311,5 +313,76 @@ describe('bindings outside the examples', () => {
     };
     expect(() => generateReact({ documents: [bad] })).toThrow(CodegenError);
     expect(() => generateReact({ documents: [bad] })).toThrow(/not a text/);
+  });
+});
+
+describe('atom contracts', () => {
+  it('generates required inputs and semantic native events', () => {
+    const field: DocumentFile = {
+      version: 1,
+      id: 'form-input-atom',
+      name: 'Form input atom',
+      kind: 'atom',
+      fields: [
+        { name: 'value', type: 'text', required: true },
+        { name: 'disabled', type: 'boolean', default: false },
+      ],
+      events: [{ name: 'commit', payload: { value: 'text' } }],
+      root: {
+        id: 'root',
+        type: 'frame',
+        tag: 'input',
+        attributes: { type: 'text' },
+        bindings: [{ field: 'value', target: 'attribute', name: 'value' }],
+        eventBindings: [{ event: 'commit', name: 'change' }],
+      },
+    };
+
+    const generated = generateReact({ documents: [field] });
+    const sourceText = source(generated.ui, 'components/FormInputAtom.tsx');
+    expect(sourceText).toContain('value: string;');
+    expect(sourceText).toContain('disabled?: boolean;');
+    expect(sourceText).toContain('onCommit?: (payload: { value: string }) => void;');
+    expect(sourceText).toContain('onChange={(event) => onCommit?.({ value: event.currentTarget.value })}');
+  });
+
+  it('forwards exposed inputs and events through a composed component', () => {
+    const atom: DocumentFile = {
+      version: 1,
+      id: 'control-atom',
+      name: 'Control atom',
+      kind: 'atom',
+      fields: [{ name: 'value', type: 'text', default: '' }],
+      events: [{ name: 'commit', payload: { value: 'text' } }],
+      root: {
+        id: 'root',
+        type: 'frame',
+        tag: 'input',
+        eventBindings: [{ event: 'commit', name: 'change' }],
+      },
+    };
+    const wrapper: DocumentFile = {
+      version: 1,
+      id: 'control-wrapper',
+      name: 'Control wrapper',
+      kind: 'component',
+      expose: {
+        fields: { value: 'control.value' },
+        events: { commit: 'control.commit' },
+      },
+      root: {
+        id: 'root',
+        type: 'frame',
+        tag: 'label',
+        children: [{ id: 'control', type: 'instance', component: 'control-atom' }],
+      },
+    };
+    const generated = generateReact({ documents: [wrapper, atom] });
+    const sourceText = source(generated.ui, 'components/ControlWrapper.tsx');
+    expect(sourceText).toContain('value?: string;');
+    expect(sourceText).toContain('onCommit?: (payload: { value: string }) => void;');
+    expect(sourceText).toContain('<ControlAtom');
+    expect(sourceText).toContain('value={value}');
+    expect(sourceText).toContain('onCommit={onCommit}');
   });
 });

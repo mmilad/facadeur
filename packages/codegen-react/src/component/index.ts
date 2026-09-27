@@ -21,7 +21,7 @@ export function renderComponent(
   const root = renderNode(document, document.root, catalog, entry, true, imports, usedProps, () => {
     usesCssProperties = true;
   });
-  const props = [...entry.fields.values(), ...entry.variants.values()];
+  const props = [...entry.fields.values(), ...entry.variants.values(), ...entry.events.values()];
   const contents = printFile({
     id: document.id,
     component: entry.component,

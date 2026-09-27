@@ -6,6 +6,9 @@ import type {
   Binding,
   DocumentFile,
   DocumentSettings,
+  EventBinding,
+  EventDefinition,
+  Expose,
   FieldDefinition,
   FieldValue,
   Layout,
@@ -24,6 +27,7 @@ export interface FlatNodeBase {
   attributes?: Record<string, string>;
   layout?: Layout;
   bindings?: Binding[];
+  eventBindings?: EventBinding[];
   style?: Record<string, string>;
 }
 
@@ -52,6 +56,7 @@ export interface InstanceNode {
   component: string;
   fields?: Record<string, FieldValue>;
   variants?: Record<string, string>;
+  expose?: Expose;
 }
 
 export type FlatNode = FrameNode | TextNode | ImageNode | InstanceNode;
@@ -65,6 +70,8 @@ export interface FlatDocument {
   group?: string;
   rootId: string;
   fields: FieldDefinition[];
+  events?: EventDefinition[];
+  expose?: Expose;
   variants: VariantAxis[];
   settings: DocumentSettings;
   /** DTCG tree. Empty when the file omits tokens. References stay unresolved. */
@@ -89,6 +96,8 @@ export function toFlat(file: DocumentFile): FlatDocument {
     ...(file.group ? { group: file.group } : {}),
     rootId,
     fields: file.fields ?? [],
+    events: file.events ?? [],
+    ...(file.expose ? { expose: cloneExpose(file.expose) } : {}),
     variants: file.variants ?? [],
     settings: file.settings ?? {},
     tokens: (file.tokens ?? {}) as TokenTree,
@@ -111,6 +120,8 @@ export function toNested(doc: FlatDocument): DocumentFile {
   };
   if (doc.group) file.group = doc.group;
   if (doc.fields.length) file.fields = doc.fields;
+  if (doc.events?.length) file.events = doc.events;
+  if (doc.expose) file.expose = cloneExpose(doc.expose);
   if (doc.variants.length) file.variants = doc.variants;
   if (doc.settings.artboard || doc.settings.breakpoints?.length) {
     const settings: DocumentSettings = {};
@@ -160,6 +171,8 @@ export function canonicalizeFlat(doc: FlatDocument): FlatDocument {
     ...(doc.group ? { group: doc.group } : {}),
     rootId: doc.rootId,
     fields: doc.fields.map(cloneField),
+    ...(doc.events?.length ? { events: doc.events.map(cloneEvent) } : {}),
+    ...(doc.expose ? { expose: cloneExpose(doc.expose) } : {}),
     variants: doc.variants.map(cloneVariant),
     settings,
     tokens: canonicalizeTokenTree(doc.tokens),
@@ -210,6 +223,7 @@ export function flattenSubtree(
     component: node.component,
     ...(node.fields ? { fields: node.fields } : {}),
     ...(node.variants ? { variants: node.variants } : {}),
+    ...(node.expose ? { expose: cloneExpose(node.expose) } : {}),
   });
   return node.id;
 }
@@ -315,6 +329,7 @@ function expandNode(doc: FlatDocument, id: string, stack: Set<string>): NestedNo
       component: node.component,
       ...(node.fields ? { fields: { ...node.fields } } : {}),
       ...(node.variants ? { variants: { ...node.variants } } : {}),
+      ...(node.expose ? { expose: cloneExpose(node.expose) } : {}),
     };
   }
   stack.delete(id);
@@ -329,6 +344,7 @@ function sharedFromNested(node: Exclude<NestedNode, { type: 'instance' }>): Flat
     ...(node.attributes ? { attributes: node.attributes } : {}),
     ...(node.layout ? { layout: node.layout } : {}),
     ...(node.bindings ? { bindings: node.bindings } : {}),
+    ...(node.eventBindings ? { eventBindings: cloneEventBindings(node.eventBindings) } : {}),
     ...(node.style ? { style: node.style } : {}),
   };
 }
@@ -342,6 +358,7 @@ function sharedFlat(node: Exclude<FlatNode, InstanceNode>): FlatNodeBase {
   const layout = cleanLayout(node.layout);
   if (layout) base.layout = layout;
   if (node.bindings?.length) base.bindings = node.bindings.map(cloneBinding);
+  if (node.eventBindings?.length) base.eventBindings = cloneEventBindings(node.eventBindings);
   const style = sortStringRecord(node.style);
   if (style) base.style = style;
   return base;
@@ -354,6 +371,7 @@ function sharedToNested(node: Exclude<FlatNode, InstanceNode>): {
   attributes?: Record<string, string>;
   layout?: Layout;
   bindings?: Binding[];
+  eventBindings?: EventBinding[];
   style?: Record<string, string>;
 } {
   return {
@@ -363,6 +381,7 @@ function sharedToNested(node: Exclude<FlatNode, InstanceNode>): {
     ...(node.attributes ? { attributes: { ...node.attributes } } : {}),
     ...(node.layout ? { layout: { ...node.layout } } : {}),
     ...(node.bindings ? { bindings: node.bindings.map(cloneBinding) } : {}),
+    ...(node.eventBindings ? { eventBindings: cloneEventBindings(node.eventBindings) } : {}),
     ...(node.style ? { style: { ...node.style } } : {}),
   };
 }
@@ -407,12 +426,31 @@ function cloneBinding(binding: Binding): Binding {
   };
 }
 
+function cloneEventBindings(bindings: EventBinding[]): EventBinding[] {
+  return bindings.map((binding) => ({ event: binding.event, name: binding.name }));
+}
+
 function cloneField(field: FieldDefinition): FieldDefinition {
   return {
     name: field.name,
     type: field.type,
+    ...(field.required !== undefined ? { required: field.required } : {}),
     ...(field.default !== undefined ? { default: field.default } : {}),
     ...(field.options ? { options: [...field.options] } : {}),
+  };
+}
+
+function cloneEvent(event: EventDefinition): EventDefinition {
+  return {
+    name: event.name,
+    ...(event.payload ? { payload: { ...event.payload } } : {}),
+  };
+}
+
+function cloneExpose(expose: Expose): Expose {
+  return {
+    ...(expose.fields ? { fields: { ...expose.fields } } : {}),
+    ...(expose.events ? { events: { ...expose.events } } : {}),
   };
 }
 

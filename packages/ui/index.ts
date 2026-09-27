@@ -13,6 +13,8 @@ export { FormControlsSection } from './components/FormControlsSection';
 export type { FormControlsSectionProps } from './components/FormControlsSection';
 export { FormFieldRow } from './components/FormFieldRow';
 export type { FormFieldRowProps, FormFieldRowState } from './components/FormFieldRow';
+export { FormInput } from './components/FormInput';
+export type { FormInputProps } from './components/FormInput';
 export { FormSegmented } from './components/FormSegmented';
 export type { FormSegmentedProps, FormSegmentedState } from './components/FormSegmented';
 export { FormSelect } from './components/FormSelect';

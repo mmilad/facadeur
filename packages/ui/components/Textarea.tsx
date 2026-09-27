@@ -41,7 +41,7 @@ export function Textarea({
         tabIndex={-1}
         placeholder={placeholder}
         name={name}
-        rows={String(rows)}
+        rows={rows}
       >
         {value}
       </textarea>

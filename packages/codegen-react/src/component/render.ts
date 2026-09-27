@@ -32,7 +32,7 @@ export function renderNode(
   markStyle: () => void,
 ): ElementNode {
   if (node.type === 'instance') {
-    return renderInstance(node, catalog, imports);
+    return renderInstance(node, catalog, imports, owner, usedProps);
   }
   const tag = node.tag ?? (node.type === 'text' ? 'span' : node.type === 'image' ? 'img' : 'div');
   const children = node.type === 'frame' ? (node.children ?? []) : [];
@@ -74,6 +74,7 @@ export function renderNode(
     if (consumed.has(name)) continue;
     attrs.push({ name, value });
   }
+  attrs.push(...eventAttributes(node.eventBindings, owner, usedProps));
 
   if (node.type === 'image') {
     pushMedia(attrs, 'src', bound.src, node.src);
@@ -104,6 +105,8 @@ function renderInstance(
   node: Extract<NestedNode, { type: 'instance' }>,
   catalog: Map<string, CatalogEntry>,
   imports: Map<string, ComponentImport>,
+  owner: CatalogEntry,
+  usedProps: Set<string>,
 ): ElementNode {
   const target = catalog.get(node.component);
   if (!target) {
@@ -123,16 +126,38 @@ function renderInstance(
   }
   imports.set(target.component, { name: target.component, from: `./${target.component}` });
   const attrs: Attr[] = [{ name: 'nodeId', value: { kind: 'literal', value: node.id } }];
-  for (const field of target.document.fields ?? []) {
-    const value = node.fields?.[field.name];
-    if (value === undefined) continue;
-    const prop = target.fields.get(field.name);
+  const forwardedFields = new Set<string>();
+  for (const [publicName, path] of Object.entries(owner.document.expose?.fields ?? {})) {
+    const prefix = `${node.id}.`;
+    if (!path.startsWith(prefix)) continue;
+    const member = exposedMemberName(target, path.slice(prefix.length), 'field');
+    const source = owner.fields.get(publicName);
+    const destination = member ? target.fields.get(member) : undefined;
+    if (!source || !destination) continue;
+    forwardedFields.add(member!);
+    usedProps.add(source.name);
+    attrs.push({ name: destination.name, value: { kind: 'expr', code: source.name } });
+  }
+  for (const [publicName, path] of Object.entries(owner.document.expose?.events ?? {})) {
+    const prefix = `${node.id}.`;
+    if (!path.startsWith(prefix)) continue;
+    const member = exposedMemberName(target, path.slice(prefix.length), 'event');
+    const source = owner.events.get(publicName);
+    const destination = member ? target.events.get(member) : undefined;
+    if (!source || !destination) continue;
+    usedProps.add(source.name);
+    attrs.push({ name: destination.name, value: { kind: 'expr', code: source.name } });
+  }
+  for (const [fieldName, value] of Object.entries(node.fields ?? {})) {
+    if (forwardedFields.has(fieldName)) continue;
+    const prop = target.fields.get(fieldName);
     if (!prop) {
       throw new CodegenError(
-        `Instance "${node.id}" sets unknown field "${field.name}" on "${node.component}"`,
+        `Instance "${node.id}" sets unknown field "${fieldName}" on "${node.component}"`,
       );
     }
-    assertDefault(node.component, field, value);
+    const directField = target.document.fields?.find((field) => field.name === fieldName);
+    if (directField) assertDefault(node.component, directField, value);
     attrs.push(valueAttr(prop.name, value));
   }
   for (const axis of target.document.variants ?? []) {
@@ -151,13 +176,6 @@ function renderInstance(
     }
     attrs.push({ name: prop.name, value: { kind: 'literal', value } });
   }
-  for (const name of Object.keys(node.fields ?? {})) {
-    if (!target.fields.has(name)) {
-      throw new CodegenError(
-        `Instance "${node.id}" sets unknown field "${name}" on "${node.component}"`,
-      );
-    }
-  }
   for (const name of Object.keys(node.variants ?? {})) {
     if (!target.variants.has(name)) {
       throw new CodegenError(
@@ -168,10 +186,63 @@ function renderInstance(
   return { tag: target.component, attrs, children: [], void: true };
 }
 
+function exposedMemberName(
+  target: CatalogEntry,
+  path: string,
+  kind: 'field' | 'event',
+): string | undefined {
+  const members = kind === 'field' ? target.fields : target.events;
+  if (members.has(path)) return path;
+  const mappings = kind === 'field' ? target.document.expose?.fields : target.document.expose?.events;
+  return Object.entries(mappings ?? {}).find(([, mappedPath]) => mappedPath === path)?.[0];
+}
+
 function valueAttr(name: string, value: FieldValue): Attr {
   if (typeof value === 'string') return { name, value: { kind: 'literal', value } };
   if (typeof value === 'boolean') return { name, value: { kind: 'bool', value } };
   return { name, value: { kind: 'expr', code: jsLiteral(value) } };
+}
+
+function eventAttributes(
+  bindings: { event: string; name: string }[] | undefined,
+  owner: CatalogEntry,
+  usedProps: Set<string>,
+): Attr[] {
+  const attrs: Attr[] = [];
+  for (const binding of bindings ?? []) {
+    const event = owner.events.get(binding.event);
+    if (!event) {
+      throw new CodegenError(`Unknown event "${binding.event}" on "${owner.document.id}"`);
+    }
+    usedProps.add(event.name);
+    const nativeName = binding.name.startsWith('on')
+      ? binding.name
+      : `on${binding.name.charAt(0).toUpperCase()}${binding.name.slice(1)}`;
+    const payload = event.eventPayload ?? {};
+    if (!Object.keys(payload).length) {
+      attrs.push({
+        name: nativeName,
+        value: { kind: 'expr', code: `() => ${event.name}?.()` },
+      });
+      continue;
+    }
+    const entries = Object.entries(payload).map(([key, type]) => {
+      const value = type === 'boolean'
+        ? 'event.currentTarget.checked'
+        : type === 'number'
+          ? 'Number(event.currentTarget.value)'
+          : 'event.currentTarget.value';
+      return `${key}: ${value}`;
+    });
+    attrs.push({
+      name: nativeName,
+      value: {
+        kind: 'expr',
+        code: `(event) => ${event.name}?.({ ${entries.join(', ')} })`,
+      },
+    });
+  }
+  return attrs;
 }
 
 function applyBinding(
@@ -193,7 +264,7 @@ function applyBinding(
     if (reactName === 'className') bound.classExpr = stringExpr(prop);
     else if (isBooleanAttribute(reactName) && prop.fieldType === 'boolean') {
       bound.attrs.set(reactName, { kind: 'expr', code: prop.name });
-    } else bound.attrs.set(reactName, { kind: 'expr', code: stringExpr(prop) });
+    } else bound.attrs.set(reactName, { kind: 'expr', code: attributeExpr(prop) });
     return true;
   }
   if (binding.target === 'style' && binding.name) {
@@ -243,6 +314,10 @@ function expression(prop: PropSpec): Expr {
 function stringExpr(prop: PropSpec): string {
   if (prop.fieldType === 'boolean' || prop.fieldType === 'number') return `String(${prop.name})`;
   return prop.name;
+}
+
+function attributeExpr(prop: PropSpec): string {
+  return prop.fieldType === 'boolean' ? `String(${prop.name})` : prop.name;
 }
 
 function textChild(

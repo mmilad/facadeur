@@ -3,16 +3,19 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
+import { FormInput } from './FormInput';
+
 export type FormTextInputState = 'default' | 'focused' | 'disabled' | 'invalid';
 
 export interface FormTextInputProps {
   label?: string;
-  value?: string;
-  placeholder?: string;
   hint?: string;
   icon?: string;
   hasIcon?: boolean;
+  value?: string;
+  placeholder?: string;
   state?: FormTextInputState;
+  onCommit?: (payload: { value: string }) => void;
   /** Instance id. Sets `data-node` so a parent style rule can address this element. */
   nodeId?: string;
   className?: string;
@@ -20,12 +23,13 @@ export interface FormTextInputProps {
 
 export function FormTextInput({
   label = 'Label',
-  value = 'Value',
-  placeholder = 'Placeholder',
   hint = 'Optional hint',
   icon,
   hasIcon = false,
+  value = 'Value',
+  placeholder = '',
   state = 'default',
+  onCommit,
   nodeId,
   className,
 }: FormTextInputProps) {
@@ -45,14 +49,7 @@ export function FormTextInput({
           alt=""
           hidden={hasIcon === false}
         />
-        <input
-          data-node="control"
-          type="text"
-          readOnly
-          tabIndex={-1}
-          value={value}
-          placeholder={placeholder}
-        />
+        <FormInput nodeId="control" value={value} placeholder={placeholder} onCommit={onCommit} />
       </div>
       <span data-node="hint">{hint}</span>
     </label>

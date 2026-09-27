@@ -102,6 +102,9 @@
               }
             ]
           },
+          "required": {
+            "type": "boolean"
+          },
           "default": {
             "anyOf": [
               {
@@ -120,6 +123,90 @@
             "type": "array",
             "items": {
               "minLength": 1,
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "minLength": 1,
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+            "type": "string"
+          },
+          "payload": {
+            "type": "object",
+            "patternProperties": {
+              "^[A-Za-z][A-Za-z0-9_-]*$": {
+                "anyOf": [
+                  {
+                    "const": "text",
+                    "type": "string"
+                  },
+                  {
+                    "const": "richText",
+                    "type": "string"
+                  },
+                  {
+                    "const": "image",
+                    "type": "string"
+                  },
+                  {
+                    "const": "link",
+                    "type": "string"
+                  },
+                  {
+                    "const": "boolean",
+                    "type": "string"
+                  },
+                  {
+                    "const": "enum",
+                    "type": "string"
+                  },
+                  {
+                    "const": "number",
+                    "type": "string"
+                  },
+                  {
+                    "const": "token",
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "expose": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "fields": {
+          "type": "object",
+          "patternProperties": {
+            "^[A-Za-z][A-Za-z0-9_-]*$": {
+              "minLength": 1,
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\.[A-Za-z][A-Za-z0-9_-]*)*$",
+              "type": "string"
+            }
+          }
+        },
+        "events": {
+          "type": "object",
+          "patternProperties": {
+            "^[A-Za-z][A-Za-z0-9_-]*$": {
+              "minLength": 1,
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\.[A-Za-z][A-Za-z0-9_-]*)*$",
               "type": "string"
             }
           }
@@ -1539,6 +1626,28 @@
                 }
               }
             },
+            "eventBindings": {
+              "type": "array",
+              "items": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "event",
+                  "name"
+                ],
+                "properties": {
+                  "event": {
+                    "minLength": 1,
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+                    "type": "string"
+                  },
+                  "name": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                }
+              }
+            },
             "style": {
               "type": "object",
               "patternProperties": {
@@ -2393,6 +2502,28 @@
                         "type": "string"
                       }
                     ]
+                  },
+                  "name": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "eventBindings": {
+              "type": "array",
+              "items": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "event",
+                  "name"
+                ],
+                "properties": {
+                  "event": {
+                    "minLength": 1,
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+                    "type": "string"
                   },
                   "name": {
                     "minLength": 1,
@@ -3260,6 +3391,28 @@
                 }
               }
             },
+            "eventBindings": {
+              "type": "array",
+              "items": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                  "event",
+                  "name"
+                ],
+                "properties": {
+                  "event": {
+                    "minLength": 1,
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+                    "type": "string"
+                  },
+                  "name": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                }
+              }
+            },
             "style": {
               "type": "object",
               "patternProperties": {
@@ -4093,6 +4246,32 @@
               "patternProperties": {
                 "^[A-Za-z][A-Za-z0-9_-]*$": {
                   "type": "string"
+                }
+              }
+            },
+            "expose": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "fields": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^[A-Za-z][A-Za-z0-9_-]*$": {
+                      "minLength": 1,
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\.[A-Za-z][A-Za-z0-9_-]*)*$",
+                      "type": "string"
+                    }
+                  }
+                },
+                "events": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^[A-Za-z][A-Za-z0-9_-]*$": {
+                      "minLength": 1,
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]*(\\.[A-Za-z][A-Za-z0-9_-]*)*$",
+                      "type": "string"
+                    }
+                  }
                 }
               }
             }

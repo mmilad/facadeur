@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "id": "form-input",
+  "name": "Input control",
+  "kind": "atom",
+  "group": "form",
+  "fields": [
+    { "name": "value", "type": "text", "default": "Value" },
+    { "name": "placeholder", "type": "text", "default": "" },
+    { "name": "name", "type": "text", "default": "" },
+    { "name": "disabled", "type": "boolean", "default": false }
+  ],
+  "events": [{ "name": "commit", "payload": { "value": "text" } }],
+  "tokenInterface": {
+    "reads": [
+      "color.accent.default",
+      "editor.color.border",
+      "editor.color.surface",
+      "editor.color.text",
+      "editor.radius",
+      "input.padding.x",
+      "input.padding.y",
+      "type.body"
+    ]
+  },
+  "styles": {
+    "declarations": {
+      "appearance": "none",
+      "background": "{editor.color.surface}",
+      "border": "1px solid {editor.color.border}",
+      "borderRadius": "{editor.radius}",
+      "boxSizing": "border-box",
+      "color": "{editor.color.text}",
+      "font": "{type.body}",
+      "paddingBlock": "{input.padding.y}",
+      "paddingInline": "{input.padding.x}",
+      "width": "100%"
+    },
+    "states": {
+      "focus-visible": {
+        "borderColor": "{color.accent.default}",
+        "outline": "2px solid {color.accent.default}",
+        "outlineOffset": "1px"
+      },
+      "disabled": { "opacity": "0.55" }
+    }
+  },
+  "root": {
+    "id": "root",
+    "type": "frame",
+    "tag": "input",
+    "attributes": { "type": "text", "autocomplete": "off" },
+    "layout": {
+      "width": { "mode": "fill" },
+      "height": { "mode": "hug" }
+    },
+    "bindings": [
+      { "field": "value", "target": "attribute", "name": "value" },
+      { "field": "placeholder", "target": "attribute", "name": "placeholder" },
+      { "field": "name", "target": "attribute", "name": "name" },
+      { "field": "disabled", "target": "attribute", "name": "disabled" }
+    ],
+    "eventBindings": [{ "event": "commit", "name": "change" }]
+  }
+}

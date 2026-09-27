@@ -32,7 +32,7 @@ export function printFile(file: {
   if (file.variantTypes.length) lines.push('');
   lines.push(`export interface ${file.component}Props {`);
   for (const prop of file.props) {
-    lines.push(`  ${prop.name}?: ${prop.type};`);
+    lines.push(`  ${prop.name}${prop.required ? '' : '?'}: ${prop.type};`);
   }
   lines.push(
     '  /** Instance id. Sets `data-node` so a parent style rule can address this element. */',

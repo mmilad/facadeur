@@ -143,8 +143,42 @@ export const fieldDefinitionSchema = Type.Object(
   {
     name: idSchema,
     type: fieldTypeSchema,
+    required: Type.Optional(Type.Boolean()),
     default: Type.Optional(fieldValueSchema),
     options: Type.Optional(Type.Array(Type.String({ minLength: 1 }), { minItems: 1 })),
+  },
+  { additionalProperties: false },
+);
+
+/** A semantic event exposed by an atom or component. Payload keys use field types. */
+export const eventDefinitionSchema = Type.Object(
+  {
+    name: idSchema,
+    payload: Type.Optional(Type.Record(idSchema, fieldTypeSchema)),
+  },
+  { additionalProperties: false },
+);
+
+/** Stable path into a composed child contract, for example `control.value`. */
+export const exposePathSchema = Type.String({
+  minLength: 1,
+  pattern: '^[A-Za-z][A-Za-z0-9_-]*(\\.[A-Za-z][A-Za-z0-9_-]*)*$',
+});
+
+/** Explicit public contract inherited from nested atoms or components. */
+export const exposeSchema = Type.Object(
+  {
+    fields: Type.Optional(Type.Record(idSchema, exposePathSchema)),
+    events: Type.Optional(Type.Record(idSchema, exposePathSchema)),
+  },
+  { additionalProperties: false },
+);
+
+/** Maps a semantic atom event to a native event on the node. */
+export const eventBindingSchema = Type.Object(
+  {
+    event: idSchema,
+    name: Type.String({ minLength: 1 }),
   },
   { additionalProperties: false },
 );
@@ -319,6 +353,7 @@ const sharedNodeProps = {
   attributes: Type.Optional(stringMapSchema),
   layout: Type.Optional(layoutSchema),
   bindings: Type.Optional(Type.Array(bindingSchema)),
+  eventBindings: Type.Optional(Type.Array(eventBindingSchema)),
   style: Type.Optional(stringMapSchema),
 };
 
@@ -358,6 +393,7 @@ export const nestedNodeSchema = Type.Recursive((Self) =>
         component: idSchema,
         fields: Type.Optional(Type.Record(idSchema, fieldValueSchema)),
         variants: Type.Optional(Type.Record(idSchema, Type.String())),
+        expose: Type.Optional(exposeSchema),
       },
       { additionalProperties: false },
     ),
@@ -457,6 +493,8 @@ function documentProperties<Kind extends TSchema>(kind: Kind) {
     kind,
     group: Type.Optional(idSchema),
     fields: Type.Optional(Type.Array(fieldDefinitionSchema)),
+    events: Type.Optional(Type.Array(eventDefinitionSchema)),
+    expose: Type.Optional(exposeSchema),
     variants: Type.Optional(Type.Array(variantAxisSchema)),
     settings: Type.Optional(settingsSchema),
     fonts: Type.Optional(Type.Array(fontFamilySchema, { minItems: 1 })),
@@ -488,6 +526,10 @@ export function createDocumentSchema(options: DocumentSchemaOptions = {}) {
 
 export type FieldValue = Static<typeof fieldValueSchema>;
 export type FieldDefinition = Static<typeof fieldDefinitionSchema>;
+export type EventDefinition = Static<typeof eventDefinitionSchema>;
+export type EventBinding = Static<typeof eventBindingSchema>;
+export type Expose = Static<typeof exposeSchema>;
+export type ExposePath = Static<typeof exposePathSchema>;
 export type VariantAxis = Static<typeof variantAxisSchema>;
 export type Layout = Static<typeof layoutSchema>;
 export type LayoutOverride = Static<typeof layoutOverrideSchema>;

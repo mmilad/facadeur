@@ -6,12 +6,17 @@
   "group": "form",
   "fields": [
     { "name": "label", "type": "text", "default": "Label" },
-    { "name": "value", "type": "text", "default": "Value" },
-    { "name": "placeholder", "type": "text", "default": "Placeholder" },
     { "name": "hint", "type": "text", "default": "Optional hint" },
     { "name": "icon", "type": "image" },
     { "name": "hasIcon", "type": "boolean", "default": false }
   ],
+  "expose": {
+    "fields": {
+      "value": "control.value",
+      "placeholder": "control.placeholder"
+    },
+    "events": { "commit": "control.commit" }
+  },
   "variants": [
     {
       "name": "state",
@@ -99,21 +104,6 @@
           "width": "16px"
         }
       },
-      "control": {
-        "declarations": {
-          "appearance": "none",
-          "background": "transparent",
-          "border": "0",
-          "boxSizing": "border-box",
-          "color": "{editor.color.text}",
-          "display": "block",
-          "flex": "1 1 auto",
-          "font": "{type.body}",
-          "minWidth": "0",
-          "outline": "none",
-          "padding": "{space.0}"
-        }
-      },
       "hint": {
         "declarations": {
           "color": "{editor.color.textmuted}",
@@ -169,14 +159,8 @@
           },
           {
             "id": "control",
-            "type": "frame",
-            "tag": "input",
-            "layout": { "width": { "mode": "fill" }, "height": { "mode": "hug" } },
-            "attributes": { "type": "text", "readonly": "readonly", "tabindex": "-1" },
-            "bindings": [
-              { "field": "value", "target": "attribute", "name": "value" },
-              { "field": "placeholder", "target": "attribute", "name": "placeholder" }
-            ]
+            "type": "instance",
+            "component": "form-input"
           }
         ]
       },

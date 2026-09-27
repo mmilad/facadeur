@@ -10,6 +10,9 @@ import {
 import type {
   Binding,
   DocumentSettings,
+  EventBinding,
+  EventDefinition,
+  Expose,
   FieldDefinition,
   FieldValue,
   FontFaceFile,
@@ -28,6 +31,7 @@ export function patchDocument(doc: Y.Doc, next: FlatDocument): void {
   syncMeta(doc.getMap('meta'), next);
   syncSettings(doc.getMap('settings'), next.settings);
   syncFields(doc.getArray<Y.Map<unknown>>('fields'), next.fields);
+  syncEvents(doc.getArray<Y.Map<unknown>>('events'), next.events ?? []);
   syncVariants(doc.getArray<Y.Map<unknown>>('variants'), next.variants);
   syncNodes(doc.getMap<Y.Map<unknown>>('nodes'), next);
   syncJsonObject(doc.getMap('tokens'), next.tokens);
@@ -38,6 +42,7 @@ export function patchDocument(doc: Y.Doc, next: FlatDocument): void {
     doc.getMap('tokenInterface'),
     (next.tokenInterface ?? {}) as Record<string, JsonValue>,
   );
+  syncJsonObject(doc.getMap('expose'), (next.expose ?? {}) as Record<string, JsonValue>);
 }
 
 export function readDocument(doc: Y.Doc): FlatDocument {
@@ -54,6 +59,9 @@ export function readDocument(doc: Y.Doc): FlatDocument {
     ...(optionalString(meta.get('group')) ? { group: optionalString(meta.get('group')) } : {}),
     rootId: stringValue(meta.get('rootId')),
     fields: readFields(doc.getArray<Y.Map<unknown>>('fields')),
+    ...(readEvents(doc.getArray<Y.Map<unknown>>('events')).length
+      ? { events: readEvents(doc.getArray<Y.Map<unknown>>('events')) }
+      : {}),
     variants: readVariants(doc.getArray<Y.Map<unknown>>('variants')),
     settings: readSettings(doc.getMap('settings')),
     tokens: readJsonObject(doc.getMap('tokens')),
@@ -61,6 +69,7 @@ export function readDocument(doc: Y.Doc): FlatDocument {
     icons: readIcons(doc.getArray<Y.Map<unknown>>('icons')),
     ...readStyleBlock(doc.getMap('styles')),
     ...readTokenInterface(doc.getMap('tokenInterface')),
+    ...readExpose(doc.getMap('expose')),
     nodes,
   };
 }
@@ -69,6 +78,7 @@ export function ensureDocumentMaps(doc: Y.Doc): void {
   doc.getMap('meta');
   doc.getMap('settings');
   doc.getArray('fields');
+  doc.getArray('events');
   doc.getArray('variants');
   doc.getMap('nodes');
   doc.getMap('tokens');
@@ -76,6 +86,7 @@ export function ensureDocumentMaps(doc: Y.Doc): void {
   doc.getArray('icons');
   doc.getMap('styles');
   doc.getMap('tokenInterface');
+  doc.getMap('expose');
 }
 
 function syncMeta(meta: Y.Map<unknown>, doc: FlatDocument): void {
@@ -152,6 +163,24 @@ function syncFields(list: Y.Array<Y.Map<unknown>>, fields: FieldDefinition[]): v
   reconcile(list, desired);
 }
 
+function syncEvents(list: Y.Array<Y.Map<unknown>>, events: EventDefinition[]): void {
+  const byName = new Map<string, Y.Map<unknown>>();
+  for (const map of list.toArray()) {
+    const name = map.get('name');
+    if (typeof name === 'string') byName.set(name, map);
+  }
+  const desired = events.map((event) => {
+    const map = byName.get(event.name) ?? new Y.Map<unknown>();
+    syncScalar(map, 'name', event.name);
+    if (event.payload) {
+      syncJsonObject(ensureMap(map, 'payload'), event.payload as Record<string, JsonValue>);
+    }
+    else if (map.has('payload')) map.delete('payload');
+    return map;
+  });
+  reconcile(list, desired);
+}
+
 function syncVariants(list: Y.Array<Y.Map<unknown>>, axes: VariantAxis[]): void {
   const byName = new Map<string, Y.Map<unknown>>();
   for (const map of list.toArray()) {
@@ -183,6 +212,7 @@ function syncNodes(nodes: Y.Map<Y.Map<unknown>>, doc: FlatDocument): void {
 function writeField(map: Y.Map<unknown>, field: FieldDefinition): void {
   syncScalar(map, 'name', field.name);
   syncScalar(map, 'type', field.type);
+  syncScalar(map, 'required', field.required);
   syncScalar(map, 'default', field.default);
   if (field.options) {
     if (!map.doc || !sameList(map.get('options'), field.options))
@@ -207,6 +237,7 @@ function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
     syncScalar(map, 'component', node.component);
     syncValueMap(map, 'fields', node.fields);
     syncStringMap(map, 'variants', node.variants);
+    syncJsonObject(ensureMap(map, 'expose'), (node.expose ?? {}) as Record<string, JsonValue>);
     for (const key of [
       'tag',
       'attributes',
@@ -216,6 +247,7 @@ function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
       'src',
       'alt',
       'children',
+      'eventBindings',
     ]) {
       if (map.has(key)) map.delete(key);
     }
@@ -227,8 +259,9 @@ function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
   syncStringMap(map, 'attributes', node.attributes);
   syncLayout(map, node.layout);
   syncBindings(map, node.bindings);
+  syncEventBindings(map, node.eventBindings);
   syncStringMap(map, 'style', node.style);
-  for (const key of ['component', 'fields', 'variants']) {
+  for (const key of ['component', 'fields', 'variants', 'expose']) {
     if (map.has(key)) map.delete(key);
   }
   if (node.type === 'frame') {
@@ -252,6 +285,7 @@ function readNode(map: Y.Map<unknown>): FlatNode {
   if (type === 'instance') {
     const fields = readValueMap(map.get('fields'));
     const variants = readStringMap(map.get('variants'));
+    const expose = readExposeValue(map.get('expose'));
     return makeFlatNode({
       id,
       type: 'instance',
@@ -260,11 +294,13 @@ function readNode(map: Y.Map<unknown>): FlatNode {
       component: stringValue(map.get('component')),
       ...(fields ? { fields } : {}),
       ...(variants ? { variants } : {}),
+      ...(expose ? { expose } : {}),
     });
   }
   const tag = optionalString(map.get('tag'));
   const attributes = readStringMap(map.get('attributes'));
   const bindings = readBindings(map.get('bindings'));
+  const eventBindings = readEventBindings(map.get('eventBindings'));
   const style = readStringMap(map.get('style'));
   const shared = {
     id,
@@ -273,6 +309,7 @@ function readNode(map: Y.Map<unknown>): FlatNode {
     ...(attributes ? { attributes } : {}),
     ...(layout ? { layout } : {}),
     ...(bindings ? { bindings } : {}),
+    ...(eventBindings ? { eventBindings } : {}),
     ...(style ? { style } : {}),
   };
   if (type === 'text') {
@@ -308,10 +345,26 @@ function readFields(list: Y.Array<Y.Map<unknown>>): FieldDefinition[] {
       name: stringValue(map.get('name')),
       type: map.get('type') as FieldDefinition['type'],
     };
+    if (typeof map.get('required') === 'boolean') field.required = map.get('required') as boolean;
     if (map.has('default')) field.default = map.get('default') as FieldValue;
     if (Array.isArray(options)) field.options = options.map(String);
     return field;
   });
+}
+
+function readEvents(list: Y.Array<Y.Map<unknown>>): EventDefinition[] {
+  return list.toArray().map((map) => {
+    const payload = map.get('payload');
+    return {
+      name: stringValue(map.get('name')),
+      ...(payload instanceof Y.Map ? { payload: readJsonObject(payload) as EventDefinition['payload'] } : {}),
+    };
+  });
+}
+
+function readExposeValue(value: unknown): Expose | undefined {
+  if (!(value instanceof Y.Map) || value.size === 0) return undefined;
+  return readJsonObject(value) as unknown as Expose;
 }
 
 function readVariants(list: Y.Array<Y.Map<unknown>>): VariantAxis[] {
@@ -515,6 +568,12 @@ function readTokenInterface(map: Y.Map<unknown>): { tokenInterface?: TokenInterf
   return { tokenInterface: value as unknown as TokenInterface };
 }
 
+function readExpose(map: Y.Map<unknown>): { expose?: Expose } {
+  const value = readJsonObject(map);
+  if (!Object.keys(value).length) return {};
+  return { expose: value as unknown as Expose };
+}
+
 function syncStringMap(
   parent: Y.Map<unknown>,
   key: string,
@@ -587,6 +646,38 @@ function readBindings(value: unknown): Binding[] | undefined {
     const name = item.get('name');
     if (typeof name === 'string') binding.name = name;
     bindings.push(binding);
+  }
+  return bindings.length ? bindings : undefined;
+}
+
+function syncEventBindings(map: Y.Map<unknown>, bindings: EventBinding[] | undefined): void {
+  if (!bindings?.length) {
+    if (map.has('eventBindings')) map.delete('eventBindings');
+    return;
+  }
+  const list = ensureArray<Y.Map<unknown>>(map, 'eventBindings');
+  while (list.length > bindings.length) list.delete(list.length - 1, 1);
+  for (let index = 0; index < bindings.length; index += 1) {
+    const binding = bindings[index];
+    if (!binding) continue;
+    let item = list.get(index);
+    if (!item) {
+      item = new Y.Map<unknown>();
+      list.insert(index, [item]);
+    }
+    syncScalar(item, 'event', binding.event);
+    syncScalar(item, 'name', binding.name);
+  }
+}
+
+function readEventBindings(value: unknown): EventBinding[] | undefined {
+  if (!(value instanceof Y.Array)) return undefined;
+  const bindings: EventBinding[] = [];
+  for (const item of value.toArray()) {
+    if (!(item instanceof Y.Map)) continue;
+    const event = item.get('event');
+    const name = item.get('name');
+    if (typeof event === 'string' && typeof name === 'string') bindings.push({ event, name });
   }
   return bindings.length ? bindings : undefined;
 }

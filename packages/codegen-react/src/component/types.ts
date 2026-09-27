@@ -5,8 +5,10 @@ export interface PropSpec {
   source: string;
   name: string;
   type: string;
-  fieldType: FieldType | 'variant';
+  fieldType: FieldType | 'variant' | 'event';
   defaultExpr?: string;
+  required?: boolean;
+  eventPayload?: Record<string, FieldType>;
 }
 
 export interface VariantTypeSpec {
@@ -35,6 +37,7 @@ export interface CatalogEntry {
   component: string;
   fields: Map<string, PropSpec>;
   variants: Map<string, PropSpec>;
+  events: Map<string, PropSpec>;
 }
 
 export interface Attr {

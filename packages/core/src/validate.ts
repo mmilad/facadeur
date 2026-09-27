@@ -11,8 +11,11 @@ import {
   type Binding,
   type DocumentFile,
   type DocumentSchemaOptions,
+  type EventDefinition,
+  type Expose,
   type FieldDefinition,
   type FieldValue,
+  type NestedNode,
 } from './schema.js';
 import { readTokenTree } from './token-tree.js';
 import { assertStyleContract } from './style-block.js';
@@ -124,6 +127,16 @@ export function validateDefinitions(doc: FlatDocument): void {
     }
     names.add(field.name);
   }
+  const events = doc.events ?? [];
+  const eventNames = new Set<string>();
+  for (const event of events) {
+    assertEventDefinition(event);
+    if (eventNames.has(event.name)) {
+      throw new DocumentError('schema', `Duplicate event "${event.name}"`);
+    }
+    eventNames.add(event.name);
+  }
+  if (doc.expose) assertExpose(doc.expose);
   const axes = new Set<string>();
   for (const axis of doc.variants) {
     assertVariantAxis(axis);
@@ -140,6 +153,17 @@ export function validateDefinitions(doc: FlatDocument): void {
           'unknown-field',
           `Node "${node.id}" binds unknown field "${binding.field}"`,
         );
+      }
+    }
+    for (const binding of node.eventBindings ?? []) {
+      if (!eventNames.has(binding.event)) {
+        throw new DocumentError(
+          'unknown-event',
+          `Node "${node.id}" binds unknown event "${binding.event}"`,
+        );
+      }
+      if (!binding.name.trim()) {
+        throw new DocumentError('schema', `Event binding "${binding.event}" needs a native event`);
       }
     }
   }
@@ -183,6 +207,35 @@ export function assertFieldDefinition(field: FieldDefinition): void {
   }
   if (field.default !== undefined) {
     assertValueMatches(field, field.default);
+  }
+}
+
+export function assertEventDefinition(event: EventDefinition): void {
+  if (!event.name.trim()) {
+    throw new DocumentError('schema', 'Event names must not be empty');
+  }
+  for (const [name, type] of Object.entries(event.payload ?? {})) {
+    if (!name.trim() || !fieldTypes.includes(type)) {
+      throw new DocumentError('schema', `Event "${event.name}" has an invalid payload`);
+    }
+  }
+}
+
+export function assertExpose(expose: Expose): void {
+  const names = new Set<string>();
+  for (const [kind, paths] of [
+    ['field', expose.fields ?? {}],
+    ['event', expose.events ?? {}],
+  ] as const) {
+    for (const [name, path] of Object.entries(paths)) {
+      if (names.has(name)) {
+        throw new DocumentError('schema', `Expose name "${name}" is used more than once`);
+      }
+      names.add(name);
+      if (!path.trim()) {
+        throw new DocumentError('schema', `Exposed ${kind} "${name}" needs a path`);
+      }
+    }
   }
 }
 
@@ -235,7 +288,7 @@ function validateInstanceOverrides(doc: FlatDocument, catalog: Map<string, Docum
     if (node.type !== 'instance') continue;
     const target = catalog.get(node.component);
     if (!target) continue;
-    const fields = new Map((target.fields ?? []).map((field) => [field.name, field]));
+    const fields = exposedFields(target, catalog);
     for (const [name, value] of Object.entries(node.fields ?? {})) {
       const field = fields.get(name);
       if (!field) {
@@ -265,6 +318,53 @@ function validateInstanceOverrides(doc: FlatDocument, catalog: Map<string, Docum
   }
 }
 
+function exposedFields(
+  document: DocumentFile,
+  catalog: Map<string, DocumentFile>,
+  seen = new Set<string>(),
+): Map<string, FieldDefinition> {
+  const fields = new Map((document.fields ?? []).map((field) => [field.name, field]));
+  for (const [name, path] of Object.entries(document.expose?.fields ?? {})) {
+    const field = resolveExposedField(document, path, catalog, seen);
+    if (field) fields.set(name, field);
+  }
+  return fields;
+}
+
+function resolveExposedField(
+  document: DocumentFile,
+  path: string,
+  catalog: Map<string, DocumentFile>,
+  seen: Set<string>,
+): FieldDefinition | undefined {
+  const key = `${document.id}:${path}`;
+  if (seen.has(key)) throw new DocumentError('schema', `Cyclic expose path "${path}"`);
+  seen.add(key);
+  const [nodeId, ...rest] = path.split('.');
+  const node = findNestedNode(document.root, nodeId);
+  if (!node || node.type !== 'instance' || rest.length === 0) {
+    throw new DocumentError('schema', `Expose path "${path}" on "${document.id}" is invalid`);
+  }
+  const child = catalog.get(node.component);
+  if (!child) return undefined;
+  const member = rest.join('.');
+  const direct = child.fields?.find((field) => field.name === member);
+  if (direct) return direct;
+  const nested = child.expose?.fields?.[member];
+  return nested ? resolveExposedField(child, nested, catalog, seen) : undefined;
+}
+
+function findNestedNode(node: NestedNode, id: string | undefined): NestedNode | undefined {
+  if (!id) return undefined;
+  if (node.id === id) return node;
+  if (node.type !== 'frame') return undefined;
+  for (const child of node.children ?? []) {
+    const found = findNestedNode(child, id);
+    if (found) return found;
+  }
+  return undefined;
+}
+
 function assertNodeData(node: FlatNode): void {
   if (node.type !== 'instance') {
     assertAttributes(node.attributes);
@@ -280,6 +380,7 @@ function assertNodeData(node: FlatNode): void {
       children.add(childId);
     }
   }
+  if (node.type === 'instance' && node.expose) assertExpose(node.expose);
   if (node.type === 'instance' && node.fields) {
     for (const value of Object.values(node.fields)) {
       if (typeof value === 'number' && !Number.isFinite(value)) {
