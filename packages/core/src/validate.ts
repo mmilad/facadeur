@@ -19,7 +19,7 @@ import {
   type VariantPreset,
   isVariantAxis,
 } from './schema.js';
-import { variantPresets } from './variants.js';
+import { resolveVariantDocument, variantPresets } from './variants.js';
 import { readTokenTree } from './token-tree.js';
 import { assertStyleContract } from './style-block.js';
 
@@ -212,6 +212,7 @@ export function validateCatalog(files: readonly unknown[]): DocumentFile[] {
     });
     validateExposedContracts(document, byId);
     validateDataContracts(flat);
+    validateVariantContracts(document);
     validateInstanceOverrides(flat, byId);
   }
   return documents;
@@ -295,6 +296,13 @@ function validateDataContracts(doc: FlatDocument): void {
   };
 
   visit(doc.rootId, { fields, aliases: new Map() });
+}
+
+function validateVariantContracts(document: DocumentFile): void {
+  for (const variant of variantPresets(document)) {
+    const resolved = toFlat(resolveVariantDocument(document, variant.name));
+    validateDataContracts(resolved);
+  }
 }
 
 function assertDataPath(path: string, scope: DataScope, context: string): FieldDefinition {

@@ -127,4 +127,32 @@ describe('component contracts', () => {
       ]),
     ).toThrow(/is not defined/);
   });
+
+  it('validates data paths introduced by a variant overlay', () => {
+    const invalid: DocumentFile = {
+      version: 1,
+      id: 'variant-data',
+      name: 'Variant data',
+      kind: 'component',
+      fields: [{ name: 'title', type: 'text' }],
+      variants: [
+        {
+          name: 'compact',
+          overrides: {
+            nodes: {
+              label: { displayOn: { path: 'missing', truthy: true } },
+            },
+          },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        tag: 'div',
+        children: [{ id: 'label', type: 'text', text: 'Title' }],
+      },
+    };
+
+    expect(() => validateCatalog([invalid])).toThrow(/is not defined/);
+  });
 });
