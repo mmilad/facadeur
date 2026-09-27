@@ -94,6 +94,9 @@ describe('editor shell', () => {
 
     expect(host.textContent).toContain('Specimen');
     expect(host.querySelector('.kind-badge')?.textContent).toBe('page');
+    expect(host.querySelector('[data-testid="inspector-context"]')?.textContent).toContain(
+      'Specimen',
+    );
     expect(host.textContent).toContain('specimen-section');
     expect(host.querySelector('nav.workspaces')).toBeNull();
     expect(host.querySelector('[data-asset-id="button"]')).toBeInstanceOf(HTMLButtonElement);
@@ -158,6 +161,9 @@ describe('editor shell', () => {
     await act(async () => {
       session.selectNode('root');
     });
+    expect(host.querySelector('[data-testid="inspector-context"]')?.textContent).toContain(
+      'Button',
+    );
     const tag = host.querySelector('select[name="tag"]');
     expect(tag).toBeInstanceOf(HTMLSelectElement);
     expect((tag as HTMLSelectElement).value).toBe('button');

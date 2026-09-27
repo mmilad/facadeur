@@ -48,9 +48,19 @@ export function PropertiesPanel({
   }, [selectionKey]);
 
   const editableStyle = node && node.type !== 'instance';
+  const contextTitle = node?.name || node?.id || snap.document.name;
+  const contextKicker = node ? 'Selected layer' : 'Document';
+  const contextMeta = node
+    ? `${node.type} · ${snap.document.name}`
+    : `${snap.document.kind} · select a layer to edit`;
 
   return (
     <div className="properties">
+      <div className="inspector-context" data-testid="inspector-context">
+        <span className="inspector-context-kicker">{contextKicker}</span>
+        <strong className="inspector-context-title">{contextTitle}</strong>
+        <span className="inspector-context-meta">{contextMeta}</span>
+      </div>
       <div className="tabs property-tabs" role="tablist" aria-label="Properties sections">
         {PROPERTY_PRIMARY_TABS.map(([id, label]) => (
           <button
