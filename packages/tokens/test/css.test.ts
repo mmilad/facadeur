@@ -191,6 +191,9 @@ describe('project template', () => {
     expect(design.properties.find((property) => property.name === '--input-color-bg')?.value).toBe(
       'var(--color-bg-canvas)',
     );
+    expect(design.properties.find((property) => property.name === '--input-padding-y')?.value).toBe(
+      'var(--space-2)',
+    );
     expect(
       design.properties.find((property) => property.name === '--input-color-border')?.value,
     ).toBe('var(--color-neutral-600)');

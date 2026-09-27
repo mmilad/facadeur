@@ -14,7 +14,6 @@
     "reads": [
       "color.accent.default",
       "color.text.secondary",
-      "font.weight.medium",
       "input.color.bg",
       "input.color.border",
       "input.color.text",
@@ -25,16 +24,13 @@
       "space.0",
       "space.gap.xs",
       "type.body",
-      "type.caption"
+      "type.label"
     ]
   },
   "styles": {
     "declarations": {
       "color": "{color.text.secondary}",
-      "font": "{type.caption}",
-      "fontWeight": "{font.weight.medium}",
-      "letterSpacing": "0.14em",
-      "textTransform": "uppercase"
+      "font": "{type.label}"
     },
     "children": {
       "control": {
@@ -49,7 +45,6 @@
           "display": "block",
           "font": "{type.body}",
           "letterSpacing": "0",
-          "minHeight": "36px",
           "paddingBlock": "{input.padding.y}",
           "paddingInline": "{input.padding.x}",
           "textTransform": "none"

@@ -18,7 +18,6 @@
       "color.bg.muted",
       "color.neutral.400",
       "color.text.secondary",
-      "font.weight.medium",
       "input.color.text",
       "input.padding.x",
       "input.padding.y",
@@ -26,16 +25,13 @@
       "space.0",
       "space.gap.xs",
       "type.body",
-      "type.caption"
+      "type.label"
     ]
   },
   "styles": {
     "declarations": {
       "color": "{color.text.secondary}",
-      "font": "{type.caption}",
-      "fontWeight": "{font.weight.medium}",
-      "letterSpacing": "0.14em",
-      "textTransform": "uppercase"
+      "font": "{type.label}"
     },
     "children": {
       "control": {
