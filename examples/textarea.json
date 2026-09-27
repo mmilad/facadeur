@@ -15,10 +15,10 @@
   "tokenInterface": {
     "reads": [
       "color.accent.default",
-      "color.text.secondary",
-      "font.weight.medium",
       "color.bg.muted",
       "color.neutral.400",
+      "color.text.secondary",
+      "font.weight.medium",
       "input.color.text",
       "input.padding.x",
       "input.padding.y",
