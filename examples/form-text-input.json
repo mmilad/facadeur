@@ -8,7 +8,9 @@
     { "name": "label", "type": "text", "default": "Label" },
     { "name": "value", "type": "text", "default": "Value" },
     { "name": "placeholder", "type": "text", "default": "Placeholder" },
-    { "name": "hint", "type": "text", "default": "Optional hint" }
+    { "name": "hint", "type": "text", "default": "Optional hint" },
+    { "name": "icon", "type": "image" },
+    { "name": "hasIcon", "type": "boolean", "default": false }
   ],
   "variants": [
     {
@@ -52,14 +54,13 @@
           "margin": "{space.0}"
         }
       },
-      "control": {
+      "controlShell": {
         "declarations": {
-          "appearance": "none",
+          "alignItems": "center",
           "background": "{editor.color.surface}",
           "border": "1px solid {editor.color.border}",
           "borderRadius": "{editor.radius}",
-          "color": "{editor.color.text}",
-          "font": "{type.body}",
+          "display": "flex",
           "paddingBlock": "{editor.padding.y}",
           "paddingInline": "{editor.padding.x}"
         },
@@ -74,7 +75,6 @@
             "disabled": {
               "declarations": {
                 "background": "{editor.color.canvas}",
-                "color": "{editor.color.textmuted}",
                 "cursor": "not-allowed",
                 "opacity": "0.65"
               }
@@ -86,6 +86,28 @@
               }
             }
           }
+        }
+      },
+      "leadingIcon": {
+        "declarations": {
+          "flex": "0 0 16px",
+          "height": "16px",
+          "marginInlineEnd": "{editor.gap}",
+          "opacity": "0.72",
+          "width": "16px"
+        }
+      },
+      "control": {
+        "declarations": {
+          "appearance": "none",
+          "background": "transparent",
+          "border": "0",
+          "color": "{editor.color.text}",
+          "flex": "1 1 auto",
+          "font": "{type.body}",
+          "minWidth": "0",
+          "outline": "none",
+          "padding": "{space.0}"
         }
       },
       "hint": {
@@ -117,14 +139,41 @@
         "bindings": [{ "field": "label", "target": "text" }]
       },
       {
-        "id": "control",
+        "id": "controlShell",
         "type": "frame",
-        "tag": "input",
-        "layout": { "width": { "mode": "fill" }, "height": { "mode": "hug" } },
-        "attributes": { "type": "text", "readonly": "readonly", "tabindex": "-1" },
-        "bindings": [
-          { "field": "value", "target": "attribute", "name": "value" },
-          { "field": "placeholder", "target": "attribute", "name": "placeholder" }
+        "tag": "div",
+        "layout": {
+          "direction": "row",
+          "align": "center",
+          "width": { "mode": "fill" },
+          "height": { "mode": "hug" }
+        },
+        "children": [
+          {
+            "id": "leadingIcon",
+            "type": "image",
+            "alt": "",
+            "attributes": { "aria-hidden": "true" },
+            "layout": {
+              "width": { "mode": "fixed", "size": 16 },
+              "height": { "mode": "fixed", "size": 16 }
+            },
+            "bindings": [
+              { "field": "icon", "target": "src" },
+              { "field": "hasIcon", "target": "visible" }
+            ]
+          },
+          {
+            "id": "control",
+            "type": "frame",
+            "tag": "input",
+            "layout": { "width": { "mode": "fill" }, "height": { "mode": "hug" } },
+            "attributes": { "type": "text", "readonly": "readonly", "tabindex": "-1" },
+            "bindings": [
+              { "field": "value", "target": "attribute", "name": "value" },
+              { "field": "placeholder", "target": "attribute", "name": "placeholder" }
+            ]
+          }
         ]
       },
       {

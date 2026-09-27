@@ -31,7 +31,12 @@ export function FormSelect({
       <span data-node="label">{label}</span>
       <div data-node="control">
         <span data-node="value">{value}</span>
-        <span data-node="chevron">⌄</span>
+        <img
+          data-node="chevron"
+          aria-hidden="true"
+          src="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Cpath d=%22m4 6 4 4 4-4%22 fill=%22none%22 stroke=%22%236f675e%22 stroke-width=%221.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E"
+          alt=""
+        />
       </div>
     </label>
   );

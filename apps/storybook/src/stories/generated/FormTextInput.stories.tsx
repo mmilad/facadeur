@@ -15,6 +15,7 @@ const meta = {
     value: 'Value',
     placeholder: 'Placeholder',
     hint: 'Optional hint',
+    hasIcon: false,
     state: 'default',
   },
 } satisfies Meta<typeof FormTextInput>;

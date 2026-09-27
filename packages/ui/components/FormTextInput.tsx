@@ -10,6 +10,8 @@ export interface FormTextInputProps {
   value?: string;
   placeholder?: string;
   hint?: string;
+  icon?: string;
+  hasIcon?: boolean;
   state?: FormTextInputState;
   /** Instance id. Sets `data-node` so a parent style rule can address this element. */
   nodeId?: string;
@@ -21,6 +23,8 @@ export function FormTextInput({
   value = 'Value',
   placeholder = 'Placeholder',
   hint = 'Optional hint',
+  icon,
+  hasIcon = false,
   state = 'default',
   nodeId,
   className,
@@ -33,14 +37,23 @@ export function FormTextInput({
       className={className}
     >
       <span data-node="label">{label}</span>
-      <input
-        data-node="control"
-        type="text"
-        readOnly
-        tabIndex={-1}
-        value={value}
-        placeholder={placeholder}
-      />
+      <div data-node="controlShell">
+        <img
+          data-node="leadingIcon"
+          aria-hidden="true"
+          src={icon}
+          alt=""
+          hidden={hasIcon === false}
+        />
+        <input
+          data-node="control"
+          type="text"
+          readOnly
+          tabIndex={-1}
+          value={value}
+          placeholder={placeholder}
+        />
+      </div>
       <span data-node="hint">{hint}</span>
     </label>
   );
