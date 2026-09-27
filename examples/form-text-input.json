@@ -35,6 +35,8 @@
       "editor.padding.x",
       "editor.padding.y",
       "editor.radius",
+      "input.padding.x",
+      "input.padding.y",
       "space.0",
       "type.body",
       "type.caption"
@@ -61,8 +63,8 @@
           "border": "1px solid {editor.color.border}",
           "borderRadius": "{editor.radius}",
           "display": "flex",
-          "paddingBlock": "{editor.padding.y}",
-          "paddingInline": "{editor.padding.x}"
+          "paddingBlock": "{input.padding.y}",
+          "paddingInline": "{input.padding.x}"
         },
         "variants": {
           "state": {
@@ -102,7 +104,9 @@
           "appearance": "none",
           "background": "transparent",
           "border": "0",
+          "boxSizing": "border-box",
           "color": "{editor.color.text}",
+          "display": "block",
           "flex": "1 1 auto",
           "font": "{type.body}",
           "minWidth": "0",

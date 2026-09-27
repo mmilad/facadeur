@@ -51,6 +51,8 @@ const ALIGN: Record<NonNullable<Layout['align']>, string> = {
   stretch: 'stretch',
 };
 
+const NATIVE_CONTROL_TAGS = new Set(['input', 'select', 'textarea']);
+
 /** Turn one document into stylesheet rules. Token refs stay as `var(--…)`. */
 export function compileDocument(
   document: DocumentFile,
@@ -247,7 +249,15 @@ function layoutDeclarations(
   node: NestedNode,
   parentDirection: 'row' | 'column' | undefined,
 ): [string, string][] {
-  if (node.type === 'frame') return frameDeclarations(node.layout, parentDirection);
+  if (node.type === 'frame') {
+    // Native controls are leaves even when the document DSL represents them as
+    // frames so they can carry layout and bindings. They must not receive the
+    // frame's flex-container declarations.
+    if (node.tag && NATIVE_CONTROL_TAGS.has(node.tag.toLowerCase())) {
+      return placementDeclarations(node.layout, parentDirection, false);
+    }
+    return frameDeclarations(node.layout, parentDirection);
+  }
   if (!node.layout) return [];
   return placementDeclarations(node.layout, parentDirection, false);
 }

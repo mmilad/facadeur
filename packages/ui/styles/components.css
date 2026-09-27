@@ -688,8 +688,8 @@
   background: var(--editor-color-surface);
   border: 1px solid var(--editor-color-border);
   border-radius: var(--editor-radius);
-  padding-block: var(--editor-padding-y);
-  padding-inline: var(--editor-padding-x);
+  padding-block: var(--input-padding-y);
+  padding-inline: var(--input-padding-x);
 }
 
 [data-component='form-text-input'][data-variant-state='focused'] [data-node='controlShell'] {
@@ -717,20 +717,15 @@
 }
 
 [data-component='form-text-input'] [data-node='control'] {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  box-sizing: border-box;
-  position: relative;
-  justify-content: flex-start;
-  align-items: stretch;
   flex: 1 1 auto;
   min-width: 0;
   height: fit-content;
   appearance: none;
   background: transparent;
   border: 0;
+  box-sizing: border-box;
   color: var(--editor-color-text);
+  display: block;
   font-family: var(--type-body--font-family);
   font-size: var(--type-body--font-size);
   font-weight: var(--type-body--font-weight);
@@ -840,13 +835,6 @@
 }
 
 [data-component='input'] [data-node='control'] {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  box-sizing: border-box;
-  position: relative;
-  justify-content: flex-start;
-  align-items: stretch;
   align-self: stretch;
   width: auto;
   height: fit-content;
@@ -854,7 +842,9 @@
   background: var(--input-color-bg);
   border: 1px solid var(--input-color-border);
   border-radius: var(--input-radius);
+  box-sizing: border-box;
   color: var(--input-color-text);
+  display: block;
   font-family: var(--type-body--font-family);
   font-size: var(--type-body--font-size);
   font-weight: var(--type-body--font-weight);

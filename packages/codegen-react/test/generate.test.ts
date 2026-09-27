@@ -12,8 +12,15 @@ const componentFiles = [
   'card.json',
   'input.json',
   'sign-in.json',
+  'form-text-input.json',
+  'form-select.json',
+  'form-toggle.json',
+  'form-segmented.json',
+  'form-field-row.json',
   'specimen-page.json',
   'specimen-section.json',
+  'form-controls-page.json',
+  'form-controls-section.json',
 ];
 
 function loadCatalog(): {
@@ -138,6 +145,13 @@ describe('generateReact', () => {
     expect(stories.map((file) => file.path)).toEqual([
       'src/stories/generated/Button.stories.tsx',
       'src/stories/generated/Card.stories.tsx',
+      'src/stories/generated/FormControls.stories.tsx',
+      'src/stories/generated/FormControlsSection.stories.tsx',
+      'src/stories/generated/FormFieldRow.stories.tsx',
+      'src/stories/generated/FormSegmented.stories.tsx',
+      'src/stories/generated/FormSelect.stories.tsx',
+      'src/stories/generated/FormTextInput.stories.tsx',
+      'src/stories/generated/FormToggle.stories.tsx',
       'src/stories/generated/Input.stories.tsx',
       'src/stories/generated/SignIn.stories.tsx',
       'src/stories/generated/Specimen.stories.tsx',

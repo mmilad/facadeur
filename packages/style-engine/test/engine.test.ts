@@ -7,6 +7,8 @@ import { createDomRenderer } from '@facadeur/renderer-dom';
 import { createStyleEngine, type CompiledRule } from '@facadeur/style-engine';
 import { compileDocument } from '@facadeur/style-engine';
 import button from '../../../examples/button.json';
+import input from '../../../examples/input.json';
+import textarea from '../../../examples/textarea.json';
 import type { DocumentFile } from '@facadeur/core';
 
 function text(rules: readonly CompiledRule[]): string {
@@ -41,6 +43,17 @@ describe('component style block', () => {
     expect(compiled).toContain('width: fit-content');
     expect(compiled).toContain('gap: var(--button-gap)');
     expect(compiled).toContain('padding-inline: var(--button-padding-x)');
+  });
+
+  it('keeps native form controls out of the frame flex layout', () => {
+    for (const document of [input, textarea] as DocumentFile[]) {
+      const control = compileDocument(document).find((rule) =>
+        rule.selector.includes('[data-node="control"]'),
+      );
+      expect(control?.declarations).toContainEqual(['display', 'block']);
+      expect(control?.declarations).toContainEqual(['box-sizing', 'border-box']);
+      expect(control?.declarations.some(([name]) => name === 'flex-direction')).toBe(false);
+    }
   });
 
   it('writes the painted canvas root into the live stylesheet', () => {
