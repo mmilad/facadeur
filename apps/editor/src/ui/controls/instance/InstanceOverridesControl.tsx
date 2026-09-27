@@ -26,10 +26,19 @@ export function InstanceOverridesControl({
 }) {
   return (
     <Stack gap={12}>
-      <p className="meta">Field and variant overrides only.</p>
-      <button type="button" className="text-button" name="open-component" onClick={onOpenMaster}>
-        Open {masterName}
-      </button>
+      <div className="instance-overrides-card">
+        <span className="instance-overrides-kicker">Instance overrides</span>
+        <strong>Local to this instance</strong>
+        <p>Fields and variants here affect only this instance.</p>
+        <button
+          type="button"
+          className="text-button instance-master-button"
+          name="open-component"
+          onClick={onOpenMaster}
+        >
+          Edit master · {masterName}
+        </button>
+      </div>
       {fields.length ? <h3>Fields</h3> : null}
       {fields.map((field) => (
         <InstanceFieldOverride
@@ -57,6 +66,11 @@ export function InstanceOverridesControl({
           </Field>
         );
       })}
+      {!fields.length && !variants.length ? (
+        <p className="meta instance-overrides-empty">
+          This component exposes no fields or variants yet.
+        </p>
+      ) : null}
     </Stack>
   );
 }

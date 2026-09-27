@@ -61,6 +61,48 @@
   letter-spacing: 0.01em;
 }
 
+.instance-overrides-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px;
+  border: 1px solid var(--eu-border);
+  border-radius: 8px;
+  background: var(--eu-bg);
+}
+
+.instance-overrides-kicker {
+  color: var(--eu-fg-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.instance-overrides-card strong {
+  color: var(--eu-fg);
+  font-size: 13px;
+}
+
+.instance-overrides-card p {
+  margin: 0 0 3px;
+  color: var(--eu-fg-muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.instance-master-button {
+  align-self: flex-start;
+  border-color: var(--eu-accent);
+  color: var(--eu-accent);
+  font-size: 11px;
+}
+
+.instance-overrides-empty {
+  margin: 0;
+  padding: 2px 0;
+}
+
 .eu-divider {
   border: 0;
   border-top: 1px solid var(--eu-border);

@@ -150,6 +150,36 @@ describe('properties inspector tabs', () => {
     );
   });
 
+  it('makes instance overrides and the master relationship explicit', async () => {
+    const session: EditorSession = createEditorSession({
+      documents,
+      design: createProjectTemplateDocument(),
+    });
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => {
+      root?.render(<App session={session} />);
+    });
+    await act(async () => {
+      session.openAsset('specimen', 'root');
+      session.selectNode('specimen-section');
+    });
+
+    const context = host.querySelector('[data-testid="inspector-context"]');
+    expect(context?.querySelector('.inspector-context-kicker')?.textContent).toBe(
+      'Instance override',
+    );
+    expect(context?.querySelector('.inspector-context-title')?.textContent).toBe(
+      'Specimen section',
+    );
+    expect(context?.textContent).toContain('edit master for shared changes');
+    expect(host.querySelector('[name="open-component"]')?.textContent).toContain(
+      'Edit master · Specimen section',
+    );
+    expect(host.textContent).toContain('This component exposes no fields or variants yet.');
+  });
+
   it('mounts field definitions on Content and variant axes on Data (Spec C)', async () => {
     const session: EditorSession = createEditorSession({
       documents,

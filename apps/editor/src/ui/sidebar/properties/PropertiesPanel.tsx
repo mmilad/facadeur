@@ -49,21 +49,31 @@ export function PropertiesPanel({
   }, [selectionKey]);
 
   const editableStyle = node && node.type !== 'instance';
-  const contextTitle = node?.name || node?.id || snap.document.name;
-  const contextKicker = node
-    ? 'Selected layer'
-    : snap.document.kind === 'component'
-      ? 'Component'
-      : snap.document.kind === 'page'
-        ? 'Page'
-        : snap.document.kind === 'section'
-          ? 'Section'
-          : 'Atom';
-  const contextMeta = node
-    ? `${node.type} · ${snap.document.name}`
-    : snap.document.kind === 'component'
-      ? 'Master · select a layer to edit'
-      : `Document · select a layer to edit`;
+  const contextTitle = node
+    ? node.type === 'instance'
+      ? snap.componentTarget?.name || node.component
+      : node.name || node.id
+    : snap.document.name;
+  const contextKicker =
+    node?.type === 'instance'
+      ? 'Instance override'
+      : node
+        ? 'Selected layer'
+        : snap.document.kind === 'component'
+          ? 'Component'
+          : snap.document.kind === 'page'
+            ? 'Page'
+            : snap.document.kind === 'section'
+              ? 'Section'
+              : 'Atom';
+  const contextMeta =
+    node?.type === 'instance'
+      ? `Local to ${snap.document.name} · edit master for shared changes`
+      : node
+        ? `${node.type} · ${snap.document.name}`
+        : snap.document.kind === 'component'
+          ? 'Master · select a layer to edit'
+          : `Document · select a layer to edit`;
   const contextPath = node ? selectionPath(snap.document, node) : [];
 
   return (
