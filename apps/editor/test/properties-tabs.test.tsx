@@ -150,6 +150,33 @@ describe('properties inspector tabs', () => {
     );
   });
 
+  it('labels the component root as the document being edited', async () => {
+    const session: EditorSession = createEditorSession({
+      documents,
+      design: createProjectTemplateDocument(),
+    });
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => {
+      root?.render(<App session={session} />);
+    });
+    await act(async () => {
+      session.openAsset('input', 'root');
+      session.selectNode('root');
+    });
+
+    const context = host.querySelector('[data-testid="inspector-context"]');
+    expect(context?.querySelector('.inspector-context-kicker')?.textContent).toBe(
+      'Component root',
+    );
+    expect(context?.querySelector('.inspector-context-title')?.textContent).toBe('Input');
+    expect(context?.querySelector('.inspector-context-meta')?.textContent).toBe(
+      'Root frame · Input',
+    );
+    expect(host.textContent).toContain('Component fields');
+  });
+
   it('makes instance overrides and the master relationship explicit', async () => {
     const session: EditorSession = createEditorSession({
       documents,

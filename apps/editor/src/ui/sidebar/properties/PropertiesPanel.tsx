@@ -42,6 +42,7 @@ export function PropertiesPanel({
   const [primaryTab, setPrimaryTab] = useState<PropertyPrimaryTab>('content');
   const [styleSubTab, setStyleSubTab] = useState<PropertyStyleSubTab>('declarations');
   const selectionKey = node?.id ?? '__none__';
+  const isRoot = node?.id === snap.document.rootId;
 
   useEffect(() => {
     setPrimaryTab('content');
@@ -52,11 +53,15 @@ export function PropertiesPanel({
   const contextTitle = node
     ? node.type === 'instance'
       ? snap.componentTarget?.name || node.component
-      : node.name || node.id
+      : isRoot
+        ? snap.document.name
+        : node.name || node.id
     : snap.document.name;
   const contextKicker =
     node?.type === 'instance'
       ? 'Instance override'
+      : isRoot
+        ? `${documentKindLabel(snap.document.kind)} root`
       : node
         ? 'Selected layer'
         : snap.document.kind === 'component'
@@ -70,7 +75,9 @@ export function PropertiesPanel({
     node?.type === 'instance'
       ? `Local to ${snap.document.name} · edit master for shared changes`
       : node
-        ? `${node.type} · ${snap.document.name}`
+        ? isRoot
+          ? `Root frame · ${snap.document.name}`
+          : `${node.type} · ${snap.document.name}`
         : snap.document.kind === 'component'
           ? 'Master · select a layer to edit'
           : `Document · select a layer to edit`;
@@ -221,4 +228,17 @@ function nodeLabel(node: FlatNode): string {
     return value.length > 28 ? `${value.slice(0, 28)}…` : value;
   }
   return node.id;
+}
+
+function documentKindLabel(kind: FlatDocument['kind']): string {
+  switch (kind) {
+    case 'component':
+      return 'Component';
+    case 'page':
+      return 'Page';
+    case 'section':
+      return 'Section';
+    default:
+      return 'Atom';
+  }
 }

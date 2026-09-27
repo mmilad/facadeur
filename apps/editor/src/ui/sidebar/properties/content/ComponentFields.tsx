@@ -12,7 +12,7 @@ export function ComponentFields({
   if (!ownsComponentFeatures(snap.document.kind)) return null;
   return (
     <div className="stack">
-      <h3>Fields</h3>
+      <h3>Component fields</h3>
       <FieldsEditorControl
         fields={snap.document.fields}
         onDefineField={(field) => session.execute({ type: 'defineField', field })}
