@@ -43,8 +43,8 @@ describe('viewport layers UX', () => {
   });
 
   function viewportLayerButton(breakpointId: string): HTMLButtonElement | undefined {
-    return [...(host?.querySelectorAll('button.viewport-layer') ?? [])].find((button) =>
-      button.dataset.breakpoint === breakpointId,
+    return [...(host?.querySelectorAll('button.viewport-layer') ?? [])].find(
+      (button) => button.dataset.breakpoint === breakpointId,
     ) as HTMLButtonElement | undefined;
   }
 
