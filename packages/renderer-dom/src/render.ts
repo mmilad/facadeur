@@ -54,6 +54,11 @@ export interface DomRenderer {
 const EVENT_ATTRIBUTE = /^on/i;
 const MAX_DEPTH = 32;
 
+function isNativeControlElement(element: Element): boolean {
+  const tag = element.tagName.toLowerCase();
+  return tag === 'input' || tag === 'select' || tag === 'textarea';
+}
+
 export function createRenderContext(documents: readonly DocumentFile[]): RenderContext {
   const catalog = new Map<string, DocumentFile>();
   for (const document of documents) catalog.set(document.id, document);
@@ -353,7 +358,12 @@ function paintInstance(
   } else {
     reconcileChildren(el, [], ctx);
   }
-  if (root.type === 'frame' && (root.children ?? []).length === 0 && !text) {
+  if (
+    root.type === 'frame' &&
+    (root.children ?? []).length === 0 &&
+    !text &&
+    !isNativeControlElement(el)
+  ) {
     el.dataset.empty = 'true';
   } else delete el.dataset.empty;
   syncLeadText(el, text);
@@ -398,7 +408,12 @@ function paintElement(
   } else {
     reconcileChildren(el, [], ctx);
   }
-  if (node.type === 'frame' && (node.children ?? []).length === 0 && !text) {
+  if (
+    node.type === 'frame' &&
+    (node.children ?? []).length === 0 &&
+    !text &&
+    !isNativeControlElement(el)
+  ) {
     el.dataset.empty = 'true';
   } else delete el.dataset.empty;
   syncLeadText(el, text);

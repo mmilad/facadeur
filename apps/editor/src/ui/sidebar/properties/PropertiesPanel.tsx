@@ -49,10 +49,20 @@ export function PropertiesPanel({
 
   const editableStyle = node && node.type !== 'instance';
   const contextTitle = node?.name || node?.id || snap.document.name;
-  const contextKicker = node ? 'Selected layer' : 'Document';
+  const contextKicker = node
+    ? 'Selected layer'
+    : snap.document.kind === 'component'
+      ? 'Component'
+      : snap.document.kind === 'page'
+        ? 'Page'
+        : snap.document.kind === 'section'
+          ? 'Section'
+          : 'Atom';
   const contextMeta = node
     ? `${node.type} · ${snap.document.name}`
-    : `${snap.document.kind} · select a layer to edit`;
+    : snap.document.kind === 'component'
+      ? 'Master · select a layer to edit'
+      : `Document · select a layer to edit`;
 
   return (
     <div className="properties">

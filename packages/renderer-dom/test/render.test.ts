@@ -79,6 +79,33 @@ describe('renderer', () => {
     expect(hostEmpty.querySelector('[data-id="root/box"]')?.getAttribute('data-empty')).toBe(
       'true',
     );
+
+    const nativeControls = document.createElement('div');
+    renderDocument(
+      {
+        version: 1,
+        id: 'native-controls',
+        name: 'Native controls',
+        kind: 'component',
+        root: {
+          id: 'root',
+          type: 'frame',
+          children: [
+            { id: 'input', type: 'frame', tag: 'input' },
+            { id: 'select', type: 'frame', tag: 'select' },
+            { id: 'textarea', type: 'frame', tag: 'textarea' },
+          ],
+        },
+      },
+      [],
+      nativeControls,
+      { paintRoot: true },
+    );
+    for (const id of ['input', 'select', 'textarea']) {
+      expect(
+        nativeControls.querySelector(`[data-id="root/${id}"]`)?.getAttribute('data-empty'),
+      ).toBeNull();
+    }
   });
 
   it('paints the specimen page with nested instance ids', () => {
