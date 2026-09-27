@@ -102,6 +102,57 @@
         "$value": "{shadow.md}"
       }
     },
+    "editor": {
+      "$extensions": {
+        "facadeur": {
+          "tier": "component"
+        }
+      },
+      "color": {
+        "$type": "color",
+        "surface": {
+          "$value": "{color.neutral.0}"
+        },
+        "canvas": {
+          "$value": "{color.neutral.50}"
+        },
+        "border": {
+          "$value": "{color.neutral.400}"
+        },
+        "bordersubtle": {
+          "$value": "{color.neutral.200}"
+        },
+        "focus": {
+          "$value": "{color.accent.default}"
+        },
+        "text": {
+          "$value": "{color.text.primary}"
+        },
+        "textmuted": {
+          "$value": "{color.text.secondary}"
+        },
+        "danger": {
+          "$value": "{color.danger.default}"
+        }
+      },
+      "radius": {
+        "$type": "dimension",
+        "$value": "{radius.sm}"
+      },
+      "padding": {
+        "$type": "dimension",
+        "x": {
+          "$value": "{space.3}"
+        },
+        "y": {
+          "$value": "{space.2}"
+        }
+      },
+      "gap": {
+        "$type": "dimension",
+        "$value": "{space.gap.xs}"
+      }
+    },
     "color": {
       "$extensions": {
         "facadeur": {

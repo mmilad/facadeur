@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "id": "editor-controls",
+  "name": "Editor controls",
+  "kind": "page",
+  "settings": {
+    "artboard": { "width": 1180, "height": 1080 },
+    "breakpoints": [
+      { "id": "mobile", "minWidth": 375 },
+      { "id": "tablet", "minWidth": 768 },
+      { "id": "desktop", "minWidth": 1440 }
+    ]
+  },
+  "root": {
+    "id": "root",
+    "type": "frame",
+    "tag": "div",
+    "children": [
+      {
+        "id": "editor-controls-section",
+        "type": "instance",
+        "component": "editor-controls-section"
+      }
+    ]
+  }
+}

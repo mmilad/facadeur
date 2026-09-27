@@ -37,6 +37,18 @@
   --color-text-inverse: var(--color-neutral-0);
   --color-text-primary: var(--color-neutral-900);
   --color-text-secondary: var(--color-neutral-600);
+  --editor-color-border: var(--color-neutral-400);
+  --editor-color-bordersubtle: var(--color-neutral-200);
+  --editor-color-canvas: var(--color-neutral-50);
+  --editor-color-danger: var(--color-danger-default);
+  --editor-color-focus: var(--color-accent-default);
+  --editor-color-surface: var(--color-neutral-0);
+  --editor-color-text: var(--color-text-primary);
+  --editor-color-textmuted: var(--color-text-secondary);
+  --editor-gap: var(--space-gap-xs);
+  --editor-padding-x: var(--space-3);
+  --editor-padding-y: var(--space-2);
+  --editor-radius: var(--radius-sm);
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-weight-bold: 700;
   --font-weight-medium: 500;

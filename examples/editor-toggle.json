@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "id": "editor-toggle",
+  "name": "Editor toggle",
+  "kind": "atom",
+  "fields": [{ "name": "label", "type": "text", "default": "Enabled" }],
+  "variants": [
+    {
+      "name": "state",
+      "values": ["on", "off", "disabled"],
+      "default": "on"
+    }
+  ],
+  "tokenInterface": {
+    "reads": [
+      "color.accent.default",
+      "color.bg.muted",
+      "color.text.inverse",
+      "editor.color.text",
+      "editor.color.textmuted",
+      "space.0",
+      "space.2",
+      "space.3",
+      "space.4",
+      "type.body",
+      "type.caption"
+    ]
+  },
+  "styles": {
+    "children": {
+      "label": {
+        "declarations": {
+          "color": "{editor.color.text}",
+          "font": "{type.body}",
+          "margin": "{space.0}"
+        }
+      },
+      "switch": {
+        "declarations": {
+          "background": "{color.accent.default}",
+          "borderRadius": "999px",
+          "color": "{color.text.inverse}",
+          "font": "{type.caption}",
+          "paddingBlock": "{space.2}",
+          "paddingInline": "{space.3}"
+        },
+        "variants": {
+          "state": {
+            "off": {
+              "declarations": {
+                "background": "{color.bg.muted}",
+                "color": "{editor.color.textmuted}"
+              }
+            },
+            "disabled": {
+              "declarations": {
+                "background": "{color.bg.muted}",
+                "color": "{editor.color.textmuted}",
+                "opacity": "0.6"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "root": {
+    "id": "root",
+    "type": "frame",
+    "tag": "label",
+    "layout": {
+      "direction": "row",
+      "align": "center",
+      "justify": "space-between",
+      "gap": "{space.4}",
+      "width": { "mode": "fill" },
+      "height": { "mode": "hug" }
+    },
+    "children": [
+      {
+        "id": "label",
+        "type": "text",
+        "tag": "span",
+        "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } },
+        "bindings": [{ "field": "label", "target": "text" }]
+      },
+      {
+        "id": "switch",
+        "type": "frame",
+        "tag": "div",
+        "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } },
+        "children": [
+          {
+            "id": "state",
+            "type": "text",
+            "tag": "span",
+            "text": "On",
+            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "id": "editor-segmented",
+  "name": "Editor segmented control",
+  "kind": "atom",
+  "fields": [{ "name": "label", "type": "text", "default": "Alignment" }],
+  "variants": [
+    {
+      "name": "state",
+      "values": ["start", "center", "end"],
+      "default": "start"
+    }
+  ],
+  "tokenInterface": {
+    "reads": [
+      "color.bg.muted",
+      "color.text.primary",
+      "editor.color.border",
+      "editor.color.surface",
+      "editor.color.text",
+      "editor.color.textmuted",
+      "editor.gap",
+      "editor.padding.x",
+      "editor.padding.y",
+      "editor.radius",
+      "space.0",
+      "type.body",
+      "type.caption"
+    ]
+  },
+  "styles": {
+    "children": {
+      "label": {
+        "declarations": {
+          "color": "{editor.color.textmuted}",
+          "font": "{type.caption}",
+          "fontWeight": "600",
+          "margin": "{space.0}"
+        }
+      },
+      "options": {
+        "declarations": {
+          "background": "{color.bg.muted}",
+          "border": "1px solid {editor.color.border}",
+          "borderRadius": "{editor.radius}",
+          "display": "flex",
+          "font": "{type.caption}",
+          "paddingBlock": "{editor.padding.y}",
+          "paddingInline": "{editor.padding.x}"
+        }
+      },
+      "start": {
+        "declarations": {
+          "background": "{editor.color.surface}",
+          "borderRadius": "{editor.radius}",
+          "color": "{editor.color.text}",
+          "fontWeight": "600",
+          "paddingBlock": "{editor.padding.y}",
+          "paddingInline": "{editor.padding.x}"
+        }
+      },
+      "center": {
+        "declarations": {
+          "color": "{editor.color.textmuted}",
+          "paddingBlock": "{editor.padding.y}",
+          "paddingInline": "{editor.padding.x}"
+        }
+      },
+      "end": {
+        "declarations": {
+          "color": "{editor.color.textmuted}",
+          "paddingBlock": "{editor.padding.y}",
+          "paddingInline": "{editor.padding.x}"
+        }
+      }
+    }
+  },
+  "root": {
+    "id": "root",
+    "type": "frame",
+    "tag": "div",
+    "layout": {
+      "direction": "column",
+      "align": "stretch",
+      "gap": "{editor.gap}",
+      "width": { "mode": "fill" },
+      "height": { "mode": "hug" }
+    },
+    "children": [
+      {
+        "id": "label",
+        "type": "text",
+        "tag": "span",
+        "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } },
+        "bindings": [{ "field": "label", "target": "text" }]
+      },
+      {
+        "id": "options",
+        "type": "frame",
+        "tag": "div",
+        "layout": {
+          "direction": "row",
+          "align": "center",
+          "gap": "{space.0}",
+          "width": { "mode": "hug" },
+          "height": { "mode": "hug" }
+        },
+        "children": [
+          {
+            "id": "start",
+            "type": "text",
+            "tag": "span",
+            "text": "Start",
+            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+          },
+          {
+            "id": "center",
+            "type": "text",
+            "tag": "span",
+            "text": "Center",
+            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+          },
+          {
+            "id": "end",
+            "type": "text",
+            "tag": "span",
+            "text": "End",
+            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+          }
+        ]
+      }
+    ]
+  }
+}

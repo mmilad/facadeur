@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "id": "editor-field-row",
+  "name": "Editor field row",
+  "kind": "atom",
+  "fields": [
+    { "name": "name", "type": "text", "default": "label" },
+    { "name": "type", "type": "text", "default": "text" },
+    { "name": "value", "type": "text", "default": "Button" }
+  ],
+  "variants": [
+    { "name": "state", "values": ["default", "selected"], "default": "default" }
+  ],
+  "tokenInterface": {
+    "reads": [
+      "color.bg.muted",
+      "color.text.primary",
+      "editor.color.bordersubtle",
+      "editor.color.surface",
+      "editor.color.text",
+      "editor.color.textmuted",
+      "editor.padding.x",
+      "editor.padding.y",
+      "editor.radius",
+      "space.0",
+      "space.3",
+      "type.body",
+      "type.caption"
+    ]
+  },
+  "styles": {
+    "declarations": {
+      "background": "{editor.color.surface}",
+          "borderBottom": "1px solid {editor.color.bordersubtle}",
+      "font": "{type.body}",
+      "paddingBlock": "{editor.padding.y}",
+      "paddingInline": "{editor.padding.x}"
+    },
+    "variants": {
+      "state": {
+        "selected": {
+          "declarations": {
+            "background": "{color.bg.muted}"
+          }
+        }
+      }
+    },
+    "children": {
+      "name": {
+        "declarations": {
+          "color": "{editor.color.text}",
+          "fontWeight": "600"
+        }
+      },
+      "type": {
+        "declarations": {
+          "color": "{editor.color.textmuted}",
+          "font": "{type.caption}"
+        }
+      },
+      "value": {
+        "declarations": {
+          "color": "{editor.color.textmuted}",
+          "font": "{type.caption}"
+        }
+      }
+    }
+  },
+  "root": {
+    "id": "root",
+    "type": "frame",
+    "tag": "div",
+    "layout": {
+      "direction": "row",
+      "align": "center",
+      "gap": "{space.3}",
+      "width": { "mode": "fill" },
+      "height": { "mode": "hug" }
+    },
+    "children": [
+      {
+        "id": "name",
+        "type": "text",
+        "tag": "span",
+        "layout": { "width": { "mode": "fixed", "size": 150 }, "height": { "mode": "hug" } },
+        "bindings": [{ "field": "name", "target": "text" }]
+      },
+      {
+        "id": "type",
+        "type": "text",
+        "tag": "span",
+        "layout": { "width": { "mode": "fixed", "size": 100 }, "height": { "mode": "hug" } },
+        "bindings": [{ "field": "type", "target": "text" }]
+      },
+      {
+        "id": "value",
+        "type": "text",
+        "tag": "span",
+        "layout": { "width": { "mode": "fill" }, "height": { "mode": "hug" } },
+        "bindings": [{ "field": "value", "target": "text" }]
+      }
+    ]
+  }
+}

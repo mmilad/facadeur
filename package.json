@@ -19,7 +19,7 @@
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "vitest run",
     "schema": "tsx scripts/export-schema.ts",
-    "codegen": "tsx packages/codegen-react/src/cli.ts --design examples/project-template.json --out packages/ui --storybook apps/storybook examples/button.json examples/card.json examples/input.json examples/sign-in.json examples/specimen-page.json examples/specimen-section.json",
+    "codegen": "tsx packages/codegen-react/src/cli.ts --design examples/project-template.json --out packages/ui --storybook apps/storybook examples/button.json examples/card.json examples/input.json examples/sign-in.json examples/editor-text-input.json examples/editor-select.json examples/editor-toggle.json examples/editor-segmented.json examples/editor-field-row.json examples/specimen-page.json examples/specimen-section.json examples/editor-controls-page.json examples/editor-controls-section.json",
     "storybook": "pnpm --filter @facadeur/storybook dev"
   },
   "devDependencies": {

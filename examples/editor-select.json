@@ -1,0 +1,133 @@
+{
+  "version": 1,
+  "id": "editor-select",
+  "name": "Editor select",
+  "kind": "atom",
+  "fields": [
+    { "name": "label", "type": "text", "default": "Property" },
+    { "name": "value", "type": "text", "default": "Choose value" }
+  ],
+  "variants": [
+    {
+      "name": "state",
+      "values": ["default", "focused", "disabled"],
+      "default": "default"
+    }
+  ],
+  "tokenInterface": {
+    "reads": [
+      "editor.color.border",
+      "editor.color.canvas",
+      "editor.color.focus",
+      "editor.color.surface",
+      "editor.color.text",
+      "editor.color.textmuted",
+      "editor.gap",
+      "editor.padding.x",
+      "editor.padding.y",
+      "editor.radius",
+      "space.0",
+      "type.body",
+      "type.caption"
+    ]
+  },
+  "styles": {
+    "children": {
+      "label": {
+        "declarations": {
+          "color": "{editor.color.textmuted}",
+          "font": "{type.caption}",
+          "fontWeight": "600",
+          "margin": "{space.0}"
+        }
+      },
+      "control": {
+        "declarations": {
+          "alignItems": "center",
+          "background": "{editor.color.surface}",
+          "border": "1px solid {editor.color.border}",
+          "borderRadius": "{editor.radius}",
+          "color": "{editor.color.text}",
+          "display": "flex",
+          "font": "{type.body}",
+          "justifyContent": "space-between",
+          "paddingBlock": "{editor.padding.y}",
+          "paddingInline": "{editor.padding.x}"
+        },
+        "variants": {
+          "state": {
+            "focused": {
+              "declarations": {
+                "borderColor": "{editor.color.focus}",
+                "boxShadow": "0 0 0 2px {editor.color.focus}"
+              }
+            },
+            "disabled": {
+              "declarations": {
+                "background": "{editor.color.canvas}",
+                "color": "{editor.color.textmuted}",
+                "cursor": "not-allowed",
+                "opacity": "0.65"
+              }
+            }
+          }
+        }
+      },
+      "chevron": {
+        "declarations": {
+          "color": "{editor.color.textmuted}",
+          "font": "{type.body}"
+        }
+      }
+    }
+  },
+  "root": {
+    "id": "root",
+    "type": "frame",
+    "tag": "label",
+    "layout": {
+      "direction": "column",
+      "align": "stretch",
+      "gap": "{editor.gap}",
+      "width": { "mode": "fill" },
+      "height": { "mode": "hug" }
+    },
+    "children": [
+      {
+        "id": "label",
+        "type": "text",
+        "tag": "span",
+        "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } },
+        "bindings": [{ "field": "label", "target": "text" }]
+      },
+      {
+        "id": "control",
+        "type": "frame",
+        "tag": "div",
+        "layout": {
+          "direction": "row",
+          "align": "center",
+          "justify": "space-between",
+          "width": { "mode": "fill" },
+          "height": { "mode": "hug" }
+        },
+        "children": [
+          {
+            "id": "value",
+            "type": "text",
+            "tag": "span",
+            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } },
+            "bindings": [{ "field": "value", "target": "text" }]
+          },
+          {
+            "id": "chevron",
+            "type": "text",
+            "tag": "span",
+            "text": "⌄",
+            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+          }
+        ]
+      }
+    ]
+  }
+}
