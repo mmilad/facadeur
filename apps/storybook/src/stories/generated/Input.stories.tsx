@@ -12,7 +12,7 @@ const meta = {
   tags: ['autodocs'],
   args: {
     label: 'Label',
-    value: '',
+    value: 'Value',
     placeholder: '',
     name: '',
   },

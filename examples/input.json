@@ -6,7 +6,7 @@
   "group": "form",
   "fields": [
     { "name": "label", "type": "text", "default": "Label" },
-    { "name": "value", "type": "text", "default": "" },
+    { "name": "value", "type": "text", "default": "Value" },
     { "name": "placeholder", "type": "text", "default": "" },
     { "name": "name", "type": "text", "default": "" }
   ],

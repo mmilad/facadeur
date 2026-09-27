@@ -15,7 +15,7 @@ export interface InputProps {
 
 export function Input({
   label = 'Label',
-  value = '',
+  value = 'Value',
   placeholder = '',
   name = '',
   nodeId,
