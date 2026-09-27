@@ -54,6 +54,9 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   let selectedViewportId: string | null = null;
   const viewportChromeStore = new Map<string, ViewportChromeSettings>();
   let editTarget: StyleEditMode = 'base';
+  // This is deliberately session state. Variant overlays remain sparse data in the document;
+  // selecting one only changes the editing context until a later command writes an override.
+  let activeVariantName: string | null = null;
   let notice: EditorNotice | null = null;
   let zoomLabel = '100%';
   let tool: EditorTool = 'select';
@@ -134,10 +137,11 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   }
 
   function build(): EditorSnapshot {
+    const document = openFlat();
     return buildEditorSnapshot({
       workspace,
       openId,
-      document: openFlat(),
+      document,
       design: designStore.getDocument(),
       selectedNodeId,
       selectedRenderId,
@@ -145,6 +149,11 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       selectedViewportId,
       viewportChrome: readViewportChromeForOpenDocument(openId, viewportChromeStore),
       editTarget,
+      activeVariantName:
+        activeVariantName &&
+        document.variantPresets?.some((preset) => preset.name === activeVariantName)
+          ? activeVariantName
+          : null,
       notice,
       zoomLabel,
       tool,
@@ -182,6 +191,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
         tool = change.tool;
         drag = change.drag;
         if (change.clearViewport) clearViewportSelection();
+        activeVariantName = null;
         selectedNodeId = change.selectedNodeId;
         selectedRenderId = change.selectedRenderId;
         if (change.selectedNodeId === null) clearSelection();
@@ -293,6 +303,10 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       setEditTarget: (target) => {
         editTarget = target;
       },
+      getActiveVariantName: () => activeVariantName,
+      setActiveVariantName: (name) => {
+        activeVariantName = name;
+      },
       getNotice: () => notice,
       setNotice: (value) => {
         notice = value;
@@ -348,6 +362,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
           openId = file.id;
           workspace = kind;
           lastOpen.set(kind, file.id);
+          activeVariantName = null;
           clearSelection();
           clearViewportSelection();
           tool = 'select';

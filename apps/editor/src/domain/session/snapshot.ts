@@ -26,6 +26,7 @@ export interface SnapshotBuildContext {
   selectedViewportId: string | null;
   viewportChrome: Readonly<Record<string, ViewportChromeSettings>>;
   editTarget: StyleEditMode;
+  activeVariantName: string | null;
   notice: EditorNotice | null;
   zoomLabel: string;
   tool: EditorTool;
@@ -81,6 +82,7 @@ export function buildEditorSnapshot(ctx: SnapshotBuildContext): EditorSnapshot {
     selectedViewportId: ctx.selectedViewportId,
     viewportChrome: ctx.viewportChrome,
     editTarget: ctx.editTarget,
+    activeVariantName: ctx.activeVariantName,
     componentTarget,
     componentFields,
     componentEvents,

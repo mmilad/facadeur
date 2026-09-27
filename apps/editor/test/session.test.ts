@@ -12,6 +12,21 @@ import specimenPage from '../../../examples/specimen-page.json';
 import specimenSection from '../../../examples/specimen-section.json';
 import { createEditorSession } from '../src/domain/session.js';
 
+const variantComponent: DocumentFile = {
+  version: 1,
+  id: 'variant-component',
+  name: 'Variant component',
+  kind: 'component',
+  fields: [{ name: 'label', type: 'text', default: 'Base' }],
+  variants: [{ name: 'default' }, { name: 'compact', overrides: { fields: { label: 'Compact' } } }],
+  root: {
+    id: 'root',
+    type: 'text',
+    tag: 'span',
+    bindings: [{ field: 'label', target: 'text' }],
+  },
+};
+
 const documents = validateCatalog([
   button,
   link,
@@ -21,6 +36,7 @@ const documents = validateCatalog([
   signIn,
   specimenSection,
   specimenPage,
+  variantComponent,
 ]);
 
 function session() {
@@ -52,6 +68,25 @@ describe('editor session', () => {
 
     editor.setWorkspace('page');
     expect(editor.getSnapshot().openId).toBe('specimen');
+  });
+
+  it('tracks the active named variant as session state without changing the source document', () => {
+    const editor = session();
+    editor.openAsset('variant-component', 'root');
+
+    expect(editor.getSnapshot().activeVariantName).toBeNull();
+    expect(editor.getSnapshot().document.fields[0]?.default).toBe('Base');
+
+    editor.setActiveVariant('compact');
+    expect(editor.getSnapshot().activeVariantName).toBe('compact');
+    expect(editor.getSnapshot().document.fields[0]?.default).toBe('Base');
+    expect(editor.getSnapshot().documentDirty).toBe(false);
+
+    editor.setActiveVariant('default');
+    expect(editor.getSnapshot().activeVariantName).toBeNull();
+    editor.setActiveVariant('missing');
+    expect(editor.getSnapshot().activeVariantName).toBeNull();
+    expect(editor.getSnapshot().notice?.text).toMatch(/unknown variant/i);
   });
 
   it('edits the open document through commands and undoes across stores', () => {
@@ -113,11 +148,7 @@ describe('editor session', () => {
     const snap = editor.getSnapshot();
     expect(snap.openId).toBe('badge');
     expect(snap.workspace).toBe('atom');
-    expect(snap.assets.map((asset) => asset.name)).toEqual([
-      'Button',
-      'Link',
-      'Badge',
-    ]);
+    expect(snap.assets.map((asset) => asset.name)).toEqual(['Button', 'Link', 'Badge']);
     expect(editor.filenameFor('specimen')).toBe('specimen-page.json');
     expect(editor.filenameFor('badge')).toBe('badge.json');
   });

@@ -124,6 +124,8 @@ export interface EditorSessionSurfaceDeps {
   viewportChromeStore: Map<string, ViewportChromeSettings>;
   getEditTarget: () => StyleEditMode;
   setEditTarget: (target: StyleEditMode) => void;
+  getActiveVariantName: () => string | null;
+  setActiveVariantName: (name: string | null) => void;
   getNotice: () => EditorNotice | null;
   setNotice: (notice: EditorNotice | null) => void;
   getZoomLabel: () => string;
@@ -174,6 +176,7 @@ export function createEditorSessionSurface(
         onSwitch: (next) => {
           deps.setOpenId(next);
           deps.lastOpen.set(kind, next);
+          deps.setActiveVariantName(null);
           deps.clearSelection();
           deps.clearViewportSelection();
           deps.resetToolAndDrag();
@@ -284,6 +287,20 @@ export function createEditorSessionSurface(
     setEditTarget(target) {
       if (deps.getEditTarget() === target) return;
       deps.setEditTarget(target);
+      deps.publish();
+    },
+    setActiveVariant(name) {
+      const normalized = name === 'default' || name === null ? null : name;
+      if (normalized !== null) {
+        const exists = deps.openFlat().variantPresets?.some((preset) => preset.name === normalized);
+        if (!exists) {
+          deps.setNotice({ tone: 'error', text: `Unknown variant "${normalized}"` });
+          deps.publish();
+          return;
+        }
+      }
+      if (deps.getActiveVariantName() === normalized) return;
+      deps.setActiveVariantName(normalized);
       deps.publish();
     },
     execute: (command) => deps.run(deps.openStore(), command),

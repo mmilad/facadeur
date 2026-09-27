@@ -59,6 +59,8 @@ export interface EditorSnapshot {
   componentEvents: import('@facadeur/core').EventDefinition[];
   /** Default plus named component variants with resolved editor documents. */
   componentVariants: import('../component-contract.js').ComponentVariantContract[];
+  /** Session-only editing context. Null means the document's default variant. */
+  activeVariantName: string | null;
   canUndo: boolean;
   canRedo: boolean;
   notice: EditorNotice | null;
@@ -99,6 +101,8 @@ export interface EditorSession {
   setViewportChrome: (breakpointId: string, patch: Partial<ViewportChromeSettings>) => void;
   /** Base, or a min-width override for the focused viewport. */
   setEditTarget: (target: StyleEditMode) => void;
+  /** Selects a named variant for the current component without changing persisted JSON. */
+  setActiveVariant: (name: string | null) => void;
   setTool: (tool: EditorTool) => void;
   beginDrag: (drag: EditorDrag) => void;
   endDrag: () => void;
