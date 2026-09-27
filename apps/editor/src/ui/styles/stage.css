@@ -115,11 +115,11 @@
 }
 
 .viewport-screen {
-  border-radius: 12px;
   overflow: hidden;
   background: var(--white);
   box-shadow: 0 0 0 calc(1px / var(--stage-scale, 1)) rgba(48, 36, 22, 0.08);
   line-height: 0;
+  padding: 12px;
 }
 
 .viewport-iframe {
