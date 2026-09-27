@@ -154,6 +154,39 @@ describe('applyCommand', () => {
     expect(doc.variants.map((axis) => axis.name)).toEqual(['tone']);
   });
 
+  it('creates, replaces, and removes sparse named variant presets', () => {
+    let doc = component();
+    doc = applyCommand(doc, {
+      type: 'setVariantPreset',
+      preset: {
+        name: 'compact',
+        overrides: { fields: { title: 'Short' }, nodes: { title: { text: 'Short' } } },
+      },
+    });
+    expect(doc.variantPresets).toEqual([
+      {
+        name: 'compact',
+        overrides: { fields: { title: 'Short' }, nodes: { title: { text: 'Short' } } },
+      },
+    ]);
+
+    doc = applyCommand(doc, {
+      type: 'setVariantPreset',
+      preset: {
+        name: 'compact',
+        overrides: { nodes: { title: { displayOn: { path: 'title', truthy: false } } } },
+      },
+    });
+    expect(doc.variantPresets).toHaveLength(1);
+    expect(doc.variantPresets?.[0]?.overrides?.fields).toBeUndefined();
+
+    doc = applyCommand(doc, { type: 'removeVariantPreset', name: 'compact' });
+    expect(doc.variantPresets).toBeUndefined();
+    expect(() => applyCommand(doc, { type: 'removeVariantPreset', name: 'compact' })).toThrow(
+      /not defined/i,
+    );
+  });
+
   it('assigns an id when insert omits one', () => {
     const doc = applyCommand(component(), {
       type: 'insert',

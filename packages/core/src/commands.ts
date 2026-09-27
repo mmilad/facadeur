@@ -25,6 +25,7 @@ import type {
   StyleBlock,
   TokenInterface,
   VariantAxis,
+  VariantPreset,
 } from './schema.js';
 import { isVariantAxis } from './schema.js';
 import {
@@ -49,6 +50,7 @@ import {
   assertFieldDefinition,
   assertLayout,
   assertVariantAxis,
+  assertVariantPreset,
   validateDefinitions,
   validateLibraries,
   validateTree,
@@ -94,6 +96,8 @@ export type Command =
   | { type: 'removeField'; name: string }
   | { type: 'defineVariant'; axis: VariantAxis }
   | { type: 'removeVariant'; name: string }
+  | { type: 'setVariantPreset'; preset: VariantPreset }
+  | { type: 'removeVariantPreset'; name: string }
   | { type: 'setToken'; path: string; token: TokenDefinition }
   | { type: 'removeToken'; path: string }
   | { type: 'setTokenGroup'; path: string; group: TokenGroupDefinition }
@@ -160,6 +164,12 @@ export function applyCommand(
       break;
     case 'removeVariant':
       removeVariant(next, command.name);
+      break;
+    case 'setVariantPreset':
+      setVariantPreset(next, command.preset);
+      break;
+    case 'removeVariantPreset':
+      removeVariantPreset(next, command.name);
       break;
     case 'setToken':
       next.tokens = setTokenInTree(next.tokens, command.path, command.token);
@@ -731,6 +741,27 @@ function isFieldValue(value: unknown): value is FieldValue {
     return Object.values(value).every(isFieldValue);
   }
   return false;
+}
+
+function setVariantPreset(doc: FlatDocument, preset: VariantPreset): void {
+  assertVariantPreset(preset);
+  const next = structuredClone(preset);
+  const presets = doc.variantPresets ? [...doc.variantPresets] : [];
+  const index = presets.findIndex((item) => item.name === next.name);
+  if (index === -1) presets.push(next);
+  else presets[index] = next;
+  doc.variantPresets = presets;
+}
+
+function removeVariantPreset(doc: FlatDocument, name: string): void {
+  const presets = doc.variantPresets ?? [];
+  const index = presets.findIndex((item) => item.name === name);
+  if (index === -1) {
+    throw new DocumentError('unknown-variant', `Variant preset "${name}" is not defined`);
+  }
+  presets.splice(index, 1);
+  if (presets.length) doc.variantPresets = presets;
+  else delete doc.variantPresets;
 }
 
 function isBindingTarget(value: string): value is Binding['target'] {
