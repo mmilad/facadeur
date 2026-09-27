@@ -337,7 +337,12 @@ function expandNode(doc: FlatDocument, id: string, stack: Set<string>): NestedNo
     const shared = sharedToNested(node);
     const children = node.children.map((childId) => expandNode(doc, childId, stack));
     nested = children.length
-      ? { ...shared, type: 'frame', ...(node.repeat ? { repeat: { ...node.repeat } } : {}), children }
+      ? {
+          ...shared,
+          type: 'frame',
+          ...(node.repeat ? { repeat: { ...node.repeat } } : {}),
+          children,
+        }
       : { ...shared, type: 'frame', ...(node.repeat ? { repeat: { ...node.repeat } } : {}) };
   } else if (node.type === 'text') {
     const shared = sharedToNested(node);
@@ -473,6 +478,14 @@ function cloneField(field: FieldDefinition): FieldDefinition {
     ...(field.required !== undefined ? { required: field.required } : {}),
     ...(field.default !== undefined ? { default: field.default } : {}),
     ...(field.options ? { options: [...field.options] } : {}),
+    ...(field.items
+      ? {
+          items: {
+            type: field.items.type,
+            ...(field.items.fields ? { fields: field.items.fields.map(cloneField) } : {}),
+          },
+        }
+      : {}),
   };
 }
 
@@ -505,9 +518,7 @@ function clonePreset(variant: VariantPreset): VariantPreset {
       ? {
           overrides: {
             ...(variant.overrides.fields ? { fields: { ...variant.overrides.fields } } : {}),
-            ...(variant.overrides.nodes
-              ? { nodes: structuredClone(variant.overrides.nodes) }
-              : {}),
+            ...(variant.overrides.nodes ? { nodes: structuredClone(variant.overrides.nodes) } : {}),
             ...(variant.overrides.removed ? { removed: [...variant.overrides.removed] } : {}),
             ...(variant.overrides.insertions
               ? { insertions: structuredClone(variant.overrides.insertions) }

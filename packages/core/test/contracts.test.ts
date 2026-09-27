@@ -55,4 +55,76 @@ describe('component contracts', () => {
     });
     expect(() => validateCatalog([atom, aliases])).not.toThrow();
   });
+
+  it('validates repeat item scopes for conditions and instance field bindings', () => {
+    const form: DocumentFile = {
+      version: 1,
+      id: 'form',
+      name: 'Form',
+      kind: 'component',
+      fields: [
+        {
+          name: 'fields',
+          type: 'array',
+          items: {
+            type: 'object',
+            fields: [
+              { name: 'id', type: 'text', required: true },
+              { name: 'kind', type: 'text', required: true },
+              { name: 'value', type: 'text' },
+            ],
+          },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        tag: 'form',
+        repeat: { path: 'fields', as: 'field', key: 'id' },
+        children: [
+          {
+            id: 'input',
+            type: 'instance',
+            component: 'control',
+            displayOn: { path: 'field.kind', equals: 'input' },
+            fieldBindings: { value: 'field.value' },
+          },
+        ],
+      },
+    };
+
+    expect(() => validateCatalog([form, atom])).not.toThrow();
+  });
+
+  it('rejects unknown data paths and non-array repeat sources', () => {
+    const invalid: DocumentFile = {
+      version: 1,
+      id: 'invalid-data',
+      name: 'Invalid data',
+      kind: 'component',
+      fields: [{ name: 'title', type: 'text' }],
+      root: {
+        id: 'root',
+        type: 'frame',
+        tag: 'div',
+        repeat: { path: 'title' },
+        children: [{ id: 'label', type: 'text', displayOn: { path: 'missing', truthy: true } }],
+      },
+    };
+
+    expect(() => validateCatalog([invalid])).toThrow(/must resolve to an array/);
+    expect(() =>
+      validateCatalog([
+        {
+          ...invalid,
+          root: {
+            id: 'root',
+            type: 'frame',
+            tag: 'div',
+            children: [{ id: 'label', type: 'text', displayOn: { path: 'missing', truthy: true } }],
+          },
+        },
+      ]),
+    ).toThrow(/is not defined/);
+  });
 });

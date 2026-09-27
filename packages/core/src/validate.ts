@@ -211,6 +211,7 @@ export function validateCatalog(files: readonly unknown[]): DocumentFile[] {
       resolveKind: (componentId) => byId.get(componentId)?.kind,
     });
     validateExposedContracts(document, byId);
+    validateDataContracts(flat);
     validateInstanceOverrides(flat, byId);
   }
   return documents;
@@ -238,6 +239,106 @@ function validateExposedContracts(
       );
     }
   }
+}
+
+interface DataScope {
+  fields: ReadonlyMap<string, FieldDefinition>;
+  aliases: ReadonlyMap<string, FieldDefinition>;
+}
+
+function validateDataContracts(doc: FlatDocument): void {
+  const fields = new Map((doc.fields ?? []).map((field) => [field.name, field]));
+  const visit = (id: string, scope: DataScope): void => {
+    const node = doc.nodes[id];
+    if (!node) return;
+
+    if (node.displayOn) {
+      assertDataPath(node.displayOn.path, scope, `displayOn on node "${node.id}"`);
+    }
+
+    if (node.type === 'instance') {
+      for (const [field, path] of Object.entries(node.fieldBindings ?? {})) {
+        assertDataPath(path, scope, `field binding "${field}" on node "${node.id}"`);
+      }
+      return;
+    }
+
+    if (node.type !== 'frame') return;
+    let childScope = scope;
+    if (node.repeat) {
+      const source = assertDataPath(node.repeat.path, scope, `repeat on node "${node.id}"`);
+      if (source.type !== 'array') {
+        throw new DocumentError(
+          'schema',
+          `Repeat path "${node.repeat.path}" on node "${node.id}" must resolve to an array`,
+        );
+      }
+      const item = itemField(source, node.repeat.as ?? 'item');
+      if (node.repeat.key) {
+        if (!item) {
+          throw new DocumentError(
+            'schema',
+            `Repeat key "${node.repeat.key}" on node "${node.id}" needs object items`,
+          );
+        }
+        assertDataPath(node.repeat.key, scopeForObject(item), `repeat key on node "${node.id}"`);
+      }
+      childScope = {
+        fields: scope.fields,
+        aliases: new Map(scope.aliases).set(
+          node.repeat.as ?? 'item',
+          item ?? scalarItemField(node.repeat.as ?? 'item'),
+        ),
+      };
+    }
+    for (const childId of node.children) visit(childId, childScope);
+  };
+
+  visit(doc.rootId, { fields, aliases: new Map() });
+}
+
+function assertDataPath(path: string, scope: DataScope, context: string): FieldDefinition {
+  const field = resolveDataPath(path, scope);
+  if (!field) {
+    throw new DocumentError('unknown-field', `Data path "${path}" in ${context} is not defined`);
+  }
+  return field;
+}
+
+function resolveDataPath(path: string, scope: DataScope): FieldDefinition | undefined {
+  const [head, ...parts] = path.split('.');
+  if (!head) return undefined;
+  let current = scope.aliases.has(head) ? scope.aliases.get(head) : scope.fields.get(head);
+  if (!current) return undefined;
+  for (const part of parts) {
+    const nextField: FieldDefinition | undefined = current.items?.fields?.find(
+      (field) => field.name === part,
+    );
+    if (!nextField) return undefined;
+    current = nextField;
+  }
+  return current;
+}
+
+function itemField(field: FieldDefinition, name: string): FieldDefinition | undefined {
+  const items = field.items;
+  if (!items) return undefined;
+  return {
+    name,
+    type: items.type,
+    ...(items.fields ? { items: { type: items.type, fields: items.fields } } : {}),
+  };
+}
+
+function scalarItemField(name: string): FieldDefinition {
+  return { name, type: 'text' };
+}
+
+function scopeForObject(field: FieldDefinition): DataScope {
+  return {
+    fields: new Map(field.items?.fields?.map((item) => [item.name, item]) ?? []),
+    aliases: new Map(),
+  };
 }
 
 export function assertFieldDefinition(field: FieldDefinition): void {
