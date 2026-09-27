@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { findParent, type FlatDocument, type FlatNode } from '@facadeur/core';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
 import { ComponentFields } from './content/ComponentFields.js';
 import { ComponentVariants } from './content/ComponentVariants.js';
@@ -63,6 +64,7 @@ export function PropertiesPanel({
     : snap.document.kind === 'component'
       ? 'Master · select a layer to edit'
       : `Document · select a layer to edit`;
+  const contextPath = node ? selectionPath(snap.document, node) : [];
 
   return (
     <div className="properties">
@@ -70,6 +72,11 @@ export function PropertiesPanel({
         <span className="inspector-context-kicker">{contextKicker}</span>
         <strong className="inspector-context-title">{contextTitle}</strong>
         <span className="inspector-context-meta">{contextMeta}</span>
+        {contextPath.length > 1 ? (
+          <span className="inspector-context-path" title={contextPath.join(' / ')}>
+            {contextPath.join(' / ')}
+          </span>
+        ) : null}
       </div>
       <div className="tabs property-tabs" role="tablist" aria-label="Properties sections">
         {PROPERTY_PRIMARY_TABS.map(([id, label]) => (
@@ -177,4 +184,31 @@ export function PropertiesPanel({
       ) : null}
     </div>
   );
+}
+
+function selectionPath(doc: FlatDocument, selected: FlatNode): string[] {
+  const path: string[] = [];
+  let current: FlatNode | undefined = selected;
+  const seen = new Set<string>();
+
+  while (current && !seen.has(current.id)) {
+    seen.add(current.id);
+    path.unshift(nodeLabel(current));
+    if (current.id === doc.rootId) break;
+    current = findParent(doc, current.id);
+  }
+
+  if (path[0] === 'root') path[0] = doc.name;
+  else path.unshift(doc.name);
+  return path;
+}
+
+function nodeLabel(node: FlatNode): string {
+  if (node.name) return node.name;
+  if (node.type === 'instance') return node.component;
+  if (node.type === 'text' && node.text?.trim()) {
+    const value = node.text.trim();
+    return value.length > 28 ? `${value.slice(0, 28)}…` : value;
+  }
+  return node.id;
 }

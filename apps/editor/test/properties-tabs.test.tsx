@@ -100,6 +100,27 @@ describe('properties inspector tabs', () => {
     expect(host.querySelector('select[name="tag"]')).toBeInstanceOf(HTMLSelectElement);
   });
 
+  it('shows the document path for a nested selection', async () => {
+    const session: EditorSession = createEditorSession({
+      documents,
+      design: createProjectTemplateDocument(),
+    });
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => {
+      root?.render(<App session={session} />);
+    });
+    await act(async () => {
+      session.openAsset('specimen-section', 'root');
+      session.selectNode('input-row');
+    });
+
+    expect(host.querySelector('.inspector-context-path')?.textContent).toBe(
+      'Specimen section / fields / input-row',
+    );
+  });
+
   it('mounts field definitions on Content and variant axes on Data (Spec C)', async () => {
     const session: EditorSession = createEditorSession({
       documents,
