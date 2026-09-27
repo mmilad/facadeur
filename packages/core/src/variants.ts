@@ -235,6 +235,8 @@ function deriveNodeOverride(
     }
     const override: VariantNodeOverride = {};
     const fields = mapDelta(
+      override,
+      'fields',
       base.fields as Record<string, unknown> | undefined,
       editedInstance.fields as Record<string, unknown> | undefined,
       variantName,
@@ -242,6 +244,8 @@ function deriveNodeOverride(
     );
     if (fields) override.fields = fields as VariantNodeOverride['fields'];
     const variants = mapDelta(
+      override,
+      'variants',
       base.variants as Record<string, unknown> | undefined,
       editedInstance.variants as Record<string, unknown> | undefined,
       variantName,
@@ -249,6 +253,8 @@ function deriveNodeOverride(
     );
     if (variants) override.variants = variants as Record<string, string>;
     const layout = objectDelta(
+      override,
+      'layout',
       base.layout as Record<string, unknown> | undefined,
       editedInstance.layout as Record<string, unknown> | undefined,
       variantName,
@@ -316,6 +322,8 @@ function deriveNodeOverride(
     );
   }
   const attributes = mapDelta(
+    override,
+    'attributes',
     baseElement.attributes as Record<string, unknown> | undefined,
     editedElement.attributes as Record<string, unknown> | undefined,
     variantName,
@@ -323,6 +331,8 @@ function deriveNodeOverride(
   );
   if (attributes) override.attributes = attributes as Record<string, string>;
   const layout = objectDelta(
+    override,
+    'layout',
     baseElement.layout as Record<string, unknown> | undefined,
     editedElement.layout as Record<string, unknown> | undefined,
     variantName,
@@ -346,6 +356,8 @@ function deriveNodeOverride(
     base.id,
   );
   const style = mapDelta(
+    override,
+    'style',
     baseElement.style as Record<string, unknown> | undefined,
     editedElement.style as Record<string, unknown> | undefined,
     variantName,
@@ -373,10 +385,8 @@ function assignScalar<T extends keyof VariantNodeOverride>(
 ): void {
   if (sameValue(base, edited)) return;
   if (edited === undefined) {
-    throw new DocumentError(
-      'schema',
-      `Variant "${variantName}" cannot clear "${String(key)}" on node "${nodeId}"`,
-    );
+    addUnset(target, String(key));
+    return;
   }
   (target as Record<string, unknown>)[key] = structuredClone(edited);
 }
@@ -391,15 +401,15 @@ function assignObject<T extends keyof VariantNodeOverride>(
 ): void {
   if (sameValue(base, edited)) return;
   if (edited === undefined) {
-    throw new DocumentError(
-      'schema',
-      `Variant "${variantName}" cannot clear "${String(key)}" on node "${nodeId}"`,
-    );
+    addUnset(target, String(key));
+    return;
   }
   (target as Record<string, unknown>)[key] = structuredClone(edited);
 }
 
 function objectDelta(
+  target: VariantNodeOverride,
+  property: string,
   base: Record<string, unknown> | undefined,
   edited: Record<string, unknown> | undefined,
   variantName: string,
@@ -407,10 +417,8 @@ function objectDelta(
 ): Record<string, unknown> | undefined {
   if (sameValue(base, edited)) return undefined;
   if (edited === undefined) {
-    throw new DocumentError(
-      'schema',
-      `Variant "${variantName}" cannot clear layout on node "${nodeId}"`,
-    );
+    addUnset(target, property);
+    return undefined;
   }
   const delta: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(edited)) {
@@ -418,16 +426,15 @@ function objectDelta(
   }
   for (const key of Object.keys(base ?? {})) {
     if (edited[key] === undefined) {
-      throw new DocumentError(
-        'schema',
-        `Variant "${variantName}" cannot clear layout.${key} on node "${nodeId}"`,
-      );
+      addUnset(target, `${property}.${key}`);
     }
   }
   return Object.keys(delta).length ? delta : undefined;
 }
 
 function mapDelta(
+  target: VariantNodeOverride,
+  property: string,
   base: Record<string, unknown> | undefined,
   edited: Record<string, unknown> | undefined,
   variantName: string,
@@ -436,10 +443,8 @@ function mapDelta(
   if (sameValue(base, edited)) return undefined;
   if (edited === undefined) {
     if (base === undefined) return undefined;
-    throw new DocumentError(
-      'schema',
-      `Variant "${variantName}" cannot clear a map on node "${nodeId}"`,
-    );
+    addUnset(target, property);
+    return undefined;
   }
   const delta: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(edited)) {
@@ -447,13 +452,16 @@ function mapDelta(
   }
   for (const key of Object.keys(base ?? {})) {
     if (edited[key] === undefined) {
-      throw new DocumentError(
-        'schema',
-        `Variant "${variantName}" cannot clear map key "${key}" on node "${nodeId}"`,
-      );
+      addUnset(target, `${property}.${key}`);
     }
   }
   return Object.keys(delta).length ? delta : undefined;
+}
+
+function addUnset(target: VariantNodeOverride, path: string): void {
+  const unset = new Set(target.unset ?? []);
+  unset.add(path);
+  target.unset = [...unset].sort();
 }
 
 function sameValue(left: unknown, right: unknown): boolean {
@@ -525,6 +533,8 @@ function applyOverride(node: NestedNode, override: VariantNodeOverride): NestedN
   if (next.type === 'instance') {
     if (override.fields) next.fields = { ...(next.fields ?? {}), ...override.fields };
     if (override.variants) next.variants = { ...(next.variants ?? {}), ...override.variants };
+    if (override.displayOn) next.displayOn = structuredClone(override.displayOn);
+    applyUnset(next, override.unset);
     return next;
   }
   if (override.repeat && next.type === 'frame') next.repeat = structuredClone(override.repeat);
@@ -537,5 +547,45 @@ function applyOverride(node: NestedNode, override: VariantNodeOverride): NestedN
   if (override.eventBindings) next.eventBindings = structuredClone(override.eventBindings);
   if (override.style) next.style = { ...(next.style ?? {}), ...override.style };
   if (override.displayOn) next.displayOn = structuredClone(override.displayOn);
+  applyUnset(next, override.unset);
   return next;
+}
+
+function applyUnset(node: NestedNode, paths: readonly string[] | undefined): void {
+  for (const path of paths ?? []) {
+    const [property, key, ...rest] = path.split('.');
+    if (rest.length > 0 || !property) continue;
+    if (property === 'fields' && node.type === 'instance') {
+      if (key) {
+        const fields = { ...(node.fields ?? {}) };
+        delete fields[key];
+        node.fields = Object.keys(fields).length ? fields : undefined;
+      } else node.fields = undefined;
+    } else if (property === 'variants' && node.type === 'instance') {
+      if (key) {
+        const variants = { ...(node.variants ?? {}) };
+        delete variants[key];
+        node.variants = Object.keys(variants).length ? variants : undefined;
+      } else node.variants = undefined;
+    } else if (property === 'attributes' && node.type !== 'instance') {
+      if (key) {
+        const attributes = { ...(node.attributes ?? {}) };
+        delete attributes[key];
+        node.attributes = Object.keys(attributes).length ? attributes : undefined;
+      } else node.attributes = undefined;
+    } else if (property === 'style' && node.type !== 'instance') {
+      if (key) {
+        const style = { ...(node.style ?? {}) };
+        delete style[key];
+        node.style = Object.keys(style).length ? style : undefined;
+      } else node.style = undefined;
+    } else if (property === 'text' && node.type === 'text') delete node.text;
+    else if (property === 'src' && node.type === 'image') delete node.src;
+    else if (property === 'alt' && node.type === 'image') delete node.alt;
+    else if (property === 'repeat' && node.type === 'frame') delete node.repeat;
+    else if (property === 'layout') delete node.layout;
+    else if (property === 'bindings' && node.type !== 'instance') delete node.bindings;
+    else if (property === 'eventBindings' && node.type !== 'instance') delete node.eventBindings;
+    else if (property === 'displayOn') delete node.displayOn;
+  }
 }

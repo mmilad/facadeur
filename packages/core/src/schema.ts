@@ -211,6 +211,12 @@ const nodeTargetSchema = Type.String({
   pattern: '^[A-Za-z][A-Za-z0-9_-]*(\\.[A-Za-z][A-Za-z0-9_-]*)*$',
 });
 
+/** A variant may explicitly clear an optional node property or map entry. */
+const variantUnsetPathSchema = Type.String({
+  minLength: 1,
+  pattern: '^[A-Za-z][A-Za-z0-9_.-]*$',
+});
+
 /** Maps a semantic atom event to a native event on the node. */
 export const eventBindingSchema = Type.Object(
   {
@@ -413,6 +419,7 @@ export const variantNodeOverrideSchema = Type.Object(
     eventBindings: Type.Optional(Type.Array(eventBindingSchema)),
     style: Type.Optional(Type.Record(Type.String({ minLength: 1 }), Type.String())),
     displayOn: Type.Optional(displayOnSchema),
+    unset: Type.Optional(Type.Array(variantUnsetPathSchema, { uniqueItems: true })),
   },
   { additionalProperties: false },
 );

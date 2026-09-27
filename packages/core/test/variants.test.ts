@@ -144,6 +144,49 @@ describe('variant overlays', () => {
     expect(roundTrip.root).toEqual(edited.root);
   });
 
+  it('derives explicit unsets for optional node properties and map entries', () => {
+    const base: DocumentFile = {
+      version: 1,
+      id: 'optional-variant',
+      name: 'Optional variant',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'frame',
+        displayOn: { path: 'visible', truthy: true },
+        style: { color: 'red', padding: '8px' },
+        children: [
+          {
+            id: 'label',
+            type: 'text',
+            text: 'Label',
+            attributes: { title: 'Tooltip', 'data-kind': 'label' },
+            style: { color: 'blue' },
+          },
+        ],
+      },
+    };
+    const edited = structuredClone(base);
+    if (edited.root.type !== 'frame') throw new Error('expected frame');
+    delete edited.root.displayOn;
+    delete edited.root.style?.color;
+    const label = edited.root.children?.[0];
+    if (!label || label.type !== 'text') throw new Error('expected text child');
+    delete label.text;
+    delete label.attributes?.title;
+    delete label.style?.color;
+    if (label.style && Object.keys(label.style).length === 0) delete label.style;
+
+    const derived = deriveVariantPreset(base, edited, 'minimal');
+    expect(derived.overrides?.nodes).toMatchObject({
+      root: { unset: ['displayOn', 'style.color'] },
+      'root.label': { unset: ['attributes.title', 'style', 'text'] },
+    });
+
+    const roundTrip = resolveVariantDocument({ ...base, variants: [derived] }, 'minimal');
+    expect(roundTrip.root).toEqual(edited.root);
+  });
+
   it('rejects unknown targets and root removal during catalog validation', () => {
     const invalid = {
       ...specimen,
@@ -165,5 +208,19 @@ describe('variant overlays', () => {
       variants: [{ name: 'broken', overrides: { removed: ['root'] } }],
     } satisfies DocumentFile;
     expect(() => validateCatalog([removesRoot])).toThrow(/cannot remove the root/);
+  });
+
+  it('rejects conflicting variant set and unset paths', () => {
+    const invalid = {
+      ...specimen,
+      id: 'conflicting-unset',
+      variants: [
+        {
+          name: 'broken',
+          overrides: { nodes: { lede: { text: 'Changed', unset: ['text'] } } },
+        },
+      ],
+    } satisfies DocumentFile;
+    expect(() => validateCatalog([invalid])).toThrow(/set and unset/);
   });
 });

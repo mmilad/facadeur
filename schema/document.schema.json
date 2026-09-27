@@ -1328,6 +1328,15 @@
                                 "type": "boolean"
                               }
                             }
+                          },
+                          "unset": {
+                            "items": {
+                              "minLength": 1,
+                              "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$",
+                              "type": "string"
+                            },
+                            "type": "array",
+                            "uniqueItems": true
                           }
                         }
                       }

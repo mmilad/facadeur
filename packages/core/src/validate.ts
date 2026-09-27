@@ -432,6 +432,7 @@ export function assertVariantPreset(variant: VariantPreset): void {
   const overrides = variant.overrides;
   if (!overrides) return;
   for (const node of Object.values(overrides.nodes ?? {})) {
+    assertVariantUnsetPaths(variant.name, node);
     if (!node.displayOn) continue;
     const hasEquals = node.displayOn.equals !== undefined;
     const hasTruthy = node.displayOn.truthy !== undefined;
@@ -448,6 +449,64 @@ export function assertVariantPreset(variant: VariantPreset): void {
         'schema',
         `Variant "${variant.name}" contains an invalid insertion node`,
       );
+    }
+  }
+}
+
+function assertVariantUnsetPaths(
+  variantName: string,
+  node: NonNullable<NonNullable<VariantPreset['overrides']>['nodes']>[string],
+): void {
+  const mapProperties = new Set(['attributes', 'fields', 'variants', 'style']);
+  const scalarProperties = new Set([
+    'text',
+    'src',
+    'alt',
+    'repeat',
+    'layout',
+    'bindings',
+    'eventBindings',
+    'displayOn',
+  ]);
+  const configured = new Set(Object.keys(node).filter((key) => key !== 'unset'));
+  for (const path of node.unset ?? []) {
+    const [property, key, ...rest] = path.split('.');
+    if (
+      !property ||
+      rest.length > 0 ||
+      (!mapProperties.has(property) && !scalarProperties.has(property))
+    ) {
+      throw new DocumentError(
+        'schema',
+        `Variant "${variantName}" has an invalid unset path "${path}"`,
+      );
+    }
+    if (key && !mapProperties.has(property)) {
+      throw new DocumentError(
+        'schema',
+        `Variant "${variantName}" cannot unset a nested property "${path}"`,
+      );
+    }
+    if (!key && mapProperties.has(property) && configured.has(property)) {
+      throw new DocumentError(
+        'schema',
+        `Variant "${variantName}" cannot set and unset "${property}" together`,
+      );
+    }
+    if (!key && scalarProperties.has(property) && configured.has(property)) {
+      throw new DocumentError(
+        'schema',
+        `Variant "${variantName}" cannot set and unset "${property}" together`,
+      );
+    }
+    if (key && configured.has(property)) {
+      const values = (node as Record<string, unknown>)[property];
+      if (values && typeof values === 'object' && key in (values as object)) {
+        throw new DocumentError(
+          'schema',
+          `Variant "${variantName}" cannot set and unset "${path}" together`,
+        );
+      }
     }
   }
 }
