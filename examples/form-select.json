@@ -25,8 +25,8 @@
       "editor.color.textmuted",
       "editor.gap",
       "editor.padding.x",
-      "editor.padding.y",
       "editor.radius",
+      "input.padding.y",
       "space.0",
       "type.body",
       "type.caption"
@@ -52,7 +52,7 @@
           "display": "flex",
           "font": "{type.body}",
           "justifyContent": "space-between",
-          "paddingBlock": "{editor.padding.y}",
+          "paddingBlock": "{input.padding.y}",
           "paddingInline": "{editor.padding.x}"
         },
         "variants": {

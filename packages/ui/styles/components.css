@@ -632,7 +632,7 @@
   font-weight: var(--type-body--font-weight);
   line-height: var(--type-body--line-height);
   letter-spacing: var(--type-body--letter-spacing);
-  padding-block: var(--editor-padding-y);
+  padding-block: var(--input-padding-y);
   padding-inline: var(--editor-padding-x);
 }
 
