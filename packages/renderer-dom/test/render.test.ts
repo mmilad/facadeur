@@ -259,4 +259,48 @@ describe('renderer', () => {
     expect(root?.getAttribute('data-variant-tone')).toBe('primary');
     expect(root?.getAttribute('data-variant-size')).toBe('md');
   });
+
+  it('repeats children from an object array and evaluates display conditions', () => {
+    const form: DocumentFile = {
+      version: 1,
+      id: 'data-form',
+      name: 'Data form',
+      kind: 'component',
+      fields: [
+        {
+          name: 'fields',
+          type: 'array',
+          default: [
+            { id: 'email', kind: 'input' },
+            { id: 'message', kind: 'textarea' },
+          ],
+          items: {
+            type: 'object',
+            fields: [
+              { name: 'id', type: 'text', required: true },
+              { name: 'kind', type: 'enum', options: ['input', 'textarea'], required: true },
+            ],
+          },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        repeat: { path: 'fields', as: 'field', key: 'id' },
+        children: [
+          { id: 'input', type: 'text', tag: 'span', text: 'Input', displayOn: { path: 'field.kind', equals: 'input' } },
+          { id: 'textarea', type: 'text', tag: 'span', text: 'Textarea', displayOn: { path: 'field.kind', equals: 'textarea' } },
+        ],
+      },
+    };
+    expect(() => validateCatalog([form])).not.toThrow();
+    const host = document.createElement('div');
+    const records = renderDocument(form, [form], host, { paintRoot: true });
+    expect(host.querySelectorAll('[data-node="input"]')).toHaveLength(1);
+    expect(host.querySelectorAll('[data-node="textarea"]')).toHaveLength(1);
+    expect(host.querySelector('[data-id="root/email/input"]')?.textContent).toBe('Input');
+    expect(host.querySelector('[data-id="root/message/textarea"]')?.textContent).toBe('Textarea');
+    expect(records.has('root/email/input')).toBe(true);
+    expect(records.has('root/email/textarea')).toBe(false);
+  });
 });

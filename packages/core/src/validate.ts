@@ -228,6 +228,15 @@ export function assertFieldDefinition(field: FieldDefinition): void {
   } else if (field.options) {
     throw new DocumentError('schema', `Only enum fields can have options ("${field.name}")`);
   }
+  if (field.items && field.type !== 'array' && field.type !== 'object') {
+    throw new DocumentError('schema', `Only array and object fields can define items ("${field.name}")`);
+  }
+  if ((field.type === 'array' || field.type === 'object') && field.items) {
+    if (field.type === 'array' && field.items.type === 'object' && !field.items.fields?.length) {
+      throw new DocumentError('schema', `Object array field "${field.name}" needs item fields`);
+    }
+    for (const item of field.items.fields ?? []) assertFieldDefinition(item);
+  }
   if (field.default !== undefined) {
     assertValueMatches(field, field.default);
   }
@@ -321,6 +330,31 @@ export function assertValueMatches(field: FieldDefinition, value: FieldValue): v
     case 'enum':
       if (typeof value !== 'string' || !field.options?.includes(value)) {
         throw new DocumentError('schema', `${label} must be one of ${field.options?.join(', ')}`);
+      }
+      return;
+    case 'array':
+      if (!Array.isArray(value)) throw new DocumentError('schema', `${label} expects an array`);
+      if (field.items?.type === 'object') {
+        for (const item of value) {
+          if (!isRecord(item)) throw new DocumentError('schema', `${label} expects object items`);
+          for (const definition of field.items.fields ?? []) {
+            const nested = item[definition.name];
+            if (nested !== undefined) assertValueMatches(definition, nested);
+            else if (definition.required) {
+              throw new DocumentError('schema', `${label} item is missing "${definition.name}"`);
+            }
+          }
+        }
+      }
+      return;
+    case 'object':
+      if (!isRecord(value)) throw new DocumentError('schema', `${label} expects an object`);
+      for (const definition of field.items?.fields ?? []) {
+        const nested = value[definition.name];
+        if (nested !== undefined) assertValueMatches(definition, nested);
+        else if (definition.required) {
+          throw new DocumentError('schema', `${label} is missing "${definition.name}"`);
+        }
       }
       return;
     default:
@@ -422,6 +456,10 @@ function findNestedNode(node: NestedNode, id: string | undefined): NestedNode | 
     if (found) return found;
   }
   return undefined;
+}
+
+function isRecord(value: unknown): value is Record<string, FieldValue> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function assertNodeData(node: FlatNode): void {

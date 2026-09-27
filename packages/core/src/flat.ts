@@ -18,6 +18,7 @@ import type {
   TokenInterface,
   VariantAxis,
   VariantPreset,
+  Repeat,
 } from './schema.js';
 import { isVariantAxis, isVariantPreset } from './schema.js';
 import { canonicalizeStyleBlock, canonicalizeTokenInterface } from './style-block.js';
@@ -37,6 +38,7 @@ export interface FlatNodeBase {
 
 export interface FrameNode extends FlatNodeBase {
   type: 'frame';
+  repeat?: Repeat;
   children: string[];
 }
 
@@ -56,6 +58,7 @@ export interface InstanceNode {
   id: string;
   type: 'instance';
   name?: string;
+  displayOn?: DisplayOn;
   layout?: Layout;
   component: string;
   fields?: Record<string, FieldValue>;
@@ -207,7 +210,12 @@ export function flattenSubtree(
   seen.add(node.id);
   if (node.type === 'frame') {
     const children = (node.children ?? []).map((child) => flattenSubtree(child, nodes, seen));
-    nodes[node.id] = makeFlatNode({ ...sharedFromNested(node), type: 'frame', children });
+    nodes[node.id] = makeFlatNode({
+      ...sharedFromNested(node),
+      type: 'frame',
+      ...(node.repeat ? { repeat: { ...node.repeat } } : {}),
+      children,
+    });
     return node.id;
   }
   if (node.type === 'text') {
@@ -231,6 +239,7 @@ export function flattenSubtree(
     id: node.id,
     type: 'instance',
     ...(node.name !== undefined ? { name: node.name } : {}),
+    ...(node.displayOn ? { displayOn: { ...node.displayOn } } : {}),
     ...(node.layout ? { layout: node.layout } : {}),
     component: node.component,
     ...(node.fields ? { fields: node.fields } : {}),
@@ -249,6 +258,7 @@ export function makeFlatNode(node: FlatNode): FlatNode {
       id: node.id,
       type: 'instance',
       ...(node.name ? { name: node.name } : {}),
+      ...(node.displayOn ? { displayOn: { ...node.displayOn } } : {}),
       ...(layout ? { layout } : {}),
       component: node.component,
       ...(fields ? { fields } : {}),
@@ -257,7 +267,12 @@ export function makeFlatNode(node: FlatNode): FlatNode {
   }
   const base = sharedFlat(node);
   if (node.type === 'frame') {
-    return { ...base, type: 'frame', children: [...node.children] };
+    return {
+      ...base,
+      type: 'frame',
+      ...(node.repeat ? { repeat: { ...node.repeat } } : {}),
+      children: [...node.children],
+    };
   }
   if (node.type === 'text') {
     return { ...base, type: 'text', ...(node.text !== undefined ? { text: node.text } : {}) };
@@ -319,8 +334,8 @@ function expandNode(doc: FlatDocument, id: string, stack: Set<string>): NestedNo
     const shared = sharedToNested(node);
     const children = node.children.map((childId) => expandNode(doc, childId, stack));
     nested = children.length
-      ? { ...shared, type: 'frame', children }
-      : { ...shared, type: 'frame' };
+      ? { ...shared, type: 'frame', ...(node.repeat ? { repeat: { ...node.repeat } } : {}), children }
+      : { ...shared, type: 'frame', ...(node.repeat ? { repeat: { ...node.repeat } } : {}) };
   } else if (node.type === 'text') {
     const shared = sharedToNested(node);
     nested = { ...shared, type: 'text', ...(node.text !== undefined ? { text: node.text } : {}) };
@@ -337,6 +352,7 @@ function expandNode(doc: FlatDocument, id: string, stack: Set<string>): NestedNo
       id: node.id,
       type: 'instance',
       ...(node.name !== undefined ? { name: node.name } : {}),
+      ...(node.displayOn ? { displayOn: { ...node.displayOn } } : {}),
       ...(node.layout ? { layout: { ...node.layout } } : {}),
       component: node.component,
       ...(node.fields ? { fields: { ...node.fields } } : {}),

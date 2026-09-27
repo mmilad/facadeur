@@ -449,4 +449,40 @@ describe('atom contracts', () => {
     );
     expect(hostSource).toContain("variant='compact'");
   });
+
+  it('generates repeat maps and item display conditions', () => {
+    const component: DocumentFile = {
+      version: 1,
+      id: 'repeat-demo',
+      name: 'Repeat demo',
+      kind: 'component',
+      fields: [
+        {
+          name: 'items',
+          type: 'array',
+          items: {
+            type: 'object',
+            fields: [
+              { name: 'id', type: 'text', required: true },
+              { name: 'kind', type: 'text', required: true },
+            ],
+          },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        tag: 'ul',
+        repeat: { path: 'items', as: 'item', key: 'id' },
+        children: [
+          { id: 'input', type: 'text', tag: 'li', text: 'Input', displayOn: { path: 'item.kind', equals: 'input' } },
+        ],
+      },
+    };
+    const generated = generateReact({ documents: [component] });
+    const sourceText = source(generated.ui, 'components/RepeatDemo.tsx');
+    expect(sourceText).toContain('{items.map((item, itemIndex) => (');
+    expect(sourceText).toContain('key={item?.id}');
+    expect(sourceText).toContain("item?.kind === 'input'");
+  });
 });

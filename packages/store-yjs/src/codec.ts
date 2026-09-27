@@ -22,6 +22,7 @@ import type {
   FontStyle,
   IconDefinition,
   JsonValue,
+  Repeat,
   VariantAxis,
   VariantPreset,
 } from '@facadeur/core';
@@ -225,6 +226,7 @@ function writeField(map: Y.Map<unknown>, field: FieldDefinition): void {
   } else if (map.doc && map.has('options')) {
     map.delete('options');
   }
+  syncJsonMap(map, 'items', field.items as unknown as Record<string, JsonValue> | undefined);
 }
 
 function writeVariant(map: Y.Map<unknown>, axis: VariantAxis): void {
@@ -238,6 +240,7 @@ function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
   syncScalar(map, 'type', node.type);
   if (node.type === 'instance') {
     syncScalar(map, 'name', node.name);
+    syncJsonMap(map, 'displayOn', node.displayOn as Record<string, JsonValue> | undefined);
     syncLayout(map, node.layout);
     syncScalar(map, 'component', node.component);
     syncValueMap(map, 'fields', node.fields);
@@ -253,7 +256,7 @@ function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
       'alt',
       'children',
       'eventBindings',
-      'displayOn',
+      'repeat',
     ]) {
       if (map.has(key)) map.delete(key);
     }
@@ -263,7 +266,7 @@ function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
   syncScalar(map, 'name', node.name);
   syncScalar(map, 'tag', node.tag);
   syncStringMap(map, 'attributes', node.attributes);
-  syncJsonObject(ensureMap(map, 'displayOn'), (node.displayOn ?? {}) as Record<string, JsonValue>);
+  syncJsonMap(map, 'displayOn', node.displayOn as Record<string, JsonValue> | undefined);
   syncLayout(map, node.layout);
   syncBindings(map, node.bindings);
   syncEventBindings(map, node.eventBindings);
@@ -273,14 +276,15 @@ function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
   }
   if (node.type === 'frame') {
     syncChildren(map, node.children);
+    syncJsonObject(ensureMap(map, 'repeat'), (node.repeat ?? {}) as Record<string, JsonValue>);
     deleteKeys(map, ['text', 'src', 'alt']);
   } else if (node.type === 'text') {
     syncScalar(map, 'text', node.text);
-    deleteKeys(map, ['children', 'src', 'alt']);
+    deleteKeys(map, ['children', 'src', 'alt', 'repeat']);
   } else {
     syncScalar(map, 'src', node.src);
     syncScalar(map, 'alt', node.alt);
-    deleteKeys(map, ['children', 'text']);
+    deleteKeys(map, ['children', 'text', 'repeat']);
   }
 }
 
@@ -292,11 +296,13 @@ function readNode(map: Y.Map<unknown>): FlatNode {
   if (type === 'instance') {
     const fields = readValueMap(map.get('fields'));
     const variants = readStringMap(map.get('variants'));
+    const displayOn = readDisplayOn(map.get('displayOn'));
     const expose = readExposeValue(map.get('expose'));
     return makeFlatNode({
       id,
       type: 'instance',
       ...(name !== undefined ? { name } : {}),
+      ...(displayOn ? { displayOn } : {}),
       ...(layout ? { layout } : {}),
       component: stringValue(map.get('component')),
       ...(fields ? { fields } : {}),
@@ -340,9 +346,11 @@ function readNode(map: Y.Map<unknown>): FlatNode {
     });
   }
   const children = map.get('children');
+  const repeat = readRepeat(map.get('repeat'));
   return makeFlatNode({
     ...shared,
     type: 'frame',
+    ...(repeat ? { repeat } : {}),
     children: children instanceof Y.Array ? children.toArray().map(String) : [],
   });
 }
@@ -357,6 +365,9 @@ function readFields(list: Y.Array<Y.Map<unknown>>): FieldDefinition[] {
     if (typeof map.get('required') === 'boolean') field.required = map.get('required') as boolean;
     if (map.has('default')) field.default = map.get('default') as FieldValue;
     if (Array.isArray(options)) field.options = options.map(String);
+    const itemsValue = map.get('items');
+    const items = itemsValue instanceof Y.Map ? readJsonObject(itemsValue) : {};
+    if (Object.keys(items).length) field.items = items as unknown as FieldDefinition['items'];
     return field;
   });
 }
@@ -379,6 +390,11 @@ function readExposeValue(value: unknown): Expose | undefined {
 function readDisplayOn(value: unknown): DisplayOn | undefined {
   if (!(value instanceof Y.Map) || value.size === 0) return undefined;
   return readJsonObject(value) as unknown as DisplayOn;
+}
+
+function readRepeat(value: unknown): Repeat | undefined {
+  const repeat = value instanceof Y.Map ? readJsonObject(value) : {};
+  return Object.keys(repeat).length ? (repeat as unknown as Repeat) : undefined;
 }
 
 function readVariants(list: Y.Array<Y.Map<unknown>>): VariantAxis[] {
@@ -628,9 +644,7 @@ function syncValueMap(
   for (const existing of [...map.keys()]) {
     if (!(existing in value)) map.delete(existing);
   }
-  for (const [name, item] of Object.entries(value)) {
-    if (map.get(name) !== item) map.set(name, item);
-  }
+  syncJsonObject(map, value as unknown as Record<string, JsonValue>);
 }
 
 function readLayout(value: unknown): Layout | undefined {
@@ -649,11 +663,7 @@ function readStringMap(value: unknown): Record<string, string> | undefined {
 
 function readValueMap(value: unknown): Record<string, FieldValue> | undefined {
   if (!(value instanceof Y.Map)) return undefined;
-  const record: Record<string, FieldValue> = {};
-  for (const [key, item] of value.entries()) {
-    if (typeof item === 'string' || typeof item === 'boolean') record[key] = item;
-    else if (typeof item === 'number' && Number.isFinite(item)) record[key] = item;
-  }
+  const record = readJsonObject(value) as unknown as Record<string, FieldValue>;
   return Object.keys(record).length ? record : undefined;
 }
 
@@ -784,6 +794,18 @@ function syncJsonObject(map: Y.Map<unknown>, value: Record<string, JsonValue>): 
   for (const [key, item] of Object.entries(value)) {
     syncJsonValue(map, key, item);
   }
+}
+
+function syncJsonMap(
+  parent: Y.Map<unknown>,
+  key: string,
+  value: Record<string, JsonValue> | undefined,
+): void {
+  if (!value || Object.keys(value).length === 0) {
+    if (parent.has(key)) parent.delete(key);
+    return;
+  }
+  syncJsonObject(ensureMap(parent, key), value);
 }
 
 function syncJsonValue(parent: Y.Map<unknown>, key: string, value: JsonValue): void {

@@ -65,19 +65,24 @@ export function printFile(file: {
 
 export function printElement(element: ElementNode, indent: number): string {
   const pad = '  '.repeat(indent);
-  const attrs = element.attrs.map(printAttr);
+  const attrs = [
+    ...element.attrs,
+    ...(element.repeat ? [{ name: 'key', value: { kind: 'expr' as const, code: element.repeat.key } }] : []),
+  ].map(printAttr);
   const inlineAttrs = attrs.length ? ` ${attrs.join(' ')}` : '';
   if (element.void || element.children.length === 0) {
     const one = `${pad}<${element.tag}${inlineAttrs} />`;
     const rendered = attrs.length <= 3 && one.length <= 100
       ? one
       : `${pad}<${element.tag}\n${attrs.map((attr) => `${pad}  ${attr}`).join('\n')}\n${pad}/>`;
-    return wrapCondition(element.condition, rendered, pad);
+    return wrapRepeat(element.repeat, wrapCondition(element.condition, rendered, pad), pad);
   }
   const only = element.children[0];
   if (element.children.length === 1 && only && 'text' in only && !only.text.includes('\n')) {
     const one = `${pad}<${element.tag}${inlineAttrs}>${only.text}</${element.tag}>`;
-    if (attrs.length <= 2 && one.length <= 100) return wrapCondition(element.condition, one, pad);
+    if (attrs.length <= 2 && one.length <= 100) {
+      return wrapRepeat(element.repeat, wrapCondition(element.condition, one, pad), pad);
+    }
   }
   const open =
     attrs.length === 0
@@ -86,7 +91,24 @@ export function printElement(element: ElementNode, indent: number): string {
   const children = element.children
     .map((child) => ('text' in child ? `${pad}  ${child.text}` : printElement(child, indent + 1)))
     .join('\n');
-  return wrapCondition(element.condition, `${open}\n${children}\n${pad}</${element.tag}>`, pad);
+  return wrapRepeat(
+    element.repeat,
+    wrapCondition(element.condition, `${open}\n${children}\n${pad}</${element.tag}>`, pad),
+    pad,
+  );
+}
+
+function wrapRepeat(
+  repeat: ElementNode['repeat'],
+  body: string,
+  pad: string,
+): string {
+  if (!repeat) return body;
+  const indented = body
+    .split('\n')
+    .map((line) => `${pad}  ${line.slice(pad.length)}`)
+    .join('\n');
+  return `${pad}{${repeat.source}.map((${repeat.item}, ${repeat.index}) => (\n${indented}\n${pad}))}`;
 }
 
 function wrapCondition(condition: string | undefined, body: string, pad: string): string {

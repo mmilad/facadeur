@@ -54,6 +54,7 @@
     "fields": {
       "type": "array",
       "items": {
+        "$id": "T0",
         "additionalProperties": false,
         "type": "object",
         "required": [
@@ -99,6 +100,14 @@
               {
                 "const": "token",
                 "type": "string"
+              },
+              {
+                "const": "array",
+                "type": "string"
+              },
+              {
+                "const": "object",
+                "type": "string"
               }
             ]
           },
@@ -115,6 +124,13 @@
               },
               {
                 "type": "boolean"
+              },
+              {
+                "type": "array"
+              },
+              {
+                "type": "object",
+                "additionalProperties": true
               }
             ]
           },
@@ -124,6 +140,65 @@
             "items": {
               "minLength": 1,
               "type": "string"
+            }
+          },
+          "items": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "anyOf": [
+                  {
+                    "const": "text",
+                    "type": "string"
+                  },
+                  {
+                    "const": "richText",
+                    "type": "string"
+                  },
+                  {
+                    "const": "image",
+                    "type": "string"
+                  },
+                  {
+                    "const": "link",
+                    "type": "string"
+                  },
+                  {
+                    "const": "boolean",
+                    "type": "string"
+                  },
+                  {
+                    "const": "enum",
+                    "type": "string"
+                  },
+                  {
+                    "const": "number",
+                    "type": "string"
+                  },
+                  {
+                    "const": "token",
+                    "type": "string"
+                  },
+                  {
+                    "const": "array",
+                    "type": "string"
+                  },
+                  {
+                    "const": "object",
+                    "type": "string"
+                  }
+                ]
+              },
+              "fields": {
+                "type": "array",
+                "items": {
+                  "$ref": "T0"
+                }
+              }
             }
           }
         }
@@ -178,6 +253,14 @@
                   },
                   {
                     "const": "token",
+                    "type": "string"
+                  },
+                  {
+                    "const": "array",
+                    "type": "string"
+                  },
+                  {
+                    "const": "object",
                     "type": "string"
                   }
                 ]
@@ -273,6 +356,13 @@
                           },
                           {
                             "type": "boolean"
+                          },
+                          {
+                            "type": "array"
+                          },
+                          {
+                            "type": "object",
+                            "additionalProperties": true
                           }
                         ]
                       }
@@ -315,6 +405,13 @@
                                   },
                                   {
                                     "type": "boolean"
+                                  },
+                                  {
+                                    "type": "array"
+                                  },
+                                  {
+                                    "type": "object",
+                                    "additionalProperties": true
                                   }
                                 ]
                               }
@@ -324,6 +421,30 @@
                             "type": "object",
                             "patternProperties": {
                               "^[A-Za-z][A-Za-z0-9_-]*$": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "repeat": {
+                            "additionalProperties": false,
+                            "type": "object",
+                            "required": [
+                              "path"
+                            ],
+                            "properties": {
+                              "path": {
+                                "minLength": 1,
+                                "pattern": "^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$",
+                                "type": "string"
+                              },
+                              "as": {
+                                "minLength": 1,
+                                "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+                                "type": "string"
+                              },
+                              "key": {
+                                "minLength": 1,
+                                "pattern": "^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$",
                                 "type": "string"
                               }
                             }
@@ -1193,6 +1314,13 @@
                                   },
                                   {
                                     "type": "boolean"
+                                  },
+                                  {
+                                    "type": "array"
+                                  },
+                                  {
+                                    "type": "object",
+                                    "additionalProperties": true
                                   }
                                 ]
                               },
@@ -1783,7 +1911,7 @@
       }
     },
     "root": {
-      "$id": "T0",
+      "$id": "T1",
       "anyOf": [
         {
           "additionalProperties": false,
@@ -1836,6 +1964,13 @@
                     },
                     {
                       "type": "boolean"
+                    },
+                    {
+                      "type": "array"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": true
                     }
                   ]
                 },
@@ -2691,10 +2826,34 @@
               "const": "frame",
               "type": "string"
             },
+            "repeat": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "path"
+              ],
+              "properties": {
+                "path": {
+                  "minLength": 1,
+                  "pattern": "^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$",
+                  "type": "string"
+                },
+                "as": {
+                  "minLength": 1,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+                  "type": "string"
+                },
+                "key": {
+                  "minLength": 1,
+                  "pattern": "^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$",
+                  "type": "string"
+                }
+              }
+            },
             "children": {
               "type": "array",
               "items": {
-                "$ref": "T0"
+                "$ref": "T1"
               }
             }
           }
@@ -2750,6 +2909,13 @@
                     },
                     {
                       "type": "boolean"
+                    },
+                    {
+                      "type": "array"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": true
                     }
                   ]
                 },
@@ -3661,6 +3827,13 @@
                     },
                     {
                       "type": "boolean"
+                    },
+                    {
+                      "type": "array"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": true
                     }
                   ]
                 },
@@ -5305,6 +5478,43 @@
                 }
               }
             },
+            "displayOn": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "path"
+              ],
+              "properties": {
+                "path": {
+                  "minLength": 1,
+                  "pattern": "^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$",
+                  "type": "string"
+                },
+                "equals": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "array"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": true
+                    }
+                  ]
+                },
+                "truthy": {
+                  "type": "boolean"
+                }
+              }
+            },
             "type": {
               "const": "instance",
               "type": "string"
@@ -5327,6 +5537,13 @@
                     },
                     {
                       "type": "boolean"
+                    },
+                    {
+                      "type": "array"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": true
                     }
                   ]
                 }

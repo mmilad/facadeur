@@ -725,7 +725,12 @@ function requireBindings(value: unknown): Binding[] {
 
 function isFieldValue(value: unknown): value is FieldValue {
   if (typeof value === 'string' || typeof value === 'boolean') return true;
-  return typeof value === 'number' && Number.isFinite(value);
+  if (typeof value === 'number') return Number.isFinite(value);
+  if (Array.isArray(value)) return value.every(isFieldValue);
+  if (typeof value === 'object' && value !== null) {
+    return Object.values(value).every(isFieldValue);
+  }
+  return false;
 }
 
 function isBindingTarget(value: string): value is Binding['target'] {

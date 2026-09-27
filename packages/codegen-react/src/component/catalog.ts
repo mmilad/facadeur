@@ -201,7 +201,11 @@ export function assertDefault(documentId: string, field: FieldDefinition, value:
       ? typeof value === 'boolean'
       : field.type === 'number'
         ? typeof value === 'number' && Number.isFinite(value)
-        : typeof value === 'string';
+        : field.type === 'array'
+          ? Array.isArray(value)
+          : field.type === 'object'
+            ? typeof value === 'object' && value !== null && !Array.isArray(value)
+            : typeof value === 'string';
   if (!matches) {
     throw new CodegenError(
       `Field "${field.name}" on "${documentId}" has a default that is not a ${field.type}`,
@@ -222,6 +226,31 @@ function fieldTypeName(field: FieldDefinition): string {
     if (!options.length) return 'string';
     return options.map((option) => quote(option)).join(' | ');
   }
+  if (field.type === 'array') {
+    return `${field.items ? fieldItemTypeName(field.items) : 'unknown'}[]`;
+  }
+  if (field.type === 'object') return field.items ? fieldObjectTypeName(field.items) : 'Record<string, unknown>';
+  return 'string';
+}
+
+function fieldItemTypeName(items: NonNullable<FieldDefinition['items']>): string {
+  if (items.type === 'object') return fieldObjectTypeName(items);
+  if (items.type === 'array') return items.fields ? 'unknown[]' : 'unknown[]';
+  return primitiveTypeName(items.type);
+}
+
+function fieldObjectTypeName(items: NonNullable<FieldDefinition['items']>): string {
+  const fields = items.fields ?? [];
+  if (!fields.length) return 'Record<string, unknown>';
+  return `{ ${fields.map((field) => `${quote(field.name)}${field.required ? '' : '?'}: ${fieldTypeName(field)}`).join('; ')} }`;
+}
+
+function primitiveTypeName(type: FieldDefinition['type']): string {
+  if (type === 'boolean') return 'boolean';
+  if (type === 'number') return 'number';
+  if (type === 'enum') return 'string';
+  if (type === 'array') return 'unknown[]';
+  if (type === 'object') return 'Record<string, unknown>';
   return 'string';
 }
 
@@ -229,5 +258,6 @@ function fieldTypeName(field: FieldDefinition): string {
 export function jsLiteral(value: FieldValue): string {
   if (typeof value === 'string') return quote(value);
   if (typeof value === 'number') return Object.is(value, -0) ? '-0' : String(value);
-  return value ? 'true' : 'false';
+  if (typeof value === 'boolean') return value ? 'true' : 'false';
+  return JSON.stringify(value);
 }

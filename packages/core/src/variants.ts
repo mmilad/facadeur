@@ -88,6 +88,7 @@ function applyOverride(node: NestedNode, override: VariantNodeOverride): NestedN
     if (override.variants) next.variants = { ...(next.variants ?? {}), ...override.variants };
     return next;
   }
+  if (override.repeat && next.type === 'frame') next.repeat = structuredClone(override.repeat);
   if (override.text !== undefined && next.type === 'text') next.text = override.text;
   if (override.src !== undefined && next.type === 'image') next.src = override.src;
   if (override.alt !== undefined && next.type === 'image') next.alt = override.alt;

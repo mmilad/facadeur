@@ -60,6 +60,12 @@ export interface ElementNode {
   children: Array<ElementNode | TextChild>;
   void: boolean;
   condition?: string;
+  repeat?: {
+    source: string;
+    item: string;
+    index: string;
+    key: string;
+  };
 }
 
 export interface Expr {

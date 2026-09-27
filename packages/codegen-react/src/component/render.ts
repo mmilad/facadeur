@@ -2,6 +2,7 @@ import {
   isVariantAxis,
   variantPresets,
   type DocumentFile,
+  type DisplayOn,
   type FieldValue,
   type NestedNode,
 } from '@facadeur/core';
@@ -36,9 +37,10 @@ export function renderNode(
   imports: Map<string, ComponentImport>,
   usedProps: Set<string>,
   markStyle: () => void,
+  dataScope: ReadonlyMap<string, string> = new Map(),
 ): ElementNode {
   if (node.type === 'instance') {
-    return renderInstance(node, catalog, imports, owner, usedProps);
+    return renderInstance(node, catalog, imports, owner, usedProps, dataScope);
   }
   const tag = node.tag ?? (node.type === 'text' ? 'span' : node.type === 'image' ? 'img' : 'div');
   const children = node.type === 'frame' ? (node.children ?? []) : [];
@@ -100,12 +102,34 @@ export function renderNode(
   if (bound.hidden) attrs.push({ name: 'hidden', value: { kind: 'expr', code: bound.hidden } });
 
   const childNodes: Array<ElementNode | TextChild> = [];
+  let childScope = dataScope;
+  let repeat: ElementNode['repeat'];
+  if (node.type === 'frame' && node.repeat) {
+    const source = dataExpression(node.repeat.path, owner, dataScope, usedProps);
+    const item = node.repeat.as ?? 'item';
+    const index = `${item}Index`;
+    childScope = new Map(dataScope).set(item, item);
+    const key = node.repeat.key
+      ? dataExpression(`${item}.${node.repeat.key}`, owner, childScope, usedProps)
+      : index;
+    repeat = { source, item, index, key };
+  }
   const text = textChild(node, bound);
   if (text && !isVoidTag(tag)) childNodes.push({ text });
   if (!isVoidTag(tag)) {
     for (const child of children) {
       childNodes.push(
-        renderNode(document, child, catalog, owner, false, imports, usedProps, markStyle),
+        renderNode(
+          document,
+          child,
+          catalog,
+          owner,
+          false,
+          imports,
+          usedProps,
+          markStyle,
+          childScope,
+        ),
       );
     }
   }
@@ -115,23 +139,42 @@ export function renderNode(
     attrs,
     children: childNodes,
     void: isVoidTag(tag),
-    ...(node.displayOn ? { condition: conditionForNode(node.displayOn, owner) } : {}),
+    ...(node.displayOn
+      ? { condition: conditionForNode(node.displayOn, owner, dataScope) }
+      : {}),
+    ...(repeat ? { repeat } : {}),
   };
 }
 
 function conditionForNode(
-  condition: NonNullable<Exclude<NestedNode, { type: 'instance' }>['displayOn']>,
+  condition: DisplayOn,
   owner: CatalogEntry,
+  dataScope: ReadonlyMap<string, string>,
 ): string {
-  const prop = owner.fields.get(condition.path);
+  const value = dataExpression(condition.path, owner, dataScope, new Set());
+  if (condition.truthy !== undefined) return condition.truthy ? value : `!${value}`;
+  if (condition.equals !== undefined) return `${value} === ${jsLiteral(condition.equals)}`;
+  throw new CodegenError(`Display condition "${condition.path}" is missing a predicate`);
+}
+
+function dataExpression(
+  path: string,
+  owner: CatalogEntry,
+  dataScope: ReadonlyMap<string, string>,
+  usedProps: Set<string>,
+): string {
+  const [head, ...tail] = path.split('.');
+  if (!head) throw new CodegenError(`Data path "${path}" is empty`);
+  const scoped = dataScope.get(head);
+  if (scoped) return `${scoped}${tail.map((part) => `?.${part}`).join('')}`;
+  const prop = owner.fields.get(head);
   if (!prop) {
     throw new CodegenError(
-      `Display condition "${condition.path}" needs a repeat/data context that is not available on "${owner.document.id}"`,
+      `Data path "${path}" needs a field or repeat context on "${owner.document.id}"`,
     );
   }
-  if (condition.truthy !== undefined) return condition.truthy ? prop.name : `!${prop.name}`;
-  if (condition.equals !== undefined) return `${prop.name} === ${jsLiteral(condition.equals)}`;
-  throw new CodegenError(`Display condition "${condition.path}" is missing a predicate`);
+  usedProps.add(prop.name);
+  return `${prop.name}${tail.map((part) => `?.${part}`).join('')}`;
 }
 
 function renderInstance(
@@ -140,6 +183,7 @@ function renderInstance(
   imports: Map<string, ComponentImport>,
   owner: CatalogEntry,
   usedProps: Set<string>,
+  dataScope: ReadonlyMap<string, string>,
 ): ElementNode {
   const target = catalog.get(node.component);
   if (!target) {
@@ -229,7 +273,15 @@ function renderInstance(
       );
     }
   }
-  return { tag: target.component, attrs, children: [], void: true };
+  return {
+    tag: target.component,
+    attrs,
+    children: [],
+    void: true,
+    ...(node.displayOn
+      ? { condition: conditionForNode(node.displayOn, owner, dataScope) }
+      : {}),
+  };
 }
 
 function exposedMemberName(

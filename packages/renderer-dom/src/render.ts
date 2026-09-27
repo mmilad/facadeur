@@ -3,12 +3,13 @@ import type {
   DocumentChange,
   DocumentFile,
   DocumentStore,
+  DisplayOn,
   FieldDefinition,
   FieldValue,
   NestedNode,
   VariantAxis,
 } from '@facadeur/core';
-import { toNested } from '@facadeur/core';
+import { isVariantAxis, toNested } from '@facadeur/core';
 
 export interface RenderedNode {
   id: string;
@@ -205,7 +206,7 @@ function paintCanvas(
     const root = parent.firstElementChild;
     if (isHtmlElement(root) && root.dataset.id === document.root.id) {
       root.dataset.component = document.id;
-      syncVariants(root, resolveVariants(document.variants, undefined));
+      syncVariants(root, resolveVariants(document.variants?.filter(isVariantAxis), undefined));
     }
   }
 }
@@ -334,7 +335,7 @@ function paintInstance(
     return;
   }
   const scope = resolveFields(definition.fields, node.fields);
-  const variants = resolveVariants(definition.variants, node.variants);
+  const variants = resolveVariants(definition.variants?.filter(isVariantAxis), node.variants);
   const root = definition.root;
   el.dataset.id = id;
   el.dataset.type = 'instance';
@@ -364,13 +365,15 @@ function paintInstance(
   });
 
   if (root.type === 'frame') {
-    reconcileChildren(el, root.children ?? [], {
+    const childContext = {
       ...ctx,
       path: id,
       scope,
       ownerId: id,
       depth: ctx.depth + 1,
-    });
+    };
+    if (root.repeat) reconcileRepeatedChildren(el, root.children ?? [], childContext, root.repeat);
+    else reconcileChildren(el, root.children ?? [], childContext);
   } else {
     reconcileChildren(el, [], ctx);
   }
@@ -421,7 +424,9 @@ function paintElement(
   if (node.type === 'frame') {
     // The instance element already stands for the component root frame.
     // Every frame under it adds its own segment so data-id stays addressable.
-    reconcileChildren(el, node.children ?? [], { ...ctx, path: id });
+    const childContext = { ...ctx, path: id };
+    if (node.repeat) reconcileRepeatedChildren(el, node.children ?? [], childContext, node.repeat);
+    else reconcileChildren(el, node.children ?? [], childContext);
   } else {
     reconcileChildren(el, [], ctx);
   }
@@ -477,6 +482,15 @@ function reconcileChildren(
   const next: HTMLElement[] = [];
   for (const child of children) {
     const id = joinId(ctx.path, child.id);
+    if (child.displayOn && !matchesDisplay(child.displayOn, ctx.scope)) {
+      const hidden = existing.get(id);
+      if (hidden) {
+        dropRecords(ctx.records, id);
+        hidden.remove();
+        existing.delete(id);
+      }
+      continue;
+    }
     let el = existing.get(id);
     const tag = tagFor(child, ctx);
     if (el && el.tagName.toLowerCase() !== tag) {
@@ -489,6 +503,51 @@ function reconcileChildren(
     paint(el, child, ctx);
     next.push(el);
   }
+  for (const [id, el] of existing) {
+    dropRecords(ctx.records, id);
+    el.remove();
+  }
+  for (const el of next) parent.append(el);
+}
+
+function reconcileRepeatedChildren(
+  parent: HTMLElement,
+  children: readonly NestedNode[],
+  ctx: RenderContext,
+  repeat: NonNullable<Extract<NestedNode, { type: 'frame' }>['repeat']>,
+): void {
+  const source = resolvePath(ctx.scope, repeat.path);
+  const items = Array.isArray(source) ? source : [];
+  const existing = new Map<string, HTMLElement>();
+  for (const child of [...parent.children]) {
+    if (isHtmlElement(child) && child.dataset.id) existing.set(child.dataset.id, child);
+  }
+  const next: HTMLElement[] = [];
+  const itemName = repeat.as ?? 'item';
+  items.forEach((item, index) => {
+    const keyValue = repeat.key ? resolvePath(item, repeat.key) : index;
+    const key = String(keyValue ?? index);
+    const itemContext = {
+      ...ctx,
+      path: joinId(ctx.path, key),
+      scope: { ...ctx.scope, [itemName]: item },
+    };
+    for (const child of children) {
+      const id = joinId(itemContext.path, child.id);
+      if (child.displayOn && !matchesDisplay(child.displayOn, itemContext.scope)) continue;
+      let el = existing.get(id);
+      const tag = tagFor(child, itemContext);
+      if (el && el.tagName.toLowerCase() !== tag) {
+        dropRecords(ctx.records, id);
+        el.remove();
+        el = undefined;
+      }
+      if (!el) el = elementFor(tag, parent.ownerDocument);
+      paint(el, child, itemContext);
+      next.push(el);
+      existing.delete(id);
+    }
+  });
   for (const [id, el] of existing) {
     dropRecords(ctx.records, id);
     el.remove();
@@ -664,6 +723,27 @@ function readAttributes(el: HTMLElement): Record<string, string> {
 
 function joinId(path: string | null, id: string): string {
   return path ? `${path}/${id}` : id;
+}
+
+function matchesDisplay(condition: DisplayOn, scope: Record<string, FieldValue>): boolean {
+  const value = resolvePath(scope, condition.path);
+  if (condition.truthy !== undefined) return condition.truthy ? Boolean(value) : !value;
+  if (condition.equals !== undefined) {
+    return JSON.stringify(value) === JSON.stringify(condition.equals);
+  }
+  return false;
+}
+
+function resolvePath(
+  value: FieldValue | Record<string, FieldValue>,
+  path: string,
+): FieldValue | undefined {
+  let current: FieldValue | undefined = value as FieldValue;
+  for (const segment of path.split('.')) {
+    if (typeof current !== 'object' || current === null || Array.isArray(current)) return undefined;
+    current = current[segment];
+  }
+  return current;
 }
 
 function cssString(value: string): string {

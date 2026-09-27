@@ -10,6 +10,8 @@ export const fieldTypes = [
   'enum',
   'number',
   'token',
+  'array',
+  'object',
 ] as const;
 export type FieldType = (typeof fieldTypes)[number];
 
@@ -21,7 +23,27 @@ const idSchema = Type.String({
   pattern: '^[A-Za-z][A-Za-z0-9_-]*$',
 });
 
-export const fieldValueSchema = Type.Union([Type.String(), Type.Number(), Type.Boolean()]);
+const dataPathSchema = Type.String({
+  minLength: 1,
+  pattern: '^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$',
+});
+
+export type FieldValue =
+  | string
+  | number
+  | boolean
+  | FieldValue[]
+  | { [key: string]: FieldValue };
+
+export const fieldValueSchema = Type.Unsafe<FieldValue>({
+  anyOf: [
+    { type: 'string' },
+    { type: 'number' },
+    { type: 'boolean' },
+    { type: 'array' },
+    { type: 'object', additionalProperties: true },
+  ],
+});
 
 export const fieldTypeSchema = Type.Union([
   Type.Literal('text'),
@@ -32,6 +54,8 @@ export const fieldTypeSchema = Type.Union([
   Type.Literal('enum'),
   Type.Literal('number'),
   Type.Literal('token'),
+  Type.Literal('array'),
+  Type.Literal('object'),
 ]);
 
 export const bindingTargetSchema = Type.Union([
@@ -139,15 +163,26 @@ export const breakpointSchema = Type.Object(
   { additionalProperties: false },
 );
 
-export const fieldDefinitionSchema = Type.Object(
-  {
-    name: idSchema,
-    type: fieldTypeSchema,
-    required: Type.Optional(Type.Boolean()),
-    default: Type.Optional(fieldValueSchema),
-    options: Type.Optional(Type.Array(Type.String({ minLength: 1 }), { minItems: 1 })),
-  },
-  { additionalProperties: false },
+export const fieldDefinitionSchema = Type.Recursive((Self) =>
+  Type.Object(
+    {
+      name: idSchema,
+      type: fieldTypeSchema,
+      required: Type.Optional(Type.Boolean()),
+      default: Type.Optional(fieldValueSchema),
+      options: Type.Optional(Type.Array(Type.String({ minLength: 1 }), { minItems: 1 })),
+      items: Type.Optional(
+        Type.Object(
+          {
+            type: fieldTypeSchema,
+            fields: Type.Optional(Type.Array(Self)),
+          },
+          { additionalProperties: false },
+        ),
+      ),
+    },
+    { additionalProperties: false },
+  ),
 );
 
 /** A semantic event exposed by an atom or component. Payload keys use field types. */
@@ -344,16 +379,20 @@ export const bindingSchema = Type.Object(
   { additionalProperties: false },
 );
 
-const dataPathSchema = Type.String({
-  minLength: 1,
-  pattern: '^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$',
-});
-
 export const displayOnSchema = Type.Object(
   {
     path: dataPathSchema,
     equals: Type.Optional(fieldValueSchema),
     truthy: Type.Optional(Type.Boolean()),
+  },
+  { additionalProperties: false },
+);
+
+export const repeatSchema = Type.Object(
+  {
+    path: dataPathSchema,
+    as: Type.Optional(idSchema),
+    key: Type.Optional(dataPathSchema),
   },
   { additionalProperties: false },
 );
@@ -366,6 +405,7 @@ export const variantNodeOverrideSchema = Type.Object(
     attributes: Type.Optional(Type.Record(Type.String({ minLength: 1 }), Type.String())),
     fields: Type.Optional(Type.Record(idSchema, fieldValueSchema)),
     variants: Type.Optional(Type.Record(idSchema, Type.String())),
+    repeat: Type.Optional(repeatSchema),
     layout: Type.Optional(layoutSchema),
     bindings: Type.Optional(Type.Array(bindingSchema)),
     eventBindings: Type.Optional(Type.Array(eventBindingSchema)),
@@ -422,6 +462,7 @@ export const nestedNodeSchema = Type.Recursive((Self) =>
       {
         ...sharedNodeProps,
         type: Type.Literal('frame'),
+        repeat: Type.Optional(repeatSchema),
         children: Type.Optional(Type.Array(Self)),
       },
       { additionalProperties: false },
@@ -448,6 +489,7 @@ export const nestedNodeSchema = Type.Recursive((Self) =>
         id: idSchema,
         name: Type.Optional(Type.String({ minLength: 1 })),
         layout: Type.Optional(layoutSchema),
+        displayOn: Type.Optional(displayOnSchema),
         type: Type.Literal('instance'),
         component: idSchema,
         fields: Type.Optional(Type.Record(idSchema, fieldValueSchema)),
@@ -583,7 +625,6 @@ export function createDocumentSchema(options: DocumentSchemaOptions = {}) {
   );
 }
 
-export type FieldValue = Static<typeof fieldValueSchema>;
 export type FieldDefinition = Static<typeof fieldDefinitionSchema>;
 export type EventDefinition = Static<typeof eventDefinitionSchema>;
 export type EventBinding = Static<typeof eventBindingSchema>;
@@ -591,6 +632,7 @@ export type Expose = Static<typeof exposeSchema>;
 export type ExposePath = Static<typeof exposePathSchema>;
 export type VariantAxis = Static<typeof variantAxisSchema>;
 export type DisplayOn = Static<typeof displayOnSchema>;
+export type Repeat = Static<typeof repeatSchema>;
 export type VariantNodeOverride = Static<typeof variantNodeOverrideSchema>;
 export type VariantInsertion = Static<typeof variantInsertionSchema>;
 export type VariantOverrides = Static<typeof variantOverridesSchema>;

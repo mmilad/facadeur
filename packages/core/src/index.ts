@@ -60,6 +60,7 @@ export {
   type DocumentSchemaOptions,
   type DocumentSettings,
   type DisplayOn,
+  type Repeat,
   type EventDefinition,
   type EventBinding,
   type Expose,
