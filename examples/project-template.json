@@ -358,10 +358,10 @@
       "color": {
         "$type": "color",
         "bg": {
-          "$value": "{color.bg.muted}"
+          "$value": "{color.bg.canvas}"
         },
         "border": {
-          "$value": "{color.neutral.400}"
+          "$value": "{color.neutral.600}"
         },
         "text": {
           "$value": "{color.text.primary}"

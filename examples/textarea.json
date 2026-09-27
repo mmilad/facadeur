@@ -17,8 +17,8 @@
       "color.accent.default",
       "color.text.secondary",
       "font.weight.medium",
-      "input.color.bg",
-      "input.color.border",
+      "color.bg.muted",
+      "color.neutral.400",
       "input.color.text",
       "input.padding.x",
       "input.padding.y",
@@ -41,8 +41,8 @@
       "control": {
         "declarations": {
           "appearance": "none",
-          "background": "{input.color.bg}",
-          "border": "1px solid {input.color.border}",
+          "background": "{color.bg.muted}",
+          "border": "1px solid {color.neutral.400}",
           "borderRadius": "{input.radius}",
           "boxSizing": "border-box",
           "color": "{input.color.text}",

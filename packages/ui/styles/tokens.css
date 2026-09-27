@@ -54,8 +54,8 @@
   --font-weight-medium: 500;
   --font-weight-regular: 400;
   --font-weight-semibold: 600;
-  --input-color-bg: var(--color-bg-muted);
-  --input-color-border: var(--color-neutral-400);
+  --input-color-bg: var(--color-bg-canvas);
+  --input-color-border: var(--color-neutral-600);
   --input-color-text: var(--color-text-primary);
   --input-padding-x: var(--space-3);
   --input-padding-y: var(--space-1);

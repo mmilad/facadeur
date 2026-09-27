@@ -188,6 +188,12 @@ describe('project template', () => {
     expect(design.properties.find((property) => property.name === '--card-shadow')?.value).toBe(
       'var(--shadow-md)',
     );
+    expect(design.properties.find((property) => property.name === '--input-color-bg')?.value).toBe(
+      'var(--color-bg-canvas)',
+    );
+    expect(
+      design.properties.find((property) => property.name === '--input-color-border')?.value,
+    ).toBe('var(--color-neutral-600)');
     expect(css).toContain('--type-body--font-size: 16px;');
     expect(css).toContain('--type-body--font-size: 17px;');
     expect(css).toContain('--type-body--font-size: 18px;');
