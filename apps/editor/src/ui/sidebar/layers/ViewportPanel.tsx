@@ -63,15 +63,16 @@ export function ViewportOptionsPanel({
   const canRemove = breakpoints.length > 1;
   return (
     <div className="viewport-options stack">
+      <div className="inspector-context viewport-context" data-testid="viewport-context">
+        <span className="inspector-context-kicker">Viewport</span>
+        <strong className="inspector-context-title">{chrome.title}</strong>
+        <span className="inspector-context-meta">
+          {breakpoint.id} · {breakpoint.minWidth}px · selected on stage
+        </span>
+      </div>
       <p className="meta">
         Preview chrome only. These settings do not change the component tree or saved layout.
       </p>
-      <dl className="kv">
-        <dt>Breakpoint</dt>
-        <dd>
-          {breakpoint.id} · {breakpoint.minWidth}px
-        </dd>
-      </dl>
       <TextControl
         label="Title"
         name="viewport-title"

@@ -208,4 +208,28 @@ describe('properties inspector tabs', () => {
       HTMLInputElement,
     );
   });
+
+  it('shows the selected viewport context before its preview settings', async () => {
+    const session: EditorSession = createEditorSession({
+      documents,
+      design: createProjectTemplateDocument(),
+    });
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => {
+      root?.render(<App session={session} />);
+    });
+
+    await act(async () => {
+      host!
+        .querySelector('button[data-breakpoint="tablet"]')
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    const context = host.querySelector('[data-testid="viewport-context"]');
+    expect(context?.querySelector('.inspector-context-kicker')?.textContent).toBe('Viewport');
+    expect(context?.querySelector('.inspector-context-title')?.textContent).toBe('tablet · 768');
+    expect(context?.textContent).toContain('selected on stage');
+  });
 });
