@@ -4,8 +4,8 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { validateCatalog, type DocumentFile } from '@facadeur/core';
-import { renderDocument } from '@facadeur/renderer-dom';
+import { resolveVariantDocument, validateCatalog, type DocumentFile } from '@facadeur/core';
+import { createDomRenderer, renderDocument } from '@facadeur/renderer-dom';
 
 const examplesDir = resolve(process.cwd(), 'examples');
 
@@ -17,6 +17,33 @@ function examples(): DocumentFile[] {
 }
 
 describe('renderer', () => {
+  it('can preview a named mounted variant without changing the source document', () => {
+    const component: DocumentFile = {
+      version: 1,
+      id: 'variant-preview',
+      name: 'Variant preview',
+      kind: 'component',
+      variants: [
+        { name: 'default' },
+        { name: 'compact', overrides: { nodes: { root: { text: 'Compact' } } } },
+      ],
+      root: { id: 'root', type: 'text', tag: 'span', text: 'Base' },
+    };
+    const host = document.createElement('div');
+    const renderer = createDomRenderer({
+      parent: host,
+      catalog: [component],
+      paintRoot: true,
+      resolveMountedDocument: (source) => resolveVariantDocument(source, 'compact'),
+    });
+
+    renderer.mount(component);
+
+    expect(host.querySelector('[data-id="root"]')?.textContent).toBe('Compact');
+    expect(component.root).toMatchObject({ text: 'Base' });
+    renderer.destroy();
+  });
+
   it('expands instances, bindings, and variant data attributes', () => {
     const documents = examples();
     const button = documents.find((document) => document.id === 'button');

@@ -32,6 +32,8 @@ export interface RenderContext {
   depth: number;
   /** Document whose root children are the canvas. Used to resolve instance paths. */
   canvasId: string | null;
+  /** Resolved canvas document for preview-only mounted variants. */
+  canvasDocument: DocumentFile | null;
 }
 
 export interface DocumentStyles {
@@ -78,6 +80,7 @@ export function createRenderContext(documents: readonly DocumentFile[]): RenderC
     ownerId: null,
     depth: 0,
     canvasId: null,
+    canvasDocument: null,
   };
 }
 
@@ -95,6 +98,7 @@ export function renderDocument(
   const ctx = createRenderContext(documents);
   ctx.catalog.set(document.id, document);
   ctx.scope = resolveFields(document.fields, undefined);
+  ctx.canvasDocument = document;
   paintCanvas(parent, document, ctx, options.paintRoot === true);
   return ctx.records;
 }
@@ -113,6 +117,8 @@ export function createDomRenderer(options: {
   parent: HTMLElement;
   catalog: readonly DocumentFile[];
   styles?: DocumentStyles;
+  /** Resolve the mounted document for a preview-only editor context. */
+  resolveMountedDocument?: (document: DocumentFile) => DocumentFile;
   /** When set, the root node is painted. Pages omit this: the root frame is the canvas. */
   paintRoot?: boolean;
 }): DomRenderer {
@@ -125,6 +131,7 @@ export function createDomRenderer(options: {
   const unsubscribers: (() => void)[] = [];
 
   function context(): RenderContext {
+    const mounted = mountedId ? catalog.get(mountedId) : undefined;
     return {
       catalog,
       records,
@@ -133,7 +140,12 @@ export function createDomRenderer(options: {
       ownerId: null,
       depth: 0,
       canvasId: mountedId,
+      canvasDocument: mounted ? mountedDocument(mounted) : null,
     };
+  }
+
+  function mountedDocument(document: DocumentFile): DocumentFile {
+    return options.resolveMountedDocument?.(document) ?? document;
   }
 
   function syncStyles(document: DocumentFile): void {
@@ -147,8 +159,9 @@ export function createDomRenderer(options: {
 
   function paintMounted(): void {
     if (!mountedId) return;
-    const document = catalog.get(mountedId);
-    if (!document) return;
+    const source = catalog.get(mountedId);
+    if (!source) return;
+    const document = mountedDocument(source);
     const ctx = context();
     ctx.scope = resolveFields(document.fields, undefined);
     paintCanvas(parent, document, ctx, paintRoot);
@@ -159,7 +172,7 @@ export function createDomRenderer(options: {
     mount(document) {
       mountedId = document.id;
       catalog.set(document.id, document);
-      for (const entry of catalog.values()) syncStyles(entry);
+      for (const entry of catalog.values()) syncStyles(mountedDocument(entry));
       records.clear();
       paintMounted();
       return records;
@@ -168,7 +181,7 @@ export function createDomRenderer(options: {
       const unsubscribe = store.subscribe((change) => {
         const next = toNested(store.getDocument());
         catalog.set(next.id, next);
-        syncStyles(next);
+        syncStyles(next.id === mountedId ? mountedDocument(next) : next);
         if (isStyleOnly(change)) return;
         if (next.id === mountedId) {
           paintMounted();
@@ -307,7 +320,7 @@ function walkRendered(
 }
 
 function findCanvasChild(ctx: RenderContext, id: string): NestedNode | undefined {
-  const document = ctx.canvasId ? ctx.catalog.get(ctx.canvasId) : undefined;
+  const document = ctx.canvasDocument ?? (ctx.canvasId ? ctx.catalog.get(ctx.canvasId) : undefined);
   const documents = document ? [document] : [...ctx.catalog.values()];
   for (const entry of documents) {
     if (entry.root.type !== 'frame') {

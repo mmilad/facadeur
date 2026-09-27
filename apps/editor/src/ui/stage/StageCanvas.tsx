@@ -51,6 +51,7 @@ export function StageCanvas({
   focusViewportId,
   selectedViewportId,
   chromeRevision,
+  activeVariantName,
   tool,
 }: {
   session: EditorSession;
@@ -61,6 +62,7 @@ export function StageCanvas({
   focusViewportId: string | null;
   selectedViewportId: string | null;
   chromeRevision: number;
+  activeVariantName: string | null;
   tool: EditorTool;
 }) {
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -524,6 +526,7 @@ export function StageCanvas({
         stores: session.boardStores(),
         design: session.designInput(),
         paintRoot: page.kind !== 'page',
+        variantName: activeVariantName,
         onLayout: () => selectionRef.current?.reposition(),
         getChrome: (id) => session.getSnapshot().viewportChrome[id],
       });
@@ -559,7 +562,7 @@ export function StageCanvas({
       if (boardRef.current === board) boardRef.current = null;
       board.destroy();
     };
-  }, [session, openId, generation]);
+  }, [session, openId, generation, activeVariantName]);
 
   useEffect(() => {
     const board = boardRef.current;

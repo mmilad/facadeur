@@ -126,6 +126,7 @@ export function EditorShell({ session }: { session: EditorSession }) {
             focusViewportId={snap.focusViewportId}
             selectedViewportId={snap.selectedViewportId}
             chromeRevision={snap.revision}
+            activeVariantName={snap.activeVariantName}
             tool={snap.tool}
           />
         )}

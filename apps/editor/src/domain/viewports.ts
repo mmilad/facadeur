@@ -4,7 +4,13 @@
  * so one command updates every viewport.
  */
 
-import { toNested, type Breakpoint, type DocumentFile, type DocumentStore } from '@facadeur/core';
+import {
+  resolveVariantDocument,
+  toNested,
+  type Breakpoint,
+  type DocumentFile,
+  type DocumentStore,
+} from '@facadeur/core';
 import { createDomRenderer, type DomRenderer } from '@facadeur/renderer-dom';
 import { createStyleEngine, type StyleEngine } from '@facadeur/style-engine';
 import { activeBreakpoints, type DesignInput } from '@facadeur/tokens';
@@ -31,6 +37,8 @@ export interface ViewportBoard {
   whenFontsReady(): Promise<void>;
   /** Apply session-only chrome without rebuilding frames. */
   applyChrome(getChrome: (breakpointId: string) => ViewportChromeSettings | undefined): void;
+  /** Apply a session-only named variant to the mounted document preview. */
+  setVariant(name: string | null): void;
   destroy(): void;
 }
 
@@ -48,6 +56,8 @@ export function createViewportBoard(options: {
   /** After a height sync or a breakpoint rebuild. */
   onLayout?: () => void;
   getChrome?: (breakpointId: string) => ViewportChromeSettings | undefined;
+  /** Session-only named variant used for the mounted document preview. */
+  variantName?: string | null;
 }): ViewportBoard {
   const parent = options.parent;
   const stores = options.stores;
@@ -63,6 +73,7 @@ export function createViewportBoard(options: {
   let destroyed = false;
   let rebuildQueued = false;
   let getChrome = options.getChrome;
+  let variantName = options.variantName ?? null;
   const unsubscribers: (() => void)[] = [];
 
   function paintChrome(frame: ViewportFrame): void {
@@ -164,6 +175,10 @@ export function createViewportBoard(options: {
         parent: host.contentDocument().body,
         catalog: documents,
         styles,
+        resolveMountedDocument: (document) =>
+          document.id === page.id && variantName
+            ? resolveVariantDocument(document, variantName)
+            : document,
         paintRoot,
       });
       renderer.mount(page);
@@ -234,6 +249,10 @@ export function createViewportBoard(options: {
     applyChrome(nextGetChrome) {
       getChrome = nextGetChrome;
       paintAllChrome();
+    },
+    setVariant(name) {
+      variantName = name;
+      rebuild();
     },
     destroy() {
       if (destroyed) return;
