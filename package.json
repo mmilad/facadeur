@@ -6,11 +6,6 @@
   "engines": {
     "node": ">=22"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
-  },
   "scripts": {
     "dev": "pnpm --filter @facadeur/editor dev",
     "build": "pnpm --filter @facadeur/editor build",

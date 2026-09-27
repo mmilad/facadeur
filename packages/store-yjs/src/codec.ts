@@ -163,6 +163,7 @@ function syncFields(list: Y.Array<Y.Map<unknown>>, fields: FieldDefinition[]): v
   }
   const desired = fields.map((field) => {
     const map = byName.get(field.name) ?? new Y.Map<unknown>();
+    if (!map.doc) list.push([map]);
     writeField(map, field);
     return map;
   });
@@ -177,6 +178,7 @@ function syncEvents(list: Y.Array<Y.Map<unknown>>, events: EventDefinition[]): v
   }
   const desired = events.map((event) => {
     const map = byName.get(event.name) ?? new Y.Map<unknown>();
+    if (!map.doc) list.push([map]);
     syncScalar(map, 'name', event.name);
     if (event.payload) {
       syncJsonObject(ensureMap(map, 'payload'), event.payload as Record<string, JsonValue>);
@@ -195,6 +197,7 @@ function syncVariants(list: Y.Array<Y.Map<unknown>>, axes: VariantAxis[]): void 
   }
   const desired = axes.map((axis) => {
     const map = byName.get(axis.name) ?? new Y.Map<unknown>();
+    if (!map.doc) list.push([map]);
     writeVariant(map, axis);
     return map;
   });

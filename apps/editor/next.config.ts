@@ -10,6 +10,7 @@ const workspaceAlias = (pkg: string, entry = 'index.ts') =>
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  outputFileTracingRoot: repoRoot,
   transpilePackages: [
     '@facadeur/core',
     '@facadeur/renderer-dom',
