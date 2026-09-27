@@ -8,7 +8,10 @@ import {
   parseTypographyFieldValue,
   projectFontRefs,
 } from '../../src/ui/controls/typography/value.js';
-import { styleDeclarationKind } from '../../src/ui/controls/style/declaration-kind.js';
+import {
+  styleDeclarationKind,
+  stylePropertyLabel,
+} from '../../src/ui/controls/style/declaration-kind.js';
 
 describe('typography control value', () => {
   it('detects token references', () => {
@@ -36,6 +39,12 @@ describe('typography control value', () => {
     expect(styleDeclarationKind('letterSpacing')).toBe('typography');
     expect(styleDeclarationKind('borderColor')).toBe('color');
     expect(styleDeclarationKind('textTransform')).toBe('enum');
+  });
+
+  it('turns internal style keys into readable labels', () => {
+    expect(stylePropertyLabel('boxShadow')).toBe('Box shadow');
+    expect(stylePropertyLabel('padding-block')).toBe('Padding block');
+    expect(stylePropertyLabel('')).toBe('');
   });
 
   it('formats and parses typography fields', () => {

@@ -5,7 +5,7 @@ import { ShadowControl } from '../shadow/index.js';
 import { TextControl } from '../fields/index.js';
 import { TypographyStyleControl, type TypographyCatalogs } from '../typography/index.js';
 import { catalogTokenOptions, dimensionTokenOptions } from '../token-options.js';
-import { enumOptionsForProperty, styleDeclarationKind } from './declaration-kind.js';
+import { enumOptionsForProperty, styleDeclarationKind, stylePropertyLabel } from './declaration-kind.js';
 
 export function StyleDeclarationField({
   property,
@@ -33,6 +33,7 @@ export function StyleDeclarationField({
   after?: ReactNode;
 }) {
   const kind = styleDeclarationKind(property);
+  const label = stylePropertyLabel(property);
   const enumOptions = enumOptionsForProperty(property);
 
   let control: ReactNode;
@@ -41,7 +42,7 @@ export function StyleDeclarationField({
       control = (
         <ColorControl
           name={name}
-          label={property}
+          label={label}
           value={value}
           colorTokens={colorTokens}
           onCommit={(next) => onCommit(next ?? '')}
@@ -52,7 +53,7 @@ export function StyleDeclarationField({
       control = (
         <ShadowControl
           name={name}
-          label={property}
+          label={label}
           value={value}
           shadowTokens={shadowTokens}
           onCommit={(next) => onCommit(next ?? '')}
@@ -63,7 +64,7 @@ export function StyleDeclarationField({
       control = (
         <TypographyStyleControl
           name={name}
-          label={property}
+          label={label}
           property={property}
           value={value}
           catalogs={typographyCatalogs}
@@ -73,7 +74,7 @@ export function StyleDeclarationField({
       break;
     case 'typography-token':
       control = (
-        <Field label={property}>
+        <Field label={label}>
           <Combobox
             name={name}
             value={value}
@@ -85,7 +86,7 @@ export function StyleDeclarationField({
       break;
     case 'spacing':
       control = (
-        <Field label={property}>
+        <Field label={label}>
           <Combobox
             name={name}
             value={value}
@@ -98,7 +99,7 @@ export function StyleDeclarationField({
       break;
     case 'enum':
       control = (
-        <Field label={property}>
+        <Field label={label}>
           <Select
             name={name}
             value={value || enumOptions![0]}
@@ -111,7 +112,7 @@ export function StyleDeclarationField({
     default:
       control = (
         <TextControl
-          label={property}
+          label={label}
           name={name}
           value={value}
           placeholder={placeholder}

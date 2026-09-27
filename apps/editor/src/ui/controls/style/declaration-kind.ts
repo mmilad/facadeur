@@ -59,6 +59,18 @@ export function enumOptionsForProperty(property: string): readonly string[] | nu
   return CSS_ENUM_OPTIONS[camel] ?? null;
 }
 
+export function stylePropertyLabel(property: string): string {
+  const trimmed = property.trim();
+  if (!trimmed) return property;
+  const readable = trimmed
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[-_]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+  return readable.charAt(0).toUpperCase() + readable.slice(1);
+}
+
 function toCamel(property: string): string {
   return property.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase());
 }
