@@ -215,6 +215,12 @@ describe('editor shell', () => {
       });
     });
     expect(frame?.contentDocument?.body.textContent).toContain('Go');
+    await act(async () => {
+      const fieldToggle = [...host!.querySelectorAll('button.eu-section__title')].find(
+        (button) => button.textContent === 'label',
+      );
+      fieldToggle?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
     const label = host.querySelector('input[name="default-label"]');
     expect((label as HTMLInputElement).value).toBe('Go');
 

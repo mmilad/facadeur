@@ -116,6 +116,12 @@ describe('properties inspector tabs', () => {
       session.selectNode(null);
     });
 
+    expect(host.querySelector('input[name="new-field-name"]')).toBeNull();
+    await act(async () => {
+      host!
+        .querySelector('button[name="open-add-field"]')
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
     expect(host.querySelector('input[name="new-field-name"]')).toBeInstanceOf(HTMLInputElement);
     expect(host.querySelector('input[name="new-axis-name"]')).toBeNull();
 

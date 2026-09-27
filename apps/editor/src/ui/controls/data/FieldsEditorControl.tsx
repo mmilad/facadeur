@@ -54,7 +54,7 @@ function FieldDefinitionCard({
 }) {
   const types = fieldTypeOptions(field);
   return (
-    <Section title={field.name}>
+    <Section title={field.name} collapsible defaultOpen={false}>
       <Stack gap={8}>
         <Field label="Type">
           <Select
@@ -169,6 +169,7 @@ function AddFieldForm({
   const [rawDefault, setRawDefault] = useState('');
   const [optionsText, setOptionsText] = useState('');
   const [booleanDefault, setBooleanDefault] = useState(false);
+  const [open, setOpen] = useState(false);
 
   function resetDraft() {
     setName('');
@@ -177,8 +178,28 @@ function AddFieldForm({
     setBooleanDefault(false);
   }
 
+  if (!open) {
+    return (
+      <button
+        type="button"
+        className="text-button"
+        name="open-add-field"
+        onClick={() => setOpen(true)}
+      >
+        Add field
+      </button>
+    );
+  }
+
   return (
-    <Section title="Add field">
+    <Section
+      title="Add field"
+      action={
+        <button type="button" className="text-button" onClick={() => setOpen(false)}>
+          Cancel
+        </button>
+      }
+    >
       <Stack gap={8}>
         <Field label="Name">
           <TextInput name="new-field-name" value={name} placeholder="label" onChange={setName} />
@@ -231,6 +252,7 @@ function AddFieldForm({
                 }),
               );
               resetDraft();
+              setOpen(false);
             } catch (error) {
               onInvalid?.(error instanceof Error ? error.message : 'Invalid field');
             }
