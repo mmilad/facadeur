@@ -255,5 +255,8 @@ describe('renderer', () => {
     const root = shown.querySelector('[data-id="root"]');
     expect(root?.tagName).toBe('BUTTON');
     expect(root?.textContent).toBe('Button');
+    expect(root?.getAttribute('data-component')).toBe('button');
+    expect(root?.getAttribute('data-variant-tone')).toBe('primary');
+    expect(root?.getAttribute('data-variant-size')).toBe('md');
   });
 });

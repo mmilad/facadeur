@@ -94,6 +94,27 @@ describe('component style block', () => {
 });
 
 describe('style engine and renderer', () => {
+  it('styles a painted component root through its component selector', () => {
+    const engine = createStyleEngine(document);
+    const host = document.createElement('div');
+    const renderer = createDomRenderer({
+      parent: host,
+      catalog: [formSegmented as DocumentFile],
+      styles: engine,
+      paintRoot: true,
+    });
+
+    renderer.mount(formSegmented as DocumentFile);
+
+    const root = host.querySelector('[data-id="root"]');
+    expect(root?.getAttribute('data-component')).toBe('form-segmented');
+    expect(root?.getAttribute('data-variant-state')).toBe('start');
+    const css = [...engine.controller.sheet.cssRules].map((rule) => rule.cssText).join('\n');
+    expect(css).toContain('[data-component="form-segmented"]');
+    expect(css).not.toContain('[data-id="root"]');
+    engine.destroy();
+  });
+
   it('paints token sets and updates a style rule without replacing the element', () => {
     const engine = createStyleEngine(document);
     engine.setDesign({

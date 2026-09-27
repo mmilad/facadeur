@@ -137,7 +137,8 @@ export function createDomRenderer(options: {
   }
 
   function syncStyles(document: DocumentFile): void {
-    const address = document.id === mountedId ? 'canvas' : 'instance';
+    const mountedAsCanvas = document.id === mountedId && !paintRoot;
+    const address = mountedAsCanvas ? 'canvas' : 'instance';
     options.styles?.setDocument(document, {
       address,
       ...(document.id === mountedId && paintRoot ? { paintRoot: true } : {}),
@@ -200,6 +201,13 @@ function paintCanvas(
     return;
   }
   reconcileChildren(parent, [document.root], ctx);
+  if (paintRoot && (document.kind === 'atom' || document.kind === 'component')) {
+    const root = parent.firstElementChild;
+    if (isHtmlElement(root) && root.dataset.id === document.root.id) {
+      root.dataset.component = document.id;
+      syncVariants(root, resolveVariants(document.variants, undefined));
+    }
+  }
 }
 
 function repaintComponent(parent: HTMLElement, componentId: string, ctx: RenderContext): void {
