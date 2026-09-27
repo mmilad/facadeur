@@ -349,6 +349,29 @@ describe('editor shell', () => {
     expect(view.querySelector('input[name="token-filter"]')).toBeNull();
   });
 
+  it('keeps native text controls in the form component group', async () => {
+    const session: EditorSession = createEditorSession({
+      documents,
+      design: createProjectTemplateDocument(),
+    });
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => {
+      root?.render(<App session={session} />);
+    });
+
+    expect(host.querySelector('[data-group="atom"] [data-asset-id="input"]')).toBeNull();
+    const formGroup = host.querySelector('[data-group="component:form"]');
+    expect(formGroup).toBeInstanceOf(HTMLElement);
+    expect(formGroup?.querySelector('[data-asset-id="input"]')).toBeInstanceOf(
+      HTMLButtonElement,
+    );
+    expect(formGroup?.querySelector('[data-asset-id="textarea"]')).toBeInstanceOf(
+      HTMLButtonElement,
+    );
+  });
+
   it('shows a primary focus cue and writes a viewport style override from the inspector', async () => {
     const session: EditorSession = createEditorSession({
       documents,
