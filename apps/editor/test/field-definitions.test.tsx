@@ -48,4 +48,34 @@ describe('field definition editor', () => {
 
     expect(onDefineField).toHaveBeenCalledWith({ name: 'enabled', type: 'boolean' });
   });
+
+  it('authors nested fields for an array of objects', async () => {
+    const user = userEvent.setup();
+    const onDefineField = vi.fn();
+    render(
+      <FieldsEditorControl
+        fields={[{ name: 'items', type: 'array', items: { type: 'object', fields: [] } }]}
+        onDefineField={onDefineField}
+        onRemoveField={() => undefined}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Items' }));
+    await user.click(screen.getByRole('button', { name: 'Add nested field' }));
+    const nameInput = document.querySelector<HTMLInputElement>('input[name="new-items-item-name"]');
+    expect(nameInput).not.toBeNull();
+    await user.type(nameInput!, 'label');
+    const addNestedButton = document.querySelector<HTMLButtonElement>('button[name="add-new-items-item"]');
+    expect(addNestedButton).not.toBeNull();
+    await user.click(addNestedButton!);
+
+    expect(onDefineField).toHaveBeenCalledWith({
+      name: 'items',
+      type: 'array',
+      items: {
+        type: 'object',
+        fields: [{ name: 'label', type: 'text' }],
+      },
+    });
+  });
 });

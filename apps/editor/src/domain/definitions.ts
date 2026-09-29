@@ -15,7 +15,11 @@ export const creatableFieldTypes = [
   'enum',
   'number',
   'token',
+  'array',
+  'object',
 ] as const satisfies readonly FieldType[];
+
+export type FieldItems = NonNullable<FieldDefinition['items']>;
 
 export function splitList(text: string): string[] {
   return text
@@ -40,6 +44,8 @@ export function fieldDefinitionFromDraft(input: {
     type: input.type,
     ...(input.required ? { required: true } : {}),
   };
+  if (input.type === 'array') field.items = { type: 'text' };
+  if (input.type === 'object') field.items = { type: 'object', fields: [] };
   if (input.type === 'enum') {
     const options = splitList(input.optionsText);
     if (!options.length) throw new Error('An enum field needs at least one option');
@@ -65,7 +71,18 @@ export function retargetField(field: FieldDefinition, type: FieldType): FieldDef
     next.default = seed;
   } else if (type === 'boolean') {
     next.default = false;
+  } else if (type === 'array') {
+    next.items = { type: 'text' };
+  } else if (type === 'object') {
+    next.items = { type: 'object', fields: [] };
   }
+  return next;
+}
+
+export function replaceFieldItems(field: FieldDefinition, items: FieldItems | undefined): FieldDefinition {
+  const next = cloneField(field);
+  if (items === undefined) delete next.items;
+  else next.items = cloneItems(items);
   return next;
 }
 
@@ -110,6 +127,21 @@ function draftDefault(
   if (field.type === 'boolean') return booleanDefault;
   const text = raw.trim();
   if (!text) return undefined;
+  if (field.type === 'array' || field.type === 'object') {
+    let value: unknown;
+    try {
+      value = JSON.parse(text);
+    } catch {
+      throw new Error(`${field.name} must be valid JSON`);
+    }
+    if (field.type === 'array' && !Array.isArray(value)) {
+      throw new Error(`${field.name} must be a JSON array`);
+    }
+    if (field.type === 'object' && (value === null || typeof value !== 'object' || Array.isArray(value))) {
+      throw new Error(`${field.name} must be a JSON object`);
+    }
+    return value as FieldValue;
+  }
   if (field.type === 'number') {
     const value = Number(text);
     if (!Number.isFinite(value)) throw new Error(`${field.name} must be a number`);
@@ -128,6 +160,14 @@ function cloneField(field: FieldDefinition): FieldDefinition {
     ...(field.required !== undefined ? { required: field.required } : {}),
     ...(field.options ? { options: [...field.options] } : {}),
     ...(field.default !== undefined ? { default: field.default } : {}),
+    ...(field.items ? { items: cloneItems(field.items) } : {}),
+  };
+}
+
+function cloneItems(items: FieldItems): FieldItems {
+  return {
+    type: items.type,
+    ...(items.fields ? { fields: items.fields.map(cloneField) } : {}),
   };
 }
 

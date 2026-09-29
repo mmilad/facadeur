@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   fieldDefinitionFromDraft,
   replaceFieldDefault,
+  replaceFieldItems,
   retargetField,
   variantAxisFromDraft,
 } from '../src/domain/definitions.js';
@@ -68,6 +69,35 @@ describe('component definitions', () => {
       required: true,
       default: 'hello',
     });
+  });
+
+  it('creates and clones nested collection schemas without sharing item arrays', () => {
+    const field = fieldDefinitionFromDraft({
+      name: 'fields',
+      type: 'array',
+      rawDefault: '',
+      optionsText: '',
+      booleanDefault: false,
+    });
+    expect(field).toEqual({ name: 'fields', type: 'array', items: { type: 'text' } });
+
+    const source = replaceFieldItems(field, {
+      type: 'object',
+      fields: [{ name: 'kind', type: 'text', required: true }],
+    });
+    const next = replaceFieldItems(source, {
+      type: 'object',
+      fields: [{ name: 'kind', type: 'text', required: true }],
+    });
+    expect(next).toEqual({
+      name: 'fields',
+      type: 'array',
+      items: {
+        type: 'object',
+        fields: [{ name: 'kind', type: 'text', required: true }],
+      },
+    });
+    expect(next.items?.fields).not.toBe(source.items?.fields);
   });
 
   it('writes variant and state declarations without dropping the rest of the block', () => {
