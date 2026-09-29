@@ -53,6 +53,7 @@ export function InstanceOverridesControl({
           key={field.name}
           field={field}
           override={fieldOverrides?.[field.name]}
+          boundPath={fieldBindings?.[field.name]}
           onSetField={(value) => onSetField(field.name, value)}
           onInvalid={onInvalid}
         />
@@ -61,7 +62,14 @@ export function InstanceOverridesControl({
         fields={fields}
         dataFields={dataFields}
         bindings={fieldBindings}
-        onChange={onSetFieldBindings}
+        onChange={(next) => {
+          for (const fieldName of Object.keys(next ?? {})) {
+            if (Object.prototype.hasOwnProperty.call(fieldOverrides ?? {}, fieldName)) {
+              onSetField(fieldName, null);
+            }
+          }
+          onSetFieldBindings(next);
+        }}
       />
       {variants.length ? <h3>Variants</h3> : null}
       {variants.map((axis) => {
@@ -92,21 +100,28 @@ export function InstanceOverridesControl({
 function InstanceFieldOverride({
   field,
   override,
+  boundPath,
   onSetField,
   onInvalid,
 }: {
   field: FieldDefinition;
   override: FieldValue | undefined;
+  boundPath?: string;
   onSetField: (value: FieldValue | null) => void;
   onInvalid?: (message: string) => void;
 }) {
+  const disabled = boundPath !== undefined;
+  const label = boundPath
+    ? `${fieldDisplayLabel(field.name)} · bound to ${boundPath}`
+    : fieldDisplayLabel(field.name);
   if (field.type === 'enum' && field.options?.length) {
     const current = typeof override === 'string' ? override : '';
     return (
-      <Field label={fieldDisplayLabel(field.name)}>
+      <Field label={label}>
         <Select
           name={`field-${field.name}`}
           value={current}
+          disabled={disabled}
           options={[
             {
               value: '',
@@ -122,11 +137,12 @@ function InstanceFieldOverride({
   if (field.type === 'boolean') {
     const checked = typeof override === 'boolean' ? override : field.default === true;
     return (
-      <Field label={fieldDisplayLabel(field.name)}>
+      <Field label={label}>
         <Toggle
           name={`field-${field.name}`}
           label="On"
           value={checked}
+          disabled={disabled}
           onCommit={(next) => onSetField(next)}
         />
       </Field>
@@ -136,14 +152,19 @@ function InstanceFieldOverride({
     const shown =
       override === undefined || override === null ? '' : JSON.stringify(override, null, 2);
     const placeholder =
-      field.default === undefined ? undefined : JSON.stringify(field.default, null, 2);
+      boundPath !== undefined
+        ? `Bound to ${boundPath}`
+        : field.default === undefined
+          ? undefined
+          : JSON.stringify(field.default, null, 2);
     return (
-      <Field label={fieldDisplayLabel(field.name)}>
+      <Field label={label}>
         <TextArea
           name={`field-${field.name}`}
           value={shown}
           placeholder={placeholder}
           rows={4}
+          disabled={disabled}
           onCommit={(raw) => {
             try {
               onSetField(raw.trim() === '' ? null : parseInstanceFieldValue(field, raw));
@@ -156,13 +177,19 @@ function InstanceFieldOverride({
     );
   }
   const shown = override === undefined || override === null ? '' : String(override);
-  const placeholder = field.default === undefined ? undefined : String(field.default);
+  const placeholder =
+    boundPath !== undefined
+      ? `Bound to ${boundPath}`
+      : field.default === undefined
+        ? undefined
+        : String(field.default);
   return (
-    <Field label={fieldDisplayLabel(field.name)}>
+    <Field label={label}>
       <TextInput
         name={`field-${field.name}`}
         value={shown}
         placeholder={placeholder}
+        disabled={disabled}
         onCommit={(raw) => {
           try {
             onSetField(raw === '' ? null : parseInstanceFieldValue(field, raw));
