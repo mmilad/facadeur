@@ -47,6 +47,10 @@ const sample: DocumentFile = {
         layout: { position: 'absolute', x: 8, y: 8 },
         fields: { label: 'Go' },
         variants: { tone: 'primary' },
+        expose: {
+          fields: { label: 'control.label' },
+          events: { commit: 'control.commit' },
+        },
       },
     ],
   },

@@ -266,6 +266,7 @@ export function makeFlatNode(node: FlatNode): FlatNode {
       ...(fields ? { fields } : {}),
       ...(node.fieldBindings ? { fieldBindings: { ...node.fieldBindings } } : {}),
       ...(variants ? { variants } : {}),
+      ...(node.expose ? { expose: cloneExpose(node.expose) } : {}),
     };
   }
   const base = sharedFlat(node);
