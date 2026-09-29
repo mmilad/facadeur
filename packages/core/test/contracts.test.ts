@@ -46,6 +46,20 @@ describe('component contracts', () => {
     expect(() => validateCatalog([atom, invalid])).toThrow(/does not resolve a child field/);
   });
 
+  it('rejects exposed fields and events that collide with direct members', () => {
+    const invalidField = wrapper({
+      fields: [{ name: 'value', type: 'text' }],
+      expose: { fields: { value: 'control.value' } },
+    });
+    expect(() => validateCatalog([atom, invalidField])).toThrow(/collides with a direct field/);
+
+    const invalidEvent = wrapper({
+      events: [{ name: 'change' }],
+      expose: { events: { change: 'control.change' } },
+    });
+    expect(() => validateCatalog([atom, invalidEvent])).toThrow(/collides with a direct event/);
+  });
+
   it('does not treat repeated aliases to one child path as a cycle', () => {
     const aliases = wrapper({
       expose: {

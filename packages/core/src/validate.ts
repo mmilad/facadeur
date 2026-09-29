@@ -258,7 +258,15 @@ function validateExposedContracts(
   document: DocumentFile,
   catalog: Map<string, DocumentFile>,
 ): void {
+  const directFields = new Set((document.fields ?? []).map((field) => field.name));
+  const directEvents = new Set((document.events ?? []).map((event) => event.name));
   for (const [name, path] of Object.entries(document.expose?.fields ?? {})) {
+    if (directFields.has(name)) {
+      throw new DocumentError(
+        'schema',
+        `Exposed field "${name}" on "${document.id}" collides with a direct field`,
+      );
+    }
     const field = resolveExposedField(document, path, catalog, new Set());
     if (!field) {
       throw new DocumentError(
@@ -268,6 +276,12 @@ function validateExposedContracts(
     }
   }
   for (const [name, path] of Object.entries(document.expose?.events ?? {})) {
+    if (directEvents.has(name)) {
+      throw new DocumentError(
+        'schema',
+        `Exposed event "${name}" on "${document.id}" collides with a direct event`,
+      );
+    }
     const event = resolveExposedEvent(document, path, catalog, new Set());
     if (!event) {
       throw new DocumentError(
