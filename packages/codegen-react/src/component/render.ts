@@ -110,7 +110,7 @@ export function renderNode(
     const index = `${item}Index`;
     childScope = new Map(dataScope).set(item, item);
     const key = node.repeat.key
-      ? dataExpression(`${item}.${node.repeat.key}`, owner, childScope, usedProps)
+      ? `${dataExpression(`${item}.${node.repeat.key}`, owner, childScope, usedProps)} ?? ${index}`
       : index;
     // Repeat sources may be optional fields (for example a form's optional
     // `fields` payload). Keep the generated component renderable until data

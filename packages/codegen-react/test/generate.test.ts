@@ -653,7 +653,7 @@ describe('atom contracts', () => {
     const generated = generateReact({ documents: [component, row] });
     const sourceText = source(generated.ui, 'components/RepeatDemo.tsx');
     expect(sourceText).toContain('{(items ?? []).map((item, itemIndex) => (');
-    expect(sourceText).toContain('key={item?.id}');
+    expect(sourceText).toContain('key={item?.id ?? itemIndex}');
     expect(sourceText).toContain("item?.kind === 'input'");
     expect(sourceText).toContain("import { RepeatRow } from './RepeatRow';");
     expect(sourceText).toContain('label={item?.label}');
@@ -773,7 +773,7 @@ describe('atom contracts', () => {
     );
     expect(sourceText).toContain('{(sections ?? []).map((section, sectionIndex) => (');
     expect(sourceText).toContain('{(section?.rows ?? []).map((row, rowIndex) => (');
-    expect(sourceText).toContain('key={row?.label}');
+    expect(sourceText).toContain('key={row?.label ?? rowIndex}');
     expect(sourceText).toContain('label={row?.label}');
   });
 });
