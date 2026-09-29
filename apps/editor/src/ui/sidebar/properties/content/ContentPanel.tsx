@@ -7,6 +7,7 @@ import { TextControl } from '../../../controls/fields/index.js';
 import '../../../form/form.css';
 import { ComponentFields } from './ComponentFields.js';
 import { ComponentEvents } from './ComponentEvents.js';
+import { ComponentExpose } from './ComponentExpose.js';
 import { NodeAttributeFields } from './NodeAttributeFields.js';
 import { partitionNodeAttributes } from './preview-attribute-keys.js';
 import { PreviewOptionsDisclosure } from './PreviewOptionsDisclosure.js';
@@ -103,6 +104,7 @@ export function ContentPanel({
         <>
           <ComponentFields session={session} snap={snap} />
           <ComponentEvents session={session} snap={snap} />
+          <ComponentExpose session={session} snap={snap} />
         </>
       ) : null}
     </>

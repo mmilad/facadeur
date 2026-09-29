@@ -20,6 +20,7 @@ import type {
   DisplayOn,
   EventBinding,
   EventDefinition,
+  Expose,
   FieldDefinition,
   FieldValue,
   FontFamily,
@@ -56,6 +57,7 @@ import {
   assertEventDefinition,
   assertFieldBindings,
   assertFieldDefinition,
+  assertExpose,
   assertLayout,
   assertRepeat,
   assertVariantAxis,
@@ -121,6 +123,7 @@ export type Command =
   | { type: 'removeField'; name: string }
   | { type: 'defineEvent'; event: EventDefinition }
   | { type: 'removeEvent'; name: string }
+  | { type: 'setExpose'; expose: Expose | null }
   | { type: 'defineVariant'; axis: VariantAxis }
   | { type: 'removeVariant'; name: string }
   | { type: 'setVariantPreset'; preset: VariantPreset }
@@ -210,6 +213,9 @@ export function applyCommand(
       break;
     case 'removeEvent':
       removeEvent(next, command.name);
+      break;
+    case 'setExpose':
+      setExpose(next, command.expose);
       break;
     case 'defineVariant':
       defineVariant(next, command.axis);
@@ -498,6 +504,18 @@ function removeEvent(doc: FlatDocument, name: string): void {
     else delete node.eventBindings;
     doc.nodes[node.id] = makeFlatNode(node);
   }
+}
+
+function setExpose(doc: FlatDocument, expose: Expose | null): void {
+  if (expose === null) {
+    delete doc.expose;
+    return;
+  }
+  assertExpose(expose);
+  doc.expose = {
+    ...(expose.fields ? { fields: { ...expose.fields } } : {}),
+    ...(expose.events ? { events: { ...expose.events } } : {}),
+  };
 }
 
 function defineVariant(doc: FlatDocument, axis: VariantAxis): void {

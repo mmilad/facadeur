@@ -305,6 +305,38 @@ describe('applyCommand', () => {
     ).toThrow(/field binding/);
   });
 
+  it('sets and clears the public expose contract', () => {
+    let doc = toFlat({
+      version: 1,
+      id: 'expose-command',
+      name: 'Expose command',
+      kind: 'component',
+      root: { id: 'root', type: 'frame' },
+    });
+    doc = applyCommand(doc, {
+      type: 'setExpose',
+      expose: { fields: { value: 'control.value' }, events: { commit: 'control.commit' } },
+    });
+    expect(doc.expose).toEqual({
+      fields: { value: 'control.value' },
+      events: { commit: 'control.commit' },
+    });
+    doc = applyCommand(doc, { type: 'setExpose', expose: null });
+    expect(doc.expose).toBeUndefined();
+    expect(() =>
+      applyCommand(
+        toFlat({
+          version: 1,
+          id: 'invalid-expose-command',
+          name: 'Invalid expose command',
+          kind: 'component',
+          root: { id: 'root', type: 'frame' },
+        }),
+        { type: 'setExpose', expose: { fields: { value: '' } } },
+      ),
+    ).toThrow(/needs a path/);
+  });
+
   it('creates, replaces, and removes sparse named variant presets', () => {
     let doc = component();
     doc = applyCommand(doc, {
