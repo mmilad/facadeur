@@ -99,4 +99,26 @@ describe('persistEditorJsonSave', () => {
     expect(notices).toEqual([{ tone: 'error', text: 'Disk full' }]);
     save.mockRestore();
   });
+
+  it('blocks persistence when catalog validation fails', async () => {
+    const save = vi.spyOn(files, 'saveJsonFile');
+    const notices: { tone: string; text: string }[] = [];
+
+    const ok = await persistEditorJsonSave({
+      filename: 'button.json',
+      document: flat,
+      validate: () => {
+        throw new Error('Invalid expose contract');
+      },
+      onHandle: () => {},
+      onMarkedSaved: () => {},
+      setNotice: (notice) => notices.push(notice),
+      publish: () => {},
+    });
+
+    expect(ok).toBe(false);
+    expect(save).not.toHaveBeenCalled();
+    expect(notices).toEqual([{ tone: 'error', text: 'Invalid expose contract' }]);
+    save.mockRestore();
+  });
 });

@@ -230,6 +230,23 @@ describe('editor session', () => {
     vi.restoreAllMocks();
   });
 
+  it('blocks saving an unresolved expose contract', async () => {
+    const save = vi.spyOn(files, 'saveJsonFile');
+    const editor = session();
+    editor.openAsset('card', 'root');
+    editor.execute({
+      type: 'setExpose',
+      expose: { fields: { missing: 'unknown-child.value' } },
+    });
+
+    const ok = await editor.saveOpenDocument();
+
+    expect(ok).toBe(false);
+    expect(save).not.toHaveBeenCalled();
+    expect(editor.getSnapshot().notice?.text).toMatch(/Expose path|does not resolve/i);
+    save.mockRestore();
+  });
+
   it('marks new assets dirty until saved', () => {
     const editor = session();
     editor.loadDocument({

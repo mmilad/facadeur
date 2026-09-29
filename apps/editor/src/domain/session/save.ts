@@ -16,6 +16,7 @@ import type { EditorNotice } from './types.js';
 
 export function bindPersistDocumentSave(options: {
   build: () => { filename: string; document: FlatDocument; id: string };
+  validate?: () => void;
   getHandle: (id: string) => JsonFileHandle | undefined;
   rememberHandle: (id: string, handle: JsonFileHandle) => void;
   markSaved: (id: string, document: FlatDocument) => void;
@@ -27,6 +28,7 @@ export function bindPersistDocumentSave(options: {
     return persistEditorJsonSave({
       filename: target.filename,
       document: target.document,
+      validate: options.validate,
       handle: options.getHandle(target.id),
       onHandle: (handle) => options.rememberHandle(target.id, handle),
       onMarkedSaved: () => options.markSaved(target.id, target.document),
@@ -68,6 +70,7 @@ export function designInputFromStore(store: YjsDocumentStore): DesignInput {
 export async function persistEditorJsonSave(options: {
   filename: string;
   document: FlatDocument;
+  validate?: () => void;
   handle?: JsonFileHandle;
   onHandle: (handle: JsonFileHandle) => void;
   onMarkedSaved: () => void;
@@ -75,6 +78,7 @@ export async function persistEditorJsonSave(options: {
   publish: () => void;
 }): Promise<boolean> {
   try {
+    options.validate?.();
     const result = await saveJsonFile({
       filename: options.filename,
       text: documentToJson(options.document),

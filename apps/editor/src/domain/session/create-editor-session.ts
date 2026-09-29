@@ -5,6 +5,7 @@ import {
   resolveVariantDocument,
   toFlat,
   toNested,
+  validateCatalog,
   type Command,
   type DefaultKind,
   type FlatDocument,
@@ -419,6 +420,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       designInput: () => designInputFromStore(designStore),
       saveOpenDocument: bindPersistDocumentSave({
         ...saveHooks,
+        validate: () => validateCatalog(boardDocumentsForOrder(order, assetStores)),
         build: () => {
           const snap = build();
           return { id: snap.openId, filename: filenameFor(snap.openId), document: snap.document };
