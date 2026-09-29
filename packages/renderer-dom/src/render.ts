@@ -341,7 +341,7 @@ function repeatedItem(
   const itemName = repeat.as ?? 'item';
   for (const [index, item] of source.entries()) {
     const rawKey = repeat.key ? resolvePath(item, repeat.key) : index;
-    const key = String(rawKey ?? index);
+    const key = repeatKeySegment(rawKey, index);
     if (key === segment) {
       return { key, scope: { ...scope, [itemName]: item } };
     }
@@ -584,7 +584,7 @@ function reconcileRepeatedChildren(
   const itemName = repeat.as ?? 'item';
   items.forEach((item, index) => {
     const keyValue = repeat.key ? resolvePath(item, repeat.key) : index;
-    const key = String(keyValue ?? index);
+    const key = repeatKeySegment(keyValue, index);
     const itemContext = {
       ...ctx,
       path: joinId(ctx.path, key),
@@ -787,6 +787,10 @@ function readAttributes(el: HTMLElement): Record<string, string> {
 
 function joinId(path: string | null, id: string): string {
   return path ? `${path}/${id}` : id;
+}
+
+function repeatKeySegment(value: FieldValue | number | undefined, index: number): string {
+  return encodeURIComponent(String(value ?? index));
 }
 
 function resolveFieldBindings(

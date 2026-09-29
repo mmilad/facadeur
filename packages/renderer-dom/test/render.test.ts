@@ -396,7 +396,7 @@ describe('renderer', () => {
         {
           name: 'items',
           type: 'array',
-          default: [{ id: 'first', label: 'Before' }],
+          default: [{ id: 'billing/email', label: 'Before' }],
           items: {
             type: 'object',
             fields: [
@@ -429,7 +429,9 @@ describe('renderer', () => {
       paintRoot: true,
     });
     renderer.mount(host);
-    expect(parent.querySelector('[data-id="root/first/row"]')?.textContent).toBe('Before');
+    expect(parent.querySelector('[data-id="root/billing%2Femail/row"]')?.textContent).toBe(
+      'Before',
+    );
 
     let notify: ((change: DocumentChange) => void) | undefined;
     const store: DocumentStore = {
@@ -448,8 +450,8 @@ describe('renderer', () => {
     renderer.connect(store);
     notify?.({ reason: 'undo' });
 
-    expect(parent.querySelectorAll('[data-id="root/first/row"]')).toHaveLength(1);
-    expect(parent.querySelector('[data-id="root/first/row"]')?.textContent).toBe('After');
+    expect(parent.querySelectorAll('[data-id="root/billing%2Femail/row"]')).toHaveLength(1);
+    expect(parent.querySelector('[data-id="root/billing%2Femail/row"]')?.textContent).toBe('After');
     renderer.destroy();
   });
 
