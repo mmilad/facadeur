@@ -220,6 +220,130 @@ describe('component contracts', () => {
     expect(() => validateCatalog([owner, target])).toThrow(/may be undefined/);
   });
 
+  it('rejects bindings with incompatible array item types', () => {
+    const target: DocumentFile = {
+      version: 1,
+      id: 'number-list-control',
+      name: 'Number list control',
+      kind: 'atom',
+      fields: [{ name: 'values', type: 'array', items: { type: 'number' }, required: true }],
+      root: { id: 'root', type: 'text', tag: 'span' },
+    };
+    const owner: DocumentFile = {
+      version: 1,
+      id: 'text-list-owner',
+      name: 'Text list owner',
+      kind: 'component',
+      fields: [{ name: 'values', type: 'array', items: { type: 'text' }, required: true }],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'control',
+            type: 'instance',
+            component: 'number-list-control',
+            fieldBindings: { values: 'values' },
+          },
+        ],
+      },
+    };
+
+    expect(() => validateCatalog([owner, target])).toThrow(/maps array to incompatible array/);
+  });
+
+  it('rejects bindings with incompatible nested object fields', () => {
+    const target: DocumentFile = {
+      version: 1,
+      id: 'settings-control',
+      name: 'Settings control',
+      kind: 'atom',
+      fields: [
+        {
+          name: 'settings',
+          type: 'object',
+          required: true,
+          items: { type: 'object', fields: [{ name: 'enabled', type: 'boolean', required: true }] },
+        },
+      ],
+      root: { id: 'root', type: 'text', tag: 'span' },
+    };
+    const owner: DocumentFile = {
+      version: 1,
+      id: 'text-settings-owner',
+      name: 'Text settings owner',
+      kind: 'component',
+      fields: [
+        {
+          name: 'settings',
+          type: 'object',
+          required: true,
+          items: { type: 'object', fields: [{ name: 'enabled', type: 'text', required: true }] },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'control',
+            type: 'instance',
+            component: 'settings-control',
+            fieldBindings: { settings: 'settings' },
+          },
+        ],
+      },
+    };
+
+    expect(() => validateCatalog([owner, target])).toThrow(/maps object to incompatible object/);
+  });
+
+  it('rejects bindings missing a nested required destination field', () => {
+    const target: DocumentFile = {
+      version: 1,
+      id: 'required-settings-control',
+      name: 'Required settings control',
+      kind: 'atom',
+      fields: [
+        {
+          name: 'settings',
+          type: 'object',
+          required: true,
+          items: { type: 'object', fields: [{ name: 'label', type: 'text', required: true }] },
+        },
+      ],
+      root: { id: 'root', type: 'text', tag: 'span' },
+    };
+    const owner: DocumentFile = {
+      version: 1,
+      id: 'empty-settings-owner',
+      name: 'Empty settings owner',
+      kind: 'component',
+      fields: [
+        {
+          name: 'settings',
+          type: 'object',
+          required: true,
+          items: { type: 'object', fields: [] },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'control',
+            type: 'instance',
+            component: 'required-settings-control',
+            fieldBindings: { settings: 'settings' },
+          },
+        ],
+      },
+    };
+
+    expect(() => validateCatalog([owner, target])).toThrow(/maps object to incompatible object/);
+  });
+
   it('validates display comparisons and repeat keys semantically', () => {
     const invalidDisplay: DocumentFile = {
       version: 1,
