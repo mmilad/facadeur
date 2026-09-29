@@ -31,6 +31,36 @@ function run(store: ReturnType<typeof createDocumentStore>, command: Command): F
 }
 
 describe('Yjs document store', () => {
+  it('preserves instance expose contracts through the Yjs codec', () => {
+    const file: DocumentFile = {
+      ...initial,
+      root: {
+        ...initial.root,
+        children: [
+          ...(initial.root.children ?? []),
+          {
+            id: 'control',
+            type: 'instance',
+            component: 'input',
+            expose: {
+              fields: { value: 'control.value' },
+              events: { commit: 'control.commit' },
+            },
+          },
+        ],
+      },
+    };
+    const store = createDocumentStore(file);
+    expect(store.getNode('control')).toMatchObject({
+      expose: {
+        fields: { value: 'control.value' },
+        events: { commit: 'control.commit' },
+      },
+    });
+    expect(store.getDocument()).toEqual(toFlat(file));
+    store.destroy();
+  });
+
   it('loads a nested file into maps and does not make that load undoable', () => {
     const store = createDocumentStore(initial);
     expect(store.getDocument()).toEqual(toFlat(initial));
