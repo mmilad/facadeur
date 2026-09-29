@@ -709,11 +709,22 @@ function assertVariantTargets(doc: FlatDocument, variant: VariantPreset): void {
       );
     }
   }
+  const removed = overrides.removed ?? [];
   for (const insertion of overrides.insertions ?? []) {
     if (!hasNodeTarget(doc, insertion.parent)) {
       throw new DocumentError(
         'schema',
         `Variant "${variant.name}" inserts under unknown node "${insertion.parent}" on "${doc.id}"`,
+      );
+    }
+    if (
+      removed.some(
+        (target) => insertion.parent === target || insertion.parent.startsWith(`${target}.`),
+      )
+    ) {
+      throw new DocumentError(
+        'schema',
+        `Variant "${variant.name}" cannot insert under removed node "${insertion.parent}"`,
       );
     }
     const parent = nodeForTarget(doc, insertion.parent);

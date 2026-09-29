@@ -307,6 +307,34 @@ describe('variant overlays', () => {
     expect(() => validateCatalog([removesRoot])).toThrow(/cannot remove the root/);
   });
 
+  it('rejects insertions whose parent is removed by the same variant', () => {
+    const invalid = {
+      ...specimen,
+      id: 'invalid-insertion-parent',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'group',
+            type: 'frame',
+            children: [{ id: 'body', type: 'text', text: 'Body' }],
+          },
+        ],
+      },
+      variants: [
+        {
+          name: 'broken',
+          overrides: {
+            removed: ['root.group'],
+            insertions: [{ parent: 'root.group', node: { id: 'badge', type: 'text' } }],
+          },
+        },
+      ],
+    } satisfies DocumentFile;
+    expect(() => validateCatalog([invalid])).toThrow(/cannot insert under removed node/);
+  });
+
   it('rejects conflicting variant set and unset paths', () => {
     const invalid = {
       ...specimen,
