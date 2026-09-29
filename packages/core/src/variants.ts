@@ -114,7 +114,10 @@ function mergeStyleChild(target: StyleChild, source: StyleChild): void {
 }
 
 /** A removed node must not leave a style child behind in the materialized view. */
-function pruneStyleChildren(styles: StyleBlock | undefined, root: NestedNode): StyleBlock | undefined {
+function pruneStyleChildren(
+  styles: StyleBlock | undefined,
+  root: NestedNode,
+): StyleBlock | undefined {
   if (!styles?.children) return styles;
   const nodeIds = new Set<string>();
   const visit = (node: NestedNode): void => {
@@ -522,8 +525,8 @@ function assignScalar<T extends keyof VariantNodeOverride>(
   key: T,
   base: unknown,
   edited: unknown,
-  variantName: string,
-  nodeId: string,
+  _variantName: string,
+  _nodeId: string,
 ): void {
   if (sameValue(base, edited)) return;
   if (edited === undefined) {
@@ -538,8 +541,8 @@ function assignObject<T extends keyof VariantNodeOverride>(
   key: T,
   base: unknown,
   edited: unknown,
-  variantName: string,
-  nodeId: string,
+  _variantName: string,
+  _nodeId: string,
 ): void {
   if (sameValue(base, edited)) return;
   if (edited === undefined) {
@@ -554,8 +557,8 @@ function objectDelta(
   property: string,
   base: Record<string, unknown> | undefined,
   edited: Record<string, unknown> | undefined,
-  variantName: string,
-  nodeId: string,
+  _variantName: string,
+  _nodeId: string,
 ): Record<string, unknown> | undefined {
   if (sameValue(base, edited)) return undefined;
   if (edited === undefined) {
@@ -579,8 +582,8 @@ function mapDelta(
   property: string,
   base: Record<string, unknown> | undefined,
   edited: Record<string, unknown> | undefined,
-  variantName: string,
-  nodeId: string,
+  _variantName: string,
+  _nodeId: string,
 ): Record<string, unknown> | undefined {
   if (sameValue(base, edited)) return undefined;
   if (edited === undefined) {

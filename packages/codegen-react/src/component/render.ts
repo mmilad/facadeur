@@ -545,8 +545,8 @@ function styleAttribute(
     if (!raw) return undefined;
     return { name: 'style', value: { kind: 'literal', value: raw } };
   }
-  markStyle();
   const needsCast = bound.style.some(([key]) => !/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(key));
+  if (needsCast) markStyle();
   const body = bound.style
     .map(([key, expr]) => `${/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(key) ? key : quote(key)}: ${expr}`)
     .join(', ');

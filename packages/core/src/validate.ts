@@ -891,7 +891,7 @@ export function assertValueMatches(field: FieldDefinition, value: FieldValue): v
         throw new DocumentError('schema', `${label} must be one of ${field.options?.join(', ')}`);
       }
       return;
-    case 'array':
+    case 'array': {
       if (!Array.isArray(value)) throw new DocumentError('schema', `${label} expects an array`);
       if (!field.items) return;
       const itemField: FieldDefinition = {
@@ -904,6 +904,7 @@ export function assertValueMatches(field: FieldDefinition, value: FieldValue): v
       };
       for (const item of value) assertValueMatches(itemField, item);
       return;
+    }
     case 'object':
       if (!isRecord(value)) throw new DocumentError('schema', `${label} expects an object`);
       for (const definition of field.items?.fields ?? []) {

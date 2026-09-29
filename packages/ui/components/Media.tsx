@@ -3,8 +3,6 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
-import type { CSSProperties } from 'react';
-
 export interface MediaProps {
   kind?: 'image' | 'video';
   src: string;
