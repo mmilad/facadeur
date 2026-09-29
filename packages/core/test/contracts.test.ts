@@ -266,6 +266,66 @@ describe('component contracts', () => {
     expect(() => validateCatalog([owner, target])).toThrow(/maps array to incompatible array/);
   });
 
+  it('rejects structured and non-boolean direct node bindings', () => {
+    const structured: DocumentFile = {
+      version: 1,
+      id: 'structured-binding',
+      name: 'Structured binding',
+      kind: 'component',
+      fields: [
+        {
+          name: 'settings',
+          type: 'object',
+          items: { type: 'object', fields: [{ name: 'label', type: 'text' }] },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'text',
+        bindings: [{ field: 'settings', target: 'text' }],
+      },
+    };
+    expect(() => validateCatalog([structured])).toThrow(/cannot use structured field type/);
+
+    const visibleText: DocumentFile = {
+      version: 1,
+      id: 'text-visibility-binding',
+      name: 'Text visibility binding',
+      kind: 'component',
+      fields: [{ name: 'visible', type: 'text' }],
+      root: {
+        id: 'root',
+        type: 'text',
+        bindings: [{ field: 'visible', target: 'visible' }],
+      },
+    };
+    expect(() => validateCatalog([visibleText])).toThrow(/needs a boolean field/);
+
+    const variantBinding: DocumentFile = {
+      version: 1,
+      id: 'variant-structured-binding',
+      name: 'Variant structured binding',
+      kind: 'component',
+      fields: [
+        {
+          name: 'settings',
+          type: 'object',
+          items: { type: 'object', fields: [{ name: 'label', type: 'text' }] },
+        },
+      ],
+      variants: [
+        {
+          name: 'compact',
+          overrides: {
+            nodes: { root: { bindings: [{ field: 'settings', target: 'text' }] } },
+          },
+        },
+      ],
+      root: { id: 'root', type: 'text' },
+    };
+    expect(() => validateCatalog([variantBinding])).toThrow(/cannot use structured field type/);
+  });
+
   it('rejects bindings with incompatible nested object fields', () => {
     const target: DocumentFile = {
       version: 1,

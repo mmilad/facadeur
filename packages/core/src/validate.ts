@@ -183,6 +183,8 @@ export function validateDefinitions(doc: FlatDocument): void {
           `Node "${node.id}" binds unknown field "${binding.field}"`,
         );
       }
+      const field = doc.fields.find((entry) => entry.name === binding.field);
+      if (field) assertBindingField(field, binding.target, node.id);
     }
     for (const binding of node.eventBindings ?? []) {
       if (!eventNames.has(binding.event)) {
@@ -207,6 +209,25 @@ export function validateDefinitions(doc: FlatDocument): void {
 
 function isStructuredFieldType(type: FieldDefinition['type']): boolean {
   return type === 'array' || type === 'object';
+}
+
+function assertBindingField(
+  field: FieldDefinition,
+  target: Binding['target'],
+  nodeId: string,
+): void {
+  if (isStructuredFieldType(field.type)) {
+    throw new DocumentError(
+      'schema',
+      `Binding "${field.name}" on node "${nodeId}" cannot use structured field type "${field.type}" for ${target}`,
+    );
+  }
+  if (target === 'visible' && field.type !== 'boolean') {
+    throw new DocumentError(
+      'schema',
+      `Binding "${field.name}" on node "${nodeId}" targeting visible needs a boolean field`,
+    );
+  }
 }
 
 function assertVariantFieldTargets(doc: FlatDocument, variant: VariantPreset): void {
