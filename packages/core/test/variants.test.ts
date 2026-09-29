@@ -62,6 +62,16 @@ describe('variant overlays', () => {
     expect(resolveVariantDocument(specimen, 'default')).toEqual(specimen);
   });
 
+  it('keeps default as the immutable base and rejects default overrides', () => {
+    const invalid = {
+      ...specimen,
+      id: 'invalid-default-variant',
+      variants: [{ name: 'default', overrides: { fields: { label: 'Not base' } } }],
+    } satisfies DocumentFile;
+    expect(() => validateCatalog([invalid])).toThrow(/default variant.*base.*overrides/i);
+    expect(resolveVariantDocument(invalid, 'default')).toEqual(invalid);
+  });
+
   it('resolves dotted node paths while keeping id targets backwards compatible', () => {
     const nested: DocumentFile = {
       ...specimen,

@@ -20,6 +20,7 @@ export function variantPresets(document: DocumentFile): VariantPreset[] {
  * The source document is never mutated: `removed` only affects the returned tree.
  */
 export function resolveVariantDocument(document: DocumentFile, name = 'default'): DocumentFile {
+  if (name === 'default') return structuredClone(document);
   const preset = variantPresets(document).find((variant) => variant.name === name);
   if (!preset?.overrides) return structuredClone(document);
 

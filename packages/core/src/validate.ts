@@ -451,6 +451,12 @@ export function assertVariantAxis(axis: {
 
 export function assertVariantPreset(variant: VariantPreset): void {
   const overrides = variant.overrides;
+  if (variant.name === 'default' && hasVariantOverrides(overrides)) {
+    throw new DocumentError(
+      'schema',
+      'The default variant is the base document and cannot contain overrides',
+    );
+  }
   if (!overrides) return;
   for (const node of Object.values(overrides.nodes ?? {})) {
     assertVariantUnsetPaths(variant.name, node);
@@ -472,6 +478,17 @@ export function assertVariantPreset(variant: VariantPreset): void {
       );
     }
   }
+}
+
+function hasVariantOverrides(overrides: VariantPreset['overrides']): boolean {
+  if (!overrides) return false;
+  return (
+    Boolean(overrides.fields && Object.keys(overrides.fields).length > 0) ||
+    Boolean(overrides.unsetFields?.length) ||
+    Boolean(overrides.nodes && Object.keys(overrides.nodes).length > 0) ||
+    Boolean(overrides.removed?.length) ||
+    Boolean(overrides.insertions?.length)
+  );
 }
 
 function assertVariantUnsetPaths(

@@ -187,6 +187,15 @@ describe('applyCommand', () => {
     );
   });
 
+  it('rejects overrides on the default variant preset', () => {
+    expect(() =>
+      applyCommand(component(), {
+        type: 'setVariantPreset',
+        preset: { name: 'default', overrides: { fields: { title: 'Not base' } } },
+      }),
+    ).toThrow(/default variant.*base.*overrides/i);
+  });
+
   it('assigns an id when insert omits one', () => {
     const doc = applyCommand(component(), {
       type: 'insert',
