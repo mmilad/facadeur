@@ -9,6 +9,8 @@ import {
   type StyleBlock,
   type StyleChild,
   type StyleLayer,
+  type Layout,
+  type LayoutOverride,
 } from './schema.js';
 
 /** Return named overlay variants without exposing the legacy axis definitions. */
@@ -685,13 +687,32 @@ function applyOverride(node: NestedNode, override: VariantNodeOverride): NestedN
   if (override.src !== undefined && next.type === 'image') next.src = override.src;
   if (override.alt !== undefined && next.type === 'image') next.alt = override.alt;
   if (override.attributes) next.attributes = { ...(next.attributes ?? {}), ...override.attributes };
-  if (override.layout) next.layout = { ...(next.layout ?? {}), ...override.layout };
+  if (override.layout) next.layout = mergeLayout(next.layout, override.layout);
   if (override.bindings) next.bindings = structuredClone(override.bindings);
   if (override.eventBindings) next.eventBindings = structuredClone(override.eventBindings);
   if (override.style) next.style = { ...(next.style ?? {}), ...override.style };
   if (override.displayOn) next.displayOn = structuredClone(override.displayOn);
   applyUnset(next, override.unset);
   return next;
+}
+
+/** Merge sparse node layout overrides without dropping sibling breakpoint layers. */
+function mergeLayout(target: Layout | undefined, source: Layout): Layout {
+  const next = structuredClone(target ?? {});
+  mergeLayoutLayer(next, source);
+  for (const [breakpoint, layer] of Object.entries(source.breakpoints ?? {})) {
+    const breakpoints = (next.breakpoints ??= {});
+    const existing = (breakpoints[breakpoint] ??= {});
+    mergeLayoutLayer(existing, layer);
+  }
+  return next;
+}
+
+function mergeLayoutLayer(target: Layout | LayoutOverride, source: Layout | LayoutOverride): void {
+  for (const [key, value] of Object.entries(source)) {
+    if (key === 'breakpoints') continue;
+    (target as Record<string, unknown>)[key] = structuredClone(value);
+  }
 }
 
 function applyUnset(node: NestedNode, paths: readonly string[] | undefined): void {

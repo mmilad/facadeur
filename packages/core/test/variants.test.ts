@@ -97,6 +97,46 @@ describe('variant overlays', () => {
     });
   });
 
+  it('keeps sibling layout breakpoint values when a variant changes one value', () => {
+    const laidOut: DocumentFile = {
+      ...specimen,
+      id: 'laid-out-variant-specimen',
+      root: {
+        ...specimen.root,
+        layout: {
+          direction: 'column',
+          padding: '{space.inset.md}',
+          breakpoints: {
+            tablet: { direction: 'row', gap: '{space.gap.sm}' },
+            desktop: { direction: 'row', gap: '{space.gap.lg}' },
+          },
+        },
+      },
+      variants: [
+        {
+          name: 'compact',
+          overrides: {
+            nodes: {
+              root: {
+                layout: { breakpoints: { tablet: { direction: 'column' } } },
+              },
+            },
+          },
+        },
+      ],
+    };
+
+    const compact = resolveVariantDocument(laidOut, 'compact');
+    expect(compact.root.layout).toEqual({
+      direction: 'column',
+      padding: '{space.inset.md}',
+      breakpoints: {
+        tablet: { direction: 'column', gap: '{space.gap.sm}' },
+        desktop: { direction: 'row', gap: '{space.gap.lg}' },
+      },
+    });
+  });
+
   it('keeps default as the immutable base and rejects default overrides', () => {
     const invalid = {
       ...specimen,
