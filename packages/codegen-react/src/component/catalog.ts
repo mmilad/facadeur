@@ -263,7 +263,12 @@ function fieldItemTypeName(items: NonNullable<FieldDefinition['items']>): string
 function fieldObjectTypeName(items: NonNullable<FieldDefinition['items']>): string {
   const fields = items.fields ?? [];
   if (!fields.length) return 'Record<string, unknown>';
-  return `{ ${fields.map((field) => `${quote(field.name)}${field.required ? '' : '?'}: ${fieldTypeName(field)}`).join('; ')} }`;
+  return `{ ${fields
+    .map(
+      (field) =>
+        `${quote(field.name)}${field.required === true && field.default === undefined ? '' : '?'}: ${fieldTypeName(field)}`,
+    )
+    .join('; ')} }`;
 }
 
 function primitiveTypeName(type: FieldDefinition['type']): string {

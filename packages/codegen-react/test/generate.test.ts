@@ -600,6 +600,35 @@ describe('atom contracts', () => {
     expect(sourceText).toContain("kinds?: ('input' | 'textarea')[];");
   });
 
+  it('keeps nested fields with defaults optional in generated object types', () => {
+    const component: DocumentFile = {
+      version: 1,
+      id: 'nested-default-props',
+      name: 'Nested default props',
+      kind: 'component',
+      fields: [
+        {
+          name: 'settings',
+          type: 'object',
+          items: {
+            type: 'object',
+            fields: [
+              { name: 'mode', type: 'text', required: true, default: 'comfortable' },
+              { name: 'label', type: 'text', required: true },
+            ],
+          },
+        },
+      ],
+      root: { id: 'root', type: 'text', text: 'Settings' },
+    };
+
+    const sourceText = source(
+      generateReact({ documents: [component] }).ui,
+      'components/NestedDefaultProps.tsx',
+    );
+    expect(sourceText).toContain("settings?: { 'mode'?: string; 'label': string };");
+  });
+
   it('nests repeat contexts for section data and child rows', () => {
     const component: DocumentFile = {
       version: 1,
