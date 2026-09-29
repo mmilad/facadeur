@@ -119,8 +119,8 @@ controls:
     fields:
       - key: map
         ui: record_field
-        emit: setStyle / setStyleBlock
-    notes: implemented (CssDeclarationsControl); style block editors in component-panel; node StyleFields add-property unchanged
+        emit: setStyle / setStyleBlock / setVariantStyleBlock
+    notes: implemented (CssDeclarationsControl); named component variants write sparse overrides.styles; node StyleFields add-property unchanged
 
   - id: fields_editor
     path: ui/controls/data
