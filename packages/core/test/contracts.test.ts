@@ -155,4 +155,68 @@ describe('component contracts', () => {
 
     expect(() => validateCatalog([invalid])).toThrow(/is not defined/);
   });
+
+  it('rejects field bindings whose source type does not match the child contract', () => {
+    const target: DocumentFile = {
+      version: 1,
+      id: 'number-control',
+      name: 'Number control',
+      kind: 'atom',
+      fields: [{ name: 'value', type: 'number', required: true }],
+      root: { id: 'root', type: 'text', tag: 'span' },
+    };
+    const owner: DocumentFile = {
+      version: 1,
+      id: 'number-owner',
+      name: 'Number owner',
+      kind: 'component',
+      fields: [{ name: 'label', type: 'text', default: 'Label' }],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'control',
+            type: 'instance',
+            component: 'number-control',
+            fieldBindings: { value: 'label' },
+          },
+        ],
+      },
+    };
+
+    expect(() => validateCatalog([owner, target])).toThrow(/maps text to incompatible number/);
+  });
+
+  it('rejects optional sources bound to required child fields', () => {
+    const target: DocumentFile = {
+      version: 1,
+      id: 'required-control',
+      name: 'Required control',
+      kind: 'atom',
+      fields: [{ name: 'value', type: 'text', required: true }],
+      root: { id: 'root', type: 'text', tag: 'span' },
+    };
+    const owner: DocumentFile = {
+      version: 1,
+      id: 'optional-owner',
+      name: 'Optional owner',
+      kind: 'component',
+      fields: [{ name: 'label', type: 'text' }],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'control',
+            type: 'instance',
+            component: 'required-control',
+            fieldBindings: { value: 'label' },
+          },
+        ],
+      },
+    };
+
+    expect(() => validateCatalog([owner, target])).toThrow(/may be undefined/);
+  });
 });

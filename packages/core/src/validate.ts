@@ -236,8 +236,8 @@ export function validateCatalog(files: readonly unknown[]): DocumentFile[] {
       resolveKind: (componentId) => byId.get(componentId)?.kind,
     });
     validateExposedContracts(document, byId);
-    validateDataContracts(flat);
-    validateVariantContracts(document);
+    validateDataContracts(flat, byId);
+    validateVariantContracts(document, byId);
     validateInstanceOverrides(flat, byId);
   }
   return documents;
@@ -272,7 +272,7 @@ interface DataScope {
   aliases: ReadonlyMap<string, FieldDefinition>;
 }
 
-function validateDataContracts(doc: FlatDocument): void {
+function validateDataContracts(doc: FlatDocument, catalog: Map<string, DocumentFile>): void {
   const fields = new Map((doc.fields ?? []).map((field) => [field.name, field]));
   const visit = (id: string, scope: DataScope): void => {
     const node = doc.nodes[id];
@@ -283,8 +283,14 @@ function validateDataContracts(doc: FlatDocument): void {
     }
 
     if (node.type === 'instance') {
+      const target = catalog.get(node.component);
+      const targetFields = target ? exposedFields(target, catalog) : undefined;
       for (const [field, path] of Object.entries(node.fieldBindings ?? {})) {
-        assertDataPath(path, scope, `field binding "${field}" on node "${node.id}"`);
+        const source = assertDataPath(path, scope, `field binding "${field}" on node "${node.id}"`);
+        const destination = targetFields?.get(field);
+        if (destination) {
+          assertFieldBinding(source, destination, node, field, path);
+        }
       }
       return;
     }
@@ -323,11 +329,58 @@ function validateDataContracts(doc: FlatDocument): void {
   visit(doc.rootId, { fields, aliases: new Map() });
 }
 
-function validateVariantContracts(document: DocumentFile): void {
+function validateVariantContracts(
+  document: DocumentFile,
+  catalog: Map<string, DocumentFile>,
+): void {
   for (const variant of variantPresets(document)) {
     const resolved = toFlat(resolveVariantDocument(document, variant.name));
-    validateDataContracts(resolved);
+    validateDataContracts(resolved, catalog);
   }
+}
+
+function assertFieldBinding(
+  source: FieldDefinition,
+  destination: FieldDefinition,
+  node: Extract<FlatNode, { type: 'instance' }>,
+  field: string,
+  path: string,
+): void {
+  const destinationRequired = destination.required === true && destination.default === undefined;
+  const sourceOptional = source.required !== true && source.default === undefined;
+  if (destinationRequired && sourceOptional) {
+    throw new DocumentError(
+      'schema',
+      `Field binding "${field}" on node "${node.id}" may be undefined at "${path}" but "${field}" on "${node.component}" is required`,
+    );
+  }
+  if (!compatibleFieldType(source, destination)) {
+    throw new DocumentError(
+      'schema',
+      `Field binding "${field}" on node "${node.id}" maps ${source.type} to incompatible ${destination.type} field on "${node.component}"`,
+    );
+  }
+}
+
+function compatibleFieldType(source: FieldDefinition, destination: FieldDefinition): boolean {
+  const sourceKind = fieldValueKind(source.type);
+  const destinationKind = fieldValueKind(destination.type);
+  if (sourceKind !== destinationKind) return false;
+  if (destination.type === 'enum') {
+    if (source.type !== 'enum') return false;
+    return (source.options ?? []).every((option) => destination.options?.includes(option));
+  }
+  return true;
+}
+
+function fieldValueKind(
+  type: FieldDefinition['type'],
+): 'string' | 'number' | 'boolean' | 'array' | 'object' {
+  if (type === 'number') return 'number';
+  if (type === 'boolean') return 'boolean';
+  if (type === 'array') return 'array';
+  if (type === 'object') return 'object';
+  return 'string';
 }
 
 function assertDataPath(path: string, scope: DataScope, context: string): FieldDefinition {
@@ -359,6 +412,7 @@ function itemField(field: FieldDefinition, name: string): FieldDefinition | unde
   return {
     name,
     type: items.type,
+    required: true,
     ...(items.fields ? { items: { type: items.type, fields: items.fields } } : {}),
   };
 }
