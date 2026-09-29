@@ -53,7 +53,11 @@ export function buildEditorSnapshot(ctx: SnapshotBuildContext): EditorSnapshot {
   const document = ctx.document;
   const activeDocument =
     ctx.activeVariantName && document.kind === 'component'
-      ? toFlat(resolveVariantDocument(toNested(document), ctx.activeVariantName))
+      ? toFlat(
+          resolveVariantDocument(toNested(document), ctx.activeVariantName, {
+            preserveStyleLayers: true,
+          }),
+        )
       : document;
   const design = ctx.design;
   const selectedNode = ctx.selectedNodeId

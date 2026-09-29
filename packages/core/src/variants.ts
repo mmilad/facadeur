@@ -22,7 +22,11 @@ export function variantPresets(document: DocumentFile): VariantPreset[] {
  * Resolve a named component variant into a renderable document.
  * The source document is never mutated: `removed` only affects the returned tree.
  */
-export function resolveVariantDocument(document: DocumentFile, name = 'default'): DocumentFile {
+export function resolveVariantDocument(
+  document: DocumentFile,
+  name = 'default',
+  options: { preserveStyleLayers?: boolean } = {},
+): DocumentFile {
   if (name === 'default') return structuredClone(document);
   const preset = variantPresets(document).find((variant) => variant.name === name);
   if (!preset) return structuredClone(document);
@@ -53,7 +57,9 @@ export function resolveVariantDocument(document: DocumentFile, name = 'default')
 
   const removed = new Set(overrides.removed ?? []);
   next.root = applyNode(next.root, overrides.nodes ?? {}, removed, overrides.insertions ?? []);
-  next.styles = resolveNamedVariantStyles(next.styles, name);
+  next.styles = options.preserveStyleLayers
+    ? structuredClone(next.styles)
+    : resolveNamedVariantStyles(next.styles, name);
   return next;
 }
 

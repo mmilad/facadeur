@@ -19,6 +19,10 @@ const variantComponent: DocumentFile = {
   kind: 'component',
   fields: [{ name: 'label', type: 'text', default: 'Base' }],
   variants: [{ name: 'default' }, { name: 'compact', overrides: { fields: { label: 'Compact' } } }],
+  styles: {
+    declarations: { color: 'black' },
+    variants: { variant: { compact: { declarations: { color: 'navy' } } } },
+  },
   root: {
     id: 'root',
     type: 'text',
@@ -120,6 +124,44 @@ describe('editor session', () => {
       { name: 'default' },
       { name: 'compact', overrides: { fields: { label: 'Compact' } } },
     ]);
+  });
+
+  it('keeps sparse variant style layers intact while editing the active variant', () => {
+    const editor = session();
+    editor.openAsset('variant-component', 'root');
+    editor.setActiveVariant('compact');
+
+    expect(editor.getSnapshot().activeDocument.styles).toEqual({
+      declarations: { color: 'black' },
+      variants: { variant: { compact: { declarations: { color: 'navy' } } } },
+    });
+
+    const editedStyles = structuredClone(editor.getSnapshot().activeDocument.styles!);
+    editedStyles.variants!.variant!.compact!.declarations!.background = 'white';
+    editor.execute({ type: 'setStyleBlock', style: editedStyles });
+
+    const unchanged = editor
+      .boardDocuments()
+      .find((document) => document.id === 'variant-component');
+    expect(unchanged?.styles?.variants?.variant?.compact?.declarations).toEqual({
+      color: 'navy',
+      background: 'white',
+    });
+
+    editor.execute({ type: 'setStyle', nodeId: 'root', property: 'fontWeight', value: '700' });
+
+    const source = editor
+      .boardDocuments()
+      .find((document) => document.id === 'variant-component');
+    expect(source?.styles?.variants?.variant?.compact?.declarations).toEqual({
+      color: 'navy',
+      background: 'white',
+    });
+    expect(source?.root.type === 'instance' ? undefined : source?.root.style).toBeUndefined();
+    expect(source?.variants?.[1]).toMatchObject({
+      name: 'compact',
+      overrides: { nodes: { root: { style: { fontWeight: '700' } } } },
+    });
   });
 
   it('edits the open document through commands and undoes across stores', () => {

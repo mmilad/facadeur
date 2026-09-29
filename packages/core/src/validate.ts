@@ -398,7 +398,10 @@ function validateVariantContracts(
   document: DocumentFile,
   catalog: Map<string, DocumentFile>,
 ): void {
-  for (const variant of variantPresets(document)) {
+  // `default` is the source document itself. Its style block may contain
+  // sparse named-variant layers, so validating it after stripping the variant
+  // contract would incorrectly report the reserved `variant` axis as unknown.
+  for (const variant of variantPresets(document).filter((item) => item.name !== 'default')) {
     const resolvedFile = resolveVariantDocument(document, variant.name);
     validateExposedContracts(resolvedFile, catalog);
 
