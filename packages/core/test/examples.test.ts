@@ -59,6 +59,24 @@ describe('examples', () => {
       type: 'frame',
       children: [{ type: 'instance', component: 'specimen-section' }],
     });
+    const formSection = documents.find((document) => document.id === 'form-controls-section');
+    expect(formSection?.kind).toBe('component');
+    expect(formSection?.group).toBe('form');
+    expect(formSection?.fields?.find((field) => field.name === 'formFields')).toMatchObject({
+      type: 'array',
+      items: { type: 'object' },
+    });
+    const dataForm =
+      formSection?.root.type === 'frame'
+        ? formSection.root.children?.find((child) => child.id === 'data-driven-form')
+        : undefined;
+    const repeatedForm =
+      dataForm?.type === 'frame'
+        ? dataForm.children?.find((child) => child.id === 'data-form')
+        : undefined;
+    expect(repeatedForm).toMatchObject({
+      repeat: { path: 'formFields', as: 'field', key: 'id' },
+    });
   });
 
   it('exports JSON Schema that matches the committed file', () => {

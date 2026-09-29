@@ -2,7 +2,8 @@
   "version": 1,
   "id": "form-controls-section",
   "name": "Form controls section",
-  "kind": "section",
+  "kind": "component",
+  "group": "form",
   "tokenInterface": {
     "reads": [
       "color.bg.canvas",
@@ -95,6 +96,52 @@
       }
     }
   },
+  "fields": [
+    {
+      "name": "formFields",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "fields": [
+          { "name": "id", "type": "text", "required": true },
+          {
+            "name": "kind",
+            "type": "enum",
+            "required": true,
+            "options": ["input", "textarea", "select", "toggle"]
+          },
+          { "name": "label", "type": "text", "required": true },
+          { "name": "value", "type": "text" },
+          { "name": "placeholder", "type": "text" },
+          { "name": "hint", "type": "text" },
+          { "name": "rows", "type": "number" }
+        ]
+      },
+      "default": [
+        {
+          "id": "name",
+          "kind": "input",
+          "label": "Name",
+          "value": "Ada Lovelace",
+          "placeholder": "Your name"
+        },
+        {
+          "id": "message",
+          "kind": "textarea",
+          "label": "Message",
+          "value": "A data-driven textarea",
+          "rows": 3
+        },
+        {
+          "id": "property",
+          "kind": "select",
+          "label": "Property",
+          "value": "color.text.primary"
+        },
+        { "id": "enabled", "kind": "toggle", "label": "Use token", "value": "On" }
+      ]
+    }
+  ],
   "root": {
     "id": "root",
     "type": "frame",
@@ -506,6 +553,80 @@
             "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } },
             "fields": { "label": "+ Add field" },
             "variants": { "tone": "secondary", "size": "sm" }
+          }
+        ]
+      },
+      {
+        "id": "data-driven-form",
+        "type": "frame",
+        "tag": "section",
+        "layout": {
+          "direction": "column",
+          "align": "stretch",
+          "gap": "{space.gap.md}",
+          "width": { "mode": "fill" },
+          "height": { "mode": "hug" }
+        },
+        "children": [
+          {
+            "id": "data-driven-title",
+            "type": "text",
+            "tag": "h2",
+            "text": "Data-driven form",
+            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+          },
+          {
+            "id": "data-form",
+            "type": "frame",
+            "tag": "div",
+            "repeat": { "path": "formFields", "as": "field", "key": "id" },
+            "layout": {
+              "direction": "column",
+              "align": "stretch",
+              "gap": "{space.gap.md}",
+              "width": { "mode": "fill" },
+              "height": { "mode": "hug" }
+            },
+            "children": [
+              {
+                "id": "data-input",
+                "type": "instance",
+                "component": "form-text-input",
+                "displayOn": { "path": "field.kind", "equals": "input" },
+                "fieldBindings": {
+                  "label": "field.label",
+                  "hint": "field.hint",
+                  "value": "field.value",
+                  "placeholder": "field.placeholder"
+                }
+              },
+              {
+                "id": "data-textarea",
+                "type": "instance",
+                "component": "textarea",
+                "displayOn": { "path": "field.kind", "equals": "textarea" },
+                "fieldBindings": {
+                  "label": "field.label",
+                  "value": "field.value",
+                  "placeholder": "field.placeholder",
+                  "rows": "field.rows"
+                }
+              },
+              {
+                "id": "data-select",
+                "type": "instance",
+                "component": "form-select",
+                "displayOn": { "path": "field.kind", "equals": "select" },
+                "fieldBindings": { "label": "field.label", "value": "field.value" }
+              },
+              {
+                "id": "data-toggle",
+                "type": "instance",
+                "component": "form-toggle",
+                "displayOn": { "path": "field.kind", "equals": "toggle" },
+                "fieldBindings": { "label": "field.label", "value": "field.value" }
+              }
+            ]
           }
         ]
       }

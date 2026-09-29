@@ -7,9 +7,23 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { FormControlsSection } from '@facadeur/ui';
 
 const meta = {
-  title: 'Sections/FormControlsSection',
+  title: 'Components/FormControlsSection',
   component: FormControlsSection,
   tags: ['autodocs'],
+  args: {
+    formFields: [
+      { id: 'name', kind: 'input', label: 'Name', value: 'Ada Lovelace', placeholder: 'Your name' },
+      {
+        id: 'message',
+        kind: 'textarea',
+        label: 'Message',
+        value: 'A data-driven textarea',
+        rows: 3,
+      },
+      { id: 'property', kind: 'select', label: 'Property', value: 'color.text.primary' },
+      { id: 'enabled', kind: 'toggle', label: 'Use token', value: 'On' },
+    ],
+  },
 } satisfies Meta<typeof FormControlsSection>;
 
 export default meta;

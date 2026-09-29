@@ -13,12 +13,30 @@ import { Input } from './Input';
 import { Textarea } from './Textarea';
 
 export interface FormControlsSectionProps {
+  formFields?: {
+    id: string;
+    kind: 'input' | 'textarea' | 'select' | 'toggle';
+    label: string;
+    value?: string;
+    placeholder?: string;
+    hint?: string;
+    rows?: number;
+  }[];
   /** Instance id. Sets `data-node` so a parent style rule can address this element. */
   nodeId?: string;
   className?: string;
 }
 
-export function FormControlsSection({ nodeId, className }: FormControlsSectionProps) {
+export function FormControlsSection({
+  formFields = [
+    { id: 'name', kind: 'input', label: 'Name', value: 'Ada Lovelace', placeholder: 'Your name' },
+    { id: 'message', kind: 'textarea', label: 'Message', value: 'A data-driven textarea', rows: 3 },
+    { id: 'property', kind: 'select', label: 'Property', value: 'color.text.primary' },
+    { id: 'enabled', kind: 'toggle', label: 'Use token', value: 'On' },
+  ],
+  nodeId,
+  className,
+}: FormControlsSectionProps) {
   return (
     <main data-component="form-controls-section" data-node={nodeId} className={className}>
       <header data-node="intro">
@@ -119,6 +137,37 @@ export function FormControlsSection({ nodeId, className }: FormControlsSectionPr
           <FormFieldRow nodeId="field-disabled" name="disabled" type="boolean" value="false" />
         </div>
         <Button nodeId="add-field" label="+ Add field" tone="secondary" size="sm" />
+      </section>
+      <section data-node="data-driven-form">
+        <h2 data-node="data-driven-title">Data-driven form</h2>
+        {formFields.map((field, fieldIndex) => (
+          <div data-node="data-form" key={field?.id}>
+            {field?.kind === 'input' && (
+              <FormTextInput
+                nodeId="data-input"
+                label={field?.label}
+                hint={field?.hint}
+                value={field?.value}
+                placeholder={field?.placeholder}
+              />
+            )}
+            {field?.kind === 'textarea' && (
+              <Textarea
+                nodeId="data-textarea"
+                label={field?.label}
+                value={field?.value}
+                placeholder={field?.placeholder}
+                rows={field?.rows}
+              />
+            )}
+            {field?.kind === 'select' && (
+              <FormSelect nodeId="data-select" label={field?.label} value={field?.value} />
+            )}
+            {field?.kind === 'toggle' && (
+              <FormToggle nodeId="data-toggle" label={field?.label} value={field?.value} />
+            )}
+          </div>
+        ))}
       </section>
     </main>
   );

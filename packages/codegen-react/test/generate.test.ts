@@ -189,6 +189,17 @@ describe('generateReact', () => {
     expect(formToggle).toContain("data-node='state'");
     expect(formToggle).toContain('{value}');
   });
+
+  it('generates the example form as a data-driven type switch', () => {
+    const form = source(files, 'components/FormControlsSection.tsx');
+    expect(form).toContain('formFields?:');
+    expect(form).toContain('{formFields.map((field, fieldIndex) => (');
+    expect(form).toContain("field?.kind === 'input'");
+    expect(form).toContain("field?.kind === 'textarea'");
+    expect(form).toContain("field?.kind === 'select'");
+    expect(form).toContain("field?.kind === 'toggle'");
+    expect(form).toContain('label={field?.label}');
+  });
 });
 
 describe('bindings outside the examples', () => {
@@ -479,10 +490,7 @@ describe('atom contracts', () => {
       name: 'Optional variant default',
       kind: 'component',
       fields: [{ name: 'title', type: 'text', default: 'Title' }],
-      variants: [
-        { name: 'default' },
-        { name: 'empty', overrides: { unsetFields: ['title'] } },
-      ],
+      variants: [{ name: 'default' }, { name: 'empty', overrides: { unsetFields: ['title'] } }],
       root: {
         id: 'root',
         type: 'text',

@@ -18,7 +18,7 @@ export interface NestingRule {
 
 /**
  * Atoms contain only primitives. Components and sections may also instance atoms
- * and components. A page canvas holds only instances of sections.
+ * and components. A page canvas holds instances of sections or composed components.
  */
 export const defaultNestingRules: Record<DefaultKind, NestingRule> = {
   atom: {
@@ -39,6 +39,6 @@ export const defaultNestingRules: Record<DefaultKind, NestingRule> = {
   page: {
     rootNodeTypes: ['frame'],
     nodeTypes: ['instance'],
-    instanceKinds: ['section'],
+    instanceKinds: ['section', 'component'],
   },
 };
