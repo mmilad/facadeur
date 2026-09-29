@@ -374,7 +374,8 @@ function definitionForInstance(
 ): DocumentFile | undefined {
   const base = ctx.catalog.get(node.component);
   if (!base) return undefined;
-  const selected = node.variants?.variant;
+  const hasNamedVariants = variantPresets(base).some((variant) => variant.name !== 'default');
+  const selected = hasNamedVariants ? node.variants?.variant : undefined;
   return selected ? resolveVariantDocument(base, selected) : base;
 }
 
@@ -715,12 +716,18 @@ function resolveVariants(
   overrides: Record<string, string> | undefined,
 ): Record<string, string> {
   const resolved: Record<string, string> = {};
+  const hasNamedVariants = variantPresets(document).some((variant) => variant.name !== 'default');
   for (const axis of (document.variants ?? []).filter(isVariantAxis)) {
     const fallback = axis.default ?? axis.values[0];
     if (fallback !== undefined) resolved[axis.name] = fallback;
   }
-  if (variantPresets(document).length) resolved.variant = overrides?.variant ?? 'default';
-  for (const [name, value] of Object.entries(overrides ?? {})) resolved[name] = value;
+  if (hasNamedVariants) {
+    resolved.variant = overrides?.variant ?? 'default';
+  }
+  for (const [name, value] of Object.entries(overrides ?? {})) {
+    if (name === 'variant' && !hasNamedVariants) continue;
+    resolved[name] = value;
+  }
   return resolved;
 }
 

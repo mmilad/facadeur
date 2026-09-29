@@ -946,12 +946,13 @@ function validateInstanceOverrides(doc: FlatDocument, catalog: Map<string, Docum
       (target.variants ?? []).filter(isVariantAxis).map((axis) => [axis.name, axis]),
     );
     const presets = variantPresets(target);
+    const namedPresets = presets.filter((preset) => preset.name !== 'default');
     for (const [name, value] of Object.entries(node.variants ?? {})) {
-      if (name === 'variant' && presets.length > 0) {
-        if (!presets.some((preset) => preset.name === value)) {
+      if (name === 'variant' && namedPresets.length > 0) {
+        if (!namedPresets.some((preset) => preset.name === value)) {
           throw new DocumentError(
             'unknown-variant',
-            `Instance "${node.id}" uses "${value}" for variant on "${node.component}", expected ${presets.map((preset) => preset.name).join(', ')}`,
+            `Instance "${node.id}" uses "${value}" for variant on "${node.component}", expected ${namedPresets.map((preset) => preset.name).join(', ')}`,
           );
         }
         continue;

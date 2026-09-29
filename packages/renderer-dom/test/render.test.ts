@@ -509,6 +509,40 @@ describe('renderer', () => {
     expect(cardElement?.querySelector('[data-node="body"]')).toBeNull();
   });
 
+  it('does not emit a named variant marker for a default-only preset', () => {
+    const card: DocumentFile = {
+      version: 1,
+      id: 'default-only-card',
+      name: 'Default-only card',
+      kind: 'component',
+      variants: [{ name: 'default' }],
+      root: { id: 'root', type: 'text', tag: 'span', text: 'Card' },
+    };
+    const host: DocumentFile = {
+      version: 1,
+      id: 'default-only-host',
+      name: 'Default-only host',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'card',
+            type: 'instance',
+            component: 'default-only-card',
+            variants: { variant: 'default' },
+          },
+        ],
+      },
+    };
+    const element = document.createElement('div');
+    renderDocument(host, [host, card], element, { paintRoot: true });
+    const cardElement = element.querySelector('[data-component="default-only-card"]');
+    expect(cardElement?.getAttribute('data-variant')).toBeNull();
+    expect(cardElement?.textContent).toBe('Card');
+  });
+
   it('renders the data-driven media example with mutually exclusive branches', () => {
     const media = examples().find((document) => document.id === 'media');
     if (!media) throw new Error('missing media example');

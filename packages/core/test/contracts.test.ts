@@ -195,6 +195,47 @@ describe('component contracts', () => {
     );
   });
 
+  it('does not expose a named variant contract for a default-only preset', () => {
+    const card: DocumentFile = {
+      version: 1,
+      id: 'default-only-card',
+      name: 'Default-only card',
+      kind: 'component',
+      variants: [{ name: 'default' }],
+      root: { id: 'root', type: 'text', tag: 'span', text: 'Card' },
+    };
+    const host: DocumentFile = {
+      version: 1,
+      id: 'default-only-host',
+      name: 'Default-only host',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [{ id: 'card', type: 'instance', component: 'default-only-card' }],
+      },
+    };
+
+    expect(() => validateCatalog([host, card])).not.toThrow();
+    const invalidHost: DocumentFile = {
+      ...host,
+      id: 'invalid-default-only-host',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'card',
+            type: 'instance',
+            component: 'default-only-card',
+            variants: { variant: 'default' },
+          },
+        ],
+      },
+    };
+    expect(() => validateCatalog([invalidHost, card])).toThrow(/unknown variant/);
+  });
+
   it('validates data paths introduced by a variant overlay', () => {
     const invalid: DocumentFile = {
       version: 1,
