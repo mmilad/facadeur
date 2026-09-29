@@ -334,7 +334,31 @@ describe('applyCommand', () => {
         }),
         { type: 'setExpose', expose: { fields: { value: '' } } },
       ),
-    ).toThrow(/needs a path/);
+    ).toThrow(/needs a valid dot path/);
+    expect(() =>
+      applyCommand(
+        toFlat({
+          version: 1,
+          id: 'invalid-expose-name',
+          name: 'Invalid expose name',
+          kind: 'component',
+          root: { id: 'root', type: 'frame' },
+        }),
+        { type: 'setExpose', expose: { fields: { 'not valid': 'control.value' } } },
+      ),
+    ).toThrow(/Invalid exposed field name/);
+    expect(() =>
+      applyCommand(
+        toFlat({
+          version: 1,
+          id: 'invalid-expose-path',
+          name: 'Invalid expose path',
+          kind: 'component',
+          root: { id: 'root', type: 'frame' },
+        }),
+        { type: 'setExpose', expose: { fields: { value: 'control.value with spaces' } } },
+      ),
+    ).toThrow(/needs a valid dot path/);
   });
 
   it('creates, replaces, and removes sparse named variant presets', () => {

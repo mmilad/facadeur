@@ -423,12 +423,15 @@ export function assertExpose(expose: Expose): void {
     ['event', expose.events ?? {}],
   ] as const) {
     for (const [name, path] of Object.entries(paths)) {
+      if (!ID_PATTERN.test(name)) {
+        throw new DocumentError('schema', `Invalid exposed ${kind} name "${name}"`);
+      }
       if (names.has(name)) {
         throw new DocumentError('schema', `Expose name "${name}" is used more than once`);
       }
       names.add(name);
-      if (!path.trim()) {
-        throw new DocumentError('schema', `Exposed ${kind} "${name}" needs a path`);
+      if (!EXPOSE_PATH.test(path)) {
+        throw new DocumentError('schema', `Exposed ${kind} "${name}" needs a valid dot path`);
       }
     }
   }
@@ -857,6 +860,7 @@ export function assertBindings(bindings: Binding[] | undefined): void {
 }
 
 const DATA_PATH = /^[A-Za-z_$][A-Za-z0-9_$-]*(\.[A-Za-z_$][A-Za-z0-9_$-]*)*$/;
+const EXPOSE_PATH = /^[A-Za-z][A-Za-z0-9_-]*(\.[A-Za-z][A-Za-z0-9_-]*)*$/;
 
 export function assertDisplayOn(value: unknown): asserts value is DisplayOn {
   if (!isRecord(value) || typeof value.path !== 'string' || !DATA_PATH.test(value.path)) {
