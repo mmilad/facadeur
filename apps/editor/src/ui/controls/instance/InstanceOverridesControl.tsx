@@ -1,5 +1,5 @@
 import type { FieldDefinition, FieldValue, VariantAxis } from '@facadeur/core';
-import { Field, Select, Stack, TextInput, Toggle } from '../../form/index.js';
+import { Field, Select, Stack, TextArea, TextInput, Toggle } from '../../form/index.js';
 import '../../form/form.css';
 import { fieldDisplayLabel } from '../data/field-label.js';
 import { parseInstanceFieldValue } from '../data/value.js';
@@ -115,6 +115,27 @@ function InstanceFieldOverride({
           label="On"
           value={checked}
           onCommit={(next) => onSetField(next)}
+        />
+      </Field>
+    );
+  }
+  if (field.type === 'array' || field.type === 'object') {
+    const shown = override === undefined || override === null ? '' : JSON.stringify(override, null, 2);
+    const placeholder = field.default === undefined ? undefined : JSON.stringify(field.default, null, 2);
+    return (
+      <Field label={fieldDisplayLabel(field.name)}>
+        <TextArea
+          name={`field-${field.name}`}
+          value={shown}
+          placeholder={placeholder}
+          rows={4}
+          onCommit={(raw) => {
+            try {
+              onSetField(raw.trim() === '' ? null : parseInstanceFieldValue(field, raw));
+            } catch (error) {
+              onInvalid?.(error instanceof Error ? error.message : 'Invalid field');
+            }
+          }}
         />
       </Field>
     );

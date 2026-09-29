@@ -64,5 +64,33 @@ export function parseInstanceFieldValue(field: FieldDefinition, raw: string): Fi
     return value;
   }
   if (field.type === 'boolean') return raw === 'true';
+  if (field.type === 'array' || field.type === 'object') {
+    let value: unknown;
+    try {
+      value = JSON.parse(raw);
+    } catch {
+      throw new Error(`${field.name} must be valid JSON`);
+    }
+    if (!isFieldValue(value)) throw new Error(`${field.name} contains an unsupported JSON value`);
+    if (field.type === 'array' && !Array.isArray(value)) {
+      throw new Error(`${field.name} must be a JSON array`);
+    }
+    if (field.type === 'object' && (!isRecord(value) || Array.isArray(value))) {
+      throw new Error(`${field.name} must be a JSON object`);
+    }
+    return value;
+  }
   return raw;
+}
+
+function isFieldValue(value: unknown): value is FieldValue {
+  if (typeof value === 'string' || typeof value === 'boolean') return true;
+  if (typeof value === 'number') return Number.isFinite(value);
+  if (Array.isArray(value)) return value.every(isFieldValue);
+  if (isRecord(value)) return Object.values(value).every(isFieldValue);
+  return false;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

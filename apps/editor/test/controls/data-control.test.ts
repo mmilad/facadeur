@@ -49,6 +49,18 @@ describe('data control helpers', () => {
   it('parses instance field values', () => {
     expect(parseInstanceFieldValue({ name: 'n', type: 'number' }, '3')).toBe(3);
     expect(() => parseInstanceFieldValue({ name: 'n', type: 'number' }, 'x')).toThrow();
+    expect(parseInstanceFieldValue({ name: 'items', type: 'array' }, '[{"kind":"input"}]')).toEqual([
+      { kind: 'input' },
+    ]);
+    expect(parseInstanceFieldValue({ name: 'data', type: 'object' }, '{"title":"Hello"}')).toEqual({
+      title: 'Hello',
+    });
+    expect(() => parseInstanceFieldValue({ name: 'items', type: 'array' }, '{"kind":"input"}')).toThrow(
+      /array/,
+    );
+    expect(() => parseInstanceFieldValue({ name: 'data', type: 'object' }, '{"title":null}')).toThrow(
+      /unsupported JSON/,
+    );
   });
 
   it('humanizes field names without changing their stored keys', () => {
