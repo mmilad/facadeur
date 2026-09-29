@@ -425,11 +425,73 @@ export const variantNodeOverrideSchema = Type.Object(
   { additionalProperties: false },
 );
 
+const stringMapSchema = Type.Record(Type.String({ minLength: 1 }), Type.String());
+
+const sharedNodeProps = {
+  id: idSchema,
+  name: Type.Optional(Type.String({ minLength: 1 })),
+  tag: Type.Optional(Type.String({ pattern: '^[A-Za-z][A-Za-z0-9-]*$' })),
+  attributes: Type.Optional(stringMapSchema),
+  displayOn: Type.Optional(displayOnSchema),
+  layout: Type.Optional(layoutSchema),
+  bindings: Type.Optional(Type.Array(bindingSchema)),
+  eventBindings: Type.Optional(Type.Array(eventBindingSchema)),
+  style: Type.Optional(stringMapSchema),
+};
+
+export const nestedNodeSchema = Type.Recursive(
+  (Self) =>
+    Type.Union([
+      Type.Object(
+        {
+          ...sharedNodeProps,
+          type: Type.Literal('frame'),
+          repeat: Type.Optional(repeatSchema),
+          children: Type.Optional(Type.Array(Self)),
+        },
+        { additionalProperties: false },
+      ),
+      Type.Object(
+        {
+          ...sharedNodeProps,
+          type: Type.Literal('text'),
+          text: Type.Optional(Type.String()),
+        },
+        { additionalProperties: false },
+      ),
+      Type.Object(
+        {
+          ...sharedNodeProps,
+          type: Type.Literal('image'),
+          src: Type.Optional(Type.String()),
+          alt: Type.Optional(Type.String()),
+        },
+        { additionalProperties: false },
+      ),
+      Type.Object(
+        {
+          id: idSchema,
+          name: Type.Optional(Type.String({ minLength: 1 })),
+          layout: Type.Optional(layoutSchema),
+          displayOn: Type.Optional(displayOnSchema),
+          type: Type.Literal('instance'),
+          component: idSchema,
+          fields: Type.Optional(Type.Record(idSchema, fieldValueSchema)),
+          fieldBindings: Type.Optional(Type.Record(idSchema, dataPathSchema)),
+          variants: Type.Optional(Type.Record(idSchema, Type.String())),
+          expose: Type.Optional(exposeSchema),
+        },
+        { additionalProperties: false },
+      ),
+    ]),
+  { $id: 'https://github.com/mmilad/facadeur/schema/nested-node' },
+);
+
 export const variantInsertionSchema = Type.Object(
   {
     parent: nodeTargetSchema,
     index: Type.Optional(Type.Integer({ minimum: 0 })),
-    node: Type.Unknown(),
+    node: Type.Ref(nestedNodeSchema),
   },
   { additionalProperties: false },
 );
@@ -452,66 +514,6 @@ export const variantPresetSchema = Type.Object(
     overrides: Type.Optional(variantOverridesSchema),
   },
   { additionalProperties: false },
-);
-
-const stringMapSchema = Type.Record(Type.String({ minLength: 1 }), Type.String());
-
-const sharedNodeProps = {
-  id: idSchema,
-  name: Type.Optional(Type.String({ minLength: 1 })),
-  tag: Type.Optional(Type.String({ pattern: '^[A-Za-z][A-Za-z0-9-]*$' })),
-  attributes: Type.Optional(stringMapSchema),
-  displayOn: Type.Optional(displayOnSchema),
-  layout: Type.Optional(layoutSchema),
-  bindings: Type.Optional(Type.Array(bindingSchema)),
-  eventBindings: Type.Optional(Type.Array(eventBindingSchema)),
-  style: Type.Optional(stringMapSchema),
-};
-
-export const nestedNodeSchema = Type.Recursive((Self) =>
-  Type.Union([
-    Type.Object(
-      {
-        ...sharedNodeProps,
-        type: Type.Literal('frame'),
-        repeat: Type.Optional(repeatSchema),
-        children: Type.Optional(Type.Array(Self)),
-      },
-      { additionalProperties: false },
-    ),
-    Type.Object(
-      {
-        ...sharedNodeProps,
-        type: Type.Literal('text'),
-        text: Type.Optional(Type.String()),
-      },
-      { additionalProperties: false },
-    ),
-    Type.Object(
-      {
-        ...sharedNodeProps,
-        type: Type.Literal('image'),
-        src: Type.Optional(Type.String()),
-        alt: Type.Optional(Type.String()),
-      },
-      { additionalProperties: false },
-    ),
-    Type.Object(
-      {
-        id: idSchema,
-        name: Type.Optional(Type.String({ minLength: 1 })),
-        layout: Type.Optional(layoutSchema),
-        displayOn: Type.Optional(displayOnSchema),
-        type: Type.Literal('instance'),
-        component: idSchema,
-        fields: Type.Optional(Type.Record(idSchema, fieldValueSchema)),
-        fieldBindings: Type.Optional(Type.Record(idSchema, dataPathSchema)),
-        variants: Type.Optional(Type.Record(idSchema, Type.String())),
-        expose: Type.Optional(exposeSchema),
-      },
-      { additionalProperties: false },
-    ),
-  ]),
 );
 
 export const settingsSchema = Type.Object(

@@ -320,4 +320,41 @@ describe('variant overlays', () => {
     } satisfies DocumentFile;
     expect(() => validateCatalog([invalid])).toThrow(/set and unset/);
   });
+
+  it('rejects malformed variant insertion nodes at the document boundary', () => {
+    const invalid = {
+      ...specimen,
+      id: 'invalid-insertion-shape',
+      variants: [
+        {
+          name: 'broken',
+          overrides: {
+            insertions: [{ parent: 'root', node: { id: 'bad', type: 'unknown' } }],
+          },
+        },
+      ],
+    };
+    expect(() => validateCatalog([invalid])).toThrow(/schema/i);
+  });
+
+  it('validates inserted nodes against the resolved variant tree and catalog', () => {
+    const invalid = {
+      ...specimen,
+      id: 'invalid-inserted-component',
+      variants: [
+        {
+          name: 'broken',
+          overrides: {
+            insertions: [
+              {
+                parent: 'root',
+                node: { id: 'missing-instance', type: 'instance', component: 'missing-component' },
+              },
+            ],
+          },
+        },
+      ],
+    } satisfies DocumentFile;
+    expect(() => validateCatalog([invalid])).toThrow(/Unknown component "missing-component"/);
+  });
 });

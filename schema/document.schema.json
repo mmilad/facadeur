@@ -1389,7 +1389,9 @@
                           "minimum": 0,
                           "type": "integer"
                         },
-                        "node": {}
+                        "node": {
+                          "$ref": "https://github.com/mmilad/facadeur/schema/nested-node"
+                        }
                       }
                     }
                   }
@@ -1939,7 +1941,7 @@
       }
     },
     "root": {
-      "$id": "T1",
+      "$id": "https://github.com/mmilad/facadeur/schema/nested-node",
       "anyOf": [
         {
           "additionalProperties": false,
@@ -2881,7 +2883,7 @@
             "children": {
               "type": "array",
               "items": {
-                "$ref": "T1"
+                "$ref": "https://github.com/mmilad/facadeur/schema/nested-node"
               }
             }
           }

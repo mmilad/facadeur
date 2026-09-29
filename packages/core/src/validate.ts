@@ -360,8 +360,22 @@ function validateVariantContracts(
   catalog: Map<string, DocumentFile>,
 ): void {
   for (const variant of variantPresets(document)) {
-    const resolved = toFlat(resolveVariantDocument(document, variant.name));
-    validateDataContracts(resolved, catalog);
+    const resolvedFile = resolveVariantDocument(document, variant.name);
+    validateExposedContracts(resolvedFile, catalog);
+
+    // A resolved variant is a complete document contract. Validate it without
+    // re-validating the source presets, whose targets may intentionally point
+    // at nodes removed by this variant.
+    const resolved = toFlat(resolvedFile);
+    const validationDoc: FlatDocument = { ...resolved, variants: [] };
+    delete validationDoc.variantPresets;
+    validateDefinitions(validationDoc);
+    validateLibraries(validationDoc);
+    validateTree(validationDoc, {
+      resolveKind: (componentId) => catalog.get(componentId)?.kind,
+    });
+    validateDataContracts(validationDoc, catalog);
+    validateInstanceOverrides(validationDoc, catalog);
   }
 }
 
