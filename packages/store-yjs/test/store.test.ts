@@ -32,6 +32,7 @@ function run(store: ReturnType<typeof createDocumentStore>, command: Command): F
 
 describe('Yjs document store', () => {
   it('preserves instance expose contracts through the Yjs codec', () => {
+    if (initial.root.type !== 'frame') throw new Error('expected frame root');
     const file: DocumentFile = {
       ...initial,
       root: {

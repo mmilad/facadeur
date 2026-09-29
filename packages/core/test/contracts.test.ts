@@ -265,6 +265,26 @@ describe('component contracts', () => {
     expect(() => validateCatalog([invalidRepeatKey])).toThrow(/must resolve to a scalar/);
   });
 
+  it('validates primitive array item types', () => {
+    const invalid: DocumentFile = {
+      version: 1,
+      id: 'invalid-array-item',
+      name: 'Invalid array item',
+      kind: 'component',
+      fields: [
+        {
+          name: 'scores',
+          type: 'array',
+          items: { type: 'number' },
+          default: ['not a number'],
+        },
+      ],
+      root: { id: 'root', type: 'text', text: 'Scores' },
+    };
+
+    expect(() => validateCatalog([invalid])).toThrow(/scores\[\].*finite number/);
+  });
+
   it('keeps structured semantic payloads separate from native event bindings', () => {
     const invalid: DocumentFile = {
       version: 1,

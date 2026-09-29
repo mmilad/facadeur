@@ -743,18 +743,15 @@ export function assertValueMatches(field: FieldDefinition, value: FieldValue): v
       return;
     case 'array':
       if (!Array.isArray(value)) throw new DocumentError('schema', `${label} expects an array`);
-      if (field.items?.type === 'object') {
-        for (const item of value) {
-          if (!isRecord(item)) throw new DocumentError('schema', `${label} expects object items`);
-          for (const definition of field.items.fields ?? []) {
-            const nested = item[definition.name];
-            if (nested !== undefined) assertValueMatches(definition, nested);
-            else if (definition.required) {
-              throw new DocumentError('schema', `${label} item is missing "${definition.name}"`);
-            }
-          }
-        }
-      }
+      if (!field.items) return;
+      const itemField: FieldDefinition = {
+        name: `${field.name}[]`,
+        type: field.items.type,
+        ...(field.items.fields
+          ? { items: { type: field.items.type, fields: field.items.fields } }
+          : {}),
+      };
+      for (const item of value) assertValueMatches(itemField, item);
       return;
     case 'object':
       if (!isRecord(value)) throw new DocumentError('schema', `${label} expects an object`);
