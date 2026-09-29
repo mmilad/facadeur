@@ -6,6 +6,9 @@ import {
   type VariantNodeOverride,
   type VariantOverrides,
   type VariantPreset,
+  type StyleBlock,
+  type StyleChild,
+  type StyleLayer,
 } from './schema.js';
 
 /** Return named overlay variants without exposing the legacy axis definitions. */
@@ -22,10 +25,10 @@ export function variantPresets(document: DocumentFile): VariantPreset[] {
 export function resolveVariantDocument(document: DocumentFile, name = 'default'): DocumentFile {
   if (name === 'default') return structuredClone(document);
   const preset = variantPresets(document).find((variant) => variant.name === name);
-  if (!preset?.overrides) return structuredClone(document);
+  if (!preset) return structuredClone(document);
 
   const next = structuredClone(document);
-  const overrides = preset.overrides;
+  const overrides = preset.overrides ?? {};
   const fields = new Map((next.fields ?? []).map((field) => [field.name, field]));
   for (const [fieldName, value] of Object.entries(overrides.fields ?? {})) {
     const field = fields.get(fieldName);
@@ -50,7 +53,53 @@ export function resolveVariantDocument(document: DocumentFile, name = 'default')
 
   const removed = new Set(overrides.removed ?? []);
   next.root = applyNode(next.root, overrides.nodes ?? {}, removed, overrides.insertions ?? []);
+  next.styles = resolveNamedVariantStyles(next.styles, name);
   return next;
+}
+
+/**
+ * Named presets reuse the style block's sparse variant layers under the reserved
+ * `variant` axis. Resolve that layer into the base styles for a materialized
+ * document, then remove the axis so the result validates as a standalone view.
+ */
+function resolveNamedVariantStyles(
+  styles: StyleBlock | undefined,
+  name: string,
+): StyleBlock | undefined {
+  if (!styles) return undefined;
+  const next = structuredClone(styles);
+  const rootLayer = next.variants?.variant?.[name];
+  if (rootLayer) mergeStyleLayer(next, rootLayer);
+  for (const child of Object.values(next.children ?? {})) {
+    const childLayer = child.variants?.variant?.[name];
+    if (childLayer) mergeStyleLayer(child, childLayer);
+  }
+  removeNamedVariantLayer(next);
+  return next;
+}
+
+function mergeStyleLayer(target: StyleBlock | StyleChild, source: StyleLayer): void {
+  if (source.declarations) {
+    target.declarations = { ...(target.declarations ?? {}), ...source.declarations };
+  }
+  if (source.states) {
+    const states = { ...(target.states ?? {}) };
+    for (const [name, declarations] of Object.entries(source.states)) {
+      if (!declarations) continue;
+      const state = name as keyof NonNullable<StyleChild['states']>;
+      states[state] = { ...(states[state] ?? {}), ...declarations };
+    }
+    target.states = states;
+  }
+}
+
+function removeNamedVariantLayer(styles: StyleBlock): void {
+  if (styles.variants?.variant) delete styles.variants.variant;
+  if (styles.variants && !Object.keys(styles.variants).length) delete styles.variants;
+  for (const child of Object.values(styles.children ?? {})) {
+    if (child.variants?.variant) delete child.variants.variant;
+    if (child.variants && !Object.keys(child.variants).length) delete child.variants;
+  }
 }
 
 /**

@@ -202,6 +202,10 @@ function assertStyleBlock(
       .filter(isVariantAxis)
       .map((axis) => [axis.name, new Set<string>(axis.values)] as const),
   );
+  const namedVariants = (doc.variantPresets ?? [])
+    .filter((variant) => variant.name !== 'default')
+    .map((variant) => variant.name);
+  if (namedVariants.length) axes.set('variant', new Set(['default', ...namedVariants]));
   const nodeIds = new Set(Object.keys(doc.nodes));
   assertLayerVariants(block, axes, 'Style block');
   for (const id of Object.keys(block.breakpoints ?? {})) assertBreakpoint(id, breakpoints, 'Style');

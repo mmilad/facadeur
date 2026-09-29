@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { applyCommand, DocumentError, toFlat, toNested, validateCatalog } from '@facadeur/core';
+import {
+  applyCommand,
+  DocumentError,
+  resolveVariantDocument,
+  toFlat,
+  toNested,
+  validateCatalog,
+} from '@facadeur/core';
 import type { DocumentFile } from '@facadeur/core';
 import button from '../../../examples/button.json';
 
@@ -12,6 +19,48 @@ describe('style block and auto layout', () => {
     expect(toNested(toFlat(document))).toEqual(document);
     expect(document.styles?.states?.hover?.background).toBe('{color.accent.hover}');
     expect(document.root.layout?.gap).toBe('{button.gap}');
+  });
+
+  it('validates and resolves named variant style layers without copying base styles', () => {
+    const source: DocumentFile = {
+      version: 1,
+      id: 'variant-style',
+      name: 'Variant style',
+      kind: 'component',
+      variants: [{ name: 'compact' }],
+      styles: {
+        declarations: { color: 'black' },
+        variants: {
+          variant: {
+            compact: {
+              declarations: { color: 'red' },
+              states: { hover: { color: 'blue' } },
+            },
+          },
+        },
+        children: {
+          title: {
+            declarations: { fontWeight: '400' },
+            variants: { variant: { compact: { declarations: { fontWeight: '700' } } } },
+          },
+        },
+      },
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [{ id: 'title', type: 'text', tag: 'h2', text: 'Base' }],
+      },
+    };
+
+    const [document] = validateCatalog([source]);
+    if (!document) throw new Error('missing variant style document');
+    const resolved = resolveVariantDocument(document, 'compact');
+
+    expect(document.styles?.declarations?.color).toBe('black');
+    expect(resolved.styles?.declarations).toEqual({ color: 'red' });
+    expect(resolved.styles?.states?.hover).toEqual({ color: 'blue' });
+    expect(resolved.styles?.children?.title?.declarations).toEqual({ fontWeight: '700' });
+    expect(resolved.styles?.variants?.variant).toBeUndefined();
   });
 
   it('rejects raw spacing and accepts a token, including per breakpoint', () => {

@@ -91,6 +91,23 @@ describe('component style block', () => {
     const hidden = text(compileDocument(button as DocumentFile, { address: 'canvas' }));
     expect(hidden).not.toContain('[data-id="root"]');
   });
+
+  it('compiles named preset style layers against data-variant', () => {
+    const document: DocumentFile = {
+      version: 1,
+      id: 'named-style',
+      name: 'Named style',
+      kind: 'component',
+      variants: [{ name: 'compact' }],
+      styles: {
+        variants: { variant: { compact: { declarations: { color: 'red' } } } },
+      },
+      root: { id: 'root', type: 'frame', tag: 'div' },
+    };
+    const compiled = text(compileDocument(document));
+    expect(compiled).toContain('[data-component="named-style"][data-variant="compact"]');
+    expect(compiled).toContain('color: red');
+  });
 });
 
 describe('style engine and renderer', () => {
