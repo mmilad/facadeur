@@ -95,6 +95,7 @@ function DisplayConditionEditor({
   const path = condition?.path ?? paths[0]?.value ?? '';
   const field = findField(paths, path);
   const mode: DisplayMode = condition && 'equals' in condition ? 'equals' : 'truthy';
+  const equalityAvailable = !field || isScalarField(field);
   let truthy = true;
   let equals: FieldValue | undefined;
   if (condition) {
@@ -128,7 +129,9 @@ function DisplayConditionEditor({
               options={pathOptions.map((option) => ({ value: option.value, label: option.label }))}
               onCommit={(nextPath) => {
                 const nextField = findField(paths, nextPath);
-                onChange(conditionForField(nextPath, nextField, mode, condition));
+                const nextMode =
+                  mode === 'equals' && nextField && !isScalarField(nextField) ? 'truthy' : mode;
+                onChange(conditionForField(nextPath, nextField, nextMode, condition));
               }}
             />
           </Field>
@@ -138,11 +141,12 @@ function DisplayConditionEditor({
               value={mode}
               options={[
                 { value: 'truthy', label: 'Value is truthy' },
-                { value: 'equals', label: 'Value equals' },
+                ...(equalityAvailable ? [{ value: 'equals', label: 'Value equals' }] : []),
               ]}
               onCommit={(nextMode) => {
                 const nextField = findField(paths, path);
                 const mode: DisplayMode = nextMode === 'equals' ? 'equals' : 'truthy';
+                if (mode === 'equals' && nextField && !isScalarField(nextField)) return;
                 onChange(conditionForField(path, nextField, mode, condition));
               }}
             />
@@ -249,7 +253,9 @@ function RepeatEditor({
   const arrayPaths = paths.filter((option) => option.field.type === 'array');
   const path = repeat?.path ?? arrayPaths[0]?.value ?? '';
   const source = findField(paths, path);
-  const keyOptions = source?.items?.fields ? fieldPathOptions(source.items.fields) : [];
+  const keyOptions = source?.items?.fields
+    ? fieldPathOptions(source.items.fields).filter(({ field }) => isScalarField(field))
+    : [];
   const visibleKeyOptions = withMissingOption(keyOptions, repeat?.key ?? '');
 
   return (
@@ -358,6 +364,10 @@ function fieldPathOptions(fields: FieldDefinition[], prefix = ''): PathOption[] 
 
 function findField(paths: PathOption[], path: string): FieldDefinition | undefined {
   return paths.find((option) => option.value === path)?.field;
+}
+
+function isScalarField(field: FieldDefinition): boolean {
+  return field.type !== 'array' && field.type !== 'object';
 }
 
 function withMissingOption(options: PathOption[], value: string): PathOption[] {

@@ -105,4 +105,59 @@ describe('data directives editor', () => {
       items: { fields: [{ name: 'title' }] },
     });
   });
+
+  it('offers only scalar fields for equality checks and repeat keys', async () => {
+    const user = userEvent.setup();
+    const fields = [
+      {
+        name: 'config',
+        type: 'object' as const,
+        items: {
+          type: 'object' as const,
+          fields: [{ name: 'enabled', type: 'boolean' as const }],
+        },
+      },
+      {
+        name: 'rows',
+        type: 'array' as const,
+        items: {
+          type: 'object' as const,
+          fields: [
+            { name: 'id', type: 'text' as const },
+            {
+              name: 'metadata',
+              type: 'object' as const,
+              items: { type: 'object' as const },
+            },
+          ],
+        },
+      },
+    ];
+    const { rerender, container } = render(
+      <DataDirectivesEditorControl
+        node={{ id: 'label', type: 'text', text: 'Label' }}
+        fields={fields}
+        onChangeDisplayOn={() => undefined}
+        onChangeRepeat={() => undefined}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Add condition' }));
+    expect(screen.queryByRole('option', { name: 'Value equals' })).not.toBeInTheDocument();
+
+    rerender(
+      <DataDirectivesEditorControl
+        node={{ id: 'root', type: 'frame', children: [], repeat: { path: 'rows' } }}
+        fields={fields}
+        onChangeDisplayOn={() => undefined}
+        onChangeRepeat={() => undefined}
+      />,
+    );
+    const key = container.querySelector<HTMLSelectElement>('select[name="repeat-key"]');
+    expect(key).not.toBeNull();
+    expect([...key!.querySelectorAll('option')].map((option) => option.textContent)).toEqual([
+      'Index',
+      'Id',
+    ]);
+  });
 });
