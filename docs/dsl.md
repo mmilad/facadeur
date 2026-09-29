@@ -117,7 +117,45 @@ An instance's `fields` object replaces those defaults for that instance only. Om
 
 ## Variants
 
-An axis lists its allowed strings. An instance's `variants` object picks one value per axis. Omitted axes use the axis `default`, then the first value. The renderer writes `data-variant-*` on the instance element. The component style block overrides declarations for those values.
+There are two related kinds of variants:
+
+- Variant axes are the public values an instance can select. An axis lists its allowed strings. An instance's `variants` object picks one value per axis. Omitted axes use the axis `default`, then the first value. The renderer writes `data-variant-*` on the instance element. The component style block overrides declarations for those values.
+- Named document presets are editor/codegen states. `default` is always the base document; additional presets contain sparse overrides and are resolved from that base when selected.
+
+```json
+{
+  "variants": [
+    { "name": "default" },
+    {
+      "name": "compact",
+      "overrides": {
+        "fields": { "label": "More" },
+        "nodes": { "root": { "layout": { "gap": "{space.2}" } } },
+        "removed": ["supporting-copy"]
+      }
+    }
+  ]
+}
+```
+
+Preset overrides are sparse: fields, node properties, render conditions, bindings, removed nodes, and insertions are stored only when they differ from `default`. New fields remain available in every preset because the base field contract is shared. A removed node is not deleted from the source tree; it is marked as removed for that preset and can be addressed by its stable path or identifier.
+
+Style overrides use the existing style block instead of duplicating style data inside every preset. A named preset uses the reserved style axis `variant`, for example `styles.variants.variant.compact`. That layer is sparse and can contain the same declarations, states, child styles, and breakpoint layers as any other style variant. Resolving `compact` materializes that layer into the active style block; the editor can preserve the sparse layer while the preset is active. Inline node styles remain available through `overrides.nodes.<path>.style` for local one-off changes.
+
+```json
+{
+  "styles": {
+    "declarations": { "padding": "{space.inset.md}" },
+    "variants": {
+      "variant": {
+        "compact": { "declarations": { "padding": "{space.inset.sm}" } }
+      }
+    }
+  }
+}
+```
+
+This keeps one source of truth for styles and preserves the existing cascade model. A document with only `default` does not generate a named variant prop or branch in codegen.
 
 ## Layout
 
