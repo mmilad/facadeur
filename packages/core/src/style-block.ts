@@ -54,9 +54,14 @@ export function canonicalizeTokenInterface(
 }
 
 /** Every DTCG path referenced by the style block and layout. Font-family refs are omitted. */
-export function collectTokenRefs(doc: Pick<FlatDocument, 'styles' | 'nodes'>): string[] {
+export function collectTokenRefs(
+  doc: Pick<FlatDocument, 'styles' | 'nodes' | 'variantPresets'>,
+): string[] {
   const refs = new Set<string>();
   if (doc.styles) collectBlockRefs(doc.styles, refs);
+  for (const preset of doc.variantPresets ?? []) {
+    if (preset.overrides?.styles) collectBlockRefs(preset.overrides.styles, refs);
+  }
   for (const node of Object.values(doc.nodes)) {
     if (node.type === 'instance') {
       for (const ref of layoutTokenRefs(node.layout)) refs.add(ref);

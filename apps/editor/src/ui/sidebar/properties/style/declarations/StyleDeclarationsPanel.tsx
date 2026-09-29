@@ -21,9 +21,7 @@ export function StyleDeclarationsPanel({
         session={session}
         snap={snap}
         target={
-          snap.activeVariantName
-            ? { nodeId, axis: 'variant', value: snap.activeVariantName }
-            : { nodeId }
+          snap.activeVariantName ? { nodeId, variantName: snap.activeVariantName } : { nodeId }
         }
       />
     </div>

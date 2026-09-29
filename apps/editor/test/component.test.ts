@@ -9,6 +9,7 @@ import {
 import {
   readStyleDeclarations,
   shownDeclarations,
+  variantStyleBlock,
   writeStyleDeclaration,
 } from '../src/domain/style-edit.js';
 
@@ -133,6 +134,39 @@ describe('component definitions', () => {
 
     const child = writeStyleDeclaration(undefined, 'root', { nodeId: 'control' }, 'resize', 'none');
     expect(child?.children?.control?.declarations).toEqual({ resize: 'none' });
+  });
+
+  it('reads direct variant styles and legacy layers through one editor adapter', () => {
+    const direct = variantStyleBlock(
+      {
+        variantPresets: [
+          { name: 'compact', overrides: { styles: { declarations: { color: 'navy' } } } },
+        ],
+        styles: { declarations: { color: 'black' } },
+      },
+      'compact',
+    );
+    expect(direct).toEqual({ declarations: { color: 'navy' } });
+
+    const legacy = variantStyleBlock(
+      {
+        variantPresets: [{ name: 'compact' }],
+        styles: {
+          declarations: { color: 'black' },
+          variants: { variant: { compact: { declarations: { color: 'navy' } } } },
+          children: {
+            label: {
+              variants: { variant: { compact: { states: { hover: { color: 'white' } } } } },
+            },
+          },
+        },
+      },
+      'compact',
+    );
+    expect(legacy).toEqual({
+      declarations: { color: 'navy' },
+      children: { label: { states: { hover: { color: 'white' } } } },
+    });
   });
 
   it('writes one breakpoint override and leaves base and other breakpoints alone', () => {

@@ -577,4 +577,45 @@ describe('applyCommand', () => {
       }),
     ).toThrow(/cannot define variants/);
   });
+
+  it('stores named variant styles sparsely and migrates its legacy layer', () => {
+    let doc = component();
+    doc = applyCommand(doc, {
+      type: 'setTokenInterface',
+      tokenInterface: { reads: ['color.ink'] },
+    });
+    doc = applyCommand(doc, {
+      type: 'setVariantPreset',
+      preset: { name: 'compact' },
+    });
+    doc = applyCommand(doc, {
+      type: 'setStyleBlock',
+      style: {
+        declarations: { color: 'black' },
+        variants: {
+          variant: { compact: { declarations: { color: 'navy' } } },
+          tone: { loud: { declarations: { color: 'blue' } } },
+        },
+      },
+    });
+    doc = applyCommand(doc, {
+      type: 'setVariantStyleBlock',
+      name: 'compact',
+      style: {
+        declarations: { color: '{color.ink}' },
+        children: { title: { states: { hover: { color: 'white' } } } },
+      },
+    });
+
+    expect(doc.variantPresets).toMatchObject([
+      { name: 'compact', overrides: { styles: { declarations: { color: '{color.ink}' } } } },
+    ]);
+    expect(doc.styles?.variants?.variant?.compact).toBeUndefined();
+    expect(doc.styles?.variants?.tone?.loud).toEqual({ declarations: { color: 'blue' } });
+    expect(doc.tokenInterface?.reads).toEqual(['color.ink']);
+
+    doc = applyCommand(doc, { type: 'setVariantStyleBlock', name: 'compact', style: null });
+    expect(doc.variantPresets?.[0]?.overrides).toBeUndefined();
+    expect(doc.styles?.variants?.variant).toBeUndefined();
+  });
 });

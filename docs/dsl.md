@@ -144,12 +144,14 @@ Style overrides can be stored directly as the sparse `overrides.styles` block. T
 
 ```json
 {
-  "variants": [{
-    "name": "compact",
-    "overrides": {
-      "styles": { "declarations": { "padding": "{space.inset.sm}" } }
+  "variants": [
+    {
+      "name": "compact",
+      "overrides": {
+        "styles": { "declarations": { "padding": "{space.inset.sm}" } }
+      }
     }
-  }],
+  ],
   "styles": {
     "declarations": { "padding": "{space.inset.md}" }
   }
@@ -291,9 +293,9 @@ Only frames have `children`. Ids are unique inside one document. `toFlat` / `toN
 
 Documents change only through commands. Each command is one transaction in the Yjs store. Undo and redo walk those transactions.
 
-`insert`, `remove`, `move`, `wrap`, `setProp`, `setStyle`, `setField`, `setVariant`, `defineField`, `removeField`, `defineVariant`, `removeVariant`, `setToken`, `removeToken`, `setTokenGroup`, `removeTokenGroup`, `setFont`, `removeFont`, `setBreakpoints`, `setStyleBlock`, `setTokenInterface`. `wrap` puts the node in a new frame at the same index. A command that introduces a token reference (`insert`, layout, `setStyle`, `setStyleBlock`) adds that path to `tokenInterface.reads`. `removeField` also drops bindings that named the field. `removeVariant`, and `defineVariant` when a value disappears, drop the matching style-block layers on the root and on children. Sections and pages cannot define fields or variant axes.
+`insert`, `remove`, `move`, `wrap`, `setProp`, `setStyle`, `setField`, `setVariant`, `defineField`, `removeField`, `defineVariant`, `removeVariant`, `setToken`, `removeToken`, `setTokenGroup`, `removeTokenGroup`, `setFont`, `removeFont`, `setBreakpoints`, `setStyleBlock`, `setVariantStyleBlock`, `setTokenInterface`. `wrap` puts the node in a new frame at the same index. A command that introduces a token reference (`insert`, layout, `setStyle`, `setStyleBlock`, `setVariantStyleBlock`) adds that path to `tokenInterface.reads`. `removeField` also drops bindings that named the field. `removeVariant`, and `defineVariant` when a value disappears, drop the matching style-block layers on the root and on children. Sections and pages cannot define fields or variant axes.
 
-`setField` and `setVariant` apply to instances. `setStyle` writes a style map on a primitive node; it does not apply to instances. `setStyleBlock` replaces the document style block. `setTokenInterface` replaces `reads` / `sets`. The style engine paints both. `move.index` is the index in the destination child list after the node has been taken out of its current parent. `setToken` replaces one token and creates missing groups along the path. `setBreakpoints` with an empty list clears the document's breakpoints, and CSS falls back to the defaults. The store resolves token references before it commits, so a cycle or a missing target never lands in the document.
+`setField` and `setVariant` apply to instances. `setStyle` writes a style map on a primitive node; it does not apply to instances. `setStyleBlock` replaces the document style block. `setVariantStyleBlock` replaces one named preset's sparse `overrides.styles` block and removes that preset's backwards-compatible reserved style layer. `setTokenInterface` replaces `reads` / `sets`. The style engine paints both. `move.index` is the index in the destination child list after the node has been taken out of its current parent. `setToken` replaces one token and creates missing groups along the path. `setBreakpoints` with an empty list clears the document's breakpoints, and CSS falls back to the defaults. The store resolves token references before it commits, so a cycle or a missing target never lands in the document.
 
 ## Ids in the DOM
 

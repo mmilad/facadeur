@@ -520,6 +520,9 @@ function clonePreset(variant: VariantPreset): VariantPreset {
       ? {
           overrides: {
             ...(variant.overrides.fields ? { fields: { ...variant.overrides.fields } } : {}),
+            ...(variant.overrides.styles
+              ? { styles: structuredClone(variant.overrides.styles) }
+              : {}),
             ...(variant.overrides.unsetFields
               ? { unsetFields: [...variant.overrides.unsetFields] }
               : {}),

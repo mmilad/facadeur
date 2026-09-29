@@ -13,6 +13,7 @@ import type { EditorSession, EditorSnapshot } from '../../../../../domain/sessio
 import {
   readStyleDeclarations,
   shownDeclarations,
+  variantStyleBlock,
   writeStyleDeclaration,
   type StyleEditTarget,
 } from '../../../../../domain/style-edit.js';
@@ -35,17 +36,34 @@ export function DeclarationEditor({
     focusId: snap.focusViewportId,
     editTarget: snap.editTarget,
   });
-  const layered = !target.axis;
+  const namedVariant = Boolean(target.variantName);
+  const layered = !target.axis && !namedVariant;
   const writingBreakpointId = layered ? ctx.writingBreakpointId : null;
   const cueViewport = layered ? ctx.overrideViewport : null;
-  const baseEntries = readStyleDeclarations(snap.document.styles, snap.document.rootId, target);
+  const variantBlock = target.variantName
+    ? variantStyleBlock(snap.document, target.variantName)
+    : undefined;
+  const baseEntries = readStyleDeclarations(
+    snap.document.styles,
+    snap.document.rootId,
+    namedVariant ? { nodeId: target.nodeId, state: target.state } : target,
+  );
   const overrideEntries = cueViewport
     ? readStyleDeclarations(snap.document.styles, snap.document.rootId, {
         ...target,
         breakpointId: cueViewport.id,
       })
-    : {};
-  const listed = shownDeclarations(baseEntries, overrideEntries, writingBreakpointId !== null);
+    : namedVariant
+      ? readStyleDeclarations(variantBlock, snap.document.rootId, {
+          nodeId: target.nodeId,
+          state: target.state,
+        })
+      : {};
+  const listed = shownDeclarations(
+    baseEntries,
+    overrideEntries,
+    namedVariant || writingBreakpointId !== null,
+  );
   const writeTarget: StyleEditTarget = writingBreakpointId
     ? { ...target, breakpointId: writingBreakpointId }
     : target;
@@ -75,14 +93,18 @@ export function DeclarationEditor({
       entries={listed.map((item) => ({
         ...item,
         placeholder:
-          item.overridden && writingBreakpointId === null
+          !namedVariant && item.overridden && writingBreakpointId === null
             ? overrideEntries[item.property]
             : undefined,
       }))}
-      variantViewportNote={Boolean(target.axis && snap.editTarget === 'viewport')}
+      variantViewportNote={Boolean((target.axis || namedVariant) && snap.editTarget === 'viewport')}
       declarationName={(property) => declarationName(target, property)}
       onCommitDeclaration={(property, next, overridden) => {
         const trimmed = next.trim();
+        if (namedVariant) {
+          commitDeclaration(session, snap, target, property, trimmed ? trimmed : null);
+          return;
+        }
         if (writingBreakpointId) {
           if (!trimmed) {
             if (overridden) commitDeclaration(session, snap, writeTarget, property, null);
@@ -118,10 +140,10 @@ export function DeclarationEditor({
 }
 
 function emptyMessage(target: StyleEditTarget): string {
-  if (target.axis && target.state) {
+  if ((target.axis || target.variantName) && target.state) {
     return 'No overrides for this state. It inherits the variant styles.';
   }
-  if (target.axis) {
+  if (target.axis || target.variantName) {
     return 'No overrides for this variant. It inherits the base styles.';
   }
   if (target.state) {
@@ -137,6 +159,18 @@ function commitDeclaration(
   property: string,
   value: string | null,
 ) {
+  if (target.variantName) {
+    const current = variantStyleBlock(snap.document, target.variantName);
+    const style = writeStyleDeclaration(
+      current,
+      snap.document.rootId,
+      { nodeId: target.nodeId, state: target.state },
+      property,
+      value,
+    );
+    session.execute({ type: 'setVariantStyleBlock', name: target.variantName, style });
+    return;
+  }
   const style = writeStyleDeclaration(
     snap.document.styles,
     snap.document.rootId,
@@ -149,6 +183,10 @@ function commitDeclaration(
 
 function declarationName(target: StyleEditTarget, property: string): string {
   const state = target.state ?? 'base';
-  const axis = target.axis ? `${target.axis}-${target.value}` : 'base';
+  const axis = target.variantName
+    ? `variant-${target.variantName}`
+    : target.axis
+      ? `${target.axis}-${target.value}`
+      : 'base';
   return `style-${target.nodeId}-${axis}-${state}-${property}`;
 }

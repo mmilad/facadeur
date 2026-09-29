@@ -1,4 +1,10 @@
-import type { StyleBlock, StyleChild, StyleDeclarations, StyleLayer } from '@facadeur/core';
+import type {
+  FlatDocument,
+  StyleBlock,
+  StyleChild,
+  StyleDeclarations,
+  StyleLayer,
+} from '@facadeur/core';
 
 export const styleStateNames = ['hover', 'focus-visible', 'disabled'] as const;
 export type StyleStateName = (typeof styleStateNames)[number];
@@ -8,12 +14,50 @@ export interface StyleEditTarget {
   nodeId: string;
   axis?: string;
   value?: string;
+  /** A named component preset whose sparse style override is being edited. */
+  variantName?: string;
   state?: StyleStateName;
   /**
    * Non-base breakpoint. Writes `breakpoints[id]` on the style owner.
    * Ignored when `axis` is set: variants are not nested under breakpoints.
    */
   breakpointId?: string;
+}
+
+/**
+ * Return the sparse style block for a named preset. Older documents stored the
+ * same data under `styles.variants.variant.<name>`; read that layer as a
+ * compatibility fallback so the first edit can migrate it to overrides.styles.
+ */
+export function variantStyleBlock(
+  document: Pick<FlatDocument, 'styles' | 'variantPresets'>,
+  name: string,
+): StyleBlock | undefined {
+  const preset = document.variantPresets?.find((candidate) => candidate.name === name);
+  if (preset?.overrides?.styles) return structuredClone(preset.overrides.styles);
+
+  const rootLayer = document.styles?.variants?.variant?.[name];
+  const childLayers = Object.entries(document.styles?.children ?? {})
+    .map(([id, child]) => [id, child.variants?.variant?.[name]] as const)
+    .filter((entry): entry is readonly [string, StyleLayer] => Boolean(entry[1]));
+  if (!rootLayer && !childLayers.length) return undefined;
+
+  const next: StyleBlock = {};
+  if (rootLayer) copyLayer(next, rootLayer);
+  if (childLayers.length) {
+    next.children = {};
+    for (const [id, layer] of childLayers) {
+      const child: StyleChild = {};
+      copyLayer(child, layer);
+      next.children[id] = child;
+    }
+  }
+  return next;
+}
+
+function copyLayer(target: StyleBlock | StyleChild, source: StyleLayer): void {
+  if (source.declarations) target.declarations = structuredClone(source.declarations);
+  if (source.states) target.states = structuredClone(source.states);
 }
 
 export interface ShownDeclaration {

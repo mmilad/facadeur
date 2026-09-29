@@ -734,6 +734,7 @@ function hasVariantOverrides(overrides: VariantPreset['overrides']): boolean {
   if (!overrides) return false;
   return (
     Boolean(overrides.fields && Object.keys(overrides.fields).length > 0) ||
+    Boolean(overrides.styles && Object.keys(overrides.styles).length > 0) ||
     Boolean(overrides.unsetFields?.length) ||
     Boolean(overrides.nodes && Object.keys(overrides.nodes).length > 0) ||
     Boolean(overrides.removed?.length) ||

@@ -127,6 +127,7 @@ export type Command =
   | { type: 'defineVariant'; axis: VariantAxis }
   | { type: 'removeVariant'; name: string }
   | { type: 'setVariantPreset'; preset: VariantPreset }
+  | { type: 'setVariantStyleBlock'; name: string; style: StyleBlock | null }
   | { type: 'removeVariantPreset'; name: string }
   | { type: 'setToken'; path: string; token: TokenDefinition }
   | { type: 'removeToken'; path: string }
@@ -225,6 +226,9 @@ export function applyCommand(
       break;
     case 'setVariantPreset':
       setVariantPreset(next, command.preset);
+      break;
+    case 'setVariantStyleBlock':
+      setVariantStyleBlock(next, command);
       break;
     case 'removeVariantPreset':
       removeVariantPreset(next, command.name);
@@ -914,6 +918,62 @@ function setVariantPreset(doc: FlatDocument, preset: VariantPreset): void {
   if (index === -1) presets.push(next);
   else presets[index] = next;
   doc.variantPresets = presets;
+}
+
+function setVariantStyleBlock(
+  doc: FlatDocument,
+  command: Extract<Command, { type: 'setVariantStyleBlock' }>,
+): void {
+  const presets = doc.variantPresets ? [...doc.variantPresets] : [];
+  const index = presets.findIndex((item) => item.name === command.name);
+  if (index === -1) {
+    throw new DocumentError('unknown-variant', `Variant preset "${command.name}" is not defined`);
+  }
+
+  const existing = presets[index];
+  if (!existing) {
+    throw new DocumentError('unknown-variant', `Variant preset "${command.name}" is not defined`);
+  }
+  const preset: VariantPreset = structuredClone(existing);
+  const overrides = { ...(preset.overrides ?? {}) };
+  if (command.style === null) delete overrides.styles;
+  else overrides.styles = parseStyleBlock(command.style);
+  if (Object.keys(overrides).length) preset.overrides = overrides;
+  else delete preset.overrides;
+  presets[index] = preset;
+  doc.variantPresets = presets;
+
+  // Named variant style layers were the editor's previous storage format.
+  // Remove only this reserved layer so existing axis styles remain intact.
+  if (doc.styles) {
+    const styles = structuredClone(doc.styles);
+    removeNamedVariantLayer(styles, command.name);
+    doc.styles = Object.keys(styles).length ? styles : undefined;
+  }
+}
+
+function removeNamedVariantLayer(styles: StyleBlock, name: string): void {
+  removeNamedVariantLayerFromOwner(styles, name);
+  for (const child of Object.values(styles.children ?? {})) {
+    removeNamedVariantLayerFromOwner(child, name);
+  }
+  if (styles.children) {
+    for (const [id, child] of Object.entries(styles.children)) {
+      if (!Object.keys(child).length) delete styles.children[id];
+    }
+    if (!Object.keys(styles.children).length) delete styles.children;
+  }
+}
+
+function removeNamedVariantLayerFromOwner(
+  owner: { variants?: NonNullable<StyleBlock['variants']> },
+  name: string,
+): void {
+  const values = owner.variants?.variant;
+  if (!values) return;
+  delete values[name];
+  if (!Object.keys(values).length) delete owner.variants!.variant;
+  if (!Object.keys(owner.variants!).length) delete owner.variants;
 }
 
 function removeVariantPreset(doc: FlatDocument, name: string): void {
