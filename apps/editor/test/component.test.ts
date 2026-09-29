@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { fieldDefinitionFromDraft, variantAxisFromDraft } from '../src/domain/definitions.js';
+import {
+  fieldDefinitionFromDraft,
+  replaceFieldDefault,
+  retargetField,
+  variantAxisFromDraft,
+} from '../src/domain/definitions.js';
 import {
   readStyleDeclarations,
   shownDeclarations,
@@ -40,6 +45,29 @@ describe('component definitions', () => {
         booleanDefault: false,
       }),
     ).toThrow(/letter/);
+  });
+
+  it('preserves required fields while changing their type or default', () => {
+    const field = fieldDefinitionFromDraft({
+      name: 'email',
+      type: 'text',
+      rawDefault: '',
+      optionsText: '',
+      booleanDefault: false,
+      required: true,
+    });
+    expect(field).toEqual({ name: 'email', type: 'text', required: true });
+    expect(retargetField(field, 'number')).toEqual({
+      name: 'email',
+      type: 'number',
+      required: true,
+    });
+    expect(replaceFieldDefault(field, 'hello')).toEqual({
+      name: 'email',
+      type: 'text',
+      required: true,
+      default: 'hello',
+    });
   });
 
   it('writes variant and state declarations without dropping the rest of the block', () => {

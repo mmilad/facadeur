@@ -30,11 +30,16 @@ export function fieldDefinitionFromDraft(input: {
   rawDefault: string;
   optionsText: string;
   booleanDefault: boolean;
+  required?: boolean;
 }): FieldDefinition {
   const name = input.name.trim();
   assertFieldName(name);
   if (input.type === 'richText') throw new Error('Rich text is not available yet');
-  const field: FieldDefinition = { name, type: input.type };
+  const field: FieldDefinition = {
+    name,
+    type: input.type,
+    ...(input.required ? { required: true } : {}),
+  };
   if (input.type === 'enum') {
     const options = splitList(input.optionsText);
     if (!options.length) throw new Error('An enum field needs at least one option');
@@ -49,7 +54,11 @@ export function fieldDefinitionFromDraft(input: {
 export function retargetField(field: FieldDefinition, type: FieldType): FieldDefinition {
   if (type === field.type) return cloneField(field);
   if (type === 'richText') throw new Error('Rich text is not available yet');
-  const next: FieldDefinition = { name: field.name, type };
+  const next: FieldDefinition = {
+    name: field.name,
+    type,
+    ...(field.required ? { required: true } : {}),
+  };
   if (type === 'enum') {
     const seed = typeof field.default === 'string' && field.default ? field.default : 'value';
     next.options = [seed];
@@ -116,6 +125,7 @@ function cloneField(field: FieldDefinition): FieldDefinition {
   return {
     name: field.name,
     type: field.type,
+    ...(field.required !== undefined ? { required: field.required } : {}),
     ...(field.options ? { options: [...field.options] } : {}),
     ...(field.default !== undefined ? { default: field.default } : {}),
   };

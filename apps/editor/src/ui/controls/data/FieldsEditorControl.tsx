@@ -7,7 +7,7 @@ import {
   replaceFieldOptions,
   retargetField,
 } from '../../../domain/definitions.js';
-import { Field, Section, Select, Stack, TextInput, Toggle } from '../../form/index.js';
+import { Field, Inline, Section, Select, Stack, TextInput, Toggle } from '../../form/index.js';
 import '../../form/form.css';
 import { fieldDisplayLabel } from './field-label.js';
 import { fieldTypeOptions } from './value.js';
@@ -86,6 +86,19 @@ function FieldDefinitionCard({
             />
           </Field>
         ) : null}
+        <Field label="Required">
+          <Toggle
+            name={`field-required-${field.name}`}
+            label="Required"
+            value={field.required === true}
+            onCommit={(required) =>
+              onDefineField({
+                ...field,
+                ...(required ? { required: true } : { required: undefined }),
+              })
+            }
+          />
+        </Field>
         <FieldDefaultEditor field={field} onDefineField={onDefineField} onInvalid={onInvalid} />
         <button
           type="button"
@@ -112,12 +125,28 @@ function FieldDefaultEditor({
   if (field.type === 'boolean') {
     return (
       <Field label="Default">
-        <Toggle
-          name={`default-${field.name}`}
-          label="On"
-          value={field.default === true}
-          onCommit={(checked) => onDefineField({ ...field, default: checked })}
-        />
+        <Inline gap={8}>
+          <Toggle
+            name={`default-${field.name}`}
+            label="On"
+            value={field.default === true}
+            onCommit={(checked) => onDefineField({ ...field, default: checked })}
+          />
+          {field.default !== undefined ? (
+            <button
+              type="button"
+              className="text-button"
+              name={`clear-default-${field.name}`}
+              onClick={() => {
+                const next = { ...field };
+                delete next.default;
+                onDefineField(next);
+              }}
+            >
+              Clear default
+            </button>
+          ) : null}
+        </Inline>
       </Field>
     );
   }
@@ -170,6 +199,7 @@ function AddFieldForm({
   const [rawDefault, setRawDefault] = useState('');
   const [optionsText, setOptionsText] = useState('');
   const [booleanDefault, setBooleanDefault] = useState(false);
+  const [required, setRequired] = useState(false);
   const [open, setOpen] = useState(false);
 
   function resetDraft() {
@@ -177,6 +207,7 @@ function AddFieldForm({
     setRawDefault('');
     setOptionsText('');
     setBooleanDefault(false);
+    setRequired(false);
   }
 
   if (!open) {
@@ -237,6 +268,14 @@ function AddFieldForm({
             <TextInput name="new-field-default" value={rawDefault} onChange={setRawDefault} />
           </Field>
         )}
+        <Field label="Required">
+          <Toggle
+            name="new-field-required"
+            label="Required"
+            value={required}
+            onCommit={setRequired}
+          />
+        </Field>
         <button
           type="button"
           className="text-button"
@@ -250,6 +289,7 @@ function AddFieldForm({
                   rawDefault,
                   optionsText,
                   booleanDefault,
+                  required,
                 }),
               );
               resetDraft();
