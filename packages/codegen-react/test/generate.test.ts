@@ -577,6 +577,29 @@ describe('atom contracts', () => {
     expect(sourceText).toContain('label={item?.label}');
   });
 
+  it('preserves enum options in array item prop types', () => {
+    const component: DocumentFile = {
+      version: 1,
+      id: 'enum-array-props',
+      name: 'Enum array props',
+      kind: 'component',
+      fields: [
+        {
+          name: 'kinds',
+          type: 'array',
+          items: { type: 'enum', options: ['input', 'textarea'] },
+        },
+      ],
+      root: { id: 'root', type: 'text', text: 'Kinds' },
+    };
+
+    const sourceText = source(
+      generateReact({ documents: [component] }).ui,
+      'components/EnumArrayProps.tsx',
+    );
+    expect(sourceText).toContain("kinds?: ('input' | 'textarea')[];");
+  });
+
   it('nests repeat contexts for section data and child rows', () => {
     const component: DocumentFile = {
       version: 1,

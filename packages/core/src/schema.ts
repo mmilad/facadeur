@@ -170,6 +170,9 @@ export const fieldDefinitionSchema = Type.Recursive((Self) =>
         Type.Object(
           {
             type: fieldTypeSchema,
+            options: Type.Optional(
+              Type.Array(Type.String({ minLength: 1 }), { minItems: 1, uniqueItems: true }),
+            ),
             fields: Type.Optional(Type.Array(Self)),
           },
           { additionalProperties: false },

@@ -113,10 +113,15 @@ function resolveExposedMember(
   const [nodeId, ...rest] = path.split('.');
   const node = findNode(document.root, nodeId);
   if (!node || node.type !== 'instance' || rest.length === 0) {
-    throw new CodegenError(`Expose path "${path}" on "${document.id}" does not target a child contract`);
+    throw new CodegenError(
+      `Expose path "${path}" on "${document.id}" does not target a child contract`,
+    );
   }
   const child = catalog.get(node.component);
-  if (!child) throw new CodegenError(`Expose path "${path}" references unknown component "${node.component}"`);
+  if (!child)
+    throw new CodegenError(
+      `Expose path "${path}" references unknown component "${node.component}"`,
+    );
   const member = rest.join('.');
   const direct = kind === 'field' ? child.fields.get(member) : child.events.get(member);
   if (direct) {
@@ -128,7 +133,10 @@ function resolveExposedMember(
       ...(direct.eventPayload ? { eventPayload: direct.eventPayload } : {}),
     };
   }
-  const nestedPath = kind === 'field' ? child.document.expose?.fields?.[member] : child.document.expose?.events?.[member];
+  const nestedPath =
+    kind === 'field'
+      ? child.document.expose?.fields?.[member]
+      : child.document.expose?.events?.[member];
   if (!nestedPath) {
     throw new CodegenError(`Expose path "${path}" does not resolve ${kind} "${member}"`);
   }
@@ -158,7 +166,10 @@ export function variantTypeSpecs(document: DocumentFile, entry: CatalogEntry): V
   }
   if (entry.namedVariant) {
     const values = ['default', ...variantPresets(document).map((variant) => variant.name)];
-    specs.push({ name: entry.namedVariant.type, union: [...new Set(values)].map(quote).join(' | ') });
+    specs.push({
+      name: entry.namedVariant.type,
+      union: [...new Set(values)].map(quote).join(' | '),
+    });
   }
   return specs;
 }
@@ -232,15 +243,20 @@ function fieldTypeName(field: FieldDefinition): string {
     return options.map((option) => quote(option)).join(' | ');
   }
   if (field.type === 'array') {
-    return `${field.items ? fieldItemTypeName(field.items) : 'unknown'}[]`;
+    const itemType = field.items ? fieldItemTypeName(field.items) : 'unknown';
+    return `${itemType.includes(' | ') ? `(${itemType})` : itemType}[]`;
   }
-  if (field.type === 'object') return field.items ? fieldObjectTypeName(field.items) : 'Record<string, unknown>';
+  if (field.type === 'object')
+    return field.items ? fieldObjectTypeName(field.items) : 'Record<string, unknown>';
   return 'string';
 }
 
 function fieldItemTypeName(items: NonNullable<FieldDefinition['items']>): string {
   if (items.type === 'object') return fieldObjectTypeName(items);
-  if (items.type === 'array') return items.fields ? 'unknown[]' : 'unknown[]';
+  if (items.type === 'enum' && items.options?.length) {
+    return items.options.map((option) => quote(option)).join(' | ');
+  }
+  if (items.type === 'array') return 'unknown[]';
   return primitiveTypeName(items.type);
 }
 

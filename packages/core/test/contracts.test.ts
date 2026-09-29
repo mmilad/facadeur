@@ -285,6 +285,26 @@ describe('component contracts', () => {
     expect(() => validateCatalog([invalid])).toThrow(/scores\[\].*finite number/);
   });
 
+  it('validates enum array item options', () => {
+    const invalid: DocumentFile = {
+      version: 1,
+      id: 'invalid-enum-array-item',
+      name: 'Invalid enum array item',
+      kind: 'component',
+      fields: [
+        {
+          name: 'kinds',
+          type: 'array',
+          items: { type: 'enum', options: ['input', 'textarea'] },
+          default: ['select'],
+        },
+      ],
+      root: { id: 'root', type: 'text', text: 'Kinds' },
+    };
+
+    expect(() => validateCatalog([invalid])).toThrow(/kinds\[\].*one of input, textarea/);
+  });
+
   it('rejects duplicate nested field names', () => {
     const invalid: DocumentFile = {
       version: 1,

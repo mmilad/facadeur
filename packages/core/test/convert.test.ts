@@ -6,7 +6,15 @@ const sample: DocumentFile = {
   id: 'hero',
   name: 'Hero',
   kind: 'component',
-  fields: [{ name: 'caption', type: 'text', default: 'Hello' }],
+  fields: [
+    { name: 'caption', type: 'text', default: 'Hello' },
+    {
+      name: 'kinds',
+      type: 'array',
+      items: { type: 'enum', options: ['quiet', 'loud'] },
+      default: ['quiet'],
+    },
+  ],
   variants: [{ name: 'tone', values: ['quiet', 'loud'], default: 'quiet' }],
   settings: { artboard: { width: 800, height: 600 } },
   root: {

@@ -193,6 +193,15 @@
                   }
                 ]
               },
+              "options": {
+                "minItems": 1,
+                "uniqueItems": true,
+                "type": "array",
+                "items": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
               "fields": {
                 "type": "array",
                 "items": {

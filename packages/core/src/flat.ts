@@ -483,6 +483,7 @@ function cloneField(field: FieldDefinition): FieldDefinition {
       ? {
           items: {
             type: field.items.type,
+            ...(field.items.options ? { options: [...field.items.options] } : {}),
             ...(field.items.fields ? { fields: field.items.fields.map(cloneField) } : {}),
           },
         }

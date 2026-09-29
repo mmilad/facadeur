@@ -477,6 +477,7 @@ function itemField(field: FieldDefinition, name: string): FieldDefinition | unde
     name,
     type: items.type,
     required: true,
+    ...(items.options ? { options: items.options } : {}),
     ...(items.fields ? { items: { type: items.type, fields: items.fields } } : {}),
   };
 }
@@ -511,6 +512,16 @@ export function assertFieldDefinition(field: FieldDefinition): void {
       'schema',
       `Only array and object fields can define items ("${field.name}")`,
     );
+  }
+  if (field.items?.options) {
+    if (field.items.type !== 'enum') {
+      throw new DocumentError('schema', `Only enum item fields can have options ("${field.name}")`);
+    }
+    if (new Set(field.items.options).size !== field.items.options.length) {
+      throw new DocumentError('schema', `Enum item field "${field.name}" has duplicate options`);
+    }
+  } else if (field.items?.type === 'enum') {
+    throw new DocumentError('schema', `Enum item field "${field.name}" needs options`);
   }
   if ((field.type === 'array' || field.type === 'object') && field.items) {
     if (field.type === 'array' && field.items.type === 'object' && !field.items.fields?.length) {
@@ -782,6 +793,7 @@ export function assertValueMatches(field: FieldDefinition, value: FieldValue): v
       const itemField: FieldDefinition = {
         name: `${field.name}[]`,
         type: field.items.type,
+        ...(field.items.options ? { options: field.items.options } : {}),
         ...(field.items.fields
           ? { items: { type: field.items.type, fields: field.items.fields } }
           : {}),
