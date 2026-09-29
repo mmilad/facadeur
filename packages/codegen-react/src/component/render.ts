@@ -156,9 +156,9 @@ function conditionForNode(
   usedProps: Set<string>,
 ): string {
   const value = dataExpression(condition.path, owner, dataScope, usedProps);
-  if (condition.truthy !== undefined) return condition.truthy ? value : `!${value}`;
-  if (condition.equals !== undefined) return `${value} === ${jsLiteral(condition.equals)}`;
-  throw new CodegenError(`Display condition "${condition.path}" is missing a predicate`);
+  if ('truthy' in condition) return condition.truthy ? value : `!${value}`;
+  if ('equals' in condition) return `${value} === ${jsLiteral(condition.equals)}`;
+  throw new CodegenError('Display condition is missing a predicate');
 }
 
 function dataExpression(

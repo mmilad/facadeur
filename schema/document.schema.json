@@ -1620,41 +1620,61 @@
                             }
                           },
                           "displayOn": {
-                            "additionalProperties": false,
-                            "type": "object",
-                            "required": [
-                              "path"
-                            ],
-                            "properties": {
-                              "path": {
-                                "minLength": 1,
-                                "pattern": "^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$",
-                                "type": "string"
-                              },
-                              "equals": {
-                                "anyOf": [
-                                  {
+                            "anyOf": [
+                              {
+                                "additionalProperties": false,
+                                "type": "object",
+                                "required": [
+                                  "path",
+                                  "equals"
+                                ],
+                                "properties": {
+                                  "path": {
+                                    "minLength": 1,
+                                    "pattern": "^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$",
                                     "type": "string"
                                   },
-                                  {
-                                    "type": "number"
-                                  },
-                                  {
-                                    "type": "boolean"
-                                  },
-                                  {
-                                    "type": "array"
-                                  },
-                                  {
-                                    "type": "object",
-                                    "additionalProperties": true
+                                  "equals": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "number"
+                                      },
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "array"
+                                      },
+                                      {
+                                        "type": "object",
+                                        "additionalProperties": true
+                                      }
+                                    ]
                                   }
-                                ]
+                                }
                               },
-                              "truthy": {
-                                "type": "boolean"
+                              {
+                                "additionalProperties": false,
+                                "type": "object",
+                                "required": [
+                                  "path",
+                                  "truthy"
+                                ],
+                                "properties": {
+                                  "path": {
+                                    "minLength": 1,
+                                    "pattern": "^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$",
+                                    "type": "string"
+                                  },
+                                  "truthy": {
+                                    "type": "boolean"
+                                  }
+                                }
                               }
-                            }
+                            ]
                           },
                           "unset": {
                             "uniqueItems": true,
@@ -2281,41 +2301,61 @@
               }
             },
             "displayOn": {
-              "additionalProperties": false,
-              "type": "object",
-              "required": [
-                "path"
-              ],
-              "properties": {
-                "path": {
-                  "minLength": 1,
-                  "pattern": "^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$",
-                  "type": "string"
-                },
-                "equals": {
-                  "anyOf": [
-                    {
+              "anyOf": [
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "path",
+                    "equals"
+                  ],
+                  "properties": {
+                    "path": {
+                      "minLength": 1,
+                      "pattern": "^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$",
                       "type": "string"
                     },
-                    {
-                      "type": "number"
-                    },
-                    {
-                      "type": "boolean"
-                    },
-                    {
-                      "type": "array"
-                    },
-                    {
-                      "type": "object",
-                      "additionalProperties": true
+                    "equals": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "array"
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      ]
                     }
-                  ]
+                  }
                 },
-                "truthy": {
-                  "type": "boolean"
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "path",
+                    "truthy"
+                  ],
+                  "properties": {
+                    "path": {
+                      "minLength": 1,
+                      "pattern": "^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$",
+                      "type": "string"
+                    },
+                    "truthy": {
+                      "type": "boolean"
+                    }
+                  }
                 }
-              }
+              ]
             },
             "layout": {
               "additionalProperties": false,
@@ -3226,41 +3266,61 @@
               }
             },
             "displayOn": {
-              "additionalProperties": false,
-              "type": "object",
-              "required": [
-                "path"
-              ],
-              "properties": {
-                "path": {
-                  "minLength": 1,
-                  "pattern": "^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$",
-                  "type": "string"
-                },
-                "equals": {
-                  "anyOf": [
-                    {
+              "anyOf": [
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "path",
+                    "equals"
+                  ],
+                  "properties": {
+                    "path": {
+                      "minLength": 1,
+                      "pattern": "^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$",
                       "type": "string"
                     },
-                    {
-                      "type": "number"
-                    },
-                    {
-                      "type": "boolean"
-                    },
-                    {
-                      "type": "array"
-                    },
-                    {
-                      "type": "object",
-                      "additionalProperties": true
+                    "equals": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "array"
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      ]
                     }
-                  ]
+                  }
                 },
-                "truthy": {
-                  "type": "boolean"
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "path",
+                    "truthy"
+                  ],
+                  "properties": {
+                    "path": {
+                      "minLength": 1,
+                      "pattern": "^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$",
+                      "type": "string"
+                    },
+                    "truthy": {
+                      "type": "boolean"
+                    }
+                  }
                 }
-              }
+              ]
             },
             "layout": {
               "additionalProperties": false,
@@ -4144,41 +4204,61 @@
               }
             },
             "displayOn": {
-              "additionalProperties": false,
-              "type": "object",
-              "required": [
-                "path"
-              ],
-              "properties": {
-                "path": {
-                  "minLength": 1,
-                  "pattern": "^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$",
-                  "type": "string"
-                },
-                "equals": {
-                  "anyOf": [
-                    {
+              "anyOf": [
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "path",
+                    "equals"
+                  ],
+                  "properties": {
+                    "path": {
+                      "minLength": 1,
+                      "pattern": "^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$",
                       "type": "string"
                     },
-                    {
-                      "type": "number"
-                    },
-                    {
-                      "type": "boolean"
-                    },
-                    {
-                      "type": "array"
-                    },
-                    {
-                      "type": "object",
-                      "additionalProperties": true
+                    "equals": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "array"
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      ]
                     }
-                  ]
+                  }
                 },
-                "truthy": {
-                  "type": "boolean"
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "path",
+                    "truthy"
+                  ],
+                  "properties": {
+                    "path": {
+                      "minLength": 1,
+                      "pattern": "^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$",
+                      "type": "string"
+                    },
+                    "truthy": {
+                      "type": "boolean"
+                    }
+                  }
                 }
-              }
+              ]
             },
             "layout": {
               "additionalProperties": false,
@@ -5817,41 +5897,61 @@
               }
             },
             "displayOn": {
-              "additionalProperties": false,
-              "type": "object",
-              "required": [
-                "path"
-              ],
-              "properties": {
-                "path": {
-                  "minLength": 1,
-                  "pattern": "^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$",
-                  "type": "string"
-                },
-                "equals": {
-                  "anyOf": [
-                    {
+              "anyOf": [
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "path",
+                    "equals"
+                  ],
+                  "properties": {
+                    "path": {
+                      "minLength": 1,
+                      "pattern": "^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$",
                       "type": "string"
                     },
-                    {
-                      "type": "number"
-                    },
-                    {
-                      "type": "boolean"
-                    },
-                    {
-                      "type": "array"
-                    },
-                    {
-                      "type": "object",
-                      "additionalProperties": true
+                    "equals": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "array"
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      ]
                     }
-                  ]
+                  }
                 },
-                "truthy": {
-                  "type": "boolean"
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": [
+                    "path",
+                    "truthy"
+                  ],
+                  "properties": {
+                    "path": {
+                      "minLength": 1,
+                      "pattern": "^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$",
+                      "type": "string"
+                    },
+                    "truthy": {
+                      "type": "boolean"
+                    }
+                  }
                 }
-              }
+              ]
             },
             "type": {
               "const": "instance",

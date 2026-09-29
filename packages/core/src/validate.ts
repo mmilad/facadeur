@@ -514,7 +514,15 @@ function assertDisplayCondition(
   field: FieldDefinition,
   context: string,
 ): void {
-  if (condition.equals === undefined) return;
+  const hasEquals = 'equals' in condition;
+  const hasTruthy = 'truthy' in condition;
+  if (hasEquals === hasTruthy) {
+    throw new DocumentError(
+      'schema',
+      `Display condition on ${context} needs exactly one of "equals" or "truthy"`,
+    );
+  }
+  if (!hasEquals || !('equals' in condition)) return;
   if (!isScalarField(field)) {
     throw new DocumentError(
       'schema',
@@ -703,8 +711,8 @@ export function assertVariantPreset(variant: VariantPreset): void {
   for (const node of Object.values(overrides.nodes ?? {})) {
     assertVariantUnsetPaths(variant.name, node);
     if (!node.displayOn) continue;
-    const hasEquals = node.displayOn.equals !== undefined;
-    const hasTruthy = node.displayOn.truthy !== undefined;
+    const hasEquals = 'equals' in node.displayOn;
+    const hasTruthy = 'truthy' in node.displayOn;
     if (hasEquals === hasTruthy) {
       throw new DocumentError(
         'schema',

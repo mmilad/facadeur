@@ -574,6 +574,28 @@ describe('component contracts', () => {
     };
     expect(() => validateCatalog([invalidDisplay])).toThrow(/Display condition/);
 
+    const ambiguousDisplay: DocumentFile = {
+      ...invalidDisplay,
+      id: 'ambiguous-display-condition',
+      root: {
+        id: 'root',
+        type: 'text',
+        displayOn: { path: 'title', equals: 'Title', truthy: true },
+      },
+    };
+    expect(() => validateCatalog([ambiguousDisplay])).toThrow();
+
+    const emptyDisplay: DocumentFile = {
+      ...invalidDisplay,
+      id: 'empty-display-condition',
+      root: {
+        id: 'root',
+        type: 'text',
+        displayOn: { path: 'title' } as never,
+      },
+    };
+    expect(() => validateCatalog([emptyDisplay])).toThrow();
+
     const invalidRepeatKey: DocumentFile = {
       version: 1,
       id: 'invalid-repeat-key',

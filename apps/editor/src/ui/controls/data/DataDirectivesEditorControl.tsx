@@ -2,6 +2,7 @@ import {
   findParent,
   type DisplayOn,
   type FieldDefinition,
+  type FieldValue,
   type FlatDocument,
   type FlatNode,
   type Repeat,
@@ -93,7 +94,13 @@ function DisplayConditionEditor({
 }) {
   const path = condition?.path ?? paths[0]?.value ?? '';
   const field = findField(paths, path);
-  const mode: DisplayMode = condition?.equals !== undefined ? 'equals' : 'truthy';
+  const mode: DisplayMode = condition && 'equals' in condition ? 'equals' : 'truthy';
+  let truthy = true;
+  let equals: FieldValue | undefined;
+  if (condition) {
+    if ('truthy' in condition) truthy = condition.truthy;
+    else equals = condition.equals;
+  }
   const pathOptions = withMissingOption(paths, path);
 
   return (
@@ -144,7 +151,7 @@ function DisplayConditionEditor({
             <Field label="Truthy">
               <Select
                 name="display-condition-truthy"
-                value={String(condition.truthy ?? true)}
+                value={String(truthy)}
                 options={[
                   { value: 'true', label: 'Yes' },
                   { value: 'false', label: 'No' },
@@ -155,7 +162,7 @@ function DisplayConditionEditor({
           ) : (
             <DisplayValueField
               field={field}
-              value={condition.equals}
+              value={equals}
               onChange={(value) => onChange({ path, equals: value })}
               onInvalid={onInvalid}
             />
@@ -181,8 +188,8 @@ function DisplayValueField({
   onInvalid,
 }: {
   field?: FieldDefinition;
-  value: DisplayOn['equals'];
-  onChange: (value: NonNullable<DisplayOn['equals']>) => void;
+  value: FieldValue | undefined;
+  onChange: (value: FieldValue) => void;
   onInvalid?: (message: string) => void;
 }) {
   if (field?.type === 'boolean') {
@@ -364,17 +371,21 @@ function conditionForField(
   mode: DisplayMode,
   previous?: DisplayOn,
 ): DisplayOn {
-  if (mode === 'truthy') return { path, truthy: previous?.truthy ?? true };
+  if (mode === 'truthy') {
+    let nextTruthy = true;
+    if (previous && 'truthy' in previous) nextTruthy = previous.truthy;
+    return { path, truthy: nextTruthy };
+  }
   const sameField = previous?.path === path;
+  let nextEquals = defaultConditionValue(field);
+  if (sameField && previous && 'equals' in previous) nextEquals = previous.equals;
   return {
     path,
-    equals: sameField
-      ? (previous?.equals ?? defaultConditionValue(field))
-      : defaultConditionValue(field),
+    equals: nextEquals,
   };
 }
 
-function defaultConditionValue(field?: FieldDefinition): NonNullable<DisplayOn['equals']> {
+function defaultConditionValue(field?: FieldDefinition): FieldValue {
   if (field?.default !== undefined && !Array.isArray(field.default)) return field.default;
   if (field?.type === 'boolean') return false;
   if (field?.type === 'number') return 0;
@@ -382,7 +393,7 @@ function defaultConditionValue(field?: FieldDefinition): NonNullable<DisplayOn['
   return '';
 }
 
-function displayValue(value: DisplayOn['equals']): string {
+function displayValue(value: FieldValue | undefined): string {
   if (typeof value === 'string') return value;
   return value === undefined ? '' : JSON.stringify(value);
 }

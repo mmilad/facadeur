@@ -814,8 +814,8 @@ function resolveFieldBindings(
 
 function matchesDisplay(condition: DisplayOn, scope: Record<string, FieldValue>): boolean {
   const value = resolvePath(scope, condition.path);
-  if (condition.truthy !== undefined) return condition.truthy ? Boolean(value) : !value;
-  if (condition.equals !== undefined) {
+  if ('truthy' in condition) return condition.truthy ? Boolean(value) : !value;
+  if ('equals' in condition) {
     return JSON.stringify(value) === JSON.stringify(condition.equals);
   }
   return false;

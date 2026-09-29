@@ -390,14 +390,19 @@ export const bindingSchema = Type.Object(
   { additionalProperties: false },
 );
 
-export const displayOnSchema = Type.Object(
-  {
-    path: dataPathSchema,
-    equals: Type.Optional(fieldValueSchema),
-    truthy: Type.Optional(Type.Boolean()),
-  },
-  { additionalProperties: false },
-);
+const displayOnPath = { path: dataPathSchema };
+
+/** A render condition has exactly one predicate so preview and codegen agree. */
+export const displayOnSchema = Type.Union([
+  Type.Object(
+    { ...displayOnPath, equals: fieldValueSchema },
+    { additionalProperties: false },
+  ),
+  Type.Object(
+    { ...displayOnPath, truthy: Type.Boolean() },
+    { additionalProperties: false },
+  ),
+]);
 
 export const repeatSchema = Type.Object(
   {
