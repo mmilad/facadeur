@@ -1,6 +1,7 @@
 import Ajv, { type ErrorObject, type ValidateFunction } from 'ajv';
 import { DocumentError } from './errors.js';
 import { type FlatDocument, type FlatNode, toFlat } from './flat.js';
+import { ID_PATTERN } from './ids.js';
 import { defaultNestingRules, type NestingRule } from './kinds.js';
 import { assertBreakpoints, assertFonts } from './libraries.js';
 import { parseLayout } from './layout.js';
@@ -12,10 +13,13 @@ import {
   type DocumentFile,
   type DocumentSchemaOptions,
   type EventDefinition,
+  type EventBinding,
+  type DisplayOn,
   type Expose,
   type FieldDefinition,
   type FieldValue,
   type NestedNode,
+  type Repeat,
   type VariantPreset,
   isVariantAxis,
 } from './schema.js';
@@ -791,11 +795,22 @@ function isRecord(value: unknown): value is Record<string, FieldValue> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function isFieldValueValue(value: unknown): value is FieldValue {
+  if (typeof value === 'string' || typeof value === 'boolean') return true;
+  if (typeof value === 'number') return Number.isFinite(value);
+  if (Array.isArray(value)) return value.every(isFieldValueValue);
+  if (isRecord(value)) return Object.values(value).every(isFieldValueValue);
+  return false;
+}
+
 function assertNodeData(node: FlatNode): void {
   if (node.type !== 'instance') {
     assertAttributes(node.attributes);
     assertBindings(node.bindings);
+    assertEventBindings(node.eventBindings);
   }
+  if (node.displayOn) assertDisplayOn(node.displayOn);
+  if (node.type === 'frame' && node.repeat) assertRepeat(node.repeat);
   if (node.layout) assertLayout(node.layout);
   if (node.type === 'frame') {
     const children = new Set<string>();
@@ -840,6 +855,54 @@ export function assertBindings(bindings: Binding[] | undefined): void {
     }
   }
 }
+
+const DATA_PATH = /^[A-Za-z_$][A-Za-z0-9_$-]*(\.[A-Za-z_$][A-Za-z0-9_$-]*)*$/;
+
+export function assertDisplayOn(value: unknown): asserts value is DisplayOn {
+  if (!isRecord(value) || typeof value.path !== 'string' || !DATA_PATH.test(value.path)) {
+    throw new DocumentError('schema', 'Display conditions need a valid data path');
+  }
+  const hasEquals = value.equals !== undefined;
+  const hasTruthy = value.truthy !== undefined;
+  if (hasEquals && !isFieldValueValue(value.equals)) {
+    throw new DocumentError('schema', 'Display condition values must be valid field values');
+  }
+  if (hasEquals === hasTruthy || (hasTruthy && typeof value.truthy !== 'boolean')) {
+    throw new DocumentError(
+      'schema',
+      'Display conditions need exactly one of equals or truthy',
+    );
+  }
+}
+
+export function assertRepeat(value: unknown): asserts value is Repeat {
+  if (!isRecord(value) || typeof value.path !== 'string' || !DATA_PATH.test(value.path)) {
+    throw new DocumentError('schema', 'Repeats need a valid array data path');
+  }
+  if (value.as !== undefined && (typeof value.as !== 'string' || !ID_PATTERN.test(value.as))) {
+    throw new DocumentError('schema', 'Repeat aliases must be valid identifiers');
+  }
+  if (value.key !== undefined && (typeof value.key !== 'string' || !DATA_PATH.test(value.key))) {
+    throw new DocumentError('schema', 'Repeat keys need a valid data path');
+  }
+}
+
+export function assertEventBindings(value: unknown): asserts value is EventBinding[] {
+  if (value === undefined) return;
+  if (!Array.isArray(value)) throw new DocumentError('schema', 'Event bindings must be an array');
+  for (const binding of value) {
+    if (
+      !isRecord(binding) ||
+      typeof binding.event !== 'string' ||
+      !ID_PATTERN.test(binding.event) ||
+      typeof binding.name !== 'string' ||
+      !binding.name.trim()
+    ) {
+      throw new DocumentError('schema', 'Each event binding needs an event and native event name');
+    }
+  }
+}
+
 
 export function assertLayout(layout: NonNullable<FlatNode['layout']>): void {
   parseLayout(layout);

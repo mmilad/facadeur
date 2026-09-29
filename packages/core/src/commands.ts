@@ -17,11 +17,14 @@ import { parseLayout } from './layout.js';
 import type {
   Binding,
   Breakpoint,
+  DisplayOn,
+  EventBinding,
   FieldDefinition,
   FieldValue,
   FontFamily,
   Layout,
   NestedNode,
+  Repeat,
   StyleBlock,
   TokenInterface,
   VariantAxis,
@@ -47,8 +50,11 @@ import {
 import {
   assertAttributes,
   assertBindings,
+  assertDisplayOn,
+  assertEventBindings,
   assertFieldDefinition,
   assertLayout,
+  assertRepeat,
   assertVariantAxis,
   assertVariantPreset,
   validateDefinitions,
@@ -68,8 +74,11 @@ export interface InsertNode {
   name?: string;
   tag?: string;
   attributes?: Record<string, string>;
+  displayOn?: DisplayOn;
   layout?: Layout;
   bindings?: Binding[];
+  eventBindings?: EventBinding[];
+  repeat?: Repeat;
   style?: Record<string, string>;
   text?: string;
   src?: string;
@@ -81,7 +90,18 @@ export interface InsertNode {
 }
 
 export type NodeProp =
-  'name' | 'tag' | 'text' | 'src' | 'alt' | 'attributes' | 'layout' | 'bindings' | 'component';
+  | 'name'
+  | 'tag'
+  | 'text'
+  | 'src'
+  | 'alt'
+  | 'attributes'
+  | 'displayOn'
+  | 'layout'
+  | 'bindings'
+  | 'eventBindings'
+  | 'repeat'
+  | 'component';
 
 export type Command =
   | { type: 'insert'; parentId: string; index?: number; node: InsertNode }
@@ -109,10 +129,10 @@ export type Command =
   | { type: 'setTokenInterface'; tokenInterface: TokenInterface | null };
 
 const PROPS: Record<NodeType, readonly NodeProp[]> = {
-  frame: ['name', 'tag', 'attributes', 'layout', 'bindings'],
-  text: ['name', 'tag', 'text', 'attributes', 'layout', 'bindings'],
-  image: ['name', 'tag', 'src', 'alt', 'attributes', 'layout', 'bindings'],
-  instance: ['name', 'layout', 'component'],
+  frame: ['name', 'tag', 'attributes', 'displayOn', 'layout', 'bindings', 'eventBindings', 'repeat'],
+  text: ['name', 'tag', 'text', 'attributes', 'displayOn', 'layout', 'bindings', 'eventBindings'],
+  image: ['name', 'tag', 'src', 'alt', 'attributes', 'displayOn', 'layout', 'bindings', 'eventBindings'],
+  instance: ['name', 'displayOn', 'layout', 'component'],
 };
 
 const STYLE_PROPERTY = /^(--)?[A-Za-z_][\w-]*$/;
@@ -482,11 +502,15 @@ function materialize(draft: InsertNode, seen: Set<string>, nextId: () => string)
     return {
       ...elementBase(draft, id),
       type: 'frame',
+      ...(draft.repeat ? { repeat: { ...draft.repeat } } : {}),
       ...(children.length ? { children } : {}),
     };
   }
   if (draft.children?.length) {
     throw new DocumentError('nesting', `${draft.type} nodes cannot have children`);
+  }
+  if (draft.repeat) {
+    throw new DocumentError('schema', 'Only frame nodes can repeat');
   }
   if (draft.type === 'text') {
     return {
@@ -510,6 +534,8 @@ function materialize(draft: InsertNode, seen: Set<string>, nextId: () => string)
     draft.tag ||
     draft.attributes ||
     draft.bindings ||
+    draft.eventBindings ||
+    draft.repeat ||
     draft.style ||
     draft.text !== undefined ||
     draft.src !== undefined ||
@@ -517,16 +543,18 @@ function materialize(draft: InsertNode, seen: Set<string>, nextId: () => string)
   ) {
     throw new DocumentError(
       'nesting',
-      'Instances can only set name, layout, component, fields, and variants',
+      'Instances can only set name, displayOn, layout, component, fields, and variants',
     );
   }
   if (!draft.component || !ID_PATTERN.test(draft.component)) {
     throw new DocumentError('schema', 'Instances require a component id');
   }
+  if (draft.displayOn) assertDisplayOn(draft.displayOn);
   return {
     id,
     type: 'instance',
     ...(draft.name !== undefined ? { name: requireName(draft.name) } : {}),
+    ...(draft.displayOn ? { displayOn: { ...draft.displayOn } } : {}),
     ...(draft.layout ? { layout: cleanCommandLayout(draft.layout) } : {}),
     component: draft.component,
     ...(draft.fields && Object.keys(draft.fields).length ? { fields: { ...draft.fields } } : {}),
@@ -544,12 +572,17 @@ function elementBase(
   name?: string;
   tag?: string;
   attributes?: Record<string, string>;
+  displayOn?: DisplayOn;
   layout?: Layout;
   bindings?: Binding[];
+  eventBindings?: EventBinding[];
   style?: Record<string, string>;
 } {
   if (draft.attributes) assertAttributes(draft.attributes);
+  if (draft.displayOn) assertDisplayOn(draft.displayOn);
   if (draft.bindings) assertBindings(draft.bindings);
+  if (draft.eventBindings) assertEventBindings(draft.eventBindings);
+  if (draft.repeat) assertRepeat(draft.repeat);
   if (draft.layout) assertLayout(draft.layout);
   if (draft.style) assertStyleMap(draft.style);
   return {
@@ -557,9 +590,13 @@ function elementBase(
     ...(draft.name !== undefined ? { name: requireName(draft.name) } : {}),
     ...(draft.tag !== undefined ? { tag: requireTag(draft.tag) } : {}),
     ...(draft.attributes ? { attributes: { ...draft.attributes } } : {}),
+    ...(draft.displayOn ? { displayOn: { ...draft.displayOn } } : {}),
     ...(draft.layout ? { layout: cleanCommandLayout(draft.layout) } : {}),
     ...(draft.bindings?.length
       ? { bindings: draft.bindings.map((binding) => ({ ...binding })) }
+      : {}),
+    ...(draft.eventBindings?.length
+      ? { eventBindings: draft.eventBindings.map((binding) => ({ ...binding })) }
       : {}),
     ...(draft.style && Object.keys(draft.style).length ? { style: { ...draft.style } } : {}),
   };
@@ -601,6 +638,13 @@ function applyElementProp(
         node.attributes = attributes;
       }
       return;
+    case 'displayOn':
+      if (value === null) delete node.displayOn;
+      else {
+        assertDisplayOn(value);
+        node.displayOn = { ...value };
+      }
+      return;
     case 'layout':
       if (value === null) delete node.layout;
       else node.layout = requireLayout(value);
@@ -611,6 +655,21 @@ function applyElementProp(
         const bindings = requireBindings(value);
         assertBindings(bindings);
         node.bindings = bindings;
+      }
+      return;
+    case 'eventBindings':
+      if (value === null) delete node.eventBindings;
+      else {
+        assertEventBindings(value);
+        node.eventBindings = value.map((binding) => ({ ...binding }));
+      }
+      return;
+    case 'repeat':
+      if (node.type !== 'frame') break;
+      if (value === null) delete node.repeat;
+      else {
+        assertRepeat(value);
+        node.repeat = { ...value };
       }
       return;
     case 'component':
@@ -635,6 +694,13 @@ function applyInstanceProp(
     case 'layout':
       if (value === null) delete node.layout;
       else node.layout = requireLayout(value);
+      return;
+    case 'displayOn':
+      if (value === null) delete node.displayOn;
+      else {
+        assertDisplayOn(value);
+        node.displayOn = { ...value };
+      }
       return;
     case 'component':
       if (typeof value !== 'string' || !ID_PATTERN.test(value)) {

@@ -127,9 +127,12 @@ export {
 } from './style-block.js';
 export {
   assertDefinitionKind,
+  assertDisplayOn,
+  assertEventBindings,
   assertEventDefinition,
   assertExpose,
   assertFieldDefinition,
+  assertRepeat,
   assertVariantPreset,
   assertVariantAxis,
   compileDocumentValidator,

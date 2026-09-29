@@ -25,6 +25,7 @@ function component(): FlatDocument {
     name: 'Card',
     kind: 'component',
     fields: [{ name: 'title', type: 'text', default: 'Title' }],
+    events: [{ name: 'commit', payload: { value: 'text' } }],
     variants: [{ name: 'tone', values: ['quiet', 'loud'], default: 'quiet' }],
     root: {
       id: 'root',
@@ -152,6 +153,83 @@ describe('applyCommand', () => {
     expect(doc.nodes.btn).not.toHaveProperty('fields');
     expect(doc.fields.map((field) => field.name)).toEqual(['title']);
     expect(doc.variants.map((axis) => axis.name)).toEqual(['tone']);
+  });
+
+  it('sets and clears display conditions, repeats, and event bindings through node props', () => {
+    let doc = component();
+    doc = applyCommand(doc, {
+      type: 'defineField',
+      field: {
+        name: 'items',
+        type: 'array',
+        items: { type: 'object', fields: [{ name: 'id', type: 'text', required: true }] },
+      },
+    });
+    doc = applyCommand(doc, {
+      type: 'setProp',
+      nodeId: 'root',
+      prop: 'displayOn',
+      value: { path: 'title', truthy: true },
+    });
+    doc = applyCommand(doc, {
+      type: 'setProp',
+      nodeId: 'root',
+      prop: 'repeat',
+      value: { path: 'items', as: 'item', key: 'id' },
+    });
+    doc = applyCommand(doc, {
+      type: 'setProp',
+      nodeId: 'title',
+      prop: 'eventBindings',
+      value: [{ event: 'commit', name: 'change' }],
+    });
+    expect(doc.nodes.root).toMatchObject({
+      displayOn: { path: 'title', truthy: true },
+      repeat: { path: 'items', as: 'item', key: 'id' },
+    });
+    expect(doc.nodes.title).toMatchObject({
+      eventBindings: [{ event: 'commit', name: 'change' }],
+    });
+
+    doc = applyCommand(doc, {
+      type: 'insert',
+      parentId: 'root',
+      node: {
+        id: 'list',
+        type: 'frame',
+        repeat: { path: 'items', as: 'item', key: 'id' },
+        displayOn: { path: 'title', truthy: true },
+        eventBindings: [{ event: 'commit', name: 'input' }],
+      },
+    });
+    expect(doc.nodes.list).toMatchObject({
+      repeat: { path: 'items', as: 'item', key: 'id' },
+      displayOn: { path: 'title', truthy: true },
+      eventBindings: [{ event: 'commit', name: 'input' }],
+    });
+
+    doc = applyCommand(doc, { type: 'setProp', nodeId: 'root', prop: 'displayOn', value: null });
+    doc = applyCommand(doc, { type: 'setProp', nodeId: 'root', prop: 'repeat', value: null });
+    doc = applyCommand(doc, { type: 'setProp', nodeId: 'title', prop: 'eventBindings', value: null });
+    expect(doc.nodes.root).not.toHaveProperty('displayOn');
+    expect(doc.nodes.root).not.toHaveProperty('repeat');
+    expect(doc.nodes.title).not.toHaveProperty('eventBindings');
+    expect(() =>
+      applyCommand(component(), {
+        type: 'setProp',
+        nodeId: 'root',
+        prop: 'displayOn',
+        value: { path: 'title' },
+      }),
+    ).toThrow(/exactly one/);
+    expect(() =>
+      applyCommand(component(), {
+        type: 'setProp',
+        nodeId: 'title',
+        prop: 'eventBindings',
+        value: [{ event: 'missing', name: 'change' }],
+      }),
+    ).toThrow(/unknown event/);
   });
 
   it('creates, replaces, and removes sparse named variant presets', () => {
