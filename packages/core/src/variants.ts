@@ -57,10 +57,29 @@ export function resolveVariantDocument(
 
   const removed = new Set(overrides.removed ?? []);
   next.root = applyNode(next.root, overrides.nodes ?? {}, removed, overrides.insertions ?? []);
-  next.styles = options.preserveStyleLayers
+  const styles = options.preserveStyleLayers
     ? structuredClone(next.styles)
     : resolveNamedVariantStyles(next.styles, name);
+  next.styles = pruneStyleChildren(styles, next.root);
   return next;
+}
+
+/** A removed node must not leave a style child behind in the materialized view. */
+function pruneStyleChildren(styles: StyleBlock | undefined, root: NestedNode): StyleBlock | undefined {
+  if (!styles?.children) return styles;
+  const nodeIds = new Set<string>();
+  const visit = (node: NestedNode): void => {
+    nodeIds.add(node.id);
+    if (node.type === 'frame') {
+      for (const child of node.children ?? []) visit(child);
+    }
+  };
+  visit(root);
+  for (const id of Object.keys(styles.children)) {
+    if (!nodeIds.has(id)) delete styles.children[id];
+  }
+  if (!Object.keys(styles.children).length) delete styles.children;
+  return styles;
 }
 
 /**

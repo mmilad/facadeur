@@ -63,6 +63,39 @@ describe('style block and auto layout', () => {
     expect(resolved.styles?.variants?.variant).toBeUndefined();
   });
 
+  it('removes style children for nodes removed by a named variant', () => {
+    const document: DocumentFile = {
+      version: 1,
+      id: 'removed-style-child',
+      name: 'Removed style child',
+      kind: 'component',
+      variants: [
+        { name: 'default' },
+        { name: 'minimal', overrides: { removed: ['gone'] } },
+      ],
+      styles: {
+        children: {
+          gone: { declarations: { color: 'red' } },
+          stay: { declarations: { color: 'green' } },
+        },
+      },
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          { id: 'gone', type: 'text', text: 'Gone' },
+          { id: 'stay', type: 'text', text: 'Stay' },
+        ],
+      },
+    };
+
+    expect(() => validateCatalog([document])).not.toThrow();
+    const resolved = resolveVariantDocument(document, 'minimal');
+    expect(resolved.styles?.children).toEqual({
+      stay: { declarations: { color: 'green' } },
+    });
+  });
+
   it('rejects raw spacing and accepts a token, including per breakpoint', () => {
     const base = toFlat(buttonFile);
     expect(() =>
