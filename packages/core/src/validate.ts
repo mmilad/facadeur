@@ -502,7 +502,17 @@ export function assertFieldDefinition(field: FieldDefinition): void {
     if (field.type === 'array' && field.items.type === 'object' && !field.items.fields?.length) {
       throw new DocumentError('schema', `Object array field "${field.name}" needs item fields`);
     }
-    for (const item of field.items.fields ?? []) assertFieldDefinition(item);
+    const nestedNames = new Set<string>();
+    for (const item of field.items.fields ?? []) {
+      if (nestedNames.has(item.name)) {
+        throw new DocumentError(
+          'schema',
+          `Duplicate nested field "${item.name}" in "${field.name}"`,
+        );
+      }
+      nestedNames.add(item.name);
+      assertFieldDefinition(item);
+    }
   }
   if (field.default !== undefined) {
     assertValueMatches(field, field.default);

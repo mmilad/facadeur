@@ -285,6 +285,31 @@ describe('component contracts', () => {
     expect(() => validateCatalog([invalid])).toThrow(/scores\[\].*finite number/);
   });
 
+  it('rejects duplicate nested field names', () => {
+    const invalid: DocumentFile = {
+      version: 1,
+      id: 'duplicate-nested-field',
+      name: 'Duplicate nested field',
+      kind: 'component',
+      fields: [
+        {
+          name: 'record',
+          type: 'object',
+          items: {
+            type: 'object',
+            fields: [
+              { name: 'value', type: 'text' },
+              { name: 'value', type: 'number' },
+            ],
+          },
+        },
+      ],
+      root: { id: 'root', type: 'text', text: 'Record' },
+    };
+
+    expect(() => validateCatalog([invalid])).toThrow(/Duplicate nested field "value"/);
+  });
+
   it('keeps structured semantic payloads separate from native event bindings', () => {
     const invalid: DocumentFile = {
       version: 1,
