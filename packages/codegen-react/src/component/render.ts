@@ -112,7 +112,10 @@ export function renderNode(
     const key = node.repeat.key
       ? dataExpression(`${item}.${node.repeat.key}`, owner, childScope, usedProps)
       : index;
-    repeat = { source, item, index, key };
+    // Repeat sources may be optional fields (for example a form's optional
+    // `fields` payload). Keep the generated component renderable until data
+    // arrives instead of emitting `items.map(...)` on `undefined`.
+    repeat = { source: `(${source} ?? [])`, item, index, key };
   }
   const text = textChild(node, bound);
   if (text && !isVoidTag(tag)) childNodes.push({ text });

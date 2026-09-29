@@ -140,7 +140,7 @@ export function FormControlsSection({
       </section>
       <section data-node="data-driven-form">
         <h2 data-node="data-driven-title">Data-driven form</h2>
-        {formFields.map((field, fieldIndex) => (
+        {(formFields ?? []).map((field, fieldIndex) => (
           <div data-node="data-form" key={field?.id}>
             {field?.kind === 'input' && (
               <FormTextInput
