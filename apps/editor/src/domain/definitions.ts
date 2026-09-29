@@ -79,7 +79,10 @@ export function retargetField(field: FieldDefinition, type: FieldType): FieldDef
   return next;
 }
 
-export function replaceFieldItems(field: FieldDefinition, items: FieldItems | undefined): FieldDefinition {
+export function replaceFieldItems(
+  field: FieldDefinition,
+  items: FieldItems | undefined,
+): FieldDefinition {
   const next = cloneField(field);
   if (items === undefined) delete next.items;
   else next.items = cloneItems(items);
@@ -101,6 +104,23 @@ export function replaceFieldOptions(field: FieldDefinition, optionsText: string)
   const next = cloneField(field);
   next.options = options;
   if (typeof next.default === 'string' && !options.includes(next.default)) delete next.default;
+  return next;
+}
+
+export function replaceFieldItemOptions(
+  field: FieldDefinition,
+  optionsText: string,
+): FieldDefinition {
+  if (field.type !== 'array' || field.items?.type !== 'enum') {
+    throw new Error('Only enum array items can have options');
+  }
+  const options = splitList(optionsText);
+  if (!options.length) throw new Error('Enum item fields need at least one option');
+  if (new Set(options).size !== options.length) {
+    throw new Error('Enum item options must be unique');
+  }
+  const next = cloneField(field);
+  next.items = { ...next.items!, options };
   return next;
 }
 
@@ -137,7 +157,10 @@ function draftDefault(
     if (field.type === 'array' && !Array.isArray(value)) {
       throw new Error(`${field.name} must be a JSON array`);
     }
-    if (field.type === 'object' && (value === null || typeof value !== 'object' || Array.isArray(value))) {
+    if (
+      field.type === 'object' &&
+      (value === null || typeof value !== 'object' || Array.isArray(value))
+    ) {
       throw new Error(`${field.name} must be a JSON object`);
     }
     return value as FieldValue;
@@ -167,6 +190,7 @@ function cloneField(field: FieldDefinition): FieldDefinition {
 function cloneItems(items: FieldItems): FieldItems {
   return {
     type: items.type,
+    ...(items.options ? { options: [...items.options] } : {}),
     ...(items.fields ? { fields: items.fields.map(cloneField) } : {}),
   };
 }

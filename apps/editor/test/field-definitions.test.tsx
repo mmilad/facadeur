@@ -65,7 +65,9 @@ describe('field definition editor', () => {
     const nameInput = document.querySelector<HTMLInputElement>('input[name="new-items-item-name"]');
     expect(nameInput).not.toBeNull();
     await user.type(nameInput!, 'label');
-    const addNestedButton = document.querySelector<HTMLButtonElement>('button[name="add-new-items-item"]');
+    const addNestedButton = document.querySelector<HTMLButtonElement>(
+      'button[name="add-new-items-item"]',
+    );
     expect(addNestedButton).not.toBeNull();
     await user.click(addNestedButton!);
 
@@ -76,6 +78,39 @@ describe('field definition editor', () => {
         type: 'object',
         fields: [{ name: 'label', type: 'text' }],
       },
+    });
+  });
+
+  it('edits options for enum array items', async () => {
+    const user = userEvent.setup();
+    const onDefineField = vi.fn();
+    render(
+      <FieldsEditorControl
+        fields={[
+          {
+            name: 'kinds',
+            type: 'array',
+            items: { type: 'enum', options: ['input', 'textarea'] },
+          },
+        ]}
+        onDefineField={onDefineField}
+        onRemoveField={() => undefined}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Kinds' }));
+    const optionsInput = document.querySelector<HTMLInputElement>(
+      'input[name="field-item-options-kinds"]',
+    );
+    expect(optionsInput).not.toBeNull();
+    await user.clear(optionsInput!);
+    await user.type(optionsInput!, 'input, checkbox');
+    await user.tab();
+
+    expect(onDefineField).toHaveBeenCalledWith({
+      name: 'kinds',
+      type: 'array',
+      items: { type: 'enum', options: ['input', 'checkbox'] },
     });
   });
 });

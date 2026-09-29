@@ -5,6 +5,7 @@ import {
   type FieldItems,
   fieldDefinitionFromDraft,
   replaceFieldDefault,
+  replaceFieldItemOptions,
   replaceFieldItems,
   replaceFieldOptions,
   retargetField,
@@ -142,8 +143,7 @@ function CompositeFieldEditor({
   onInvalid?: (message: string) => void;
 }) {
   const items = field.items ?? defaultItemsFor(field.type);
-  const objectItems: FieldItems =
-    items.type === 'object' ? items : { type: 'object', fields: [] };
+  const objectItems: FieldItems = items.type === 'object' ? items : { type: 'object', fields: [] };
 
   if (field.type === 'array') {
     return (
@@ -159,12 +159,28 @@ function CompositeFieldEditor({
                 onDefineField(
                   replaceFieldItems(field, {
                     type,
+                    ...(type === 'enum' ? { options: items.options ?? ['value'] } : {}),
                     ...(type === 'object' ? { fields: objectItems.fields ?? [] } : {}),
                   }),
                 );
               }}
             />
           </Field>
+          {items.type === 'enum' ? (
+            <Field label="Item options">
+              <TextInput
+                name={`field-item-options-${fieldKey}`}
+                value={(items.options ?? []).join(', ')}
+                onCommit={(text) => {
+                  try {
+                    onDefineField(replaceFieldItemOptions(field, text));
+                  } catch (error) {
+                    onInvalid?.(error instanceof Error ? error.message : 'Invalid field');
+                  }
+                }}
+              />
+            </Field>
+          ) : null}
           {items.type === 'object' ? (
             <NestedFieldsEditor
               fields={items.fields ?? []}
@@ -185,9 +201,7 @@ function CompositeFieldEditor({
       <NestedFieldsEditor
         fields={objectItems.fields ?? []}
         scopeKey={`${fieldKey}-object`}
-        onChange={(fields) =>
-          onDefineField(replaceFieldItems(field, { type: 'object', fields }))
-        }
+        onChange={(fields) => onDefineField(replaceFieldItems(field, { type: 'object', fields }))}
         onInvalid={onInvalid}
       />
     </Section>
