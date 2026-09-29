@@ -264,4 +264,22 @@ describe('component contracts', () => {
     };
     expect(() => validateCatalog([invalidRepeatKey])).toThrow(/must resolve to a scalar/);
   });
+
+  it('keeps structured semantic payloads separate from native event bindings', () => {
+    const invalid: DocumentFile = {
+      version: 1,
+      id: 'structured-native-event',
+      name: 'Structured native event',
+      kind: 'atom',
+      events: [{ name: 'commit', payload: { record: 'object' } }],
+      root: {
+        id: 'root',
+        type: 'frame',
+        tag: 'input',
+        eventBindings: [{ event: 'commit', name: 'change' }],
+      },
+    };
+
+    expect(() => validateCatalog([invalid])).toThrow(/structured payload/);
+  });
 });

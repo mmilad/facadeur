@@ -194,8 +194,19 @@ export function validateDefinitions(doc: FlatDocument): void {
       if (!binding.name.trim()) {
         throw new DocumentError('schema', `Event binding "${binding.event}" needs a native event`);
       }
+      const event = events.find((entry) => entry.name === binding.event);
+      if (event && Object.values(event.payload ?? {}).some(isStructuredFieldType)) {
+        throw new DocumentError(
+          'schema',
+          `Event "${binding.event}" uses a structured payload and cannot be bound directly to a native event`,
+        );
+      }
     }
   }
+}
+
+function isStructuredFieldType(type: FieldDefinition['type']): boolean {
+  return type === 'array' || type === 'object';
 }
 
 function assertVariantFieldTargets(doc: FlatDocument, variant: VariantPreset): void {

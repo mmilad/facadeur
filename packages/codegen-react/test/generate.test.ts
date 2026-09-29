@@ -372,6 +372,25 @@ describe('atom contracts', () => {
     );
   });
 
+  it('rejects structured payloads when an event is mapped to a native handler', () => {
+    const invalid: DocumentFile = {
+      version: 1,
+      id: 'structured-event-atom',
+      name: 'Structured event atom',
+      kind: 'atom',
+      events: [{ name: 'commit', payload: { record: 'object' } }],
+      root: {
+        id: 'root',
+        type: 'frame',
+        tag: 'input',
+        eventBindings: [{ event: 'commit', name: 'change' }],
+      },
+    };
+
+    expect(() => generateReact({ documents: [invalid] })).toThrow(CodegenError);
+    expect(() => generateReact({ documents: [invalid] })).toThrow(/structured payload/);
+  });
+
   it('forwards exposed inputs and events through a composed component', () => {
     const atom: DocumentFile = {
       version: 1,

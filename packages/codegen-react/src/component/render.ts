@@ -333,6 +333,14 @@ function eventAttributes(
       ? binding.name
       : `on${binding.name.charAt(0).toUpperCase()}${binding.name.slice(1)}`;
     const payload = event.eventPayload ?? {};
+    const structured = Object.entries(payload).find(
+      ([, type]) => type === 'array' || type === 'object',
+    );
+    if (structured) {
+      throw new CodegenError(
+        `Event "${binding.event}" has a structured payload field "${structured[0]}" and cannot be mapped from native event "${binding.name}"`,
+      );
+    }
     if (!Object.keys(payload).length) {
       attrs.push({
         name: nativeName,
