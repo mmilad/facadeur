@@ -5,6 +5,7 @@ import { findParent, type FlatDocument, type FlatNode } from '@facadeur/core';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
 import { AddPopover, Field, TextInput } from '../../form/index.js';
 import { ComponentFields } from './content/ComponentFields.js';
+import { ComponentEvents } from './content/ComponentEvents.js';
 import { ComponentVariants } from './content/ComponentVariants.js';
 import { ContentPanel } from './content/ContentPanel.js';
 import { NodeBindings } from './content/NodeBindings.js';
@@ -124,7 +125,10 @@ export function PropertiesPanel({
         <div role="tabpanel" className="property-panel">
           {!node ? (
             showDefinitions ? (
-              <ComponentFields session={session} snap={inspectorSnap} />
+              <>
+                <ComponentFields session={session} snap={inspectorSnap} />
+                <ComponentEvents session={session} snap={inspectorSnap} />
+              </>
             ) : (
               <p className="inspector-empty">Select a layer or an element on the stage.</p>
             )

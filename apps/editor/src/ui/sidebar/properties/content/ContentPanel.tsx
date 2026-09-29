@@ -5,6 +5,7 @@ import { InstanceOverridesControl } from '../../../controls/instance/index.js';
 import { TextControl } from '../../../controls/fields/index.js';
 import '../../../form/form.css';
 import { ComponentFields } from './ComponentFields.js';
+import { ComponentEvents } from './ComponentEvents.js';
 import { NodeAttributeFields } from './NodeAttributeFields.js';
 import { partitionNodeAttributes } from './preview-attribute-keys.js';
 import { PreviewOptionsDisclosure } from './PreviewOptionsDisclosure.js';
@@ -97,7 +98,12 @@ export function ContentPanel({
       {node.type === 'instance' ? (
         <InstanceFields session={session} node={node} snap={snap} />
       ) : null}
-      {showDefinitions ? <ComponentFields session={session} snap={snap} /> : null}
+      {showDefinitions ? (
+        <>
+          <ComponentFields session={session} snap={snap} />
+          <ComponentEvents session={session} snap={snap} />
+        </>
+      ) : null}
     </>
   );
 }

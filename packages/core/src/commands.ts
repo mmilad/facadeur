@@ -19,6 +19,7 @@ import type {
   Breakpoint,
   DisplayOn,
   EventBinding,
+  EventDefinition,
   FieldDefinition,
   FieldValue,
   FontFamily,
@@ -52,6 +53,7 @@ import {
   assertBindings,
   assertDisplayOn,
   assertEventBindings,
+  assertEventDefinition,
   assertFieldDefinition,
   assertLayout,
   assertRepeat,
@@ -114,6 +116,8 @@ export type Command =
   | { type: 'setVariant'; nodeId: string; axis: string; value: string | null }
   | { type: 'defineField'; field: FieldDefinition }
   | { type: 'removeField'; name: string }
+  | { type: 'defineEvent'; event: EventDefinition }
+  | { type: 'removeEvent'; name: string }
   | { type: 'defineVariant'; axis: VariantAxis }
   | { type: 'removeVariant'; name: string }
   | { type: 'setVariantPreset'; preset: VariantPreset }
@@ -178,6 +182,12 @@ export function applyCommand(
       break;
     case 'removeField':
       removeField(next, command.name);
+      break;
+    case 'defineEvent':
+      defineEvent(next, command.event);
+      break;
+    case 'removeEvent':
+      removeEvent(next, command.name);
       break;
     case 'defineVariant':
       defineVariant(next, command.axis);
@@ -431,6 +441,36 @@ function removeField(doc: FlatDocument, name: string): void {
     const bindings = node.bindings.filter((binding) => binding.field !== name);
     if (bindings.length) node.bindings = bindings;
     else delete node.bindings;
+    doc.nodes[node.id] = makeFlatNode(node);
+  }
+}
+
+function defineEvent(doc: FlatDocument, event: EventDefinition): void {
+  assertEventDefinition(event);
+  const events = doc.events ? [...doc.events] : [];
+  const index = events.findIndex((item) => item.name === event.name);
+  if (index === -1) events.push(structuredClone(event));
+  else events[index] = structuredClone(event);
+  doc.events = events;
+}
+
+/** Removing a public event also removes native bindings that target it. */
+function removeEvent(doc: FlatDocument, name: string): void {
+  const events = doc.events ?? [];
+  const index = events.findIndex((item) => item.name === name);
+  if (index === -1) {
+    throw new DocumentError('unknown-event', `Event "${name}" is not defined`);
+  }
+  events.splice(index, 1);
+  if (events.length) doc.events = events;
+  else delete doc.events;
+  for (const node of Object.values(doc.nodes)) {
+    if (node.type === 'instance' || !node.eventBindings?.some((binding) => binding.event === name)) {
+      continue;
+    }
+    const bindings = node.eventBindings.filter((binding) => binding.event !== name);
+    if (bindings.length) node.eventBindings = bindings;
+    else delete node.eventBindings;
     doc.nodes[node.id] = makeFlatNode(node);
   }
 }

@@ -232,6 +232,39 @@ describe('applyCommand', () => {
     ).toThrow(/unknown event/);
   });
 
+  it('defines events and removes their dependent native bindings', () => {
+    let doc = component();
+    doc = applyCommand(doc, {
+      type: 'defineEvent',
+      event: { name: 'submit', payload: { value: 'text', valid: 'boolean' } },
+    });
+    doc = applyCommand(doc, {
+      type: 'setProp',
+      nodeId: 'title',
+      prop: 'eventBindings',
+      value: [
+        { event: 'commit', name: 'change' },
+        { event: 'submit', name: 'submit' },
+      ],
+    });
+    expect(doc.events).toContainEqual({
+      name: 'submit',
+      payload: { value: 'text', valid: 'boolean' },
+    });
+
+    doc = applyCommand(doc, { type: 'removeEvent', name: 'submit' });
+    expect(doc.events).toEqual([{ name: 'commit', payload: { value: 'text' } }]);
+    expect(doc.nodes.title).toMatchObject({
+      eventBindings: [{ event: 'commit', name: 'change' }],
+    });
+    expect(() => applyCommand(doc, { type: 'removeEvent', name: 'submit' })).toThrow(
+      /not defined/,
+    );
+    expect(() =>
+      applyCommand(doc, { type: 'defineEvent', event: { name: 'not valid' } }),
+    ).toThrow(/Invalid event name/);
+  });
+
   it('creates, replaces, and removes sparse named variant presets', () => {
     let doc = component();
     doc = applyCommand(doc, {

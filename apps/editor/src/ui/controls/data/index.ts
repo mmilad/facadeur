@@ -1,5 +1,7 @@
 export { FieldsEditorControl } from './FieldsEditorControl.js';
 export { BindingsEditorControl } from './BindingsEditorControl.js';
+export { EventsEditorControl } from './EventsEditorControl.js';
+export { EventBindingsEditorControl } from './EventBindingsEditorControl.js';
 export {
   BINDING_TARGET_LABEL,
   bindingFieldOptions,

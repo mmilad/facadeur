@@ -406,11 +406,11 @@ export function assertFieldDefinition(field: FieldDefinition): void {
 }
 
 export function assertEventDefinition(event: EventDefinition): void {
-  if (!event.name.trim()) {
-    throw new DocumentError('schema', 'Event names must not be empty');
+  if (!ID_PATTERN.test(event.name)) {
+    throw new DocumentError('schema', `Invalid event name "${event.name}"`);
   }
   for (const [name, type] of Object.entries(event.payload ?? {})) {
-    if (!name.trim() || !fieldTypes.includes(type)) {
+    if (!ID_PATTERN.test(name) || !fieldTypes.includes(type)) {
       throw new DocumentError('schema', `Event "${event.name}" has an invalid payload`);
     }
   }

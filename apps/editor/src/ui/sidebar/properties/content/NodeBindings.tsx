@@ -1,6 +1,9 @@
 import { type Binding, type FlatNode } from '@facadeur/core';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
-import { BindingsEditorControl } from '../../../controls/data/index.js';
+import {
+  BindingsEditorControl,
+  EventBindingsEditorControl,
+} from '../../../controls/data/index.js';
 import { ownsComponentFeatures } from './owns-component-features.js';
 
 export function NodeBindings({
@@ -21,6 +24,20 @@ export function NodeBindings({
         bindings={bindings}
         fields={snap.document.fields}
         onChangeBindings={(next) => writeBindings(session, node, next)}
+        onInvalid={(message) => session.setNotice(message, 'error')}
+      />
+      <h3>Event bindings</h3>
+      <EventBindingsEditorControl
+        bindings={node.eventBindings ?? []}
+        events={snap.document.events ?? []}
+        onChangeBindings={(next) =>
+          session.execute({
+            type: 'setProp',
+            nodeId: node.id,
+            prop: 'eventBindings',
+            value: next.length ? next : null,
+          })
+        }
         onInvalid={(message) => session.setNotice(message, 'error')}
       />
     </div>
