@@ -142,6 +142,59 @@ describe('component contracts', () => {
     ).toThrow(/is not defined/);
   });
 
+  it('rejects repeat aliases that shadow fields or outer repeat aliases', () => {
+    const fieldCollision: DocumentFile = {
+      version: 1,
+      id: 'repeat-field-alias-collision',
+      name: 'Repeat field alias collision',
+      kind: 'component',
+      fields: [
+        { name: 'items', type: 'array', items: { type: 'text' } },
+        { name: 'item', type: 'text' },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        tag: 'div',
+        repeat: { path: 'items' },
+      },
+    };
+    expect(() => validateCatalog([fieldCollision])).toThrow(/shadows an existing data path/);
+
+    const outerAliasCollision: DocumentFile = {
+      version: 1,
+      id: 'repeat-alias-collision',
+      name: 'Repeat alias collision',
+      kind: 'component',
+      fields: [
+        {
+          name: 'sections',
+          type: 'array',
+          items: {
+            type: 'object',
+            fields: [{ name: 'rows', type: 'array', items: { type: 'text' } }],
+          },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        tag: 'main',
+        repeat: { path: 'sections', as: 'item' },
+        children: [
+          {
+            id: 'rows',
+            type: 'frame',
+            repeat: { path: 'item.rows', as: 'item' },
+          },
+        ],
+      },
+    };
+    expect(() => validateCatalog([outerAliasCollision])).toThrow(
+      /Repeat alias "item".*shadows an existing data path/,
+    );
+  });
+
   it('validates data paths introduced by a variant overlay', () => {
     const invalid: DocumentFile = {
       version: 1,

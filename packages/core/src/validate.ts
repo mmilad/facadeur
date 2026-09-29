@@ -356,7 +356,14 @@ function validateDataContracts(doc: FlatDocument, catalog: Map<string, DocumentF
           `Repeat path "${node.repeat.path}" on node "${node.id}" must resolve to an array`,
         );
       }
-      const item = itemField(source, node.repeat.as ?? 'item');
+      const repeatAlias = node.repeat.as ?? 'item';
+      if (scope.fields.has(repeatAlias) || scope.aliases.has(repeatAlias)) {
+        throw new DocumentError(
+          'schema',
+          `Repeat alias "${repeatAlias}" on node "${node.id}" shadows an existing data path`,
+        );
+      }
+      const item = itemField(source, repeatAlias);
       if (node.repeat.key) {
         if (!item) {
           throw new DocumentError(
@@ -379,8 +386,8 @@ function validateDataContracts(doc: FlatDocument, catalog: Map<string, DocumentF
       childScope = {
         fields: scope.fields,
         aliases: new Map(scope.aliases).set(
-          node.repeat.as ?? 'item',
-          item ?? scalarItemField(node.repeat.as ?? 'item'),
+          repeatAlias,
+          item ?? scalarItemField(repeatAlias),
         ),
       };
     }
