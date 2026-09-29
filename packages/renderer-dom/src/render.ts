@@ -132,15 +132,16 @@ export function createDomRenderer(options: {
 
   function context(): RenderContext {
     const mounted = mountedId ? catalog.get(mountedId) : undefined;
+    const canvas = mounted ? mountedDocument(mounted) : undefined;
     return {
       catalog,
       records,
       path: null,
-      scope: {},
+      scope: canvas ? resolveFields(canvas.fields, undefined) : {},
       ownerId: null,
       depth: 0,
       canvasId: mountedId,
-      canvasDocument: mounted ? mountedDocument(mounted) : null,
+      canvasDocument: canvas ?? null,
     };
   }
 
@@ -265,7 +266,7 @@ function resolveInstance(
   if (!canvasNode) return null;
   return walkRendered(canvasNode, parts, 0, ctx, {
     path: null,
-    scope: {},
+    scope: ctx.scope,
     ownerId: null,
     depth: 0,
   });
@@ -295,36 +296,65 @@ function walkRendered(
     if (last) return { instance: node, ...parent };
     const definition = definitionForInstance(node, ctx);
     if (!definition || definition.root.type !== 'frame') return null;
-    const nextId = parts[index + 1];
-    const child = (definition.root.children ?? []).find((entry) => entry.id === nextId);
-    if (!child) return null;
     const path = joinId(parent.path, node.id);
-    return walkRendered(child, parts, index + 1, ctx, {
-      path,
-      scope: resolveFields(definition.fields, {
-        ...(node.fields ?? {}),
-        ...resolveFieldBindings(node.fieldBindings, parent.scope),
-      }),
+    const scope = resolveFields(definition.fields, {
+      ...(node.fields ?? {}),
+      ...resolveFieldBindings(node.fieldBindings, parent.scope),
+    });
+    const root = definition.root;
+    const repeated = root.repeat ? repeatedItem(root.repeat, scope, parts[index + 1]) : undefined;
+    const childIndex = root.repeat ? index + 2 : index + 1;
+    const nextId = parts[childIndex];
+    const child = (root.children ?? []).find((entry) => entry.id === nextId);
+    if (!child || (root.repeat && !repeated)) return null;
+    return walkRendered(child, parts, childIndex, ctx, {
+      path: repeated ? joinId(path, repeated.key) : path,
+      scope: repeated?.scope ?? scope,
       ownerId: path,
       depth: parent.depth + 1,
     });
   }
   if (node.type !== 'frame' || last) return null;
-  const nextId = parts[index + 1];
+  const path = joinId(parent.path, node.id);
+  const repeated = node.repeat
+    ? repeatedItem(node.repeat, parent.scope, parts[index + 1])
+    : undefined;
+  const childIndex = node.repeat ? index + 2 : index + 1;
+  const nextId = parts[childIndex];
   const child = (node.children ?? []).find((entry) => entry.id === nextId);
-  if (!child) return null;
-  return walkRendered(child, parts, index + 1, ctx, {
+  if (!child || (node.repeat && !repeated)) return null;
+  return walkRendered(child, parts, childIndex, ctx, {
     ...parent,
-    path: joinId(parent.path, node.id),
+    path: repeated ? joinId(path, repeated.key) : path,
+    scope: repeated?.scope ?? parent.scope,
   });
+}
+
+function repeatedItem(
+  repeat: NonNullable<Extract<NestedNode, { type: 'frame' }>['repeat']>,
+  scope: Record<string, FieldValue>,
+  segment: string | undefined,
+): { key: string; scope: Record<string, FieldValue> } | undefined {
+  if (segment === undefined) return undefined;
+  const source = resolvePath(scope, repeat.path);
+  if (!Array.isArray(source)) return undefined;
+  const itemName = repeat.as ?? 'item';
+  for (const [index, item] of source.entries()) {
+    const rawKey = repeat.key ? resolvePath(item, repeat.key) : index;
+    const key = String(rawKey ?? index);
+    if (key === segment) {
+      return { key, scope: { ...scope, [itemName]: item } };
+    }
+  }
+  return undefined;
 }
 
 function findCanvasChild(ctx: RenderContext, id: string): NestedNode | undefined {
   const document = ctx.canvasDocument ?? (ctx.canvasId ? ctx.catalog.get(ctx.canvasId) : undefined);
   const documents = document ? [document] : [...ctx.catalog.values()];
   for (const entry of documents) {
+    if (entry.root.id === id) return entry.root;
     if (entry.root.type !== 'frame') {
-      if (entry.root.id === id) return entry.root;
       continue;
     }
     const child = (entry.root.children ?? []).find((node) => node.id === id);

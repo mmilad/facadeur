@@ -4,7 +4,14 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { resolveVariantDocument, validateCatalog, type DocumentFile } from '@facadeur/core';
+import {
+  resolveVariantDocument,
+  toFlat,
+  validateCatalog,
+  type DocumentChange,
+  type DocumentFile,
+  type DocumentStore,
+} from '@facadeur/core';
 import { createDomRenderer, renderDocument } from '@facadeur/renderer-dom';
 
 const examplesDir = resolve(process.cwd(), 'examples');
@@ -355,6 +362,95 @@ describe('renderer', () => {
     expect(host.querySelector('[data-id="root/message/textarea"]')?.textContent).toBe('Message');
     expect(records.has('root/email/input')).toBe(true);
     expect(records.has('root/email/textarea')).toBe(false);
+  });
+
+  it('repaints component instances inside repeated data rows', () => {
+    const rowBefore: DocumentFile = {
+      version: 1,
+      id: 'repaint-row',
+      name: 'Repaint row',
+      kind: 'atom',
+      fields: [{ name: 'label', type: 'text', required: true }],
+      root: {
+        id: 'root',
+        type: 'text',
+        tag: 'span',
+        bindings: [{ field: 'label', target: 'text' }],
+      },
+    };
+    const rowAfter: DocumentFile = {
+      ...rowBefore,
+      root: {
+        id: 'root',
+        type: 'text',
+        tag: 'span',
+        text: 'After',
+      },
+    };
+    const host: DocumentFile = {
+      version: 1,
+      id: 'repaint-host',
+      name: 'Repaint host',
+      kind: 'component',
+      fields: [
+        {
+          name: 'items',
+          type: 'array',
+          default: [{ id: 'first', label: 'Before' }],
+          items: {
+            type: 'object',
+            fields: [
+              { name: 'id', type: 'text', required: true },
+              { name: 'label', type: 'text', required: true },
+            ],
+          },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        repeat: { path: 'items', as: 'item', key: 'id' },
+        children: [
+          {
+            id: 'row',
+            type: 'instance',
+            component: 'repaint-row',
+            fieldBindings: { label: 'item.label' },
+          },
+        ],
+      },
+    };
+    expect(() => validateCatalog([host, rowBefore])).not.toThrow();
+
+    const parent = document.createElement('div');
+    const renderer = createDomRenderer({
+      parent,
+      catalog: [host, rowBefore],
+      paintRoot: true,
+    });
+    renderer.mount(host);
+    expect(parent.querySelector('[data-id="root/first/row"]')?.textContent).toBe('Before');
+
+    let notify: ((change: DocumentChange) => void) | undefined;
+    const store: DocumentStore = {
+      getDocument: () => toFlat(rowAfter),
+      getNode: () => undefined,
+      execute: () => undefined,
+      subscribe: (listener) => {
+        notify = listener;
+        return () => undefined;
+      },
+      undo: () => undefined,
+      redo: () => undefined,
+      canUndo: () => false,
+      canRedo: () => false,
+    };
+    renderer.connect(store);
+    notify?.({ reason: 'undo' });
+
+    expect(parent.querySelectorAll('[data-id="root/first/row"]')).toHaveLength(1);
+    expect(parent.querySelector('[data-id="root/first/row"]')?.textContent).toBe('After');
+    renderer.destroy();
   });
 
   it('activates named component variants in DOM instances', () => {
