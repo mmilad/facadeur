@@ -421,7 +421,7 @@ export function toolAllowed(kind: string, tool: InsertTool): boolean {
 }
 
 export function refusalMessage(kind: string, nodeType: string, instanceKind?: string): string {
-  if (kind === 'page') return 'Pages can only contain sections.';
+  if (kind === 'page') return 'Pages can only contain sections or components.';
   if (kind === 'atom' && nodeType === 'instance') {
     return 'Atoms can only contain frames, text, and images.';
   }

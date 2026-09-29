@@ -161,6 +161,6 @@ describe('editing', () => {
         placementAllowed(page, id, 'frame'),
       ),
     ).toBeNull();
-    expect(refusalMessage('page', 'text')).toBe('Pages can only contain sections.');
+    expect(refusalMessage('page', 'text')).toBe('Pages can only contain sections or components.');
   });
 });
