@@ -412,6 +412,7 @@ export const variantNodeOverrideSchema = Type.Object(
     alt: Type.Optional(Type.String()),
     attributes: Type.Optional(Type.Record(Type.String({ minLength: 1 }), Type.String())),
     fields: Type.Optional(Type.Record(idSchema, fieldValueSchema)),
+    fieldBindings: Type.Optional(Type.Record(idSchema, dataPathSchema)),
     variants: Type.Optional(Type.Record(idSchema, Type.String())),
     repeat: Type.Optional(repeatSchema),
     layout: Type.Optional(layoutSchema),

@@ -197,6 +197,41 @@ describe('variant overlays', () => {
     expect(roundTrip.root).toEqual(edited.root);
   });
 
+  it('derives and resolves variant-specific instance field bindings', () => {
+    const base: DocumentFile = {
+      version: 1,
+      id: 'binding-variant',
+      name: 'Binding variant',
+      kind: 'component',
+      variants: [{ name: 'default' }],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'control',
+            type: 'instance',
+            component: 'form-input',
+            fieldBindings: { value: 'item.value' },
+          },
+        ],
+      },
+    };
+    const edited = structuredClone(base);
+    const control = edited.root.type === 'frame' ? edited.root.children?.[0] : undefined;
+    if (!control || control.type !== 'instance') throw new Error('expected instance');
+    control.fieldBindings = { value: 'item.label' };
+
+    const derived = deriveVariantPreset(base, edited, 'label-mode');
+    expect(derived.overrides?.nodes).toMatchObject({
+      'root.control': { fieldBindings: { value: 'item.label' } },
+    });
+    const resolved = resolveVariantDocument({ ...base, variants: [derived] }, 'label-mode');
+    expect(resolved.root).toMatchObject({
+      children: [{ fieldBindings: { value: 'item.label' } }],
+    });
+  });
+
   it('derives and resolves removed optional field defaults without copying the definition', () => {
     const base: DocumentFile = {
       version: 1,

@@ -130,6 +130,7 @@ export {
   assertDisplayOn,
   assertEventBindings,
   assertEventDefinition,
+  assertFieldBindings,
   assertExpose,
   assertFieldDefinition,
   assertRepeat,

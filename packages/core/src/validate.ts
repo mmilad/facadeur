@@ -499,7 +499,7 @@ function assertVariantUnsetPaths(
   variantName: string,
   node: NonNullable<NonNullable<VariantPreset['overrides']>['nodes']>[string],
 ): void {
-  const mapProperties = new Set(['attributes', 'fields', 'variants', 'style']);
+  const mapProperties = new Set(['attributes', 'fields', 'fieldBindings', 'variants', 'style']);
   const scalarProperties = new Set([
     'text',
     'src',
@@ -868,10 +868,7 @@ export function assertDisplayOn(value: unknown): asserts value is DisplayOn {
     throw new DocumentError('schema', 'Display condition values must be valid field values');
   }
   if (hasEquals === hasTruthy || (hasTruthy && typeof value.truthy !== 'boolean')) {
-    throw new DocumentError(
-      'schema',
-      'Display conditions need exactly one of equals or truthy',
-    );
+    throw new DocumentError('schema', 'Display conditions need exactly one of equals or truthy');
   }
 }
 
@@ -903,6 +900,16 @@ export function assertEventBindings(value: unknown): asserts value is EventBindi
   }
 }
 
+export function assertFieldBindings(value: unknown): asserts value is Record<string, string> {
+  if (!isRecord(value)) {
+    throw new DocumentError('schema', 'Field bindings must be an object of data paths');
+  }
+  for (const [field, path] of Object.entries(value)) {
+    if (!ID_PATTERN.test(field) || typeof path !== 'string' || !DATA_PATH.test(path)) {
+      throw new DocumentError('schema', 'Each field binding needs a field name and data path');
+    }
+  }
+}
 
 export function assertLayout(layout: NonNullable<FlatNode['layout']>): void {
   parseLayout(layout);

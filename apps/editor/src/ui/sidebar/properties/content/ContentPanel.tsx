@@ -1,5 +1,6 @@
 import type { FlatNode } from '@facadeur/core';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
+import { dataFieldsForNode } from '../../../controls/data/index.js';
 import { HtmlTagSelect } from '../../../controls/html/index.js';
 import { InstanceOverridesControl } from '../../../controls/instance/index.js';
 import { TextControl } from '../../../controls/fields/index.js';
@@ -145,10 +146,15 @@ function InstanceFields({
       fields={snap.componentFields}
       variants={target.variants}
       fieldOverrides={node.fields}
+      fieldBindings={node.fieldBindings}
+      dataFields={dataFieldsForNode(snap.document, node.id)}
       variantOverrides={node.variants}
       onOpenMaster={() => session.openAsset(node.component, 'root')}
       onSetField={(field, value) =>
         session.execute({ type: 'setField', nodeId: node.id, field, value })
+      }
+      onSetFieldBindings={(value) =>
+        session.execute({ type: 'setProp', nodeId: node.id, prop: 'fieldBindings', value })
       }
       onSetVariant={(axis, value) =>
         session.execute({ type: 'setVariant', nodeId: node.id, axis, value })

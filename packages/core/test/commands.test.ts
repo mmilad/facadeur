@@ -210,7 +210,12 @@ describe('applyCommand', () => {
 
     doc = applyCommand(doc, { type: 'setProp', nodeId: 'root', prop: 'displayOn', value: null });
     doc = applyCommand(doc, { type: 'setProp', nodeId: 'root', prop: 'repeat', value: null });
-    doc = applyCommand(doc, { type: 'setProp', nodeId: 'title', prop: 'eventBindings', value: null });
+    doc = applyCommand(doc, {
+      type: 'setProp',
+      nodeId: 'title',
+      prop: 'eventBindings',
+      value: null,
+    });
     expect(doc.nodes.root).not.toHaveProperty('displayOn');
     expect(doc.nodes.root).not.toHaveProperty('repeat');
     expect(doc.nodes.title).not.toHaveProperty('eventBindings');
@@ -257,12 +262,47 @@ describe('applyCommand', () => {
     expect(doc.nodes.title).toMatchObject({
       eventBindings: [{ event: 'commit', name: 'change' }],
     });
-    expect(() => applyCommand(doc, { type: 'removeEvent', name: 'submit' })).toThrow(
-      /not defined/,
+    expect(() => applyCommand(doc, { type: 'removeEvent', name: 'submit' })).toThrow(/not defined/);
+    expect(() => applyCommand(doc, { type: 'defineEvent', event: { name: 'not valid' } })).toThrow(
+      /Invalid event name/,
     );
+  });
+
+  it('sets and clears instance field bindings through node props', () => {
+    const doc = toFlat({
+      version: 1,
+      id: 'binding-command',
+      name: 'Binding command',
+      kind: 'component',
+      fields: [{ name: 'value', type: 'text' }],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [{ id: 'child', type: 'instance', component: 'input' }],
+      },
+    });
+    const bound = applyCommand(doc, {
+      type: 'setProp',
+      nodeId: 'child',
+      prop: 'fieldBindings',
+      value: { value: 'item.value' },
+    });
+    expect(bound.nodes.child).toMatchObject({ fieldBindings: { value: 'item.value' } });
+    const cleared = applyCommand(bound, {
+      type: 'setProp',
+      nodeId: 'child',
+      prop: 'fieldBindings',
+      value: null,
+    });
+    expect(cleared.nodes.child).not.toHaveProperty('fieldBindings');
     expect(() =>
-      applyCommand(doc, { type: 'defineEvent', event: { name: 'not valid' } }),
-    ).toThrow(/Invalid event name/);
+      applyCommand(doc, {
+        type: 'setProp',
+        nodeId: 'child',
+        prop: 'fieldBindings',
+        value: { value: 'not a path' },
+      }),
+    ).toThrow(/field binding/);
   });
 
   it('creates, replaces, and removes sparse named variant presets', () => {

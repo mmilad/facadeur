@@ -3,15 +3,19 @@ import { Field, Select, Stack, TextArea, TextInput, Toggle } from '../../form/in
 import '../../form/form.css';
 import { fieldDisplayLabel } from '../data/field-label.js';
 import { parseInstanceFieldValue } from '../data/value.js';
+import { FieldBindingsEditorControl } from './FieldBindingsEditorControl.js';
 
 export function InstanceOverridesControl({
   masterName,
   fields,
   variants,
   fieldOverrides,
+  fieldBindings = undefined,
+  dataFields = [],
   variantOverrides,
   onOpenMaster,
   onSetField,
+  onSetFieldBindings = () => undefined,
   onSetVariant,
   onInvalid,
 }: {
@@ -19,9 +23,12 @@ export function InstanceOverridesControl({
   fields: FieldDefinition[];
   variants: VariantAxis[];
   fieldOverrides: Record<string, FieldValue> | undefined;
+  fieldBindings?: Record<string, string> | undefined;
+  dataFields?: FieldDefinition[];
   variantOverrides: Record<string, string> | undefined;
   onOpenMaster: () => void;
   onSetField: (field: string, value: FieldValue | null) => void;
+  onSetFieldBindings?: (value: Record<string, string> | null) => void;
   onSetVariant: (axis: string, value: string | null) => void;
   onInvalid?: (message: string) => void;
 }) {
@@ -50,6 +57,12 @@ export function InstanceOverridesControl({
           onInvalid={onInvalid}
         />
       ))}
+      <FieldBindingsEditorControl
+        fields={fields}
+        dataFields={dataFields}
+        bindings={fieldBindings}
+        onChange={onSetFieldBindings}
+      />
       {variants.length ? <h3>Variants</h3> : null}
       {variants.map((axis) => {
         const current = variantOverrides?.[axis.name] ?? '';
@@ -90,7 +103,7 @@ function InstanceFieldOverride({
   if (field.type === 'enum' && field.options?.length) {
     const current = typeof override === 'string' ? override : '';
     return (
-          <Field label={fieldDisplayLabel(field.name)}>
+      <Field label={fieldDisplayLabel(field.name)}>
         <Select
           name={`field-${field.name}`}
           value={current}
@@ -120,8 +133,10 @@ function InstanceFieldOverride({
     );
   }
   if (field.type === 'array' || field.type === 'object') {
-    const shown = override === undefined || override === null ? '' : JSON.stringify(override, null, 2);
-    const placeholder = field.default === undefined ? undefined : JSON.stringify(field.default, null, 2);
+    const shown =
+      override === undefined || override === null ? '' : JSON.stringify(override, null, 2);
+    const placeholder =
+      field.default === undefined ? undefined : JSON.stringify(field.default, null, 2);
     return (
       <Field label={fieldDisplayLabel(field.name)}>
         <TextArea

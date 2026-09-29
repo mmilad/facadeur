@@ -235,10 +235,7 @@ function deriveNodeOverride(
         `Variant "${variantName}" cannot change component on node "${base.id}"`,
       );
     }
-    if (
-      !sameValue(base.fieldBindings, editedInstance.fieldBindings) ||
-      !sameValue(base.expose, editedInstance.expose)
-    ) {
+    if (!sameValue(base.expose, editedInstance.expose)) {
       throw new DocumentError(
         'schema',
         `Variant "${variantName}" cannot change instance contracts on node "${base.id}"`,
@@ -254,6 +251,17 @@ function deriveNodeOverride(
       base.id,
     );
     if (fields) override.fields = fields as VariantNodeOverride['fields'];
+    const fieldBindings = mapDelta(
+      override,
+      'fieldBindings',
+      base.fieldBindings as Record<string, unknown> | undefined,
+      editedInstance.fieldBindings as Record<string, unknown> | undefined,
+      variantName,
+      base.id,
+    );
+    if (fieldBindings) {
+      override.fieldBindings = fieldBindings as VariantNodeOverride['fieldBindings'];
+    }
     const variants = mapDelta(
       override,
       'variants',
@@ -543,6 +551,9 @@ function applyOverride(node: NestedNode, override: VariantNodeOverride): NestedN
   const next = structuredClone(node);
   if (next.type === 'instance') {
     if (override.fields) next.fields = { ...(next.fields ?? {}), ...override.fields };
+    if (override.fieldBindings) {
+      next.fieldBindings = { ...(next.fieldBindings ?? {}), ...override.fieldBindings };
+    }
     if (override.variants) next.variants = { ...(next.variants ?? {}), ...override.variants };
     if (override.displayOn) next.displayOn = structuredClone(override.displayOn);
     applyUnset(next, override.unset);
@@ -572,6 +583,12 @@ function applyUnset(node: NestedNode, paths: readonly string[] | undefined): voi
         delete fields[key];
         node.fields = Object.keys(fields).length ? fields : undefined;
       } else node.fields = undefined;
+    } else if (property === 'fieldBindings' && node.type === 'instance') {
+      if (key) {
+        const fieldBindings = { ...(node.fieldBindings ?? {}) };
+        delete fieldBindings[key];
+        node.fieldBindings = Object.keys(fieldBindings).length ? fieldBindings : undefined;
+      } else node.fieldBindings = undefined;
     } else if (property === 'variants' && node.type === 'instance') {
       if (key) {
         const variants = { ...(node.variants ?? {}) };

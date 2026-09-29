@@ -13,6 +13,8 @@ import { fieldDisplayLabel } from './field-label.js';
 type PathOption = { value: string; label: string; field: FieldDefinition };
 type DisplayMode = 'truthy' | 'equals';
 
+export type DataPathOption = Pick<PathOption, 'value' | 'label'>;
+
 export function DataDirectivesEditorControl({
   node,
   fields,
@@ -72,6 +74,10 @@ export function dataFieldsForNode(document: FlatDocument, nodeId: string): Field
     );
   }
   return [...fields.values()];
+}
+
+export function dataPathOptions(fields: FieldDefinition[]): DataPathOption[] {
+  return fieldPathOptions(fields).map(({ value, label }) => ({ value, label }));
 }
 
 function DisplayConditionEditor({

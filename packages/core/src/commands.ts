@@ -54,6 +54,7 @@ import {
   assertDisplayOn,
   assertEventBindings,
   assertEventDefinition,
+  assertFieldBindings,
   assertFieldDefinition,
   assertLayout,
   assertRepeat,
@@ -80,6 +81,7 @@ export interface InsertNode {
   layout?: Layout;
   bindings?: Binding[];
   eventBindings?: EventBinding[];
+  fieldBindings?: Record<string, string>;
   repeat?: Repeat;
   style?: Record<string, string>;
   text?: string;
@@ -102,6 +104,7 @@ export type NodeProp =
   | 'layout'
   | 'bindings'
   | 'eventBindings'
+  | 'fieldBindings'
   | 'repeat'
   | 'component';
 
@@ -133,10 +136,29 @@ export type Command =
   | { type: 'setTokenInterface'; tokenInterface: TokenInterface | null };
 
 const PROPS: Record<NodeType, readonly NodeProp[]> = {
-  frame: ['name', 'tag', 'attributes', 'displayOn', 'layout', 'bindings', 'eventBindings', 'repeat'],
+  frame: [
+    'name',
+    'tag',
+    'attributes',
+    'displayOn',
+    'layout',
+    'bindings',
+    'eventBindings',
+    'repeat',
+  ],
   text: ['name', 'tag', 'text', 'attributes', 'displayOn', 'layout', 'bindings', 'eventBindings'],
-  image: ['name', 'tag', 'src', 'alt', 'attributes', 'displayOn', 'layout', 'bindings', 'eventBindings'],
-  instance: ['name', 'displayOn', 'layout', 'component'],
+  image: [
+    'name',
+    'tag',
+    'src',
+    'alt',
+    'attributes',
+    'displayOn',
+    'layout',
+    'bindings',
+    'eventBindings',
+  ],
+  instance: ['name', 'displayOn', 'layout', 'component', 'fieldBindings'],
 };
 
 const STYLE_PROPERTY = /^(--)?[A-Za-z_][\w-]*$/;
@@ -465,7 +487,10 @@ function removeEvent(doc: FlatDocument, name: string): void {
   if (events.length) doc.events = events;
   else delete doc.events;
   for (const node of Object.values(doc.nodes)) {
-    if (node.type === 'instance' || !node.eventBindings?.some((binding) => binding.event === name)) {
+    if (
+      node.type === 'instance' ||
+      !node.eventBindings?.some((binding) => binding.event === name)
+    ) {
       continue;
     }
     const bindings = node.eventBindings.filter((binding) => binding.event !== name);
@@ -575,6 +600,7 @@ function materialize(draft: InsertNode, seen: Set<string>, nextId: () => string)
     draft.attributes ||
     draft.bindings ||
     draft.eventBindings ||
+    draft.fieldBindings ||
     draft.repeat ||
     draft.style ||
     draft.text !== undefined ||
@@ -583,13 +609,14 @@ function materialize(draft: InsertNode, seen: Set<string>, nextId: () => string)
   ) {
     throw new DocumentError(
       'nesting',
-      'Instances can only set name, displayOn, layout, component, fields, and variants',
+      'Instances can only set name, displayOn, layout, component, fields, fieldBindings, and variants',
     );
   }
   if (!draft.component || !ID_PATTERN.test(draft.component)) {
     throw new DocumentError('schema', 'Instances require a component id');
   }
   if (draft.displayOn) assertDisplayOn(draft.displayOn);
+  if (draft.fieldBindings) assertFieldBindings(draft.fieldBindings);
   return {
     id,
     type: 'instance',
@@ -598,6 +625,9 @@ function materialize(draft: InsertNode, seen: Set<string>, nextId: () => string)
     ...(draft.layout ? { layout: cleanCommandLayout(draft.layout) } : {}),
     component: draft.component,
     ...(draft.fields && Object.keys(draft.fields).length ? { fields: { ...draft.fields } } : {}),
+    ...(draft.fieldBindings && Object.keys(draft.fieldBindings).length
+      ? { fieldBindings: { ...(draft.fieldBindings as Record<string, string>) } }
+      : {}),
     ...(draft.variants && Object.keys(draft.variants).length
       ? { variants: { ...draft.variants } }
       : {}),
@@ -714,6 +744,8 @@ function applyElementProp(
       return;
     case 'component':
       break;
+    case 'fieldBindings':
+      break;
     default: {
       const unreachable: never = prop;
       throw new DocumentError('schema', `Unknown property ${String(unreachable)}`);
@@ -747,6 +779,13 @@ function applyInstanceProp(
         throw new DocumentError('schema', 'Instances require a component id');
       }
       node.component = value;
+      return;
+    case 'fieldBindings':
+      if (value === null) delete node.fieldBindings;
+      else {
+        assertFieldBindings(value);
+        node.fieldBindings = { ...value };
+      }
       return;
     default:
       throw new DocumentError('schema', `Instances have no "${prop}" property`);
