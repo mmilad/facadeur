@@ -374,6 +374,14 @@ function applyBinding(
   prop: PropSpec,
   expr: Expr,
 ): boolean {
+  if (prop.fieldType === 'array' || prop.fieldType === 'object') {
+    throw new CodegenError(
+      `Binding "${binding.field}" on "${binding.target}" cannot use structured field type "${prop.fieldType}"`,
+    );
+  }
+  if (binding.target === 'visible' && prop.fieldType !== 'boolean') {
+    throw new CodegenError(`Binding "${binding.field}" targeting visible needs a boolean field`);
+  }
   if (binding.target === 'text') {
     bound.text = expr;
     return true;

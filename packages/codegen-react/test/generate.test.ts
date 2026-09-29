@@ -358,6 +358,42 @@ describe('bindings outside the examples', () => {
 
     expect(() => generateReact({ documents: [bad] })).toThrow(/scores\[\].*number/);
   });
+
+  it('rejects structured and non-boolean bindings during codegen', () => {
+    const structured: DocumentFile = {
+      version: 1,
+      id: 'structured-binding-codegen',
+      name: 'Structured binding codegen',
+      kind: 'component',
+      fields: [
+        {
+          name: 'settings',
+          type: 'object',
+          items: { type: 'object', fields: [{ name: 'label', type: 'text' }] },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'text',
+        bindings: [{ field: 'settings', target: 'text' }],
+      },
+    };
+    expect(() => generateReact({ documents: [structured] })).toThrow(/structured field type/);
+
+    const visibleText: DocumentFile = {
+      version: 1,
+      id: 'text-visibility-codegen',
+      name: 'Text visibility codegen',
+      kind: 'component',
+      fields: [{ name: 'visible', type: 'text' }],
+      root: {
+        id: 'root',
+        type: 'text',
+        bindings: [{ field: 'visible', target: 'visible' }],
+      },
+    };
+    expect(() => generateReact({ documents: [visibleText] })).toThrow(/boolean field/);
+  });
 });
 
 describe('atom contracts', () => {
