@@ -776,4 +776,58 @@ describe('atom contracts', () => {
     expect(sourceText).toContain('key={row?.label ?? rowIndex}');
     expect(sourceText).toContain('label={row?.label}');
   });
+
+  it('quotes hyphenated data paths and sanitizes repeat aliases', () => {
+    const component: DocumentFile = {
+      version: 1,
+      id: 'hyphenated-repeat-demo',
+      name: 'Hyphenated repeat demo',
+      kind: 'component',
+      fields: [
+        {
+          name: 'form-fields',
+          type: 'array',
+          items: {
+            type: 'object',
+            fields: [
+              { name: 'field-id', type: 'text', required: true },
+              { name: 'kind', type: 'text', required: true },
+            ],
+          },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        tag: 'ul',
+        repeat: { path: 'form-fields', as: 'form-field', key: 'field-id' },
+        children: [
+          {
+            id: 'row',
+            type: 'instance',
+            component: 'hyphenated-row',
+            displayOn: { path: 'form-field.kind', equals: 'input' },
+            fieldBindings: { label: 'form-field.field-id' },
+          },
+        ],
+      },
+    };
+    const row: DocumentFile = {
+      version: 1,
+      id: 'hyphenated-row',
+      name: 'Hyphenated row',
+      kind: 'atom',
+      fields: [{ name: 'label', type: 'text', required: true }],
+      root: { id: 'root', type: 'text', tag: 'li', bindings: [{ field: 'label', target: 'text' }] },
+    };
+
+    const sourceText = source(
+      generateReact({ documents: [component, row] }).ui,
+      'components/HyphenatedRepeatDemo.tsx',
+    );
+    expect(sourceText).toContain('{(formFields ?? []).map((formField, formFieldIndex) => (');
+    expect(sourceText).toContain("key={formField?.['field-id'] ?? formFieldIndex}");
+    expect(sourceText).toContain("formField?.kind === 'input'");
+    expect(sourceText).toContain("label={formField?.['field-id']}");
+  });
 });

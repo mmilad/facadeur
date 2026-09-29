@@ -15,7 +15,7 @@ import {
   reactAttributeName,
   reactStyleName,
 } from '../attributes.js';
-import { CodegenError, quote } from '../names.js';
+import { CodegenError, propName, quote } from '../names.js';
 import { assertDefault, jsLiteral } from './catalog.js';
 import type {
   Attr,
@@ -106,11 +106,12 @@ export function renderNode(
   let repeat: ElementNode['repeat'];
   if (node.type === 'frame' && node.repeat) {
     const source = dataExpression(node.repeat.path, owner, dataScope, usedProps);
-    const item = node.repeat.as ?? 'item';
+    const alias = node.repeat.as ?? 'item';
+    const item = repeatLocalName(alias, owner, dataScope, usedProps);
     const index = `${item}Index`;
-    childScope = new Map(dataScope).set(item, item);
+    childScope = new Map(dataScope).set(alias, item);
     const key = node.repeat.key
-      ? `${dataExpression(`${item}.${node.repeat.key}`, owner, childScope, usedProps)} ?? ${index}`
+      ? `${dataExpression(`${alias}.${node.repeat.key}`, owner, childScope, usedProps)} ?? ${index}`
       : index;
     // Repeat sources may be optional fields (for example a form's optional
     // `fields` payload). Keep the generated component renderable until data
@@ -170,7 +171,7 @@ function dataExpression(
   const [head, ...tail] = path.split('.');
   if (!head) throw new CodegenError(`Data path "${path}" is empty`);
   const scoped = dataScope.get(head);
-  if (scoped) return `${scoped}${tail.map((part) => `?.${part}`).join('')}`;
+  if (scoped) return `${scoped}${propertyAccess(tail)}`;
   const prop = owner.fields.get(head);
   if (!prop) {
     throw new CodegenError(
@@ -178,7 +179,29 @@ function dataExpression(
     );
   }
   usedProps.add(prop.name);
-  return `${prop.name}${tail.map((part) => `?.${part}`).join('')}`;
+  return `${prop.name}${propertyAccess(tail)}`;
+}
+
+function propertyAccess(parts: readonly string[]): string {
+  return parts
+    .map((part) => (/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(part) ? `?.${part}` : `?.[${quote(part)}]`))
+    .join('');
+}
+
+function repeatLocalName(
+  alias: string,
+  owner: CatalogEntry,
+  dataScope: ReadonlyMap<string, string>,
+  usedProps: ReadonlySet<string>,
+): string {
+  const used = new Set<string>([
+    ...usedProps,
+    ...[...owner.fields.values()].map((prop) => prop.name),
+    ...[...owner.variants.values()].map((prop) => prop.name),
+    ...[...owner.events.values()].map((prop) => prop.name),
+    ...dataScope.values(),
+  ]);
+  return propName(alias, used);
 }
 
 function renderInstance(
