@@ -805,7 +805,7 @@ export function assertValueMatches(field: FieldDefinition, value: FieldValue): v
       for (const definition of field.items?.fields ?? []) {
         const nested = value[definition.name];
         if (nested !== undefined) assertValueMatches(definition, nested);
-        else if (definition.required) {
+        else if (definition.required && definition.default === undefined) {
           throw new DocumentError('schema', `${label} is missing "${definition.name}"`);
         }
       }

@@ -338,6 +338,26 @@ describe('bindings outside the examples', () => {
     expect(() => generateReact({ documents: [bad] })).toThrow(CodegenError);
     expect(() => generateReact({ documents: [bad] })).toThrow(/not a text/);
   });
+
+  it('rejects invalid nested array defaults during codegen', () => {
+    const bad: DocumentFile = {
+      version: 1,
+      id: 'bad-array-default',
+      name: 'Bad array default',
+      kind: 'component',
+      fields: [
+        {
+          name: 'scores',
+          type: 'array',
+          items: { type: 'number' },
+          default: ['wrong'],
+        },
+      ],
+      root: { id: 'root', type: 'text', text: 'Scores' },
+    };
+
+    expect(() => generateReact({ documents: [bad] })).toThrow(/scores\[\].*number/);
+  });
 });
 
 describe('atom contracts', () => {

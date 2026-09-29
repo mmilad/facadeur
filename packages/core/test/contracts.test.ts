@@ -285,6 +285,29 @@ describe('component contracts', () => {
     expect(() => validateCatalog([invalid])).toThrow(/scores\[\].*finite number/);
   });
 
+  it('allows nested required fields to fall back to their own defaults', () => {
+    const document: DocumentFile = {
+      version: 1,
+      id: 'nested-default-field',
+      name: 'Nested default field',
+      kind: 'component',
+      fields: [
+        {
+          name: 'settings',
+          type: 'object',
+          items: {
+            type: 'object',
+            fields: [{ name: 'mode', type: 'text', required: true, default: 'comfortable' }],
+          },
+          default: {},
+        },
+      ],
+      root: { id: 'root', type: 'text', text: 'Settings' },
+    };
+
+    expect(() => validateCatalog([document])).not.toThrow();
+  });
+
   it('validates enum array item options', () => {
     const invalid: DocumentFile = {
       version: 1,

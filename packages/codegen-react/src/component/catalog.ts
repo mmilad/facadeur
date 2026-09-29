@@ -212,26 +212,74 @@ function fieldProp(documentId: string, field: FieldDefinition, used: Set<string>
 }
 
 export function assertDefault(documentId: string, field: FieldDefinition, value: FieldValue): void {
-  const matches =
-    field.type === 'boolean'
-      ? typeof value === 'boolean'
-      : field.type === 'number'
-        ? typeof value === 'number' && Number.isFinite(value)
-        : field.type === 'array'
-          ? Array.isArray(value)
-          : field.type === 'object'
-            ? typeof value === 'object' && value !== null && !Array.isArray(value)
-            : typeof value === 'string';
-  if (!matches) {
-    throw new CodegenError(
-      `Field "${field.name}" on "${documentId}" has a default that is not a ${field.type}`,
-    );
+  assertDefaultValue(documentId, field, value, field.name);
+}
+
+function assertDefaultValue(
+  documentId: string,
+  field: FieldDefinition,
+  value: FieldValue,
+  name: string,
+): void {
+  if (field.type === 'boolean') {
+    if (typeof value !== 'boolean') throw invalidDefault(documentId, name, field.type);
+    return;
   }
-  if (field.type === 'enum' && typeof value === 'string' && !field.options?.includes(value)) {
-    throw new CodegenError(
-      `Field "${field.name}" on "${documentId}" defaults to "${value}", which is not one of its options`,
-    );
+  if (field.type === 'number') {
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      throw invalidDefault(documentId, name, field.type);
+    }
+    return;
   }
+  if (field.type === 'enum') {
+    if (typeof value !== 'string' || !field.options?.includes(value)) {
+      throw new CodegenError(
+        `Field "${name}" on "${documentId}" defaults to "${String(value)}", which is not one of its options`,
+      );
+    }
+    return;
+  }
+  if (field.type === 'array') {
+    if (!Array.isArray(value)) throw invalidDefault(documentId, name, field.type);
+    if (!field.items) return;
+    const itemField: FieldDefinition = {
+      name: `${name}[]`,
+      type: field.items.type,
+      ...(field.items.options ? { options: field.items.options } : {}),
+      ...(field.items.fields
+        ? { items: { type: field.items.type, fields: field.items.fields } }
+        : {}),
+    };
+    for (const item of value) assertDefaultValue(documentId, itemField, item, itemField.name);
+    return;
+  }
+  if (field.type === 'object') {
+    if (!isRecordValue(value)) throw invalidDefault(documentId, name, field.type);
+    for (const definition of field.items?.fields ?? []) {
+      const nested = value[definition.name];
+      if (nested !== undefined) {
+        assertDefaultValue(documentId, definition, nested, `${name}.${definition.name}`);
+      } else if (definition.required && definition.default === undefined) {
+        throw new CodegenError(
+          `Field "${name}" on "${documentId}" is missing required field "${definition.name}"`,
+        );
+      }
+    }
+    return;
+  }
+  if (typeof value !== 'string') throw invalidDefault(documentId, name, field.type);
+}
+
+function invalidDefault(
+  documentId: string,
+  name: string,
+  type: FieldDefinition['type'],
+): CodegenError {
+  return new CodegenError(`Field "${name}" on "${documentId}" has a default that is not a ${type}`);
+}
+
+function isRecordValue(value: FieldValue): value is { [key: string]: FieldValue } {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function fieldTypeName(field: FieldDefinition): string {
