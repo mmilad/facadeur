@@ -502,6 +502,8 @@ export const variantInsertionSchema = Type.Object(
 export const variantOverridesSchema = Type.Object(
   {
     fields: Type.Optional(Type.Record(idSchema, fieldValueSchema)),
+    /** Sparse style block merged onto the default styles for this preset. */
+    styles: Type.Optional(styleBlockSchema),
     /** Optional field defaults can be explicitly removed without duplicating the base definition. */
     unsetFields: Type.Optional(Type.Array(idSchema, { uniqueItems: true })),
     nodes: Type.Optional(Type.Record(nodeTargetSchema, variantNodeOverrideSchema)),

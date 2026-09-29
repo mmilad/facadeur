@@ -60,8 +60,55 @@ export function resolveVariantDocument(
   const styles = options.preserveStyleLayers
     ? structuredClone(next.styles)
     : resolveNamedVariantStyles(next.styles, name);
-  next.styles = pruneStyleChildren(styles, next.root);
+  next.styles = pruneStyleChildren(mergeStyleBlock(styles, overrides.styles), next.root);
   return next;
+}
+
+/** Merge a sparse style block stored directly on a named preset. */
+function mergeStyleBlock(
+  target: StyleBlock | undefined,
+  source: StyleBlock | undefined,
+): StyleBlock | undefined {
+  if (!source) return target;
+  const next = target ? structuredClone(target) : {};
+  mergeStyleLayer(next, source);
+
+  for (const [axis, values] of Object.entries(source.variants ?? {})) {
+    const variants = (next.variants ??= {});
+    const targetValues = (variants[axis] ??= {});
+    for (const [value, layer] of Object.entries(values)) {
+      const existing = (targetValues[value] ??= {});
+      mergeStyleLayer(existing, layer);
+    }
+  }
+  for (const [breakpoint, layer] of Object.entries(source.breakpoints ?? {})) {
+    const breakpoints = (next.breakpoints ??= {});
+    const existing = (breakpoints[breakpoint] ??= {});
+    mergeStyleLayer(existing, layer);
+  }
+  for (const [id, child] of Object.entries(source.children ?? {})) {
+    const children = (next.children ??= {});
+    const existing = (children[id] ??= {});
+    mergeStyleChild(existing, child);
+  }
+  return next;
+}
+
+function mergeStyleChild(target: StyleChild, source: StyleChild): void {
+  mergeStyleLayer(target, source);
+  for (const [axis, values] of Object.entries(source.variants ?? {})) {
+    const variants = (target.variants ??= {});
+    const targetValues = (variants[axis] ??= {});
+    for (const [value, layer] of Object.entries(values)) {
+      const existing = (targetValues[value] ??= {});
+      mergeStyleLayer(existing, layer);
+    }
+  }
+  for (const [breakpoint, layer] of Object.entries(source.breakpoints ?? {})) {
+    const breakpoints = (target.breakpoints ??= {});
+    const existing = (breakpoints[breakpoint] ??= {});
+    mergeStyleLayer(existing, layer);
+  }
 }
 
 /** A removed node must not leave a style child behind in the materialized view. */

@@ -108,6 +108,24 @@ describe('component style block', () => {
     expect(compiled).toContain('[data-component="named-style"][data-variant="compact"]');
     expect(compiled).toContain('color: red');
   });
+
+  it('compiles styles declared directly in named preset overrides', () => {
+    const document: DocumentFile = {
+      version: 1,
+      id: 'named-override-style',
+      name: 'Named override style',
+      kind: 'component',
+      variants: [
+        { name: 'default' },
+        { name: 'compact', overrides: { styles: { declarations: { color: 'navy' } } } },
+      ],
+      styles: { declarations: { color: 'black' } },
+      root: { id: 'root', type: 'frame', tag: 'div' },
+    };
+    const compiled = text(compileDocument(document));
+    expect(compiled).toContain('[data-component="named-override-style"][data-variant="compact"]');
+    expect(compiled).toContain('color: navy');
+  });
 });
 
 describe('style engine and renderer', () => {

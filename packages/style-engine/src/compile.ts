@@ -1,5 +1,7 @@
 import {
   defaultBreakpoints,
+  resolveVariantDocument,
+  variantPresets,
   type AxisSize,
   type Breakpoint,
   type DocumentFile,
@@ -58,6 +60,22 @@ export function compileDocument(
   document: DocumentFile,
   options: CompileOptions = {},
 ): CompiledRule[] {
+  const base = compileSingleDocument(document, options);
+  if (options.address === 'canvas') return base;
+  const named = variantPresets(document).filter((variant) => variant.name !== 'default');
+  const variants = named.flatMap((variant) =>
+    compileSingleDocument(resolveVariantDocument(document, variant.name), {
+      ...options,
+      variantScope: variant.name,
+    }),
+  );
+  return [...base, ...variants].filter((rule) => rule.declarations.length > 0);
+}
+
+function compileSingleDocument(
+  document: DocumentFile,
+  options: CompileOptions & { variantScope?: string } = {},
+): CompiledRule[] {
   const address = options.address ?? 'instance';
   const breakpoints = resolveBreakpoints(document, options.breakpoints);
   const rules: CompiledRule[] = [];
@@ -70,6 +88,7 @@ export function compileDocument(
     path: rootRendered ? document.root.id : null,
     isRoot: true,
     rendered: rootRendered,
+    variantScope: options.variantScope,
     rules,
   });
   return rules.filter((rule) => rule.declarations.length > 0);
@@ -94,6 +113,7 @@ interface WalkState {
   path: string | null;
   isRoot: boolean;
   rendered: boolean;
+  variantScope?: string;
   rules: CompiledRule[];
 }
 
@@ -213,8 +233,10 @@ function push(
 
 function selectorFor(document: DocumentFile, node: NestedNode, state: WalkState): string {
   if (state.address === 'canvas') return `[data-id="${cssString(state.path ?? node.id)}"]`;
-  if (state.isRoot) return `[data-component="${cssString(document.id)}"]`;
-  return `[data-component="${cssString(document.id)}"] [data-node="${cssString(node.id)}"]`;
+  const selector = state.isRoot
+    ? `[data-component="${cssString(document.id)}"]`
+    : `[data-component="${cssString(document.id)}"] [data-node="${cssString(node.id)}"]`;
+  return state.variantScope ? withVariant(selector, 'variant', state.variantScope) : selector;
 }
 
 function styleLayerFor(

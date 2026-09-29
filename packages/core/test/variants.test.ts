@@ -62,6 +62,41 @@ describe('variant overlays', () => {
     expect(resolveVariantDocument(specimen, 'default')).toEqual(specimen);
   });
 
+  it('merges sparse styles declared inside a preset override', () => {
+    const styled: DocumentFile = {
+      ...specimen,
+      id: 'styled-variant-specimen',
+      styles: {
+        declarations: { color: 'black', backgroundColor: 'white' },
+        states: { hover: { color: 'gray' } },
+        children: { lede: { declarations: { fontWeight: '400' } } },
+      },
+      variants: [
+        { name: 'default' },
+        {
+          name: 'compact',
+          overrides: {
+            styles: {
+              declarations: { color: 'navy' },
+              states: { hover: { color: 'blue' } },
+              breakpoints: { tablet: { declarations: { backgroundColor: 'gainsboro' } } },
+              children: { lede: { declarations: { fontWeight: '700' } } },
+            },
+          },
+        },
+      ],
+    };
+
+    expect(() => validateCatalog([styled])).not.toThrow();
+    const compact = resolveVariantDocument(styled, 'compact');
+    expect(compact.styles).toMatchObject({
+      declarations: { color: 'navy', backgroundColor: 'white' },
+      states: { hover: { color: 'blue' } },
+      breakpoints: { tablet: { declarations: { backgroundColor: 'gainsboro' } } },
+      children: { lede: { declarations: { fontWeight: '700' } } },
+    });
+  });
+
   it('keeps default as the immutable base and rejects default overrides', () => {
     const invalid = {
       ...specimen,

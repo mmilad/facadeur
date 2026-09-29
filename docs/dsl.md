@@ -140,17 +140,18 @@ There are two related kinds of variants:
 
 Preset overrides are sparse: fields, node properties, render conditions, bindings, removed nodes, and insertions are stored only when they differ from `default`. New fields remain available in every preset because the base field contract is shared. A removed node is not deleted from the source tree; it is marked as removed for that preset and can be addressed by its stable path or identifier.
 
-Style overrides use the existing style block instead of duplicating style data inside every preset. A named preset uses the reserved style axis `variant`, for example `styles.variants.variant.compact`. That layer is sparse and can contain the same declarations, states, child styles, and breakpoint layers as any other style variant. Resolving `compact` materializes that layer into the active style block; the editor can preserve the sparse layer while the preset is active. Inline node styles remain available through `overrides.nodes.<path>.style` for local one-off changes.
+Style overrides can be stored directly as the sparse `overrides.styles` block. They merge onto the base style block when the preset is resolved and may contain declarations, states, child styles, variant layers, and breakpoint layers. For backwards compatibility, the editor also understands the existing reserved style axis `styles.variants.variant.<preset>`; that layer is materialized in the same way. Inline node styles remain available through `overrides.nodes.<path>.style` for local one-off changes.
 
 ```json
 {
-  "styles": {
-    "declarations": { "padding": "{space.inset.md}" },
-    "variants": {
-      "variant": {
-        "compact": { "declarations": { "padding": "{space.inset.sm}" } }
-      }
+  "variants": [{
+    "name": "compact",
+    "overrides": {
+      "styles": { "declarations": { "padding": "{space.inset.sm}" } }
     }
+  }],
+  "styles": {
+    "declarations": { "padding": "{space.inset.md}" }
   }
 }
 ```
