@@ -279,7 +279,12 @@ function validateDataContracts(doc: FlatDocument, catalog: Map<string, DocumentF
     if (!node) return;
 
     if (node.displayOn) {
-      assertDataPath(node.displayOn.path, scope, `displayOn on node "${node.id}"`);
+      const conditionField = assertDataPath(
+        node.displayOn.path,
+        scope,
+        `displayOn on node "${node.id}"`,
+      );
+      assertDisplayCondition(node.displayOn, conditionField, `node "${node.id}"`);
     }
 
     if (node.type === 'instance') {
@@ -313,7 +318,17 @@ function validateDataContracts(doc: FlatDocument, catalog: Map<string, DocumentF
             `Repeat key "${node.repeat.key}" on node "${node.id}" needs object items`,
           );
         }
-        assertDataPath(node.repeat.key, scopeForObject(item), `repeat key on node "${node.id}"`);
+        const keyField = assertDataPath(
+          node.repeat.key,
+          scopeForObject(item),
+          `repeat key on node "${node.id}"`,
+        );
+        if (!isScalarField(keyField)) {
+          throw new DocumentError(
+            'schema',
+            `Repeat key "${node.repeat.key}" on node "${node.id}" must resolve to a scalar field`,
+          );
+        }
       }
       childScope = {
         fields: scope.fields,
@@ -371,6 +386,30 @@ function compatibleFieldType(source: FieldDefinition, destination: FieldDefiniti
     return (source.options ?? []).every((option) => destination.options?.includes(option));
   }
   return true;
+}
+
+function assertDisplayCondition(
+  condition: NonNullable<FlatNode['displayOn']>,
+  field: FieldDefinition,
+  context: string,
+): void {
+  if (condition.equals === undefined) return;
+  if (!isScalarField(field)) {
+    throw new DocumentError(
+      'schema',
+      `Display condition on ${context} can only compare scalar fields, not ${field.type}`,
+    );
+  }
+  try {
+    assertValueMatches(field, condition.equals);
+  } catch (error) {
+    const message = error instanceof DocumentError ? error.message : 'has an invalid value';
+    throw new DocumentError('schema', `Display condition on ${context} ${message}`);
+  }
+}
+
+function isScalarField(field: FieldDefinition): boolean {
+  return fieldValueKind(field.type) !== 'array' && fieldValueKind(field.type) !== 'object';
 }
 
 function fieldValueKind(

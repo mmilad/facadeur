@@ -219,4 +219,49 @@ describe('component contracts', () => {
 
     expect(() => validateCatalog([owner, target])).toThrow(/may be undefined/);
   });
+
+  it('validates display comparisons and repeat keys semantically', () => {
+    const invalidDisplay: DocumentFile = {
+      version: 1,
+      id: 'invalid-display-value',
+      name: 'Invalid display value',
+      kind: 'component',
+      fields: [{ name: 'title', type: 'text' }],
+      root: {
+        id: 'root',
+        type: 'text',
+        displayOn: { path: 'title', equals: 42 },
+      },
+    };
+    expect(() => validateCatalog([invalidDisplay])).toThrow(/Display condition/);
+
+    const invalidRepeatKey: DocumentFile = {
+      version: 1,
+      id: 'invalid-repeat-key',
+      name: 'Invalid repeat key',
+      kind: 'component',
+      fields: [
+        {
+          name: 'items',
+          type: 'array',
+          items: {
+            type: 'object',
+            fields: [
+              {
+                name: 'meta',
+                type: 'object',
+                items: { type: 'object', fields: [{ name: 'label', type: 'text' }] },
+              },
+            ],
+          },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        repeat: { path: 'items', as: 'item', key: 'meta' },
+      },
+    };
+    expect(() => validateCatalog([invalidRepeatKey])).toThrow(/must resolve to a scalar/);
+  });
 });
