@@ -111,6 +111,7 @@ describe('editor session', () => {
         overrides: {
           fields: { label: 'Compact' },
           nodes: { root: { text: 'Compact text' } },
+          styles: { declarations: { color: 'navy' } },
         },
       },
     ]);
@@ -126,7 +127,7 @@ describe('editor session', () => {
     ]);
   });
 
-  it('keeps sparse variant style layers intact while editing the active variant', () => {
+  it('migrates legacy variant styles when editing the active variant', () => {
     const editor = session();
     editor.openAsset('variant-component', 'root');
     editor.setActiveVariant('compact');
@@ -136,31 +137,32 @@ describe('editor session', () => {
       variants: { variant: { compact: { declarations: { color: 'navy' } } } },
     });
 
-    const editedStyles = structuredClone(editor.getSnapshot().activeDocument.styles!);
-    editedStyles.variants!.variant!.compact!.declarations!.background = 'white';
-    editor.execute({ type: 'setStyleBlock', style: editedStyles });
+    editor.execute({
+      type: 'setVariantStyleBlock',
+      name: 'compact',
+      style: { declarations: { color: 'navy', background: 'white' } },
+    });
 
-    const unchanged = editor
+    const migrated = editor
       .boardDocuments()
       .find((document) => document.id === 'variant-component');
-    expect(unchanged?.styles?.variants?.variant?.compact?.declarations).toEqual({
-      color: 'navy',
-      background: 'white',
+    expect(migrated?.styles?.variants?.variant?.compact).toBeUndefined();
+    expect(migrated?.variants?.[1]).toMatchObject({
+      name: 'compact',
+      overrides: { styles: { declarations: { color: 'navy', background: 'white' } } },
     });
 
     editor.execute({ type: 'setStyle', nodeId: 'root', property: 'fontWeight', value: '700' });
 
-    const source = editor
-      .boardDocuments()
-      .find((document) => document.id === 'variant-component');
-    expect(source?.styles?.variants?.variant?.compact?.declarations).toEqual({
-      color: 'navy',
-      background: 'white',
-    });
+    const source = editor.boardDocuments().find((document) => document.id === 'variant-component');
+    expect(source?.styles?.variants?.variant?.compact).toBeUndefined();
     expect(source?.root.type === 'instance' ? undefined : source?.root.style).toBeUndefined();
     expect(source?.variants?.[1]).toMatchObject({
       name: 'compact',
-      overrides: { nodes: { root: { style: { fontWeight: '700' } } } },
+      overrides: {
+        nodes: { root: { style: { fontWeight: '700' } } },
+        styles: { declarations: { color: 'navy', background: 'white' } },
+      },
     });
   });
 

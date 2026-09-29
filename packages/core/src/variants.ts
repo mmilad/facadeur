@@ -220,6 +220,14 @@ export function deriveVariantPreset(
   if (Object.keys(fields).length) overrides.fields = fields;
   if (unsetFields.length) overrides.unsetFields = unsetFields.sort();
 
+  // The resolved editor document contains the effective named-variant styles.
+  // Compare it with the base styles after removing the legacy named layer so
+  // the derived preset stores only the sparse direct override.
+  const styleBase = base.styles ? structuredClone(base.styles) : undefined;
+  if (styleBase) removeNamedVariantLayer(styleBase);
+  const styles = deriveStyleBlock(styleBase, edited.styles);
+  if (styles) overrides.styles = styles;
+
   const baseEntries = collectNodes(base.root);
   const editedEntries = collectNodes(edited.root);
   const baseById = new Map(baseEntries.map((entry) => [entry.node.id, entry]));
@@ -289,6 +297,81 @@ export function deriveVariantPreset(
   if (insertions.length) overrides.insertions = insertions;
 
   return Object.keys(overrides).length ? { name, overrides } : { name };
+}
+
+function deriveStyleBlock(
+  base: StyleBlock | undefined,
+  edited: StyleBlock | undefined,
+): StyleBlock | undefined {
+  if (!edited) return undefined;
+  const next = deriveStyleOwner(base, edited) as StyleBlock;
+  const children: Record<string, StyleChild> = {};
+  for (const [id, child] of Object.entries(edited.children ?? {})) {
+    const delta = deriveStyleOwner(base?.children?.[id], child) as StyleChild;
+    if (Object.keys(delta).length) children[id] = delta;
+  }
+  if (Object.keys(children).length) next.children = children;
+  return Object.keys(next).length ? next : undefined;
+}
+
+function deriveStyleOwner(base: StyleChild | undefined, edited: StyleChild): StyleChild {
+  const next: StyleChild = {};
+  const declarations = declarationDelta(base?.declarations, edited.declarations);
+  if (declarations) next.declarations = declarations;
+
+  const states: NonNullable<StyleChild['states']> = {};
+  for (const state of ['hover', 'focus-visible', 'disabled'] as const) {
+    const delta = declarationDelta(base?.states?.[state], edited.states?.[state]);
+    if (delta) states[state] = delta;
+  }
+  if (Object.keys(states).length) next.states = states;
+
+  const variants: NonNullable<StyleChild['variants']> = {};
+  for (const [axis, values] of Object.entries(edited.variants ?? {})) {
+    const nextValues: Record<string, StyleLayer> = {};
+    for (const [value, layer] of Object.entries(values)) {
+      const delta = deriveStyleLayer(base?.variants?.[axis]?.[value], layer);
+      if (delta) nextValues[value] = delta;
+    }
+    if (Object.keys(nextValues).length) variants[axis] = nextValues;
+  }
+  if (Object.keys(variants).length) next.variants = variants;
+
+  const breakpoints: NonNullable<StyleChild['breakpoints']> = {};
+  for (const [id, layer] of Object.entries(edited.breakpoints ?? {})) {
+    const delta = deriveStyleLayer(base?.breakpoints?.[id], layer);
+    if (delta) breakpoints[id] = delta;
+  }
+  if (Object.keys(breakpoints).length) next.breakpoints = breakpoints;
+  return next;
+}
+
+function deriveStyleLayer(
+  base: StyleLayer | undefined,
+  edited: StyleLayer,
+): StyleLayer | undefined {
+  const next: StyleLayer = {};
+  const declarations = declarationDelta(base?.declarations, edited.declarations);
+  if (declarations) next.declarations = declarations;
+  const states: NonNullable<StyleChild['states']> = {};
+  for (const state of ['hover', 'focus-visible', 'disabled'] as const) {
+    const delta = declarationDelta(base?.states?.[state], edited.states?.[state]);
+    if (delta) states[state] = delta;
+  }
+  if (Object.keys(states).length) next.states = states;
+  return Object.keys(next).length ? next : undefined;
+}
+
+function declarationDelta(
+  base: Record<string, string> | undefined,
+  edited: Record<string, string> | undefined,
+): Record<string, string> | undefined {
+  if (!edited) return undefined;
+  const next: Record<string, string> = {};
+  for (const [property, value] of Object.entries(edited)) {
+    if (!sameValue(base?.[property], value)) next[property] = value;
+  }
+  return Object.keys(next).length ? next : undefined;
 }
 
 interface NodeEntry {

@@ -918,6 +918,11 @@ function setVariantPreset(doc: FlatDocument, preset: VariantPreset): void {
   if (index === -1) presets.push(next);
   else presets[index] = next;
   doc.variantPresets = presets;
+  if (next.overrides?.styles && doc.styles) {
+    const styles = structuredClone(doc.styles);
+    removeNamedVariantLayer(styles, next.name);
+    doc.styles = Object.keys(styles).length ? styles : undefined;
+  }
 }
 
 function setVariantStyleBlock(

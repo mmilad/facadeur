@@ -214,6 +214,82 @@ describe('variant overlays', () => {
     expect(roundTrip.root).toEqual(compact.root);
   });
 
+  it('derives sparse style overrides from a resolved named variant', () => {
+    const base: DocumentFile = {
+      version: 1,
+      id: 'style-variant',
+      name: 'Style variant',
+      kind: 'component',
+      variants: [
+        { name: 'tone', values: ['quiet', 'loud'] },
+        { name: 'size', values: ['compact'] },
+        { name: 'default' },
+        { name: 'compact' },
+      ],
+      styles: {
+        declarations: { color: 'black', padding: '8px' },
+        states: { hover: { color: 'gray' } },
+        variants: { tone: { loud: { declarations: { color: 'blue' } } } },
+        breakpoints: { tablet: { declarations: { padding: '12px' } } },
+        children: { label: { declarations: { fontSize: '16px' } } },
+      },
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [{ id: 'label', type: 'text', text: 'Label' }],
+      },
+    };
+    const edited = structuredClone(base);
+    edited.styles = {
+      declarations: { color: 'navy', padding: '8px' },
+      states: { hover: { color: 'white' } },
+      variants: {
+        tone: { loud: { declarations: { color: 'purple' } } },
+        size: { compact: { declarations: { letterSpacing: '0.02em' } } },
+      },
+      breakpoints: { tablet: { declarations: { padding: '16px' } } },
+      children: {
+        label: { declarations: { fontSize: '18px' } },
+      },
+    };
+
+    const derived = deriveVariantPreset(base, edited, 'compact');
+    expect(derived.overrides?.styles).toEqual({
+      declarations: { color: 'navy' },
+      states: { hover: { color: 'white' } },
+      variants: {
+        tone: { loud: { declarations: { color: 'purple' } } },
+        size: { compact: { declarations: { letterSpacing: '0.02em' } } },
+      },
+      breakpoints: { tablet: { declarations: { padding: '16px' } } },
+      children: { label: { declarations: { fontSize: '18px' } } },
+    });
+
+    const roundTrip = resolveVariantDocument({ ...base, variants: [derived] }, 'compact');
+    expect(roundTrip.styles).toEqual(edited.styles);
+  });
+
+  it('derives legacy named style layers into direct overrides', () => {
+    const base: DocumentFile = {
+      version: 1,
+      id: 'legacy-style-variant',
+      name: 'Legacy style variant',
+      kind: 'component',
+      variants: [{ name: 'default' }, { name: 'compact' }],
+      styles: {
+        declarations: { color: 'black' },
+        variants: { variant: { compact: { declarations: { color: 'navy' } } } },
+      },
+      root: { id: 'root', type: 'text', text: 'Label' },
+    };
+    const edited = resolveVariantDocument(base, 'compact');
+    const derived = deriveVariantPreset(base, edited, 'compact');
+    expect(derived.overrides?.styles).toEqual({ declarations: { color: 'navy' } });
+    expect(resolveVariantDocument({ ...base, variants: [derived] }, 'compact').styles).toEqual(
+      edited.styles,
+    );
+  });
+
   it('represents a reordered base child as remove plus insertion', () => {
     const edited = structuredClone(specimen);
     if (edited.root.type !== 'frame' || !edited.root.children) throw new Error('expected frame');
