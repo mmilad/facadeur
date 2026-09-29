@@ -339,6 +339,32 @@ describe('bindings outside the examples', () => {
     expect(() => generateReact({ documents: [bad] })).toThrow(/not a text/);
   });
 
+  it('rejects missing required instance fields during codegen', () => {
+    const control: DocumentFile = {
+      version: 1,
+      id: 'required-codegen-control',
+      name: 'Required codegen control',
+      kind: 'atom',
+      fields: [{ name: 'value', type: 'text', required: true }],
+      root: { id: 'root', type: 'text', text: 'Control' },
+    };
+    const host: DocumentFile = {
+      version: 1,
+      id: 'missing-codegen-field-host',
+      name: 'Missing codegen field host',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [{ id: 'control', type: 'instance', component: control.id }],
+      },
+    };
+
+    expect(() => generateReact({ documents: [host, control] })).toThrow(
+      /missing required field "value"/,
+    );
+  });
+
   it('rejects invalid nested array defaults during codegen', () => {
     const bad: DocumentFile = {
       version: 1,

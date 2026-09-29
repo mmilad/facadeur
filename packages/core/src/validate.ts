@@ -385,10 +385,7 @@ function validateDataContracts(doc: FlatDocument, catalog: Map<string, DocumentF
       }
       childScope = {
         fields: scope.fields,
-        aliases: new Map(scope.aliases).set(
-          repeatAlias,
-          item ?? scalarItemField(repeatAlias),
-        ),
+        aliases: new Map(scope.aliases).set(repeatAlias, item ?? scalarItemField(repeatAlias)),
       };
     }
     for (const childId of node.children) visit(childId, childScope);
@@ -929,11 +926,19 @@ function validateInstanceOverrides(doc: FlatDocument, catalog: Map<string, Docum
       }
       assertValueMatches(field, value);
     }
-    for (const name of Object.keys(node.fieldBindings ?? {})) {
+    const staticFields = new Set(Object.keys(node.fields ?? {}));
+    const boundFields = Object.keys(node.fieldBindings ?? {});
+    for (const name of boundFields) {
       if (!fields.has(name)) {
         throw new DocumentError(
           'unknown-field',
           `Instance "${node.id}" binds unknown field "${name}" on "${node.component}"`,
+        );
+      }
+      if (staticFields.has(name)) {
+        throw new DocumentError(
+          'schema',
+          `Instance "${node.id}" cannot set and bind field "${name}" on "${node.component}" together`,
         );
       }
     }
@@ -962,6 +967,15 @@ function validateInstanceOverrides(doc: FlatDocument, catalog: Map<string, Docum
         throw new DocumentError(
           'unknown-variant',
           `Instance "${node.id}" uses "${value}" for "${name}", expected ${axis.values.join(', ')}`,
+        );
+      }
+    }
+    const providedFields = new Set([...staticFields, ...boundFields]);
+    for (const [name, field] of fields) {
+      if (field.required === true && field.default === undefined && !providedFields.has(name)) {
+        throw new DocumentError(
+          'schema',
+          `Instance "${node.id}" is missing required field "${name}" on "${node.component}"`,
         );
       }
     }

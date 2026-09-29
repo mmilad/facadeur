@@ -244,7 +244,14 @@ function renderInstance(
     });
   }
   for (const [fieldName, value] of Object.entries(node.fields ?? {})) {
-    if (forwardedFields.has(fieldName) || boundFields.has(fieldName)) continue;
+    if (forwardedFields.has(fieldName) || boundFields.has(fieldName)) {
+      if (boundFields.has(fieldName)) {
+        throw new CodegenError(
+          `Instance "${node.id}" cannot set and bind field "${fieldName}" on "${node.component}" together`,
+        );
+      }
+      continue;
+    }
     const prop = target.fields.get(fieldName);
     if (!prop) {
       throw new CodegenError(
@@ -254,6 +261,18 @@ function renderInstance(
     const directField = target.document.fields?.find((field) => field.name === fieldName);
     if (directField) assertDefault(node.component, directField, value);
     attrs.push(valueAttr(prop.name, value));
+  }
+  const providedFields = new Set([
+    ...forwardedFields,
+    ...boundFields,
+    ...Object.keys(node.fields ?? {}),
+  ]);
+  for (const [fieldName, prop] of target.fields) {
+    if (prop.required && !providedFields.has(fieldName)) {
+      throw new CodegenError(
+        `Instance "${node.id}" is missing required field "${fieldName}" on "${node.component}"`,
+      );
+    }
   }
   for (const axis of (target.document.variants ?? []).filter(isVariantAxis)) {
     const value = node.variants?.[axis.name];

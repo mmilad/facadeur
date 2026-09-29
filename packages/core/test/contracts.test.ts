@@ -287,6 +287,53 @@ describe('component contracts', () => {
     expect(() => validateCatalog([owner, target])).toThrow(/may be undefined/);
   });
 
+  it('requires every required instance field and rejects static/bound conflicts', () => {
+    const target: DocumentFile = {
+      version: 1,
+      id: 'required-instance-control',
+      name: 'Required instance control',
+      kind: 'atom',
+      fields: [
+        { name: 'value', type: 'text', required: true },
+        { name: 'hint', type: 'text' },
+      ],
+      root: { id: 'root', type: 'text', tag: 'span' },
+    };
+    const missing: DocumentFile = {
+      version: 1,
+      id: 'missing-required-instance-field',
+      name: 'Missing required instance field',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [{ id: 'control', type: 'instance', component: target.id }],
+      },
+    };
+    expect(() => validateCatalog([missing, target])).toThrow(/missing required field "value"/);
+
+    const conflict: DocumentFile = {
+      ...missing,
+      id: 'conflicting-instance-field',
+      name: 'Conflicting instance field',
+      fields: [{ name: 'source', type: 'text', required: true }],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'control',
+            type: 'instance',
+            component: target.id,
+            fields: { value: 'Static' },
+            fieldBindings: { value: 'source' },
+          },
+        ],
+      },
+    };
+    expect(() => validateCatalog([conflict, target])).toThrow(/cannot set and bind field "value"/);
+  });
+
   it('rejects bindings with incompatible array item types', () => {
     const target: DocumentFile = {
       version: 1,
