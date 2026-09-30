@@ -13,7 +13,7 @@ import {
 } from '../border/index.js';
 import { Field, Inline, Section, Stack, TextInput } from '../../form/index.js';
 import { StyleDeclarationField } from '../style/index.js';
-import { styleDeclarationKind } from '../style/declaration-kind.js';
+import { styleDeclarationGroup, type StyleDeclarationGroup } from '../style/declaration-kind.js';
 import type { TypographyCatalogs } from '../typography/index.js';
 import '../../form/form.css';
 
@@ -28,13 +28,20 @@ export type StyleDeclarationCatalogs = {
   typographyCatalogs: TypographyCatalogs;
 };
 
+export type StructuredDeclarationGroup = Extract<
+  StyleDeclarationGroup,
+  'layout' | 'size' | 'spacing'
+>;
+
 export function CssDeclarationsControl({
   entries,
   variantViewportNote,
   declarationName,
   catalogs,
   onCommitDeclaration,
+  onPatchDeclarations,
   onAddDeclaration,
+  renderStructuredSection,
   renderAfterRow,
   emptyMessage = 'No declarations.',
 }: {
@@ -43,7 +50,11 @@ export function CssDeclarationsControl({
   declarationName: (property: string) => string;
   catalogs: StyleDeclarationCatalogs;
   onCommitDeclaration: (property: string, raw: string, overridden: boolean) => void;
+  /** Apply a compound edit as one sparse declaration patch when available. */
+  onPatchDeclarations?: (patch: Record<string, string | null>) => void;
   onAddDeclaration: (property: string, value: string) => void;
+  /** Let the structured layout editor host these CSS rows in its own section. */
+  renderStructuredSection?: (group: StructuredDeclarationGroup, content: ReactNode) => ReactNode;
   renderAfterRow?: (property: string, overridden: boolean) => ReactNode;
   emptyMessage?: ReactNode;
 }) {
@@ -64,18 +75,60 @@ export function CssDeclarationsControl({
   const visibleEntries = entries.filter(
     (item) => !borderKeys.has(item.property) && !radiusKeys.has(item.property),
   );
-  const visibleGroups = groupDeclarations(visibleEntries);
-
   function replaceKeys(remove: readonly string[], set: Record<string, string>) {
+    const nextValues = new Map(Object.entries(set));
+    const patch: Record<string, string | null> = {};
     for (const key of remove) {
+      if (nextValues.has(key)) continue;
       const item = entries.find((entry) => entry.property === key);
-      if (item) onCommitDeclaration(key, '', item.overridden);
+      // `entries` contains effective inherited declarations too. Clearing an
+      // inherited value would create a needless local reset and could erase a
+      // value from the wrong layer.
+      if (item?.overridden) patch[key] = null;
     }
-    for (const [key, next] of Object.entries(set)) {
+    for (const [key, next] of nextValues) {
       const item = entries.find((entry) => entry.property === key);
-      onCommitDeclaration(key, next, item?.overridden ?? false);
+      if (!item || item.value !== next) patch[key] = next;
+    }
+    commitPatch(patch);
+  }
+
+  function commitPatch(patch: Record<string, string | null>) {
+    const changed = Object.entries(patch).filter(([, value]) => value !== undefined);
+    if (changed.length === 0) return;
+    if (onPatchDeclarations) {
+      onPatchDeclarations(Object.fromEntries(changed));
+      return;
+    }
+    for (const [key, next] of changed) {
+      const item = entries.find((entry) => entry.property === key);
+      onCommitDeclaration(key, next ?? '', item?.overridden ?? true);
     }
   }
+
+  function compoundAfter(keys: readonly string[]) {
+    return renderAfterRow ? (
+      <div className="declaration-compound-after">
+        {keys.map((key) => {
+          const item = entries.find((entry) => entry.property === key);
+          return item ? <span key={key}>{renderAfterRow(key, item.overridden)}</span> : null;
+        })}
+      </div>
+    ) : null;
+  }
+
+  const groups = groupDeclarations(visibleEntries);
+  if (renderStructuredSection) {
+    for (const id of ['layout', 'size', 'spacing'] as const) {
+      if (!groups.some((group) => group.id === id)) {
+        groups.push({ id, label: DECLARATION_GROUP_LABELS[id], items: [] });
+      }
+    }
+  }
+  if ((border || borderRadius) && !groups.some((group) => group.id === 'surface')) {
+    groups.push({ id: 'surface', label: DECLARATION_GROUP_LABELS.surface, items: [] });
+  }
+  groups.sort((left, right) => GROUP_ORDER.indexOf(left.id) - GROUP_ORDER.indexOf(right.id));
 
   return (
     <Stack gap={12}>
@@ -84,35 +137,44 @@ export function CssDeclarationsControl({
           Variant styles stay on Base. Breakpoints are not nested under variants.
         </p>
       ) : null}
-      {border ? (
-        <Section title="Border" collapsible>
-          <BorderControl
-            namePrefix={declarationName('border')}
-            value={border}
-            colorTokens={catalogs.colorTokens}
-            onCommit={(next) => {
-              replaceKeys(borderDeclarationKeys(), serializeBorder(next));
-            }}
-          />
-        </Section>
-      ) : null}
-      {borderRadius ? (
-        <Section title="Radius" collapsible>
-          <BorderRadiusControl
-            namePrefix={declarationName('radius')}
-            value={borderRadius}
-            radiusTokens={catalogs.radiusTokens}
-            onCommit={(next) => {
-              replaceKeys(borderRadiusDeclarationKeys(), serializeBorderRadius(next));
-            }}
-          />
-        </Section>
-      ) : null}
-      {visibleEntries.length === 0 && !border && !borderRadius ? (
+      {visibleEntries.length === 0 && !border && !borderRadius && !renderStructuredSection ? (
         <p className="meta">{emptyMessage}</p>
       ) : null}
-      {visibleGroups.map((group) => (
-        <Section key={group.id} title={group.label} collapsible defaultOpen={group.id !== 'layout'}>
+      {groups.map((group) => (
+        <DeclarationGroupSection
+          key={group.id}
+          group={group}
+          renderStructuredSection={renderStructuredSection}
+        >
+          {group.conflictsStructured ? (
+            <p className="meta css-structure-conflict">
+              CSS values here override the structured layout value.
+            </p>
+          ) : null}
+          {group.id === 'surface' && border ? (
+            <div className="declaration-compound" key="border-control">
+              <BorderControl
+                namePrefix={declarationName('border')}
+                value={border}
+                colorTokens={catalogs.colorTokens}
+                onCommit={(next) => replaceKeys(borderDeclarationKeys(), serializeBorder(next))}
+              />
+              {compoundAfter(borderDeclarationKeys())}
+            </div>
+          ) : null}
+          {group.id === 'surface' && borderRadius ? (
+            <div className="declaration-compound" key="radius-control">
+              <BorderRadiusControl
+                namePrefix={declarationName('radius')}
+                value={borderRadius}
+                radiusTokens={catalogs.radiusTokens}
+                onCommit={(next) =>
+                  replaceKeys(borderRadiusDeclarationKeys(), serializeBorderRadius(next))
+                }
+              />
+              {compoundAfter(borderRadiusDeclarationKeys())}
+            </div>
+          ) : null}
           {group.items.map((item) => (
             <StyleDeclarationField
               key={item.property}
@@ -129,7 +191,7 @@ export function CssDeclarationsControl({
               after={renderAfterRow?.(item.property, item.overridden)}
             />
           ))}
-        </Section>
+        </DeclarationGroupSection>
       ))}
       <Section title="Add property" collapsible defaultOpen={false}>
         <Stack gap={8}>
@@ -171,107 +233,82 @@ export function CssDeclarationsControl({
 }
 
 type DeclarationGroup = {
-  id: DeclarationGroupId;
+  id: StyleDeclarationGroup;
   label: string;
   items: CssDeclarationEntry[];
+  conflictsStructured?: boolean;
 };
 
-type DeclarationGroupId =
-  | 'color'
-  | 'typography'
-  | 'layout'
-  | 'spacing'
-  | 'effects'
-  | 'behavior'
-  | 'other';
+function DeclarationGroupSection({
+  group,
+  renderStructuredSection,
+  children,
+}: {
+  group: DeclarationGroup;
+  renderStructuredSection?: (group: StructuredDeclarationGroup, content: ReactNode) => ReactNode;
+  children: ReactNode;
+}) {
+  if (isStructuredGroup(group.id) && renderStructuredSection) {
+    return renderStructuredSection(group.id, children);
+  }
+  return (
+    <Section
+      title={group.label}
+      collapsible
+      defaultOpen={group.id !== 'layout' && group.id !== 'advanced'}
+    >
+      {children}
+    </Section>
+  );
+}
 
-const DECLARATION_GROUP_LABELS: Record<DeclarationGroupId, string> = {
-  color: 'Color',
-  typography: 'Typography',
+function isStructuredGroup(group: StyleDeclarationGroup): group is StructuredDeclarationGroup {
+  return group === 'layout' || group === 'size' || group === 'spacing';
+}
+
+const DECLARATION_GROUP_LABELS: Record<StyleDeclarationGroup, string> = {
   layout: 'CSS layout',
+  size: 'Size & Position',
   spacing: 'Spacing',
+  surface: 'Surface',
+  typography: 'Typography',
   effects: 'Effects',
-  behavior: 'Behavior',
-  other: 'Other',
+  visibility: 'Visibility & Interaction',
+  advanced: 'CSS rules',
 };
+
+const GROUP_ORDER: StyleDeclarationGroup[] = [
+  'layout',
+  'size',
+  'spacing',
+  'surface',
+  'typography',
+  'effects',
+  'visibility',
+  'advanced',
+];
 
 function groupDeclarations(entries: CssDeclarationEntry[]): DeclarationGroup[] {
   const groups: DeclarationGroup[] = [];
   for (const entry of entries) {
+    const sourceGroup = styleDeclarationGroup(entry.property);
     const id = declarationGroupId(entry.property);
     let group = groups.find((candidate) => candidate.id === id);
     if (!group) {
-      group = { id, label: DECLARATION_GROUP_LABELS[id], items: [] };
+      group = {
+        id,
+        label: DECLARATION_GROUP_LABELS[id],
+        items: [],
+        conflictsStructured: false,
+      };
       groups.push(group);
     }
+    if (isStructuredGroup(sourceGroup)) group.conflictsStructured = true;
     group.items.push(entry);
   }
   return groups;
 }
 
-function declarationGroupId(property: string): DeclarationGroupId {
-  if (isLayoutProperty(property)) return 'layout';
-  switch (styleDeclarationKind(property)) {
-    case 'color':
-      return 'color';
-    case 'typography':
-    case 'typography-token':
-      return 'typography';
-    case 'spacing':
-      return 'spacing';
-    case 'shadow':
-      return 'effects';
-    case 'enum':
-      return 'behavior';
-    default:
-      return 'other';
-  }
-}
-
-const LAYOUT_PROPERTIES = new Set([
-  'align-content',
-  'align-items',
-  'align-self',
-  'aspect-ratio',
-  'box-sizing',
-  'display',
-  'flex',
-  'flex-basis',
-  'flex-direction',
-  'flex-flow',
-  'flex-grow',
-  'flex-shrink',
-  'flex-wrap',
-  'height',
-  'inset',
-  'inset-block',
-  'inset-block-end',
-  'inset-block-start',
-  'inset-inline',
-  'inset-inline-end',
-  'inset-inline-start',
-  'justify-content',
-  'justify-items',
-  'justify-self',
-  'left',
-  'max-height',
-  'max-width',
-  'min-height',
-  'min-width',
-  'order',
-  'position',
-  'right',
-  'top',
-  'bottom',
-  'width',
-  'z-index',
-]);
-
-function isLayoutProperty(property: string): boolean {
-  return LAYOUT_PROPERTIES.has(
-    property
-      .trim()
-      .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
-      .toLowerCase(),
-  );
+function declarationGroupId(property: string): StyleDeclarationGroup {
+  return styleDeclarationGroup(property);
 }

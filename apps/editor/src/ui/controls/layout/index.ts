@@ -1,4 +1,8 @@
-export { LayoutControl } from './LayoutControl.js';
+export {
+  LayoutControl,
+  type LayoutControlSection,
+  type LayoutControlSectionContent,
+} from './LayoutControl.js';
 export {
   layoutControlValue,
   shownLayoutField,

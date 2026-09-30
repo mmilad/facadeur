@@ -1,29 +1,12 @@
-import { useEffect, useState } from 'react';
-import {
-  Combobox,
-  Field,
-  NumberInput,
-  SegmentedControl,
-  Stack,
-  TextInput,
-} from '../../form/index.js';
+import { TokenValueControl } from '../fields/TokenValueControl.js';
+import { Field, Stack, TextInput } from '../../form/index.js';
 import '../../form/form.css';
-import { catalogTokenOptions } from '../token-options.js';
 import {
   formatTypographyFieldValue,
-  inferTypographyFieldMode,
   parseTypographyFieldValue,
   TYPOGRAPHY_VALUE_KEYS,
-  type TypographyFieldMode,
   type TypographyValue,
 } from './value.js';
-
-function numberDraft(value: string): number | null {
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-  const parsed = Number(trimmed);
-  return Number.isFinite(parsed) ? parsed : null;
-}
 
 function assignTypographyField(
   target: TypographyValue,
@@ -66,7 +49,6 @@ function TokenOrCustomField({
   value,
   tokenOptions,
   customPlaceholder,
-  useNumberCustom,
   onCommit,
 }: {
   name: string;
@@ -74,61 +56,19 @@ function TokenOrCustomField({
   value: string;
   tokenOptions: readonly string[];
   customPlaceholder?: string;
-  useNumberCustom?: boolean;
   onCommit: (next: string | null) => void;
 }) {
-  const [mode, setMode] = useState<TypographyFieldMode>(() =>
-    inferTypographyFieldMode(value, tokenOptions),
-  );
-
-  useEffect(() => {
-    setMode(inferTypographyFieldMode(value, tokenOptions));
-  }, [value, tokenOptions]);
-
   return (
-    <Stack gap={8}>
-      <Field label={label}>
-        <SegmentedControl
-          name={`${name}-mode`}
-          value={mode}
-          options={[
-            { value: 'custom', label: 'Value' },
-            { value: 'token', label: 'Token' },
-          ]}
-          onCommit={(next) => setMode(next as TypographyFieldMode)}
-        />
-      </Field>
-      {mode === 'token' ? (
-        <Field label="Token">
-          <Combobox
-            name={`${name}-token`}
-            value={value.trim()}
-            options={catalogTokenOptions(tokenOptions, value.trim())}
-            onCommit={(next) => onCommit(next.trim() ? next.trim() : null)}
-          />
-        </Field>
-      ) : useNumberCustom ? (
-        <Field label={label}>
-          <NumberInput
-            name={name}
-            value={numberDraft(value)}
-            onCommit={(next) => onCommit(next === null || next === undefined ? null : String(next))}
-          />
-        </Field>
-      ) : (
-        <Field label={label}>
-          <TextInput
-            name={name}
-            value={value.trim()}
-            placeholder={customPlaceholder}
-            onCommit={(next) => onCommit(next.trim() ? next.trim() : null)}
-          />
-        </Field>
-      )}
-    </Stack>
+    <TokenValueControl
+      name={name}
+      label={label}
+      value={value}
+      tokens={tokenOptions}
+      placeholder={customPlaceholder}
+      onCommit={onCommit}
+    />
   );
 }
-
 function fieldLabel(key: (typeof TYPOGRAPHY_VALUE_KEYS)[number]): string {
   if (key === 'fontFamily') return 'Family';
   if (key === 'fontSize') return 'Size';
@@ -179,12 +119,11 @@ export function TypographyControl({
   };
 
   return (
-    <Stack gap={12}>
+    <Stack gap={8}>
       {label ? <span className="eu-field__hint">{label}</span> : null}
       {keys.map((key) => {
         const shown = formatTypographyFieldValue(value[key]);
         const tokens = tokenOptionsForKey(key, catalogs);
-        const useNumber = key === 'fontWeight' || key === 'lineHeight';
         return (
           <TokenOrCustomField
             key={key}
@@ -192,7 +131,6 @@ export function TypographyControl({
             label={fieldLabel(key)}
             value={shown}
             tokenOptions={tokens}
-            useNumberCustom={useNumber}
             customPlaceholder={key === 'fontFamily' ? 'Inter, sans-serif' : undefined}
             onCommit={(next) => commitKey(key, next)}
           />
@@ -241,7 +179,6 @@ export function TypographyStyleControl({
         label={fieldLabel}
         value={value}
         tokenOptions={catalogs.fontWeightTokens}
-        useNumberCustom
         onCommit={onCommit}
       />
     );
@@ -253,7 +190,6 @@ export function TypographyStyleControl({
         label={fieldLabel}
         value={value}
         tokenOptions={[...catalogs.dimensionTokens, ...catalogs.numberTokens]}
-        useNumberCustom
         onCommit={onCommit}
       />
     );

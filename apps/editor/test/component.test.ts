@@ -251,7 +251,7 @@ describe('component definitions', () => {
     expect(child?.declarations).toEqual({ color: 'red' });
     expect(child?.children?.label?.declarations).toBeUndefined();
     expect(child?.children?.label?.breakpoints?.desktop?.declarations).toEqual({
-      fontSize: '18px',
+      'font-size': '18px',
     });
 
     const hover = writeStyleDeclaration(

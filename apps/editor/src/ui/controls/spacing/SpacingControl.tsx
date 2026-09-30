@@ -1,6 +1,7 @@
 import type { Spacing, SpacingBox } from '@facadeur/core';
-import { Combobox, Field, Stack } from '../../form/index.js';
-import { dimensionTokenOptions } from '../token-options.js';
+import { useEffect, useState } from 'react';
+import { Grid, Stack } from '../../form/index.js';
+import { TokenValueControl } from '../fields/TokenValueControl.js';
 
 export function boxWith(
   box: SpacingBox,
@@ -8,9 +9,25 @@ export function boxWith(
   value: string | null,
 ): SpacingBox | null {
   const next: SpacingBox = { ...box };
-  if (value) next[side] = value;
+  const trimmed = value?.trim() ?? '';
+  if (trimmed) next[side] = trimmed;
   else delete next[side];
   return next.top || next.right || next.bottom || next.left ? next : null;
+}
+
+function asBox(spacing: Spacing | undefined): SpacingBox {
+  if (spacing && typeof spacing !== 'string') return spacing;
+  const value = typeof spacing === 'string' ? spacing : undefined;
+  if (!value) return {};
+  return { top: value, right: value, bottom: value, left: value };
+}
+
+function uniformBoxValue(box: SpacingBox): string | null {
+  const values = [box.top ?? '', box.right ?? '', box.bottom ?? '', box.left ?? ''].map((value) =>
+    value.trim(),
+  );
+  const first = values[0] ?? '';
+  return values.every((value) => value === first) ? first : null;
 }
 
 export function SpacingControl({
@@ -26,60 +43,69 @@ export function SpacingControl({
   dimensionTokens: readonly string[];
   onCommit: (spacing: Spacing | null) => void;
 }) {
-  if (spacing && typeof spacing !== 'string') {
+  const [showSides, setShowSides] = useState(() => Boolean(spacing && typeof spacing !== 'string'));
+  useEffect(() => {
+    if (spacing && typeof spacing !== 'string') setShowSides(true);
+    else if (spacing === undefined) setShowSides(false);
+  }, [spacing]);
+  const box = asBox(spacing);
+
+  if (showSides || Boolean(spacing && typeof spacing !== 'string')) {
+    const uniform = uniformBoxValue(box);
     return (
       <Stack gap={8}>
         <span className="eu-field__hint">{legend} per side</span>
-        {(['top', 'right', 'bottom', 'left'] as const).map((side) => (
-          <Field key={side} label={side}>
-            <Combobox
+        <Grid columns={2}>
+          {(['top', 'right', 'bottom', 'left'] as const).map((side) => (
+            <TokenValueControl
+              key={side}
               name={`${namePrefix}-${side}`}
-              value={spacing[side] ?? ''}
-              options={dimensionTokenOptions(dimensionTokens, spacing[side])}
-              onCommit={(next) => onCommit(boxWith(spacing, side, next || null))}
+              label={side}
+              value={box[side] ?? ''}
+              tokens={dimensionTokens}
+              tokenOnly
+              placeholder="None"
+              onCommit={(next) => onCommit(boxWith(box, side, next))}
             />
-          </Field>
-        ))}
-        <button
-          type="button"
-          className="text-button"
-          onClick={() =>
-            onCommit(spacing.top ?? spacing.right ?? spacing.bottom ?? spacing.left ?? null)
-          }
-        >
-          One token
-        </button>
+          ))}
+        </Grid>
+        {uniform !== null ? (
+          <button
+            type="button"
+            className="text-button eu-mode-action"
+            onClick={() => {
+              setShowSides(false);
+              onCommit(uniform || null);
+            }}
+          >
+            One value
+          </button>
+        ) : (
+          <span className="eu-field__hint">Sides differ; keep them separate.</span>
+        )}
       </Stack>
     );
   }
 
-  const tokenValue = typeof spacing === 'string' ? spacing : undefined;
+  const tokenValue = typeof spacing === 'string' ? spacing : '';
   return (
     <Stack gap={8}>
-      <Field label={legend}>
-        <Combobox
-          name={namePrefix}
-          value={tokenValue ?? ''}
-          options={dimensionTokenOptions(dimensionTokens, tokenValue)}
-          onCommit={(next) => onCommit(next || null)}
-        />
-      </Field>
-      {spacing ? (
-        <button
-          type="button"
-          className="text-button"
-          onClick={() =>
-            onCommit({
-              top: spacing,
-              right: spacing,
-              bottom: spacing,
-              left: spacing,
-            })
-          }
-        >
-          Per side
-        </button>
-      ) : null}
+      <TokenValueControl
+        name={namePrefix}
+        label={legend}
+        value={tokenValue}
+        tokens={dimensionTokens}
+        tokenOnly
+        placeholder="None"
+        onCommit={(next) => onCommit(next)}
+      />
+      <button
+        type="button"
+        className="text-button eu-mode-action"
+        onClick={() => setShowSides(true)}
+      >
+        Per side
+      </button>
     </Stack>
   );
 }

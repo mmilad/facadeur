@@ -31,7 +31,7 @@ export function TextInput({
   return (
     <input
       {...rest}
-      id={id}
+      id={rest.id ?? id}
       name={name}
       className="eu-control"
       type="text"

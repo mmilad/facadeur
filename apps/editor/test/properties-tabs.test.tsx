@@ -57,7 +57,7 @@ describe('properties inspector tabs', () => {
     host = null;
   });
 
-  it('shows primary tabs and hides layout until the Layout tab is selected', async () => {
+  it('keeps layout controls in the Style tab', async () => {
     const session: EditorSession = createEditorSession({
       documents,
       design: createProjectTemplateDocument(),
@@ -69,18 +69,18 @@ describe('properties inspector tabs', () => {
       root?.render(<App session={session} />);
     });
     await act(async () => {
-      session.openAsset('button', 'root');
+      session.openAsset('input', 'root');
     });
 
     expect(host.querySelector('button[name="property-tab-content"]')).toBeInstanceOf(
       HTMLButtonElement,
     );
     expect(host.querySelector('select[name="tag"]')).toBeInstanceOf(HTMLSelectElement);
-    expect(host.querySelector('select[name="layout-direction"]')).toBeNull();
+    expect(host.querySelector('button[name="property-tab-layout"]')).toBeNull();
 
     await act(async () => {
       host!
-        .querySelector('button[name="property-tab-layout"]')
+        .querySelector('button[name="property-tab-style"]')
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
     expect(host.querySelector('select[name="layout-direction"]')).toBeInstanceOf(HTMLSelectElement);
@@ -128,7 +128,7 @@ describe('properties inspector tabs', () => {
     );
   });
 
-  it('groups style declarations by purpose', async () => {
+  it('always shows Default as the first variant tab', async () => {
     const session: EditorSession = createEditorSession({
       documents,
       design: createProjectTemplateDocument(),
@@ -143,6 +143,31 @@ describe('properties inspector tabs', () => {
       session.openAsset('input', 'root');
       session.selectNode('root');
     });
+
+    expect(host.querySelector('button[name="variant-tab-default"]')).toBeInstanceOf(
+      HTMLButtonElement,
+    );
+    expect(host.querySelector('.variant-tabs-list button:nth-child(1)')?.textContent).toBe(
+      'default',
+    );
+    expect(host.querySelector('button[name="property-style-tab-variants"]')).toBeNull();
+  });
+
+  it('groups style declarations by purpose', async () => {
+    const session: EditorSession = createEditorSession({
+      documents,
+      design: createProjectTemplateDocument(),
+    });
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => {
+      root?.render(<App session={session} />);
+    });
+    await act(async () => {
+      session.openAsset('input', 'root');
+      session.selectNode('control');
+    });
     await act(async () => {
       host!
         .querySelector('button[name="property-tab-style"]')
@@ -152,12 +177,15 @@ describe('properties inspector tabs', () => {
     expect(
       host.querySelector('button[name="property-tab-style"]')?.getAttribute('aria-selected'),
     ).toBe('true');
-    expect(host.querySelector('.eu-section__title')?.textContent).toBe('Color');
+    expect(host.querySelector('.eu-section__title')?.textContent).toBe('Layout');
     expect(host.textContent).toContain('Typography');
-    expect(host.textContent).not.toContain('Other');
+    expect(host.textContent).toContain('Surface');
+    expect(host.textContent).toContain('Advanced CSS');
     expect(
-      host.querySelector('.eu-section__title--collapsible[aria-expanded="false"]')?.textContent,
-    ).toBe('Add property');
+      [...host.querySelectorAll('.eu-section__title--collapsible')].find(
+        (title) => title.textContent === 'Add property',
+      ),
+    ).toBeTruthy();
   });
 
   it('puts layout declarations in the Layout group', async () => {
@@ -181,14 +209,16 @@ describe('properties inspector tabs', () => {
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(host.textContent).toContain('CSS layout');
+    expect(host.textContent).toContain('Advanced CSS');
     expect(host.textContent).not.toContain('Other');
     expect(
-      host.querySelector('.eu-section__title--collapsible[aria-expanded="false"]')?.textContent,
-    ).toBe('CSS layout');
+      [...host.querySelectorAll('.eu-section__title')].some(
+        (title) => title.textContent === 'CSS rules',
+      ),
+    ).toBe(true);
   });
 
-  it('resets to Content when selection changes', async () => {
+  it('keeps the selected properties tab when selection changes', async () => {
     const session: EditorSession = createEditorSession({
       documents,
       design: createProjectTemplateDocument(),
@@ -213,7 +243,10 @@ describe('properties inspector tabs', () => {
     await act(async () => {
       session.selectNode('root');
     });
-    expect(host.querySelector('select[name="tag"]')).toBeInstanceOf(HTMLSelectElement);
+    expect(
+      host.querySelector('button[name="property-tab-data"]')?.getAttribute('aria-selected'),
+    ).toBe('true');
+    expect(host.querySelector('select[name="tag"]')).toBeNull();
   });
 
   it('shows the document path for a nested selection', async () => {
@@ -322,6 +355,14 @@ describe('properties inspector tabs', () => {
       'Edit master · Specimen section',
     );
     expect(host.textContent).toContain('This component exposes no fields or variants yet.');
+
+    await act(async () => {
+      host!
+        .querySelector('button[name="property-tab-style"]')
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(host.querySelector('button[name="layout-margin"]')).toBeInstanceOf(HTMLButtonElement);
+    expect(host.textContent).toContain('Edit the master component for shared styles.');
   });
 
   it('mounts field definitions on Content and variant axes on Data (Spec C)', async () => {

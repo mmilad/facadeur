@@ -1,4 +1,9 @@
-import { type FlatNode, type LayoutOverride } from '@facadeur/core';
+import {
+  type FlatNode,
+  type LayoutOverride,
+  type VariantNodeOverride,
+  type VariantPreset,
+} from '@facadeur/core';
 import {
   clearLayoutBreakpoint,
   dimensionTokenRefs,
@@ -7,17 +12,26 @@ import {
 } from '../../../../domain/editing.js';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
 import { editorBreakpoints, viewportEditContext } from '../../../../domain/viewport-edit.js';
-import { LayoutControl, layoutControlValue } from '../../../controls/layout/index.js';
+import {
+  LayoutControl,
+  layoutControlValue,
+  type LayoutControlSection,
+  type LayoutControlSectionContent,
+} from '../../../controls/layout/index.js';
 import { OverrideCue } from '../ViewportEditBar.js';
 
 export function LayoutPanel({
   session,
   snap,
   node,
+  section,
+  sectionContent,
 }: {
   session: EditorSession;
   snap: EditorSnapshot;
   node: FlatNode;
+  section?: LayoutControlSection;
+  sectionContent?: LayoutControlSectionContent;
 }) {
   const ctx = viewportEditContext({
     breakpoints: editorBreakpoints(snap.document, snap.design),
@@ -27,54 +41,132 @@ export function LayoutPanel({
   const breakpointId = ctx.writingBreakpointId;
   const tokens = dimensionTokenRefs(snap.design.tokens);
   const cueViewport = ctx.overrideViewport;
+  const variantEntry = snap.activeVariantName
+    ? variantNodeEntry(snap.document, snap.activeVariantName, node.id)
+    : null;
+  const ownLayout = variantEntry?.override.layout;
+  const effectiveNode = snap.activeDocument.nodes[node.id] ?? node;
+  const effectiveLayout = effectiveNode.layout ? structuredClone(effectiveNode.layout) : undefined;
+  // A wider target inherits all preceding min-width layers, not just Base.
+  if (effectiveLayout && breakpointId) {
+    const targetWidth = ctx.breakpoints.find((item) => item.id === breakpointId)?.minWidth ?? 0;
+    for (const breakpoint of ctx.breakpoints) {
+      if (breakpoint.id === ctx.base?.id || breakpoint.minWidth > targetWidth) continue;
+      Object.assign(effectiveLayout, effectiveNode.layout?.breakpoints?.[breakpoint.id]);
+    }
+  }
   const controlValue = layoutControlValue({
     nodeType: node.type,
-    layout: node.layout,
-    writingBreakpointId: breakpointId,
+    layout: effectiveLayout,
+    writingBreakpointId: null,
   });
 
   function cue(key: keyof LayoutOverride) {
+    const own = breakpointId
+      ? (variantEntry ? ownLayout : node.layout)?.breakpoints?.[breakpointId]
+      : variantEntry
+        ? ownLayout
+        : undefined;
+    if (own?.[key] !== undefined) {
+      return (
+        <p className="override-cue">
+          <span>
+            {snap.activeVariantName ?? 'Default'} · {breakpointId ?? 'Base'}
+          </span>
+          <button
+            type="button"
+            className="text-button"
+            aria-label={`Reset layout ${key}`}
+            onClick={() => commit({ [key]: null })}
+          >
+            Reset
+          </button>
+        </p>
+      );
+    }
     if (!cueViewport) return null;
-    const override = node.layout?.breakpoints?.[cueViewport.id];
+    const override = variantEntry
+      ? ownLayout?.breakpoints?.[cueViewport.id]
+      : node.layout?.breakpoints?.[cueViewport.id];
     if (!override || override[key] === undefined) return null;
     return (
       <OverrideCue
         minWidth={cueViewport.minWidth}
-        onReset={() =>
-          session.execute({
-            type: 'setProp',
-            nodeId: node.id,
-            prop: 'layout',
-            value: writeLayoutFields(node.layout, cueViewport.id, { [key]: null }),
-          })
-        }
+        onReset={() => commit({ [key]: null }, cueViewport.id)}
       />
     );
   }
 
-  function commit(patch: LayoutPatch) {
+  function commit(patch: LayoutPatch, targetBreakpointId = breakpointId) {
+    if (variantEntry) {
+      const latest = variantNodeEntry(
+        session.getSnapshot().document,
+        snap.activeVariantName!,
+        node.id,
+      );
+      if (latest) {
+        const normalized: LayoutPatch = { ...patch };
+        if (
+          (patch.x !== undefined || patch.y !== undefined) &&
+          patch.position === undefined &&
+          controlValue.position === 'absolute'
+        ) {
+          normalized.position = 'absolute';
+        }
+        if (targetBreakpointId === null) {
+          if (patch.position === null && controlValue.position === 'absolute') {
+            normalized.position = 'auto';
+          }
+          if (patch.wrap === null && controlValue.wrap === true) {
+            normalized.wrap = false;
+          }
+        }
+        commitVariantLayout(session, latest, targetBreakpointId, normalized);
+      }
+      return;
+    }
     session.execute({
       type: 'setProp',
       nodeId: node.id,
       prop: 'layout',
-      value: writeLayoutFields(node.layout, breakpointId, patch),
+      value: writeLayoutFields(
+        session.getSnapshot().document.nodes[node.id]?.layout,
+        targetBreakpointId,
+        patch,
+      ),
     });
   }
 
   return (
     <div className="stack">
-      <h3>Layout</h3>
-      {cueViewport && node.layout?.breakpoints?.[cueViewport.id] ? (
+      {(!section || section === 'layout') &&
+      cueViewport &&
+      (variantEntry ? ownLayout : node.layout)?.breakpoints?.[cueViewport.id] ? (
         <button
           type="button"
           className="text-button"
           onClick={() =>
-            session.execute({
-              type: 'setProp',
-              nodeId: node.id,
-              prop: 'layout',
-              value: clearLayoutBreakpoint(node.layout, cueViewport.id),
-            })
+            variantEntry
+              ? commitVariantLayout(session, variantEntry, cueViewport.id, {
+                  direction: null,
+                  gap: null,
+                  padding: null,
+                  margin: null,
+                  justify: null,
+                  align: null,
+                  wrap: null,
+                  position: null,
+                  x: null,
+                  y: null,
+                  width: null,
+                  height: null,
+                })
+              : session.execute({
+                  type: 'setProp',
+                  nodeId: node.id,
+                  prop: 'layout',
+                  value: clearLayoutBreakpoint(node.layout, cueViewport.id),
+                })
           }
         >
           Reset layout {cueViewport.id}
@@ -86,7 +178,51 @@ export function LayoutPanel({
         writingBreakpointId={breakpointId}
         onCommit={commit}
         afterField={cue}
+        section={section}
+        sectionContent={sectionContent}
       />
     </div>
   );
+}
+
+interface VariantNodeEntry {
+  preset: VariantPreset;
+  key: string;
+  override: VariantNodeOverride;
+}
+
+function variantNodeEntry(
+  document: EditorSnapshot['document'],
+  name: string,
+  nodeId: string,
+): VariantNodeEntry | null {
+  const preset = document.variantPresets?.find((candidate) => candidate.name === name);
+  const nodes = preset?.overrides?.nodes;
+  if (!preset || !nodes) return preset ? { preset, key: nodeId, override: {} } : null;
+  const key = Object.prototype.hasOwnProperty.call(nodes, nodeId)
+    ? nodeId
+    : (Object.keys(nodes).find((candidate) => candidate.endsWith(`.${nodeId}`)) ?? nodeId);
+  return { preset, key, override: nodes[key] ?? {} };
+}
+
+function commitVariantLayout(
+  session: EditorSession,
+  entry: VariantNodeEntry,
+  breakpointId: string | null,
+  patch: LayoutPatch,
+): void {
+  const preset = structuredClone(entry.preset);
+  const overrides = { ...(preset.overrides ?? {}) };
+  const nodes = { ...(overrides.nodes ?? {}) };
+  const nodeOverride = structuredClone(nodes[entry.key] ?? entry.override);
+  const layout = writeLayoutFields(nodeOverride.layout, breakpointId, patch);
+  if (layout) nodeOverride.layout = layout;
+  else delete nodeOverride.layout;
+  if (Object.keys(nodeOverride).length) nodes[entry.key] = nodeOverride;
+  else delete nodes[entry.key];
+  if (Object.keys(nodes).length) overrides.nodes = nodes;
+  else delete overrides.nodes;
+  if (Object.keys(overrides).length) preset.overrides = overrides;
+  else delete preset.overrides;
+  session.execute({ type: 'setVariantPreset', preset });
 }

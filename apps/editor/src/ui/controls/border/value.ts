@@ -23,6 +23,72 @@ export type BorderRadiusValue =
   | { mode: 'uniform'; value: string }
   | { mode: 'corners'; topLeft: string; topRight: string; bottomRight: string; bottomLeft: string };
 
+/** Return a uniform value only when all four corners are identical. */
+export function uniformRadiusValue(
+  value: Extract<BorderRadiusValue, { mode: 'corners' }>,
+): string | null {
+  const { topLeft, topRight, bottomRight, bottomLeft } = value;
+  const normalized = [topLeft, topRight, bottomRight, bottomLeft].map((part) => part.trim());
+  const first = normalized[0] ?? '';
+  return normalized.every((part) => part === first) ? first : null;
+}
+
+/** Expand the CSS 1–4 value radius shorthand without discarding its order. */
+export function expandRadiusValue(value: string): Extract<BorderRadiusValue, { mode: 'corners' }> {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return { mode: 'corners', topLeft: '', topRight: '', bottomRight: '', bottomLeft: '' };
+  }
+  const slash = findTopLevelSlash(trimmed);
+  const horizontalText = slash === -1 ? trimmed : trimmed.slice(0, slash).trim();
+  const verticalText = slash === -1 ? undefined : trimmed.slice(slash + 1).trim();
+  const expand = (text: string): string[] => {
+    const parts = splitCssValues(text);
+    if (parts.length === 1) return [parts[0]!, parts[0]!, parts[0]!, parts[0]!];
+    if (parts.length === 2) return [parts[0]!, parts[1]!, parts[0]!, parts[1]!];
+    if (parts.length === 3) return [parts[0]!, parts[1]!, parts[2]!, parts[1]!];
+    return [parts[0]!, parts[1]!, parts[2]!, parts[3]!];
+  };
+  const horizontal = expand(horizontalText ?? '');
+  const vertical = verticalText ? expand(verticalText) : horizontal;
+  return {
+    mode: 'corners',
+    topLeft: verticalText ? `${horizontal[0]} ${vertical[0]}` : horizontal[0]!,
+    topRight: verticalText ? `${horizontal[1]} ${vertical[1]}` : horizontal[1]!,
+    bottomRight: verticalText ? `${horizontal[2]} ${vertical[2]}` : horizontal[2]!,
+    bottomLeft: verticalText ? `${horizontal[3]} ${vertical[3]}` : horizontal[3]!,
+  };
+}
+
+function splitCssValues(value: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let current = '';
+  for (const character of value.trim()) {
+    if (character === '(') depth += 1;
+    if (character === ')') depth = Math.max(0, depth - 1);
+    if (/\s/.test(character) && depth === 0) {
+      if (current) parts.push(current);
+      current = '';
+    } else {
+      current += character;
+    }
+  }
+  if (current) parts.push(current);
+  return parts;
+}
+
+function findTopLevelSlash(value: string): number {
+  let depth = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    const character = value[index];
+    if (character === '(') depth += 1;
+    else if (character === ')') depth = Math.max(0, depth - 1);
+    else if (character === '/' && depth === 0) return index;
+  }
+  return -1;
+}
+
 const BORDER_KEYS = new Set([
   'border',
   'borderWidth',
@@ -35,6 +101,7 @@ const BORDER_KEYS = new Set([
 
 const RADIUS_KEYS = new Set([
   'borderRadius',
+  'border-radius',
   'borderTopLeftRadius',
   'borderTopRightRadius',
   'borderBottomRightRadius',
@@ -54,10 +121,11 @@ export function isBorderRadiusDeclarationKey(property: string): boolean {
 }
 
 export function readBorder(declarations: Record<string, string>): BorderValue | null {
-  const width = declarations.borderWidth ?? declarations['border-width'];
-  const style = declarations.borderStyle ?? declarations['border-style'];
-  const color = declarations.borderColor ?? declarations['border-color'];
-  const shorthand = declarations.border;
+  const shorthand = declarations.border ?? declarations['border'];
+  const shorthandValue = shorthand ? parseBorderShorthand(shorthand) : null;
+  const width = declarations.borderWidth ?? declarations['border-width'] ?? shorthandValue?.width;
+  const style = declarations.borderStyle ?? declarations['border-style'] ?? shorthandValue?.style;
+  const color = declarations.borderColor ?? declarations['border-color'] ?? shorthandValue?.color;
   if (width || style || color) {
     return {
       width: width ?? '',
@@ -65,7 +133,7 @@ export function readBorder(declarations: Record<string, string>): BorderValue | 
       color: color ?? '',
     };
   }
-  if (shorthand) return parseBorderShorthand(shorthand);
+  if (shorthandValue) return shorthandValue;
   return null;
 }
 
@@ -106,24 +174,43 @@ export function serializeBorder(border: BorderValue): Record<string, string> {
 }
 
 export function readBorderRadius(declarations: Record<string, string>): BorderRadiusValue | null {
-  const uniform = declarations.borderRadius;
-  const topLeft = declarations.borderTopLeftRadius ?? declarations['border-top-left-radius'] ?? '';
+  const shorthand = declarations.borderRadius ?? declarations['border-radius'];
+  const expanded = shorthand ? expandRadiusValue(shorthand) : null;
+  const topLeft =
+    declarations.borderTopLeftRadius ??
+    declarations['border-top-left-radius'] ??
+    expanded?.topLeft ??
+    '';
   const topRight =
-    declarations.borderTopRightRadius ?? declarations['border-top-right-radius'] ?? '';
+    declarations.borderTopRightRadius ??
+    declarations['border-top-right-radius'] ??
+    expanded?.topRight ??
+    '';
   const bottomRight =
-    declarations.borderBottomRightRadius ?? declarations['border-bottom-right-radius'] ?? '';
+    declarations.borderBottomRightRadius ??
+    declarations['border-bottom-right-radius'] ??
+    expanded?.bottomRight ??
+    '';
   const bottomLeft =
-    declarations.borderBottomLeftRadius ?? declarations['border-bottom-left-radius'] ?? '';
+    declarations.borderBottomLeftRadius ??
+    declarations['border-bottom-left-radius'] ??
+    expanded?.bottomLeft ??
+    '';
   if (topLeft || topRight || bottomRight || bottomLeft) {
-    return {
+    const corners: Extract<BorderRadiusValue, { mode: 'corners' }> = {
       mode: 'corners',
       topLeft,
       topRight,
       bottomRight,
       bottomLeft,
     };
+    const uniform = uniformRadiusValue(corners);
+    return uniform ? { mode: 'uniform', value: uniform } : corners;
   }
-  if (uniform) return { mode: 'uniform', value: uniform };
+  if (expanded) {
+    const uniform = uniformRadiusValue(expanded);
+    return uniform ? { mode: 'uniform', value: uniform } : expanded;
+  }
   return null;
 }
 
@@ -132,11 +219,35 @@ export function serializeBorderRadius(radius: BorderRadiusValue): Record<string,
     const value = radius.value.trim();
     return value ? { borderRadius: value } : {};
   }
+  const values = {
+    topLeft: radius.topLeft.trim(),
+    topRight: radius.topRight.trim(),
+    bottomRight: radius.bottomRight.trim(),
+    bottomLeft: radius.bottomLeft.trim(),
+  };
+  const unique = [...new Set(Object.values(values))];
+  if (unique.length === 1) return unique[0] ? { borderRadius: unique[0] } : {};
+  if (unique.length === 2) {
+    const counts = new Map(unique.map((value) => [value, 0]));
+    for (const value of Object.values(values)) {
+      if (value) counts.set(value, (counts.get(value) ?? 0) + 1);
+    }
+    const common = unique.find((value) => counts.get(value) === 3);
+    const outlier = unique.find((value) => counts.get(value) === 1);
+    if (common && outlier) {
+      const result: Record<string, string> = common ? { borderRadius: common } : {};
+      for (const [side, value] of Object.entries(values)) {
+        if (value === outlier)
+          result[`border${side[0]!.toUpperCase()}${side.slice(1)}Radius`] = value;
+      }
+      return result;
+    }
+  }
   const out: Record<string, string> = {};
-  if (radius.topLeft.trim()) out.borderTopLeftRadius = radius.topLeft.trim();
-  if (radius.topRight.trim()) out.borderTopRightRadius = radius.topRight.trim();
-  if (radius.bottomRight.trim()) out.borderBottomRightRadius = radius.bottomRight.trim();
-  if (radius.bottomLeft.trim()) out.borderBottomLeftRadius = radius.bottomLeft.trim();
+  if (values.topLeft) out.borderTopLeftRadius = values.topLeft;
+  if (values.topRight) out.borderTopRightRadius = values.topRight;
+  if (values.bottomRight) out.borderBottomRightRadius = values.bottomRight;
+  if (values.bottomLeft) out.borderBottomLeftRadius = values.bottomLeft;
   return out;
 }
 

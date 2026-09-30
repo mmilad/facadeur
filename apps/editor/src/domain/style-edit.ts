@@ -68,6 +68,11 @@ export interface ShownDeclaration {
   overridden: boolean;
 }
 
+export interface StyleBreakpointRef {
+  id: string;
+  minWidth: number;
+}
+
 /**
  * Base keys first, then properties that exist only on the viewport override,
  * so a breakpoint-only value stays visible and resettable from Base.
@@ -76,22 +81,28 @@ export function shownDeclarations(
   base: StyleDeclarations,
   override: StyleDeclarations,
   writingViewport: boolean,
+  preferOverrideValues = true,
 ): ShownDeclaration[] {
+  const baseIndex = declarationIndex(base);
+  const overrideIndex = declarationIndex(override);
   const keys: string[] = [];
-  const seen = new Set<string>();
   for (const key of Object.keys(base)) {
-    seen.add(key);
+    if (keys.some((item) => canonicalStyleProperty(item) === canonicalStyleProperty(key))) continue;
     keys.push(key);
   }
   for (const key of Object.keys(override)) {
-    if (seen.has(key)) continue;
+    if (keys.some((item) => canonicalStyleProperty(item) === canonicalStyleProperty(key))) continue;
     keys.push(key);
   }
   return keys.map((property) => {
-    const overridden = Object.prototype.hasOwnProperty.call(override, property);
-    const value = writingViewport
-      ? (override[property] ?? base[property] ?? '')
-      : (base[property] ?? '');
+    const canonical = canonicalStyleProperty(property);
+    const overrideValue = overrideIndex.get(canonical);
+    const baseValue = baseIndex.get(canonical);
+    const overridden = overrideValue !== undefined;
+    const value =
+      writingViewport && preferOverrideValues
+        ? (overrideValue ?? baseValue ?? '')
+        : (baseValue ?? '');
     return { property, value, overridden };
   });
 }
@@ -103,8 +114,82 @@ export function readStyleDeclarations(
 ): StyleDeclarations {
   const layer = findLayer(block, rootId, target);
   if (!layer) return {};
-  if (target.state) return { ...(layer.states?.[target.state] ?? {}) };
-  return { ...(layer.declarations ?? {}) };
+  return declarationsForLayer(layer, target.state);
+}
+
+export function canonicalStyleProperty(property: string): string {
+  return property.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+}
+
+function declarationIndex(declarations: StyleDeclarations): Map<string, string> {
+  const index = new Map<string, string>();
+  for (const [property, value] of Object.entries(declarations)) {
+    index.set(canonicalStyleProperty(property), value);
+  }
+  return index;
+}
+
+function declarationsForLayer(
+  layer: StyleLayer,
+  state: StyleEditTarget['state'] | undefined,
+): StyleDeclarations {
+  const declarations: StyleDeclarations = {};
+  mergeDeclarations(declarations, layer.declarations);
+  if (state) mergeDeclarations(declarations, layer.states?.[state]);
+  return declarations;
+}
+
+function mergeDeclarations(target: StyleDeclarations, source: StyleDeclarations | undefined): void {
+  for (const [property, value] of Object.entries(source ?? {})) {
+    const canonical = canonicalStyleProperty(property);
+    for (const existing of Object.keys(target)) {
+      if (canonicalStyleProperty(existing) === canonical) delete target[existing];
+    }
+    target[property] = value;
+  }
+}
+
+/**
+ * Read the value a declaration has at a viewport. CSS media rules cascade, so
+ * every preceding breakpoint contributes before the focused layer. State
+ * values are applied after normal declarations and therefore inherit normal
+ * values when a state only overrides a subset of properties.
+ */
+export function effectiveStyleDeclarations(
+  block: StyleBlock | undefined,
+  rootId: string,
+  target: StyleEditTarget,
+  breakpoints: readonly StyleBreakpointRef[] = [],
+): StyleDeclarations {
+  if (!block) return {};
+  const owner = ownerOf(block, rootId, target.nodeId, false);
+  if (!owner) return {};
+  if (target.axis && target.value !== undefined) {
+    return readStyleDeclarations(block, rootId, target);
+  }
+
+  const layers: StyleLayer[] = [owner];
+  if (target.breakpointId) {
+    const ordered = [...breakpoints].sort((left, right) => left.minWidth - right.minWidth);
+    const focused = ordered.find((item) => item.id === target.breakpointId);
+    const through = focused?.minWidth;
+    for (const breakpoint of ordered) {
+      if (through !== undefined && breakpoint.minWidth > through) break;
+      const layer = owner.breakpoints?.[breakpoint.id];
+      if (layer) layers.push(layer);
+    }
+    if (!focused && !ordered.some((item) => item.id === target.breakpointId)) {
+      const layer = owner.breakpoints?.[target.breakpointId];
+      if (layer) layers.push(layer);
+    }
+  }
+
+  const declarations: StyleDeclarations = {};
+  for (const layer of layers) mergeDeclarations(declarations, layer.declarations);
+  if (target.state) {
+    for (const layer of layers) mergeDeclarations(declarations, layer.states?.[target.state]);
+  }
+  return declarations;
 }
 
 /**
@@ -120,18 +205,49 @@ export function writeStyleDeclaration(
 ): StyleBlock | null {
   const next: StyleBlock = block ? structuredClone(block) : {};
   const layer = ensureLayer(next, rootId, target);
-  if (target.state) {
-    const states = (layer.states ??= {});
-    const declarations = (states[target.state] ??= {});
-    if (value === null) delete declarations[property];
-    else declarations[property] = value;
-  } else {
-    const declarations = (layer.declarations ??= {});
-    if (value === null) delete declarations[property];
-    else declarations[property] = value;
+  writeLayerDeclaration(layer, target.state, property, value);
+  compactBlock(next);
+  return hasContent(next) ? next : null;
+}
+
+/**
+ * Apply a compound declaration edit to one sparse layer and return one block
+ * for one undoable command. Null values remove only the named layer's keys.
+ */
+export function writeStyleDeclarations(
+  block: StyleBlock | undefined,
+  rootId: string,
+  target: StyleEditTarget,
+  patch: Record<string, string | null>,
+): StyleBlock | null {
+  if (!Object.keys(patch).length) return block ? structuredClone(block) : null;
+  const next: StyleBlock = block ? structuredClone(block) : {};
+  const layer = ensureLayer(next, rootId, target);
+  for (const [property, value] of Object.entries(patch)) {
+    writeLayerDeclaration(layer, target.state, property, value);
   }
   compactBlock(next);
   return hasContent(next) ? next : null;
+}
+
+/**
+ * Edit one property without migrating the rest of the declaration map.
+ * Existing camel/kebab storage wins; a newly-created key uses CSS kebab case.
+ */
+function writeLayerDeclaration(
+  layer: StyleLayer,
+  state: StyleEditTarget['state'] | undefined,
+  property: string,
+  value: string | null,
+): void {
+  const declarations = state ? ((layer.states ??= {})[state] ??= {}) : (layer.declarations ??= {});
+  const canonical = canonicalStyleProperty(property);
+  const aliases = Object.keys(declarations).filter(
+    (candidate) => canonicalStyleProperty(candidate) === canonical,
+  );
+  const existing = aliases[0];
+  for (const alias of aliases) delete declarations[alias];
+  if (value !== null) declarations[existing ?? canonical] = value;
 }
 
 function findLayer(

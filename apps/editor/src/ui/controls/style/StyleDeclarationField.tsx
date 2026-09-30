@@ -5,7 +5,12 @@ import { ShadowControl } from '../shadow/index.js';
 import { TextControl } from '../fields/index.js';
 import { TypographyStyleControl, type TypographyCatalogs } from '../typography/index.js';
 import { catalogTokenOptions, dimensionTokenOptions } from '../token-options.js';
-import { enumOptionsForProperty, styleDeclarationKind, stylePropertyLabel } from './declaration-kind.js';
+import {
+  enumOptionLabel,
+  enumOptionsForProperty,
+  styleDeclarationKind,
+  stylePropertyLabel,
+} from './declaration-kind.js';
 
 export function StyleDeclarationField({
   property,
@@ -98,16 +103,27 @@ export function StyleDeclarationField({
       );
       break;
     case 'enum':
-      control = (
-        <Field label={label}>
-          <Select
-            name={name}
-            value={value || enumOptions![0]}
-            options={enumOptions!.map((option) => ({ value: option, label: option }))}
-            onCommit={onCommit}
-          />
-        </Field>
-      );
+      // Keep an existing value that is newer than our option catalog editable.
+      // A select would silently display its first option and lose that value.
+      control =
+        enumOptions && value && !enumOptions.includes(value) ? (
+          <TextControl label={label} name={name} value={value} onCommit={onCommit} />
+        ) : (
+          <Field label={label}>
+            <Select
+              name={name}
+              value={value}
+              options={[
+                { value: '', label: 'Unset' },
+                ...enumOptions!.map((option) => ({
+                  value: option,
+                  label: enumOptionLabel(property, option),
+                })),
+              ]}
+              onCommit={onCommit}
+            />
+          </Field>
+        );
       break;
     default:
       control = (

@@ -40,26 +40,34 @@ const ALIGN_OPTIONS = [
   { value: 'stretch', label: 'stretch' },
 ];
 
+export type LayoutControlSection = 'layout' | 'size' | 'spacing';
+
+export type LayoutControlSectionContent = Partial<Record<LayoutControlSection, ReactNode>>;
+
 export function LayoutControl({
   value,
   dimensionTokens,
   writingBreakpointId,
   onCommit,
   afterField,
+  section,
+  sectionContent,
 }: {
   value: LayoutControlValue;
   dimensionTokens: readonly string[];
   writingBreakpointId: string | null;
   onCommit: (patch: LayoutPatch) => void;
   afterField?: (key: keyof LayoutOverride) => ReactNode;
+  section?: LayoutControlSection;
+  sectionContent?: LayoutControlSectionContent;
 }) {
   const free = value.position === 'absolute';
   const margin = value.margin;
 
   return (
     <Stack gap={12}>
-      {value.isFrame ? (
-        <Section title="Flex">
+      {value.isFrame && (!section || section === 'layout') ? (
+        <Section title="Layout">
           <Field label="Direction">
             <Select
               name="layout-direction"
@@ -82,14 +90,6 @@ export function LayoutControl({
             />
           </Field>
           {afterField?.('gap')}
-          <SpacingControl
-            legend="Padding"
-            namePrefix="layout-padding"
-            spacing={value.padding}
-            dimensionTokens={dimensionTokens}
-            onCommit={(padding) => onCommit({ padding })}
-          />
-          {afterField?.('padding')}
           <Field label="Justify">
             <Select
               name="layout-justify"
@@ -115,84 +115,85 @@ export function LayoutControl({
             onCommit={(checked) => onCommit(wrapLayoutPatch(checked, writingBreakpointId))}
           />
           {afterField?.('wrap')}
+          {sectionContent?.layout}
         </Section>
       ) : null}
 
-      <Section title="Spacing">
-        <Field label="Margin">
-          <Combobox
-            name="layout-margin"
-            value={typeof margin === 'string' ? margin : ''}
-            options={dimensionTokenOptions(
-              dimensionTokens,
-              typeof margin === 'string' ? margin : undefined,
-            )}
-            onCommit={(next) => onCommit({ margin: next || null })}
+      {!section || section === 'size' ? (
+        <Section title="Size & Position">
+          <Toggle
+            name="layout-free"
+            label="Free position"
+            value={free}
+            onCommit={(checked) => onCommit(freePositionPatch(checked, writingBreakpointId))}
           />
-        </Field>
-        {afterField?.('margin')}
-        {margin && typeof margin === 'object' ? (
+          {afterField?.('position')}
+          {free ? (
+            <Grid columns={2}>
+              <Field label="X">
+                <NumberInput
+                  name="layout-x"
+                  value={value.x ?? null}
+                  onCommit={(x) => onCommit({ x })}
+                />
+              </Field>
+              <Field label="Y">
+                <NumberInput
+                  name="layout-y"
+                  value={value.y ?? null}
+                  onCommit={(y) => onCommit({ y })}
+                />
+              </Field>
+            </Grid>
+          ) : null}
+          {afterField?.('x')}
+          {afterField?.('y')}
+          {!free ? (
+            <span className="eu-field__hint">Arrow keys move only free-positioned elements.</span>
+          ) : null}
+          <AxisSizeEditor
+            label="Width"
+            name="width"
+            axis={value.width}
+            dimensionTokens={dimensionTokens}
+            onCommit={(width) => onCommit({ width })}
+          />
+          {afterField?.('width')}
+          <AxisSizeEditor
+            label="Height"
+            name="height"
+            axis={value.height}
+            dimensionTokens={dimensionTokens}
+            onCommit={(height) => onCommit({ height })}
+          />
+          {afterField?.('height')}
+          {sectionContent?.size}
+        </Section>
+      ) : null}
+
+      {!section || section === 'spacing' ? (
+        <Section title="Spacing">
+          {value.isFrame ? (
+            <SpacingControl
+              legend="Padding"
+              namePrefix="layout-padding"
+              spacing={value.padding}
+              dimensionTokens={dimensionTokens}
+              onCommit={(padding) => onCommit({ padding })}
+            />
+          ) : null}
+          {value.isFrame ? afterField?.('padding') : null}
           <SpacingControl
-            legend="Margin sides"
+            legend="Margin"
             namePrefix="layout-margin"
             spacing={margin}
             dimensionTokens={dimensionTokens}
             onCommit={(next) => onCommit({ margin: next })}
           />
-        ) : null}
-      </Section>
-
-      <Section title="Position">
-        <Toggle
-          name="layout-free"
-          label="Free position"
-          value={free}
-          onCommit={(checked) => onCommit(freePositionPatch(checked, writingBreakpointId))}
-        />
-        {afterField?.('position')}
-        {free ? (
-          <Grid columns={2}>
-            <Field label="X">
-              <NumberInput
-                name="layout-x"
-                value={value.x ?? null}
-                onCommit={(x) => onCommit({ x })}
-              />
-            </Field>
-            <Field label="Y">
-              <NumberInput
-                name="layout-y"
-                value={value.y ?? null}
-                onCommit={(y) => onCommit({ y })}
-              />
-            </Field>
-          </Grid>
-        ) : null}
-        {afterField?.('x')}
-        {afterField?.('y')}
-        {!free ? (
-          <span className="eu-field__hint">Arrow keys move only free-positioned elements.</span>
-        ) : null}
-      </Section>
-
-      <Section title="Sizing">
-        <AxisSizeEditor
-          label="Width"
-          name="width"
-          axis={value.width}
-          dimensionTokens={dimensionTokens}
-          onCommit={(width) => onCommit({ width })}
-        />
-        {afterField?.('width')}
-        <AxisSizeEditor
-          label="Height"
-          name="height"
-          axis={value.height}
-          dimensionTokens={dimensionTokens}
-          onCommit={(height) => onCommit({ height })}
-        />
-        {afterField?.('height')}
-      </Section>
+          {afterField?.('margin')}
+          {sectionContent?.spacing}
+        </Section>
+      ) : null}
     </Stack>
   );
 }

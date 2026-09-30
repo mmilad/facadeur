@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { findParent, type FlatDocument, type FlatNode } from '@facadeur/core';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
 import { AddPopover, Field, TextInput } from '../../form/index.js';
@@ -11,25 +11,14 @@ import { ComponentVariants } from './content/ComponentVariants.js';
 import { ContentPanel } from './content/ContentPanel.js';
 import { NodeBindings } from './content/NodeBindings.js';
 import { ownsComponentFeatures } from './content/owns-component-features.js';
-import { LayoutPanel } from './layout/LayoutPanel.js';
-import { StyleDeclarationsPanel } from './style/declarations/StyleDeclarationsPanel.js';
-import { StyleOverridesPanel } from './style/overrides/StyleOverridesPanel.js';
-import { NodeVariantStylesPanel } from './style/variants/NodeVariantStylesPanel.js';
+import { StyleInspector } from './style/StyleInspector.js';
 
-type PropertyPrimaryTab = 'content' | 'style' | 'layout' | 'data';
-type PropertyStyleSubTab = 'declarations' | 'variants' | 'overrides';
+type PropertyPrimaryTab = 'content' | 'style' | 'data';
 
 const PROPERTY_PRIMARY_TABS = [
   ['content', 'Content'],
   ['style', 'Style'],
-  ['layout', 'Layout'],
   ['data', 'Data'],
-] as const;
-
-const PROPERTY_STYLE_SUBTABS = [
-  ['declarations', 'Declarations'],
-  ['variants', 'Variants'],
-  ['overrides', 'Overrides'],
 ] as const;
 
 export function PropertiesPanel({
@@ -51,16 +40,8 @@ export function PropertiesPanel({
     ownsComponentFeatures(inspectorSnap.document.kind) &&
     (!node || node.id === inspectorSnap.document.rootId);
   const [primaryTab, setPrimaryTab] = useState<PropertyPrimaryTab>('content');
-  const [styleSubTab, setStyleSubTab] = useState<PropertyStyleSubTab>('declarations');
-  const selectionKey = node?.id ?? '__none__';
   const isRoot = node?.id === inspectorSnap.document.rootId;
 
-  useEffect(() => {
-    setPrimaryTab('content');
-    setStyleSubTab('declarations');
-  }, [selectionKey]);
-
-  const editableStyle = node && node.type !== 'instance';
   const contextTitle = node
     ? node.type === 'instance'
       ? snap.componentTarget?.name || node.component
@@ -146,54 +127,10 @@ export function PropertiesPanel({
       ) : null}
       {primaryTab === 'style' ? (
         <div role="tabpanel" className="property-panel">
-          {!editableStyle ? (
-            <p className="inspector-empty">
-              {node?.type === 'instance'
-                ? 'Style is edited on the master component.'
-                : 'Select a layer to edit style.'}
-            </p>
+          {node ? (
+            <StyleInspector session={session} snap={snap} node={node} />
           ) : (
-            <>
-              <div className="tabs property-subtabs" role="tablist" aria-label="Style sections">
-                {PROPERTY_STYLE_SUBTABS.map(([id, label]) => (
-                  <button
-                    key={id}
-                    type="button"
-                    role="tab"
-                    name={`property-style-tab-${id}`}
-                    className={styleSubTab === id ? 'tab is-active' : 'tab'}
-                    aria-selected={styleSubTab === id}
-                    onClick={() => setStyleSubTab(id)}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-              {styleSubTab === 'declarations' ? (
-                <StyleDeclarationsPanel session={session} snap={inspectorSnap} nodeId={node.id} />
-              ) : null}
-              {styleSubTab === 'variants' ? (
-                node.id !== inspectorSnap.document.rootId ? (
-                  <NodeVariantStylesPanel session={session} snap={inspectorSnap} nodeId={node.id} />
-                ) : (
-                  <p className="meta">
-                    Variant styles for child layers appear when a nested node is selected.
-                  </p>
-                )
-              ) : null}
-              {styleSubTab === 'overrides' ? (
-                <StyleOverridesPanel session={session} snap={inspectorSnap} node={node} />
-              ) : null}
-            </>
-          )}
-        </div>
-      ) : null}
-      {primaryTab === 'layout' ? (
-        <div role="tabpanel" className="property-panel">
-          {!node ? (
-            <p className="inspector-empty">Select a layer to edit layout.</p>
-          ) : (
-            <LayoutPanel session={session} snap={inspectorSnap} node={node} />
+            <p className="inspector-empty">Select a layer to edit style.</p>
           )}
         </div>
       ) : null}
@@ -223,11 +160,11 @@ export function PropertiesPanel({
 
 function VariantTabs({ session, snap }: { session: EditorSession; snap: EditorSnapshot }) {
   const [newName, setNewName] = useState('');
-  if (snap.document.kind !== 'component' || !snap.document.variantPresets?.length) return null;
+  if (snap.document.kind !== 'component') return null;
 
   const names = [
     'default',
-    ...snap.document.variantPresets
+    ...(snap.document.variantPresets ?? [])
       .map((preset) => preset.name)
       .filter((name) => name !== 'default'),
   ];

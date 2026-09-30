@@ -137,6 +137,72 @@ describe('variant overlays', () => {
     });
   });
 
+  it('merges sparse layout overrides on nested instances without dropping base siblings', () => {
+    const nestedInstance: DocumentFile = {
+      ...specimen,
+      id: 'nested-instance-layout',
+      variants: [
+        { name: 'default' },
+        {
+          name: 'compact',
+          overrides: {
+            nodes: {
+              'root.control': {
+                layout: {
+                  gap: '{space.gap.lg}',
+                  breakpoints: { tablet: { direction: 'row' } },
+                },
+              },
+            },
+          },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'control',
+            type: 'instance',
+            component: 'child',
+            layout: {
+              direction: 'column',
+              gap: '{space.gap.sm}',
+              margin: '{space.stack.sm}',
+              width: { mode: 'fixed', size: 100 },
+              breakpoints: {
+                tablet: {
+                  direction: 'column',
+                  gap: '{space.gap.md}',
+                  width: { mode: 'fixed', size: 120 },
+                },
+                desktop: { gap: '{space.gap.xl}' },
+              },
+            },
+          },
+        ],
+      },
+    };
+
+    const compact = resolveVariantDocument(nestedInstance, 'compact');
+    const control = compact.root.type === 'frame' ? compact.root.children?.[0] : undefined;
+    expect(control?.type).toBe('instance');
+    expect(control?.layout).toMatchObject({
+      direction: 'column',
+      gap: '{space.gap.lg}',
+      margin: '{space.stack.sm}',
+      width: { mode: 'fixed', size: 100 },
+      breakpoints: {
+        tablet: {
+          direction: 'row',
+          gap: '{space.gap.md}',
+          width: { mode: 'fixed', size: 120 },
+        },
+        desktop: { gap: '{space.gap.xl}' },
+      },
+    });
+  });
+
   it('keeps default as the immutable base and rejects default overrides', () => {
     const invalid = {
       ...specimen,

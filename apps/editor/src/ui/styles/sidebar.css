@@ -526,8 +526,67 @@ body.is-resizing-inspector {
   gap: 4px;
 }
 
+.inspector .eu-section {
+  padding: 6px 0;
+}
+
+.inspector .eu-section > .eu-stack {
+  gap: 6px;
+}
+
+.declaration-compound-after {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.css-structure-conflict {
+  margin: 0;
+  font-size: 11px;
+}
+
 .properties .property-panel {
   padding-top: 4px;
+}
+
+.style-inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.inspector .style-inspector .eu-section {
+  padding: 4px 0;
+}
+
+.inspector .style-inspector .eu-section > .eu-stack {
+  gap: 4px;
+}
+
+.inspector .style-inspector .field {
+  margin-bottom: 4px;
+}
+
+.inspector .style-inspector .eu-mode-action {
+  align-self: flex-start;
+  width: auto;
+  flex: none;
+  padding: 2px 6px;
+  font-size: 11px;
+}
+
+.style-inspector > .field {
+  margin: 0 0 6px;
+}
+
+.style-inspector .advanced-css {
+  margin-top: 8px;
+  background: rgba(28, 25, 21, 0.025);
+}
+
+.style-inspector .advanced-css > summary {
+  font-weight: 600;
 }
 
 .inspector .side-scroll {
@@ -538,7 +597,7 @@ body.is-resizing-inspector {
 .stack {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0;
 }
 
 .property-tabs,
@@ -552,43 +611,53 @@ body.is-resizing-inspector {
   background: var(--sidebar);
 }
 
+.property-tabs {
+  gap: 4px;
+}
+
+.property-tabs .tab {
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
+}
+
 .variant-tabs {
   position: sticky;
   top: 0;
   z-index: 2;
   display: flex;
-  flex-direction: column;
-  gap: 5px;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
   margin: 0 0 8px;
-  padding: 8px 0 7px;
+  padding: 5px 0;
   border-bottom: 1px solid var(--line);
   background: var(--sidebar);
 }
 
 .variant-tabs + .property-tabs {
-  top: 62px;
+  top: 42px;
 }
 
 .variant-tabs-label {
-  color: var(--muted);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  display: none;
 }
 
 .variant-tabs-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 8px 0 12px;
+  flex: none;
+  padding: 0 0 0 12px;
 }
 
 .variant-tabs-list {
+  flex: 1;
+  min-width: 0;
   display: flex;
   gap: 3px;
   overflow-x: auto;
-  padding: 0 8px;
+  padding: 0 8px 0 0;
 }
 
 .variant-tab {

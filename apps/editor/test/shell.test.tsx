@@ -167,9 +167,10 @@ describe('editor shell', () => {
     const tag = host.querySelector('select[name="tag"]');
     expect(tag).toBeInstanceOf(HTMLSelectElement);
     expect((tag as HTMLSelectElement).value).toBe('button');
-    const layoutTab = host.querySelector('button[name="property-tab-layout"]');
     await act(async () => {
-      layoutTab?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      host!
+        .querySelector('button[name="property-tab-style"]')
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
     const direction = host.querySelector('select[name="layout-direction"]');
     expect(direction).toBeInstanceOf(HTMLSelectElement);
@@ -364,9 +365,7 @@ describe('editor shell', () => {
     expect(host.querySelector('[data-group="atom"] [data-asset-id="input"]')).toBeNull();
     const formGroup = host.querySelector('[data-group="component:form"]');
     expect(formGroup).toBeInstanceOf(HTMLElement);
-    expect(formGroup?.querySelector('[data-asset-id="input"]')).toBeInstanceOf(
-      HTMLButtonElement,
-    );
+    expect(formGroup?.querySelector('[data-asset-id="input"]')).toBeInstanceOf(HTMLButtonElement);
     expect(formGroup?.querySelector('[data-asset-id="textarea"]')).toBeInstanceOf(
       HTMLButtonElement,
     );
@@ -397,6 +396,12 @@ describe('editor shell', () => {
     const styleTab = host.querySelector('button[name="property-tab-style"]');
     await act(async () => {
       styleTab?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    const cssRules = [...host.querySelectorAll('.eu-section__title--collapsible')].find(
+      (title) => title.textContent === 'CSS rules',
+    );
+    await act(async () => {
+      cssRules?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
     const padding = host.querySelector(
       'button[name="style-root-base-base-paddingInline"]',

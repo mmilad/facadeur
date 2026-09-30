@@ -1,6 +1,6 @@
 import type { AxisSize, SizeValue } from '@facadeur/core';
-import { Combobox, Field, NumberInput, Select, Stack } from '../../form/index.js';
-import { dimensionTokenOptions } from '../token-options.js';
+import { Field, Grid, NumberInput, Section, Select, Stack } from '../../form/index.js';
+import { TokenValueControl } from '../fields/TokenValueControl.js';
 
 const SIZE_MODES = [
   { value: '', label: 'Default' },
@@ -62,7 +62,7 @@ function SizeValueEditor({
   const kindOptions = allowEmpty ? SIZE_KINDS : SIZE_KINDS.filter((option) => option.value !== '');
 
   return (
-    <Stack gap={8}>
+    <Grid columns={kind === '' ? 1 : 2}>
       <Field label={label}>
         <Select
           name={`${name}-kind`}
@@ -78,7 +78,7 @@ function SizeValueEditor({
         />
       </Field>
       {kind === 'px' ? (
-        <Field label="px">
+        <Field label="Pixels">
           <NumberInput
             name={name}
             value={pxValue}
@@ -89,23 +89,20 @@ function SizeValueEditor({
         </Field>
       ) : null}
       {kind === 'token' ? (
-        <Field label="Token">
-          <Combobox
-            name={name}
-            value={typeof value === 'string' ? value : ''}
-            options={dimensionTokenOptions(
-              dimensionTokens,
-              typeof value === 'string' ? value : undefined,
-              'Select…',
-            ).filter((option) => option.value !== '')}
-            onCommit={(next) => {
-              if (next) onCommit(next);
-            }}
-          />
-        </Field>
+        <TokenValueControl
+          name={name}
+          label="Token"
+          value={typeof value === 'string' ? value : ''}
+          tokens={dimensionTokens}
+          tokenOnly
+          placeholder="Select…"
+          onCommit={(next) => {
+            if (next) onCommit(next);
+          }}
+        />
       ) : null}
       {kind === 'percent' ? (
-        <Field label="%">
+        <Field label="Percent">
           <NumberInput
             name={name}
             value={percentValue}
@@ -117,7 +114,7 @@ function SizeValueEditor({
           />
         </Field>
       ) : null}
-    </Stack>
+    </Grid>
   );
 }
 
@@ -168,48 +165,54 @@ export function AxisSizeEditor({
           }}
         />
       ) : null}
-      <SizeValueEditor
-        label={`Min ${label.toLowerCase()}`}
-        name={`layout-${name}-min`}
-        value={axis?.min}
-        dimensionTokens={dimensionTokens}
-        allowEmpty
-        onCommit={(min) => {
-          if (!axis) {
-            if (min === null) return;
-            rebuild({ mode: 'hug', min });
-            return;
-          }
-          const next: AxisSize = {
-            mode: axis.mode,
-            ...(axis.size !== undefined ? { size: axis.size } : {}),
-          };
-          if (min !== null) next.min = min;
-          if (axis.max !== undefined) next.max = axis.max;
-          rebuild(next);
-        }}
-      />
-      <SizeValueEditor
-        label={`Max ${label.toLowerCase()}`}
-        name={`layout-${name}-max`}
-        value={axis?.max}
-        dimensionTokens={dimensionTokens}
-        allowEmpty
-        onCommit={(max) => {
-          if (!axis) {
-            if (max === null) return;
-            rebuild({ mode: 'hug', max });
-            return;
-          }
-          const next: AxisSize = {
-            mode: axis.mode,
-            ...(axis.size !== undefined ? { size: axis.size } : {}),
-          };
-          if (axis.min !== undefined) next.min = axis.min;
-          if (max !== null) next.max = max;
-          rebuild(next);
-        }}
-      />
+      <Section
+        title="Min / max"
+        collapsible
+        defaultOpen={Boolean(axis?.min !== undefined || axis?.max !== undefined)}
+      >
+        <SizeValueEditor
+          label={`Min ${label.toLowerCase()}`}
+          name={`layout-${name}-min`}
+          value={axis?.min}
+          dimensionTokens={dimensionTokens}
+          allowEmpty
+          onCommit={(min) => {
+            if (!axis) {
+              if (min === null) return;
+              rebuild({ mode: 'hug', min });
+              return;
+            }
+            const next: AxisSize = {
+              mode: axis.mode,
+              ...(axis.size !== undefined ? { size: axis.size } : {}),
+            };
+            if (min !== null) next.min = min;
+            if (axis.max !== undefined) next.max = axis.max;
+            rebuild(next);
+          }}
+        />
+        <SizeValueEditor
+          label={`Max ${label.toLowerCase()}`}
+          name={`layout-${name}-max`}
+          value={axis?.max}
+          dimensionTokens={dimensionTokens}
+          allowEmpty
+          onCommit={(max) => {
+            if (!axis) {
+              if (max === null) return;
+              rebuild({ mode: 'hug', max });
+              return;
+            }
+            const next: AxisSize = {
+              mode: axis.mode,
+              ...(axis.size !== undefined ? { size: axis.size } : {}),
+            };
+            if (axis.min !== undefined) next.min = axis.min;
+            if (max !== null) next.max = max;
+            rebuild(next);
+          }}
+        />
+      </Section>
     </Stack>
   );
 }

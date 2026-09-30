@@ -1,7 +1,9 @@
-import { Combobox, Field, Stack } from '../../form/index.js';
+import { useEffect, useState } from 'react';
+import { Grid, Stack } from '../../form/index.js';
 import '../../form/form.css';
-import { catalogTokenOptions } from '../token-options.js';
+import { TokenValueControl } from '../fields/TokenValueControl.js';
 import type { BorderRadiusValue } from './value.js';
+import { expandRadiusValue, uniformRadiusValue } from './value.js';
 
 export function BorderRadiusControl({
   namePrefix,
@@ -14,29 +16,26 @@ export function BorderRadiusControl({
   radiusTokens: readonly string[];
   onCommit: (next: BorderRadiusValue) => void;
 }) {
-  if (value.mode === 'uniform') {
+  const [showCorners, setShowCorners] = useState(() => value.mode === 'corners');
+  useEffect(() => {
+    setShowCorners(value.mode === 'corners');
+  }, [value.mode]);
+
+  if (!showCorners && value.mode === 'uniform') {
     return (
       <Stack gap={8}>
-        <Field label="Border radius">
-          <Combobox
-            name={`${namePrefix}-border-radius`}
-            value={value.value}
-            options={catalogTokenOptions(radiusTokens, value.value, 'None')}
-            onCommit={(next) => onCommit({ mode: 'uniform', value: next })}
-          />
-        </Field>
+        <TokenValueControl
+          name={`${namePrefix}-border-radius`}
+          label="Border radius"
+          value={value.value}
+          tokens={radiusTokens}
+          placeholder="None"
+          onCommit={(next) => onCommit({ mode: 'uniform', value: next ?? '' })}
+        />
         <button
           type="button"
-          className="text-button"
-          onClick={() =>
-            onCommit({
-              mode: 'corners',
-              topLeft: value.value,
-              topRight: value.value,
-              bottomRight: value.value,
-              bottomLeft: value.value,
-            })
-          }
+          className="text-button eu-mode-action"
+          onClick={() => setShowCorners(true)}
         >
           Per corner
         </button>
@@ -44,36 +43,44 @@ export function BorderRadiusControl({
     );
   }
 
-  const corners = value;
+  const corners = value.mode === 'corners' ? value : expandRadiusValue(value.value);
   const corner = (side: 'topLeft' | 'topRight' | 'bottomRight' | 'bottomLeft', label: string) => (
-    <Field key={side} label={label}>
-      <Combobox
-        name={`${namePrefix}-radius-${side}`}
-        value={corners[side]}
-        options={catalogTokenOptions(radiusTokens, corners[side], 'None')}
-        onCommit={(next) => onCommit({ ...corners, [side]: next })}
-      />
-    </Field>
+    <TokenValueControl
+      key={side}
+      name={`${namePrefix}-radius-${side}`}
+      label={label}
+      value={corners[side]}
+      tokens={radiusTokens}
+      placeholder="None"
+      onCommit={(next) => onCommit({ ...corners, [side]: next ?? '' })}
+    />
   );
+
+  const uniform = uniformRadiusValue(corners);
 
   return (
     <Stack gap={8}>
       <span className="eu-field__hint">Border radius per corner</span>
-      {corner('topLeft', 'Top left')}
-      {corner('topRight', 'Top right')}
-      {corner('bottomRight', 'Bottom right')}
-      {corner('bottomLeft', 'Bottom left')}
-      <button
-        type="button"
-        className="text-button"
-        onClick={() => {
-          const token =
-            corners.topLeft || corners.topRight || corners.bottomRight || corners.bottomLeft || '';
-          onCommit({ mode: 'uniform', value: token });
-        }}
-      >
-        One token
-      </button>
+      <Grid columns={2}>
+        {corner('topLeft', 'Top left')}
+        {corner('topRight', 'Top right')}
+        {corner('bottomRight', 'Bottom right')}
+        {corner('bottomLeft', 'Bottom left')}
+      </Grid>
+      {uniform !== null ? (
+        <button
+          type="button"
+          className="text-button eu-mode-action"
+          onClick={() => {
+            setShowCorners(false);
+            if (value.mode === 'corners') onCommit({ mode: 'uniform', value: uniform });
+          }}
+        >
+          One value
+        </button>
+      ) : (
+        <span className="eu-field__hint">Corners differ; keep them separate.</span>
+      )}
     </Stack>
   );
 }

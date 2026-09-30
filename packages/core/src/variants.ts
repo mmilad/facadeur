@@ -759,6 +759,7 @@ function joinPath(parent: string, id: string): string {
 function applyOverride(node: NestedNode, override: VariantNodeOverride): NestedNode {
   const next = structuredClone(node);
   if (next.type === 'instance') {
+    if (override.layout) next.layout = mergeLayout(next.layout, override.layout);
     if (override.fields) next.fields = { ...(next.fields ?? {}), ...override.fields };
     if (override.fieldBindings) {
       next.fieldBindings = { ...(next.fieldBindings ?? {}), ...override.fieldBindings };
