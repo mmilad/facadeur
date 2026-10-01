@@ -357,7 +357,7 @@ const variantStyleSchema = Type.Record(
 
 const breakpointStyleSchema = Type.Record(breakpointIdSchema, styleLayerSchema);
 
-/** A descendant rule. One level deep: nested instances carry their own style block. */
+/** A descendant rule. One level deep: instance roots may be styled by their containing document. */
 export const styleChildSchema = Type.Object(
   {
     declarations: Type.Optional(styleDeclarationsSchema),
@@ -624,7 +624,7 @@ const documentSchemaMeta = {
   additionalProperties: false,
   title: 'Facadeur document',
   description:
-    'Nested facadeur document. Nodes are frame, text, image, or instance. Tokens are a DTCG tree. Fonts list families and their sources. A style block paints the component. Instances override fields and variants only.',
+    'Nested facadeur document. Nodes are frame, text, image, or instance. Tokens are a DTCG tree. Fonts list families and their sources. A style block paints the component. Instances override fields and variants, and their containing document may add sparse root appearance rules.',
 } as const;
 
 function documentProperties<Kind extends TSchema>(kind: Kind) {

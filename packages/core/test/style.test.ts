@@ -69,10 +69,7 @@ describe('style block and auto layout', () => {
       id: 'removed-style-child',
       name: 'Removed style child',
       kind: 'component',
-      variants: [
-        { name: 'default' },
-        { name: 'minimal', overrides: { removed: ['gone'] } },
-      ],
+      variants: [{ name: 'default' }, { name: 'minimal', overrides: { removed: ['gone'] } }],
       styles: {
         children: {
           gone: { declarations: { color: 'red' } },
@@ -149,5 +146,80 @@ describe('style block and auto layout', () => {
       declarations: { color: '{color.text.primary}' },
       states: { disabled: { opacity: '0.4' } },
     });
+  });
+
+  it('allows sparse instance-root appearance overrides and resets inheritance', () => {
+    const button: DocumentFile = {
+      version: 1,
+      id: 'button',
+      name: 'Button',
+      kind: 'atom',
+      variants: [{ name: 'default' }, { name: 'compact' }],
+      styles: {
+        declarations: { color: 'black' },
+        variants: { variant: { compact: { declarations: { color: 'navy' } } } },
+        children: {
+          root: {
+            declarations: { color: 'red' },
+          },
+        },
+      },
+      settings: {
+        breakpoints: [
+          { id: 'phone', minWidth: 390 },
+          { id: 'wide', minWidth: 900 },
+        ],
+      },
+      root: { id: 'root', type: 'frame', tag: 'button' },
+    };
+    const host: DocumentFile = {
+      version: 1,
+      id: 'host',
+      name: 'Host',
+      kind: 'component',
+      variants: [{ name: 'default' }, { name: 'compact' }],
+      settings: {
+        breakpoints: [
+          { id: 'phone', minWidth: 390 },
+          { id: 'wide', minWidth: 900 },
+        ],
+      },
+      tokenInterface: { reads: ['color.accent'] },
+      styles: {
+        children: {
+          submit: {
+            declarations: { color: '{color.accent}' },
+            states: { hover: { color: 'white' } },
+            variants: { variant: { compact: { declarations: { color: 'purple' } } } },
+            breakpoints: { wide: { declarations: { color: 'green' } } },
+          },
+        },
+      },
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [{ id: 'submit', type: 'instance', component: 'button' }],
+      },
+    };
+
+    expect(() => validateCatalog([host, button])).not.toThrow();
+    expect(toNested(toFlat(host))).toEqual(host);
+    expect(resolveVariantDocument(host, 'compact').styles?.children?.submit).toMatchObject({
+      declarations: { color: 'purple' },
+      states: { hover: { color: 'white' } },
+      breakpoints: { wide: { declarations: { color: 'green' } } },
+    });
+
+    const edited = applyCommand(toFlat(host), {
+      type: 'setStyleBlock',
+      style: { children: { submit: { declarations: { color: 'orange' } } } },
+    });
+    expect(edited.styles?.children?.submit).toEqual({
+      declarations: { color: 'orange' },
+    });
+    expect(edited.tokenInterface?.reads).toContain('color.accent');
+
+    const reset = applyCommand(edited, { type: 'setStyleBlock', style: null });
+    expect(reset.styles).toBeUndefined();
   });
 });

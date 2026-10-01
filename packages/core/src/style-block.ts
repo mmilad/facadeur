@@ -218,12 +218,6 @@ function assertStyleBlock(
     if (!nodeIds.has(id)) {
       throw new DocumentError('schema', `Style child "${id}" is not a node`);
     }
-    if (doc.nodes[id]?.type === 'instance') {
-      throw new DocumentError(
-        'schema',
-        `Style child "${id}" is an instance and cannot carry style`,
-      );
-    }
     assertLayerVariants(child, axes, `Style child "${id}"`);
     for (const breakpointId of Object.keys(child.breakpoints ?? {})) {
       assertBreakpoint(breakpointId, breakpoints, `Style child "${id}"`);

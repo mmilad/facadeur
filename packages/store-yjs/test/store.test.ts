@@ -73,6 +73,38 @@ describe('Yjs document store', () => {
     store.destroy();
   });
 
+  it('round-trips sparse instance-root styles and reset through Yjs', () => {
+    const file: DocumentFile = {
+      ...initial,
+      styles: {
+        children: {
+          control: {
+            declarations: { color: '{color.accent}' },
+            states: { hover: { color: 'white' } },
+            breakpoints: { tablet: { declarations: { color: 'green' } } },
+          },
+        },
+      },
+      settings: {
+        breakpoints: [
+          { id: 'phone', minWidth: 390 },
+          { id: 'tablet', minWidth: 768 },
+        ],
+      },
+      tokenInterface: { reads: ['color.accent'] },
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [{ id: 'control', type: 'instance', component: 'input' }],
+      },
+    };
+    const store = createDocumentStore(file);
+    expect(store.getDocument().styles?.children?.control).toEqual(file.styles?.children?.control);
+    store.execute({ type: 'setStyleBlock', style: null });
+    expect(store.getDocument().styles).toBeUndefined();
+    store.destroy();
+  });
+
   it('runs each command as one transaction and undoes it independently', () => {
     const store = createDocumentStore(initial);
     let transactions = 0;

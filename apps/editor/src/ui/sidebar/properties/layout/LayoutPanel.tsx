@@ -11,6 +11,8 @@ import {
   type LayoutPatch,
 } from '../../../../domain/editing.js';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
+import { effectiveStyleDeclarations } from '../../../../domain/style-edit.js';
+import { layoutCapabilities } from '../../../../domain/layout-capabilities.js';
 import { editorBreakpoints, viewportEditContext } from '../../../../domain/viewport-edit.js';
 import {
   LayoutControl,
@@ -59,6 +61,36 @@ export function LayoutPanel({
     nodeType: node.type,
     layout: effectiveLayout,
     writingBreakpointId: null,
+  });
+  const styleDeclarations: Record<string, Record<string, string>> = {};
+  for (const candidate of [effectiveNode.id, ctxParentId(snap.activeDocument, effectiveNode.id)]) {
+    if (!candidate) continue;
+    const block = structuredClone(snap.activeDocument.styles ?? {});
+    const owner =
+      candidate === snap.activeDocument.rootId
+        ? block
+        : ((block.children ??= {})[candidate] ??= {});
+    const candidateNode = snap.activeDocument.nodes[candidate];
+    if (candidateNode?.type !== 'instance' && candidateNode?.style) {
+      owner.declarations = { ...owner.declarations, ...candidateNode.style };
+    }
+    styleDeclarations[candidate] = effectiveStyleDeclarations(
+      block,
+      snap.activeDocument.rootId,
+      {
+        nodeId: candidate,
+        ...(breakpointId ? { breakpointId } : {}),
+      },
+      ctx.breakpoints,
+    );
+  }
+  const capabilities = layoutCapabilities({
+    document: snap.activeDocument,
+    nodeId: effectiveNode.id,
+    breakpointId,
+    variantName: snap.activeVariantName,
+    breakpoints: ctx.breakpoints,
+    styleDeclarations,
   });
 
   function cue(key: keyof LayoutOverride) {
@@ -137,6 +169,25 @@ export function LayoutPanel({
     });
   }
 
+  function inactiveReset(key: keyof LayoutOverride) {
+    const own = breakpointId
+      ? (variantEntry ? ownLayout : node.layout)?.breakpoints?.[breakpointId]
+      : variantEntry
+        ? ownLayout
+        : node.layout;
+    if (own?.[key] === undefined) return null;
+    return (
+      <button
+        type="button"
+        className="text-button"
+        aria-label={`Reset layout ${key}`}
+        onClick={() => commit({ [key]: null })}
+      >
+        Reset
+      </button>
+    );
+  }
+
   return (
     <div className="stack">
       {(!section || section === 'layout') &&
@@ -176,13 +227,22 @@ export function LayoutPanel({
         value={controlValue}
         dimensionTokens={tokens}
         writingBreakpointId={breakpointId}
+        capabilities={capabilities}
         onCommit={commit}
         afterField={cue}
+        resetField={inactiveReset}
         section={section}
         sectionContent={sectionContent}
       />
     </div>
   );
+}
+
+function ctxParentId(document: EditorSnapshot['activeDocument'], nodeId: string): string | null {
+  for (const candidate of Object.values(document.nodes)) {
+    if (candidate.type === 'frame' && candidate.children.includes(nodeId)) return candidate.id;
+  }
+  return null;
 }
 
 interface VariantNodeEntry {

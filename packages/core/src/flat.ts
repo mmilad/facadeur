@@ -55,7 +55,7 @@ export interface ImageNode extends FlatNodeBase {
   alt?: string;
 }
 
-/** Instances carry placement plus field and variant overrides. Nothing else. */
+/** Instances carry placement plus field, variant, and containing-document style overrides. */
 export interface InstanceNode {
   id: string;
   type: 'instance';

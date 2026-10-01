@@ -400,7 +400,8 @@ describe('properties inspector tabs', () => {
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
     expect(host.querySelector('button[name="layout-margin"]')).toBeInstanceOf(HTMLButtonElement);
-    expect(host.textContent).toContain('Edit the master component for shared styles.');
+    expect(host.textContent).toContain('Inherited appearance from');
+    expect(host.querySelector('button[name="open-component"]')).toBeInstanceOf(HTMLButtonElement);
   });
 
   it('mounts field definitions on Content and legacy variant axes on Schema (Spec C)', async () => {

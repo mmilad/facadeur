@@ -97,6 +97,7 @@ export function VariantRulesEditor({
             <Field label="Variant">
               <Select
                 name={`variant-rule-${index}-variant`}
+                aria-label={`Rule ${index + 1} variant`}
                 value={rule.variant}
                 options={withMissingVariant(variantOptions, rule.variant)}
                 onCommit={(variant) => patchRule(index, { variant })}

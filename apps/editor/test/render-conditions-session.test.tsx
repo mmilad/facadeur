@@ -8,7 +8,7 @@ import { createEditorSession } from '../src/domain/session.js';
 import { App } from '../src/ui/shell/EditorShell.js';
 
 afterEach(cleanup);
-it('edits rendering in the active variant and exposes the referenced component variants', async () => {
+it('edits rendering and variant rules in the owning variant while showing nested selection read-only', async () => {
   const session = createEditorSession({
     design: createProjectTemplateDocument(),
     documents: [
@@ -18,6 +18,7 @@ it('edits rendering in the active variant and exposes the referenced component v
         name: 'Host',
         kind: 'component',
         fields: [{ name: 'enabled', type: 'boolean' }],
+        previewData: { fields: { enabled: true } },
         variants: [{ name: 'compact' }],
         root: {
           id: 'root',
@@ -50,13 +51,15 @@ it('edits rendering in the active variant and exposes the referenced component v
   act(() => session.undo());
   expect(session.getSnapshot().activeDocument.nodes.control?.displayOn).toBeUndefined();
 
-  await user.selectOptions(screen.getByRole('combobox', { name: 'Variant selection' }), 'checkbox');
+  expect(screen.queryByRole('combobox', { name: 'Variant selection' })).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Add variant rule' }));
+  await user.selectOptions(screen.getByRole('combobox', { name: 'Rule 1 variant' }), 'checkbox');
   const active = session.getSnapshot().activeDocument.nodes.control;
-  expect(active?.type === 'instance' && active.variants?.variant).toBe('checkbox');
-  await user.click(screen.getByRole('button', { name: 'Use variant rules' }));
-  const automatic = session.getSnapshot().activeDocument.nodes.control;
-  expect(automatic?.type === 'instance' && automatic.variants?.variant).toBeUndefined();
+  expect(active?.type === 'instance' && active.variantRules?.[0]?.variant).toBe('checkbox');
+  expect(screen.getByText('Nested variant · Checkbox · Rule')).toBeInTheDocument();
+  const base = session.getSnapshot().document.nodes.control;
+  expect(base?.type === 'instance' ? base.variantRules : undefined).toBeUndefined();
   act(() => session.undo());
   const restored = session.getSnapshot().activeDocument.nodes.control;
-  expect(restored?.type === 'instance' && restored.variants?.variant).toBe('checkbox');
+  expect(restored?.type === 'instance' && restored.variantRules?.[0]?.variant).toBe('default');
 });

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 import type { ShownDeclaration } from '../../../domain/style-edit.js';
+import type { LayoutCapabilities } from '../../../domain/layout-capabilities.js';
 import {
   BorderControl,
   BorderRadiusControl,
@@ -43,6 +44,7 @@ export function CssDeclarationsControl({
   onAddDeclaration,
   renderStructuredSection,
   renderAfterRow,
+  layoutCapabilities,
   emptyMessage = 'No declarations.',
 }: {
   entries: CssDeclarationEntry[];
@@ -56,10 +58,13 @@ export function CssDeclarationsControl({
   /** Let the structured layout editor host these CSS rows in its own section. */
   renderStructuredSection?: (group: StructuredDeclarationGroup, content: ReactNode) => ReactNode;
   renderAfterRow?: (property: string, overridden: boolean) => ReactNode;
+  /** Context used to keep existing but inactive layout declarations visible and disabled. */
+  layoutCapabilities?: LayoutCapabilities;
   emptyMessage?: ReactNode;
 }) {
   const [property, setProperty] = useState('');
   const [value, setValue] = useState('');
+  const [propertyError, setPropertyError] = useState<string | null>(null);
 
   const declarationMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -176,19 +181,14 @@ export function CssDeclarationsControl({
             </div>
           ) : null}
           {group.items.map((item) => (
-            <StyleDeclarationField
+            <DeclarationRow
               key={item.property}
-              property={item.property}
-              value={item.value}
-              placeholder={item.placeholder}
-              name={declarationName(item.property)}
-              colorTokens={catalogs.colorTokens}
-              shadowTokens={catalogs.shadowTokens}
-              typographyTokens={catalogs.typographyTokens}
-              dimensionTokens={catalogs.dimensionTokens}
-              typographyCatalogs={catalogs.typographyCatalogs}
-              onCommit={(next) => onCommitDeclaration(item.property, next, item.overridden)}
-              after={renderAfterRow?.(item.property, item.overridden)}
+              item={item}
+              declarationName={declarationName}
+              catalogs={catalogs}
+              layoutCapabilities={layoutCapabilities}
+              onCommitDeclaration={onCommitDeclaration}
+              renderAfterRow={renderAfterRow}
             />
           ))}
         </DeclarationGroupSection>
@@ -203,6 +203,7 @@ export function CssDeclarationsControl({
               onChange={setProperty}
             />
           </Field>
+          {propertyError ? <p className="meta">{propertyError}</p> : null}
           <Field label="Value">
             <Inline gap={8}>
               <TextInput
@@ -219,9 +220,17 @@ export function CssDeclarationsControl({
             onClick={() => {
               const name = property.trim();
               if (!name || !value.trim()) return;
+              const capability = layoutCapabilities?.property(name);
+              if (capability && !capability.supported) {
+                setPropertyError(
+                  capability.reason ?? 'This property is inactive in the current layout context.',
+                );
+                return;
+              }
               onAddDeclaration(name, value.trim());
               setProperty('');
               setValue('');
+              setPropertyError(null);
             }}
           >
             Add style
@@ -229,6 +238,52 @@ export function CssDeclarationsControl({
         </Stack>
       </Section>
     </Stack>
+  );
+}
+
+function DeclarationRow({
+  item,
+  declarationName,
+  catalogs,
+  layoutCapabilities,
+  onCommitDeclaration,
+  renderAfterRow,
+}: {
+  item: CssDeclarationEntry;
+  declarationName: (property: string) => string;
+  catalogs: StyleDeclarationCatalogs;
+  layoutCapabilities?: LayoutCapabilities;
+  onCommitDeclaration: (property: string, raw: string, overridden: boolean) => void;
+  renderAfterRow?: (property: string, overridden: boolean) => ReactNode;
+}) {
+  const capability = layoutCapabilities?.property(item.property);
+  const disabled = capability ? !capability.supported : false;
+  const reset = renderAfterRow?.(item.property, item.overridden);
+  const field = (
+    <StyleDeclarationField
+      property={item.property}
+      value={item.value}
+      placeholder={item.placeholder}
+      name={declarationName(item.property)}
+      colorTokens={catalogs.colorTokens}
+      shadowTokens={catalogs.shadowTokens}
+      typographyTokens={catalogs.typographyTokens}
+      dimensionTokens={catalogs.dimensionTokens}
+      typographyCatalogs={catalogs.typographyCatalogs}
+      onCommit={(next) => onCommitDeclaration(item.property, next, item.overridden)}
+      after={disabled ? undefined : reset}
+    />
+  );
+  if (!disabled) return field;
+  return (
+    <div className="layout-capability-row">
+      <fieldset disabled className="layout-capability-disabled">
+        {field}
+      </fieldset>
+      <p className="meta layout-capability-note">
+        {capability?.reason ?? 'This value is inactive in the current layout context.'} {reset}
+      </p>
+    </div>
   );
 }
 
@@ -249,7 +304,8 @@ function DeclarationGroupSection({
   children: ReactNode;
 }) {
   if (isStructuredGroup(group.id) && renderStructuredSection) {
-    return renderStructuredSection(group.id, children);
+    const content = group.items.length || group.conflictsStructured ? children : undefined;
+    return renderStructuredSection(group.id, content);
   }
   return (
     <Section

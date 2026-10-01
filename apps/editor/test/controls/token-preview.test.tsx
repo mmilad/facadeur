@@ -52,6 +52,20 @@ describe('token previews', () => {
     expect(host.querySelectorAll('output')[0]?.textContent).toBe('#ff0000');
     expect(host.querySelectorAll('output')[1]?.textContent).toBe('unresolved');
     expect(document.tokenInterface?.sets?.['color.surface']).toBe('{color.base}');
+    act(() =>
+      root.render(
+        <TokenPreviewProvider
+          design={design}
+          document={document}
+          breakpointId={null}
+          declarations={{ '--color-base': '#00ff00' }}
+        >
+          <Preview reference="{color.surface}" />
+        </TokenPreviewProvider>,
+      ),
+    );
+    expect(host.querySelector('output')?.textContent).toBe('#00ff00');
+    expect(document.tokenInterface?.sets?.['color.surface']).toBe('{color.base}');
     act(() => root.unmount());
   });
 });

@@ -232,7 +232,30 @@ function push(
 }
 
 function selectorFor(document: DocumentFile, node: NestedNode, state: WalkState): string {
-  if (state.address === 'canvas') return `[data-id="${cssString(state.path ?? node.id)}"]`;
+  // A local instance rule must address the root element itself. Its component
+  // marker alone is shared by the master stylesheet, so include the rendered
+  // path and repeated marker attributes to win the cascade independent of
+  // document insertion order.
+  const scopedInstance =
+    node.type === 'instance' && !state.isRoot && document.styles?.children?.[node.id] !== undefined;
+  if (state.address === 'canvas') {
+    const selector = `[data-id="${cssString(state.path ?? node.id)}"]`;
+    return scopedInstance
+      ? `${selector}[data-node="${cssString(node.id)}"][data-component="${cssString(node.component)}"][data-component="${cssString(node.component)}"]`
+      : selector;
+  }
+  if (scopedInstance) {
+    const path = state.path?.split('/').slice(1) ?? [node.id];
+    const target = path
+      .map((id, index) => {
+        const nodeSelector = `[data-node="${cssString(id)}"]`;
+        if (index !== path.length - 1) return nodeSelector;
+        return `${nodeSelector}[data-component="${cssString(node.component)}"][data-component="${cssString(node.component)}"]`;
+      })
+      .join(' > ');
+    const selector = `[data-component="${cssString(document.id)}"] > ${target}`;
+    return state.variantScope ? withVariant(selector, 'variant', state.variantScope) : selector;
+  }
   const selector = state.isRoot
     ? `[data-component="${cssString(document.id)}"]`
     : `[data-component="${cssString(document.id)}"] [data-node="${cssString(node.id)}"]`;

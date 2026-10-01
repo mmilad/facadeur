@@ -15,6 +15,7 @@ export function InstanceOverridesControl({
   dataFields = [],
   variantOverrides,
   onOpenMaster,
+  showMasterAction = true,
   onSetField,
   onSetFieldBindings = () => undefined,
   onSetVariant,
@@ -29,6 +30,7 @@ export function InstanceOverridesControl({
   dataFields?: FieldDefinition[];
   variantOverrides: Record<string, string> | undefined;
   onOpenMaster: () => void;
+  showMasterAction?: boolean;
   onSetField: (field: string, value: FieldValue | null) => void;
   onSetFieldBindings?: (value: Record<string, string> | null) => void;
   onSetVariant: (axis: string, value: string | null) => void;
@@ -39,15 +41,17 @@ export function InstanceOverridesControl({
       <div className="instance-overrides-card">
         <span className="instance-overrides-kicker">Instance overrides</span>
         <strong>Local to this instance</strong>
-        <p>Fields and variants here affect only this instance.</p>
-        <button
-          type="button"
-          className="text-button instance-master-button"
-          name="open-component"
-          onClick={onOpenMaster}
-        >
-          Edit master · {masterName}
-        </button>
+        <p>Fields and variant rules here affect only this instance.</p>
+        {showMasterAction ? (
+          <button
+            type="button"
+            className="text-button instance-master-button"
+            name="open-component"
+            onClick={onOpenMaster}
+          >
+            Edit master · {masterName}
+          </button>
+        ) : null}
       </div>
       {fields.length ? <h3>Fields</h3> : null}
       {fields.map((field) => (

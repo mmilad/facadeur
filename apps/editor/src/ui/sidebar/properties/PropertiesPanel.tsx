@@ -8,6 +8,7 @@ import { createNamedVariant, renameNamedVariant } from '../../../domain/variant-
 import { VariantActionButton } from '../../controls/variants/VariantActionButton.js';
 import { AddPopover, Field, TextInput } from '../../form/index.js';
 import { ContentPanel } from './content/ContentPanel.js';
+import { InstanceContext } from './content/InstanceContext.js';
 import { StyleInspector } from './style/StyleInspector.js';
 
 type PropertyPrimaryTab = 'content' | 'style';
@@ -70,16 +71,20 @@ export function PropertiesPanel({
 
   return (
     <div className="properties">
-      <div className="inspector-context" data-testid="inspector-context">
-        <span className="inspector-context-kicker">{contextKicker}</span>
-        <strong className="inspector-context-title">{contextTitle}</strong>
-        <span className="inspector-context-meta">{contextMeta}</span>
-        {contextPath.length > 1 ? (
-          <span className="inspector-context-path" title={contextPath.join(' / ')}>
-            {contextPath.join(' / ')}
-          </span>
-        ) : null}
-      </div>
+      {node?.type === 'instance' ? (
+        <InstanceContext session={session} snap={snap} node={node} />
+      ) : (
+        <div className="inspector-context" data-testid="inspector-context">
+          <span className="inspector-context-kicker">{contextKicker}</span>
+          <strong className="inspector-context-title">{contextTitle}</strong>
+          <span className="inspector-context-meta">{contextMeta}</span>
+          {contextPath.length > 1 ? (
+            <span className="inspector-context-path" title={contextPath.join(' / ')}>
+              {contextPath.join(' / ')}
+            </span>
+          ) : null}
+        </div>
+      )}
       <VariantTabs session={session} snap={snap} />
       <div className="tabs property-tabs" role="tablist" aria-label="Properties sections">
         {PROPERTY_PRIMARY_TABS.map(([id, label]) => (

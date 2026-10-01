@@ -1,0 +1,34 @@
+.instance-context {
+  gap: 5px;
+}
+
+.instance-context-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.instance-context-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 0 7px;
+  border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.instance-context-resolution {
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.instance-context-master-button {
+  align-self: flex-start;
+  margin-top: 3px;
+}

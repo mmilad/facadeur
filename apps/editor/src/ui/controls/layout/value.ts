@@ -1,6 +1,7 @@
 import type { AxisSize, Layout, LayoutOverride, Spacing } from '@facadeur/core';
 import { layoutLayer } from '../../../domain/editing.js';
 import type { LayoutPatch } from '../../../domain/editing.js';
+import type { LayoutCapabilities } from '../../../domain/layout-capabilities.js';
 
 export type LayoutControlValue = {
   isFrame: boolean;
@@ -16,6 +17,7 @@ export type LayoutControlValue = {
   y?: number;
   width?: AxisSize;
   height?: AxisSize;
+  capabilities?: LayoutCapabilities;
 };
 
 export function shownLayoutField<Key extends keyof LayoutOverride>(

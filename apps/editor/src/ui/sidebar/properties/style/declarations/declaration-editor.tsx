@@ -1,4 +1,6 @@
 import { useMemo, type ReactNode } from 'react';
+import { findParent, type FlatNode, type StyleBlock } from '@facadeur/core';
+import { layoutCapabilities } from '../../../../../domain/layout-capabilities.js';
 import {
   colorTokenRefs,
   dimensionTokenRefs,
@@ -31,11 +33,16 @@ export function DeclarationEditor({
   snap,
   target,
   renderStructuredSection,
+  inheritedDeclarations,
+  instanceRoot,
 }: {
   session: EditorSession;
   snap: EditorSnapshot;
   target: StyleEditTarget;
   renderStructuredSection?: (group: StructuredDeclarationGroup, content: ReactNode) => ReactNode;
+  /** Effective referenced master root styles; writes still belong to this document. */
+  inheritedDeclarations?: Record<string, string>;
+  instanceRoot?: FlatNode;
 }) {
   const ctx = viewportEditContext({
     breakpoints: editorBreakpoints(snap.document, snap.design),
@@ -43,6 +50,7 @@ export function DeclarationEditor({
     editTarget: snap.editTarget,
   });
   const namedVariant = Boolean(target.variantName);
+  const instance = snap.activeDocument.nodes[target.nodeId]?.type === 'instance';
   // Named preset styles have the same breakpoint layers as the base style
   // block. Axis layers are the legacy variant form and intentionally stay
   // base-only because their schema has no breakpoint nesting.
@@ -78,24 +86,67 @@ export function DeclarationEditor({
         ctx.breakpoints,
       )
     : canonicalEntries;
-  const baseEntries = namedVariant ? effectiveEntries : canonicalEntries;
+  const baseEntries = mergeStyleValues(
+    inheritedDeclarations ?? {},
+    namedVariant ? effectiveEntries : canonicalEntries,
+  );
+  const styleDeclarations: Record<string, Record<string, string>> = {
+    [target.nodeId]: baseEntries,
+  };
+  const parent = findParent(snap.activeDocument, target.nodeId);
+  if (parent) {
+    const block = structuredClone(snap.activeDocument.styles ?? {});
+    const owner =
+      parent.id === snap.activeDocument.rootId
+        ? block
+        : ((block.children ??= {})[parent.id] ??= {});
+    owner.declarations = { ...owner.declarations, ...parent.style };
+    styleDeclarations[parent.id] = effectiveStyleDeclarations(
+      block,
+      snap.activeDocument.rootId,
+      {
+        nodeId: parent.id,
+        ...(displayBreakpointId ? { breakpointId: displayBreakpointId } : {}),
+      },
+      ctx.breakpoints,
+    );
+  }
+  const capabilities = layoutCapabilities({
+    document: snap.activeDocument,
+    nodeId: target.nodeId,
+    instanceRoot,
+    breakpointId: displayBreakpointId,
+    variantName: snap.activeVariantName,
+    breakpoints: ctx.breakpoints,
+    styleDeclarations,
+  });
   const ownEntries = namedVariant
-    ? readStyleDeclarations(variantBlock, snap.document.rootId, {
-        ...baseTarget,
-      })
+    ? (instance ? readOwnInstanceDeclarations : readStyleDeclarations)(
+        variantBlock,
+        snap.document.rootId,
+        {
+          ...baseTarget,
+        },
+      )
     : {};
   const overrideEntries = namedVariant
     ? ownEntries
-    : cueViewport
-      ? readStyleDeclarations(snap.document.styles, snap.document.rootId, {
-          ...target,
-          breakpointId: cueViewport.id,
-        })
-      : {};
+    : instance && !writingBreakpointId
+      ? readOwnInstanceDeclarations(snap.document.styles, snap.document.rootId, target)
+      : cueViewport
+        ? (instance ? readOwnInstanceDeclarations : readStyleDeclarations)(
+            snap.document.styles,
+            snap.document.rootId,
+            {
+              ...target,
+              breakpointId: cueViewport.id,
+            },
+          )
+        : {};
   const listed = shownDeclarations(
     baseEntries,
     overrideEntries,
-    namedVariant || displayBreakpointId !== undefined,
+    instance || namedVariant || displayBreakpointId !== undefined,
     !namedVariant,
   );
   const writeTarget: StyleEditTarget = writingBreakpointId
@@ -123,6 +174,7 @@ export function DeclarationEditor({
 
   return (
     <CssDeclarationsControl
+      layoutCapabilities={capabilities}
       catalogs={catalogs}
       entries={listed.map((item) => ({
         ...item,
@@ -185,6 +237,22 @@ export function DeclarationEditor({
       emptyMessage={emptyMessage(target)}
       renderAfterRow={(property, overridden) => {
         if (!overridden) return null;
+        if (instance && !namedVariant && !writingBreakpointId) {
+          return (
+            <p className="override-cue">
+              <span>Instance override</span>
+              <button
+                type="button"
+                className="text-button"
+                onClick={() =>
+                  commitDeclaration(session, session.getSnapshot(), target, property, null)
+                }
+              >
+                Reset
+              </button>
+            </p>
+          );
+        }
         if (namedVariant && !writingBreakpointId) {
           return (
             <VariantResetCue
@@ -207,6 +275,30 @@ export function DeclarationEditor({
       }}
     />
   );
+}
+
+function mergeStyleValues(
+  base: Record<string, string>,
+  own: Record<string, string>,
+): Record<string, string> {
+  const result = { ...base };
+  for (const [key, value] of Object.entries(own)) {
+    for (const existing of Object.keys(result)) {
+      if (canonicalStyleProperty(existing) === canonicalStyleProperty(key)) delete result[existing];
+    }
+    result[key] = value;
+  }
+  return result;
+}
+
+function readOwnInstanceDeclarations(
+  block: StyleBlock | undefined,
+  rootId: string,
+  target: StyleEditTarget,
+): Record<string, string> {
+  const owner = target.nodeId === rootId ? block : block?.children?.[target.nodeId];
+  const layer = target.breakpointId ? owner?.breakpoints?.[target.breakpointId] : owner;
+  return target.state ? { ...layer?.states?.[target.state] } : { ...layer?.declarations };
 }
 
 function emptyMessage(target: StyleEditTarget): string {

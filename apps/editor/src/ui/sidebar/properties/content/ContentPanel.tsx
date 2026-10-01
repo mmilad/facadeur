@@ -163,27 +163,20 @@ function InstanceFields({
     <InstanceOverridesControl
       masterName={target.name}
       fields={snap.componentFields}
-      variants={[
-        ...target.variants,
-        ...(snap.componentVariants.length > 1
-          ? [{ name: 'variant', values: snap.componentVariants.map((variant) => variant.name) }]
-          : []),
-      ]}
-      variantLabels={target.variantLabels}
+      variants={[]}
       fieldOverrides={node.fields}
       fieldBindings={node.fieldBindings}
       dataFields={dataFieldsForNode(snap.document, node.id)}
       variantOverrides={node.variants}
       onOpenMaster={() => session.openAsset(node.component, 'root')}
+      showMasterAction={false}
       onSetField={(field, value) =>
         session.execute({ type: 'setField', nodeId: node.id, field, value })
       }
       onSetFieldBindings={(value) =>
         session.execute({ type: 'setProp', nodeId: node.id, prop: 'fieldBindings', value })
       }
-      onSetVariant={(axis, value) =>
-        session.execute({ type: 'setVariant', nodeId: node.id, axis, value })
-      }
+      onSetVariant={() => undefined}
       onInvalid={(message) => session.setNotice(message, 'error')}
     />
   );

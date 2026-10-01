@@ -12,11 +12,14 @@ export function TokenPreviewProvider({
   document,
   breakpointId,
   children,
+  declarations,
 }: {
   design: FlatDocument;
   document: FlatDocument;
   breakpointId: string | null;
   children: ReactNode;
+  /** Effective custom properties at the selected element, including local instance rules. */
+  declarations?: Readonly<Record<string, string>>;
 }) {
   const resolve = useMemo(() => {
     try {
@@ -40,6 +43,13 @@ export function TokenPreviewProvider({
       for (const [path, value] of Object.entries(document.tokenInterface?.sets ?? {})) {
         properties.set(
           tokenCustomProperty(path),
+          value.replace(/\{([^{}]+)\}/g, (_, ref: string) => `var(${tokenCustomProperty(ref)})`),
+        );
+      }
+      for (const [name, value] of Object.entries(declarations ?? {})) {
+        if (!name.startsWith('--')) continue;
+        properties.set(
+          name,
           value.replace(/\{([^{}]+)\}/g, (_, ref: string) => `var(${tokenCustomProperty(ref)})`),
         );
       }
@@ -77,6 +87,7 @@ export function TokenPreviewProvider({
     design.settings.breakpoints,
     document.tokenInterface,
     breakpointId,
+    declarations,
   ]);
   return <TokenPreviewContext.Provider value={resolve}>{children}</TokenPreviewContext.Provider>;
 }

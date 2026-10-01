@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "title": "Facadeur document",
-  "description": "Nested facadeur document. Nodes are frame, text, image, or instance. Tokens are a DTCG tree. Fonts list families and their sources. A style block paints the component. Instances override fields and variants only.",
+  "description": "Nested facadeur document. Nodes are frame, text, image, or instance. Tokens are a DTCG tree. Fonts list families and their sources. A style block paints the component. Instances override fields and variants, and their containing document may add sparse root appearance rules.",
   "$id": "https://github.com/mmilad/facadeur/schema/document.schema.json",
   "type": "object",
   "required": ["version", "id", "name", "kind", "root"],
