@@ -1,5 +1,5 @@
 import { createId } from '@facadeur/core';
-import { useState, type DragEvent } from 'react';
+import { useEffect, useState, type DragEvent } from 'react';
 import {
   layerDropTarget,
   layerInsertAt,
@@ -12,21 +12,30 @@ import { ViewportLayersList } from './ViewportPanel.js';
 
 export function LayersPanel({ session, snap }: { session: EditorSession; snap: EditorSnapshot }) {
   const [over, setOver] = useState<{ id: string; zone: DropZone } | null>(null);
+  const [viewportsOpen, setViewportsOpen] = useState(false);
+  useEffect(() => {
+    if (snap.selectedViewportId) setViewportsOpen(true);
+  }, [snap.selectedViewportId]);
   return (
     <section className="side-block side-block-grow" aria-label="Layers">
       <h2>Layers</h2>
-      <ViewportLayersList session={session} snap={snap} />
+      <strong className="layers-document-title">{snap.document.name}</strong>
+      <p className="side-note">Double-click an instance to edit its master.</p>
       <div className="side-scroll">
         {snap.layers ? (
           <LayerRows
+            key={snap.openId}
             item={snap.layers}
             depth={0}
             selectedId={snap.selectedNodeId}
             over={over}
             onSelect={(id) => session.selectNode(id)}
             onOpenInstance={(nodeId) => {
-              const node = snap.document.nodes[nodeId];
-              if (node?.type === 'instance') session.openAsset(node.component, 'root');
+              const node = session.getSnapshot().activeDocument.nodes[nodeId];
+              if (node?.type === 'instance') {
+                session.selectNode(nodeId);
+                session.drillToMaster(node.component);
+              }
             }}
             onDragStart={(id, event) => {
               event.dataTransfer.setData('text/plain', id);
@@ -108,6 +117,14 @@ export function LayersPanel({ session, snap }: { session: EditorSession; snap: E
           <p className="inspector-empty">This document has no nodes.</p>
         )}
       </div>
+      <details
+        className="layers-viewports fold"
+        open={viewportsOpen}
+        onToggle={(event) => setViewportsOpen(event.currentTarget.open)}
+      >
+        <summary>Viewports</summary>
+        <ViewportLayersList session={session} snap={snap} showHeading={false} />
+      </details>
     </section>
   );
 }
@@ -165,6 +182,10 @@ function LayerRows({
   onDragOver: (id: string, type: string, event: DragEvent) => void;
   onDrop: (id: string, event: DragEvent) => void;
 }) {
+  const [expanded, setExpanded] = useState(true);
+  useEffect(() => {
+    if (item.children.some((child) => containsLayer(child, selectedId))) setExpanded(true);
+  }, [item, selectedId]);
   const mark = over?.id === item.id ? over.zone : null;
   const className = [
     'layer',
@@ -177,36 +198,56 @@ function LayerRows({
     .join(' ');
   return (
     <>
-      <button
-        type="button"
-        className={className}
-        style={{ paddingLeft: 8 + depth * 14 }}
-        draggable={depth > 0}
-        onDragStart={(event) => onDragStart(item.id, event)}
-        onDragEnd={onDragEnd}
-        onDragOver={(event) => onDragOver(item.id, item.type, event)}
-        onDrop={(event) => onDrop(item.id, event)}
-        onClick={() => onSelect(item.id)}
-        onDoubleClick={() => onOpenInstance(item.id)}
-      >
-        <span className="layer-type">{item.type}</span>
-        <span className="layer-name">{item.name}</span>
-      </button>
-      {item.children.map((child) => (
-        <LayerRows
-          key={child.id}
-          item={child}
-          depth={depth + 1}
-          selectedId={selectedId}
-          over={over}
-          onSelect={onSelect}
-          onOpenInstance={onOpenInstance}
-          onDragStart={onDragStart}
+      <div className="layer-row" style={{ paddingLeft: depth * 14 }}>
+        {item.children.length ? (
+          <button
+            type="button"
+            className="layer-toggle"
+            aria-label={`${expanded ? 'Collapse' : 'Expand'} layers in ${item.name}`}
+            aria-expanded={expanded}
+            onClick={() => setExpanded((open) => !open)}
+          >
+            {expanded ? '▾' : '▸'}
+          </button>
+        ) : (
+          <span className="layer-toggle-spacer" />
+        )}
+        <button
+          type="button"
+          className={className}
+          title={item.type === 'instance' ? 'Double-click to edit master' : undefined}
+          draggable={depth > 0}
+          onDragStart={(event) => onDragStart(item.id, event)}
           onDragEnd={onDragEnd}
-          onDragOver={onDragOver}
-          onDrop={onDrop}
-        />
-      ))}
+          onDragOver={(event) => onDragOver(item.id, item.type, event)}
+          onDrop={(event) => onDrop(item.id, event)}
+          onClick={() => onSelect(item.id)}
+          onDoubleClick={() => onOpenInstance(item.id)}
+        >
+          <span className="layer-type">{item.type}</span>
+          <span className="layer-name">{item.name}</span>
+        </button>
+      </div>
+      {expanded &&
+        item.children.map((child) => (
+          <LayerRows
+            key={child.id}
+            item={child}
+            depth={depth + 1}
+            selectedId={selectedId}
+            over={over}
+            onSelect={onSelect}
+            onOpenInstance={onOpenInstance}
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
+            onDragOver={onDragOver}
+            onDrop={onDrop}
+          />
+        ))}
     </>
   );
+}
+
+function containsLayer(item: NonNullable<EditorSnapshot['layers']>, id: string | null): boolean {
+  return item.id === id || item.children.some((child) => containsLayer(child, id));
 }

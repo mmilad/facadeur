@@ -44,6 +44,7 @@ export function ProjectTree({
   const [expandedVariants, setExpandedVariants] = useState<Record<string, boolean>>({});
   const [contextAssetId, setContextAssetId] = useState<string | null>(null);
   const activeRef = useRef<HTMLButtonElement | null>(null);
+  const contextMenuRef = useRef<HTMLDivElement | null>(null);
   const needle = query.trim().toLowerCase();
   const openKind = snap.catalog.find((asset) => asset.id === snap.openId)?.kind;
 
@@ -65,10 +66,37 @@ export function ProjectTree({
   useEffect(() => {
     if (!contextAssetId) return;
     const close = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setContextAssetId(null);
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      event.stopPropagation();
+      setContextAssetId(null);
     };
-    window.addEventListener('keydown', close);
-    return () => window.removeEventListener('keydown', close);
+    window.addEventListener('keydown', close, true);
+    return () => window.removeEventListener('keydown', close, true);
+  }, [contextAssetId]);
+
+  useEffect(() => {
+    if (contextAssetId && !snap.catalog.some((asset) => asset.id === contextAssetId)) {
+      setContextAssetId(null);
+    }
+  }, [contextAssetId, snap.catalog]);
+
+  useEffect(() => {
+    setContextAssetId((current) => (current && current !== snap.openId ? null : current));
+  }, [snap.openId]);
+
+  useEffect(() => {
+    if (!contextAssetId) return;
+    const close = (event: PointerEvent) => {
+      if (!contextMenuRef.current?.contains(event.target as Node)) setContextAssetId(null);
+    };
+    const closeOnBlur = () => setContextAssetId(null);
+    document.addEventListener('pointerdown', close, true);
+    window.addEventListener('blur', closeOnBlur);
+    return () => {
+      document.removeEventListener('pointerdown', close, true);
+      window.removeEventListener('blur', closeOnBlur);
+    };
   }, [contextAssetId]);
 
   const designLabelHit = needle.length > 0 && 'design'.includes(needle);
@@ -213,6 +241,7 @@ export function ProjectTree({
                   setExpandedVariants((prev) => ({ ...prev, [assetId]: prev[assetId] !== true }))
                 }
                 contextAssetId={contextAssetId}
+                contextMenuRef={contextMenuRef}
                 onContextAsset={(assetId) => setContextAssetId(assetId)}
                 onCreateVariant={createVariant}
                 onRenameVariant={renameVariant}
@@ -240,6 +269,7 @@ export function ProjectTree({
                         }))
                       }
                       contextAssetId={contextAssetId}
+                      contextMenuRef={contextMenuRef}
                       onContextAsset={(assetId) => setContextAssetId(assetId)}
                       onCreateVariant={createVariant}
                       onRenameVariant={renameVariant}
@@ -265,6 +295,7 @@ function AssetRows({
   expandedVariants,
   onToggleVariants,
   contextAssetId,
+  contextMenuRef,
   onContextAsset,
   onCreateVariant,
   onRenameVariant,
@@ -277,6 +308,7 @@ function AssetRows({
   expandedVariants: Readonly<Record<string, boolean>>;
   onToggleVariants: (assetId: string) => void;
   contextAssetId: string | null;
+  contextMenuRef: MutableRefObject<HTMLDivElement | null>;
   onContextAsset: (assetId: string) => void;
   onCreateVariant: (assetId: string) => void;
   onRenameVariant: (assetId: string, name: string, label: string) => void;
@@ -296,10 +328,18 @@ function AssetRows({
             className={open ? 'asset is-active' : 'asset'}
             data-asset-id={asset.id}
             aria-current={open ? 'true' : undefined}
+            aria-haspopup="menu"
+            aria-expanded={contextAssetId === asset.id}
             draggable={canPlace(snap, asset.kind, asset.id)}
             onDragStart={(event) => startAssetDrag(session, event, asset.id)}
             onDragEnd={() => session.endDrag()}
             onClick={() => onOpenAsset(asset.id)}
+            onKeyDown={(event) => {
+              if ((event.shiftKey && event.key === 'F10') || event.key === 'ContextMenu') {
+                event.preventDefault();
+                onContextAsset(asset.id);
+              }
+            }}
             onContextMenu={(event) => {
               event.preventDefault();
               onContextAsset(asset.id);
@@ -322,7 +362,12 @@ function AssetRows({
           ) : null}
         </div>
         {contextAssetId === asset.id ? (
-          <div className="asset-context-menu" role="menu" aria-label={`${asset.name} actions`}>
+          <div
+            ref={contextMenuRef}
+            className="asset-context-menu"
+            role="menu"
+            aria-label={`${asset.name} actions`}
+          >
             {canHaveVariants ? (
               <button type="button" role="menuitem" onClick={() => onCreateVariant(asset.id)}>
                 Create variant

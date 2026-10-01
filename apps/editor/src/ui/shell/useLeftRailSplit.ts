@@ -3,8 +3,8 @@ import { useCallback, useEffect, useState } from 'react';
 const RATIO_KEY = 'facadeur.leftRail.projectRatio';
 const COLLAPSED_KEY = 'facadeur.leftRail.projectCollapsed';
 
-/** Default favors Layers / Viewports staying visible on short viewports. */
-export const LEFT_RAIL_PROJECT_RATIO_DEFAULT = 0.34;
+/** Keep Layers prominent while giving Project enough room for its tree. */
+export const LEFT_RAIL_PROJECT_RATIO_DEFAULT = 0.4;
 const MIN_RATIO = 0.12;
 const MAX_RATIO = 0.72;
 
@@ -12,6 +12,23 @@ export const LEFT_RAIL_PROJECT_COLLAPSED_HEIGHT = 36;
 export const LEFT_RAIL_MIN_PROJECT_PX = 72;
 export const LEFT_RAIL_MIN_LAYERS_PX = 96;
 export const LEFT_RAIL_SPLIT_HANDLE_PX = 6;
+
+/** Convert the split pointer position into the persisted project share. */
+export function projectRatioFromPointer(
+  clientY: number,
+  containerTop: number,
+  containerBottom: number,
+): number | undefined {
+  const available = containerBottom - containerTop - LEFT_RAIL_SPLIT_HANDLE_PX;
+  if (available <= 0) return undefined;
+
+  const minimumsFit = available >= LEFT_RAIL_MIN_PROJECT_PX + LEFT_RAIL_MIN_LAYERS_PX;
+  const minProject = minimumsFit ? LEFT_RAIL_MIN_PROJECT_PX : available / 2;
+  const minLayers = minimumsFit ? LEFT_RAIL_MIN_LAYERS_PX : available / 2;
+  const projectPx = containerBottom - clientY;
+  const clamped = Math.min(available - minLayers, Math.max(minProject, projectPx));
+  return Math.min(MAX_RATIO, Math.max(MIN_RATIO, clamped / available));
+}
 
 function readStoredRatio(): number {
   if (typeof window === 'undefined') return LEFT_RAIL_PROJECT_RATIO_DEFAULT;

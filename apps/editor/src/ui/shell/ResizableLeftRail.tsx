@@ -1,54 +1,35 @@
 import { useCallback, useRef, type ReactNode } from 'react';
 import {
-  LEFT_RAIL_MIN_LAYERS_PX,
-  LEFT_RAIL_MIN_PROJECT_PX,
   LEFT_RAIL_PROJECT_COLLAPSED_HEIGHT,
   LEFT_RAIL_SPLIT_HANDLE_PX,
+  projectRatioFromPointer,
   useLeftRailSplit,
 } from './useLeftRailSplit.js';
 
 export function ResizableLeftRail({ project, layers }: { project: ReactNode; layers: ReactNode }) {
-  const {
-    projectRatio,
-    persistRatio,
-    projectCollapsed,
-    collapseProject,
-    expandProject,
-    minRatio,
-    maxRatio,
-  } = useLeftRailSplit();
+  const { projectRatio, persistRatio, projectCollapsed, collapseProject, expandProject } =
+    useLeftRailSplit();
   const containerRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
-  const startY = useRef(0);
-  const startRatio = useRef(projectRatio);
 
   const onPointerDown = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       if (event.button !== 0 || projectCollapsed) return;
       dragging.current = true;
-      startY.current = event.clientY;
-      startRatio.current = projectRatio;
       event.currentTarget.setPointerCapture(event.pointerId);
       document.body.classList.add('is-resizing-left-rail');
     },
-    [projectCollapsed, projectRatio],
+    [projectCollapsed],
   );
 
   const onPointerMove = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       if (!dragging.current || !containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
-      const available = rect.height - LEFT_RAIL_SPLIT_HANDLE_PX;
-      if (available <= 0) return;
-      const projectPx = event.clientY - rect.top;
-      const clamped = Math.min(
-        available - LEFT_RAIL_MIN_LAYERS_PX,
-        Math.max(LEFT_RAIL_MIN_PROJECT_PX, projectPx),
-      );
-      const ratio = clamped / available;
-      persistRatio(Math.min(maxRatio, Math.max(minRatio, ratio)));
+      const ratio = projectRatioFromPointer(event.clientY, rect.top, rect.bottom);
+      if (ratio !== undefined) persistRatio(ratio);
     },
-    [maxRatio, minRatio, persistRatio],
+    [persistRatio],
   );
 
   const onPointerUp = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
@@ -59,8 +40,8 @@ export function ResizableLeftRail({ project, layers }: { project: ReactNode; lay
   }, []);
 
   const gridTemplateRows = projectCollapsed
-    ? `${LEFT_RAIL_PROJECT_COLLAPSED_HEIGHT}px 1fr`
-    : `${projectRatio}fr ${LEFT_RAIL_SPLIT_HANDLE_PX}px ${1 - projectRatio}fr`;
+    ? `1fr ${LEFT_RAIL_PROJECT_COLLAPSED_HEIGHT}px`
+    : `${1 - projectRatio}fr ${LEFT_RAIL_SPLIT_HANDLE_PX}px ${projectRatio}fr`;
 
   return (
     <div
@@ -69,6 +50,19 @@ export function ResizableLeftRail({ project, layers }: { project: ReactNode; lay
       style={{ gridTemplateRows }}
       data-project-collapsed={projectCollapsed ? 'true' : 'false'}
     >
+      <div className="left-rail-pane left-rail-pane-layers">{layers}</div>
+      {!projectCollapsed ? (
+        <div
+          className="left-rail-split-handle"
+          role="separator"
+          aria-orientation="horizontal"
+          aria-label="Resize layers and project"
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+        />
+      ) : null}
       <div className="left-rail-pane left-rail-pane-project">
         {projectCollapsed ? (
           <button
@@ -93,25 +87,12 @@ export function ResizableLeftRail({ project, layers }: { project: ReactNode; lay
               title="Collapse project"
               onClick={collapseProject}
             >
-              <span aria-hidden="true">▴</span>
+              <span aria-hidden="true">▾</span>
             </button>
             {project}
           </>
         )}
       </div>
-      {!projectCollapsed ? (
-        <div
-          className="left-rail-split-handle"
-          role="separator"
-          aria-orientation="horizontal"
-          aria-label="Resize project and layers"
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerUp}
-        />
-      ) : null}
-      <div className="left-rail-pane left-rail-pane-layers">{layers}</div>
     </div>
   );
 }

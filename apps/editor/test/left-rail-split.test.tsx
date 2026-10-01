@@ -19,6 +19,7 @@ import { App } from '../src/ui/shell/EditorShell.js';
 import {
   LEFT_RAIL_PROJECT_COLLAPSED_HEIGHT,
   LEFT_RAIL_PROJECT_RATIO_DEFAULT,
+  projectRatioFromPointer,
 } from '../src/ui/shell/useLeftRailSplit.js';
 
 const documents = validateCatalog([
@@ -70,6 +71,9 @@ describe('left rail split', () => {
     const handle = tree.querySelector('.left-rail-split-handle');
     expect(handle).toBeInstanceOf(HTMLElement);
     expect(handle?.getAttribute('aria-orientation')).toBe('horizontal');
+    const panes = tree.querySelectorAll('.left-rail-pane');
+    expect(panes[0]?.classList.contains('left-rail-pane-layers')).toBe(true);
+    expect(panes[1]?.classList.contains('left-rail-pane-project')).toBe(true);
   });
 
   it('persists split ratio and collapse state in localStorage', async () => {
@@ -81,6 +85,11 @@ describe('left rail split', () => {
     });
     expect(window.localStorage.getItem('facadeur.leftRail.projectCollapsed')).toBe('1');
     expect(tree.querySelector('.left-rail-project-strip')).toBeInstanceOf(HTMLButtonElement);
+    expect(
+      tree
+        .querySelector('.left-rail-pane-project')
+        ?.lastElementChild?.classList.contains('left-rail-project-strip'),
+    ).toBe(true);
     expect(tree.querySelector('.left-rail-split-handle')).toBeNull();
 
     const expand = tree.querySelector('.left-rail-project-strip');
@@ -97,7 +106,7 @@ describe('left rail split', () => {
     const tree = await mount();
     const split = tree.querySelector('.left-rail-split') as HTMLElement;
     expect(split?.dataset.projectCollapsed).toBe('true');
-    expect(split.style.gridTemplateRows).toBe(`${LEFT_RAIL_PROJECT_COLLAPSED_HEIGHT}px 1fr`);
+    expect(split.style.gridTemplateRows).toBe(`1fr ${LEFT_RAIL_PROJECT_COLLAPSED_HEIGHT}px`);
 
     window.localStorage.setItem('facadeur.leftRail.projectCollapsed', '0');
     await act(async () => {
@@ -115,7 +124,14 @@ describe('left rail split', () => {
     await mount();
     expect(window.localStorage.getItem('facadeur.leftRail.projectRatio')).toBeNull();
     const split = document.querySelector('.left-rail-split') as HTMLElement;
-    const expected = `${LEFT_RAIL_PROJECT_RATIO_DEFAULT}fr 6px ${1 - LEFT_RAIL_PROJECT_RATIO_DEFAULT}fr`;
+    const expected = `${1 - LEFT_RAIL_PROJECT_RATIO_DEFAULT}fr 6px ${LEFT_RAIL_PROJECT_RATIO_DEFAULT}fr`;
     expect(split.style.gridTemplateRows).toBe(expected);
+  });
+
+  it('maps the drag boundary to the bottom project share and clamps short rails', () => {
+    expect(projectRatioFromPointer(700, 100, 1100)).toBeCloseTo(0.4024, 3);
+    expect(projectRatioFromPointer(300, 100, 1100)).toBe(0.72);
+    expect(projectRatioFromPointer(150, 100, 150)).toBe(0.5);
+    expect(projectRatioFromPointer(100, 100, 105)).toBeUndefined();
   });
 });

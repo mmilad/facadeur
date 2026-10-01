@@ -7,14 +7,16 @@ import { TextControl } from '../../controls/fields/index.js';
 export function ViewportLayersList({
   session,
   snap,
+  showHeading = true,
 }: {
   session: EditorSession;
   snap: EditorSnapshot;
+  showHeading?: boolean;
 }) {
   const breakpoints = editorBreakpoints(snap.document, snap.design);
   return (
     <div className="viewport-layers">
-      <h3 className="side-subhead">Viewports</h3>
+      {showHeading ? <h3 className="side-subhead">Viewports</h3> : null}
       <div className="viewport-layer-list">
         {breakpoints.map((breakpoint) => {
           const active = snap.selectedViewportId === breakpoint.id;
