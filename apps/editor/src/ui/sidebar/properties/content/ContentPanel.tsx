@@ -1,4 +1,4 @@
-import type { FlatNode } from '@facadeur/core';
+import type { Binding, FlatNode } from '@facadeur/core';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
 import {
   dataFieldsForNode,
@@ -12,6 +12,8 @@ import '../../../form/form.css';
 import { NodeAttributeFields } from './NodeAttributeFields.js';
 import { partitionNodeAttributes } from './preview-attribute-keys.js';
 import { PreviewOptionsDisclosure } from './PreviewOptionsDisclosure.js';
+import { NodeBindings } from './NodeBindings.js';
+import { ownsComponentFeatures } from './owns-component-features.js';
 import { VariantRulesEditor } from './VariantRulesEditor.js';
 
 export function ContentPanel({
@@ -95,7 +97,15 @@ export function ContentPanel({
         </>
       ) : null}
       {node.type !== 'instance' && node.attributes ? (
-        <AttributeSections session={session} node={node} attributes={node.attributes} />
+        <AttributeSections
+          session={session}
+          node={node}
+          attributes={node.attributes}
+          bindings={node.bindings}
+        />
+      ) : null}
+      {node.type !== 'instance' && ownsComponentFeatures(snap.document.kind) ? (
+        <NodeBindings session={session} snap={snap} node={node} />
       ) : null}
       <DisplayConditionEditor
         condition={node.displayOn}
@@ -132,18 +142,46 @@ function AttributeSections({
   session,
   node,
   attributes,
+  bindings,
 }: {
   session: EditorSession;
   node: Exclude<FlatNode, { type: 'instance' }>;
   attributes: Record<string, string>;
+  bindings?: Binding[] | null;
 }) {
   const { main, preview } = partitionNodeAttributes(attributes);
+  const visibleMain = filterBoundAttributeEntries(main, bindings);
   return (
     <>
-      <NodeAttributeFields session={session} node={node} entries={main} />
+      <NodeAttributeFields session={session} node={node} entries={visibleMain} />
       <PreviewOptionsDisclosure session={session} node={node} entries={preview} />
     </>
   );
+}
+
+function filterBoundAttributeEntries(
+  entries: [string, string][],
+  bindings?: Binding[] | null,
+): [string, string][] {
+  const boundNames = boundAttributeNames(bindings);
+  if (boundNames.size === 0) {
+    return entries;
+  }
+  return entries.filter(([key]) => !boundNames.has(key.toLowerCase()));
+}
+
+function boundAttributeNames(bindings?: Binding[] | null): Set<string> {
+  const names = new Set<string>();
+  for (const binding of bindings ?? []) {
+    if (binding.target !== 'attribute') {
+      continue;
+    }
+    const name = binding.name?.trim();
+    if (name) {
+      names.add(name.toLowerCase());
+    }
+  }
+  return names;
 }
 
 function InstanceFields({

@@ -86,11 +86,6 @@ describe('editor subnavigation', () => {
     expect(host.textContent).toContain('Legacy variant axes');
     expect(session.getSnapshot().selectedNodeId).toBe(selectedBefore);
     expect(session.getSnapshot().activeVariantName).toBe('compact');
-    expect(
-      [...host.querySelectorAll('select[name="schema-node"] option')].some(
-        (option) => (option as HTMLOptionElement).value === 'variant-child',
-      ),
-    ).toBe(true);
 
     await act(async () => {
       (host!.querySelector('[data-surface="preview"]') as HTMLButtonElement).click();

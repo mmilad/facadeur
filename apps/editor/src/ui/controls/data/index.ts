@@ -20,3 +20,9 @@ export {
   parseInstanceFieldValue,
   patchBindingAt,
 } from './value.js';
+export {
+  bindingFromSlot,
+  type BindingSlot,
+  slotForBinding,
+  slotsForNode,
+} from './binding-slots.js';

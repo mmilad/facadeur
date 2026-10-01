@@ -2,8 +2,8 @@
 
 The editor subnavigation separates three tasks:
 
-- **Editor**: structure, style, instance values/bindings, render conditions, and conditional variant selection.
-- **Schema**: the shared component props, event payloads, public mappings, element bindings, and read-only React output. Legacy variant axes remain available in a disclosure.
+- **Editor**: structure, style, instance values/bindings, render conditions, and conditional variant selection. Element and event bindings for a layer are edited on the selected layer in Editor (Content).
+- **Schema**: the shared component contract (props, event payloads, public mappings) and read-only React preview. Legacy variant axes remain available in a disclosure.
 - **Preview data**: example values used by the editor, with sparse overrides for each named variant.
 
 Required props describe the runtime contract; they do not require a preview value. Missing required samples are indicated in Preview data. Sample values never become React prop defaults. Generated Storybook default-story args may use the base samples.

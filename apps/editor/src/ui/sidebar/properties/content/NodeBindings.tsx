@@ -1,11 +1,6 @@
 import { type Binding, type FlatNode } from '@facadeur/core';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
-import {
-  BindingsEditorControl,
-  DataDirectivesEditorControl,
-  EventBindingsEditorControl,
-  dataFieldsForNode,
-} from '../../../controls/data/index.js';
+import { BindingsEditorControl, EventBindingsEditorControl } from '../../../controls/data/index.js';
 import { ownsComponentFeatures } from './owns-component-features.js';
 
 export function NodeBindings({
@@ -17,47 +12,36 @@ export function NodeBindings({
   snap: EditorSnapshot;
   node: Exclude<FlatNode, { type: 'instance' }>;
 }) {
+  if (!ownsComponentFeatures(snap.document.kind)) {
+    return null;
+  }
+
   const bindings = node.bindings ?? [];
-  const ownsDefinitions = ownsComponentFeatures(snap.document.kind);
-  const directiveFields = dataFieldsForNode(snap.document, node.id);
   return (
-    <div className="stack">
-      <DataDirectivesEditorControl
-        node={node}
-        fields={directiveFields}
-        onChangeDisplayOn={(value) =>
-          session.execute({ type: 'setProp', nodeId: node.id, prop: 'displayOn', value })
-        }
-        onChangeRepeat={(value) =>
-          session.execute({ type: 'setProp', nodeId: node.id, prop: 'repeat', value })
+    <div className="stack node-bindings">
+      <h3>Bindings</h3>
+      <BindingsEditorControl
+        bindings={bindings}
+        fields={snap.document.fields}
+        nodeType={node.type}
+        tag={node.tag ?? undefined}
+        onChangeBindings={(next) => writeBindings(session, node, next)}
+        onInvalid={(message) => session.setNotice(message, 'error')}
+      />
+      <h3>Event bindings</h3>
+      <EventBindingsEditorControl
+        bindings={node.eventBindings ?? []}
+        events={snap.document.events ?? []}
+        onChangeBindings={(next) =>
+          session.execute({
+            type: 'setProp',
+            nodeId: node.id,
+            prop: 'eventBindings',
+            value: next.length ? next : null,
+          })
         }
         onInvalid={(message) => session.setNotice(message, 'error')}
       />
-      {ownsDefinitions ? (
-        <>
-          <h3>Bindings</h3>
-          <BindingsEditorControl
-            bindings={bindings}
-            fields={snap.document.fields}
-            onChangeBindings={(next) => writeBindings(session, node, next)}
-            onInvalid={(message) => session.setNotice(message, 'error')}
-          />
-          <h3>Event bindings</h3>
-          <EventBindingsEditorControl
-            bindings={node.eventBindings ?? []}
-            events={snap.document.events ?? []}
-            onChangeBindings={(next) =>
-              session.execute({
-                type: 'setProp',
-                nodeId: node.id,
-                prop: 'eventBindings',
-                value: next.length ? next : null,
-              })
-            }
-            onInvalid={(message) => session.setNotice(message, 'error')}
-          />
-        </>
-      ) : null}
     </div>
   );
 }
