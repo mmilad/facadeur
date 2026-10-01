@@ -11,11 +11,6 @@ const meta = {
   component: FormTextInput,
   tags: ['autodocs'],
   args: {
-    label: 'Label',
-    hint: 'Optional hint',
-    hasIcon: false,
-    value: 'Value',
-    placeholder: '',
     state: 'default',
   },
 } satisfies Meta<typeof FormTextInput>;

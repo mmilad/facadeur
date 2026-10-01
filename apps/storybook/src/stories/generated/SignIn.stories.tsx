@@ -10,11 +10,6 @@ const meta = {
   title: 'Components/SignIn',
   component: SignIn,
   tags: ['autodocs'],
-  args: {
-    eyebrow: 'Composition',
-    title: 'Sign in',
-    body: "The nested input inherits this card's border token.",
-  },
 } satisfies Meta<typeof SignIn>;
 
 export default meta;

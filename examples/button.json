@@ -3,7 +3,7 @@
   "id": "button",
   "name": "Button",
   "kind": "atom",
-  "fields": [{ "name": "label", "type": "text", "default": "Button" }],
+  "fields": [{ "name": "label", "type": "text" }],
   "variants": [
     {
       "name": "tone",

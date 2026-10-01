@@ -5,9 +5,9 @@
   "kind": "component",
   "group": "form",
   "fields": [
-    { "name": "name", "type": "text", "default": "label" },
-    { "name": "type", "type": "text", "default": "text" },
-    { "name": "value", "type": "text", "default": "Button" }
+    { "name": "name", "type": "text" },
+    { "name": "type", "type": "text" },
+    { "name": "value", "type": "text" }
   ],
   "variants": [{ "name": "state", "values": ["default", "selected"], "default": "default" }],
   "tokenInterface": {

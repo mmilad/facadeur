@@ -11,7 +11,6 @@ const meta = {
   component: FormSegmented,
   tags: ['autodocs'],
   args: {
-    label: 'Alignment',
     state: 'start',
   },
 } satisfies Meta<typeof FormSegmented>;

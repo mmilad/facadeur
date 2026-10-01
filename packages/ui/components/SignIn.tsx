@@ -15,13 +15,7 @@ export interface SignInProps {
   className?: string;
 }
 
-export function SignIn({
-  eyebrow = 'Composition',
-  title = 'Sign in',
-  body = "The nested input inherits this card's border token.",
-  nodeId,
-  className,
-}: SignInProps) {
+export function SignIn({ eyebrow, title, body, nodeId, className }: SignInProps) {
   return (
     <article data-component="sign-in" data-node={nodeId} className={className}>
       <p data-node="eyebrow">{eyebrow}</p>

@@ -12,16 +12,10 @@ const meta = {
   tags: ['autodocs'],
   args: {
     formFields: [
-      { id: 'name', kind: 'input', label: 'Name', value: 'Ada Lovelace', placeholder: 'Your name' },
-      {
-        id: 'message',
-        kind: 'textarea',
-        label: 'Message',
-        value: 'A data-driven textarea',
-        rows: 3,
-      },
-      { id: 'property', kind: 'select', label: 'Property', value: 'color.text.primary' },
-      { id: 'enabled', kind: 'toggle', label: 'Use token', value: 'On' },
+      { id: 'name', kind: 'input', label: 'Name', placeholder: 'Your name' },
+      { id: 'message', kind: 'textarea', label: 'Message', rows: 3 },
+      { id: 'property', kind: 'select', label: 'Property' },
+      { id: 'enabled', kind: 'toggle', label: 'Use token' },
     ],
   },
 } satisfies Meta<typeof FormControlsSection>;

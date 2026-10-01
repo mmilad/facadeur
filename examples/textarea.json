@@ -5,11 +5,11 @@
   "kind": "component",
   "group": "form",
   "fields": [
-    { "name": "label", "type": "text", "default": "Label" },
-    { "name": "value", "type": "text", "default": "" },
-    { "name": "placeholder", "type": "text", "default": "" },
-    { "name": "name", "type": "text", "default": "" },
-    { "name": "rows", "type": "number", "default": 4 }
+    { "name": "label", "type": "text" },
+    { "name": "value", "type": "text" },
+    { "name": "placeholder", "type": "text" },
+    { "name": "name", "type": "text" },
+    { "name": "rows", "type": "number" }
   ],
   "variants": [{ "name": "resize", "values": ["vertical", "none"], "default": "vertical" }],
   "tokenInterface": {

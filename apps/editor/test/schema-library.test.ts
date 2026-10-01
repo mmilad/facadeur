@@ -75,6 +75,31 @@ describe('schema library', () => {
       label: { type: 'string' },
       placeholder: { type: 'string' },
     });
+    expect(input?.properties?.label).not.toHaveProperty('default');
+  });
+
+  it('drops legacy default keywords copied onto a stored schema', () => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        seeded: true,
+        custom: [],
+        overrides: {
+          input: {
+            id: 'input',
+            name: 'Input',
+            schema: {
+              type: 'object',
+              properties: { label: { type: 'string', title: 'Label', default: 'Label' } },
+            },
+          },
+        },
+        hidden: [],
+        assignments: { input: 'input' },
+      }),
+    );
+    const input = reloadSchemaLibrary().schemas.find((schema) => schema.id === 'input');
+    expect(input?.schema.properties?.label).toEqual({ type: 'string', title: 'Label' });
   });
 
   it('keeps a custom schema and can hide a built-in one', () => {

@@ -11,8 +11,6 @@ const meta = {
   component: FormToggle,
   tags: ['autodocs'],
   args: {
-    label: 'Enabled',
-    value: 'On',
     state: 'on',
   },
 } satisfies Meta<typeof FormToggle>;

@@ -4,10 +4,10 @@
   "name": "Input",
   "kind": "atom",
   "fields": [
-    { "name": "value", "type": "text", "default": "Value" },
-    { "name": "placeholder", "type": "text", "default": "" },
-    { "name": "name", "type": "text", "default": "" },
-    { "name": "disabled", "type": "boolean", "default": false }
+    { "name": "value", "type": "text" },
+    { "name": "placeholder", "type": "text" },
+    { "name": "name", "type": "text" },
+    { "name": "disabled", "type": "boolean" }
   ],
   "events": [{ "name": "commit", "payload": { "value": "text" } }],
   "tokenInterface": {

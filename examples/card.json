@@ -4,9 +4,9 @@
   "name": "Card",
   "kind": "component",
   "fields": [
-    { "name": "eyebrow", "type": "text", "default": "Card" },
-    { "name": "title", "type": "text", "default": "Title" },
-    { "name": "body", "type": "text", "default": "" }
+    { "name": "eyebrow", "type": "text" },
+    { "name": "title", "type": "text" },
+    { "name": "body", "type": "text" }
   ],
   "tokenInterface": {
     "reads": [

@@ -164,15 +164,35 @@ function parsePersisted(raw: string | null): PersistedLibrary {
   }
 }
 
+/** Example values belong on the component form, not on the schema document. */
+function withoutSchemaDefaults(schema: JsonSchema): JsonSchema {
+  const next: JsonSchema = { ...schema };
+  delete next.default;
+  if (next.properties) {
+    next.properties = Object.fromEntries(
+      Object.entries(next.properties).map(([name, property]) => [name, withoutSchemaDefaults(property)]),
+    );
+  }
+  if (next.items) next.items = withoutSchemaDefaults(next.items);
+  if (next.oneOf) next.oneOf = next.oneOf.map(withoutSchemaDefaults);
+  if (next.anyOf) next.anyOf = next.anyOf.map(withoutSchemaDefaults);
+  if (next.allOf) next.allOf = next.allOf.map(withoutSchemaDefaults);
+  return next;
+}
+
+function withoutLibraryDefaults(schema: LibrarySchema): LibrarySchema {
+  return { ...schema, schema: withoutSchemaDefaults(schema.schema) };
+}
+
 function materialize(saved: PersistedLibrary): SchemaLibraryState {
   const hidden = new Set(saved.hidden);
   const schemas: LibrarySchema[] = [];
   for (const builtin of BUILTIN_SCHEMAS) {
     if (hidden.has(builtin.id)) continue;
-    schemas.push(saved.overrides[builtin.id] ?? builtin);
+    schemas.push(withoutLibraryDefaults(saved.overrides[builtin.id] ?? builtin));
   }
   for (const schema of saved.custom) {
-    if (!schemas.some((entry) => entry.id === schema.id)) schemas.push(schema);
+    if (!schemas.some((entry) => entry.id === schema.id)) schemas.push(withoutLibraryDefaults(schema));
   }
   const assignments = {
     ...(saved.seeded ? {} : DEFAULT_SCHEMA_ASSIGNMENTS),

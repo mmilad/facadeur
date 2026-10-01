@@ -12,13 +12,7 @@ export interface CardProps {
   className?: string;
 }
 
-export function Card({
-  eyebrow = 'Card',
-  title = 'Title',
-  body = '',
-  nodeId,
-  className,
-}: CardProps) {
+export function Card({ eyebrow, title, body, nodeId, className }: CardProps) {
   return (
     <article data-component="card" data-node={nodeId} className={className}>
       <p data-node="eyebrow">{eyebrow}</p>

@@ -22,12 +22,12 @@ export interface FormTextInputProps {
 }
 
 export function FormTextInput({
-  label = 'Label',
-  hint = 'Optional hint',
+  label,
+  hint,
   icon,
-  hasIcon = false,
-  value = 'Value',
-  placeholder = '',
+  hasIcon,
+  value,
+  placeholder,
   state = 'default',
   onCommit,
   nodeId,

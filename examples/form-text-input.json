@@ -5,10 +5,10 @@
   "kind": "component",
   "group": "form",
   "fields": [
-    { "name": "label", "type": "text", "default": "Label" },
-    { "name": "hint", "type": "text", "default": "Optional hint" },
+    { "name": "label", "type": "text" },
+    { "name": "hint", "type": "text" },
     { "name": "icon", "type": "image" },
-    { "name": "hasIcon", "type": "boolean", "default": false }
+    { "name": "hasIcon", "type": "boolean" }
   ],
   "expose": {
     "fields": {

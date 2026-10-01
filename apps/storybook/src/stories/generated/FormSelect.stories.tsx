@@ -11,8 +11,6 @@ const meta = {
   component: FormSelect,
   tags: ['autodocs'],
   args: {
-    label: 'Property',
-    value: 'Choose value',
     state: 'default',
   },
 } satisfies Meta<typeof FormSelect>;

@@ -10,11 +10,6 @@ const meta = {
   title: 'Components/Card',
   component: Card,
   tags: ['autodocs'],
-  args: {
-    eyebrow: 'Card',
-    title: 'Title',
-    body: '',
-  },
 } satisfies Meta<typeof Card>;
 
 export default meta;

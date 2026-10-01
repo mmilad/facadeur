@@ -58,7 +58,7 @@ describe('generateReact', () => {
     expect(button).toContain("export type ButtonTone = 'primary' | 'secondary' | 'ghost';");
     expect(button).toContain("export type ButtonSize = 'sm' | 'md';");
     expect(button).toContain('label?: string;');
-    expect(button).toContain("label = 'Button'");
+    expect(button).not.toContain("label = 'Button'");
     expect(button).toContain("tone = 'primary'");
     expect(button).toContain("size = 'md'");
     expect(button).toContain("data-component='button'");

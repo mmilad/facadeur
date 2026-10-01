@@ -14,13 +14,7 @@ export interface FormToggleProps {
   className?: string;
 }
 
-export function FormToggle({
-  label = 'Enabled',
-  value = 'On',
-  state = 'on',
-  nodeId,
-  className,
-}: FormToggleProps) {
+export function FormToggle({ label, value, state = 'on', nodeId, className }: FormToggleProps) {
   return (
     <label
       data-component="form-toggle"

@@ -5,10 +5,10 @@
   "kind": "component",
   "group": "form",
   "fields": [
-    { "name": "label", "type": "text", "default": "Label" },
-    { "name": "value", "type": "text", "default": "Value" },
-    { "name": "placeholder", "type": "text", "default": "" },
-    { "name": "name", "type": "text", "default": "" }
+    { "name": "label", "type": "text" },
+    { "name": "value", "type": "text" },
+    { "name": "placeholder", "type": "text" },
+    { "name": "name", "type": "text" }
   ],
   "tokenInterface": {
     "reads": [

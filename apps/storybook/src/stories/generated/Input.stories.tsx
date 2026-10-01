@@ -10,12 +10,6 @@ const meta = {
   title: 'Components/Input',
   component: Input,
   tags: ['autodocs'],
-  args: {
-    label: 'Label',
-    value: 'Value',
-    placeholder: '',
-    name: '',
-  },
 } satisfies Meta<typeof Input>;
 
 export default meta;

@@ -11,11 +11,6 @@ const meta = {
   component: Textarea,
   tags: ['autodocs'],
   args: {
-    label: 'Label',
-    value: '',
-    placeholder: '',
-    name: '',
-    rows: 4,
     resize: 'vertical',
   },
 } satisfies Meta<typeof Textarea>;

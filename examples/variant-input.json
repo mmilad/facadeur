@@ -5,8 +5,8 @@
   "kind": "component",
   "group": "form",
   "fields": [
-    { "name": "label", "type": "text", "default": "Email" },
-    { "name": "value", "type": "text", "default": "name@example.com" }
+    { "name": "label", "type": "text" },
+    { "name": "value", "type": "text" }
   ],
   "variants": [
     { "name": "default" },

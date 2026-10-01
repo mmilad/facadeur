@@ -15,8 +15,8 @@ export interface FormSelectProps {
 }
 
 export function FormSelect({
-  label = 'Property',
-  value = 'Choose value',
+  label,
+  value,
   state = 'default',
   nodeId,
   className,

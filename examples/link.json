@@ -4,8 +4,8 @@
   "name": "Link",
   "kind": "atom",
   "fields": [
-    { "name": "label", "type": "text", "default": "Link" },
-    { "name": "href", "type": "link", "default": "#" }
+    { "name": "label", "type": "text" },
+    { "name": "href", "type": "link" }
   ],
   "variants": [{ "name": "tone", "values": ["default", "muted"], "default": "default" }],
   "tokenInterface": {

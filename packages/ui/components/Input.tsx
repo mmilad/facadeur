@@ -13,14 +13,7 @@ export interface InputProps {
   className?: string;
 }
 
-export function Input({
-  label = 'Label',
-  value = 'Value',
-  placeholder = '',
-  name = '',
-  nodeId,
-  className,
-}: InputProps) {
+export function Input({ label, value, placeholder, name, nodeId, className }: InputProps) {
   return (
     <label data-component="input" data-node={nodeId} className={className}>
       <span data-node="label">{label}</span>

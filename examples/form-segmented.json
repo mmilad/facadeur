@@ -4,7 +4,7 @@
   "name": "Segmented control",
   "kind": "component",
   "group": "form",
-  "fields": [{ "name": "label", "type": "text", "default": "Alignment" }],
+  "fields": [{ "name": "label", "type": "text" }],
   "variants": [
     {
       "name": "state",

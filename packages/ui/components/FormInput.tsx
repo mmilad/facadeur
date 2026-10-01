@@ -15,10 +15,10 @@ export interface FormInputProps {
 }
 
 export function FormInput({
-  value = 'Value',
-  placeholder = '',
-  name = '',
-  disabled = false,
+  value,
+  placeholder,
+  name,
+  disabled,
   onCommit,
   nodeId,
   className,

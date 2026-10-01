@@ -16,9 +16,9 @@ export interface FormFieldRowProps {
 }
 
 export function FormFieldRow({
-  name = 'label',
-  type = 'text',
-  value = 'Button',
+  name,
+  type,
+  value,
   state = 'default',
   nodeId,
   className,

@@ -5,8 +5,8 @@
   "kind": "component",
   "group": "form",
   "fields": [
-    { "name": "label", "type": "text", "default": "Property" },
-    { "name": "value", "type": "text", "default": "Choose value" }
+    { "name": "label", "type": "text" },
+    { "name": "value", "type": "text" }
   ],
   "variants": [
     {

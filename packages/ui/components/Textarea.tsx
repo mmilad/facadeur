@@ -18,11 +18,11 @@ export interface TextareaProps {
 }
 
 export function Textarea({
-  label = 'Label',
-  value = '',
-  placeholder = '',
-  name = '',
-  rows = 4,
+  label,
+  value,
+  placeholder,
+  name,
+  rows,
   resize = 'vertical',
   nodeId,
   className,

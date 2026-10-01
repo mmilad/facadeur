@@ -11,7 +11,6 @@ const meta = {
   component: Button,
   tags: ['autodocs'],
   args: {
-    label: 'Button',
     tone: 'primary',
     size: 'md',
   },

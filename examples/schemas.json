@@ -15,10 +15,10 @@
         "type": "object",
         "title": "Input",
         "properties": {
-          "label": { "type": "string", "title": "Label", "default": "Label" },
-          "value": { "type": "string", "title": "Value", "default": "Value" },
-          "placeholder": { "type": "string", "title": "Placeholder", "default": "" },
-          "name": { "type": "string", "title": "Name", "default": "" }
+          "label": { "type": "string", "title": "Label" },
+          "value": { "type": "string", "title": "Value" },
+          "placeholder": { "type": "string", "title": "Placeholder" },
+          "name": { "type": "string", "title": "Name" }
         }
       }
     },
@@ -30,11 +30,11 @@
         "type": "object",
         "title": "Textarea",
         "properties": {
-          "label": { "type": "string", "title": "Label", "default": "Label" },
-          "value": { "type": "string", "title": "Value", "default": "" },
-          "placeholder": { "type": "string", "title": "Placeholder", "default": "" },
-          "name": { "type": "string", "title": "Name", "default": "" },
-          "rows": { "type": "number", "title": "Rows", "default": 4 }
+          "label": { "type": "string", "title": "Label" },
+          "value": { "type": "string", "title": "Value" },
+          "placeholder": { "type": "string", "title": "Placeholder" },
+          "name": { "type": "string", "title": "Name" },
+          "rows": { "type": "number", "title": "Rows" }
         }
       }
     },
@@ -76,9 +76,9 @@
         "type": "object",
         "title": "Card",
         "properties": {
-          "eyebrow": { "type": "string", "title": "Eyebrow", "default": "Card" },
-          "title": { "type": "string", "title": "Title", "default": "Title" },
-          "body": { "type": "string", "title": "Body", "default": "" }
+          "eyebrow": { "type": "string", "title": "Eyebrow" },
+          "title": { "type": "string", "title": "Title" },
+          "body": { "type": "string", "title": "Body" }
         }
       }
     },

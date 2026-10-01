@@ -15,13 +15,7 @@ export interface ButtonProps {
   className?: string;
 }
 
-export function Button({
-  label = 'Button',
-  tone = 'primary',
-  size = 'md',
-  nodeId,
-  className,
-}: ButtonProps) {
+export function Button({ label, tone = 'primary', size = 'md', nodeId, className }: ButtonProps) {
   return (
     <button
       data-component="button"

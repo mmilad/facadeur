@@ -13,12 +13,7 @@ export interface FormSegmentedProps {
   className?: string;
 }
 
-export function FormSegmented({
-  label = 'Alignment',
-  state = 'start',
-  nodeId,
-  className,
-}: FormSegmentedProps) {
+export function FormSegmented({ label, state = 'start', nodeId, className }: FormSegmentedProps) {
   return (
     <div
       data-component="form-segmented"
