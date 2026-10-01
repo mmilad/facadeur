@@ -6,6 +6,7 @@ import {
   validateTree,
   type DocumentFile,
   type FlatDocument,
+  type InstanceNode,
 } from '@facadeur/core';
 
 function file(kind: DocumentFile['kind']): DocumentFile {
@@ -127,6 +128,13 @@ describe('applyCommand', () => {
     doc = applyCommand(doc, { type: 'setProp', nodeId: 'title', prop: 'text', value: 'Hello' });
     doc = applyCommand(doc, { type: 'setStyle', nodeId: 'title', property: 'color', value: 'red' });
     doc = applyCommand(doc, { type: 'setField', nodeId: 'btn', field: 'label', value: 'Go' });
+    doc = applyCommand(doc, {
+      type: 'setChildField',
+      nodeId: 'btn',
+      path: 'control/input',
+      field: 'placeholder',
+      value: 'Search',
+    });
     doc = applyCommand(doc, { type: 'setVariant', nodeId: 'btn', axis: 'tone', value: 'primary' });
     doc = applyCommand(doc, {
       type: 'defineField',
@@ -140,6 +148,7 @@ describe('applyCommand', () => {
     expect(doc.nodes.title).toMatchObject({ text: 'Hello', style: { color: 'red' } });
     expect(doc.nodes.btn).toMatchObject({
       fields: { label: 'Go' },
+      childFields: { 'control/input': { placeholder: 'Search' } },
       variants: { tone: 'primary' },
     });
     expect(doc.fields.map((field) => field.name)).toEqual(['title', 'open']);
@@ -147,10 +156,18 @@ describe('applyCommand', () => {
 
     doc = applyCommand(doc, { type: 'setStyle', nodeId: 'title', property: 'color', value: null });
     doc = applyCommand(doc, { type: 'setField', nodeId: 'btn', field: 'label', value: null });
+    doc = applyCommand(doc, {
+      type: 'setChildField',
+      nodeId: 'btn',
+      path: 'control/input',
+      field: 'placeholder',
+      value: null,
+    });
     doc = applyCommand(doc, { type: 'removeField', name: 'open' });
     doc = applyCommand(doc, { type: 'removeVariant', name: 'size' });
     expect(doc.nodes.title).not.toHaveProperty('style');
     expect(doc.nodes.btn).not.toHaveProperty('fields');
+    expect(doc.nodes.btn).not.toHaveProperty('childFields');
     expect(doc.fields.map((field) => field.name)).toEqual(['title']);
     expect(doc.variants.map((axis) => axis.name)).toEqual(['tone']);
   });
@@ -235,6 +252,32 @@ describe('applyCommand', () => {
         value: [{ event: 'missing', name: 'change' }],
       }),
     ).toThrow(/unknown event/);
+  });
+
+  it('uses the command context to validate child field values when a catalog is available', () => {
+    const doc = applyCommand(component(), {
+      type: 'insert',
+      parentId: 'root',
+      node: { id: 'owner', type: 'instance', component: 'owner' },
+    });
+    const context = {
+      resolveChildField: (_node: InstanceNode, path: string, field: string) =>
+        path === 'email' && field === 'value' ? { name: field, type: 'text' as const } : undefined,
+    };
+    expect(() =>
+      applyCommand(
+        doc,
+        { type: 'setChildField', nodeId: 'owner', path: 'email', field: 'value', value: 42 },
+        context,
+      ),
+    ).toThrow(/expects a string/);
+    expect(() =>
+      applyCommand(
+        doc,
+        { type: 'setChildField', nodeId: 'owner', path: 'email', field: 'missing', value: 'x' },
+        context,
+      ),
+    ).toThrow(/unknown child field/);
   });
 
   it('defines events and removes their dependent native bindings', () => {

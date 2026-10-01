@@ -8,6 +8,7 @@ export { compileDocumentValidator, validateDocumentFile } from './validation/sch
 export {
   assertAttributes,
   assertBindings,
+  assertChildFields,
   assertDisplayOn,
   assertEventBindings,
   assertEventDefinition,
@@ -22,4 +23,4 @@ export {
 } from './validation/assertions.js';
 export { assertDefinitionKind, validateDefinitions } from './validation/definitions.js';
 export { validateLibraries, validateTree, type ValidateOptions } from './validation/tree.js';
-export { validateCatalog } from './validation/catalog.js';
+export { resolveChildFieldDefinition, validateCatalog } from './validation/catalog.js';

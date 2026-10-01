@@ -1,4 +1,5 @@
 import { DocumentError } from '../document/errors.js';
+import { mergeChildFieldOverrides } from '../document/child-fields.js';
 import {
   isVariantAxis,
   type DocumentFile,
@@ -235,6 +236,9 @@ function applyOverride(node: NestedNode, override: VariantNodeOverride): NestedN
   if (next.type === 'instance') {
     if (override.layout) next.layout = mergeLayout(next.layout, override.layout);
     if (override.fields) next.fields = { ...(next.fields ?? {}), ...override.fields };
+    if (override.childFields) {
+      next.childFields = mergeChildFieldOverrides(next.childFields, override.childFields);
+    }
     if (override.fieldBindings) {
       next.fieldBindings = { ...(next.fieldBindings ?? {}), ...override.fieldBindings };
     }
@@ -280,7 +284,24 @@ function mergeLayoutLayer(target: Layout | LayoutOverride, source: Layout | Layo
 function applyUnset(node: NestedNode, paths: readonly string[] | undefined): void {
   for (const path of paths ?? []) {
     const [property, key, ...rest] = path.split('.');
-    if (rest.length > 0 || !property) continue;
+    if (!property) continue;
+    if (property === 'childFields' && node.type === 'instance') {
+      const childFields = structuredClone(node.childFields ?? {});
+      if (!key) {
+        node.childFields = undefined;
+      } else if (key && !rest.length) {
+        delete childFields[key];
+        node.childFields = Object.keys(childFields).length ? childFields : undefined;
+      } else if (key && rest.length === 1 && rest[0]) {
+        const fields = { ...(childFields[key] ?? {}) };
+        delete fields[rest[0]];
+        if (Object.keys(fields).length) childFields[key] = fields;
+        else delete childFields[key];
+        node.childFields = Object.keys(childFields).length ? childFields : undefined;
+      }
+      continue;
+    }
+    if (rest.length > 0) continue;
     if (property === 'fields' && node.type === 'instance') {
       if (key) {
         const fields = { ...(node.fields ?? {}) };

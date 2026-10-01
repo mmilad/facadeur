@@ -11,8 +11,10 @@ import {
   assertFieldBindings,
   assertRepeat,
 } from '../validation/assertions.js';
+import { assertValueMatches } from '../validation/assertions.js';
 import { isRecord } from './value-utils.js';
 import type { Command, NodeProp } from './types.js';
+import type { CommandContext } from './types.js';
 import { adoptTokenReads } from './token-reads.js';
 import {
   isFieldValue,
@@ -53,6 +55,7 @@ const PROPS: Record<NodeType, readonly NodeProp[]> = {
 };
 
 const STYLE_PROPERTY = /^(--)?[A-Za-z_][\w-]*$/;
+const CHILD_FIELD_PATH = /^[A-Za-z][A-Za-z0-9_-]*(\/[A-Za-z][A-Za-z0-9_-]*)*$/;
 
 export function setProp(doc: FlatDocument, command: Extract<Command, { type: 'setProp' }>): void {
   const node = requireNode(doc, command.nodeId);
@@ -107,6 +110,43 @@ export function setField(doc: FlatDocument, command: Extract<Command, { type: 's
     throw new DocumentError('schema', 'Field values must be a string, number, or boolean');
   }
   node.fields = fields;
+  doc.nodes[node.id] = makeFlatNode(node);
+}
+
+export function setChildField(
+  doc: FlatDocument,
+  command: Extract<Command, { type: 'setChildField' }>,
+  ctx: CommandContext = {},
+): void {
+  const node = requireNode(doc, command.nodeId);
+  if (node.type !== 'instance') {
+    throw new DocumentError('schema', 'Only instances can override child fields');
+  }
+  if (!CHILD_FIELD_PATH.test(command.path)) {
+    throw new DocumentError('schema', `Invalid child instance path "${command.path}"`);
+  }
+  if (!ID_PATTERN.test(command.field)) {
+    throw new DocumentError('schema', `Invalid field name "${command.field}"`);
+  }
+  const childFields = structuredClone(node.childFields ?? {});
+  const fields = { ...(childFields[command.path] ?? {}) };
+  if (command.value === null) delete fields[command.field];
+  else {
+    if (!isFieldValue(command.value))
+      throw new DocumentError('schema', 'Field values must be a string, number, or boolean');
+    const definition = ctx.resolveChildField?.(node, command.path, command.field);
+    if (ctx.resolveChildField && !definition) {
+      throw new DocumentError(
+        'unknown-field',
+        `Instance "${node.id}" sets unknown child field "${command.path}.${command.field}"`,
+      );
+    }
+    if (definition) assertValueMatches(definition, command.value);
+    fields[command.field] = structuredClone(command.value);
+  }
+  if (Object.keys(fields).length) childFields[command.path] = fields;
+  else delete childFields[command.path];
+  node.childFields = childFields;
   doc.nodes[node.id] = makeFlatNode(node);
 }
 

@@ -1,4 +1,5 @@
 import { quote } from '../names.js';
+import { childFieldsPropType } from './child-fields.js';
 import type { Attr, ComponentImport, ElementNode, PropSpec, VariantTypeSpec } from './types.js';
 
 export function printFile(file: {
@@ -8,6 +9,8 @@ export function printFile(file: {
   variantTypes: VariantTypeSpec[];
   imports: ComponentImport[];
   usesCssProperties: boolean;
+  acceptsChildFields: boolean;
+  childFieldsPropName: string;
   usedProps: Set<string>;
   body: string;
 }): string {
@@ -39,6 +42,9 @@ export function printFile(file: {
   );
   lines.push('  nodeId?: string;');
   lines.push('  className?: string;');
+  if (file.acceptsChildFields) {
+    lines.push(`  ${file.childFieldsPropName}?: ${childFieldsPropType};`);
+  }
   lines.push('}');
   lines.push('');
   lines.push(`export function ${file.component}({`);
@@ -54,6 +60,7 @@ export function printFile(file: {
   }
   lines.push('  nodeId,');
   lines.push('  className,');
+  if (file.acceptsChildFields) lines.push(`  ${file.childFieldsPropName},`);
   lines.push(`}: ${file.component}Props) {`);
   lines.push('  return (');
   lines.push(file.body);
@@ -67,14 +74,17 @@ export function printElement(element: ElementNode, indent: number): string {
   const pad = '  '.repeat(indent);
   const attrs = [
     ...element.attrs,
-    ...(element.repeat ? [{ name: 'key', value: { kind: 'expr' as const, code: element.repeat.key } }] : []),
+    ...(element.repeat
+      ? [{ name: 'key', value: { kind: 'expr' as const, code: element.repeat.key } }]
+      : []),
   ].map(printAttr);
   const inlineAttrs = attrs.length ? ` ${attrs.join(' ')}` : '';
   if (element.void || element.children.length === 0) {
     const one = `${pad}<${element.tag}${inlineAttrs} />`;
-    const rendered = attrs.length <= 3 && one.length <= 100
-      ? one
-      : `${pad}<${element.tag}\n${attrs.map((attr) => `${pad}  ${attr}`).join('\n')}\n${pad}/>`;
+    const rendered =
+      attrs.length <= 3 && one.length <= 100
+        ? one
+        : `${pad}<${element.tag}\n${attrs.map((attr) => `${pad}  ${attr}`).join('\n')}\n${pad}/>`;
     return wrapRepeat(element.repeat, wrapCondition(element.condition, rendered, pad), pad);
   }
   const only = element.children[0];
@@ -98,11 +108,7 @@ export function printElement(element: ElementNode, indent: number): string {
   );
 }
 
-function wrapRepeat(
-  repeat: ElementNode['repeat'],
-  body: string,
-  pad: string,
-): string {
+function wrapRepeat(repeat: ElementNode['repeat'], body: string, pad: string): string {
   if (!repeat) return body;
   const indented = body
     .split('\n')

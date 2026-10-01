@@ -7,6 +7,7 @@ import { readTokenTree } from '../token-tree.js';
 import {
   assertAttributes,
   assertBindings,
+  assertChildFields,
   assertDisplayOn,
   assertEventBindings,
   assertExpose,
@@ -106,6 +107,7 @@ export function assertNodeData(node: FlatNode): void {
     }
   }
   if (node.type === 'instance' && node.expose) assertExpose(node.expose);
+  if (node.type === 'instance' && node.childFields) assertChildFields(node.childFields);
   if (node.type === 'instance') {
     for (const rule of node.variantRules ?? []) {
       assertDisplayOn(rule.when);

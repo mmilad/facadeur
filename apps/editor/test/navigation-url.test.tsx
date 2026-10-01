@@ -59,6 +59,55 @@ function session() {
   });
 }
 describe('editor URL selection', () => {
+  it('restores nested layer addresses without opening the master', async () => {
+    routing.search = 'document=section&layer=root%2Fhost%2Flabel';
+    const editor = createEditorSession({
+      design: createProjectTemplateDocument(),
+      documents: [
+        {
+          version: 1,
+          id: 'button',
+          name: 'Button',
+          kind: 'atom',
+          fields: [{ name: 'label', type: 'text', default: 'Button' }],
+          root: {
+            id: 'root',
+            type: 'frame',
+            children: [
+              { id: 'label', type: 'text', bindings: [{ field: 'label', target: 'text' }] },
+            ],
+          },
+        },
+        {
+          version: 1,
+          id: 'section',
+          name: 'Section',
+          kind: 'section',
+          root: {
+            id: 'root',
+            type: 'frame',
+            children: [{ id: 'host', type: 'instance', component: 'button' }],
+          },
+        },
+      ],
+    });
+    const view = render(<App session={editor} />);
+    expect(editor.getSnapshot().openId).toBe('section');
+    expect(editor.getSnapshot().nestedSelection?.renderId).toBe('root/host/label');
+    expect(screen.getByTestId('nested-fields-panel')).toBeVisible();
+    act(() => editor.selectNode('host'));
+    await waitFor(() => expect(routing.replace).toHaveBeenCalled());
+    expect(
+      new URL(routing.replace.mock.lastCall?.[0] as string, 'http://localhost').searchParams.get(
+        'layer',
+      ),
+    ).toBe('host');
+    routing.search = 'document=section&layer=root%2Fhost%2Fmissing';
+    view.rerender(<App session={editor} />);
+    expect(editor.getSnapshot().nestedSelection).toBeNull();
+    expect(editor.getSnapshot().selectedNodeId).toBeNull();
+  });
+
   it('returns to the initial document when navigating back to the bare URL', async () => {
     const editor = session();
     const view = render(<App session={editor} />);

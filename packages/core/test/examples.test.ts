@@ -14,7 +14,7 @@ const schemaPath = fileURLToPath(new URL('../../../schema/document.schema.json',
 
 describe('examples', () => {
   const files = readdirSync(examplesDir)
-    .filter((name) => name.endsWith('.json'))
+    .filter((name) => name.endsWith('.json') && name !== 'schemas.json')
     .sort();
 
   it('validates every example and round-trips it', () => {

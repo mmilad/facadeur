@@ -1,4 +1,10 @@
-import type { DocumentFile, DocumentStore, FieldValue, NestedNode } from '@facadeur/core';
+import type {
+  ChildFieldOverrides,
+  DocumentFile,
+  DocumentStore,
+  FieldValue,
+  NestedNode,
+} from '@facadeur/core';
 
 export interface RenderedNode {
   id: string;
@@ -18,6 +24,10 @@ export interface RenderContext {
   records: Map<string, RenderedNode>;
   path: string | null;
   scope: Record<string, FieldValue>;
+  /** Sparse field overrides owned by an enclosing instance. */
+  childFields?: ChildFieldOverrides;
+  /** Path to the current instance within `childFields`; empty means direct children. */
+  childFieldPath?: string | null;
   ownerId: string | null;
   depth: number;
   /** Document whose root children are the canvas. Used to resolve instance paths. */

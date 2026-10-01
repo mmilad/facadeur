@@ -17,6 +17,7 @@ import { parseLayout } from '../styles/layout.js';
 
 const DATA_PATH = /^[A-Za-z_$][A-Za-z0-9_$-]*(\.[A-Za-z_$][A-Za-z0-9_$-]*)*$/;
 const EXPOSE_PATH = /^[A-Za-z][A-Za-z0-9_-]*(\.[A-Za-z][A-Za-z0-9_-]*)*$/;
+const CHILD_FIELD_PATH = /^[A-Za-z][A-Za-z0-9_-]*(\/[A-Za-z][A-Za-z0-9_-]*)*$/;
 const EVENT_ATTRIBUTE = /^on/i;
 
 export function assertFieldDefinition(field: FieldDefinition): void {
@@ -168,7 +169,14 @@ function assertVariantUnsetPaths(
   variantName: string,
   node: NonNullable<NonNullable<VariantPreset['overrides']>['nodes']>[string],
 ): void {
-  const mapProperties = new Set(['attributes', 'fields', 'fieldBindings', 'variants', 'style']);
+  const mapProperties = new Set([
+    'attributes',
+    'fields',
+    'fieldBindings',
+    'variants',
+    'style',
+    'childFields',
+  ]);
   const scalarProperties = new Set([
     'text',
     'src',
@@ -183,6 +191,48 @@ function assertVariantUnsetPaths(
   const configured = new Set(Object.keys(node).filter((key) => key !== 'unset'));
   for (const path of node.unset ?? []) {
     const [property, key, ...rest] = path.split('.');
+    if (property === 'childFields') {
+      if (!key || rest.length > 1) {
+        if (!key && configured.has(property)) {
+          throw new DocumentError(
+            'schema',
+            `Variant "${variantName}" cannot set and unset "${property}" together`,
+          );
+        }
+        if (rest.length > 1) {
+          throw new DocumentError(
+            'schema',
+            `Variant "${variantName}" has an invalid unset path "${path}"`,
+          );
+        }
+      } else if (configured.has(property)) {
+        const values = (node as Record<string, unknown>)[property];
+        const pathValues =
+          values && typeof values === 'object'
+            ? (values as Record<string, unknown>)[key]
+            : undefined;
+        if (rest.length === 0 && pathValues !== undefined) {
+          throw new DocumentError(
+            'schema',
+            `Variant "${variantName}" cannot set and unset "${path}" together`,
+          );
+        }
+        const fieldName = rest[0];
+        if (
+          rest.length === 1 &&
+          fieldName &&
+          pathValues &&
+          typeof pathValues === 'object' &&
+          fieldName in (pathValues as object)
+        ) {
+          throw new DocumentError(
+            'schema',
+            `Variant "${variantName}" cannot set and unset "${path}" together`,
+          );
+        }
+      }
+      continue;
+    }
     if (
       !property ||
       rest.length > 0 ||
@@ -344,6 +394,22 @@ export function assertFieldBindings(value: unknown): asserts value is Record<str
   for (const [field, path] of Object.entries(value)) {
     if (!ID_PATTERN.test(field) || typeof path !== 'string' || !DATA_PATH.test(path)) {
       throw new DocumentError('schema', 'Each field binding needs a field name and data path');
+    }
+  }
+}
+
+export function assertChildFields(
+  value: unknown,
+): asserts value is Record<string, Record<string, FieldValue>> {
+  if (!isRecord(value)) throw new DocumentError('schema', 'Child fields must be an object');
+  for (const [path, fields] of Object.entries(value)) {
+    if (!CHILD_FIELD_PATH.test(path) || !isRecord(fields)) {
+      throw new DocumentError('schema', 'Each child field override needs a valid instance path');
+    }
+    for (const [field, item] of Object.entries(fields)) {
+      if (!ID_PATTERN.test(field) || !isFieldValueValue(item)) {
+        throw new DocumentError('schema', 'Each child field override needs a valid field value');
+      }
     }
   }
 }

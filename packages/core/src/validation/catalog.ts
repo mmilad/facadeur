@@ -1,6 +1,12 @@
 import { DocumentError } from '../document/errors.js';
 import { type FlatDocument, toFlat } from '../document/flat.js';
-import { type DocumentFile, isVariantAxis } from '../document/schema.js';
+import {
+  type DocumentFile,
+  isVariantAxis,
+  type FieldDefinition,
+  type FieldValue,
+  type NestedNode,
+} from '../document/schema.js';
 import { resolveVariantDocument, variantPresets } from '../variants/resolve.js';
 import { assertValueMatches } from './assertions.js';
 import { validateDataContracts } from './data-contracts.js';
@@ -80,6 +86,7 @@ function validateInstanceOverrides(doc: FlatDocument, catalog: Map<string, Docum
       }
       assertValueMatches(field, value);
     }
+    validateChildFieldOverrides(node, target, catalog);
     const staticFields = new Set(Object.keys(node.fields ?? {}));
     const boundFields = Object.keys(node.fieldBindings ?? {});
     for (const name of boundFields) {
@@ -135,4 +142,105 @@ function validateInstanceOverrides(doc: FlatDocument, catalog: Map<string, Docum
       }
     }
   }
+}
+
+function validateChildFieldOverrides(
+  node: Extract<FlatDocument['nodes'][string], { type: 'instance' }>,
+  target: DocumentFile,
+  catalog: Map<string, DocumentFile>,
+): void {
+  if (!node.childFields) return;
+  for (const [path, values] of Object.entries(node.childFields)) {
+    const child = activeVariantDocuments(target, node.variants?.variant)
+      .map((owner) => resolveChildInstance(owner, path, catalog))
+      .find((candidate): candidate is Extract<NestedNode, { type: 'instance' }> =>
+        Boolean(candidate),
+      );
+    if (!child) {
+      throw new DocumentError(
+        'unknown-field',
+        `Instance "${node.id}" targets unknown child instance path "${path}" on "${node.component}"`,
+      );
+    }
+    for (const [name, value] of Object.entries(values)) {
+      const field = resolveChildFieldDefinition(node, path, name, catalog);
+      if (!field) {
+        throw new DocumentError(
+          'unknown-field',
+          `Instance "${node.id}" sets unknown child field "${path}.${name}" on "${child.component}"`,
+        );
+      }
+      assertValueMatches(field, value as FieldValue);
+    }
+  }
+}
+
+/** Resolve a sparse child override against the active nested component contracts. */
+export function resolveChildFieldDefinition(
+  node: Extract<FlatDocument['nodes'][string], { type: 'instance' }>,
+  path: string,
+  field: string,
+  catalog: Map<string, DocumentFile>,
+): FieldDefinition | undefined {
+  const target = catalog.get(node.component);
+  if (!target) return undefined;
+  for (const owner of activeVariantDocuments(target, node.variants?.variant)) {
+    const child = resolveChildInstance(owner, path, catalog);
+    if (!child) continue;
+    const childDocument = catalog.get(child.component);
+    if (!childDocument) continue;
+    const definition = exposedFields(
+      resolveVariantDocument(childDocument, child.variants?.variant ?? 'default'),
+      catalog,
+    ).get(field);
+    if (definition) return definition;
+  }
+  return undefined;
+}
+
+/** Enumerate explicit/default target variants when a variant rule leaves the active value data-driven. */
+function activeVariantDocuments(
+  document: DocumentFile,
+  selected: string | undefined,
+): DocumentFile[] {
+  const names = selected
+    ? [selected]
+    : ['default', ...variantPresets(document).map((variant) => variant.name)];
+  return [...new Set(names)].map((name) => resolveVariantDocument(document, name));
+}
+
+function resolveChildInstance(
+  document: DocumentFile,
+  path: string,
+  catalog: Map<string, DocumentFile>,
+): Extract<NestedNode, { type: 'instance' }> | undefined {
+  let currentDocuments = [document];
+  const segments = path.split('/');
+  for (const [index, segment] of segments.entries()) {
+    const nextDocuments: DocumentFile[] = [];
+    for (const current of currentDocuments) {
+      const instance = findNestedInstance(current.root, segment);
+      if (!instance) continue;
+      if (index === segments.length - 1) return instance;
+      const target = catalog.get(instance.component);
+      if (!target) continue;
+      nextDocuments.push(...activeVariantDocuments(target, instance.variants?.variant));
+    }
+    currentDocuments = nextDocuments;
+    if (!currentDocuments.length) return undefined;
+  }
+  return undefined;
+}
+
+function findNestedInstance(
+  node: NestedNode,
+  id: string,
+): Extract<NestedNode, { type: 'instance' }> | undefined {
+  if (node.type === 'instance') return node.id === id ? node : undefined;
+  if (node.type !== 'frame') return undefined;
+  for (const child of node.children ?? []) {
+    const found = findNestedInstance(child, id);
+    if (found) return found;
+  }
+  return undefined;
 }

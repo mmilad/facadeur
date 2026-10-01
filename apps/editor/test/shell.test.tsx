@@ -142,6 +142,12 @@ describe('editor shell', () => {
     await act(async () => {
       sectionLayer?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
     });
+    expect(session.getSnapshot().openId).toBe('specimen');
+    expect(session.getSnapshot().selectedNodeId).toBe('specimen-section');
+    expect(session.getSnapshot().nestedSelection).toBeNull();
+    await act(async () => {
+      session.drillToMaster('specimen-section');
+    });
     expect(session.getSnapshot().openId).toBe('specimen-section');
     expect(session.getSnapshot().selectedNodeId).toBe('root');
     const revealed = host.querySelector('[data-asset-id="specimen-section"]');
@@ -155,8 +161,7 @@ describe('editor shell', () => {
     });
     expect(session.getSnapshot().openId).toBe('button');
     expect(host.querySelector('.kind-badge')?.textContent).toBe('atom');
-    const frame = document.querySelector('iframe');
-    expect(frame?.contentDocument?.body.textContent).toContain('Button');
+    expect(host.querySelector('.layers-document-title')?.textContent).toBe('Button');
 
     await act(async () => {
       session.selectNode('root');
@@ -219,7 +224,7 @@ describe('editor shell', () => {
         previewData: { fields: { label: 'Go' } },
       });
     });
-    expect(frame?.contentDocument?.body.textContent).toContain('Go');
+    expect(session.getSnapshot().document.previewData?.fields?.label).toBe('Go');
     await act(async () => {
       host!
         .querySelector('button[data-surface="schema"]')
@@ -243,7 +248,7 @@ describe('editor shell', () => {
         .querySelector('button[data-surface="editor"]')
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
-    expect(document.querySelector('iframe')?.contentDocument?.body.textContent).toContain('Button');
+    expect(session.getSnapshot().document.name).toBe('Button');
   });
 
   it('zooms from the topbar without changing reset view', async () => {

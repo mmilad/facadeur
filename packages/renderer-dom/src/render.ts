@@ -1,5 +1,5 @@
 import type { DocumentFile, NestedNode } from '@facadeur/core';
-import { toNested } from '@facadeur/core';
+import { childOverridePath, mergeChildFieldContext, toNested } from '@facadeur/core';
 import { createRenderContext } from './context.js';
 import {
   cssString,
@@ -193,6 +193,8 @@ function repaintComponent(parent: HTMLElement, componentId: string, ctx: RenderC
       scope: resolved.scope,
       ownerId: resolved.ownerId,
       depth: resolved.depth,
+      childFields: resolved.childFields,
+      childFieldPath: resolved.childFieldPath,
     };
     const tag = tagFor(resolved.instance, childCtx);
     let target = el;
@@ -221,8 +223,11 @@ function paintInstance(
     paintUnknown(el, id, node, ctx);
     return;
   }
+  const overridePath = childOverridePath(ctx.childFieldPath, node.id);
+  const childOverride = overridePath ? ctx.childFields?.[overridePath] : undefined;
+  const effectiveFields = { ...(node.fields ?? {}), ...(childOverride ?? {}) };
   const scope = resolveFields(definition.fields, {
-    ...(node.fields ?? {}),
+    ...effectiveFields,
     ...resolveFieldBindings(node.fieldBindings, ctx.scope),
   });
   const selected = selectedVariantForInstance(node, ctx);
@@ -259,12 +264,15 @@ function paintInstance(
   });
 
   if (root.type === 'frame') {
+    const childFields = mergeChildFieldContext(ctx.childFields, node.childFields, overridePath);
     const childContext = {
       ...ctx,
       path: id,
       scope,
       ownerId: id,
       depth: ctx.depth + 1,
+      childFields,
+      childFieldPath: overridePath ?? '',
     };
     if (root.repeat) reconcileRepeatedChildren(el, root.children ?? [], childContext, root.repeat);
     else reconcileChildren(el, root.children ?? [], childContext);

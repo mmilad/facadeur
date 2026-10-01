@@ -786,6 +786,36 @@
                               }
                             }
                           },
+                          "childFields": {
+                            "type": "object",
+                            "patternProperties": {
+                              "^[A-Za-z][A-Za-z0-9_-]*(/[A-Za-z][A-Za-z0-9_-]*)*$": {
+                                "type": "object",
+                                "patternProperties": {
+                                  "^[A-Za-z][A-Za-z0-9_-]*$": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "number"
+                                      },
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "array"
+                                      },
+                                      {
+                                        "type": "object",
+                                        "additionalProperties": true
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          },
                           "fieldBindings": {
                             "type": "object",
                             "patternProperties": {
@@ -1762,7 +1792,7 @@
                             "type": "array",
                             "items": {
                               "minLength": 1,
-                              "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$",
+                              "pattern": "^[A-Za-z][A-Za-z0-9_./-]*$",
                               "type": "string"
                             }
                           }
@@ -5866,6 +5896,36 @@
                       "additionalProperties": true
                     }
                   ]
+                }
+              }
+            },
+            "childFields": {
+              "type": "object",
+              "patternProperties": {
+                "^[A-Za-z][A-Za-z0-9_-]*(/[A-Za-z][A-Za-z0-9_-]*)*$": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^[A-Za-z][A-Za-z0-9_-]*$": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "array"
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      ]
+                    }
+                  }
                 }
               }
             },

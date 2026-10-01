@@ -1,5 +1,8 @@
 import {
   isVariantAxis,
+  resolveChildFieldDefinition,
+  resolveVariantDocument,
+  toFlat,
   variantPresets,
   type DocumentFile,
   type FieldDefinition,
@@ -97,7 +100,119 @@ export function assignCatalog(documents: readonly DocumentFile[]): Map<string, C
     }
     if (entry.namedVariant) applyVariantDefaults(entry, entry.namedVariant.name);
   }
+  assignChildFieldSupport(catalog);
   return catalog;
+}
+
+/**
+ * Validate sparse paths once and mark the generated components that need the
+ * internal transport prop. Paths are resolved through instance boundaries;
+ * frames and roots never participate in the path.
+ */
+function assignChildFieldSupport(catalog: Map<string, CatalogEntry>): void {
+  const supported = new Set<string>();
+  const documents = new Map<string, DocumentFile>(
+    [...catalog.values()].map((entry) => [entry.document.id, entry.document]),
+  );
+  for (const owner of catalog.values()) {
+    for (const ownerDocument of variantDocuments(owner.document)) {
+      const flat = toFlat(ownerDocument);
+      visitNodes(ownerDocument.root, (node) => {
+        if (node.type !== 'instance' || !node.childFields) return;
+        const target = catalog.get(node.component);
+        if (!target) return;
+        const flatNode = flat.nodes[node.id];
+        if (!flatNode || flatNode.type !== 'instance') return;
+        supported.add(target.document.id);
+        for (const [path, fields] of Object.entries(node.childFields)) {
+          const segments = path.split('/');
+          let candidates = childVariantDocuments(target.document, node.variants?.variant);
+          for (let index = 0; index < segments.length; index += 1) {
+            const segment = segments[index];
+            if (!segment) continue;
+            const matches = candidates
+              .map((candidate) => findNode(candidate.root, segment))
+              .filter(
+                (candidate): candidate is Extract<NestedNode, { type: 'instance' }> =>
+                  candidate?.type === 'instance',
+              );
+            if (!matches.length) {
+              throw new CodegenError(
+                `Child field path "${path}" on instance "${node.id}" does not resolve instance "${segment}" in "${target.document.id}"`,
+              );
+            }
+            const nextEntries = [
+              ...new Map(
+                matches
+                  .map((match) => [match.component, catalog.get(match.component)] as const)
+                  .filter(
+                    (entry): entry is readonly [string, CatalogEntry] => entry[1] !== undefined,
+                  ),
+              ).values(),
+            ];
+            if (!nextEntries.length) {
+              throw new CodegenError(
+                `Child field path "${path}" on instance "${node.id}" references an unknown component`,
+              );
+            }
+            if (index === segments.length - 1) {
+              for (const fieldName of Object.keys(fields)) {
+                const field = resolveChildFieldDefinition(flatNode, path, fieldName, documents);
+                if (!field) {
+                  throw new CodegenError(
+                    `Child field path "${path}" on instance "${node.id}" sets unknown field "${fieldName}"`,
+                  );
+                }
+                assertDefault(node.component, field, fields[fieldName]!);
+              }
+            } else {
+              for (const next of nextEntries) supported.add(next.document.id);
+              candidates = nextEntries.flatMap((next) =>
+                matches
+                  .filter((match) => match.component === next.document.id)
+                  .flatMap((match) =>
+                    childVariantDocuments(next.document, match.variants?.variant),
+                  ),
+              );
+            }
+          }
+        }
+      });
+    }
+  }
+  for (const entry of catalog.values()) {
+    entry.acceptsChildFields = supported.has(entry.document.id);
+    if (entry.acceptsChildFields) {
+      const used = new Set([
+        'nodeId',
+        'className',
+        ...[...entry.fields.values(), ...entry.variants.values(), ...entry.events.values()].map(
+          (prop) => prop.name,
+        ),
+      ]);
+      entry.childFieldsProp = propName('childFields', used);
+    }
+  }
+}
+
+function variantDocuments(document: DocumentFile): DocumentFile[] {
+  const names = ['default', ...variantPresets(document).map((variant) => variant.name)];
+  return names.map((name) => resolveVariantDocument(document, name));
+}
+
+function childVariantDocuments(
+  document: DocumentFile,
+  variant: string | undefined,
+): DocumentFile[] {
+  return variant && variantPresets(document).some((preset) => preset.name === variant)
+    ? [resolveVariantDocument(document, variant)]
+    : variantDocuments(document);
+}
+
+function visitNodes(node: NestedNode, visit: (node: NestedNode) => void): void {
+  visit(node);
+  if (node.type !== 'frame') return;
+  for (const child of node.children ?? []) visitNodes(child, visit);
 }
 
 function resolveExposedMember(

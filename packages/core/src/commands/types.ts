@@ -1,5 +1,6 @@
 import type { ValidateOptions } from '../validation/tree.js';
 import type { NodeType } from '../document/kinds.js';
+import type { FlatNode } from '../document/flat.js';
 import type {
   Binding,
   Breakpoint,
@@ -23,6 +24,12 @@ import type { TokenDefinition, TokenGroupDefinition } from '../token-tree.js';
 
 export interface CommandContext extends ValidateOptions {
   createId?: () => string;
+  /** Resolve a deep instance field for command-time validation. Resets may omit it. */
+  resolveChildField?: (
+    node: Extract<FlatNode, { type: 'instance' }>,
+    path: string,
+    field: string,
+  ) => FieldDefinition | undefined;
 }
 
 /** Node passed to `insert`. Ids are assigned when omitted. */
@@ -44,6 +51,7 @@ export interface InsertNode {
   alt?: string;
   component?: string;
   fields?: Record<string, FieldValue>;
+  childFields?: Record<string, Record<string, FieldValue>>;
   variants?: Record<string, string>;
   variantRules?: VariantRule[];
   children?: InsertNode[];
@@ -74,6 +82,13 @@ export type Command =
   | { type: 'setProp'; nodeId: string; prop: NodeProp; value: unknown }
   | { type: 'setStyle'; nodeId: string; property: string; value: string | null }
   | { type: 'setField'; nodeId: string; field: string; value: FieldValue | null }
+  | {
+      type: 'setChildField';
+      nodeId: string;
+      path: string;
+      field: string;
+      value: FieldValue | null;
+    }
   | { type: 'setVariant'; nodeId: string; axis: string; value: string | null }
   | { type: 'defineField'; field: FieldDefinition }
   | { type: 'setPreviewData'; previewData: PreviewData | null }

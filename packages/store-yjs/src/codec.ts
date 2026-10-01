@@ -259,6 +259,11 @@ function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
     syncLayout(map, node.layout);
     syncScalar(map, 'component', node.component);
     syncValueMap(map, 'fields', node.fields);
+    syncJsonMap(
+      map,
+      'childFields',
+      node.childFields as unknown as Record<string, JsonValue> | undefined,
+    );
     syncStringMap(map, 'fieldBindings', node.fieldBindings);
     syncStringMap(map, 'variants', node.variants);
     if (node.variantRules?.length)
@@ -296,6 +301,7 @@ function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
   for (const key of [
     'component',
     'fields',
+    'childFields',
     'fieldBindings',
     'variants',
     'variantRules',
@@ -324,6 +330,7 @@ function readNode(map: Y.Map<unknown>): FlatNode {
   const layout = readLayout(map.get('layout'));
   if (type === 'instance') {
     const fields = readValueMap(map.get('fields'));
+    const childFields = readChildFields(map.get('childFields'));
     const fieldBindings = readStringMap(map.get('fieldBindings'));
     const variants = readStringMap(map.get('variants'));
     const displayOn = readDisplayOn(map.get('displayOn'));
@@ -336,6 +343,7 @@ function readNode(map: Y.Map<unknown>): FlatNode {
       ...(layout ? { layout } : {}),
       component: stringValue(map.get('component')),
       ...(fields ? { fields } : {}),
+      ...(childFields ? { childFields } : {}),
       ...(fieldBindings ? { fieldBindings } : {}),
       ...(variants ? { variants } : {}),
       ...(readJsonArray(map.get('variantRules')).length
@@ -706,6 +714,17 @@ function readValueMap(value: unknown): Record<string, FieldValue> | undefined {
   if (!(value instanceof Y.Map)) return undefined;
   const record = readJsonObject(value) as unknown as Record<string, FieldValue>;
   return Object.keys(record).length ? record : undefined;
+}
+
+function readChildFields(value: unknown): Record<string, Record<string, FieldValue>> | undefined {
+  if (!(value instanceof Y.Map)) return undefined;
+  const result: Record<string, Record<string, FieldValue>> = {};
+  for (const [path, fields] of value.entries()) {
+    if (!(fields instanceof Y.Map)) continue;
+    const record = readJsonObject(fields) as unknown as Record<string, FieldValue>;
+    if (Object.keys(record).length) result[path] = record;
+  }
+  return Object.keys(result).length ? result : undefined;
 }
 
 function readBindings(value: unknown): Binding[] | undefined {

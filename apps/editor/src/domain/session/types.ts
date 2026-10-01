@@ -9,6 +9,7 @@ import type {
 import type { DesignInput } from '@facadeur/tokens';
 import type { JsonFileHandle } from '../files.js';
 import type { LayerItem } from '../selection-model.js';
+import type { NestedFieldContext, NestedSelection } from '../nested-selection.js';
 import type { ViewportChromeSettings } from '../viewport-chrome.js';
 import type { StyleEditMode } from '../viewport-edit.js';
 import type { DrillParent } from '../drill-navigation.js';
@@ -44,6 +45,10 @@ export interface EditorSnapshot {
   selectedNodeId: string | null;
   selectedRenderId: string | null;
   selectedNode: FlatNode | null;
+  /** Virtual selection inside a composed instance, without opening its master. */
+  nestedSelection: NestedSelection | null;
+  /** Fields editable at the current selection; null for non-instance leaves. */
+  fieldContext: NestedFieldContext | null;
   /** Breakpoint id of the frame the user last clicked. Null until then. */
   focusViewportId: string | null;
   /** When set, the right rail edits viewport chrome instead of node properties. */
@@ -97,6 +102,8 @@ export interface EditorSession {
   navigateDrillParent: (index: number) => void;
   selectNode: (nodeId: string | null) => void;
   selectRendered: (renderedId: string | null) => void;
+  /** Set a field on the selected direct instance or nested child instance. */
+  setNestedField: (field: string, value: import('@facadeur/core').FieldValue | null) => void;
   /** Last clicked viewport frame. Does not change the selection or the edit target. */
   setFocusViewport: (breakpointId: string | null) => void;
   /** Select a viewport row (Layers or stage). Clears the node selection. */

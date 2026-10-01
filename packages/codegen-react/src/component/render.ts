@@ -18,6 +18,7 @@ import {
 } from '../attributes.js';
 import { CodegenError, propName, quote } from '../names.js';
 import { assertDefault, jsLiteral } from './catalog.js';
+import { childFieldValue, childFieldsForInstance, withChildFieldOverride } from './child-fields.js';
 import type {
   Attr,
   Bound,
@@ -39,9 +40,10 @@ export function renderNode(
   usedProps: Set<string>,
   markStyle: () => void,
   dataScope: ReadonlyMap<string, string> = new Map(),
+  childFieldsProp?: string,
 ): ElementNode {
   if (node.type === 'instance') {
-    return renderInstance(node, catalog, imports, owner, usedProps, dataScope);
+    return renderInstance(node, catalog, imports, owner, usedProps, dataScope, childFieldsProp);
   }
   const tag = node.tag ?? (node.type === 'text' ? 'span' : node.type === 'image' ? 'img' : 'div');
   const children = node.type === 'frame' ? (node.children ?? []) : [];
@@ -134,6 +136,7 @@ export function renderNode(
           usedProps,
           markStyle,
           childScope,
+          childFieldsProp,
         ),
       );
     }
@@ -212,6 +215,7 @@ function renderInstance(
   owner: CatalogEntry,
   usedProps: Set<string>,
   dataScope: ReadonlyMap<string, string>,
+  childFieldsProp: string | undefined,
 ): ElementNode {
   const target = catalog.get(node.component);
   if (!target) {
@@ -241,7 +245,14 @@ function renderInstance(
     if (!source || !destination) continue;
     forwardedFields.add(member!);
     usedProps.add(source.name);
-    attrs.push({ name: destination.name, value: { kind: 'expr', code: source.name } });
+    attrs.push({
+      name: destination.name,
+      value: withChildFieldOverride(
+        { kind: 'expr', code: source.name },
+        childFieldValue(childFieldsProp, node.id, member!),
+        destination,
+      ) ?? { kind: 'expr', code: source.name },
+    });
   }
   for (const [publicName, path] of Object.entries(owner.document.expose?.events ?? {})) {
     const prefix = `${node.id}.`;
@@ -284,7 +295,15 @@ function renderInstance(
     }
     const directField = target.document.fields?.find((field) => field.name === fieldName);
     if (directField) assertDefault(node.component, directField, value);
-    attrs.push(valueAttr(prop.name, value));
+    attrs.push({
+      name: prop.name,
+      value:
+        withChildFieldOverride(
+          valueAttr(prop.name, value).value,
+          childFieldValue(childFieldsProp, node.id, fieldName),
+          prop,
+        ) ?? valueAttr(prop.name, value).value,
+    });
   }
   const providedFields = new Set([
     ...forwardedFields,
@@ -297,6 +316,18 @@ function renderInstance(
         `Instance "${node.id}" is missing required field "${fieldName}" on "${node.component}"`,
       );
     }
+    if (!providedFields.has(fieldName) && !prop.required) {
+      const override = childFieldValue(childFieldsProp, node.id, fieldName);
+      const value = withChildFieldOverride(undefined, override, prop);
+      if (value) attrs.push({ name: prop.name, value });
+    }
+  }
+  const inheritedChildFields = childFieldsForInstance(childFieldsProp, node.id, node.childFields);
+  if (inheritedChildFields && target.childFieldsProp) {
+    attrs.push({
+      name: target.childFieldsProp,
+      value: { kind: 'expr', code: inheritedChildFields },
+    });
   }
   for (const axis of (target.document.variants ?? []).filter(isVariantAxis)) {
     const value = node.variants?.[axis.name];

@@ -10,7 +10,14 @@ import type { StyleEditMode } from '../viewport-edit.js';
 import { pushDrillFrame, stackThroughParent, type DrillStackFrame } from '../drill-navigation.js';
 import { applyWorkspaceChange, kindOf, normalizeBreakpointId } from './kinds.js';
 import { resolveRenderedSelection } from './snapshot.js';
-import type { EditorDrag, EditorNotice, EditorSession, EditorTool } from './types.js';
+import type { NestedSelection } from '../nested-selection.js';
+import type {
+  EditorDrag,
+  EditorNotice,
+  EditorSession,
+  EditorSnapshot,
+  EditorTool,
+} from './types.js';
 
 export interface UndoHistory {
   noteCommand: (store: YjsDocumentStore) => void;
@@ -117,6 +124,10 @@ export interface EditorSessionSurfaceDeps {
   setSelectedNodeId: (id: string | null) => void;
   getSelectedRenderId: () => string | null;
   setSelectedRenderId: (id: string | null) => void;
+  getNestedSelection: () => NestedSelection | null;
+  getFieldContext: () => EditorSnapshot['fieldContext'];
+  setNestedSelection: (selection: NestedSelection | null) => void;
+  resolveNestedSelection: (renderedId: string) => NestedSelection | null;
   getFocusViewportId: () => string | null;
   setFocusViewportId: (id: string | null) => void;
   getSelectedViewportId: () => string | null;
@@ -242,8 +253,29 @@ export function createEditorSessionSurface(
         deps.publish();
         return;
       }
+      const nested = deps.resolveNestedSelection(renderedId);
+      if (nested) {
+        if (!deps.openFlat().nodes[nested.ownerNodeId]) {
+          deps.clearSelection();
+          deps.publish();
+          return;
+        }
+        if (
+          deps.getSelectedNodeId() === nested.ownerNodeId &&
+          deps.getSelectedRenderId() === nested.renderId &&
+          deps.getNestedSelection()?.instancePath === nested.instancePath
+        ) {
+          return;
+        }
+        deps.clearViewportSelection();
+        deps.setSelectedNodeId(nested.ownerNodeId);
+        deps.setSelectedRenderId(nested.renderId);
+        deps.setNestedSelection(nested);
+        deps.publish();
+        return;
+      }
       const hit = resolveRenderedSelection(deps.openFlat(), renderedId, deps.paintRoot());
-      if (!hit) {
+      if (!hit || (renderedId.includes('/') && hit.renderId !== renderedId)) {
         deps.clearSelection();
         deps.publish();
         return;
@@ -254,7 +286,45 @@ export function createEditorSessionSurface(
       deps.clearViewportSelection();
       deps.setSelectedNodeId(hit.nodeId);
       deps.setSelectedRenderId(hit.renderId);
+      deps.setNestedSelection(null);
       deps.publish();
+    },
+    setNestedField(field, value) {
+      const context = deps.getFieldContext();
+      if (!context || !context.fields.some((candidate) => candidate.name === field)) {
+        deps.setNotice({ tone: 'info', text: `Field "${field}" is not editable at this layer.` });
+        deps.publish();
+        return;
+      }
+      if (context.boundFields.includes(field) && value !== null) {
+        deps.setNotice({ tone: 'info', text: `Field "${field}" is bound to parent data.` });
+        deps.publish();
+        return;
+      }
+      const nested = deps.getNestedSelection();
+      if (nested) {
+        if (nested.instancePath) {
+          deps.run(deps.openStore(), {
+            type: 'setChildField',
+            nodeId: nested.ownerNodeId,
+            path: nested.instancePath,
+            field,
+            value,
+          });
+        } else {
+          deps.run(deps.openStore(), {
+            type: 'setField',
+            nodeId: nested.ownerNodeId,
+            field,
+            value,
+          });
+        }
+        return;
+      }
+      const selected = deps.getSelectedNodeId();
+      const node = selected ? deps.openFlat().nodes[selected] : undefined;
+      if (node?.type !== 'instance') return;
+      deps.run(deps.openStore(), { type: 'setField', nodeId: node.id, field, value });
     },
     setFocusViewport(breakpointId) {
       const next = normalizeBreakpointId(breakpointId);
@@ -303,7 +373,14 @@ export function createEditorSessionSurface(
       deps.setActiveVariantName(normalized);
       deps.publish();
     },
-    execute: (command) => deps.run(deps.openStore(), command),
+    execute: (command) => {
+      if (deps.getNestedSelection() && command.type !== 'setChildField') {
+        deps.setNotice({ tone: 'info', text: 'Nested layers only allow field overrides.' });
+        deps.publish();
+        return;
+      }
+      deps.run(deps.openStore(), command);
+    },
     executeDesign: (command) => deps.run(deps.designStore, command),
     undo: () => deps.undoHistory.undo(),
     redo: () => deps.undoHistory.redo(),

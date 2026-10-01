@@ -4,16 +4,25 @@ import {
   toNested,
   type DefaultKind,
   type FlatDocument,
+  type FlatNode,
 } from '@facadeur/core';
+import { withPreviewData } from '@facadeur/core';
 import type { YjsDocumentStore } from '@facadeur/store-yjs';
 import { componentVariantsFor, publicEventsFor, publicFieldsFor } from '../component-contract.js';
 import { ownsVariantContract, variantSummaries } from '../variant-edit.js';
-import { layerTree, nodeIdForHit, renderIdForNode } from '../selection-model.js';
+import { nodeIdForHit, renderIdForNode } from '../selection-model.js';
+import {
+  fieldContextForSelection,
+  type NestedFieldContext,
+  type NestedSelection,
+  virtualLayerTree,
+} from '../nested-selection.js';
 import { isDocumentDirty, type SavedJsonBaselines } from '../save-state.js';
 import type { ViewportChromeSettings } from '../viewport-chrome.js';
 import type { StyleEditMode } from '../viewport-edit.js';
 import type { DrillParent, DrillStackFrame } from '../drill-navigation.js';
 import { isKind } from './kinds.js';
+import { overlaySchemaDefaults } from '../schema-defaults.js';
 import type {
   AssetSummary,
   EditorDrag,
@@ -29,6 +38,7 @@ export interface SnapshotBuildContext {
   design: FlatDocument;
   selectedNodeId: string | null;
   selectedRenderId: string | null;
+  nestedSelection: NestedSelection | null;
   focusViewportId: string | null;
   selectedViewportId: string | null;
   viewportChrome: Readonly<Record<string, ViewportChromeSettings>>;
@@ -95,18 +105,45 @@ export function buildEditorSnapshot(ctx: SnapshotBuildContext): EditorSnapshot {
   const componentFields = componentTarget ? publicFieldsFor(componentTarget, catalogDocuments) : [];
   const componentEvents = componentTarget ? publicEventsFor(componentTarget, catalogDocuments) : [];
   const componentVariants = componentTarget ? componentVariantsFor(componentTarget) : [];
+  const nestedSelection = ctx.nestedSelection;
+  const fieldContext: NestedFieldContext | null = fieldContextForSelection({
+    document: activeDocument,
+    selectedNode,
+    nestedSelection,
+    catalog: catalogDocuments,
+    childFields: (ownerNodeId, instancePath) => {
+      const owner = activeDocument.nodes[ownerNodeId];
+      if (owner?.type !== 'instance') return undefined;
+      const childFields = (
+        owner as FlatNode & {
+          childFields?: Record<string, Record<string, import('@facadeur/core').FieldValue>>;
+        }
+      ).childFields;
+      return childFields?.[instancePath];
+    },
+  });
+  const nestedSelectionWithFields = nestedSelection ? { ...nestedSelection, fieldContext } : null;
+  const prepareDocument = (source: FlatDocument, variant?: string): FlatDocument =>
+    toFlat(withPreviewData(overlaySchemaDefaults(toNested(source)), variant));
+  const layers = virtualLayerTree(activeDocument, {
+    catalog: catalogDocuments,
+    paintRoot: activeDocument.kind !== 'page',
+    prepareDocument,
+  });
   return {
     workspace: ctx.workspace,
     openId: ctx.openId,
     paintRoot: document.kind !== 'page',
     assets,
-    layers: layerTree(activeDocument),
+    layers,
     document,
     activeDocument,
     design,
     selectedNodeId: ctx.selectedNodeId,
     selectedRenderId: ctx.selectedRenderId,
     selectedNode,
+    nestedSelection: nestedSelectionWithFields,
+    fieldContext,
     focusViewportId: ctx.focusViewportId,
     selectedViewportId: ctx.selectedViewportId,
     viewportChrome: ctx.viewportChrome,

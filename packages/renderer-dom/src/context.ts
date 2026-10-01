@@ -9,6 +9,7 @@ export function createRenderContext(documents: readonly DocumentFile[]): RenderC
     records: new Map<string, RenderedNode>(),
     path: null,
     scope: {},
+    childFieldPath: null,
     ownerId: null,
     depth: 0,
     canvasId: null,

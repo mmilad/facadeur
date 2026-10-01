@@ -62,6 +62,57 @@ describe('Yjs document store', () => {
     store.destroy();
   });
 
+  it('round-trips and undoes sparse child field overrides', () => {
+    const file: DocumentFile = {
+      ...initial,
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'owner',
+            type: 'instance',
+            component: 'owner',
+            childFields: { email: { label: 'Work email', placeholder: 'name@example.com' } },
+          },
+        ],
+      },
+    };
+    const store = createDocumentStore(file);
+    expect(store.getNode('owner')).toMatchObject({
+      childFields: { email: { label: 'Work email', placeholder: 'name@example.com' } },
+    });
+    store.execute({
+      type: 'setChildField',
+      nodeId: 'owner',
+      path: 'email',
+      field: 'value',
+      value: 'ada@example.com',
+    });
+    expect(store.getNode('owner')).toMatchObject({
+      childFields: { email: { value: 'ada@example.com' } },
+    });
+    store.undo();
+    expect(store.getNode('owner')).toMatchObject({
+      childFields: { email: { label: 'Work email', placeholder: 'name@example.com' } },
+    });
+    store.execute({
+      type: 'setChildField',
+      nodeId: 'owner',
+      path: 'email',
+      field: 'label',
+      value: null,
+    });
+    expect(store.getNode('owner')).toMatchObject({
+      childFields: { email: { placeholder: 'name@example.com' } },
+    });
+    store.undo();
+    expect(store.getNode('owner')).toMatchObject({
+      childFields: { email: { label: 'Work email', placeholder: 'name@example.com' } },
+    });
+    store.destroy();
+  });
+
   it('loads a nested file into maps and does not make that load undoable', () => {
     const store = createDocumentStore(initial);
     expect(store.getDocument()).toEqual(toFlat(initial));

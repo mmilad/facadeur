@@ -32,3 +32,18 @@
   align-self: flex-start;
   margin-top: 3px;
 }
+
+.nested-field-source {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.nested-field-source .text-button {
+  padding: 0;
+  font-size: inherit;
+}

@@ -30,6 +30,7 @@ export interface ComponentFile {
   variantTypes: VariantTypeSpec[];
   imports: ComponentImport[];
   usesCssProperties: boolean;
+  acceptsChildFields: boolean;
   contents: string;
 }
 
@@ -40,6 +41,8 @@ export interface CatalogEntry {
   variants: Map<string, PropSpec>;
   events: Map<string, PropSpec>;
   namedVariant?: PropSpec;
+  acceptsChildFields?: boolean;
+  childFieldsProp?: string;
 }
 
 export interface Attr {

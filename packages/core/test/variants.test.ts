@@ -449,6 +449,51 @@ describe('variant overlays', () => {
     });
   });
 
+  it('merges sparse nested instance fields and derives field-level resets', () => {
+    const base: DocumentFile = {
+      version: 1,
+      id: 'nested-fields-variant',
+      name: 'Nested fields variant',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'signIn',
+            type: 'instance',
+            component: 'sign-in',
+            childFields: {
+              email: { label: 'Email', value: 'base@example.test' },
+              'email/control': { placeholder: 'Base placeholder' },
+            },
+          },
+        ],
+      },
+    };
+    const edited = structuredClone(base);
+    const signIn = edited.root.type === 'frame' ? edited.root.children?.[0] : undefined;
+    if (!signIn || signIn.type !== 'instance') throw new Error('expected sign-in instance');
+    signIn.childFields = {
+      email: { placeholder: 'Variant placeholder' },
+      'email/control': { placeholder: 'Variant control placeholder' },
+    };
+
+    const derived = deriveVariantPreset(base, edited, 'compact');
+    expect(derived.overrides?.nodes).toMatchObject({
+      'root.signIn': {
+        childFields: {
+          email: { placeholder: 'Variant placeholder' },
+          'email/control': { placeholder: 'Variant control placeholder' },
+        },
+        unset: ['childFields.email.label', 'childFields.email.value'],
+      },
+    });
+
+    const resolved = resolveVariantDocument({ ...base, variants: [derived] }, 'compact');
+    expect(resolved.root).toEqual(edited.root);
+  });
+
   it('derives and resolves removed optional field defaults without copying the definition', () => {
     const base: DocumentFile = {
       version: 1,

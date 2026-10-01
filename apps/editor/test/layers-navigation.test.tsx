@@ -28,7 +28,11 @@ function setup() {
         id: 'child',
         name: 'Child',
         kind: 'atom',
-        root: { id: 'root', type: 'text', text: 'Inner layer' },
+        root: {
+          id: 'root',
+          type: 'frame',
+          children: [{ id: 'inner', type: 'text', text: 'Inner layer' }],
+        },
       },
     ],
   });
@@ -36,12 +40,24 @@ function setup() {
   render(<App session={session} />);
   return session;
 }
-it('drills into a layer instance master and returns through the breadcrumb', async () => {
+it('selects nested layers locally and drills to a master explicitly', async () => {
   const session = setup();
   const layers = within(screen.getByRole('region', { name: 'Layers' }));
   expect(layers.getByText('Parent', { selector: 'strong' })).toBeVisible();
   const user = userEvent.setup();
   await user.dblClick(layers.getByRole('button', { name: 'instance child' }));
+  expect(session.getSnapshot().openId).toBe('parent');
+  expect(session.getSnapshot().selectedNodeId).toBe('child');
+  expect(session.getSnapshot().nestedSelection).toBeNull();
+  await user.click(layers.getByRole('button', { name: 'Expand layers in child' }));
+  await user.dblClick(layers.getByRole('button', { name: 'text Inner layer' }));
+  expect(session.getSnapshot().openId).toBe('parent');
+  expect(session.getSnapshot().selectedNodeId).toBe('child');
+  expect(session.getSnapshot().nestedSelection).toMatchObject({
+    ownerNodeId: 'child',
+    renderId: 'root/child/inner',
+  });
+  act(() => session.drillToMaster('child'));
   expect(session.getSnapshot().openId).toBe('child');
   expect(session.getSnapshot().drillParents.map((parent) => parent.documentId)).toEqual(['parent']);
   act(() => session.navigateDrillParent(0));

@@ -4,6 +4,7 @@ import { canonicalizeLayout } from '../styles/layout.js';
 import type { FontFamily, IconDefinition } from './schema.js';
 import type {
   Binding,
+  ChildFieldOverrides,
   DocumentFile,
   DocumentSettings,
   DisplayOn,
@@ -64,6 +65,7 @@ export interface InstanceNode {
   layout?: Layout;
   component: string;
   fields?: Record<string, FieldValue>;
+  childFields?: ChildFieldOverrides;
   fieldBindings?: Record<string, string>;
   variants?: Record<string, string>;
   variantRules?: VariantRule[];
@@ -255,6 +257,7 @@ export function flattenSubtree(
     ...(node.layout ? { layout: node.layout } : {}),
     component: node.component,
     ...(node.fields ? { fields: node.fields } : {}),
+    ...(node.childFields ? { childFields: cloneChildFields(node.childFields) } : {}),
     ...(node.fieldBindings ? { fieldBindings: { ...node.fieldBindings } } : {}),
     ...(node.variants ? { variants: node.variants } : {}),
     ...(node.variantRules?.length ? { variantRules: structuredClone(node.variantRules) } : {}),
@@ -266,6 +269,7 @@ export function flattenSubtree(
 export function makeFlatNode(node: FlatNode): FlatNode {
   if (node.type === 'instance') {
     const fields = sortFieldValues(node.fields);
+    const childFields = cloneChildFields(node.childFields);
     const variants = sortStringRecord(node.variants);
     const layout = cleanLayout(node.layout);
     return {
@@ -276,6 +280,7 @@ export function makeFlatNode(node: FlatNode): FlatNode {
       ...(layout ? { layout } : {}),
       component: node.component,
       ...(fields ? { fields } : {}),
+      ...(childFields ? { childFields } : {}),
       ...(node.fieldBindings ? { fieldBindings: { ...node.fieldBindings } } : {}),
       ...(variants ? { variants } : {}),
       ...(node.variantRules?.length ? { variantRules: structuredClone(node.variantRules) } : {}),
@@ -378,6 +383,7 @@ function expandNode(doc: FlatDocument, id: string, stack: Set<string>): NestedNo
       ...(node.layout ? { layout: { ...node.layout } } : {}),
       component: node.component,
       ...(node.fields ? { fields: { ...node.fields } } : {}),
+      ...(node.childFields ? { childFields: cloneChildFields(node.childFields) } : {}),
       ...(node.fieldBindings ? { fieldBindings: { ...node.fieldBindings } } : {}),
       ...(node.variants ? { variants: { ...node.variants } } : {}),
       ...(node.variantRules?.length ? { variantRules: structuredClone(node.variantRules) } : {}),
@@ -470,6 +476,22 @@ function sortFieldValues(
   for (const key of keys) {
     const value = record[key];
     if (value !== undefined) next[key] = value;
+  }
+  return Object.keys(next).length ? next : undefined;
+}
+
+function cloneChildFields(value: ChildFieldOverrides | undefined): ChildFieldOverrides | undefined {
+  if (!value) return undefined;
+  const next: ChildFieldOverrides = {};
+  for (const path of Object.keys(value).sort()) {
+    const fields = value[path];
+    if (!fields) continue;
+    const sorted: Record<string, FieldValue> = {};
+    for (const name of Object.keys(fields).sort()) {
+      const field = fields[name];
+      if (field !== undefined) sorted[name] = structuredClone(field);
+    }
+    if (Object.keys(sorted).length) next[path] = sorted;
   }
   return Object.keys(next).length ? next : undefined;
 }

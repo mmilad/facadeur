@@ -2,9 +2,17 @@ import { findParent, type FlatDocument, type FlatNode } from '@facadeur/core';
 
 export interface LayerItem {
   id: string;
+  /** Rendered address, unique across a composed document tree. */
+  address: string;
+  /** Document that defines this node. */
+  documentId: string;
   name: string;
   type: FlatNode['type'];
   children: LayerItem[];
+  virtual: boolean;
+  ownerNodeId?: string;
+  instancePath?: string;
+  fieldEditable: boolean;
 }
 
 /**
@@ -61,7 +69,7 @@ export function renderIdForNode(
 export function layerTree(doc: FlatDocument): LayerItem | null {
   const root = doc.nodes[doc.rootId];
   if (!root) return null;
-  return layerItem(doc, root);
+  return layerItem(doc, root, root.id, false, undefined, '');
 }
 
 function descend(doc: FlatDocument, id: string, parts: string[], index: number): string | null {
@@ -73,16 +81,31 @@ function descend(doc: FlatDocument, id: string, parts: string[], index: number):
   return descend(doc, next, parts, index + 1) ?? id;
 }
 
-function layerItem(doc: FlatDocument, node: FlatNode): LayerItem {
+function layerItem(
+  doc: FlatDocument,
+  node: FlatNode,
+  address: string,
+  virtual: boolean,
+  ownerNodeId: string | undefined,
+  instancePath: string,
+): LayerItem {
   const children = node.type === 'frame' ? node.children : [];
   return {
     id: node.id,
+    address,
+    documentId: doc.id,
     name: layerName(node),
     type: node.type,
     children: children.flatMap((id) => {
       const child = doc.nodes[id];
-      return child ? [layerItem(doc, child)] : [];
+      return child
+        ? [layerItem(doc, child, `${address}/${child.id}`, virtual, ownerNodeId, instancePath)]
+        : [];
     }),
+    virtual,
+    ...(ownerNodeId ? { ownerNodeId } : {}),
+    ...(virtual ? { instancePath } : {}),
+    fieldEditable: node.type === 'instance' && !virtual,
   };
 }
 

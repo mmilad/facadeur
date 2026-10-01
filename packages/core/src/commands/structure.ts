@@ -14,6 +14,7 @@ import {
   assertAttributes,
   assertBindings,
   assertDisplayOn,
+  assertChildFields,
   assertEventBindings,
   assertFieldBindings,
   assertLayout,
@@ -174,7 +175,7 @@ function materialize(draft: InsertNode, seen: Set<string>, nextId: () => string)
   ) {
     throw new DocumentError(
       'nesting',
-      'Instances can only set name, displayOn, layout, component, fields, fieldBindings, and variants',
+      'Instances can only set name, displayOn, layout, component, fields, childFields, fieldBindings, and variants',
     );
   }
   if (!draft.component || !ID_PATTERN.test(draft.component)) {
@@ -182,6 +183,7 @@ function materialize(draft: InsertNode, seen: Set<string>, nextId: () => string)
   }
   if (draft.displayOn) assertDisplayOn(draft.displayOn);
   if (draft.fieldBindings) assertFieldBindings(draft.fieldBindings);
+  if (draft.childFields) assertChildFields(draft.childFields);
   return {
     id,
     type: 'instance',
@@ -190,6 +192,9 @@ function materialize(draft: InsertNode, seen: Set<string>, nextId: () => string)
     ...(draft.layout ? { layout: cleanCommandLayout(draft.layout) } : {}),
     component: draft.component,
     ...(draft.fields && Object.keys(draft.fields).length ? { fields: { ...draft.fields } } : {}),
+    ...(draft.childFields && Object.keys(draft.childFields).length
+      ? { childFields: structuredClone(draft.childFields) }
+      : {}),
     ...(draft.fieldBindings && Object.keys(draft.fieldBindings).length
       ? { fieldBindings: { ...(draft.fieldBindings as Record<string, string>) } }
       : {}),

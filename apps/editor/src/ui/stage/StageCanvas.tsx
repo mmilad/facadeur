@@ -24,7 +24,7 @@ import {
 } from '../../domain/selection.js';
 import {
   documentChain,
-  instanceOpenTarget,
+  nodeIdForHit,
   renderIdForNode,
   resolveClick,
   type SelectMode,
@@ -123,6 +123,13 @@ export function StageCanvas({
     function choose(event: { clientX: number; clientY: number }, mode: SelectMode) {
       const snap = session.getSnapshot();
       const hit = selection.hitAt(event.clientX, event.clientY);
+      if (hit) {
+        const targetAddress = renderedAddressForClick(snap, hit.id, mode);
+        if (targetAddress) {
+          session.selectRendered(targetAddress);
+          return;
+        }
+      }
       const chain = hit ? documentChain(snap.document, hit.id, snap.paintRoot) : [];
       const target = resolveClick({
         doc: snap.document,
@@ -131,6 +138,33 @@ export function StageCanvas({
         mode,
       });
       session.selectNode(target);
+    }
+
+    function renderedAddressForClick(
+      snap: EditorSnapshot,
+      renderedId: string,
+      mode: SelectMode,
+    ): string | null {
+      const chain = documentChain(snap.document, renderedId, snap.paintRoot);
+      const localDeepest = chain[chain.length - 1] ?? null;
+      const localAddress = localDeepest
+        ? renderIdForNode(snap.document, localDeepest, snap.paintRoot)
+        : null;
+      if (mode === 'deepest') return renderedId;
+      const selected = snap.selectedRenderId;
+      if (!selected || selected === renderedId || !renderedId.startsWith(`${selected}/`)) {
+        return localAddress;
+      }
+      if (mode === 'context') return selected;
+      const remainder = renderedId.slice(selected.length + 1);
+      const next = remainder.split('/')[0];
+      return next ? `${selected}/${next}` : selected;
+    }
+
+    function isNestedRenderedId(snap: EditorSnapshot, renderedId: string): boolean {
+      const local = nodeIdForHit(snap.document, renderedId, snap.paintRoot);
+      if (!local) return false;
+      return renderIdForNode(snap.document, local, snap.paintRoot) !== renderedId;
     }
 
     function measure(
@@ -149,6 +183,7 @@ export function StageCanvas({
       if (!local) return null;
       const snap = session.getSnapshot();
       const hit = selection.hitAt(clientX, clientY);
+      if (hit && isNestedRenderedId(snap, hit.id)) return null;
       const chain = hit
         ? documentChain(snap.document, hit.id, snap.paintRoot)
         : [snap.document.rootId];
@@ -198,6 +233,7 @@ export function StageCanvas({
     function placeTool(toolName: InsertTool, clientX: number, clientY: number, fromDrag: boolean) {
       const snap = session.getSnapshot();
       const hit = selection.hitAt(clientX, clientY);
+      if (hit && isNestedRenderedId(snap, hit.id)) return;
       const chain = hit ? documentChain(snap.document, hit.id, snap.paintRoot) : [];
       const selected = snap.selectedNode;
       const append = !fromDrag && selected?.type === 'frame' && chain.includes(selected.id);
@@ -265,7 +301,8 @@ export function StageCanvas({
         mode,
       });
       const renderId = target ? renderIdForNode(snap.document, target, snap.paintRoot) : null;
-      selection.hoverRendered(renderId, frame.host.id);
+      const address = renderedAddressForClick(snap, hit.id, mode);
+      selection.hoverRendered(address ?? renderId, frame.host.id);
     };
 
     const onPointerDown = (event: PointerEvent) => {
@@ -292,7 +329,12 @@ export function StageCanvas({
         startY: event.clientY,
         moved: false,
         mode: snap.tool === 'select' ? 'reorder' : 'insert',
-        nodeId: snap.tool === 'select' ? target : null,
+        nodeId:
+          snap.tool === 'select' &&
+          !snap.nestedSelection &&
+          (!hit || !isNestedRenderedId(snap, hit.id))
+            ? target
+            : null,
       };
       viewport.setPointerCapture(event.pointerId);
     };
@@ -316,15 +358,6 @@ export function StageCanvas({
         lastClick = { time: now, x: event.clientX, y: event.clientY };
         const mode: SelectMode =
           event.ctrlKey || event.metaKey ? 'deepest' : deeper ? 'deeper' : 'context';
-        if (mode === 'deeper') {
-          const hit = selection.hitAt(event.clientX, event.clientY);
-          const chain = hit ? documentChain(snap.document, hit.id, snap.paintRoot) : [];
-          const componentId = instanceOpenTarget(snap.document, chain, snap.selectedNodeId);
-          if (componentId) {
-            session.drillToMaster(componentId);
-            return;
-          }
-        }
         choose(event, mode);
         return;
       }
@@ -439,6 +472,7 @@ export function StageCanvas({
         return;
       }
       const snap = session.getSnapshot();
+      if (snap.nestedSelection) return;
       const node = snap.selectedNode;
       if (!node?.layout || node.layout.position !== 'absolute') return;
       event.preventDefault();
@@ -600,7 +634,7 @@ export function StageCanvas({
       >
         {isInsertTool(tool)
           ? insertModeCue(tool)
-          : 'Scroll to zoom · drag the canvas to pan · F T I insert · double-click drills in and opens the master in the project tree'}
+          : 'Scroll to zoom · drag the canvas to pan · F T I insert · double-click selects the next nested layer'}
       </p>
     </div>
   );

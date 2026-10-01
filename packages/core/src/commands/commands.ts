@@ -12,7 +12,7 @@ import { validateLibraries, validateTree } from '../validation/tree.js';
 import type { Command, CommandContext } from './types.js';
 import { insertNode, moveNode, removeNode, wrapNode } from './structure.js';
 import { adoptTokenReads } from './token-reads.js';
-import { setField, setProp, setStyle, setVariant } from './node.js';
+import { setChildField, setField, setProp, setStyle, setVariant } from './node.js';
 import {
   defineEvent,
   defineField,
@@ -61,6 +61,9 @@ export function applyCommand(
       break;
     case 'setField':
       setField(next, command);
+      break;
+    case 'setChildField':
+      setChildField(next, command, ctx);
       break;
     case 'setVariant':
       setVariant(next, command);

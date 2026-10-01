@@ -5,6 +5,7 @@ import {
   type DefaultKind,
   type DocumentFile,
   type FlatDocument,
+  type CommandContext,
 } from '@facadeur/core';
 import { createDocumentStore, type YjsDocumentStore } from '@facadeur/store-yjs';
 import type { DesignInput } from '@facadeur/tokens';
@@ -106,6 +107,7 @@ export function registerSessionAssetDocuments(options: {
   documents: readonly DocumentFile[];
   designId: string;
   resolveKind: (componentId: string) => string | undefined;
+  resolveChildField?: CommandContext['resolveChildField'];
   assetStores: Map<string, YjsDocumentStore>;
   order: string[];
 }): void {
@@ -115,7 +117,10 @@ export function registerSessionAssetDocuments(options: {
     }
     if (file.id === options.designId) continue;
     const migrated = migratePreviewData(file);
-    const store = createDocumentStore(migrated, { resolveKind: options.resolveKind });
+    const store = createDocumentStore(migrated, {
+      resolveKind: options.resolveKind,
+      resolveChildField: options.resolveChildField,
+    });
     options.assetStores.set(file.id, store);
     options.order.push(file.id);
   }
@@ -189,6 +194,7 @@ export function loadEditorDocument(options: {
   handles: Map<string, JsonFileHandle>;
   savedJson: SavedJsonBaselines;
   resolveKind: (componentId: string) => string | undefined;
+  resolveChildField?: CommandContext['resolveChildField'];
   forget: (store: YjsDocumentStore | undefined) => void;
   watch: (store: YjsDocumentStore, source: 'asset' | 'design') => void;
   syncKinds: () => void;
@@ -202,7 +208,10 @@ export function loadEditorDocument(options: {
   try {
     const file = migratePreviewData(options.file);
     if (file.id === options.designId) {
-      const created = createDocumentStore(file, { resolveKind: options.resolveKind });
+      const created = createDocumentStore(file, {
+        resolveKind: options.resolveKind,
+        resolveChildField: options.resolveChildField,
+      });
       const previous = options.getDesignStore();
       options.setDesignStore(created);
       options.forget(previous);
@@ -224,7 +233,10 @@ export function loadEditorDocument(options: {
     });
     if (!options.assetStores.has(file.id)) nextFiles.push(file);
     validateCatalog(nextFiles);
-    const created = createDocumentStore(file, { resolveKind: options.resolveKind });
+    const created = createDocumentStore(file, {
+      resolveKind: options.resolveKind,
+      resolveChildField: options.resolveChildField,
+    });
     const previous = options.assetStores.get(file.id);
     options.assetStores.set(file.id, created);
     if (!options.order.includes(file.id)) options.order.push(file.id);

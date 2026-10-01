@@ -59,7 +59,7 @@ describe('content example values', () => {
       root?.render(<App session={session} />);
     });
     await act(async () => {
-      session.openAsset('input', 'control');
+      session.openAsset('input');
       session.selectNode('control');
     });
 

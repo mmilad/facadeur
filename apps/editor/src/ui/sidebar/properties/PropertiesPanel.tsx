@@ -7,6 +7,7 @@ import { ownsVariantContract, variantSummaries } from '../../../domain/variant-e
 import { createNamedVariant, renameNamedVariant } from '../../../domain/variant-actions.js';
 import { VariantActionButton } from '../../controls/variants/VariantActionButton.js';
 import { AddPopover, Field, TextInput } from '../../form/index.js';
+import { NestedFieldsPanel } from './content/NestedFieldsPanel.js';
 import { ContentPanel } from './content/ContentPanel.js';
 import { InstanceContext } from './content/InstanceContext.js';
 import { StyleInspector } from './style/StyleInspector.js';
@@ -35,6 +36,8 @@ export function PropertiesPanel({
   const node = inspectorSnap.selectedNode;
   const [primaryTab, setPrimaryTab] = useState<PropertyPrimaryTab>('content');
   const isRoot = node?.id === inspectorSnap.document.rootId;
+
+  if (snap.nestedSelection) return <NestedFieldsPanel session={session} snap={snap} />;
 
   const contextTitle = node
     ? node.type === 'instance'

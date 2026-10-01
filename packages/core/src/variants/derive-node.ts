@@ -1,5 +1,10 @@
 import { DocumentError } from '../document/errors.js';
-import type { NestedNode, VariantNodeOverride } from '../document/schema.js';
+import type {
+  ChildFieldOverrides,
+  FieldValue,
+  NestedNode,
+  VariantNodeOverride,
+} from '../document/schema.js';
 
 export function deriveNodeOverride(
   base: NestedNode,
@@ -42,6 +47,8 @@ export function deriveNodeOverride(
       base.id,
     );
     if (fields) override.fields = fields as VariantNodeOverride['fields'];
+    const childFields = childFieldsDelta(override, base.childFields, editedInstance.childFields);
+    if (childFields) override.childFields = childFields;
     const fieldBindings = mapDelta(
       override,
       'fieldBindings',
@@ -271,6 +278,44 @@ function mapDelta(
   for (const key of Object.keys(base ?? {})) {
     if (edited[key] === undefined) {
       addUnset(target, `${property}.${key}`);
+    }
+  }
+  return Object.keys(delta).length ? delta : undefined;
+}
+
+/** Derive nested instance fields as a sparse path/field map. */
+function childFieldsDelta(
+  target: VariantNodeOverride,
+  base: ChildFieldOverrides | undefined,
+  edited: ChildFieldOverrides | undefined,
+): ChildFieldOverrides | undefined {
+  if (sameValue(base, edited)) return undefined;
+  if (edited === undefined) {
+    if (base === undefined) return undefined;
+    addUnset(target, 'childFields');
+    return undefined;
+  }
+
+  const delta: ChildFieldOverrides = {};
+  const paths = new Set([...Object.keys(base ?? {}), ...Object.keys(edited)]);
+  for (const path of paths) {
+    const baseFields = base?.[path];
+    const editedFields = edited[path];
+    if (!editedFields) {
+      for (const field of Object.keys(baseFields ?? {})) {
+        addUnset(target, `childFields.${path}.${field}`);
+      }
+      continue;
+    }
+    for (const [field, value] of Object.entries(editedFields)) {
+      if (!sameValue(baseFields?.[field], value)) {
+        (delta[path] ??= {})[field] = structuredClone(value) as FieldValue;
+      }
+    }
+    for (const field of Object.keys(baseFields ?? {})) {
+      if (editedFields[field] === undefined) {
+        addUnset(target, `childFields.${path}.${field}`);
+      }
     }
   }
   return Object.keys(delta).length ? delta : undefined;

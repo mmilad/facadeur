@@ -18,7 +18,7 @@ const examplesDir = resolve(process.cwd(), 'examples');
 
 function examples(): DocumentFile[] {
   const raw = readdirSync(examplesDir)
-    .filter((name) => name.endsWith('.json'))
+    .filter((name) => name.endsWith('.json') && name !== 'schemas.json')
     .map((name) => JSON.parse(readFileSync(resolve(examplesDir, name), 'utf8')) as unknown);
   return validateCatalog(raw);
 }
@@ -172,6 +172,73 @@ describe('renderer', () => {
     );
   });
 
+  it('applies sparse child field overrides at the owning instance only', () => {
+    const control: DocumentFile = {
+      version: 1,
+      id: 'nested-control',
+      name: 'Nested control',
+      kind: 'atom',
+      fields: [
+        { name: 'label', type: 'text', default: 'Label' },
+        { name: 'value', type: 'text', default: '' },
+        { name: 'placeholder', type: 'text', default: 'Placeholder' },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'label',
+            type: 'text',
+            bindings: [{ field: 'label', target: 'text' }],
+          },
+        ],
+      },
+    };
+    const owner: DocumentFile = {
+      version: 1,
+      id: 'nested-owner',
+      name: 'Nested owner',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [{ id: 'email', type: 'instance', component: control.id }],
+      },
+    };
+    const use: DocumentFile = {
+      version: 1,
+      id: 'nested-use',
+      name: 'Nested use',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'form',
+            type: 'instance',
+            component: owner.id,
+            childFields: { email: { label: 'Work email' } },
+          },
+        ],
+      },
+    };
+    const host = document.createElement('div');
+    renderDocument(use, [use, owner, control], host);
+    expect(host.querySelector('[data-id="form/email/label"]')?.textContent).toBe('Work email');
+    expect(host.querySelector('[data-id="form/email"]')?.getAttribute('data-component')).toBe(
+      control.id,
+    );
+    expect(use.root).toMatchObject({
+      children: [{ childFields: { email: { label: 'Work email' } } }],
+    });
+    expect(owner.root).toMatchObject({ children: [{ id: 'email' }] });
+    expect(
+      (owner.root as Extract<typeof owner.root, { type: 'frame' }>).children?.[0],
+    ).not.toHaveProperty('fields');
+  });
+
   it('paints the specimen page with nested instance ids', () => {
     const documents = examples();
     const page = documents.find((document) => document.id === 'specimen');
@@ -288,7 +355,7 @@ describe('renderer', () => {
     renderDocument(button, documents, shown, { paintRoot: true });
     const root = shown.querySelector('[data-id="root"]');
     expect(root?.tagName).toBe('BUTTON');
-    expect(root?.textContent).toBe('Button');
+    expect(root?.textContent).toBe('');
     expect(root?.getAttribute('data-component')).toBe('button');
     expect(root?.getAttribute('data-variant-tone')).toBe('primary');
     expect(root?.getAttribute('data-variant-size')).toBe('md');

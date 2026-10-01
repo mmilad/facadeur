@@ -35,7 +35,7 @@ export function useEditorNavigation(
   const initialSelection = useRef({
     documentId: snap.openId,
     variantName: snap.activeVariantName ?? undefined,
-    layerId: snap.selectedNodeId ?? undefined,
+    layerId: snap.nestedSelection?.renderId ?? snap.selectedNodeId ?? undefined,
     viewportId: snap.selectedViewportId ?? undefined,
     surface: 'editor',
   });
@@ -85,14 +85,22 @@ export function useEditorNavigation(
         changed = true;
       }
 
-      const nodeId =
-        requested.layerId && next.activeDocument.nodes[requested.layerId]
-          ? requested.layerId
-          : null;
-      if (nodeId !== next.selectedNodeId) {
-        session.selectNode(nodeId);
-        next = session.getSnapshot();
-        changed = true;
+      const requestedLayer = requested.layerId;
+      const currentLayer = next.nestedSelection?.renderId ?? next.selectedNodeId;
+      if (requestedLayer?.includes('/')) {
+        if (requestedLayer !== currentLayer) {
+          session.selectRendered(requestedLayer);
+          next = session.getSnapshot();
+          changed = true;
+        }
+      } else {
+        const nodeId =
+          requestedLayer && next.activeDocument.nodes[requestedLayer] ? requestedLayer : null;
+        if (nodeId !== currentLayer) {
+          session.selectNode(nodeId);
+          next = session.getSnapshot();
+          changed = true;
+        }
       }
 
       const viewportId = requested.viewportId;
@@ -142,7 +150,7 @@ export function useEditorNavigation(
     const desired = {
       documentId: snap.openId,
       variantName: snap.activeVariantName ?? undefined,
-      layerId: snap.selectedNodeId ?? undefined,
+      layerId: snap.nestedSelection?.renderId ?? snap.selectedNodeId ?? undefined,
       viewportId: snap.selectedViewportId ?? undefined,
       surface,
     };
@@ -167,6 +175,7 @@ export function useEditorNavigation(
     snap.activeVariantName,
     snap.openId,
     snap.selectedNodeId,
+    snap.selectedRenderId,
     snap.selectedViewportId,
     surface,
   ]);

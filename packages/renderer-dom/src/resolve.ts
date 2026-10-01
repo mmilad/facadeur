@@ -1,4 +1,5 @@
 import type {
+  ChildFieldOverrides,
   DisplayOn,
   DocumentChange,
   DocumentFile,
@@ -6,7 +7,13 @@ import type {
   FieldValue,
   NestedNode,
 } from '@facadeur/core';
-import { isVariantAxis, resolveVariantDocument, variantPresets } from '@facadeur/core';
+import {
+  childOverridePath,
+  isVariantAxis,
+  mergeChildFieldContext,
+  resolveVariantDocument,
+  variantPresets,
+} from '@facadeur/core';
 import type { RenderContext } from './types.js';
 
 export const MAX_DEPTH = 32;
@@ -70,6 +77,8 @@ export function resolveInstance(
   scope: Record<string, FieldValue>;
   ownerId: string | null;
   depth: number;
+  childFields?: ChildFieldOverrides;
+  childFieldPath?: string | null;
 } | null {
   const parts = renderedId.split('/');
   const rootId = parts[0];
@@ -81,6 +90,7 @@ export function resolveInstance(
     scope: ctx.scope,
     ownerId: null,
     depth: 0,
+    childFieldPath: null,
   });
 }
 
@@ -94,6 +104,8 @@ function walkRendered(
     scope: Record<string, FieldValue>;
     ownerId: string | null;
     depth: number;
+    childFields?: ChildFieldOverrides;
+    childFieldPath?: string | null;
   },
 ): {
   instance: Extract<NestedNode, { type: 'instance' }>;
@@ -101,16 +113,23 @@ function walkRendered(
   scope: Record<string, FieldValue>;
   ownerId: string | null;
   depth: number;
+  childFields?: ChildFieldOverrides;
+  childFieldPath?: string | null;
 } | null {
   if (node.id !== parts[index]) return null;
   const last = index === parts.length - 1;
   if (node.type === 'instance') {
-    if (last) return { instance: node, ...parent };
+    const overridePath = childOverridePath(parent.childFieldPath, node.id);
+    const childOverride = overridePath ? parent.childFields?.[overridePath] : undefined;
+    const effectiveNode = childOverride
+      ? { ...node, fields: { ...(node.fields ?? {}), ...childOverride } }
+      : node;
+    if (last) return { instance: effectiveNode, ...parent };
     const definition = definitionForInstance(node, ctx);
     if (!definition || definition.root.type !== 'frame') return null;
     const path = joinId(parent.path, node.id);
     const scope = resolveFields(definition.fields, {
-      ...(node.fields ?? {}),
+      ...(effectiveNode.fields ?? {}),
       ...resolveFieldBindings(node.fieldBindings, parent.scope),
     });
     const root = definition.root;
@@ -124,6 +143,8 @@ function walkRendered(
       scope: repeated?.scope ?? scope,
       ownerId: path,
       depth: parent.depth + 1,
+      childFields: mergeChildFieldContext(parent.childFields, node.childFields, overridePath),
+      childFieldPath: overridePath ?? '',
     });
   }
   if (node.type !== 'frame' || last) return null;

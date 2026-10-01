@@ -18,8 +18,14 @@ export function renderComponent(
   const imports = new Map<string, ComponentImport>();
   const usedProps = new Set<string>();
   let usesCssProperties = false;
+  const acceptsChildFields = entry.acceptsChildFields === true;
   const names = entry.namedVariant
-    ? ['default', ...variantPresets(document).filter((variant) => variant.name !== 'default').map((variant) => variant.name)]
+    ? [
+        'default',
+        ...variantPresets(document)
+          .filter((variant) => variant.name !== 'default')
+          .map((variant) => variant.name),
+      ]
     : ['default'];
   const roots = names.map((name) => {
     const effective = resolveVariantDocument(document, name);
@@ -34,6 +40,8 @@ export function renderComponent(
       () => {
         usesCssProperties = true;
       },
+      new Map(),
+      acceptsChildFields ? entry.childFieldsProp : undefined,
     );
   });
   const body = entry.namedVariant
@@ -52,6 +60,8 @@ export function renderComponent(
     variantTypes,
     imports: [...imports.values()].sort((left, right) => left.from.localeCompare(right.from, 'en')),
     usesCssProperties,
+    acceptsChildFields,
+    childFieldsPropName: entry.childFieldsProp ?? 'childFields',
     usedProps,
     body,
   });
@@ -63,6 +73,7 @@ export function renderComponent(
     variantTypes,
     imports: [...imports.values()],
     usesCssProperties,
+    acceptsChildFields,
     contents,
   };
 }

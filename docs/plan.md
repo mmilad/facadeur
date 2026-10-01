@@ -10,6 +10,47 @@ keine automatische Aufteilung. Begründete Refactors innerhalb des aktuellen Auf
 vor die davon abhängige Feature-Arbeit in den Aufgabenplan. Andere Kandidaten bleiben im Backlog.
 Aktuelle Nutzerentscheidungen haben Vorrang vor historischen Architekturentscheidungen unten.
 
+### Nested instance fields (2026-10-01)
+
+Aktueller Nutzerauftrag ersetzt den bisherigen Master-only-Drill-in für die Auswahl:
+Instanzen in der Ebenenliste aufklappen und innere Layers im enthaltenden Dokument auswählen.
+Innere Layers erlauben ausschließlich lokale Feldwerte, keine Struktur-, Style-, Schema- oder
+Variantenänderungen am Master. Master-Bearbeitung bleibt eine explizite Aktion.
+
+- [x] Auswahl/virtuellen Baum in einem fokussierten Editor-Domain-Modul kapseln, bevor
+      Session, Layers und Stage erweitert werden. Evidenz: lokale Node-IDs und Render-Adressen
+      sind bisher absichtlich getrennt und beenden die Auswahl an der Instanzgrenze. Session
+      bleibt Koordinator; wiederholte Resolver-/Baumlogik gehört in `nested-selection`.
+- [x] Sparse `childFields` auf Instanzen ergänzen: bestehende `fields` adressieren nur den
+      öffentlichen Contract; nicht exponierte innere Input-Felder sind damit nicht lokal
+      überschreibbar. Pfade enthalten Instanz-IDs, keine vollständigen Kopien der Master.
+      Feld-only-Command, Reset und Validierung erhalten atomare Ablehnung, Undo und Roundtrip.
+- [x] Renderer, Varianten, Yjs und Codegen unterstützen denselben Contract. Gemeinsame
+      portable Pfad-/Overlay-Semantik gehört zu Core; DOM-/Code-Ausgabe bleibt beim Adapter.
+      Große Schema-/Flat-Dateien bleiben kohäsiv, neue Overlay-Verantwortung wird separat geführt.
+- [x] Inspector zeigt Herkunft, vererbte Werte und Reset; verschachtelte Auswahl hat keine
+      Style-/Struktur-/Varianten-Controls. Bestehende Formcontrols werden wiederverwendet.
+- [x] Auswahlpfad im URL abbilden; Kollisionen gleicher innerer Node-IDs vermeiden.
+- [x] Regressionstests für Isolation zweier Instanzen und Master, tiefe Pfade, Bindings,
+      aktive Varianten, Reset, Undo/Redo, Persistenz und Codegen; Browser-Prüfung des Specimen.
+
+Unabhängige Größen-/Organisationskandidaten bleiben im Backlog. Die vorhandenen großen
+Stage-/Session-Koordinatoren erhalten nur Integrationspunkte und Guards; keine neue
+Resolver-Verantwortung. Änderungen am Datenmodell sind auf die begründete optionale
+Feld-Override-Map begrenzt, ohne Migration bestehender Dokumente.
+
+Abschluss: `nested-selection/` trennt Adressauflösung, Feldkontext und virtuelle Baumprojektion;
+`InstanceFieldOverride` wird von direktem und verschachteltem Inspector gemeinsam genutzt.
+Core besitzt die gemeinsame Pfad-/Merge-Semantik, Codegen einen privaten Transport-Emitter.
+Schema/Flat und die Ausgabe-/Session-Koordinatoren bleiben wegen ihrer kohäsiven Verträge erhalten.
+Der erneute Scan markiert weiterhin den großen Yjs-Codec; dessen breite Codec-Familien-Aufteilung
+bleibt ein unabhängiger Backlog-Kandidat (Persistenz-Roundtrip und Undo unverändert halten).
+Die Content-Inspector-Dateien gehören weiterhin zu einer gemeinsamen UI-Domain.
+Validierung: 116 Testdateien / 569 Tests, Typechecks der fünf betroffenen Pakete,
+Lint und Formatierung der geänderten Quellen, generierter React-Code semantisch geprüft.
+Browser: lokale Label-/Placeholder-Overrides in allen drei Viewports, andere Inputs unverändert,
+Reset auf vererbte Werte; Teständerungen zurückgesetzt.
+
 ### Refactoring-Backlog
 
 Team-Pass (2026-10-01): Validation, Commands und Variants fachlich extrahieren.

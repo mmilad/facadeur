@@ -7,6 +7,11 @@ export {
 } from './commands/commands.js';
 export { DocumentError } from './document/errors.js';
 export { canonicalizeJson, isJsonValue, isPlainObject, type JsonValue } from './document/json.js';
+export {
+  childOverridePath,
+  mergeChildFieldContext,
+  mergeChildFieldOverrides,
+} from './document/child-fields.js';
 export { assertBreakpoints, assertFont, assertFonts, fontStyles } from './styles/libraries.js';
 export {
   canonicalizeFlat,
@@ -39,6 +44,7 @@ export {
   bindingTargets,
   createDocumentSchema,
   documentFileSchema,
+  childFieldPathSchema,
   documentJsonSchema,
   displayOnSchema,
   eventBindingSchema,
@@ -69,6 +75,7 @@ export {
   type Expose,
   type ExposePath,
   type FieldDefinition,
+  type ChildFieldOverrides,
   type FieldType,
   type FieldValue,
   type FontFaceFile,
@@ -137,6 +144,7 @@ export {
   assertDefinitionKind,
   assertDisplayOn,
   assertEventBindings,
+  assertChildFields,
   assertEventDefinition,
   assertFieldBindings,
   assertExpose,
@@ -146,6 +154,7 @@ export {
   assertVariantAxis,
   compileDocumentValidator,
   validateCatalog,
+  resolveChildFieldDefinition,
   validateDefinitions,
   validateDocumentFile,
   validateLibraries,

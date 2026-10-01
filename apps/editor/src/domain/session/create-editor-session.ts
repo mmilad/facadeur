@@ -2,9 +2,11 @@ import {
   applyCommand,
   deriveVariantPreset,
   DocumentError,
+  resolveChildFieldDefinition,
   resolveVariantDocument,
   toFlat,
   toNested,
+  withPreviewData,
   validateCatalog,
   type Command,
   type DefaultKind,
@@ -14,6 +16,7 @@ import { createDocumentStore, type YjsDocumentStore } from '@facadeur/store-yjs'
 import type { JsonFileHandle } from '../files.js';
 import { markDocumentSaved, type SavedJsonBaselines } from '../save-state.js';
 import { renderIdForNode } from '../selection-model.js';
+import { resolveNestedSelection, type NestedSelection } from '../nested-selection.js';
 import type { ViewportChromeSettings } from '../viewport-chrome.js';
 import type { StyleEditMode } from '../viewport-edit.js';
 import type { DrillStackFrame } from '../drill-navigation.js';
@@ -34,6 +37,7 @@ import {
 } from './snapshot.js';
 import { createEditorSessionSurface, createUndoHistory } from './undo-history.js';
 import { migratePreviewData } from '../preview-data.js';
+import { overlaySchemaDefaults } from '../schema-defaults.js';
 import type {
   EditorDrag,
   EditorNotice,
@@ -62,6 +66,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   let openId = options.documents[0]?.id ?? '';
   let selectedNodeId: string | null = null;
   let selectedRenderId: string | null = null;
+  let nestedSelection: NestedSelection | null = null;
   let focusViewportId: string | null = null;
   let selectedViewportId: string | null = null;
   const viewportChromeStore = new Map<string, ViewportChromeSettings>();
@@ -121,6 +126,24 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     return openStore().getDocument();
   }
 
+  function catalogDocuments(): ReadonlyMap<string, FlatDocument> {
+    const documents = new Map<string, FlatDocument>();
+    for (const store of assetStores.values()) {
+      const document = store.getDocument();
+      documents.set(document.id, document);
+    }
+    return documents;
+  }
+
+  function catalogNestedDocuments() {
+    const documents = new Map<string, ReturnType<typeof toNested>>();
+    for (const store of assetStores.values()) {
+      const document = store.getDocument();
+      documents.set(document.id, toNested(document));
+    }
+    return documents;
+  }
+
   function selectionDocument(): FlatDocument {
     const document = openFlat();
     if (
@@ -139,6 +162,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   function clearSelection() {
     selectedNodeId = null;
     selectedRenderId = null;
+    nestedSelection = null;
   }
 
   function clearViewportSelection() {
@@ -150,6 +174,22 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     const doc = selectionDocument();
     if (!doc.nodes[selectedNodeId]) {
       clearSelection();
+      return;
+    }
+    if (nestedSelection) {
+      const next = resolveNestedSelection(
+        doc,
+        nestedSelection.renderId,
+        catalogDocuments(),
+        paintRoot(),
+        prepareNestedDocument,
+      );
+      if (!next || next.ownerNodeId !== selectedNodeId) {
+        clearSelection();
+        return;
+      }
+      nestedSelection = next;
+      selectedRenderId = next.renderId;
       return;
     }
     selectedRenderId = renderIdForNode(doc, selectedNodeId, paintRoot());
@@ -170,6 +210,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       design: designStore.getDocument(),
       selectedNodeId,
       selectedRenderId,
+      nestedSelection,
       focusViewportId,
       selectedViewportId,
       viewportChrome: readViewportChromeForOpenDocument(openId, viewportChromeStore),
@@ -217,6 +258,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
         drag = change.drag;
         if (change.clearViewport) clearViewportSelection();
         activeVariantName = null;
+        nestedSelection = null;
         selectedNodeId = change.selectedNodeId;
         selectedRenderId = change.selectedRenderId;
         if (change.selectedNodeId === null) clearSelection();
@@ -229,10 +271,11 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     const doc = selectionDocument();
     if (!doc.nodes[nodeId]) return;
     const renderId = renderIdForNode(doc, nodeId, paintRoot());
-    if (selectedNodeId === nodeId && selectedRenderId === renderId) return;
+    if (selectedNodeId === nodeId && selectedRenderId === renderId && !nestedSelection) return;
     clearViewportSelection();
     selectedNodeId = nodeId;
     selectedRenderId = renderId;
+    nestedSelection = null;
     publish();
   }
 
@@ -256,7 +299,13 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     try {
       const base = toNested(store.getDocument());
       const active = resolveVariantDocument(base, variantName);
-      const edited = toNested(applyCommand(toFlat(active), command, { resolveKind }));
+      const edited = toNested(
+        applyCommand(toFlat(active), command, {
+          resolveKind,
+          resolveChildField: (node, path, field) =>
+            resolveChildFieldDefinition(node, path, field, catalogNestedDocuments()),
+        }),
+      );
       const preset = deriveVariantPreset(base, edited, variantName);
       run(store, { type: 'setVariantPreset', preset });
     } catch (error) {
@@ -271,6 +320,8 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     resolveKind,
     assetStores,
     order,
+    resolveChildField: (node, path, field) =>
+      resolveChildFieldDefinition(node, path, field, catalogNestedDocuments()),
   });
   syncKinds();
   watch(designStore, 'design');
@@ -334,6 +385,19 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       setSelectedRenderId: (id) => {
         selectedRenderId = id;
       },
+      getNestedSelection: () => nestedSelection,
+      getFieldContext: () => snapshot?.fieldContext ?? null,
+      setNestedSelection: (selection) => {
+        nestedSelection = selection;
+      },
+      resolveNestedSelection: (renderedId) =>
+        resolveNestedSelection(
+          selectionDocument(),
+          renderedId,
+          catalogDocuments(),
+          paintRoot(),
+          prepareNestedDocument,
+        ),
       getFocusViewportId: () => focusViewportId,
       setFocusViewportId: (id) => {
         focusViewportId = id;
@@ -394,6 +458,8 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
         handles,
         savedJson,
         resolveKind,
+        resolveChildField: (node, path, field) =>
+          resolveChildFieldDefinition(node, path, field, catalogNestedDocuments()),
         forget,
         watch,
         syncKinds,
@@ -467,8 +533,13 @@ function variantEditableCommand(command: Command): boolean {
     case 'setStyle':
     case 'setField':
     case 'setVariant':
+    case 'setChildField':
       return true;
     default:
       return false;
   }
+}
+
+function prepareNestedDocument(document: FlatDocument, variant?: string): FlatDocument {
+  return toFlat(withPreviewData(overlaySchemaDefaults(toNested(document)), variant));
 }

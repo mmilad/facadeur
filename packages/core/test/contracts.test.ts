@@ -375,6 +375,126 @@ describe('component contracts', () => {
     expect(() => validateCatalog([conflict, target])).toThrow(/cannot set and bind field "value"/);
   });
 
+  it('validates sparse child instance field overrides against nested contracts', () => {
+    const target: DocumentFile = {
+      version: 1,
+      id: 'child-field-control',
+      name: 'Child field control',
+      kind: 'atom',
+      fields: [
+        { name: 'value', type: 'text', required: true },
+        { name: 'placeholder', type: 'text' },
+      ],
+      root: { id: 'root', type: 'text', tag: 'input' },
+    };
+    const owner: DocumentFile = {
+      version: 1,
+      id: 'child-field-owner',
+      name: 'Child field owner',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'control',
+            type: 'instance',
+            component: target.id,
+            fields: { value: 'Default' },
+          },
+        ],
+      },
+    };
+    const use: DocumentFile = {
+      version: 1,
+      id: 'child-field-use',
+      name: 'Child field use',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'owner',
+            type: 'instance',
+            component: owner.id,
+            childFields: { control: { placeholder: 'Search' } },
+          },
+        ],
+      },
+    };
+    expect(() => validateCatalog([use, owner, target])).not.toThrow();
+    expect(() =>
+      validateCatalog([
+        {
+          ...use,
+          root: {
+            ...use.root,
+            children: [
+              {
+                ...(use.root as Extract<typeof use.root, { type: 'frame' }>).children![0],
+                childFields: { control: { missing: 'x' } },
+              },
+            ],
+          },
+        },
+        owner,
+        target,
+      ]),
+    ).toThrow(/unknown child field/);
+  });
+
+  it('accepts child paths introduced by a target named variant when no variant is selected', () => {
+    const target: DocumentFile = {
+      version: 1,
+      id: 'variant-child-control',
+      name: 'Variant child control',
+      kind: 'atom',
+      fields: [{ name: 'placeholder', type: 'text' }],
+      root: { id: 'root', type: 'text', tag: 'input' },
+    };
+    const owner: DocumentFile = {
+      version: 1,
+      id: 'variant-child-owner',
+      name: 'Variant child owner',
+      kind: 'component',
+      variants: [
+        { name: 'default' },
+        {
+          name: 'compact',
+          overrides: {
+            insertions: [
+              {
+                parent: 'root',
+                node: { id: 'email', type: 'instance', component: target.id },
+              },
+            ],
+          },
+        },
+      ],
+      root: { id: 'root', type: 'frame' },
+    };
+    const use: DocumentFile = {
+      version: 1,
+      id: 'variant-child-use',
+      name: 'Variant child use',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'owner',
+            type: 'instance',
+            component: owner.id,
+            childFields: { email: { placeholder: 'Search' } },
+          },
+        ],
+      },
+    };
+    expect(() => validateCatalog([use, owner, target])).not.toThrow();
+  });
+
   it('rejects bindings with incompatible array item types', () => {
     const target: DocumentFile = {
       version: 1,

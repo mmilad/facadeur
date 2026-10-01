@@ -20,7 +20,9 @@ export function LayersPanel({ session, snap }: { session: EditorSession; snap: E
     <section className="side-block side-block-grow" aria-label="Layers">
       <h2>Layers</h2>
       <strong className="layers-document-title">{snap.document.name}</strong>
-      <p className="side-note">Double-click an instance to edit its master.</p>
+      <p className="side-note">
+        Expand an instance to select nested fields. Edit a master from its inspector.
+      </p>
       <div className="side-scroll">
         {snap.layers ? (
           <LayerRows
@@ -28,39 +30,48 @@ export function LayersPanel({ session, snap }: { session: EditorSession; snap: E
             item={snap.layers}
             depth={0}
             selectedId={snap.selectedNodeId}
+            selectedRenderId={snap.selectedRenderId}
+            nestedSelection={snap.nestedSelection}
             over={over}
-            onSelect={(id) => session.selectNode(id)}
-            onOpenInstance={(nodeId) => {
-              const node = session.getSnapshot().activeDocument.nodes[nodeId];
+            onSelect={(item) => {
+              if (item.virtual) session.selectRendered(item.address);
+              else session.selectNode(item.id);
+            }}
+            onOpenInstance={(item) => {
+              if (item.virtual) return;
+              const node = session.getSnapshot().activeDocument.nodes[item.id];
               if (node?.type === 'instance') {
-                session.selectNode(nodeId);
-                session.drillToMaster(node.component);
+                session.selectNode(item.id);
               }
             }}
-            onDragStart={(id, event) => {
-              event.dataTransfer.setData('text/plain', id);
+            onDragStart={(item, event) => {
+              if (item.virtual) return;
+              event.dataTransfer.setData('text/plain', item.id);
               event.dataTransfer.effectAllowed = 'move';
-              session.beginDrag({ kind: 'node', nodeId: id });
+              session.beginDrag({ kind: 'node', nodeId: item.id });
             }}
             onDragEnd={() => {
               session.endDrag();
               setOver(null);
             }}
-            onDragOver={(id, type, event) => {
+            onDragOver={(item, event) => {
+              if (item.virtual) return;
               const drag = session.getSnapshot().drag;
               if (!drag) return;
-              const zone = zoneFor(event, type);
-              if (!layerDropLegal(snap, drag, id, zone)) return;
+              const zone = zoneFor(event, item.type);
+              if (!layerDropLegal(snap, drag, item.id, zone)) return;
               event.preventDefault();
               event.stopPropagation();
-              if (over?.id !== id || over.zone !== zone) setOver({ id, zone });
+              if (over?.id !== item.address || over.zone !== zone)
+                setOver({ id: item.address, zone });
             }}
-            onDrop={(id, event) => {
+            onDrop={(item, event) => {
+              if (item.virtual) return;
               const drag = session.getSnapshot().drag;
-              const zone = over?.id === id ? over.zone : zoneFor(event, 'frame');
+              const zone = over?.id === item.address ? over.zone : zoneFor(event, item.type);
               setOver(null);
               if (!drag) return;
-              if (!layerDropLegal(snap, drag, id, zone)) {
+              if (!layerDropLegal(snap, drag, item.id, zone)) {
                 event.preventDefault();
                 session.endDrag();
                 const node = drag.kind === 'node' ? snap.document.nodes[drag.nodeId] : undefined;
@@ -82,7 +93,7 @@ export function LayersPanel({ session, snap }: { session: EditorSession; snap: E
               event.preventDefault();
               event.stopPropagation();
               if (drag.kind === 'node') {
-                const target = layerDropTarget(snap.document, drag.nodeId, id, zone);
+                const target = layerDropTarget(snap.document, drag.nodeId, item.id, zone);
                 session.endDrag();
                 if (!target) return;
                 session.execute({
@@ -94,7 +105,7 @@ export function LayersPanel({ session, snap }: { session: EditorSession; snap: E
                 session.selectNode(drag.nodeId);
                 return;
               }
-              const target = layerInsertAt(snap.document, id, zone);
+              const target = layerInsertAt(snap.document, item.id, zone);
               session.endDrag();
               if (!target) return;
               const asset = snap.catalog.find((item) => item.id === drag.assetId);
@@ -163,6 +174,8 @@ function LayerRows({
   item,
   depth,
   selectedId,
+  selectedRenderId,
+  nestedSelection,
   over,
   onSelect,
   onOpenInstance,
@@ -175,21 +188,27 @@ function LayerRows({
   depth: number;
   selectedId: string | null;
   over: { id: string; zone: DropZone } | null;
-  onSelect: (id: string) => void;
-  onOpenInstance: (id: string) => void;
-  onDragStart: (id: string, event: DragEvent) => void;
+  selectedRenderId: string | null;
+  nestedSelection: EditorSnapshot['nestedSelection'];
+  onSelect: (item: NonNullable<EditorSnapshot['layers']>) => void;
+  onOpenInstance: (item: NonNullable<EditorSnapshot['layers']>) => void;
+  onDragStart: (item: NonNullable<EditorSnapshot['layers']>, event: DragEvent) => void;
   onDragEnd: () => void;
-  onDragOver: (id: string, type: string, event: DragEvent) => void;
-  onDrop: (id: string, event: DragEvent) => void;
+  onDragOver: (item: NonNullable<EditorSnapshot['layers']>, event: DragEvent) => void;
+  onDrop: (item: NonNullable<EditorSnapshot['layers']>, event: DragEvent) => void;
 }) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(item.type === 'instance' ? false : true);
   useEffect(() => {
-    if (item.children.some((child) => containsLayer(child, selectedId))) setExpanded(true);
-  }, [item, selectedId]);
-  const mark = over?.id === item.id ? over.zone : null;
+    if (item.children.some((child) => containsLayer(child, selectedId, selectedRenderId)))
+      setExpanded(true);
+  }, [item, selectedId, selectedRenderId]);
+  const mark = over?.id === item.address ? over.zone : null;
   const className = [
     'layer',
-    item.id === selectedId ? 'is-active' : '',
+    (!nestedSelection && !item.virtual && item.id === selectedId) ||
+    (nestedSelection && item.address === selectedRenderId)
+      ? 'is-active'
+      : '',
     mark === 'before' ? 'is-insert-before' : '',
     mark === 'after' ? 'is-insert-after' : '',
     mark === 'inside' ? 'is-insert-inside' : '',
@@ -215,14 +234,20 @@ function LayerRows({
         <button
           type="button"
           className={className}
-          title={item.type === 'instance' ? 'Double-click to edit master' : undefined}
-          draggable={depth > 0}
-          onDragStart={(event) => onDragStart(item.id, event)}
+          title={
+            item.type === 'instance'
+              ? item.virtual
+                ? 'Select nested instance fields'
+                : 'Select instance; use the inspector to edit its master'
+              : undefined
+          }
+          draggable={depth > 0 && !item.virtual}
+          onDragStart={(event) => onDragStart(item, event)}
           onDragEnd={onDragEnd}
-          onDragOver={(event) => onDragOver(item.id, item.type, event)}
-          onDrop={(event) => onDrop(item.id, event)}
-          onClick={() => onSelect(item.id)}
-          onDoubleClick={() => onOpenInstance(item.id)}
+          onDragOver={(event) => onDragOver(item, event)}
+          onDrop={(event) => onDrop(item, event)}
+          onClick={() => onSelect(item)}
+          onDoubleClick={() => onOpenInstance(item)}
         >
           <span className="layer-type">{item.type}</span>
           <span className="layer-name">{item.name}</span>
@@ -235,6 +260,8 @@ function LayerRows({
             item={child}
             depth={depth + 1}
             selectedId={selectedId}
+            selectedRenderId={selectedRenderId}
+            nestedSelection={nestedSelection}
             over={over}
             onSelect={onSelect}
             onOpenInstance={onOpenInstance}
@@ -248,6 +275,14 @@ function LayerRows({
   );
 }
 
-function containsLayer(item: NonNullable<EditorSnapshot['layers']>, id: string | null): boolean {
-  return item.id === id || item.children.some((child) => containsLayer(child, id));
+function containsLayer(
+  item: NonNullable<EditorSnapshot['layers']>,
+  id: string | null,
+  address: string | null,
+): boolean {
+  return (
+    item.id === id ||
+    item.address === address ||
+    item.children.some((child) => containsLayer(child, id, address))
+  );
 }

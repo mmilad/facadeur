@@ -28,6 +28,13 @@ const dataPathSchema = Type.String({
   pattern: '^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$',
 });
 
+/** Slash-separated instance ids used for sparse overrides inside an instance.
+ * Frame and root ids are intentionally omitted from these paths. */
+export const childFieldPathSchema = Type.String({
+  minLength: 1,
+  pattern: '^[A-Za-z][A-Za-z0-9_-]*(/[A-Za-z][A-Za-z0-9_-]*)*$',
+});
+
 export type FieldValue = string | number | boolean | FieldValue[] | { [key: string]: FieldValue };
 
 export const fieldValueSchema = Type.Unsafe<FieldValue>({
@@ -217,7 +224,7 @@ const nodeTargetSchema = Type.String({
 /** A variant may explicitly clear an optional node property or map entry. */
 const variantUnsetPathSchema = Type.String({
   minLength: 1,
-  pattern: '^[A-Za-z][A-Za-z0-9_.-]*$',
+  pattern: '^[A-Za-z][A-Za-z0-9_./-]*$',
 });
 
 /** Maps a semantic atom event to a native event on the node. */
@@ -425,6 +432,9 @@ export const variantNodeOverrideSchema = Type.Object(
     alt: Type.Optional(Type.String()),
     attributes: Type.Optional(Type.Record(Type.String({ minLength: 1 }), Type.String())),
     fields: Type.Optional(Type.Record(idSchema, fieldValueSchema)),
+    childFields: Type.Optional(
+      Type.Record(childFieldPathSchema, Type.Record(idSchema, fieldValueSchema)),
+    ),
     fieldBindings: Type.Optional(Type.Record(idSchema, dataPathSchema)),
     variants: Type.Optional(Type.Record(idSchema, Type.String())),
     variantRules: Type.Optional(Type.Array(variantRuleSchema)),
@@ -491,6 +501,9 @@ export const nestedNodeSchema = Type.Recursive(
           type: Type.Literal('instance'),
           component: idSchema,
           fields: Type.Optional(Type.Record(idSchema, fieldValueSchema)),
+          childFields: Type.Optional(
+            Type.Record(childFieldPathSchema, Type.Record(idSchema, fieldValueSchema)),
+          ),
           fieldBindings: Type.Optional(Type.Record(idSchema, dataPathSchema)),
           variants: Type.Optional(Type.Record(idSchema, Type.String())),
           variantRules: Type.Optional(Type.Array(variantRuleSchema)),
@@ -670,6 +683,7 @@ export function createDocumentSchema(options: DocumentSchemaOptions = {}) {
 }
 
 export type FieldDefinition = Static<typeof fieldDefinitionSchema>;
+export type ChildFieldOverrides = Record<string, Record<string, FieldValue>>;
 export type PreviewData = Static<typeof previewDataSchema>;
 export type EventDefinition = Static<typeof eventDefinitionSchema>;
 export type EventBinding = Static<typeof eventBindingSchema>;

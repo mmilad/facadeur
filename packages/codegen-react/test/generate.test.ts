@@ -1,5 +1,8 @@
-import { readFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
+import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { validateCatalog, validateDocumentFile, type DocumentFile } from '@facadeur/core';
 import { CodegenError, designFromDocument, generateReact } from '../src/index.js';
@@ -47,6 +50,42 @@ function source(files: { path: string; contents: string }[], path: string): stri
   const file = files.find((entry) => entry.path === path);
   expect(file, path).toBeDefined();
   return file?.contents ?? '';
+}
+
+function expectGeneratedTypecheck(files: { path: string; contents: string }[]): void {
+  const root = mkdtempSync(join(tmpdir(), 'facadeur-codegen-'));
+  try {
+    const roots: string[] = [];
+    for (const file of files.filter((entry) => entry.path.endsWith('.tsx'))) {
+      const path = join(root, file.path);
+      mkdirSync(join(path, '..'), { recursive: true });
+      writeFileSync(path, file.contents, 'utf8');
+      roots.push(path);
+    }
+    writeFileSync(
+      join(root, 'react.d.ts'),
+      "declare module 'react' { export type CSSProperties = Record<string, string | number>; }\ndeclare module 'react/jsx-runtime' { export const Fragment: unknown; export function jsx(...args: unknown[]): unknown; export function jsxs(...args: unknown[]): unknown; }\ndeclare namespace JSX { interface IntrinsicElements { [element: string]: any; } }\n",
+      'utf8',
+    );
+    roots.push(join(root, 'react.d.ts'));
+    const program = ts.createProgram(roots, {
+      jsx: ts.JsxEmit.ReactJSX,
+      module: ts.ModuleKind.ESNext,
+      moduleResolution: ts.ModuleResolutionKind.Bundler,
+      target: ts.ScriptTarget.ES2022,
+      strict: true,
+      skipLibCheck: true,
+      types: [],
+    });
+    const diagnostics = ts.getPreEmitDiagnostics(program);
+    expect(
+      diagnostics.map((diagnostic) =>
+        ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'),
+      ),
+    ).toEqual([]);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 }
 
 describe('generateReact', () => {
@@ -419,6 +458,112 @@ describe('bindings outside the examples', () => {
       },
     };
     expect(() => generateReact({ documents: [visibleText] })).toThrow(/boolean field/);
+  });
+});
+
+describe('nested child field codegen', () => {
+  it('forwards local and deep overrides across generated instance calls', () => {
+    const input: DocumentFile = {
+      version: 1,
+      id: 'nested-input',
+      name: 'Nested input',
+      kind: 'atom',
+      fields: [
+        { name: 'value', type: 'text', default: 'Master value' },
+        { name: 'placeholder', type: 'text', default: 'Master placeholder' },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          { id: 'value', type: 'text', bindings: [{ field: 'value', target: 'text' }] },
+          {
+            id: 'placeholder',
+            type: 'text',
+            bindings: [{ field: 'placeholder', target: 'text' }],
+          },
+        ],
+      },
+    };
+    const field: DocumentFile = {
+      version: 1,
+      id: 'nested-field',
+      name: 'Nested field',
+      kind: 'component',
+      fields: [{ name: 'title', type: 'text', default: 'Master title' }],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'section-part',
+            type: 'instance',
+            component: 'nested-section',
+            fields: { title: 'Master section title' },
+            childFields: { control: { placeholder: 'Inner placeholder' } },
+          },
+        ],
+      },
+    };
+    const section: DocumentFile = {
+      version: 1,
+      id: 'nested-section',
+      name: 'Nested section',
+      kind: 'component',
+      fields: [
+        { name: 'title', type: 'text', default: 'Master section' },
+        { name: 'childFields', type: 'text', default: 'Reserved field' },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'control',
+            type: 'instance',
+            component: input.id,
+            fields: { value: 'Master field value', placeholder: 'Master field placeholder' },
+          },
+        ],
+      },
+    };
+    const host: DocumentFile = {
+      version: 1,
+      id: 'nested-host',
+      name: 'Nested host',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'sign-in',
+            type: 'instance',
+            component: field.id,
+            childFields: {
+              'section-part': { title: 'Local title' },
+              'section-part/control': { value: 'Deep value' },
+            },
+          },
+        ],
+      },
+    };
+
+    const { ui: files } = generateReact({ documents: [host, field, section, input] });
+    const hostSource = source(files, 'components/NestedHost.tsx');
+    const fieldSource = source(files, 'components/NestedField.tsx');
+    const sectionSource = source(files, 'components/NestedSection.tsx');
+
+    expect(hostSource).toContain(
+      "childFields={{ 'section-part': { 'title': 'Local title' }, 'section-part/control': { 'value': 'Deep value' } }}",
+    );
+    expect(fieldSource).toContain('childFields?: Record<string, Record<string, unknown>>;');
+    expect(fieldSource).toContain("childFields?.['section-part']?.title");
+    expect(fieldSource).toContain('childFields2={{ ...');
+    expect(sectionSource).toContain('childFields2?.control?.value');
+    expect(sectionSource).toContain('childFields?: string;');
+    expect(sectionSource).toContain('childFields2?: Record<string, Record<string, unknown>>;');
+    expectGeneratedTypecheck(files);
   });
 });
 
