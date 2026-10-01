@@ -16,6 +16,8 @@ import { createDomRenderer, type DomRenderer } from '@facadeur/renderer-dom';
 import { createStyleEngine, type StyleEngine } from '@facadeur/style-engine';
 import { activeBreakpoints, type DesignInput } from '@facadeur/tokens';
 import { createFrameHost, type FrameHost } from './frame-host.js';
+import { overlaySchemaDefaults } from './schema-defaults.js';
+import { subscribeSchemaLibrary } from './schema-library.js';
 import { resolvedViewportChrome, type ViewportChromeSettings } from './viewport-chrome.js';
 
 export interface ViewportFrame {
@@ -181,9 +183,13 @@ export function createViewportBoard(options: {
             document.id === page.id && variantName
               ? resolveVariantDocument(document, variantName)
               : document;
-          return withPreviewData(resolved, document.id === page.id ? variantName : null);
+          return withPreviewData(
+            overlaySchemaDefaults(resolved),
+            document.id === page.id ? variantName : null,
+          );
         },
-        prepareInstanceDocument: (document, variant) => withPreviewData(document, variant),
+        prepareInstanceDocument: (document, variant) =>
+          withPreviewData(overlaySchemaDefaults(document), variant),
         paintRoot,
       });
       renderer.mount(page);
@@ -222,6 +228,15 @@ export function createViewportBoard(options: {
 
   const pageStore = stores.find((item) => item.getDocument().id === pageId);
   if (pageStore) unsubscribers.push(pageStore.subscribe(() => scheduleRebuild()));
+  unsubscribers.push(
+    subscribeSchemaLibrary(() => {
+      if (destroyed || frames.length === 0) return;
+      const documents = documentsNow();
+      const page = documents.find((document) => document.id === pageId) ?? pageDocument();
+      for (const frame of frames) frame.renderer.mount(page);
+      syncHeights();
+    }),
+  );
   createFrames();
   for (const store of stores) {
     unsubscribers.push(

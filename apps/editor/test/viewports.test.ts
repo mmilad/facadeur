@@ -4,6 +4,11 @@
 import { describe, expect, it } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
 import { createDocumentStore } from '@facadeur/store-yjs';
+import {
+  createLibrarySchema,
+  resetSchemaLibrary,
+  setComponentSchemaUse,
+} from '../src/domain/schema-library.js';
 import { createViewportBoard } from '../src/domain/viewports.js';
 
 const section: DocumentFile = {
@@ -178,5 +183,59 @@ describe('viewport board', () => {
     board.destroy();
     store.destroy();
     parent.remove();
+  });
+
+  it('paints schema assignment defaults and updates them when the library changes', () => {
+    resetSchemaLibrary();
+    const schema = createLibrarySchema('Input');
+    const source: DocumentFile = {
+      version: 1,
+      id: 'form-input',
+      name: 'Input',
+      kind: 'atom',
+      fields: [
+        { name: 'value', type: 'text' },
+        { name: 'placeholder', type: 'text' },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        tag: 'input',
+        bindings: [
+          { field: 'value', target: 'attribute', name: 'value' },
+          { field: 'placeholder', target: 'attribute', name: 'placeholder' },
+        ],
+      },
+    };
+    setComponentSchemaUse(source.id, {
+      direct: { kind: 'schema', schemaId: schema.id },
+      defaults: { placeholder: 'Email address' },
+    });
+    const store = createDocumentStore(source);
+    const parent = document.createElement('div');
+    document.body.append(parent);
+    const board = createViewportBoard({
+      parent,
+      documents: [source],
+      page: source,
+      stores: [store],
+      paintRoot: true,
+      design: {},
+    });
+
+    const input = () => board.frames()[0]?.host.contentDocument().querySelector('input');
+    expect(input()?.getAttribute('placeholder')).toBe('Email address');
+    expect(input()?.hasAttribute('value')).toBe(false);
+
+    setComponentSchemaUse(source.id, {
+      direct: { kind: 'schema', schemaId: schema.id },
+      defaults: { placeholder: 'Your name' },
+    });
+    expect(input()?.getAttribute('placeholder')).toBe('Your name');
+
+    board.destroy();
+    store.destroy();
+    parent.remove();
+    resetSchemaLibrary();
   });
 });

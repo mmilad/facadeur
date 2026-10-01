@@ -13,6 +13,7 @@ import { NodeAttributeFields } from './NodeAttributeFields.js';
 import { partitionNodeAttributes } from './preview-attribute-keys.js';
 import { PreviewOptionsDisclosure } from './PreviewOptionsDisclosure.js';
 import { NodeBindings } from './NodeBindings.js';
+import { BoundFieldValues } from './BoundFieldValues.js';
 import { ownsComponentFeatures } from './owns-component-features.js';
 import { VariantRulesEditor } from './VariantRulesEditor.js';
 
@@ -59,6 +60,9 @@ export function ContentPanel({
             })
           }
         />
+      ) : null}
+      {node.type !== 'instance' && ownsComponentFeatures(snap.document.kind) ? (
+        <BoundFieldValues session={session} snap={snap} node={node} />
       ) : null}
       {node.type === 'text' ? (
         <TextControl
