@@ -121,6 +121,17 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     return openStore().getDocument();
   }
 
+  function selectionDocument(): FlatDocument {
+    const document = openFlat();
+    if (
+      !activeVariantName ||
+      !document.variantPresets?.some((preset) => preset.name === activeVariantName)
+    ) {
+      return document;
+    }
+    return toFlat(resolveVariantDocument(toNested(document), activeVariantName));
+  }
+
   function paintRoot(): boolean {
     return openFlat().kind !== 'page';
   }
@@ -136,7 +147,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
 
   function refreshSelection() {
     if (!selectedNodeId) return;
-    const doc = openFlat();
+    const doc = selectionDocument();
     if (!doc.nodes[selectedNodeId]) {
       clearSelection();
       return;
@@ -215,7 +226,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   }
 
   function applySelectNode(nodeId: string) {
-    const doc = openFlat();
+    const doc = selectionDocument();
     if (!doc.nodes[nodeId]) return;
     const renderId = renderIdForNode(doc, nodeId, paintRoot());
     if (selectedNodeId === nodeId && selectedRenderId === renderId) return;
@@ -339,6 +350,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       getActiveVariantName: () => activeVariantName,
       setActiveVariantName: (name) => {
         activeVariantName = name;
+        refreshSelection();
       },
       getNotice: () => notice,
       setNotice: (value) => {

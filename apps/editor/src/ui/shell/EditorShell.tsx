@@ -2,16 +2,11 @@
 
 import { createId, findParent } from '@facadeur/core';
 import { placementAllowed, refusalMessage, toolAllowed } from '../../domain/editing.js';
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useSyncExternalStore } from 'react';
 import { openJsonFile, parseDocumentText } from '../../domain/files.js';
 import { isEditableTarget } from '../../domain/keyboard.js';
 import type { EditorSession } from '../../domain/session.js';
-import {
-  EDITOR_VIEW_ITEMS,
-  isDesignDomain,
-  type EditorSurface,
-} from '../sidebar/design/design-domain.js';
+import { EDITOR_VIEW_ITEMS, isDesignDomain } from '../sidebar/design/design-domain.js';
 import { DesignDomainStage } from '../stage/DesignDomainStage.js';
 import { PreviewDataStage } from '../stage/PreviewDataStage.js';
 import { SchemaStage } from '../stage/SchemaStage.js';
@@ -27,44 +22,12 @@ import { HistoryButtons } from './HistoryButtons.js';
 import { KindBadge } from './KindBadge.js';
 import { DocumentBreadcrumb } from './DocumentBreadcrumb.js';
 import { ZoomControls } from './ZoomControls.js';
-
-const SURFACE_PARAM = 'surface';
-
-function surfaceFromParam(value: string | null): EditorSurface {
-  if (!value || value === 'properties' || value === 'editor') return 'editor';
-  if (value === 'schema' || value === 'preview') return value;
-  if (isDesignDomain(value as EditorSurface)) return value as EditorSurface;
-  return 'editor';
-}
+import { useEditorNavigation } from './useEditorNavigation.js';
 
 export function EditorShell({ session }: { session: EditorSession }) {
   const snap = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [surface, setSurfaceState] = useState<EditorSurface>(() =>
-    surfaceFromParam(searchParams.get(SURFACE_PARAM)),
-  );
-  const seenOpenId = useRef(snap.openId);
+  const { surface, setSurface } = useEditorNavigation(session, snap);
   useEditorKeys(session);
-
-  useEffect(() => {
-    setSurfaceState(surfaceFromParam(searchParams.get(SURFACE_PARAM)));
-  }, [searchParams]);
-
-  useEffect(() => {
-    if (seenOpenId.current === snap.openId) return;
-    seenOpenId.current = snap.openId;
-    if (isDesignDomain(surface)) {
-      setSurfaceState('editor');
-      replaceSurface(router, pathname, searchParams, 'editor');
-    }
-  }, [snap.openId, router, pathname, searchParams, surface]);
-
-  function setSurface(next: EditorSurface) {
-    setSurfaceState(next);
-    replaceSurface(router, pathname, searchParams, next);
-  }
 
   return (
     <div className="app">
@@ -169,19 +132,6 @@ export function EditorShell({ session }: { session: EditorSession }) {
 
 /** @deprecated Use EditorShell — kept for tests importing App. */
 export const App = EditorShell;
-
-function replaceSurface(
-  router: ReturnType<typeof useRouter>,
-  pathname: string,
-  searchParams: ReturnType<typeof useSearchParams>,
-  surface: EditorSurface,
-) {
-  const params = new URLSearchParams(searchParams.toString());
-  if (surface === 'editor') params.delete(SURFACE_PARAM);
-  else params.set(SURFACE_PARAM, surface);
-  const query = params.toString();
-  router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-}
 
 function useEditorKeys(session: EditorSession) {
   useEffect(() => {
