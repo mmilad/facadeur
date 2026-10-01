@@ -16,7 +16,7 @@ import specimenPage from '../../../examples/specimen-page.json';
 import specimenSection from '../../../examples/specimen-section.json';
 import textarea from '../../../examples/textarea.json';
 import { createEditorSession, type EditorSession } from '../src/domain/session.js';
-import { withTokenBreakpoint } from '../src/domain/token-edit.js';
+import { withTokenBreakpoint } from '../src/domain/edits/token-edit.js';
 import { App } from '../src/ui/shell/EditorShell.js';
 
 const documents = validateCatalog([
@@ -63,6 +63,20 @@ describe('spacing domain panel', () => {
     });
   }
 
+  async function submitNewToken(path: string) {
+    if (!document.querySelector('input[name="new-spacing-path"]')) {
+      await act(async () => {
+        (host!.querySelector('button[name="add-spacing"]') as HTMLButtonElement).click();
+      });
+    }
+    const pathInput = document.querySelector('input[name="new-spacing-path"]') as HTMLInputElement;
+    expect(pathInput).toBeInstanceOf(HTMLInputElement);
+    await act(async () => setInput(pathInput, path));
+    await act(async () => {
+      (document.querySelector('button[name="add-spacing-submit"]') as HTMLButtonElement).click();
+    });
+  }
+
   it('adds a spacing token with a valid path and default value', async () => {
     const session = createEditorSession({
       documents,
@@ -70,11 +84,7 @@ describe('spacing domain panel', () => {
     });
     await openSpacing(session);
 
-    const pathInput = host!.querySelector('input[name="new-spacing-path"]') as HTMLInputElement;
-    setInput(pathInput, 'space.gap.xl');
-    await act(async () => {
-      (host!.querySelector('button[name="add-spacing"]') as HTMLButtonElement).click();
-    });
+    await submitNewToken('space.gap.xl');
 
     const indexed = readTokenTree(session.getSnapshot().design.tokens);
     expect(indexed.tokens.get('space.gap.xl')).toMatchObject({
@@ -107,11 +117,7 @@ describe('spacing domain panel', () => {
     });
     await openSpacing(session);
 
-    const pathInput = host!.querySelector('input[name="new-spacing-path"]') as HTMLInputElement;
-    setInput(pathInput, 'gap.only');
-    await act(async () => {
-      (host!.querySelector('button[name="add-spacing"]') as HTMLButtonElement).click();
-    });
+    await submitNewToken('gap.only');
 
     expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has('gap.only')).toBe(false);
     expect(session.getSnapshot().notice?.tone).toBe('error');
@@ -125,11 +131,7 @@ describe('spacing domain panel', () => {
     });
     await openSpacing(session);
 
-    const pathInput = host!.querySelector('input[name="new-spacing-path"]') as HTMLInputElement;
-    setInput(pathInput, 'space.gap.md');
-    await act(async () => {
-      (host!.querySelector('button[name="add-spacing"]') as HTMLButtonElement).click();
-    });
+    await submitNewToken('space.gap.md');
 
     expect(session.getSnapshot().notice?.tone).toBe('error');
     expect(session.getSnapshot().notice?.text).toMatch(/already exists/i);
@@ -156,10 +158,9 @@ describe('spacing domain panel', () => {
     const indexedBefore = readTokenTree(session.getSnapshot().design.tokens);
     expect(indexedBefore.tokens.get('space.5')?.breakpoints.tablet).toBe('28px');
 
-    const resetButton = host!
-      .querySelector('input[name="token-space.5"]')
-      ?.closest('div')
-      ?.parentElement?.querySelector('.override-cue button');
+    const resetButton = host!.querySelector(
+      'tr[data-token-path="space.5"] .override-cue button',
+    );
     expect(resetButton).toBeInstanceOf(HTMLButtonElement);
     await act(async () => {
       (resetButton as HTMLButtonElement).click();

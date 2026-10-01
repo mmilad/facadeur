@@ -8,13 +8,13 @@ import {
   parseFontWeights,
   suggestFontId,
   tokenPathsReferencingFont,
-} from '../../../domain/font-edit.js';
+} from '../../../domain/edits/font-edit.js';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
 import { TextControl } from '../../controls/fields/index.js';
 import { Field, Popover, TextInput } from '../../form/index.js';
 import './design-resources.css';
 
-export { TokensDomainPanel } from './TokensDomainPanel.js';
+export { TokensDomainPanel } from './tokens/TokensDomainPanel.js';
 export { IconsDomainPanel } from './IconsDomainPanel.js';
 
 export function FontsDomainPanel({

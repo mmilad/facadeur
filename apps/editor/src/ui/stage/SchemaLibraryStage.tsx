@@ -14,7 +14,7 @@ import {
   updateLibrarySchema,
   type JsonSchema,
   type LibrarySchema,
-} from '../../domain/schema-library.js';
+} from '../../domain/schema/schema-library.js';
 import { Field, TextInput } from '../form/index.js';
 
 const EDITOR_LABELS = {

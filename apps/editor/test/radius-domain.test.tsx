@@ -16,7 +16,7 @@ import specimenPage from '../../../examples/specimen-page.json';
 import specimenSection from '../../../examples/specimen-section.json';
 import textarea from '../../../examples/textarea.json';
 import { createEditorSession, type EditorSession } from '../src/domain/session.js';
-import { withTokenBreakpoint } from '../src/domain/token-edit.js';
+import { withTokenBreakpoint } from '../src/domain/edits/token-edit.js';
 import { App } from '../src/ui/shell/EditorShell.js';
 
 const documents = validateCatalog([
@@ -63,6 +63,20 @@ describe('radius domain panel', () => {
     });
   }
 
+  async function submitNewToken(path: string) {
+    if (!document.querySelector('input[name="new-radius-path"]')) {
+      await act(async () => {
+        (host!.querySelector('button[name="add-radius"]') as HTMLButtonElement).click();
+      });
+    }
+    const pathInput = document.querySelector('input[name="new-radius-path"]') as HTMLInputElement;
+    expect(pathInput).toBeInstanceOf(HTMLInputElement);
+    await act(async () => setInput(pathInput, path));
+    await act(async () => {
+      (document.querySelector('button[name="add-radius-submit"]') as HTMLButtonElement).click();
+    });
+  }
+
   it('adds a radius token with a valid path and default value', async () => {
     const session = createEditorSession({
       documents,
@@ -70,11 +84,7 @@ describe('radius domain panel', () => {
     });
     await openRadius(session);
 
-    const pathInput = host!.querySelector('input[name="new-radius-path"]') as HTMLInputElement;
-    setInput(pathInput, 'radius.corner.xl');
-    await act(async () => {
-      (host!.querySelector('button[name="add-radius"]') as HTMLButtonElement).click();
-    });
+    await submitNewToken('radius.corner.xl');
 
     const indexed = readTokenTree(session.getSnapshot().design.tokens);
     expect(indexed.tokens.get('radius.corner.xl')).toMatchObject({
@@ -107,11 +117,7 @@ describe('radius domain panel', () => {
     });
     await openRadius(session);
 
-    const pathInput = host!.querySelector('input[name="new-radius-path"]') as HTMLInputElement;
-    setInput(pathInput, 'corner.only');
-    await act(async () => {
-      (host!.querySelector('button[name="add-radius"]') as HTMLButtonElement).click();
-    });
+    await submitNewToken('corner.only');
 
     expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has('corner.only')).toBe(
       false,
@@ -127,11 +133,7 @@ describe('radius domain panel', () => {
     });
     await openRadius(session);
 
-    const pathInput = host!.querySelector('input[name="new-radius-path"]') as HTMLInputElement;
-    setInput(pathInput, 'radius.md');
-    await act(async () => {
-      (host!.querySelector('button[name="add-radius"]') as HTMLButtonElement).click();
-    });
+    await submitNewToken('radius.md');
 
     expect(session.getSnapshot().notice?.tone).toBe('error');
     expect(session.getSnapshot().notice?.text).toMatch(/already exists/i);
@@ -163,10 +165,9 @@ describe('radius domain panel', () => {
     const indexedBefore = readTokenTree(session.getSnapshot().design.tokens);
     expect(indexedBefore.tokens.get('radius.lg')?.breakpoints.tablet).toBe('20px');
 
-    const resetButton = host!
-      .querySelector('input[name="token-radius.lg"]')
-      ?.closest('div')
-      ?.parentElement?.querySelector('.override-cue button');
+    const resetButton = host!.querySelector(
+      'tr[data-token-path="radius.lg"] .override-cue button',
+    );
     expect(resetButton).toBeInstanceOf(HTMLButtonElement);
     await act(async () => {
       (resetButton as HTMLButtonElement).click();

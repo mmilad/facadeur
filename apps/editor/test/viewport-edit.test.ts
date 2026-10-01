@@ -16,9 +16,9 @@ import specimenPage from '../../../examples/specimen-page.json';
 import specimenSection from '../../../examples/specimen-section.json';
 import textarea from '../../../examples/textarea.json';
 import { createEditorSession } from '../src/domain/session.js';
-import { writeStyleDeclaration } from '../src/domain/style-edit.js';
-import { withTokenBreakpoint } from '../src/domain/token-edit.js';
-import { viewportEditContext } from '../src/domain/viewport-edit.js';
+import { writeStyleDeclaration } from '../src/domain/edits/style-edit.js';
+import { withTokenBreakpoint } from '../src/domain/edits/token-edit.js';
+import { viewportEditContext } from '../src/domain/viewport/viewport-edit.js';
 
 const documents = validateCatalog([
   button,

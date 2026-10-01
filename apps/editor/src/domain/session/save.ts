@@ -9,9 +9,13 @@ import {
 } from '@facadeur/core';
 import { createDocumentStore, type YjsDocumentStore } from '@facadeur/store-yjs';
 import type { DesignInput } from '@facadeur/tokens';
-import { renderIdForNode } from '../selection-model.js';
-import { clearDocumentSaved, markDocumentSaved, type SavedJsonBaselines } from '../save-state.js';
-import { documentToJson, saveJsonFile, type JsonFileHandle } from '../files.js';
+import { renderIdForNode } from '../selection/selection-model.js';
+import {
+  clearDocumentSaved,
+  markDocumentSaved,
+  type SavedJsonBaselines,
+} from '../assets/save-state.js';
+import { documentToJson, saveJsonFile, type JsonFileHandle } from '../assets/files.js';
 import { errorText, kindOf } from './kinds.js';
 import type { EditorNotice } from './types.js';
 import { migratePreviewData } from '../preview-data.js';

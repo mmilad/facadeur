@@ -12,7 +12,7 @@ import {
   nodeIdForHit,
   renderIdForNode,
   resolveClick,
-} from '../src/domain/selection-model.js';
+} from '../src/domain/selection/selection-model.js';
 
 const documents = validateCatalog([button, input, card, signIn, specimenSection, specimenPage]);
 

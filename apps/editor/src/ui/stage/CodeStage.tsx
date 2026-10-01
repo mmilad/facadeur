@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { codePreview } from '../../domain/code-preview.js';
+import { codePreview } from '../../domain/assets/code-preview.js';
 import type { EditorSession, EditorSnapshot } from '../../domain/session.js';
 
 /** Read-only React output for the open component. */

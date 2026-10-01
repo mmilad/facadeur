@@ -1,13 +1,17 @@
 import { type Command, type DefaultKind, type FlatDocument } from '@facadeur/core';
 import type { YjsDocumentStore } from '@facadeur/store-yjs';
-import type { JsonFileHandle } from '../files.js';
+import type { JsonFileHandle } from '../assets/files.js';
 import {
   chromeStorageKey,
   defaultViewportChrome,
   type ViewportChromeSettings,
-} from '../viewport-chrome.js';
-import type { StyleEditMode } from '../viewport-edit.js';
-import { pushDrillFrame, stackThroughParent, type DrillStackFrame } from '../drill-navigation.js';
+} from '../viewport/viewport-chrome.js';
+import type { StyleEditMode } from '../viewport/viewport-edit.js';
+import {
+  pushDrillFrame,
+  stackThroughParent,
+  type DrillStackFrame,
+} from '../navigation/drill-navigation.js';
 import { applyWorkspaceChange, kindOf, normalizeBreakpointId } from './kinds.js';
 import { resolveRenderedSelection } from './snapshot.js';
 import type { NestedSelection } from '../nested-selection.js';

@@ -7,13 +7,13 @@ import type {
   FlatNode,
 } from '@facadeur/core';
 import type { DesignInput } from '@facadeur/tokens';
-import type { JsonFileHandle } from '../files.js';
-import type { LayerItem } from '../selection-model.js';
+import type { JsonFileHandle } from '../assets/files.js';
+import type { LayerItem } from '../selection/selection-model.js';
 import type { NestedFieldContext, NestedSelection } from '../nested-selection.js';
-import type { ViewportChromeSettings } from '../viewport-chrome.js';
-import type { StyleEditMode } from '../viewport-edit.js';
-import type { DrillParent } from '../drill-navigation.js';
-import type { VariantSummary } from '../variant-edit.js';
+import type { ViewportChromeSettings } from '../viewport/viewport-chrome.js';
+import type { StyleEditMode } from '../viewport/viewport-edit.js';
+import type { DrillParent } from '../navigation/drill-navigation.js';
+import type { VariantSummary } from '../edits/variant-edit.js';
 
 export type EditorTool = 'select' | 'frame' | 'text' | 'image';
 
@@ -67,7 +67,7 @@ export interface EditorSnapshot {
   /** Public events of the selected component, including recursive expose paths. */
   componentEvents: import('@facadeur/core').EventDefinition[];
   /** Default plus named component variants with resolved editor documents. */
-  componentVariants: import('../component-contract.js').ComponentVariantContract[];
+  componentVariants: import('../schema/component-contract.js').ComponentVariantContract[];
   /** Session-only editing context. Null means the document's default variant. */
   activeVariantName: string | null;
   canUndo: boolean;

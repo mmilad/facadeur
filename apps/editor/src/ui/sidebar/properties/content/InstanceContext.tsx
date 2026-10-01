@@ -1,7 +1,7 @@
 import type { FlatDocument, FlatNode } from '@facadeur/core';
 import { resolveInstanceVariantContext } from '../../../../domain/instance-variant-context.js';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
-import { variantLabel } from '../../../../domain/variant-edit.js';
+import { variantLabel } from '../../../../domain/edits/variant-edit.js';
 import './instance-context.css';
 
 export function InstanceContext({

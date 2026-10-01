@@ -1,10 +1,10 @@
 import type { EditorSession, EditorSnapshot } from '../../domain/session.js';
-import { variantLabel } from '../../domain/variant-edit.js';
-import { ComponentEvents } from '../sidebar/properties/content/ComponentEvents.js';
-import { ComponentExpose } from '../sidebar/properties/content/ComponentExpose.js';
-import { ComponentFields } from '../sidebar/properties/content/ComponentFields.js';
-import { ComponentVariants } from '../sidebar/properties/content/ComponentVariants.js';
-import { ownsComponentFeatures } from '../sidebar/properties/content/owns-component-features.js';
+import { variantLabel } from '../../domain/edits/variant-edit.js';
+import { ComponentEvents } from '../sidebar/properties/content/component/ComponentEvents.js';
+import { ComponentExpose } from '../sidebar/properties/content/component/ComponentExpose.js';
+import { ComponentFields } from '../sidebar/properties/content/component/ComponentFields.js';
+import { ComponentVariants } from '../sidebar/properties/content/component/ComponentVariants.js';
+import { ownsComponentFeatures } from '../sidebar/properties/content/component/owns-component-features.js';
 import { SchemaUseControl } from './SchemaUseControl.js';
 
 /**

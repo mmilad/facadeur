@@ -1,7 +1,7 @@
 import { type Binding, type FlatNode } from '@facadeur/core';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
 import { BindingsEditorControl, EventBindingsEditorControl } from '../../../controls/data/index.js';
-import { ownsComponentFeatures } from './owns-component-features.js';
+import { ownsComponentFeatures } from './component/owns-component-features.js';
 
 export function NodeBindings({
   session,

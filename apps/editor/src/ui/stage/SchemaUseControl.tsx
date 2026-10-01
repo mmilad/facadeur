@@ -4,9 +4,9 @@ import {
   getSchemaLibrary,
   setComponentSchemaUse,
   subscribeSchemaLibrary,
-} from '../../domain/schema-library.js';
-import type { ComponentSchemaUse, SchemaFieldUse } from '../../domain/schema-use.js';
-import { parseTypeRef, typeRefValue } from '../../domain/schema-use.js';
+} from '../../domain/schema/schema-library.js';
+import type { ComponentSchemaUse, SchemaFieldUse } from '../../domain/schema/schema-use.js';
+import { parseTypeRef, typeRefValue } from '../../domain/schema/schema-use.js';
 import { Combobox, Field, SegmentedControl, Stack, TextInput } from '../form/index.js';
 import { SchemaPreviewForm } from './SchemaPreviewForm.js';
 import { schemaTypeOptions } from './schema-type-options.js';

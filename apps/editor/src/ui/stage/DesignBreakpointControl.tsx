@@ -1,5 +1,5 @@
 import type { EditorSession, EditorSnapshot } from '../../domain/session.js';
-import { editorBreakpoints, viewportEditContext } from '../../domain/viewport-edit.js';
+import { editorBreakpoints, viewportEditContext } from '../../domain/viewport/viewport-edit.js';
 
 /** Design edits choose their breakpoint without selecting canvas preview chrome. */
 export function DesignBreakpointControl({

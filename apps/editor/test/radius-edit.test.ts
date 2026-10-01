@@ -7,7 +7,7 @@ import {
   isValidRadiusTokenPath,
   suggestRadiusPath,
   tokenPathsReferencingRadius,
-} from '../src/domain/radius-edit.js';
+} from '../src/domain/edits/radius-edit.js';
 import { tokenMatchesDomain } from '../src/ui/sidebar/design/design-domain.js';
 
 describe('radius-edit', () => {

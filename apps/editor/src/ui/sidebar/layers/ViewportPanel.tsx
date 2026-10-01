@@ -1,7 +1,7 @@
 import type { Breakpoint } from '@facadeur/core';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
-import { editorBreakpoints } from '../../../domain/viewport-edit.js';
-import { resolvedViewportChrome } from '../../../domain/viewport-chrome.js';
+import { editorBreakpoints } from '../../../domain/viewport/viewport-edit.js';
+import { resolvedViewportChrome } from '../../../domain/viewport/viewport-chrome.js';
 import { TextControl } from '../../controls/fields/index.js';
 
 export function ViewportLayersList({

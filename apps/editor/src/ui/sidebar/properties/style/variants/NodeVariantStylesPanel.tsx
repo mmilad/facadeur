@@ -1,7 +1,7 @@
 import type { EditorSession, EditorSnapshot } from '../../../../../domain/session.js';
-import { styleStateNames } from '../../../../../domain/style-edit.js';
+import { styleStateNames } from '../../../../../domain/edits/style-edit.js';
 import { VariantStyleLayers } from '../../../../controls/variants/index.js';
-import { ownsComponentFeatures } from '../../content/owns-component-features.js';
+import { ownsComponentFeatures } from '../../content/component/owns-component-features.js';
 import { DeclarationEditor } from '../declarations/declaration-editor.js';
 
 export function NodeVariantStylesPanel({

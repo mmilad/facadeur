@@ -352,6 +352,9 @@ describe('editor shell', () => {
       (view.querySelector('[data-design-domain="fonts"]') as HTMLButtonElement).click();
     });
     expect(view.querySelector('.design-domain-stage[data-design-domain="fonts"]')).toBeTruthy();
+    await act(async () => {
+      (view.querySelector('button[name="font-details-sans"]') as HTMLButtonElement).click();
+    });
     expect(view.querySelector('input[name="font-sans-family"]')).toBeInstanceOf(HTMLInputElement);
 
     await act(async () => {

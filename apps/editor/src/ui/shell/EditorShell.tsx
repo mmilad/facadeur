@@ -4,7 +4,7 @@ import { createId, findParent } from '@facadeur/core';
 import { placementAllowed, refusalMessage, toolAllowed } from '../../domain/editing.js';
 import dynamic from 'next/dynamic';
 import { useEffect, useSyncExternalStore } from 'react';
-import { openJsonFile, parseDocumentText } from '../../domain/files.js';
+import { openJsonFile, parseDocumentText } from '../../domain/assets/files.js';
 import { isEditableTarget } from '../../domain/keyboard.js';
 import type { EditorSession } from '../../domain/session.js';
 import { EDITOR_VIEW_ITEMS, isDesignDomain } from '../sidebar/design/design-domain.js';

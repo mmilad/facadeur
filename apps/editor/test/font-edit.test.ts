@@ -7,7 +7,7 @@ import {
   parseFontWeights,
   suggestFontId,
   tokenPathsReferencingFont,
-} from '../src/domain/font-edit.js';
+} from '../src/domain/edits/font-edit.js';
 
 describe('font-edit', () => {
   it('creates a google font with a generic fallback', () => {

@@ -1,13 +1,13 @@
 import { useMemo } from 'react';
-import type { ComponentSchemaUse, NamedSchema, PreviewControl } from '../../domain/schema-use.js';
+import type { ComponentSchemaUse, NamedSchema, PreviewControl } from '../../domain/schema/schema-use.js';
 import {
   getAt,
   matchingChoice,
   previewControlsForUse,
   retargetControl,
   setAt,
-} from '../../domain/schema-use.js';
-import { getComponentSchemaUse, setComponentSchemaUse } from '../../domain/schema-library.js';
+} from '../../domain/schema/schema-use.js';
+import { getComponentSchemaUse, setComponentSchemaUse } from '../../domain/schema/schema-library.js';
 import { Checkbox, Combobox, Field, NumberInput, Stack, TextInput } from '../form/index.js';
 
 function joinPath(parent: string, name: string): string {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pushDrillFrame, stackThroughParent } from '../src/domain/drill-navigation.js';
+import { pushDrillFrame, stackThroughParent } from '../src/domain/navigation/drill-navigation.js';
 import { validateCatalog } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import button from '../../../examples/button.json';

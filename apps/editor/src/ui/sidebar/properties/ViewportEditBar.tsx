@@ -3,7 +3,7 @@ import {
   editorBreakpoints,
   overrideLabel,
   viewportEditContext,
-} from '../../../domain/viewport-edit.js';
+} from '../../../domain/viewport/viewport-edit.js';
 
 export function ViewportEditBar({
   session,

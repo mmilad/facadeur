@@ -9,7 +9,7 @@ import {
 import { designDomainLabel, type DesignDomain } from '../sidebar/design/design-domain.js';
 import { DesignBreakpointControl } from './DesignBreakpointControl.js';
 import { TokenPreviewProvider } from '../controls/fields/TokenPreviewContext.js';
-import { editorBreakpoints, viewportEditContext } from '../../domain/viewport-edit.js';
+import { editorBreakpoints, viewportEditContext } from '../../domain/viewport/viewport-edit.js';
 import '../form/form.css';
 
 export function DesignDomainStage({

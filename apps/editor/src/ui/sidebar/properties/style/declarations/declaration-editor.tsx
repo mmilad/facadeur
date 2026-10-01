@@ -21,8 +21,8 @@ import {
   writeStyleDeclarations,
   writeStyleDeclaration,
   type StyleEditTarget,
-} from '../../../../../domain/style-edit.js';
-import { editorBreakpoints, viewportEditContext } from '../../../../../domain/viewport-edit.js';
+} from '../../../../../domain/edits/style-edit.js';
+import { editorBreakpoints, viewportEditContext } from '../../../../../domain/viewport/viewport-edit.js';
 import { CssDeclarationsControl } from '../../../../controls/generic/index.js';
 import type { StructuredDeclarationGroup } from '../../../../controls/generic/CssDeclarationsControl.js';
 import { projectFontRefs, type TypographyCatalogs } from '../../../../controls/typography/index.js';

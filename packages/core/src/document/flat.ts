@@ -1,105 +1,43 @@
 import { DocumentError } from './errors.js';
 import { cloneBreakpoints, cloneFonts } from '../styles/libraries.js';
 import { canonicalizeLayout } from '../styles/layout.js';
-import type { FontFamily, IconDefinition } from './schema.js';
 import type {
   Binding,
-  ChildFieldOverrides,
+  DisplayOn,
   DocumentFile,
   DocumentSettings,
-  DisplayOn,
   EventBinding,
-  EventDefinition,
-  Expose,
-  FieldDefinition,
-  FieldValue,
-  PreviewData,
   Layout,
   NestedNode,
-  StyleBlock,
-  TokenInterface,
-  VariantAxis,
-  VariantPreset,
-  VariantRule,
-  Repeat,
 } from './schema.js';
 import { isVariantAxis, isVariantPreset } from './schema.js';
 import { canonicalizeStyleBlock, canonicalizeTokenInterface } from '../styles/style-block.js';
-import { canonicalizeTokenTree, type TokenTree } from '../token-tree.js';
+import { canonicalizeTokenTree } from '../token-tree.js';
+import {
+  cloneBinding,
+  cloneChildFields,
+  cloneEvent,
+  cloneEventBindings,
+  cloneExpose,
+  cloneField,
+  clonePreset,
+  cloneVariant,
+  sortFieldValues,
+  sortStringRecord,
+} from './flat/flat-clone.js';
+import { collectSubtree, findParent, isInsideSubtree } from './flat/flat-tree.js';
+import type { FlatDocument, FlatNode, FlatNodeBase, InstanceNode } from './flat/flat-types.js';
 
-export interface FlatNodeBase {
-  id: string;
-  name?: string;
-  tag?: string;
-  attributes?: Record<string, string>;
-  displayOn?: DisplayOn;
-  layout?: Layout;
-  bindings?: Binding[];
-  eventBindings?: EventBinding[];
-  style?: Record<string, string>;
-}
-
-export interface FrameNode extends FlatNodeBase {
-  type: 'frame';
-  repeat?: Repeat;
-  children: string[];
-}
-
-export interface TextNode extends FlatNodeBase {
-  type: 'text';
-  text?: string;
-}
-
-export interface ImageNode extends FlatNodeBase {
-  type: 'image';
-  src?: string;
-  alt?: string;
-}
-
-/** Instances carry placement plus field, variant, and containing-document style overrides. */
-export interface InstanceNode {
-  id: string;
-  type: 'instance';
-  name?: string;
-  displayOn?: DisplayOn;
-  layout?: Layout;
-  component: string;
-  fields?: Record<string, FieldValue>;
-  childFields?: ChildFieldOverrides;
-  fieldBindings?: Record<string, string>;
-  variants?: Record<string, string>;
-  variantRules?: VariantRule[];
-  expose?: Expose;
-}
-
-export type FlatNode = FrameNode | TextNode | ImageNode | InstanceNode;
-
-/** In-memory document: one map of nodes, children as ordered id lists. */
-export interface FlatDocument {
-  version: 1;
-  id: string;
-  name: string;
-  kind: string;
-  group?: string;
-  rootId: string;
-  fields: FieldDefinition[];
-  previewData?: PreviewData;
-  variantLabels?: Record<string, string>;
-  events?: EventDefinition[];
-  expose?: Expose;
-  variants: VariantAxis[];
-  variantPresets?: VariantPreset[];
-  settings: DocumentSettings;
-  /** DTCG tree. Empty when the file omits tokens. References stay unresolved. */
-  tokens: TokenTree;
-  fonts: FontFamily[];
-  icons?: IconDefinition[];
-  /** Component style block: base, variants, states, breakpoints. */
-  styles?: StyleBlock;
-  /** Tokens this component reads, and tokens it sets for descendants. */
-  tokenInterface?: TokenInterface;
-  nodes: Record<string, FlatNode>;
-}
+export type {
+  FlatNodeBase,
+  FrameNode,
+  TextNode,
+  ImageNode,
+  InstanceNode,
+  FlatNode,
+  FlatDocument,
+} from './flat/flat-types.js';
+export { collectSubtree, findParent, isInsideSubtree } from './flat/flat-tree.js';
 
 export function toFlat(file: DocumentFile): FlatDocument {
   const nodes: Record<string, FlatNode> = {};
@@ -121,7 +59,7 @@ export function toFlat(file: DocumentFile): FlatDocument {
       ? { variantPresets: (file.variants ?? []).filter(isVariantPreset).map(clonePreset) }
       : {}),
     settings: file.settings ?? {},
-    tokens: (file.tokens ?? {}) as TokenTree,
+    tokens: (file.tokens ?? {}) as FlatDocument['tokens'],
     fonts: file.fonts ?? [],
     ...(file.icons?.length ? { icons: file.icons } : {}),
     ...(file.styles ? { styles: file.styles } : {}),
@@ -307,41 +245,6 @@ export function makeFlatNode(node: FlatNode): FlatNode {
   };
 }
 
-export function findParent(doc: FlatDocument, id: string): FrameNode | undefined {
-  for (const node of Object.values(doc.nodes)) {
-    if (node.type === 'frame' && node.children.includes(id)) return node;
-  }
-  return undefined;
-}
-
-export function collectSubtree(doc: FlatDocument, id: string): string[] {
-  const ids: string[] = [];
-  const walk = (current: string) => {
-    ids.push(current);
-    const node = doc.nodes[current];
-    if (node?.type === 'frame') {
-      for (const child of node.children) walk(child);
-    }
-  };
-  walk(id);
-  return ids;
-}
-
-export function isInsideSubtree(doc: FlatDocument, ancestorId: string, nodeId: string): boolean {
-  if (ancestorId === nodeId) return true;
-  const ancestor = doc.nodes[ancestorId];
-  if (!ancestor || ancestor.type !== 'frame') return false;
-  const stack = [...ancestor.children];
-  while (stack.length) {
-    const next = stack.pop();
-    if (!next) continue;
-    if (next === nodeId) return true;
-    const node = doc.nodes[next];
-    if (node?.type === 'frame') stack.push(...node.children);
-  }
-  return false;
-}
-
 function expandNode(doc: FlatDocument, id: string, stack: Set<string>): NestedNode {
   if (stack.has(id)) {
     throw new DocumentError('cycle', `Cycle at node "${id}"`);
@@ -450,129 +353,4 @@ function sharedToNested(node: Exclude<FlatNode, InstanceNode>): {
 
 function cleanLayout(layout: Layout | undefined): Layout | undefined {
   return canonicalizeLayout(layout);
-}
-
-function sortStringRecord(
-  record: Record<string, string> | undefined,
-): Record<string, string> | undefined {
-  if (!record) return undefined;
-  const keys = Object.keys(record).sort();
-  if (!keys.length) return undefined;
-  const next: Record<string, string> = {};
-  for (const key of keys) {
-    const value = record[key];
-    if (value !== undefined) next[key] = value;
-  }
-  return Object.keys(next).length ? next : undefined;
-}
-
-function sortFieldValues(
-  record: Record<string, FieldValue> | undefined,
-): Record<string, FieldValue> | undefined {
-  if (!record) return undefined;
-  const keys = Object.keys(record).sort();
-  if (!keys.length) return undefined;
-  const next: Record<string, FieldValue> = {};
-  for (const key of keys) {
-    const value = record[key];
-    if (value !== undefined) next[key] = value;
-  }
-  return Object.keys(next).length ? next : undefined;
-}
-
-function cloneChildFields(value: ChildFieldOverrides | undefined): ChildFieldOverrides | undefined {
-  if (!value) return undefined;
-  const next: ChildFieldOverrides = {};
-  for (const path of Object.keys(value).sort()) {
-    const fields = value[path];
-    if (!fields) continue;
-    const sorted: Record<string, FieldValue> = {};
-    for (const name of Object.keys(fields).sort()) {
-      const field = fields[name];
-      if (field !== undefined) sorted[name] = structuredClone(field);
-    }
-    if (Object.keys(sorted).length) next[path] = sorted;
-  }
-  return Object.keys(next).length ? next : undefined;
-}
-
-function cloneBinding(binding: Binding): Binding {
-  return {
-    field: binding.field,
-    target: binding.target,
-    ...(binding.name !== undefined ? { name: binding.name } : {}),
-  };
-}
-
-function cloneEventBindings(bindings: EventBinding[]): EventBinding[] {
-  return bindings.map((binding) => ({
-    event: binding.event,
-    name: binding.name,
-    ...(binding.payload ? { payload: { ...binding.payload } } : {}),
-  }));
-}
-
-function cloneField(field: FieldDefinition): FieldDefinition {
-  return {
-    name: field.name,
-    type: field.type,
-    ...(field.required !== undefined ? { required: field.required } : {}),
-    ...(field.default !== undefined ? { default: field.default } : {}),
-    ...(field.options ? { options: [...field.options] } : {}),
-    ...(field.items
-      ? {
-          items: {
-            type: field.items.type,
-            ...(field.items.options ? { options: [...field.items.options] } : {}),
-            ...(field.items.fields ? { fields: field.items.fields.map(cloneField) } : {}),
-          },
-        }
-      : {}),
-  };
-}
-
-function cloneEvent(event: EventDefinition): EventDefinition {
-  return {
-    name: event.name,
-    ...(event.payload ? { payload: { ...event.payload } } : {}),
-  };
-}
-
-function cloneExpose(expose: Expose): Expose {
-  return {
-    ...(expose.fields ? { fields: { ...expose.fields } } : {}),
-    ...(expose.events ? { events: { ...expose.events } } : {}),
-  };
-}
-
-function cloneVariant(variant: VariantAxis): VariantAxis {
-  return {
-    name: variant.name,
-    values: [...variant.values],
-    ...(variant.default !== undefined ? { default: variant.default } : {}),
-  };
-}
-
-function clonePreset(variant: VariantPreset): VariantPreset {
-  return {
-    name: variant.name,
-    ...(variant.overrides
-      ? {
-          overrides: {
-            ...(variant.overrides.fields ? { fields: { ...variant.overrides.fields } } : {}),
-            ...(variant.overrides.styles
-              ? { styles: structuredClone(variant.overrides.styles) }
-              : {}),
-            ...(variant.overrides.unsetFields
-              ? { unsetFields: [...variant.overrides.unsetFields] }
-              : {}),
-            ...(variant.overrides.nodes ? { nodes: structuredClone(variant.overrides.nodes) } : {}),
-            ...(variant.overrides.removed ? { removed: [...variant.overrides.removed] } : {}),
-            ...(variant.overrides.insertions
-              ? { insertions: structuredClone(variant.overrides.insertions) }
-              : {}),
-          },
-        }
-      : {}),
-  };
 }

@@ -8,21 +8,25 @@ import {
 } from '@facadeur/core';
 import { withPreviewData } from '@facadeur/core';
 import type { YjsDocumentStore } from '@facadeur/store-yjs';
-import { componentVariantsFor, publicEventsFor, publicFieldsFor } from '../component-contract.js';
-import { ownsVariantContract, variantSummaries } from '../variant-edit.js';
-import { nodeIdForHit, renderIdForNode } from '../selection-model.js';
+import {
+  componentVariantsFor,
+  publicEventsFor,
+  publicFieldsFor,
+} from '../schema/component-contract.js';
+import { ownsVariantContract, variantSummaries } from '../edits/variant-edit.js';
+import { nodeIdForHit, renderIdForNode } from '../selection/selection-model.js';
 import {
   fieldContextForSelection,
   type NestedFieldContext,
   type NestedSelection,
   virtualLayerTree,
 } from '../nested-selection.js';
-import { isDocumentDirty, type SavedJsonBaselines } from '../save-state.js';
-import type { ViewportChromeSettings } from '../viewport-chrome.js';
-import type { StyleEditMode } from '../viewport-edit.js';
-import type { DrillParent, DrillStackFrame } from '../drill-navigation.js';
+import { isDocumentDirty, type SavedJsonBaselines } from '../assets/save-state.js';
+import type { ViewportChromeSettings } from '../viewport/viewport-chrome.js';
+import type { StyleEditMode } from '../viewport/viewport-edit.js';
+import type { DrillParent, DrillStackFrame } from '../navigation/drill-navigation.js';
 import { isKind } from './kinds.js';
-import { overlaySchemaDefaults } from '../schema-defaults.js';
+import { overlaySchemaDefaults } from '../schema/schema-defaults.js';
 import type {
   AssetSummary,
   EditorDrag,

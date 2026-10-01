@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useMemo, useState } from 'react';
-import type { ShownDeclaration } from '../../../domain/style-edit.js';
+import type { ShownDeclaration } from '../../../domain/edits/style-edit.js';
 import type { LayoutCapabilities } from '../../../domain/layout-capabilities.js';
 import {
   BorderControl,

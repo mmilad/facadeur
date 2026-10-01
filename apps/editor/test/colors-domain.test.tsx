@@ -62,6 +62,20 @@ describe('colors domain panel', () => {
     });
   }
 
+  async function submitNewToken(path: string) {
+    if (!document.querySelector('input[name="new-color-path"]')) {
+      await act(async () => {
+        (host!.querySelector('button[name="add-color"]') as HTMLButtonElement).click();
+      });
+    }
+    const pathInput = document.querySelector('input[name="new-color-path"]') as HTMLInputElement;
+    expect(pathInput).toBeInstanceOf(HTMLInputElement);
+    await act(async () => setInput(pathInput, path));
+    await act(async () => {
+      (document.querySelector('button[name="add-color-submit"]') as HTMLButtonElement).click();
+    });
+  }
+
   it('adds a color token with a valid path and default value', async () => {
     const session = createEditorSession({
       documents,
@@ -69,11 +83,7 @@ describe('colors domain panel', () => {
     });
     await openColors(session);
 
-    const pathInput = host!.querySelector('input[name="new-color-path"]') as HTMLInputElement;
-    setInput(pathInput, 'color.brand.highlight');
-    await act(async () => {
-      (host!.querySelector('button[name="add-color"]') as HTMLButtonElement).click();
-    });
+    await submitNewToken('color.brand.highlight');
 
     const indexed = readTokenTree(session.getSnapshot().design.tokens);
     expect(indexed.tokens.get('color.brand.highlight')).toMatchObject({
@@ -110,11 +120,7 @@ describe('colors domain panel', () => {
     });
     await openColors(session);
 
-    const pathInput = host!.querySelector('input[name="new-color-path"]') as HTMLInputElement;
-    setInput(pathInput, 'accent.only');
-    await act(async () => {
-      (host!.querySelector('button[name="add-color"]') as HTMLButtonElement).click();
-    });
+    await submitNewToken('accent.only');
 
     expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has('accent.only')).toBe(
       false,
@@ -130,11 +136,7 @@ describe('colors domain panel', () => {
     });
     await openColors(session);
 
-    const pathInput = host!.querySelector('input[name="new-color-path"]') as HTMLInputElement;
-    setInput(pathInput, 'color.accent.default');
-    await act(async () => {
-      (host!.querySelector('button[name="add-color"]') as HTMLButtonElement).click();
-    });
+    await submitNewToken('color.accent.default');
 
     expect(session.getSnapshot().notice?.tone).toBe('error');
     expect(session.getSnapshot().notice?.text).toMatch(/already exists/i);

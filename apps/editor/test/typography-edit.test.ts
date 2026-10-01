@@ -7,7 +7,7 @@ import {
   isValidTypographyTokenPath,
   suggestTypographyPath,
   tokenPathsReferencingTypography,
-} from '../src/domain/typography-edit.js';
+} from '../src/domain/edits/typography-edit.js';
 import { tokenMatchesDomain } from '../src/ui/sidebar/design/design-domain.js';
 
 describe('typography-edit', () => {

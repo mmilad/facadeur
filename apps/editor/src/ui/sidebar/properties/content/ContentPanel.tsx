@@ -14,7 +14,7 @@ import { partitionNodeAttributes } from './preview-attribute-keys.js';
 import { PreviewOptionsDisclosure } from './PreviewOptionsDisclosure.js';
 import { NodeBindings } from './NodeBindings.js';
 import { BoundFieldValues } from './BoundFieldValues.js';
-import { ownsComponentFeatures } from './owns-component-features.js';
+import { ownsComponentFeatures } from './component/owns-component-features.js';
 import { VariantRulesEditor } from './VariantRulesEditor.js';
 
 export function ContentPanel({

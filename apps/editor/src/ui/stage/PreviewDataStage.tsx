@@ -5,7 +5,7 @@ import {
   patchPreviewData,
   previewValueSource,
 } from '../../domain/preview-data.js';
-import { variantLabel } from '../../domain/variant-edit.js';
+import { variantLabel } from '../../domain/edits/variant-edit.js';
 import { fieldDisplayLabel } from '../controls/data/field-label.js';
 import { Field, NumberInput, Select, Stack, TextArea, TextInput, Toggle } from '../form/index.js';
 

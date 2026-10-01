@@ -12,7 +12,7 @@ import {
   resetSchemaLibrary,
   setComponentSchemaUse,
   updateLibrarySchema,
-} from '../src/domain/schema-library.js';
+} from '../src/domain/schema/schema-library.js';
 
 const STORAGE_KEY = 'facadeur.schema-library.v1';
 

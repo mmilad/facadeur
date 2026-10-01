@@ -16,7 +16,7 @@ import specimenPage from '../../../examples/specimen-page.json';
 import specimenSection from '../../../examples/specimen-section.json';
 import textarea from '../../../examples/textarea.json';
 import { createEditorSession, type EditorSession } from '../src/domain/session.js';
-import { withTokenBreakpoint } from '../src/domain/token-edit.js';
+import { withTokenBreakpoint } from '../src/domain/edits/token-edit.js';
 import { App } from '../src/ui/shell/EditorShell.js';
 
 const documents = validateCatalog([
@@ -63,6 +63,20 @@ describe('shadow domain panel', () => {
     });
   }
 
+  async function submitNewToken(path: string) {
+    if (!document.querySelector('input[name="new-shadow-path"]')) {
+      await act(async () => {
+        (host!.querySelector('button[name="add-shadow"]') as HTMLButtonElement).click();
+      });
+    }
+    const pathInput = document.querySelector('input[name="new-shadow-path"]') as HTMLInputElement;
+    expect(pathInput).toBeInstanceOf(HTMLInputElement);
+    await act(async () => setInput(pathInput, path));
+    await act(async () => {
+      (document.querySelector('button[name="add-shadow-submit"]') as HTMLButtonElement).click();
+    });
+  }
+
   it('adds a shadow token with a valid path and default value', async () => {
     const session = createEditorSession({
       documents,
@@ -70,11 +84,7 @@ describe('shadow domain panel', () => {
     });
     await openShadow(session);
 
-    const pathInput = host!.querySelector('input[name="new-shadow-path"]') as HTMLInputElement;
-    setInput(pathInput, 'shadow.elevated.xl');
-    await act(async () => {
-      (host!.querySelector('button[name="add-shadow"]') as HTMLButtonElement).click();
-    });
+    await submitNewToken('shadow.elevated.xl');
 
     const indexed = readTokenTree(session.getSnapshot().design.tokens);
     expect(indexed.tokens.get('shadow.elevated.xl')).toMatchObject({
@@ -113,11 +123,7 @@ describe('shadow domain panel', () => {
     });
     await openShadow(session);
 
-    const pathInput = host!.querySelector('input[name="new-shadow-path"]') as HTMLInputElement;
-    setInput(pathInput, 'elevated.only');
-    await act(async () => {
-      (host!.querySelector('button[name="add-shadow"]') as HTMLButtonElement).click();
-    });
+    await submitNewToken('elevated.only');
 
     expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has('elevated.only')).toBe(
       false,
@@ -133,11 +139,7 @@ describe('shadow domain panel', () => {
     });
     await openShadow(session);
 
-    const pathInput = host!.querySelector('input[name="new-shadow-path"]') as HTMLInputElement;
-    setInput(pathInput, 'shadow.md');
-    await act(async () => {
-      (host!.querySelector('button[name="add-shadow"]') as HTMLButtonElement).click();
-    });
+    await submitNewToken('shadow.md');
 
     expect(session.getSnapshot().notice?.tone).toBe('error');
     expect(session.getSnapshot().notice?.text).toMatch(/already exists/i);
@@ -176,10 +178,9 @@ describe('shadow domain panel', () => {
     const indexedBefore = readTokenTree(session.getSnapshot().design.tokens);
     expect(indexedBefore.tokens.get('shadow.lg')?.breakpoints.tablet).toEqual(tabletOverride);
 
-    const resetButton = host!
-      .querySelector('textarea[name="token-shadow.lg"]')
-      ?.closest('div')
-      ?.parentElement?.querySelector('.override-cue button');
+    const resetButton = host!.querySelector(
+      'tr[data-token-path="shadow.lg"] .override-cue button',
+    );
     expect(resetButton).toBeInstanceOf(HTMLButtonElement);
     await act(async () => {
       (resetButton as HTMLButtonElement).click();

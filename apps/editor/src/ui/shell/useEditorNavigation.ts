@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { editorBreakpoints } from '../../domain/viewport-edit.js';
+import { editorBreakpoints } from '../../domain/viewport/viewport-edit.js';
 import {
   EDITOR_NAVIGATION_PARAMS,
   hasEditorNavigationSelection,
   parseEditorNavigation,
   writeEditorNavigation,
-} from '../../domain/editor-navigation.js';
+} from '../../domain/navigation/editor-navigation.js';
 import type { EditorSession, EditorSnapshot } from '../../domain/session.js';
 import {
   DESIGN_DOMAIN_ITEMS,

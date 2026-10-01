@@ -12,15 +12,15 @@ import signIn from '../../../examples/sign-in.json';
 import specimenPage from '../../../examples/specimen-page.json';
 import specimenSection from '../../../examples/specimen-section.json';
 import textarea from '../../../examples/textarea.json';
-import { documentToJson } from '../src/domain/files.js';
-import { createFrameHost } from '../src/domain/frame-host.js';
+import { documentToJson } from '../src/domain/assets/files.js';
+import { createFrameHost } from '../src/domain/viewport/frame-host.js';
 import { createEditorSession } from '../src/domain/session.js';
 import {
   ASSET_PREVIEW_INNER_PADDING_PX,
   defaultViewportChrome,
   resolvedViewportChrome,
-} from '../src/domain/viewport-chrome.js';
-import { createViewportBoard } from '../src/domain/viewports.js';
+} from '../src/domain/viewport/viewport-chrome.js';
+import { createViewportBoard } from '../src/domain/viewport/viewports.js';
 import { createDocumentStore } from '@facadeur/store-yjs';
 
 const documents = validateCatalog([

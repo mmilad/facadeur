@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import * as files from '../src/domain/files.js';
+import * as files from '../src/domain/assets/files.js';
 import {
   readTokenTree,
   resolvePreviewData,

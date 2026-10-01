@@ -6,10 +6,10 @@ import {
   type FlatNode,
 } from '@facadeur/core';
 import { parsePreviewFieldValue, patchPreviewData } from '../../../../domain/preview-data.js';
-import { schemaFieldDefaultsFor } from '../../../../domain/schema-defaults.js';
-import { getSchemaLibrary, subscribeSchemaLibrary } from '../../../../domain/schema-library.js';
+import { schemaFieldDefaultsFor } from '../../../../domain/schema/schema-defaults.js';
+import { getSchemaLibrary, subscribeSchemaLibrary } from '../../../../domain/schema/schema-library.js';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
-import { variantLabel } from '../../../../domain/variant-edit.js';
+import { variantLabel } from '../../../../domain/edits/variant-edit.js';
 import { fieldDisplayLabel } from '../../../controls/data/field-label.js';
 import { TextControl } from '../../../controls/fields/index.js';
 import { Field, Select, Toggle } from '../../../form/index.js';

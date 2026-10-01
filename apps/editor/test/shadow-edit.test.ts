@@ -7,7 +7,7 @@ import {
   isValidShadowTokenPath,
   suggestShadowPath,
   tokenPathsReferencingShadow,
-} from '../src/domain/shadow-edit.js';
+} from '../src/domain/edits/shadow-edit.js';
 import { tokenMatchesDomain } from '../src/ui/sidebar/design/design-domain.js';
 
 describe('shadow-edit', () => {

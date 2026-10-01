@@ -1,4 +1,4 @@
-import { publicFieldsFor } from '../component-contract.js';
+import { publicFieldsFor } from '../schema/component-contract.js';
 import type { FieldValue, FlatDocument, FlatNode } from '@facadeur/core';
 import { findParent } from '@facadeur/core';
 import type { NestedFieldContext, NestedSelection } from './types.js';

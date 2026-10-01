@@ -16,7 +16,7 @@ import specimenPage from '../../../examples/specimen-page.json';
 import specimenSection from '../../../examples/specimen-section.json';
 import textarea from '../../../examples/textarea.json';
 import { createEditorSession, type EditorSession } from '../src/domain/session.js';
-import { withTokenBreakpoint } from '../src/domain/token-edit.js';
+import { withTokenBreakpoint } from '../src/domain/edits/token-edit.js';
 import { App } from '../src/ui/shell/EditorShell.js';
 
 const documents = validateCatalog([
@@ -63,6 +63,22 @@ describe('typography domain panel', () => {
     });
   }
 
+  async function submitNewToken(path: string) {
+    if (!document.querySelector('input[name="new-typography-path"]')) {
+      await act(async () => {
+        (host!.querySelector('button[name="add-typography"]') as HTMLButtonElement).click();
+      });
+    }
+    const pathInput = document.querySelector(
+      'input[name="new-typography-path"]',
+    ) as HTMLInputElement;
+    expect(pathInput).toBeInstanceOf(HTMLInputElement);
+    await act(async () => setInput(pathInput, path));
+    await act(async () => {
+      (document.querySelector('button[name="add-typography-submit"]') as HTMLButtonElement).click();
+    });
+  }
+
   it('adds a typography token with a valid path and default value', async () => {
     const session = createEditorSession({
       documents,
@@ -70,11 +86,7 @@ describe('typography domain panel', () => {
     });
     await openTypography(session);
 
-    const pathInput = host!.querySelector('input[name="new-typography-path"]') as HTMLInputElement;
-    setInput(pathInput, 'type.hero');
-    await act(async () => {
-      (host!.querySelector('button[name="add-typography"]') as HTMLButtonElement).click();
-    });
+    await submitNewToken('type.hero');
 
     const indexed = readTokenTree(session.getSnapshot().design.tokens);
     expect(indexed.tokens.get('type.hero')).toMatchObject({
@@ -121,13 +133,8 @@ describe('typography domain panel', () => {
     });
     await openTypography(session);
 
-    const pathInput = host!.querySelector('input[name="new-typography-path"]') as HTMLInputElement;
-
     for (const invalidPath of ['typography.hero', 'font.custom']) {
-      setInput(pathInput, invalidPath);
-      await act(async () => {
-        (host!.querySelector('button[name="add-typography"]') as HTMLButtonElement).click();
-      });
+      await submitNewToken(invalidPath);
 
       expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has(invalidPath)).toBe(
         false,
@@ -144,11 +151,7 @@ describe('typography domain panel', () => {
     });
     await openTypography(session);
 
-    const pathInput = host!.querySelector('input[name="new-typography-path"]') as HTMLInputElement;
-    setInput(pathInput, 'type.body');
-    await act(async () => {
-      (host!.querySelector('button[name="add-typography"]') as HTMLButtonElement).click();
-    });
+    await submitNewToken('type.body');
 
     expect(session.getSnapshot().notice?.tone).toBe('error');
     expect(session.getSnapshot().notice?.text).toMatch(/already exists/i);
@@ -187,10 +190,9 @@ describe('typography domain panel', () => {
     const indexedBefore = readTokenTree(session.getSnapshot().design.tokens);
     expect(indexedBefore.tokens.get('type.title')?.breakpoints.tablet).toEqual(tabletOverride);
 
-    const resetButton = host!
-      .querySelector('button[name="remove-typography-type.title"]')
-      ?.closest('div')
-      ?.querySelector('.override-cue button');
+    const resetButton = host!.querySelector(
+      'tr[data-token-path="type.title"] .override-cue button',
+    );
     expect(resetButton).toBeInstanceOf(HTMLButtonElement);
     await act(async () => {
       (resetButton as HTMLButtonElement).click();

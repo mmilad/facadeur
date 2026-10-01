@@ -1,26 +1,22 @@
 import {
-  applyCommand,
-  deriveVariantPreset,
   DocumentError,
   resolveChildFieldDefinition,
   resolveVariantDocument,
   toFlat,
   toNested,
-  withPreviewData,
   validateCatalog,
-  type Command,
   type DefaultKind,
   type FlatDocument,
 } from '@facadeur/core';
 import { createDocumentStore, type YjsDocumentStore } from '@facadeur/store-yjs';
-import type { JsonFileHandle } from '../files.js';
-import { markDocumentSaved, type SavedJsonBaselines } from '../save-state.js';
-import { renderIdForNode } from '../selection-model.js';
+import type { JsonFileHandle } from '../assets/files.js';
+import type { SavedJsonBaselines } from '../assets/save-state.js';
+import { renderIdForNode } from '../selection/selection-model.js';
 import { resolveNestedSelection, type NestedSelection } from '../nested-selection.js';
-import type { ViewportChromeSettings } from '../viewport-chrome.js';
-import type { StyleEditMode } from '../viewport-edit.js';
-import type { DrillStackFrame } from '../drill-navigation.js';
-import { errorText, isKind, syncDocumentKinds } from './kinds.js';
+import type { ViewportChromeSettings } from '../viewport/viewport-chrome.js';
+import type { StyleEditMode } from '../viewport/viewport-edit.js';
+import type { DrillStackFrame } from '../navigation/drill-navigation.js';
+import { syncDocumentKinds } from './kinds.js';
 import {
   applyOpenAssetChange,
   bindLoadDocument,
@@ -28,16 +24,18 @@ import {
   boardDocumentsForOrder,
   boardStoresForOrder,
   designInputFromStore,
-  registerSessionAssetDocuments,
 } from './save.js';
-import {
-  buildDrillParentsForSnapshot,
-  buildEditorSnapshot,
-  readViewportChromeForOpenDocument,
-} from './snapshot.js';
 import { createEditorSessionSurface, createUndoHistory } from './undo-history.js';
 import { migratePreviewData } from '../preview-data.js';
-import { overlaySchemaDefaults } from '../schema-defaults.js';
+import { bindSessionCommandRunner } from './session-commands.js';
+import {
+  bindBuildEditorSnapshot,
+  bindRefreshSelection,
+  bindSessionDocumentStores,
+  bootstrapSessionDocumentCatalog,
+  createSessionSaveHooks,
+} from './session-documents.js';
+import { prepareNestedDocument } from './session-variant-context.js';
 import type {
   EditorDrag,
   EditorNotice,
@@ -99,50 +97,15 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     syncDocumentKinds(order, assetStores, kinds);
   }
 
-  function watch(store: YjsDocumentStore, source: 'asset' | 'design') {
-    unsubs.get(store)?.();
-    unsubs.set(
-      store,
-      store.subscribe(() => {
-        if (source === 'design') designRevision += 1;
-        refreshSelection();
-        if (notice?.tone === 'error') notice = null;
-        publish();
-      }),
-    );
-  }
-
-  function forget(store: YjsDocumentStore | undefined) {
-    undoHistory.forget(store);
-  }
-
-  function openStore(): YjsDocumentStore {
-    const store = assetStores.get(openId);
-    if (!store) throw new DocumentError('missing-node', `No open document "${openId}"`);
-    return store;
-  }
-
-  function openFlat(): FlatDocument {
-    return openStore().getDocument();
-  }
-
-  function catalogDocuments(): ReadonlyMap<string, FlatDocument> {
-    const documents = new Map<string, FlatDocument>();
-    for (const store of assetStores.values()) {
-      const document = store.getDocument();
-      documents.set(document.id, document);
-    }
-    return documents;
-  }
-
-  function catalogNestedDocuments() {
-    const documents = new Map<string, ReturnType<typeof toNested>>();
-    for (const store of assetStores.values()) {
-      const document = store.getDocument();
-      documents.set(document.id, toNested(document));
-    }
-    return documents;
-  }
+  let onStoreChange: (source: 'asset' | 'design') => void = () => {};
+  const { watch, forget, openStore, openFlat, catalogDocuments, catalogNestedDocuments } =
+    bindSessionDocumentStores({
+      assetStores,
+      unsubs,
+      undoHistory,
+      getOpenId: () => openId,
+      onStoreChange: (source) => onStoreChange(source),
+    });
 
   function selectionDocument(): FlatDocument {
     const document = openFlat();
@@ -169,31 +132,50 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     selectedViewportId = null;
   }
 
-  function refreshSelection() {
-    if (!selectedNodeId) return;
-    const doc = selectionDocument();
-    if (!doc.nodes[selectedNodeId]) {
-      clearSelection();
-      return;
-    }
-    if (nestedSelection) {
-      const next = resolveNestedSelection(
-        doc,
-        nestedSelection.renderId,
-        catalogDocuments(),
-        paintRoot(),
-        prepareNestedDocument,
-      );
-      if (!next || next.ownerNodeId !== selectedNodeId) {
-        clearSelection();
-        return;
-      }
-      nestedSelection = next;
-      selectedRenderId = next.renderId;
-      return;
-    }
-    selectedRenderId = renderIdForNode(doc, selectedNodeId, paintRoot());
-  }
+  const refreshSelection = bindRefreshSelection({
+    getSelectedNodeId: () => selectedNodeId,
+    selectionDocument,
+    paintRoot,
+    catalogDocuments,
+    prepareNestedDocument,
+    getNestedSelection: () => nestedSelection,
+    setNestedSelection: (selection) => {
+      nestedSelection = selection;
+    },
+    setSelectedRenderId: (id) => {
+      selectedRenderId = id;
+    },
+    clearSelection,
+  });
+
+  const build = bindBuildEditorSnapshot({
+    openFlat,
+    getDesignDocument: () => designStore.getDocument(),
+    getWorkspace: () => workspace,
+    getOpenId: () => openId,
+    getSelectedNodeId: () => selectedNodeId,
+    getSelectedRenderId: () => selectedRenderId,
+    getNestedSelection: () => nestedSelection,
+    getFocusViewportId: () => focusViewportId,
+    getSelectedViewportId: () => selectedViewportId,
+    viewportChromeStore,
+    getEditTarget: () => editTarget,
+    getActiveVariantName: () => activeVariantName,
+    getNotice: () => notice,
+    getZoomLabel: () => zoomLabel,
+    getTool: () => tool,
+    getDrag: () => drag,
+    getGeneration: () => generation,
+    getDesignRevision: () => designRevision,
+    getRevision: () => revision,
+    order,
+    assetStores,
+    savedJson,
+    designId,
+    canUndo: () => undoHistory.canUndo(),
+    canRedo: () => undoHistory.canRedo(),
+    getDrillStack: () => drillStack,
+  });
 
   function publish() {
     revision += 1;
@@ -201,41 +183,12 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     for (const listener of listeners) listener();
   }
 
-  function build(): EditorSnapshot {
-    const document = openFlat();
-    return buildEditorSnapshot({
-      workspace,
-      openId,
-      document,
-      design: designStore.getDocument(),
-      selectedNodeId,
-      selectedRenderId,
-      nestedSelection,
-      focusViewportId,
-      selectedViewportId,
-      viewportChrome: readViewportChromeForOpenDocument(openId, viewportChromeStore),
-      editTarget,
-      activeVariantName:
-        activeVariantName &&
-        document.variantPresets?.some((preset) => preset.name === activeVariantName)
-          ? activeVariantName
-          : null,
-      notice,
-      zoomLabel,
-      tool,
-      drag,
-      generation,
-      designRevision,
-      revision,
-      order,
-      assetStores,
-      savedJson,
-      designId,
-      canUndo: undoHistory.canUndo(),
-      canRedo: undoHistory.canRedo(),
-      drillParents: buildDrillParentsForSnapshot(drillStack, assetStores),
-    });
-  }
+  onStoreChange = (source) => {
+    if (source === 'design') designRevision += 1;
+    refreshSelection();
+    if (notice?.tone === 'error') notice = null;
+    publish();
+  };
 
   function openAssetCore(id: string, focus?: 'root', keepDrillStack = false) {
     applyOpenAssetChange({
@@ -279,81 +232,48 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     publish();
   }
 
-  function run(store: YjsDocumentStore, command: Command) {
-    undoHistory.noteCommand(store);
-    try {
-      store.execute(command);
-    } catch (error) {
-      notice = { tone: 'error', text: errorText(error) };
-      publish();
-    }
-  }
+  const runWithActiveVariant = bindSessionCommandRunner({
+    undoHistory,
+    assetStores,
+    getOpenId: () => openId,
+    getSnapshot: () => snapshot,
+    resolveKind,
+    catalogNestedDocuments,
+    setErrorNotice: (message) => {
+      notice = { tone: 'error', text: message };
+    },
+    publish,
+  });
 
-  function runWithActiveVariant(store: YjsDocumentStore, command: Command) {
-    const activeStore = assetStores.get(openId);
-    const variantName = snapshot?.activeVariantName;
-    if (store !== activeStore || !variantName || !variantEditableCommand(command)) {
-      run(store, command);
-      return;
-    }
-    try {
-      const base = toNested(store.getDocument());
-      const active = resolveVariantDocument(base, variantName);
-      const edited = toNested(
-        applyCommand(toFlat(active), command, {
-          resolveKind,
-          resolveChildField: (node, path, field) =>
-            resolveChildFieldDefinition(node, path, field, catalogNestedDocuments()),
-        }),
-      );
-      const preset = deriveVariantPreset(base, edited, variantName);
-      run(store, { type: 'setVariantPreset', preset });
-    } catch (error) {
-      notice = { tone: 'error', text: errorText(error) };
-      publish();
-    }
-  }
-
-  registerSessionAssetDocuments({
+  bootstrapSessionDocumentCatalog({
     documents: options.documents,
     designId,
     resolveKind,
     assetStores,
     order,
-    resolveChildField: (node, path, field) =>
-      resolveChildFieldDefinition(node, path, field, catalogNestedDocuments()),
+    catalogNestedDocuments,
+    syncKinds,
+    watch,
+    designStore,
+    savedJson,
+    applyPreferredOpen: (id, kind) => {
+      openId = id;
+      workspace = kind;
+      lastOpen.set(kind, id);
+    },
+    rebuildSnapshot: () => {
+      snapshot = build();
+    },
   });
-  syncKinds();
-  watch(designStore, 'design');
-  for (const id of order) {
-    const store = assetStores.get(id);
-    if (store) watch(store, 'asset');
-  }
-  const preferred =
-    options.documents.find((file) => file.id === 'specimen' && assetStores.has(file.id)) ??
-    options.documents.find((file) => file.kind === 'page' && assetStores.has(file.id)) ??
-    options.documents.find((file) => assetStores.has(file.id));
-  if (preferred && isKind(preferred.kind)) {
-    openId = preferred.id;
-    workspace = preferred.kind;
-    lastOpen.set(preferred.kind, preferred.id);
-  }
-  for (const id of order) {
-    const store = assetStores.get(id);
-    if (store) markDocumentSaved(savedJson, id, store.getDocument());
-  }
-  markDocumentSaved(savedJson, designId, designStore.getDocument());
-  snapshot = build();
 
-  const saveHooks = {
-    getHandle: (id: string) => handles.get(id),
-    rememberHandle: (id: string, handle: JsonFileHandle) => handles.set(id, handle),
-    markSaved: (id: string, document: FlatDocument) => markDocumentSaved(savedJson, id, document),
-    setNotice: (next: EditorNotice) => {
+  const saveHooks = createSessionSaveHooks({
+    handles,
+    savedJson,
+    setNotice: (next) => {
       notice = next;
     },
     publish,
-  };
+  });
 
   return {
     subscribe(listener) {
@@ -521,25 +441,4 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       },
     }),
   };
-}
-
-function variantEditableCommand(command: Command): boolean {
-  switch (command.type) {
-    case 'insert':
-    case 'remove':
-    case 'move':
-    case 'wrap':
-    case 'setProp':
-    case 'setStyle':
-    case 'setField':
-    case 'setVariant':
-    case 'setChildField':
-      return true;
-    default:
-      return false;
-  }
-}
-
-function prepareNestedDocument(document: FlatDocument, variant?: string): FlatDocument {
-  return toFlat(withPreviewData(overlaySchemaDefaults(toNested(document)), variant));
 }

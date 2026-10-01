@@ -11,9 +11,9 @@ import {
   type LayoutPatch,
 } from '../../../../domain/editing.js';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
-import { effectiveStyleDeclarations } from '../../../../domain/style-edit.js';
+import { effectiveStyleDeclarations } from '../../../../domain/edits/style-edit.js';
 import { layoutCapabilities } from '../../../../domain/layout-capabilities.js';
-import { editorBreakpoints, viewportEditContext } from '../../../../domain/viewport-edit.js';
+import { editorBreakpoints, viewportEditContext } from '../../../../domain/viewport/viewport-edit.js';
 import {
   LayoutControl,
   layoutControlValue,

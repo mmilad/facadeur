@@ -14,7 +14,7 @@ import {
   isDocumentDirty,
   markDocumentSaved,
   type SavedJsonBaselines,
-} from '../src/domain/save-state.js';
+} from '../src/domain/assets/save-state.js';
 import { createEditorSession } from '../src/domain/session.js';
 
 const documents = validateCatalog([

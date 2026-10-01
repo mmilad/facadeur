@@ -7,7 +7,7 @@ import {
   isValidSpacingTokenPath,
   suggestSpacingPath,
   tokenPathsReferencingSpacing,
-} from '../src/domain/spacing-edit.js';
+} from '../src/domain/edits/spacing-edit.js';
 import { tokenMatchesDomain } from '../src/ui/sidebar/design/design-domain.js';
 
 describe('spacing-edit', () => {

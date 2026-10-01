@@ -11,7 +11,7 @@ import {
   shownDeclarations,
   variantStyleBlock,
   writeStyleDeclaration,
-} from '../src/domain/style-edit.js';
+} from '../src/domain/edits/style-edit.js';
 
 describe('component definitions', () => {
   it('builds a field and a variant axis from editor drafts', () => {

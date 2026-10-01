@@ -1,636 +1,124 @@
 import { Type, type Static, type TSchema } from '@sinclair/typebox';
 import { defaultKinds } from './kinds.js';
-
-export const fieldTypes = [
-  'text',
-  'richText',
-  'image',
-  'link',
-  'boolean',
-  'enum',
-  'number',
-  'token',
-  'array',
-  'object',
-] as const;
-export type FieldType = (typeof fieldTypes)[number];
-
-export const bindingTargets = ['text', 'attribute', 'style', 'visible', 'src', 'alt'] as const;
-export type BindingTarget = (typeof bindingTargets)[number];
-
-const idSchema = Type.String({
-  minLength: 1,
-  pattern: '^[A-Za-z][A-Za-z0-9_-]*$',
-});
-
-const dataPathSchema = Type.String({
-  minLength: 1,
-  pattern: '^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$',
-});
-
-/** Slash-separated instance ids used for sparse overrides inside an instance.
- * Frame and root ids are intentionally omitted from these paths. */
-export const childFieldPathSchema = Type.String({
-  minLength: 1,
-  pattern: '^[A-Za-z][A-Za-z0-9_-]*(/[A-Za-z][A-Za-z0-9_-]*)*$',
-});
-
-export type FieldValue = string | number | boolean | FieldValue[] | { [key: string]: FieldValue };
-
-export const fieldValueSchema = Type.Unsafe<FieldValue>({
-  anyOf: [
-    { type: 'string' },
-    { type: 'number' },
-    { type: 'boolean' },
-    { type: 'array' },
-    { type: 'object', additionalProperties: true },
-  ],
-});
-
-export const fieldTypeSchema = Type.Union([
-  Type.Literal('text'),
-  Type.Literal('richText'),
-  Type.Literal('image'),
-  Type.Literal('link'),
-  Type.Literal('boolean'),
-  Type.Literal('enum'),
-  Type.Literal('number'),
-  Type.Literal('token'),
-  Type.Literal('array'),
-  Type.Literal('object'),
-]);
-
-export const bindingTargetSchema = Type.Union([
-  Type.Literal('text'),
-  Type.Literal('attribute'),
-  Type.Literal('style'),
-  Type.Literal('visible'),
-  Type.Literal('src'),
-  Type.Literal('alt'),
-]);
-
-export const kindSchema = Type.Union([
-  Type.Literal('atom'),
-  Type.Literal('component'),
-  Type.Literal('section'),
-  Type.Literal('page'),
-]);
-
-export const tokenTypes = [
-  'color',
-  'dimension',
-  'number',
-  'fontFamily',
-  'fontWeight',
-  'shadow',
-  'typography',
-] as const;
-export type TokenType = (typeof tokenTypes)[number];
-
-export const tokenTypeSchema = Type.Union([
-  Type.Literal('color'),
-  Type.Literal('dimension'),
-  Type.Literal('number'),
-  Type.Literal('fontFamily'),
-  Type.Literal('fontWeight'),
-  Type.Literal('shadow'),
-  Type.Literal('typography'),
-]);
-
-/**
- * DTCG group or token. The published schema is structural; `readTokenTree` enforces
- * inheritance, names, and value shapes. A recursive TypeBox type here makes the
- * document's Static type collapse, so the JSON Schema is written by hand.
- */
-export const tokenTreeSchema = Type.Unsafe<Record<string, unknown>>({
-  $ref: '#/$defs/dtcgNode',
-});
-
-export const fontStyleSchema = Type.Union([Type.Literal('normal'), Type.Literal('italic')]);
-
-export const fontFaceFileSchema = Type.Object(
-  {
-    weight: Type.Integer({ minimum: 1, maximum: 1000 }),
-    style: fontStyleSchema,
-    url: Type.String({ minLength: 1 }),
-    format: Type.Optional(Type.String({ minLength: 1 })),
-  },
-  { additionalProperties: false },
-);
-
-export const fontSourceSchema = Type.Union([
-  Type.Object(
-    {
-      type: Type.Literal('file'),
-      files: Type.Array(fontFaceFileSchema, { minItems: 1 }),
-    },
-    { additionalProperties: false },
-  ),
-  Type.Object(
-    {
-      type: Type.Literal('google'),
-      family: Type.String({ minLength: 1 }),
-    },
-    { additionalProperties: false },
-  ),
-]);
-
-export const fontFamilySchema = Type.Object(
-  {
-    id: Type.String({ pattern: '^[a-z][a-z0-9]*$' }),
-    family: Type.String({ minLength: 1 }),
-    weights: Type.Array(Type.Integer({ minimum: 1, maximum: 1000 }), { minItems: 1 }),
-    styles: Type.Optional(Type.Array(fontStyleSchema, { minItems: 1 })),
-    source: fontSourceSchema,
-    fallbacks: Type.Array(Type.String({ minLength: 1 }), { minItems: 1 }),
-  },
-  { additionalProperties: false },
-);
-
-export const iconDefinitionSchema = Type.Object(
-  {
-    id: idSchema,
-    name: Type.String({ minLength: 1 }),
-    src: Type.String({ minLength: 1 }),
-    category: Type.Optional(idSchema),
-  },
-  { additionalProperties: false },
-);
-
-export const breakpointSchema = Type.Object(
-  {
-    id: Type.String({ pattern: '^[a-z][a-z0-9]*$' }),
-    minWidth: Type.Integer({ minimum: 1 }),
-  },
-  { additionalProperties: false },
-);
-
-export const fieldDefinitionSchema = Type.Recursive((Self) =>
-  Type.Object(
-    {
-      name: idSchema,
-      type: fieldTypeSchema,
-      required: Type.Optional(Type.Boolean()),
-      default: Type.Optional(fieldValueSchema),
-      options: Type.Optional(Type.Array(Type.String({ minLength: 1 }), { minItems: 1 })),
-      items: Type.Optional(
-        Type.Object(
-          {
-            type: fieldTypeSchema,
-            options: Type.Optional(
-              Type.Array(Type.String({ minLength: 1 }), { minItems: 1, uniqueItems: true }),
-            ),
-            fields: Type.Optional(Type.Array(Self)),
-          },
-          { additionalProperties: false },
-        ),
-      ),
-    },
-    { additionalProperties: false },
-  ),
-);
-
-/** A semantic event exposed by an atom or component. Payload keys use field types. */
-export const eventDefinitionSchema = Type.Object(
-  {
-    name: idSchema,
-    payload: Type.Optional(Type.Record(idSchema, fieldTypeSchema)),
-  },
-  { additionalProperties: false },
-);
-
-/** Stable path into a composed child contract, for example `control.value`. */
-export const exposePathSchema = Type.String({
-  minLength: 1,
-  pattern: '^[A-Za-z][A-Za-z0-9_-]*(\\.[A-Za-z][A-Za-z0-9_-]*)*$',
-});
-
-/** Explicit public contract inherited from nested atoms or components. */
-export const exposeSchema = Type.Object(
-  {
-    fields: Type.Optional(Type.Record(idSchema, exposePathSchema)),
-    events: Type.Optional(Type.Record(idSchema, exposePathSchema)),
-  },
-  { additionalProperties: false },
-);
-
-/** Stable node target used by variant overlays. IDs remain valid for compatibility;
- * dotted paths disambiguate nested targets such as `root.header.lede`. */
-const nodeTargetSchema = Type.String({
-  minLength: 1,
-  pattern: '^[A-Za-z][A-Za-z0-9_-]*(\\.[A-Za-z][A-Za-z0-9_-]*)*$',
-});
-
-/** A variant may explicitly clear an optional node property or map entry. */
-const variantUnsetPathSchema = Type.String({
-  minLength: 1,
-  pattern: '^[A-Za-z][A-Za-z0-9_./-]*$',
-});
-
-/** Maps a semantic atom event to a native event on the node. */
-export const eventBindingSchema = Type.Object(
-  {
-    event: idSchema,
-    name: Type.String({ minLength: 1 }),
-    payload: Type.Optional(
-      Type.Record(
-        idSchema,
-        Type.Union([Type.Literal('value'), Type.Literal('checked'), Type.Literal('valueAsNumber')]),
-      ),
-    ),
-  },
-  { additionalProperties: false },
-);
-
-export const variantAxisSchema = Type.Object(
-  {
-    name: idSchema,
-    values: Type.Array(Type.String({ minLength: 1 }), { minItems: 1 }),
-    default: Type.Optional(Type.String({ minLength: 1 })),
-  },
-  { additionalProperties: false },
-);
-
-/** `{color.blue.500}` — a token reference stored in a style or layout value. */
-export const tokenRefSchema = Type.String({
-  pattern: '^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$',
-});
-
-/** `color.blue.500` — a token path, without braces. */
-export const tokenPathSchema = Type.String({
-  pattern: '^[a-z][a-z0-9]*(\\.[a-z0-9]+)+$',
-});
-
-const breakpointIdSchema = Type.String({ pattern: '^[a-z][a-z0-9]*$' });
-
-export const spacingBoxSchema = Type.Object(
-  {
-    top: Type.Optional(tokenRefSchema),
-    right: Type.Optional(tokenRefSchema),
-    bottom: Type.Optional(tokenRefSchema),
-    left: Type.Optional(tokenRefSchema),
-  },
-  { additionalProperties: false },
-);
-
-export const spacingSchema = Type.Union([tokenRefSchema, spacingBoxSchema]);
-
-export const sizeValueSchema = Type.Union([
-  Type.Number({ exclusiveMinimum: 0 }),
+import { childFieldPathSchema, idSchema, kindSchema } from './schemas/schema-common.js';
+import {
+  bindingSchema,
+  bindingTargetSchema,
+  bindingTargets,
+  displayOnSchema,
+  eventBindingSchema,
+  eventDefinitionSchema,
+  exposePathSchema,
+  exposeSchema,
+  fieldDefinitionSchema,
+  fieldTypeSchema,
+  fieldTypes,
+  fieldValueSchema,
+  repeatSchema,
+  variantRuleSchema,
+  type BindingTarget,
+  type FieldType,
+  type FieldValue,
+} from './schemas/schema-fields.js';
+import {
+  breakpointSchema,
+  fontFaceFileSchema,
+  fontFamilySchema,
+  fontSourceSchema,
+  fontStyleSchema,
+  iconDefinitionSchema,
+  previewDataSchema,
+  settingsSchema,
+  tokenTreeSchema,
+  tokenTypeSchema,
+  tokenTypes,
+  withTokenDefs,
+  type TokenType,
+} from './schemas/schema-fonts.js';
+import {
+  axisSizeSchema,
+  layoutOverrideSchema,
+  layoutSchema,
+  sizeValueSchema,
+  spacingBoxSchema,
+  spacingSchema,
+  tokenPathSchema,
   tokenRefSchema,
-  Type.Object(
-    {
-      unit: Type.Literal('%'),
-      value: Type.Number({ exclusiveMinimum: 0, maximum: 100 }),
-    },
-    { additionalProperties: false },
-  ),
-]);
+} from './schemas/schema-layout.js';
+import { nestedNodeSchema } from './schemas/schema-nodes.js';
+import {
+  styleBlockSchema,
+  styleChildSchema,
+  styleLayerSchema,
+  styleStatesSchema,
+  tokenInterfaceSchema,
+} from './schemas/schema-style.js';
+import {
+  variantAxisSchema,
+  variantInsertionSchema,
+  variantNodeOverrideSchema,
+  variantOverridesSchema,
+  variantPresetSchema,
+} from './schemas/schema-variants.js';
 
-export const axisSizeSchema = Type.Object(
-  {
-    mode: Type.Union([Type.Literal('hug'), Type.Literal('fill'), Type.Literal('fixed')]),
-    size: Type.Optional(sizeValueSchema),
-    min: Type.Optional(sizeValueSchema),
-    max: Type.Optional(sizeValueSchema),
-  },
-  { additionalProperties: false },
-);
-
-const layoutFields = {
-  position: Type.Optional(Type.Union([Type.Literal('auto'), Type.Literal('absolute')])),
-  x: Type.Optional(Type.Number()),
-  y: Type.Optional(Type.Number()),
-  width: Type.Optional(axisSizeSchema),
-  height: Type.Optional(axisSizeSchema),
-  direction: Type.Optional(Type.Union([Type.Literal('row'), Type.Literal('column')])),
-  gap: Type.Optional(tokenRefSchema),
-  padding: Type.Optional(spacingSchema),
-  margin: Type.Optional(spacingSchema),
-  justify: Type.Optional(
-    Type.Union([
-      Type.Literal('start'),
-      Type.Literal('center'),
-      Type.Literal('end'),
-      Type.Literal('space-between'),
-    ]),
-  ),
-  align: Type.Optional(
-    Type.Union([
-      Type.Literal('start'),
-      Type.Literal('center'),
-      Type.Literal('end'),
-      Type.Literal('stretch'),
-    ]),
-  ),
-  wrap: Type.Optional(Type.Boolean()),
+export {
+  fieldTypes,
+  type FieldType,
+  bindingTargets,
+  type BindingTarget,
+  childFieldPathSchema,
+  type FieldValue,
+  fieldValueSchema,
+  fieldTypeSchema,
+  bindingTargetSchema,
+  kindSchema,
+  tokenTypes,
+  type TokenType,
+  tokenTypeSchema,
+  tokenTreeSchema,
+  fontStyleSchema,
+  fontFaceFileSchema,
+  fontSourceSchema,
+  fontFamilySchema,
+  iconDefinitionSchema,
+  breakpointSchema,
+  fieldDefinitionSchema,
+  eventDefinitionSchema,
+  exposePathSchema,
+  exposeSchema,
+  eventBindingSchema,
+  variantAxisSchema,
+  tokenRefSchema,
+  tokenPathSchema,
+  spacingBoxSchema,
+  spacingSchema,
+  sizeValueSchema,
+  axisSizeSchema,
+  layoutOverrideSchema,
+  layoutSchema,
+  styleStatesSchema,
+  styleLayerSchema,
+  styleChildSchema,
+  styleBlockSchema,
+  tokenInterfaceSchema,
+  bindingSchema,
+  displayOnSchema,
+  repeatSchema,
+  variantRuleSchema,
+  variantNodeOverrideSchema,
+  nestedNodeSchema,
+  variantInsertionSchema,
+  variantOverridesSchema,
+  variantPresetSchema,
+  previewDataSchema,
+  settingsSchema,
 };
-
-/** Layout fields that a breakpoint may override. Breakpoints do not nest. */
-export const layoutOverrideSchema = Type.Object(layoutFields, { additionalProperties: false });
-
-export const layoutSchema = Type.Object(
-  {
-    ...layoutFields,
-    breakpoints: Type.Optional(Type.Record(breakpointIdSchema, layoutOverrideSchema)),
-  },
-  { additionalProperties: false },
-);
-
-const cssPropertySchema = Type.String({ pattern: '^(--)?[A-Za-z_][\\w-]*$' });
-const styleDeclarationsSchema = Type.Record(cssPropertySchema, Type.String());
-
-export const styleStatesSchema = Type.Object(
-  {
-    hover: Type.Optional(styleDeclarationsSchema),
-    'focus-visible': Type.Optional(styleDeclarationsSchema),
-    disabled: Type.Optional(styleDeclarationsSchema),
-  },
-  { additionalProperties: false },
-);
-
-export const styleLayerSchema = Type.Object(
-  {
-    declarations: Type.Optional(styleDeclarationsSchema),
-    states: Type.Optional(styleStatesSchema),
-  },
-  { additionalProperties: false },
-);
-
-const variantStyleSchema = Type.Record(
-  idSchema,
-  Type.Record(Type.String({ minLength: 1 }), styleLayerSchema),
-);
-
-const breakpointStyleSchema = Type.Record(breakpointIdSchema, styleLayerSchema);
-
-/** A descendant rule. One level deep: instance roots may be styled by their containing document. */
-export const styleChildSchema = Type.Object(
-  {
-    declarations: Type.Optional(styleDeclarationsSchema),
-    states: Type.Optional(styleStatesSchema),
-    variants: Type.Optional(variantStyleSchema),
-    breakpoints: Type.Optional(breakpointStyleSchema),
-  },
-  { additionalProperties: false },
-);
-
-export const styleBlockSchema = Type.Object(
-  {
-    declarations: Type.Optional(styleDeclarationsSchema),
-    states: Type.Optional(styleStatesSchema),
-    variants: Type.Optional(variantStyleSchema),
-    breakpoints: Type.Optional(breakpointStyleSchema),
-    children: Type.Optional(Type.Record(idSchema, styleChildSchema)),
-  },
-  { additionalProperties: false },
-);
-
-export const tokenInterfaceSchema = Type.Object(
-  {
-    reads: Type.Optional(Type.Array(tokenPathSchema, { minItems: 1 })),
-    sets: Type.Optional(Type.Record(tokenPathSchema, Type.String({ minLength: 1 }))),
-  },
-  { additionalProperties: false },
-);
-
-export const bindingSchema = Type.Object(
-  {
-    field: idSchema,
-    target: bindingTargetSchema,
-    name: Type.Optional(Type.String({ minLength: 1 })),
-  },
-  { additionalProperties: false },
-);
-
-const displayOnPath = { path: dataPathSchema };
-
-/** A render condition has exactly one predicate so preview and codegen agree. */
-export const displayOnSchema = Type.Union([
-  Type.Object({ ...displayOnPath, equals: fieldValueSchema }, { additionalProperties: false }),
-  Type.Object({ ...displayOnPath, truthy: Type.Boolean() }, { additionalProperties: false }),
-]);
-
-export const repeatSchema = Type.Object(
-  {
-    path: dataPathSchema,
-    as: Type.Optional(idSchema),
-    key: Type.Optional(dataPathSchema),
-  },
-  { additionalProperties: false },
-);
-
-export const variantRuleSchema = Type.Object(
-  { when: displayOnSchema, variant: idSchema },
-  { additionalProperties: false },
-);
-
-export const variantNodeOverrideSchema = Type.Object(
-  {
-    text: Type.Optional(Type.String()),
-    src: Type.Optional(Type.String()),
-    alt: Type.Optional(Type.String()),
-    attributes: Type.Optional(Type.Record(Type.String({ minLength: 1 }), Type.String())),
-    fields: Type.Optional(Type.Record(idSchema, fieldValueSchema)),
-    childFields: Type.Optional(
-      Type.Record(childFieldPathSchema, Type.Record(idSchema, fieldValueSchema)),
-    ),
-    fieldBindings: Type.Optional(Type.Record(idSchema, dataPathSchema)),
-    variants: Type.Optional(Type.Record(idSchema, Type.String())),
-    variantRules: Type.Optional(Type.Array(variantRuleSchema)),
-    repeat: Type.Optional(repeatSchema),
-    layout: Type.Optional(layoutSchema),
-    bindings: Type.Optional(Type.Array(bindingSchema)),
-    eventBindings: Type.Optional(Type.Array(eventBindingSchema)),
-    style: Type.Optional(Type.Record(Type.String({ minLength: 1 }), Type.String())),
-    displayOn: Type.Optional(displayOnSchema),
-    unset: Type.Optional(Type.Array(variantUnsetPathSchema, { uniqueItems: true })),
-  },
-  { additionalProperties: false },
-);
-
-const stringMapSchema = Type.Record(Type.String({ minLength: 1 }), Type.String());
-
-const sharedNodeProps = {
-  id: idSchema,
-  name: Type.Optional(Type.String({ minLength: 1 })),
-  tag: Type.Optional(Type.String({ pattern: '^[A-Za-z][A-Za-z0-9-]*$' })),
-  attributes: Type.Optional(stringMapSchema),
-  displayOn: Type.Optional(displayOnSchema),
-  layout: Type.Optional(layoutSchema),
-  bindings: Type.Optional(Type.Array(bindingSchema)),
-  eventBindings: Type.Optional(Type.Array(eventBindingSchema)),
-  style: Type.Optional(stringMapSchema),
-};
-
-export const nestedNodeSchema = Type.Recursive(
-  (Self) =>
-    Type.Union([
-      Type.Object(
-        {
-          ...sharedNodeProps,
-          type: Type.Literal('frame'),
-          repeat: Type.Optional(repeatSchema),
-          children: Type.Optional(Type.Array(Self)),
-        },
-        { additionalProperties: false },
-      ),
-      Type.Object(
-        {
-          ...sharedNodeProps,
-          type: Type.Literal('text'),
-          text: Type.Optional(Type.String()),
-        },
-        { additionalProperties: false },
-      ),
-      Type.Object(
-        {
-          ...sharedNodeProps,
-          type: Type.Literal('image'),
-          src: Type.Optional(Type.String()),
-          alt: Type.Optional(Type.String()),
-        },
-        { additionalProperties: false },
-      ),
-      Type.Object(
-        {
-          id: idSchema,
-          name: Type.Optional(Type.String({ minLength: 1 })),
-          layout: Type.Optional(layoutSchema),
-          displayOn: Type.Optional(displayOnSchema),
-          type: Type.Literal('instance'),
-          component: idSchema,
-          fields: Type.Optional(Type.Record(idSchema, fieldValueSchema)),
-          childFields: Type.Optional(
-            Type.Record(childFieldPathSchema, Type.Record(idSchema, fieldValueSchema)),
-          ),
-          fieldBindings: Type.Optional(Type.Record(idSchema, dataPathSchema)),
-          variants: Type.Optional(Type.Record(idSchema, Type.String())),
-          variantRules: Type.Optional(Type.Array(variantRuleSchema)),
-          expose: Type.Optional(exposeSchema),
-        },
-        { additionalProperties: false },
-      ),
-    ]),
-  { $id: 'https://github.com/mmilad/facadeur/schema/nested-node' },
-);
-
-export const variantInsertionSchema = Type.Object(
-  {
-    parent: nodeTargetSchema,
-    index: Type.Optional(Type.Integer({ minimum: 0 })),
-    node: Type.Ref(nestedNodeSchema),
-  },
-  { additionalProperties: false },
-);
-
-export const variantOverridesSchema = Type.Object(
-  {
-    fields: Type.Optional(Type.Record(idSchema, fieldValueSchema)),
-    /** Sparse style block merged onto the default styles for this preset. */
-    styles: Type.Optional(styleBlockSchema),
-    /** Optional field defaults can be explicitly removed without duplicating the base definition. */
-    unsetFields: Type.Optional(Type.Array(idSchema, { uniqueItems: true })),
-    nodes: Type.Optional(Type.Record(nodeTargetSchema, variantNodeOverrideSchema)),
-    removed: Type.Optional(Type.Array(nodeTargetSchema, { uniqueItems: true })),
-    insertions: Type.Optional(Type.Array(variantInsertionSchema)),
-  },
-  { additionalProperties: false },
-);
-
-export const variantPresetSchema = Type.Object(
-  {
-    name: idSchema,
-    overrides: Type.Optional(variantOverridesSchema),
-  },
-  { additionalProperties: false },
-);
-
-/** Editor sample values. Never part of the component's runtime defaults. */
-export const previewDataSchema = Type.Object(
-  {
-    fields: Type.Optional(Type.Record(idSchema, fieldValueSchema)),
-    variants: Type.Optional(Type.Record(idSchema, Type.Record(idSchema, fieldValueSchema))),
-  },
-  { additionalProperties: false },
-);
-
-export const settingsSchema = Type.Object(
-  {
-    artboard: Type.Optional(
-      Type.Object(
-        {
-          width: Type.Number({ exclusiveMinimum: 0 }),
-          height: Type.Number({ exclusiveMinimum: 0 }),
-        },
-        { additionalProperties: false },
-      ),
-    ),
-    breakpoints: Type.Optional(Type.Array(breakpointSchema, { minItems: 1 })),
-  },
-  { additionalProperties: false },
-);
 
 export const DOCUMENT_SCHEMA_ID = 'https://github.com/mmilad/facadeur/schema/document.schema.json';
 
 export interface DocumentSchemaOptions {
   kinds?: readonly string[];
   schemaId?: string;
-}
-
-const DTCG_DEFS = {
-  jsonValue: {
-    anyOf: [
-      { type: 'string' },
-      { type: 'number' },
-      { type: 'boolean' },
-      { type: 'array', items: { $ref: '#/$defs/jsonValue' } },
-      { type: 'object', additionalProperties: { $ref: '#/$defs/jsonValue' } },
-    ],
-  },
-  facadeurExtension: {
-    type: 'object',
-    additionalProperties: false,
-    properties: {
-      tier: { enum: ['primitive', 'semantic', 'component'] },
-      breakpoints: {
-        type: 'object',
-        propertyNames: { pattern: '^[a-z][a-z0-9]*$' },
-        additionalProperties: { $ref: '#/$defs/jsonValue' },
-      },
-    },
-  },
-  tokenExtensions: {
-    type: 'object',
-    additionalProperties: { $ref: '#/$defs/jsonValue' },
-    properties: {
-      facadeur: { $ref: '#/$defs/facadeurExtension' },
-    },
-  },
-  dtcgNode: {
-    type: 'object',
-    additionalProperties: false,
-    description:
-      'DTCG group or token. $value makes an object a token. Group $type is inherited. Child names match [a-z0-9]+.',
-    properties: {
-      $value: { $ref: '#/$defs/jsonValue' },
-      $type: {
-        enum: ['color', 'dimension', 'number', 'fontFamily', 'fontWeight', 'shadow', 'typography'],
-      },
-      $description: { type: 'string' },
-      $deprecated: { anyOf: [{ type: 'boolean' }, { type: 'string' }] },
-      $extensions: { $ref: '#/$defs/tokenExtensions' },
-    },
-    patternProperties: {
-      '^[a-z0-9]+$': { $ref: '#/$defs/dtcgNode' },
-    },
-  },
-} as const;
-
-/** Attach token definitions without changing the TypeBox static type. */
-function withTokenDefs<T extends object>(schema: T): T {
-  Object.assign(schema, { $defs: DTCG_DEFS });
-  return schema;
 }
 
 const documentSchemaMeta = {

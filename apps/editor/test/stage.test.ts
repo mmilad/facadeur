@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { describe, expect, it } from 'vitest';
-import { MAX_SCALE, MIN_SCALE, ZOOM_STEP_FACTOR, createStage } from '../src/domain/stage.js';
+import { MAX_SCALE, MIN_SCALE, ZOOM_STEP_FACTOR, createStage } from '../src/domain/viewport/stage.js';
 
 describe('stage zoomBy', () => {
   it('steps toward the viewport center and clamps scale', () => {

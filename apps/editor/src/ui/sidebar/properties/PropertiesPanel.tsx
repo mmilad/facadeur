@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { findParent, type FlatDocument, type FlatNode } from '@facadeur/core';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
-import { ownsVariantContract, variantSummaries } from '../../../domain/variant-edit.js';
+import { ownsVariantContract, variantSummaries } from '../../../domain/edits/variant-edit.js';
 import { createNamedVariant, renameNamedVariant } from '../../../domain/variant-actions.js';
 import { VariantActionButton } from '../../controls/variants/VariantActionButton.js';
 import { AddPopover, Field, TextInput } from '../../form/index.js';
