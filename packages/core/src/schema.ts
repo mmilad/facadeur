@@ -225,6 +225,12 @@ export const eventBindingSchema = Type.Object(
   {
     event: idSchema,
     name: Type.String({ minLength: 1 }),
+    payload: Type.Optional(
+      Type.Record(
+        idSchema,
+        Type.Union([Type.Literal('value'), Type.Literal('checked'), Type.Literal('valueAsNumber')]),
+      ),
+    ),
   },
   { additionalProperties: false },
 );
@@ -394,14 +400,8 @@ const displayOnPath = { path: dataPathSchema };
 
 /** A render condition has exactly one predicate so preview and codegen agree. */
 export const displayOnSchema = Type.Union([
-  Type.Object(
-    { ...displayOnPath, equals: fieldValueSchema },
-    { additionalProperties: false },
-  ),
-  Type.Object(
-    { ...displayOnPath, truthy: Type.Boolean() },
-    { additionalProperties: false },
-  ),
+  Type.Object({ ...displayOnPath, equals: fieldValueSchema }, { additionalProperties: false }),
+  Type.Object({ ...displayOnPath, truthy: Type.Boolean() }, { additionalProperties: false }),
 ]);
 
 export const repeatSchema = Type.Object(
@@ -410,6 +410,11 @@ export const repeatSchema = Type.Object(
     as: Type.Optional(idSchema),
     key: Type.Optional(dataPathSchema),
   },
+  { additionalProperties: false },
+);
+
+export const variantRuleSchema = Type.Object(
+  { when: displayOnSchema, variant: idSchema },
   { additionalProperties: false },
 );
 
@@ -422,6 +427,7 @@ export const variantNodeOverrideSchema = Type.Object(
     fields: Type.Optional(Type.Record(idSchema, fieldValueSchema)),
     fieldBindings: Type.Optional(Type.Record(idSchema, dataPathSchema)),
     variants: Type.Optional(Type.Record(idSchema, Type.String())),
+    variantRules: Type.Optional(Type.Array(variantRuleSchema)),
     repeat: Type.Optional(repeatSchema),
     layout: Type.Optional(layoutSchema),
     bindings: Type.Optional(Type.Array(bindingSchema)),
@@ -487,6 +493,7 @@ export const nestedNodeSchema = Type.Recursive(
           fields: Type.Optional(Type.Record(idSchema, fieldValueSchema)),
           fieldBindings: Type.Optional(Type.Record(idSchema, dataPathSchema)),
           variants: Type.Optional(Type.Record(idSchema, Type.String())),
+          variantRules: Type.Optional(Type.Array(variantRuleSchema)),
           expose: Type.Optional(exposeSchema),
         },
         { additionalProperties: false },
@@ -522,6 +529,15 @@ export const variantPresetSchema = Type.Object(
   {
     name: idSchema,
     overrides: Type.Optional(variantOverridesSchema),
+  },
+  { additionalProperties: false },
+);
+
+/** Editor sample values. Never part of the component's runtime defaults. */
+export const previewDataSchema = Type.Object(
+  {
+    fields: Type.Optional(Type.Record(idSchema, fieldValueSchema)),
+    variants: Type.Optional(Type.Record(idSchema, Type.Record(idSchema, fieldValueSchema))),
   },
   { additionalProperties: false },
 );
@@ -619,6 +635,9 @@ function documentProperties<Kind extends TSchema>(kind: Kind) {
     kind,
     group: Type.Optional(idSchema),
     fields: Type.Optional(Type.Array(fieldDefinitionSchema)),
+    previewData: Type.Optional(previewDataSchema),
+    /** Display names only; preset identifiers remain stable when renamed. */
+    variantLabels: Type.Optional(Type.Record(idSchema, Type.String({ minLength: 1 }))),
     events: Type.Optional(Type.Array(eventDefinitionSchema)),
     expose: Type.Optional(exposeSchema),
     variants: Type.Optional(Type.Array(Type.Union([variantAxisSchema, variantPresetSchema]))),
@@ -651,12 +670,14 @@ export function createDocumentSchema(options: DocumentSchemaOptions = {}) {
 }
 
 export type FieldDefinition = Static<typeof fieldDefinitionSchema>;
+export type PreviewData = Static<typeof previewDataSchema>;
 export type EventDefinition = Static<typeof eventDefinitionSchema>;
 export type EventBinding = Static<typeof eventBindingSchema>;
 export type Expose = Static<typeof exposeSchema>;
 export type ExposePath = Static<typeof exposePathSchema>;
 export type VariantAxis = Static<typeof variantAxisSchema>;
 export type DisplayOn = Static<typeof displayOnSchema>;
+export type VariantRule = Static<typeof variantRuleSchema>;
 export type Repeat = Static<typeof repeatSchema>;
 export type VariantNodeOverride = Static<typeof variantNodeOverrideSchema>;
 export type VariantInsertion = Static<typeof variantInsertionSchema>;

@@ -23,6 +23,7 @@ import type {
   Expose,
   FieldDefinition,
   FieldValue,
+  PreviewData,
   FontFamily,
   Layout,
   NestedNode,
@@ -31,6 +32,7 @@ import type {
   TokenInterface,
   VariantAxis,
   VariantPreset,
+  VariantRule,
 } from './schema.js';
 import { isVariantAxis } from './schema.js';
 import {
@@ -49,6 +51,7 @@ import {
   type TokenDefinition,
   type TokenGroupDefinition,
 } from './token-tree.js';
+import { assertValueMatches } from './validate.js';
 import {
   assertAttributes,
   assertBindings,
@@ -92,6 +95,7 @@ export interface InsertNode {
   component?: string;
   fields?: Record<string, FieldValue>;
   variants?: Record<string, string>;
+  variantRules?: VariantRule[];
   children?: InsertNode[];
 }
 
@@ -107,8 +111,10 @@ export type NodeProp =
   | 'bindings'
   | 'eventBindings'
   | 'fieldBindings'
+  | 'variantRules'
   | 'repeat'
   | 'component';
+// Instance selection rules are evaluated against the owning component's data.
 
 export type Command =
   | { type: 'insert'; parentId: string; index?: number; node: InsertNode }
@@ -120,6 +126,8 @@ export type Command =
   | { type: 'setField'; nodeId: string; field: string; value: FieldValue | null }
   | { type: 'setVariant'; nodeId: string; axis: string; value: string | null }
   | { type: 'defineField'; field: FieldDefinition }
+  | { type: 'setPreviewData'; previewData: PreviewData | null }
+  | { type: 'setVariantLabels'; labels: Record<string, string> | null }
   | { type: 'removeField'; name: string }
   | { type: 'defineEvent'; event: EventDefinition }
   | { type: 'removeEvent'; name: string }
@@ -162,7 +170,7 @@ const PROPS: Record<NodeType, readonly NodeProp[]> = {
     'bindings',
     'eventBindings',
   ],
-  instance: ['name', 'displayOn', 'layout', 'component', 'fieldBindings'],
+  instance: ['name', 'displayOn', 'layout', 'component', 'fieldBindings', 'variantRules'],
 };
 
 const STYLE_PROPERTY = /^(--)?[A-Za-z_][\w-]*$/;
@@ -205,6 +213,15 @@ export function applyCommand(
       break;
     case 'defineField':
       defineField(next, command.field);
+      break;
+    case 'setPreviewData':
+      if (command.previewData) next.previewData = structuredClone(command.previewData);
+      else delete next.previewData;
+      break;
+    case 'setVariantLabels':
+      if (command.labels && Object.keys(command.labels).length)
+        next.variantLabels = { ...command.labels };
+      else delete next.variantLabels;
       break;
     case 'removeField':
       removeField(next, command.name);
@@ -457,7 +474,38 @@ function defineField(doc: FlatDocument, field: FieldDefinition): void {
   assertFieldDefinition(field);
   const index = doc.fields.findIndex((item) => item.name === field.name);
   if (index === -1) doc.fields.push(field);
-  else doc.fields[index] = field;
+  else {
+    doc.fields[index] = field;
+    cleanFieldValues(doc, field);
+  }
+}
+
+/** A schema type edit can invalidate values kept in the separate preview store. */
+function cleanFieldValues(doc: FlatDocument, field: FieldDefinition): void {
+  const clean = (values: Record<string, FieldValue> | undefined) => {
+    const value = values?.[field.name];
+    if (value === undefined) return;
+    try {
+      assertValueMatches(field, value);
+    } catch {
+      delete values![field.name];
+    }
+  };
+  clean(doc.previewData?.fields);
+  if (doc.previewData?.fields && Object.keys(doc.previewData.fields).length === 0) {
+    delete doc.previewData.fields;
+  }
+  for (const [name, values] of Object.entries(doc.previewData?.variants ?? {})) {
+    clean(values);
+    if (Object.keys(values).length === 0) delete doc.previewData!.variants![name];
+  }
+  if (doc.previewData?.variants && Object.keys(doc.previewData.variants).length === 0) {
+    delete doc.previewData.variants;
+  }
+  if (doc.previewData && !doc.previewData.fields && !doc.previewData.variants) {
+    delete doc.previewData;
+  }
+  for (const preset of doc.variantPresets ?? []) clean(preset.overrides?.fields);
 }
 
 function removeField(doc: FlatDocument, name: string): void {
@@ -466,6 +514,8 @@ function removeField(doc: FlatDocument, name: string): void {
     throw new DocumentError('unknown-field', `Field "${name}" is not defined`);
   }
   doc.fields.splice(index, 1);
+  if (doc.previewData?.fields) delete doc.previewData.fields[name];
+  for (const values of Object.values(doc.previewData?.variants ?? {})) delete values[name];
   for (const node of Object.values(doc.nodes)) {
     if (node.type === 'instance' || !node.bindings?.some((binding) => binding.field === name)) {
       continue;
@@ -653,6 +703,7 @@ function materialize(draft: InsertNode, seen: Set<string>, nextId: () => string)
     ...(draft.variants && Object.keys(draft.variants).length
       ? { variants: { ...draft.variants } }
       : {}),
+    ...(draft.variantRules?.length ? { variantRules: structuredClone(draft.variantRules) } : {}),
   };
 }
 
@@ -764,6 +815,7 @@ function applyElementProp(
         node.repeat = { ...value };
       }
       return;
+    case 'variantRules':
     case 'component':
       break;
     case 'fieldBindings':
@@ -782,6 +834,19 @@ function applyInstanceProp(
   value: unknown,
 ): void {
   switch (prop) {
+    case 'variantRules':
+      if (value === null) delete node.variantRules;
+      else {
+        if (!Array.isArray(value))
+          throw new DocumentError('schema', 'Variant rules must be a list');
+        for (const rule of value) {
+          if (!isRecord(rule) || typeof rule.variant !== 'string' || !ID_PATTERN.test(rule.variant))
+            throw new DocumentError('schema', 'Variant rule needs a valid variant');
+          assertDisplayOn(rule.when);
+        }
+        node.variantRules = structuredClone(value) as VariantRule[];
+      }
+      return;
     case 'name':
       assignName(node, value);
       return;
@@ -988,6 +1053,8 @@ function removeVariantPreset(doc: FlatDocument, name: string): void {
     throw new DocumentError('unknown-variant', `Variant preset "${name}" is not defined`);
   }
   presets.splice(index, 1);
+  if (doc.variantLabels) delete doc.variantLabels[name];
+  if (doc.previewData?.variants) delete doc.previewData.variants[name];
   if (presets.length) doc.variantPresets = presets;
   else delete doc.variantPresets;
 }

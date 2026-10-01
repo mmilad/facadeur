@@ -3,22 +3,21 @@
 import { useState } from 'react';
 import { findParent, type FlatDocument, type FlatNode } from '@facadeur/core';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
+import {
+  nextVariantIdentity,
+  ownsVariantContract,
+  variantLabelMap,
+  variantSummaries,
+} from '../../../domain/variant-edit.js';
 import { AddPopover, Field, TextInput } from '../../form/index.js';
-import { ComponentFields } from './content/ComponentFields.js';
-import { ComponentEvents } from './content/ComponentEvents.js';
-import { ComponentExpose } from './content/ComponentExpose.js';
-import { ComponentVariants } from './content/ComponentVariants.js';
 import { ContentPanel } from './content/ContentPanel.js';
-import { NodeBindings } from './content/NodeBindings.js';
-import { ownsComponentFeatures } from './content/owns-component-features.js';
 import { StyleInspector } from './style/StyleInspector.js';
 
-type PropertyPrimaryTab = 'content' | 'style' | 'data';
+type PropertyPrimaryTab = 'content' | 'style';
 
 const PROPERTY_PRIMARY_TABS = [
   ['content', 'Content'],
   ['style', 'Style'],
-  ['data', 'Data'],
 ] as const;
 
 export function PropertiesPanel({
@@ -36,9 +35,6 @@ export function PropertiesPanel({
       }
     : snap;
   const node = inspectorSnap.selectedNode;
-  const showDefinitions =
-    ownsComponentFeatures(inspectorSnap.document.kind) &&
-    (!node || node.id === inspectorSnap.document.rootId);
   const [primaryTab, setPrimaryTab] = useState<PropertyPrimaryTab>('content');
   const isRoot = node?.id === inspectorSnap.document.rootId;
 
@@ -106,22 +102,12 @@ export function PropertiesPanel({
       {primaryTab === 'content' ? (
         <div role="tabpanel" className="property-panel">
           {!node ? (
-            showDefinitions ? (
-              <>
-                <ComponentFields session={session} snap={inspectorSnap} />
-                <ComponentEvents session={session} snap={inspectorSnap} />
-                <ComponentExpose session={session} snap={inspectorSnap} />
-              </>
-            ) : (
-              <p className="inspector-empty">Select a layer or an element on the stage.</p>
-            )
+            <p className="inspector-empty">
+              Select a layer or an element on the stage. Shared fields and events are edited in
+              Schema.
+            </p>
           ) : (
-            <ContentPanel
-              session={session}
-              snap={inspectorSnap}
-              node={node}
-              showDefinitions={showDefinitions}
-            />
+            <ContentPanel session={session} snap={inspectorSnap} node={node} />
           )}
         </div>
       ) : null}
@@ -134,54 +120,30 @@ export function PropertiesPanel({
           )}
         </div>
       ) : null}
-      {primaryTab === 'data' ? (
-        <div role="tabpanel" className="property-panel">
-          {!node ? (
-            showDefinitions ? (
-              <ComponentVariants session={session} snap={inspectorSnap} />
-            ) : (
-              <p className="inspector-empty">Select a layer to edit data bindings.</p>
-            )
-          ) : node.type === 'instance' ? (
-            <p className="inspector-empty">Use the Content tab for field and variant overrides.</p>
-          ) : (
-            <>
-              <NodeBindings session={session} snap={inspectorSnap} node={node} />
-              {showDefinitions ? (
-                <ComponentVariants session={session} snap={inspectorSnap} />
-              ) : null}
-            </>
-          )}
-        </div>
-      ) : null}
     </div>
   );
 }
 
 function VariantTabs({ session, snap }: { session: EditorSession; snap: EditorSnapshot }) {
   const [newName, setNewName] = useState('');
-  if (snap.document.kind !== 'component') return null;
+  if (!ownsVariantContract(snap.document.kind)) return null;
 
-  const names = [
-    'default',
-    ...(snap.document.variantPresets ?? [])
-      .map((preset) => preset.name)
-      .filter((name) => name !== 'default'),
-  ];
+  const variants = variantSummaries(snap.document);
   function addVariant() {
-    const name = newName.trim();
-    if (!/^[A-Za-z][A-Za-z0-9_-]*$/.test(name)) {
-      session.setNotice(
-        'Variant names start with a letter and use letters, numbers, _ or -',
-        'error',
-      );
+    const label = newName.trim();
+    if (!label) {
+      session.setNotice('Variant labels must not be empty', 'error');
       return;
     }
-    if (names.includes(name)) {
-      session.setNotice(`Variant "${name}" already exists`, 'error');
-      return;
-    }
-    session.execute({ type: 'setVariantPreset', preset: { name } });
+    const identity = nextVariantIdentity(snap.document);
+    session.execute({ type: 'setVariantPreset', preset: identity.preset });
+    const labels: Record<string, string> = {
+      ...(snap.document.variantLabels ?? {}),
+      default: 'Default',
+    };
+    labels[identity.name] = label;
+    session.execute({ type: 'setVariantLabels', labels });
+    session.setActiveVariant(identity.name);
     setNewName('');
   }
 
@@ -201,20 +163,32 @@ function VariantTabs({ session, snap }: { session: EditorSession; snap: EditorSn
         </AddPopover>
       </div>
       <div className="variant-tabs-list">
-        {names.map((name) => {
-          const active = (snap.activeVariantName ?? 'default') === name;
+        {variants.map((variant) => {
+          const active = (snap.activeVariantName ?? 'default') === variant.name;
           return (
-            <button
-              key={name}
-              type="button"
-              role="tab"
-              name={`variant-tab-${name}`}
-              className={active ? 'variant-tab is-active' : 'variant-tab'}
-              aria-selected={active}
-              onClick={() => session.setActiveVariant(name === 'default' ? null : name)}
-            >
-              {name}
-            </button>
+            <div key={variant.name} className="variant-tab-entry">
+              <button
+                type="button"
+                role="tab"
+                name={`variant-tab-${variant.name}`}
+                className={active ? 'variant-tab is-active' : 'variant-tab'}
+                aria-selected={active}
+                onClick={() => session.setActiveVariant(variant.isDefault ? null : variant.name)}
+              >
+                {variant.label}
+              </button>
+              <input
+                type="text"
+                name={`variant-label-${variant.name}`}
+                aria-label={`${variant.label} label`}
+                value={variant.label}
+                onChange={(event) => {
+                  const labels =
+                    variantLabelMap(snap.document, variant.name, event.target.value) ?? {};
+                  session.execute({ type: 'setVariantLabels', labels });
+                }}
+              />
+            </div>
           );
         })}
       </div>

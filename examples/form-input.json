@@ -1,9 +1,8 @@
 {
   "version": 1,
   "id": "form-input",
-  "name": "Input control",
+  "name": "Input",
   "kind": "atom",
-  "group": "form",
   "fields": [
     { "name": "value", "type": "text", "default": "Value" },
     { "name": "placeholder", "type": "text", "default": "" },

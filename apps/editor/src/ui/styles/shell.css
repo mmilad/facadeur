@@ -5,3 +5,34 @@
   min-width: 0;
   overflow: hidden;
 }
+
+.editor-subnav {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  min-height: 36px;
+  padding: 4px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--sidebar);
+}
+
+.editor-subnav-item {
+  border: 0;
+  border-radius: 4px;
+  padding: 5px 12px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.editor-subnav-item:hover {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+  color: var(--ink);
+}
+
+.editor-subnav-item.is-active {
+  background: var(--ink);
+  color: var(--white);
+}

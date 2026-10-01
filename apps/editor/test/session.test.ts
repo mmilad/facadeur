@@ -79,11 +79,13 @@ describe('editor session', () => {
     editor.openAsset('variant-component', 'root');
 
     expect(editor.getSnapshot().activeVariantName).toBeNull();
-    expect(editor.getSnapshot().document.fields[0]?.default).toBe('Base');
+    expect(editor.getSnapshot().document.fields[0]?.default).toBeUndefined();
+    expect(editor.getSnapshot().document.previewData?.fields?.label).toBe('Base');
 
     editor.setActiveVariant('compact');
     expect(editor.getSnapshot().activeVariantName).toBe('compact');
-    expect(editor.getSnapshot().document.fields[0]?.default).toBe('Base');
+    expect(editor.getSnapshot().document.fields[0]?.default).toBeUndefined();
+    expect(editor.getSnapshot().document.previewData?.fields?.label).toBe('Base');
     expect(editor.getSnapshot().documentDirty).toBe(false);
 
     editor.setActiveVariant('default');
@@ -109,7 +111,6 @@ describe('editor session', () => {
       {
         name: 'compact',
         overrides: {
-          fields: { label: 'Compact' },
           nodes: { root: { text: 'Compact text' } },
           styles: { declarations: { color: 'navy' } },
         },
@@ -121,10 +122,7 @@ describe('editor session', () => {
     editor.undo();
     expect(
       editor.boardDocuments().find((document) => document.id === 'variant-component')?.variants,
-    ).toEqual([
-      { name: 'default' },
-      { name: 'compact', overrides: { fields: { label: 'Compact' } } },
-    ]);
+    ).toEqual([{ name: 'default' }, { name: 'compact' }]);
   });
 
   it('migrates legacy variant styles when editing the active variant', () => {
@@ -228,6 +226,33 @@ describe('editor session', () => {
     expect(snap.assets.map((asset) => asset.name)).toEqual(['Button', 'Link', 'Badge']);
     expect(editor.filenameFor('specimen')).toBe('specimen-page.json');
     expect(editor.filenameFor('badge')).toBe('badge.json');
+  });
+
+  it('migrates loaded defaults into preview metadata without marking the document dirty', async () => {
+    vi.spyOn(files, 'saveJsonFile').mockResolvedValue({ via: 'dev' });
+    const editor = session();
+    editor.loadDocument({
+      ...variantComponent,
+      fields: [{ name: 'label', type: 'text', default: 'Reloaded' }],
+      variants: [
+        { name: 'default' },
+        { name: 'compact', overrides: { fields: { label: 'Small' } } },
+      ],
+    });
+
+    const loaded = editor.getSnapshot().document;
+    expect(loaded.fields[0]?.default).toBeUndefined();
+    expect(loaded.previewData).toEqual({
+      fields: { label: 'Reloaded' },
+      variants: { compact: { label: 'Small' } },
+    });
+    expect(editor.getSnapshot().documentDirty).toBe(false);
+
+    editor.execute({ type: 'setPreviewData', previewData: { fields: { label: 'Edited' } } });
+    expect(editor.getSnapshot().documentDirty).toBe(true);
+    await editor.saveOpenDocument();
+    expect(editor.getSnapshot().documentDirty).toBe(false);
+    vi.restoreAllMocks();
   });
 
   it('tracks document and design dirty flags separately', () => {

@@ -9,6 +9,11 @@ import {
   type ReactNode,
 } from 'react';
 import { blankAsset } from '../../../domain/new-asset.js';
+import {
+  nextVariantIdentity,
+  ownsVariantContract,
+  variantLabelMap,
+} from '../../../domain/variant-edit.js';
 import type { AssetSummary, EditorSession, EditorSnapshot } from '../../../domain/session.js';
 import {
   DESIGN_DOMAIN_ITEMS,
@@ -38,6 +43,8 @@ export function ProjectTree({
 }) {
   const [query, setQuery] = useState('');
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [expandedVariants, setExpandedVariants] = useState<Record<string, boolean>>({});
+  const [contextAssetId, setContextAssetId] = useState<string | null>(null);
   const activeRef = useRef<HTMLButtonElement | null>(null);
   const needle = query.trim().toLowerCase();
   const openKind = snap.catalog.find((asset) => asset.id === snap.openId)?.kind;
@@ -48,8 +55,23 @@ export function ProjectTree({
   }, [openKind, snap.openId]);
 
   useEffect(() => {
+    const asset = snap.catalog.find((candidate) => candidate.id === snap.openId);
+    if (!asset || !ownsVariantContract(asset.kind) || !hasNamedVariants(asset)) return;
+    setExpandedVariants((prev) => (prev[asset.id] === true ? prev : { ...prev, [asset.id]: true }));
+  }, [snap.catalog, snap.openId]);
+
+  useEffect(() => {
     activeRef.current?.scrollIntoView?.({ block: 'nearest' });
   }, [snap.openId, expanded, needle]);
+
+  useEffect(() => {
+    if (!contextAssetId) return;
+    const close = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setContextAssetId(null);
+    };
+    window.addEventListener('keydown', close);
+    return () => window.removeEventListener('keydown', close);
+  }, [contextAssetId]);
 
   const designLabelHit = needle.length > 0 && 'design'.includes(needle);
   const designItems = useMemo(
@@ -122,6 +144,31 @@ export function ProjectTree({
     onOpenAsset(file.id);
   }
 
+  function createVariant(assetId: string) {
+    const current = session.getSnapshot();
+    if (current.openId !== assetId) onOpenAsset(assetId);
+    const latest = session.getSnapshot();
+    if (!ownsVariantContract(latest.document.kind)) return;
+    const identity = nextVariantIdentity(latest.document);
+    session.execute({ type: 'setVariantPreset', preset: identity.preset });
+    const labels = variantLabelMap(latest.document, identity.name, identity.label) ?? {
+      [identity.name]: identity.label,
+    };
+    session.execute({ type: 'setVariantLabels', labels });
+    session.setActiveVariant(identity.name);
+    setExpandedVariants((prev) => ({ ...prev, [assetId]: true }));
+    setContextAssetId(null);
+  }
+
+  function renameVariant(assetId: string, name: string, label: string) {
+    const asset = snap.catalog.find((candidate) => candidate.id === assetId);
+    if (!asset) return;
+    if (session.getSnapshot().openId !== assetId) onOpenAsset(assetId);
+    const document = session.getSnapshot().document;
+    const labels = variantLabelMap(document, name, label) ?? {};
+    session.execute({ type: 'setVariantLabels', labels });
+  }
+
   return (
     <section className="side-block side-block-tree" aria-label="Project">
       <h2>Project</h2>
@@ -173,6 +220,14 @@ export function ProjectTree({
                 session={session}
                 activeRef={activeRef}
                 onOpenAsset={onOpenAsset}
+                expandedVariants={expandedVariants}
+                onToggleVariants={(assetId) =>
+                  setExpandedVariants((prev) => ({ ...prev, [assetId]: prev[assetId] !== true }))
+                }
+                contextAssetId={contextAssetId}
+                onContextAsset={(assetId) => setContextAssetId(assetId)}
+                onCreateVariant={createVariant}
+                onRenameVariant={renameVariant}
               />
               {group.subgroups.map((subgroup) =>
                 subgroup.show ? (
@@ -189,6 +244,17 @@ export function ProjectTree({
                       session={session}
                       activeRef={activeRef}
                       onOpenAsset={onOpenAsset}
+                      expandedVariants={expandedVariants}
+                      onToggleVariants={(assetId) =>
+                        setExpandedVariants((prev) => ({
+                          ...prev,
+                          [assetId]: prev[assetId] !== true,
+                        }))
+                      }
+                      contextAssetId={contextAssetId}
+                      onContextAsset={(assetId) => setContextAssetId(assetId)}
+                      onCreateVariant={createVariant}
+                      onRenameVariant={renameVariant}
                     />
                   </TreeGroup>
                 ) : null,
@@ -208,33 +274,117 @@ function AssetRows({
   session,
   activeRef,
   onOpenAsset,
+  expandedVariants,
+  onToggleVariants,
+  contextAssetId,
+  onContextAsset,
+  onCreateVariant,
+  onRenameVariant,
 }: {
   assets: AssetSummary[];
   snap: EditorSnapshot;
   session: EditorSession;
   activeRef: MutableRefObject<HTMLButtonElement | null>;
   onOpenAsset: (id: string) => void;
+  expandedVariants: Readonly<Record<string, boolean>>;
+  onToggleVariants: (assetId: string) => void;
+  contextAssetId: string | null;
+  onContextAsset: (assetId: string) => void;
+  onCreateVariant: (assetId: string) => void;
+  onRenameVariant: (assetId: string, name: string, label: string) => void;
 }) {
   return assets.map((asset) => {
     const open = asset.id === snap.openId;
+    const variants = asset.variants ?? [];
+    const canHaveVariants = ownsVariantContract(asset.kind);
+    const hasVariants = hasNamedVariants(asset);
+    const variantsOpen = expandedVariants[asset.id] === true;
     return (
-      <button
-        key={asset.id}
-        type="button"
-        ref={open ? activeRef : undefined}
-        className={open ? 'asset is-active' : 'asset'}
-        data-asset-id={asset.id}
-        aria-current={open ? 'true' : undefined}
-        draggable={canPlace(snap, asset.kind, asset.id)}
-        onDragStart={(event) => startAssetDrag(session, event, asset.id)}
-        onDragEnd={() => session.endDrag()}
-        onClick={() => onOpenAsset(asset.id)}
-      >
-        <span className="asset-name">{asset.name}</span>
-        <span className="asset-id">{asset.id}</span>
-      </button>
+      <div key={asset.id} className="asset-entry">
+        <div className="asset-row">
+          <button
+            type="button"
+            ref={open ? activeRef : undefined}
+            className={open ? 'asset is-active' : 'asset'}
+            data-asset-id={asset.id}
+            aria-current={open ? 'true' : undefined}
+            draggable={canPlace(snap, asset.kind, asset.id)}
+            onDragStart={(event) => startAssetDrag(session, event, asset.id)}
+            onDragEnd={() => session.endDrag()}
+            onClick={() => onOpenAsset(asset.id)}
+            onContextMenu={(event) => {
+              event.preventDefault();
+              onContextAsset(asset.id);
+            }}
+          >
+            <span className="asset-name">{asset.name}</span>
+            <span className="asset-id">{asset.id}</span>
+          </button>
+          {canHaveVariants && hasVariants ? (
+            <button
+              type="button"
+              className="asset-variants-toggle"
+              name={`toggle-variants-${asset.id}`}
+              aria-label={`${variantsOpen ? 'Collapse' : 'Expand'} variants for ${asset.name}`}
+              aria-expanded={variantsOpen}
+              onClick={() => onToggleVariants(asset.id)}
+            >
+              {variantsOpen ? '▾' : '▸'}
+            </button>
+          ) : null}
+        </div>
+        {contextAssetId === asset.id ? (
+          <div className="asset-context-menu" role="menu" aria-label={`${asset.name} actions`}>
+            {canHaveVariants ? (
+              <button type="button" role="menuitem" onClick={() => onCreateVariant(asset.id)}>
+                Create variant
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+        {canHaveVariants && hasVariants && variantsOpen ? (
+          <div className="asset-variants" role="list" aria-label={`${asset.name} variants`}>
+            {variants.map((variant) => {
+              const variantActive = open
+                ? (snap.activeVariantName ?? 'default') === variant.name
+                : false;
+              return (
+                <div
+                  key={variant.name}
+                  role="listitem"
+                  className={variantActive ? 'asset-variant is-active' : 'asset-variant'}
+                >
+                  <button
+                    type="button"
+                    name={`variant-${asset.id}-${variant.name}`}
+                    aria-current={variantActive ? 'true' : undefined}
+                    onClick={() => {
+                      onOpenAsset(asset.id);
+                      session.setActiveVariant(variant.isDefault ? null : variant.name);
+                    }}
+                  >
+                    {variant.label}
+                  </button>
+                  <input
+                    type="text"
+                    value={variant.label}
+                    aria-label={`${variant.label} label`}
+                    onChange={(event) =>
+                      onRenameVariant(asset.id, variant.name, event.target.value)
+                    }
+                  />
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
+      </div>
     );
   });
+}
+
+function hasNamedVariants(asset: Pick<AssetSummary, 'variants'>): boolean {
+  return (asset.variants ?? []).some((variant) => !variant.isDefault);
 }
 
 function TreeGroup({

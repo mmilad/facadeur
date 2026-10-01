@@ -7,6 +7,7 @@ import {
 } from '@facadeur/core';
 import type { YjsDocumentStore } from '@facadeur/store-yjs';
 import { componentVariantsFor, publicEventsFor, publicFieldsFor } from '../component-contract.js';
+import { ownsVariantContract, variantSummaries } from '../variant-edit.js';
 import { layerTree, nodeIdForHit, renderIdForNode } from '../selection-model.js';
 import { isDocumentDirty, type SavedJsonBaselines } from '../save-state.js';
 import type { ViewportChromeSettings } from '../viewport-chrome.js';
@@ -52,7 +53,7 @@ export interface SnapshotBuildContext {
 export function buildEditorSnapshot(ctx: SnapshotBuildContext): EditorSnapshot {
   const document = ctx.document;
   const activeDocument =
-    ctx.activeVariantName && document.kind === 'component'
+    ctx.activeVariantName && ownsVariantContract(document.kind)
       ? toFlat(
           resolveVariantDocument(toNested(document), ctx.activeVariantName, {
             preserveStyleLayers: true,
@@ -72,9 +73,20 @@ export function buildEditorSnapshot(ctx: SnapshotBuildContext): EditorSnapshot {
     const doc = store.getDocument();
     catalogDocuments.set(doc.id, doc);
     if (!isKind(doc.kind)) continue;
-    catalog.push({ id: doc.id, name: doc.name, kind: doc.kind, group: doc.group });
+    catalog.push({
+      id: doc.id,
+      name: doc.name,
+      kind: doc.kind,
+      group: doc.group,
+      ...(ownsVariantContract(doc.kind) ? { variants: variantSummaries(doc) } : {}),
+    });
     if (doc.kind !== ctx.workspace) continue;
-    assets.push({ id: doc.id, name: doc.name, kind: doc.kind });
+    assets.push({
+      id: doc.id,
+      name: doc.name,
+      kind: doc.kind,
+      ...(ownsVariantContract(doc.kind) ? { variants: variantSummaries(doc) } : {}),
+    });
   }
   let componentTarget: FlatDocument | null = null;
   if (selectedNode?.type === 'instance') {

@@ -212,28 +212,38 @@ describe('editor shell', () => {
     await act(async () => {
       session.execute({
         type: 'defineField',
-        field: { name: 'label', type: 'text', default: 'Go' },
+        field: { name: 'label', type: 'text' },
+      });
+      session.execute({
+        type: 'setPreviewData',
+        previewData: { fields: { label: 'Go' } },
       });
     });
     expect(frame?.contentDocument?.body.textContent).toContain('Go');
+    await act(async () => {
+      host!
+        .querySelector('button[data-surface="schema"]')
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
     await act(async () => {
       const fieldToggle = [...host!.querySelectorAll('button.eu-section__title')].find(
         (button) => button.textContent === 'Label',
       );
       fieldToggle?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
-    const label = host.querySelector('input[name="default-label"]');
-    expect((label as HTMLInputElement).value).toBe('Go');
+    expect(host.querySelector('select[name="field-type-label"]')).toBeInstanceOf(HTMLSelectElement);
 
     await act(async () => {
       window.dispatchEvent(
         new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }),
       );
     });
-    expect(frame?.contentDocument?.body.textContent).toContain('Button');
-    expect((host.querySelector('input[name="default-label"]') as HTMLInputElement).value).toBe(
-      'Button',
-    );
+    await act(async () => {
+      host!
+        .querySelector('button[data-surface="editor"]')
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(document.querySelector('iframe')?.contentDocument?.body.textContent).toContain('Button');
   });
 
   it('zooms from the topbar without changing reset view', async () => {

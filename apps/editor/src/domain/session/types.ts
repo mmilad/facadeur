@@ -12,6 +12,7 @@ import type { LayerItem } from '../selection-model.js';
 import type { ViewportChromeSettings } from '../viewport-chrome.js';
 import type { StyleEditMode } from '../viewport-edit.js';
 import type { DrillParent } from '../drill-navigation.js';
+import type { VariantSummary } from '../variant-edit.js';
 
 export type EditorTool = 'select' | 'frame' | 'text' | 'image';
 
@@ -22,6 +23,7 @@ export interface AssetSummary {
   name: string;
   kind: DefaultKind;
   group?: string;
+  variants?: readonly VariantSummary[];
 }
 
 export interface EditorNotice {

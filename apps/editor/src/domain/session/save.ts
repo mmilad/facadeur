@@ -13,6 +13,7 @@ import { clearDocumentSaved, markDocumentSaved, type SavedJsonBaselines } from '
 import { documentToJson, saveJsonFile, type JsonFileHandle } from '../files.js';
 import { errorText, kindOf } from './kinds.js';
 import type { EditorNotice } from './types.js';
+import { migratePreviewData } from '../preview-data.js';
 
 export function bindPersistDocumentSave(options: {
   build: () => { filename: string; document: FlatDocument; id: string };
@@ -113,7 +114,8 @@ export function registerSessionAssetDocuments(options: {
       throw new DocumentError('duplicate-id', `Duplicate document id "${file.id}"`);
     }
     if (file.id === options.designId) continue;
-    const store = createDocumentStore(file, { resolveKind: options.resolveKind });
+    const migrated = migratePreviewData(file);
+    const store = createDocumentStore(migrated, { resolveKind: options.resolveKind });
     options.assetStores.set(file.id, store);
     options.order.push(file.id);
   }
@@ -198,15 +200,16 @@ export function loadEditorDocument(options: {
   publish: () => void;
 }): void {
   try {
-    if (options.file.id === options.designId) {
-      const created = createDocumentStore(options.file, { resolveKind: options.resolveKind });
+    const file = migratePreviewData(options.file);
+    if (file.id === options.designId) {
+      const created = createDocumentStore(file, { resolveKind: options.resolveKind });
       const previous = options.getDesignStore();
       options.setDesignStore(created);
       options.forget(previous);
       previous.destroy();
       options.watch(created, 'design');
-      if (options.handle) options.handles.set(options.file.id, options.handle);
-      markDocumentSaved(options.savedJson, options.file.id, created.getDocument());
+      if (options.handle) options.handles.set(file.id, options.handle);
+      markDocumentSaved(options.savedJson, file.id, created.getDocument());
       options.onDesignLoaded();
       options.onNoticeClear();
       options.publish();
@@ -214,28 +217,28 @@ export function loadEditorDocument(options: {
     }
     options.resetDrillStack();
     const nextFiles = options.order.map((id) => {
-      if (id === options.file.id) return options.file;
+      if (id === file.id) return file;
       const store = options.assetStores.get(id);
       if (!store) throw new DocumentError('missing-node', `Missing document "${id}"`);
       return toNested(store.getDocument());
     });
-    if (!options.assetStores.has(options.file.id)) nextFiles.push(options.file);
+    if (!options.assetStores.has(file.id)) nextFiles.push(file);
     validateCatalog(nextFiles);
-    const created = createDocumentStore(options.file, { resolveKind: options.resolveKind });
-    const previous = options.assetStores.get(options.file.id);
-    options.assetStores.set(options.file.id, created);
-    if (!options.order.includes(options.file.id)) options.order.push(options.file.id);
+    const created = createDocumentStore(file, { resolveKind: options.resolveKind });
+    const previous = options.assetStores.get(file.id);
+    options.assetStores.set(file.id, created);
+    if (!options.order.includes(file.id)) options.order.push(file.id);
     options.syncKinds();
     options.forget(previous);
     previous?.destroy();
     options.watch(created, 'asset');
-    if (options.handle) options.handles.set(options.file.id, options.handle);
+    if (options.handle) options.handles.set(file.id, options.handle);
     if (options.handle || previous) {
-      markDocumentSaved(options.savedJson, options.file.id, created.getDocument());
+      markDocumentSaved(options.savedJson, file.id, created.getDocument());
     } else {
-      clearDocumentSaved(options.savedJson, options.file.id);
+      clearDocumentSaved(options.savedJson, file.id);
     }
-    options.onAssetLoaded(kindOf(created.getDocument()), options.file);
+    options.onAssetLoaded(kindOf(created.getDocument()), file);
     options.onNoticeClear();
     options.publish();
   } catch (error) {

@@ -1,7 +1,15 @@
 export type DesignDomain =
   'colors' | 'fonts' | 'icons' | 'spacing' | 'radius' | 'shadow' | 'typography';
 
-export type EditorSurface = 'properties' | DesignDomain;
+export type EditorView = 'editor' | 'schema' | 'preview';
+
+export type EditorSurface = EditorView | DesignDomain;
+
+export const EDITOR_VIEW_ITEMS: { id: EditorView; label: string }[] = [
+  { id: 'editor', label: 'Editor' },
+  { id: 'schema', label: 'Schema' },
+  { id: 'preview', label: 'Preview data' },
+];
 
 export const DESIGN_DOMAIN_ITEMS: {
   id: DesignDomain;
@@ -18,7 +26,11 @@ export const DESIGN_DOMAIN_ITEMS: {
 ];
 
 export function isDesignDomain(surface: EditorSurface): surface is DesignDomain {
-  return surface !== 'properties';
+  return DESIGN_DOMAIN_ITEMS.some((item) => item.id === surface);
+}
+
+export function isEditorView(surface: EditorSurface): surface is EditorView {
+  return EDITOR_VIEW_ITEMS.some((item) => item.id === surface);
 }
 
 export function designDomainLabel(domain: DesignDomain): string {

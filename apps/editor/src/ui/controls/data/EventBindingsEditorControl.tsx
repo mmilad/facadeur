@@ -1,12 +1,23 @@
 import type { EventBinding, EventDefinition } from '@facadeur/core';
-import { Field, Select, Stack, TextInput } from '../../form/index.js';
+import {
+  defaultEventPayloadSource,
+  eventPayloadSourceLabel,
+  eventPayloadSourceOptions,
+  NATIVE_EVENT_NAMES,
+  type EventPayloadSource,
+} from '../../../domain/events.js';
+import { Field, Select, Stack, type SelectOption } from '../../form/index.js';
 import '../../form/form.css';
+
+type EditableEventBinding = EventBinding & {
+  payload?: Record<string, EventPayloadSource>;
+};
 
 export function EventBindingsEditorControl({
   bindings,
   events,
   onChangeBindings,
-  onInvalid,
+  onInvalid: _onInvalid,
 }: {
   bindings: EventBinding[];
   events: EventDefinition[];
@@ -26,7 +37,6 @@ export function EventBindingsEditorControl({
           bindings={bindings}
           events={events}
           onChangeBindings={onChangeBindings}
-          onInvalid={onInvalid}
         />
       ))}
       <button
@@ -51,7 +61,6 @@ function EventBindingRow({
   bindings,
   events,
   onChangeBindings,
-  onInvalid,
 }: {
   binding: EventBinding;
   index: number;
@@ -60,7 +69,10 @@ function EventBindingRow({
   onChangeBindings: (bindings: EventBinding[]) => void;
   onInvalid?: (message: string) => void;
 }) {
-  function commit(next: EventBinding | null) {
+  const definition = events.find((event) => event.name === binding.event);
+  const editable = binding as EditableEventBinding;
+
+  function commit(next: EditableEventBinding | null) {
     const nextBindings = [...bindings];
     if (next === null) nextBindings.splice(index, 1);
     else nextBindings[index] = next;
@@ -74,26 +86,60 @@ function EventBindingRow({
           name={`event-binding-event-${index}`}
           value={binding.event}
           options={events.map((event) => ({ value: event.name, label: event.name }))}
-          onCommit={(event) => commit({ ...binding, event })}
+          onCommit={(event) => commit({ ...editable, event })}
         />
       </Field>
       <Field label="Native event">
-        <TextInput
+        <Select
           name={`event-binding-name-${index}`}
           value={binding.name}
-          onCommit={(name) => {
-            const next = name.trim();
-            if (!next) {
-              onInvalid?.('A native event name is required');
-              return;
-            }
-            commit({ event: binding.event, name: next });
-          }}
+          options={nativeEventOptions(binding.name)}
+          onCommit={(name) => commit({ ...editable, name })}
         />
       </Field>
+      {definition?.payload
+        ? Object.entries(definition.payload).map(([key, type]) => {
+            const source = editable.payload?.[key] ?? defaultEventPayloadSource(type);
+            const options: SelectOption[] = eventPayloadSourceOptions(type);
+            if (!options.some((option) => option.value === source)) {
+              options.push({
+                value: source,
+                label: `${eventPayloadSourceLabel(source)} (invalid)`,
+                disabled: true,
+              });
+            }
+            return (
+              <Field key={key} label={`Payload: ${key}`}>
+                <Select
+                  name={`event-binding-payload-${index}-${key}`}
+                  value={source}
+                  options={options}
+                  onCommit={(next) => {
+                    const payload = { ...(editable.payload ?? {}) };
+                    if (next === defaultEventPayloadSource(type)) delete payload[key];
+                    else payload[key] = next as EventPayloadSource;
+                    commit({
+                      ...editable,
+                      ...(Object.keys(payload).length ? { payload } : { payload: undefined }),
+                    });
+                  }}
+                />
+              </Field>
+            );
+          })
+        : null}
       <button type="button" className="text-button" onClick={() => commit(null)}>
         Remove event binding
       </button>
     </Stack>
   );
+}
+
+function nativeEventOptions(current: string): { value: string; label: string }[] {
+  const names = new Set<string>(NATIVE_EVENT_NAMES);
+  if (current.trim()) names.add(current);
+  return [...names].map((name) => ({
+    value: name,
+    label: name,
+  }));
 }

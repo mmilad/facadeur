@@ -6,6 +6,7 @@
 
 import {
   resolveVariantDocument,
+  withPreviewData,
   toNested,
   type Breakpoint,
   type DocumentFile,
@@ -175,10 +176,14 @@ export function createViewportBoard(options: {
         parent: host.contentDocument().body,
         catalog: documents,
         styles,
-        resolveMountedDocument: (document) =>
-          document.id === page.id && variantName
-            ? resolveVariantDocument(document, variantName)
-            : document,
+        resolveMountedDocument: (document) => {
+          const resolved =
+            document.id === page.id && variantName
+              ? resolveVariantDocument(document, variantName)
+              : document;
+          return withPreviewData(resolved, document.id === page.id ? variantName : null);
+        },
+        prepareInstanceDocument: (document, variant) => withPreviewData(document, variant),
         paintRoot,
       });
       renderer.mount(page);

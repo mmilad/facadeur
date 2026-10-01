@@ -31,9 +31,9 @@ export function splitList(text: string): string[] {
 export function fieldDefinitionFromDraft(input: {
   name: string;
   type: FieldType;
-  rawDefault: string;
+  rawDefault?: string;
   optionsText: string;
-  booleanDefault: boolean;
+  booleanDefault?: boolean;
   required?: boolean;
 }): FieldDefinition {
   const name = input.name.trim();
@@ -52,7 +52,10 @@ export function fieldDefinitionFromDraft(input: {
     if (new Set(options).size !== options.length) throw new Error('Enum options must be unique');
     field.options = options;
   }
-  const fallback = draftDefault(field, input.rawDefault, input.booleanDefault);
+  const fallback =
+    input.rawDefault !== undefined || input.booleanDefault !== undefined
+      ? draftDefault(field, input.rawDefault ?? '', input.booleanDefault ?? false)
+      : undefined;
   if (fallback !== undefined) field.default = fallback;
   return field;
 }
@@ -68,9 +71,6 @@ export function retargetField(field: FieldDefinition, type: FieldType): FieldDef
   if (type === 'enum') {
     const seed = typeof field.default === 'string' && field.default ? field.default : 'value';
     next.options = [seed];
-    next.default = seed;
-  } else if (type === 'boolean') {
-    next.default = false;
   } else if (type === 'array') {
     next.items = { type: 'text' };
   } else if (type === 'object') {

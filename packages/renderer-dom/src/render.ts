@@ -34,6 +34,8 @@ export interface RenderContext {
   canvasId: string | null;
   /** Resolved canvas document for preview-only mounted variants. */
   canvasDocument: DocumentFile | null;
+  /** Optional editor-only preparation of instance documents after variant resolution. */
+  prepareInstanceDocument?: (document: DocumentFile, variant: string | undefined) => DocumentFile;
 }
 
 export interface DocumentStyles {
@@ -54,6 +56,30 @@ export interface DomRenderer {
 }
 
 const EVENT_ATTRIBUTE = /^on/i;
+const BOOLEAN_ATTRIBUTES = new Set([
+  'allowfullscreen',
+  'async',
+  'autofocus',
+  'autoplay',
+  'checked',
+  'controls',
+  'default',
+  'defer',
+  'disabled',
+  'formnovalidate',
+  'hidden',
+  'itemscope',
+  'loop',
+  'multiple',
+  'muted',
+  'novalidate',
+  'open',
+  'playsinline',
+  'readonly',
+  'required',
+  'reversed',
+  'selected',
+]);
 const MAX_DEPTH = 32;
 
 function isNativeControlElement(element: Element): boolean {
@@ -119,6 +145,7 @@ export function createDomRenderer(options: {
   styles?: DocumentStyles;
   /** Resolve the mounted document for a preview-only editor context. */
   resolveMountedDocument?: (document: DocumentFile) => DocumentFile;
+  prepareInstanceDocument?: (document: DocumentFile, variant: string | undefined) => DocumentFile;
   /** When set, the root node is painted. Pages omit this: the root frame is the canvas. */
   paintRoot?: boolean;
 }): DomRenderer {
@@ -142,6 +169,7 @@ export function createDomRenderer(options: {
       depth: 0,
       canvasId: mountedId,
       canvasDocument: canvas ?? null,
+      prepareInstanceDocument: options.prepareInstanceDocument,
     };
   }
 
@@ -375,8 +403,17 @@ function definitionForInstance(
   const base = ctx.catalog.get(node.component);
   if (!base) return undefined;
   const hasNamedVariants = variantPresets(base).some((variant) => variant.name !== 'default');
-  const selected = hasNamedVariants ? node.variants?.variant : undefined;
-  return selected ? resolveVariantDocument(base, selected) : base;
+  const selected = hasNamedVariants ? selectedVariantForInstance(node, ctx) : undefined;
+  const resolved = selected ? resolveVariantDocument(base, selected) : base;
+  return ctx.prepareInstanceDocument?.(resolved, selected) ?? resolved;
+}
+
+function selectedVariantForInstance(
+  node: Extract<NestedNode, { type: 'instance' }>,
+  ctx: RenderContext,
+): string | undefined {
+  if (node.variants?.variant !== undefined) return node.variants.variant;
+  return node.variantRules?.find((rule) => matchesDisplay(rule.when, ctx.scope))?.variant;
 }
 
 function paintInstance(
@@ -394,7 +431,11 @@ function paintInstance(
     ...(node.fields ?? {}),
     ...resolveFieldBindings(node.fieldBindings, ctx.scope),
   });
-  const variants = resolveVariants(definition, node.variants);
+  const selected = selectedVariantForInstance(node, ctx);
+  const variants = resolveVariants(definition, {
+    ...node.variants,
+    ...(selected ? { variant: selected } : {}),
+  });
   const root = definition.root;
   el.dataset.id = id;
   el.dataset.type = 'instance';
@@ -773,7 +814,12 @@ function applyBindings(
       binding.name &&
       !EVENT_ATTRIBUTE.test(binding.name)
     ) {
-      el.setAttribute(binding.name, String(value));
+      if (typeof value === 'boolean' && BOOLEAN_ATTRIBUTES.has(binding.name.toLowerCase())) {
+        if (value) el.setAttribute(binding.name, '');
+        else el.removeAttribute(binding.name);
+      } else {
+        el.setAttribute(binding.name, String(value));
+      }
     } else if (binding.target === 'style' && binding.name) {
       el.style.setProperty(binding.name, String(value));
     } else if (binding.target === 'src') src = String(value);

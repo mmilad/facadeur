@@ -33,6 +33,7 @@ import {
   readViewportChromeForOpenDocument,
 } from './snapshot.js';
 import { createEditorSessionSurface, createUndoHistory } from './undo-history.js';
+import { migratePreviewData } from '../preview-data.js';
 import type {
   EditorDrag,
   EditorNotice,
@@ -81,7 +82,9 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   let snapshot: EditorSnapshot | null = null;
 
   const resolveKind = (componentId: string) => kinds.get(componentId);
-  let designStore: YjsDocumentStore = createDocumentStore(options.design, { resolveKind });
+  let designStore: YjsDocumentStore = createDocumentStore(migratePreviewData(options.design), {
+    resolveKind,
+  });
 
   function filenameFor(id: string) {
     return sources[id] ?? `${id}.json`;

@@ -3,6 +3,7 @@ import {
   variantPresets,
   type DocumentFile,
   type DisplayOn,
+  type EventBinding,
   type FieldValue,
   type NestedNode,
 } from '@facadeur/core';
@@ -323,7 +324,19 @@ function renderInstance(
         );
       }
       attrs.push({ name: target.namedVariant.name, value: { kind: 'literal', value } });
+    } else if (node.variantRules?.length) {
+      attrs.push({
+        name: target.namedVariant.name,
+        value: {
+          kind: 'expr',
+          code: variantRuleExpression(node.variantRules, owner, dataScope, usedProps),
+        },
+      });
     }
+  } else if (node.variantRules?.length) {
+    throw new CodegenError(
+      `Instance "${node.id}" uses variant rules but "${node.component}" has no named variants`,
+    );
   }
   for (const name of Object.keys(node.variants ?? {})) {
     if (name === 'variant' && target.namedVariant) continue;
@@ -342,6 +355,22 @@ function renderInstance(
       ? { condition: conditionForNode(node.displayOn, owner, dataScope, usedProps) }
       : {}),
   };
+}
+
+function variantRuleExpression(
+  rules: readonly { when: DisplayOn; variant: string }[],
+  owner: CatalogEntry,
+  dataScope: ReadonlyMap<string, string>,
+  usedProps: Set<string>,
+): string {
+  let expression = quote('default');
+  for (let index = rules.length - 1; index >= 0; index -= 1) {
+    const rule = rules[index];
+    if (!rule) continue;
+    const condition = conditionForNode(rule.when, owner, dataScope, usedProps);
+    expression = `${condition} ? ${quote(rule.variant)} : ${expression}`;
+  }
+  return expression;
 }
 
 function exposedMemberName(
@@ -363,7 +392,7 @@ function valueAttr(name: string, value: FieldValue): Attr {
 }
 
 function eventAttributes(
-  bindings: { event: string; name: string }[] | undefined,
+  bindings: EventBinding[] | undefined,
   owner: CatalogEntry,
   usedProps: Set<string>,
 ): Attr[] {
@@ -378,6 +407,14 @@ function eventAttributes(
       ? binding.name
       : `on${binding.name.charAt(0).toUpperCase()}${binding.name.slice(1)}`;
     const payload = event.eventPayload ?? {};
+    const explicitPayload = (binding as EventBindingWithPayload).payload;
+    for (const key of Object.keys(explicitPayload ?? {})) {
+      if (!(key in payload)) {
+        throw new CodegenError(
+          `Event binding for "${binding.event}" maps unknown payload key "${key}"`,
+        );
+      }
+    }
     const structured = Object.entries(payload).find(
       ([, type]) => type === 'array' || type === 'object',
     );
@@ -394,12 +431,13 @@ function eventAttributes(
       continue;
     }
     const entries = Object.entries(payload).map(([key, type]) => {
-      const value =
-        type === 'boolean'
-          ? 'event.currentTarget.checked'
-          : type === 'number'
-            ? 'Number(event.currentTarget.value)'
-            : 'event.currentTarget.value';
+      const source =
+        explicitPayload?.[key] ??
+        (type === 'boolean' ? 'checked' : type === 'number' ? 'valueAsNumber' : 'value');
+      assertPayloadSource(source, type, binding.event, key);
+      const value = explicitPayload?.[key]
+        ? payloadSourceExpression(source)
+        : defaultPayloadExpression(type);
       return `${key}: ${value}`;
     });
     attrs.push({
@@ -411,6 +449,46 @@ function eventAttributes(
     });
   }
   return attrs;
+}
+
+type EventPayloadSource = 'value' | 'checked' | 'valueAsNumber';
+type EventBindingWithPayload = EventBinding & {
+  payload?: Record<string, EventPayloadSource>;
+};
+
+function assertPayloadSource(
+  source: EventPayloadSource,
+  type: string,
+  eventName: string,
+  key: string,
+): void {
+  if (source === 'checked' && type !== 'boolean') {
+    throw new CodegenError(
+      `Event "${eventName}" payload "${key}" uses checked but its type is ${type}`,
+    );
+  }
+  if (source === 'valueAsNumber' && type !== 'number') {
+    throw new CodegenError(
+      `Event "${eventName}" payload "${key}" uses valueAsNumber but its type is ${type}`,
+    );
+  }
+}
+
+function payloadSourceExpression(source: EventPayloadSource): string {
+  switch (source) {
+    case 'checked':
+      return 'event.currentTarget.checked';
+    case 'valueAsNumber':
+      return 'event.currentTarget.valueAsNumber';
+    default:
+      return 'event.currentTarget.value';
+  }
+}
+
+function defaultPayloadExpression(type: string): string {
+  if (type === 'boolean') return 'event.currentTarget.checked';
+  if (type === 'number') return 'Number(event.currentTarget.value)';
+  return 'event.currentTarget.value';
 }
 
 function applyBinding(

@@ -3,6 +3,7 @@
  */
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 import { validateCatalog, type DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
@@ -148,9 +149,45 @@ describe('properties inspector tabs', () => {
       HTMLButtonElement,
     );
     expect(host.querySelector('.variant-tabs-list button:nth-child(1)')?.textContent).toBe(
-      'default',
+      'Default',
     );
     expect(host.querySelector('button[name="property-style-tab-variants"]')).toBeNull();
+  });
+
+  it('creates a stable variant id from a free display label and activates it', async () => {
+    const user = userEvent.setup();
+    const session: EditorSession = createEditorSession({
+      documents,
+      design: createProjectTemplateDocument(),
+    });
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => {
+      root?.render(<App session={session} />);
+    });
+    await act(async () => {
+      session.openAsset('button', 'root');
+      session.selectNode('root');
+    });
+
+    await act(async () => {
+      await user.click(host!.querySelector('button[aria-label="Add variant"]')!);
+      await user.type(document.querySelector('input[name="new-variant-name"]')!, 'Dark Mode');
+      await user.click(document.querySelector('button.eu-button--primary')!);
+    });
+
+    expect(session.getSnapshot().activeVariantName).toBe('variant-1');
+    expect(session.getSnapshot().document.variantPresets).toEqual(
+      expect.arrayContaining([expect.objectContaining({ name: 'variant-1' })]),
+    );
+    expect(session.getSnapshot().document.variantLabels).toMatchObject({
+      default: 'Default',
+      'variant-1': 'Dark Mode',
+    });
+    expect(host.querySelector('button[name="variant-tab-variant-1"]')?.textContent).toBe(
+      'Dark Mode',
+    );
   });
 
   it('groups style declarations by purpose', async () => {
@@ -235,7 +272,7 @@ describe('properties inspector tabs', () => {
     });
     await act(async () => {
       host!
-        .querySelector('button[name="property-tab-data"]')
+        .querySelector('button[name="property-tab-style"]')
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
     expect(host.querySelector('select[name="tag"]')).toBeNull();
@@ -244,7 +281,7 @@ describe('properties inspector tabs', () => {
       session.selectNode('root');
     });
     expect(
-      host.querySelector('button[name="property-tab-data"]')?.getAttribute('aria-selected'),
+      host.querySelector('button[name="property-tab-style"]')?.getAttribute('aria-selected'),
     ).toBe('true');
     expect(host.querySelector('select[name="tag"]')).toBeNull();
   });
@@ -293,7 +330,7 @@ describe('properties inspector tabs', () => {
     expect(context?.querySelector('.inspector-context-meta')?.textContent).toBe(
       'Root frame · Input',
     );
-    expect(host.textContent).toContain('Component fields');
+    expect(host.textContent).not.toContain('Component fields');
   });
 
   it('explains inherited styles for an empty variant override', async () => {
@@ -365,7 +402,7 @@ describe('properties inspector tabs', () => {
     expect(host.textContent).toContain('Edit the master component for shared styles.');
   });
 
-  it('mounts field definitions on Content and variant axes on Data (Spec C)', async () => {
+  it('mounts field definitions on Content and legacy variant axes on Schema (Spec C)', async () => {
     const session: EditorSession = createEditorSession({
       documents,
       design: createProjectTemplateDocument(),
@@ -384,19 +421,23 @@ describe('properties inspector tabs', () => {
     expect(host.querySelector('input[name="new-field-name"]')).toBeNull();
     await act(async () => {
       host!
+        .querySelector('button[data-surface="schema"]')
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    await act(async () => {
+      host!
         .querySelector('button[name="open-add-field"]')
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
     expect(host.querySelector('input[name="new-field-name"]')).toBeInstanceOf(HTMLInputElement);
-    expect(host.querySelector('input[name="new-axis-name"]')).toBeNull();
+    expect(host.querySelector('input[name="new-axis-name"]')).toBeInstanceOf(HTMLInputElement);
 
     await act(async () => {
       host!
-        .querySelector('button[name="property-tab-data"]')
+        .querySelector('button[data-surface="schema"]')
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
     expect(host.querySelector('input[name="new-axis-name"]')).toBeInstanceOf(HTMLInputElement);
-    expect(host.querySelector('input[name="new-field-name"]')).toBeNull();
   });
 
   it('does not show property tabs when a viewport is selected', async () => {

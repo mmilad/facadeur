@@ -11,7 +11,7 @@ import { Field, NumberInput, Section, Select, Stack, TextInput } from '../../for
 import '../../form/form.css';
 import { fieldDisplayLabel } from './field-label.js';
 
-type PathOption = { value: string; label: string; field: FieldDefinition };
+export type PathOption = { value: string; label: string; field: FieldDefinition };
 type DisplayMode = 'truthy' | 'equals';
 
 export type DataPathOption = Pick<PathOption, 'value' | 'label'>;
@@ -81,16 +81,20 @@ export function dataPathOptions(fields: FieldDefinition[]): DataPathOption[] {
   return fieldPathOptions(fields).map(({ value, label }) => ({ value, label }));
 }
 
-function DisplayConditionEditor({
+export function DisplayConditionEditor({
   condition,
   paths,
   onChange,
   onInvalid,
+  namePrefix = '',
+  title = 'Display condition',
 }: {
   condition?: DisplayOn;
   paths: PathOption[];
   onChange: (value: DisplayOn | null) => void;
   onInvalid?: (message: string) => void;
+  namePrefix?: string;
+  title?: string;
 }) {
   const path = condition?.path ?? paths[0]?.value ?? '';
   const field = findField(paths, path);
@@ -105,7 +109,7 @@ function DisplayConditionEditor({
   const pathOptions = withMissingOption(paths, path);
 
   return (
-    <Section title="Display condition" collapsible defaultOpen>
+    <Section title={title} collapsible defaultOpen>
       {!condition ? (
         <button
           type="button"
@@ -124,7 +128,7 @@ function DisplayConditionEditor({
         <>
           <Field label="Field">
             <Select
-              name="display-condition-path"
+              name={`${namePrefix}display-condition-path`}
               value={path}
               options={pathOptions.map((option) => ({ value: option.value, label: option.label }))}
               onCommit={(nextPath) => {
@@ -137,7 +141,7 @@ function DisplayConditionEditor({
           </Field>
           <Field label="When">
             <Select
-              name="display-condition-mode"
+              name={`${namePrefix}display-condition-mode`}
               value={mode}
               options={[
                 { value: 'truthy', label: 'Value is truthy' },
@@ -154,7 +158,7 @@ function DisplayConditionEditor({
           {mode === 'truthy' ? (
             <Field label="Truthy">
               <Select
-                name="display-condition-truthy"
+                name={`${namePrefix}display-condition-truthy`}
                 value={String(truthy)}
                 options={[
                   { value: 'true', label: 'Yes' },
@@ -169,12 +173,13 @@ function DisplayConditionEditor({
               value={equals}
               onChange={(value) => onChange({ path, equals: value })}
               onInvalid={onInvalid}
+              namePrefix={namePrefix}
             />
           )}
           <button
             type="button"
             className="text-button"
-            name="remove-display-condition"
+            name={`${namePrefix}remove-display-condition`}
             onClick={() => onChange(null)}
           >
             Remove condition
@@ -190,17 +195,19 @@ function DisplayValueField({
   value,
   onChange,
   onInvalid,
+  namePrefix = '',
 }: {
   field?: FieldDefinition;
   value: FieldValue | undefined;
   onChange: (value: FieldValue) => void;
   onInvalid?: (message: string) => void;
+  namePrefix?: string;
 }) {
   if (field?.type === 'boolean') {
     return (
       <Field label="Value">
         <Select
-          name="display-condition-value"
+          name={`${namePrefix}display-condition-value`}
           value={String(value ?? false)}
           options={[
             { value: 'true', label: 'True' },
@@ -215,7 +222,7 @@ function DisplayValueField({
     return (
       <Field label="Value">
         <NumberInput
-          name="display-condition-value"
+          name={`${namePrefix}display-condition-value`}
           value={typeof value === 'number' ? value : 0}
           onCommit={(next) => {
             if (next === null) {
@@ -231,7 +238,7 @@ function DisplayValueField({
   return (
     <Field label="Value">
       <TextInput
-        name="display-condition-value"
+        name={`${namePrefix}display-condition-value`}
         value={displayValue(value)}
         onCommit={(next) => onChange(next)}
       />
@@ -350,7 +357,7 @@ function RepeatEditor({
   );
 }
 
-function fieldPathOptions(fields: FieldDefinition[], prefix = ''): PathOption[] {
+export function fieldPathOptions(fields: FieldDefinition[], prefix = ''): PathOption[] {
   return fields.flatMap((field) => {
     const value = prefix ? `${prefix}.${field.name}` : field.name;
     const option: PathOption = { value, label: fieldDisplayLabel(value), field };

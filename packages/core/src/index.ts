@@ -52,6 +52,8 @@ export {
   variantOverridesSchema,
   variantPresetSchema,
   fieldTypes,
+  previewDataSchema,
+  type PreviewData,
   type Binding,
   type BindingTarget,
   defaultBreakpoints,
@@ -60,6 +62,7 @@ export {
   type DocumentSchemaOptions,
   type DocumentSettings,
   type DisplayOn,
+  type VariantRule,
   type Repeat,
   type EventDefinition,
   type EventBinding,
@@ -112,6 +115,7 @@ export {
 } from './token-tree.js';
 export { type DocumentChange, type DocumentStore } from './store.js';
 export { deriveVariantPreset, resolveVariantDocument, variantPresets } from './variants.js';
+export { resolvePreviewData, withPreviewData } from './preview-data.js';
 export {
   assertStyleContract,
   assertStyleMap,

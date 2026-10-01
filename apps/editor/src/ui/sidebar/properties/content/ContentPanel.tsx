@@ -1,27 +1,27 @@
 import type { FlatNode } from '@facadeur/core';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
-import { dataFieldsForNode } from '../../../controls/data/index.js';
+import {
+  dataFieldsForNode,
+  DisplayConditionEditor,
+  fieldPathOptions,
+} from '../../../controls/data/index.js';
 import { HtmlTagSelect } from '../../../controls/html/index.js';
 import { InstanceOverridesControl } from '../../../controls/instance/index.js';
 import { TextControl } from '../../../controls/fields/index.js';
 import '../../../form/form.css';
-import { ComponentFields } from './ComponentFields.js';
-import { ComponentEvents } from './ComponentEvents.js';
-import { ComponentExpose } from './ComponentExpose.js';
 import { NodeAttributeFields } from './NodeAttributeFields.js';
 import { partitionNodeAttributes } from './preview-attribute-keys.js';
 import { PreviewOptionsDisclosure } from './PreviewOptionsDisclosure.js';
+import { VariantRulesEditor } from './VariantRulesEditor.js';
 
 export function ContentPanel({
   session,
   snap,
   node,
-  showDefinitions,
 }: {
   session: EditorSession;
   snap: EditorSnapshot;
   node: FlatNode;
-  showDefinitions: boolean;
 }) {
   return (
     <>
@@ -97,14 +97,28 @@ export function ContentPanel({
       {node.type !== 'instance' && node.attributes ? (
         <AttributeSections session={session} node={node} attributes={node.attributes} />
       ) : null}
+      <DisplayConditionEditor
+        condition={node.displayOn}
+        paths={fieldPathOptions(dataFieldsForNode(snap.document, node.id))}
+        title="Render condition"
+        onChange={(value) =>
+          session.execute({ type: 'setProp', nodeId: node.id, prop: 'displayOn', value })
+        }
+        onInvalid={(message) => session.setNotice(message, 'error')}
+      />
       {node.type === 'instance' ? (
-        <InstanceFields session={session} node={node} snap={snap} />
-      ) : null}
-      {showDefinitions ? (
         <>
-          <ComponentFields session={session} snap={snap} />
-          <ComponentEvents session={session} snap={snap} />
-          <ComponentExpose session={session} snap={snap} />
+          <VariantRulesEditor
+            node={node}
+            fields={dataFieldsForNode(snap.document, node.id)}
+            presets={snap.componentTarget?.variantPresets}
+            variantLabels={snap.componentTarget?.variantLabels}
+            onChange={(value) =>
+              session.execute({ type: 'setProp', nodeId: node.id, prop: 'variantRules', value })
+            }
+            onInvalid={(message) => session.setNotice(message, 'error')}
+          />
+          <InstanceFields session={session} node={node} snap={snap} />
         </>
       ) : null}
     </>

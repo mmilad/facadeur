@@ -5,8 +5,10 @@ export { EventBindingsEditorControl } from './EventBindingsEditorControl.js';
 export { ExposeEditorControl } from './ExposeEditorControl.js';
 export {
   DataDirectivesEditorControl,
+  DisplayConditionEditor,
   dataFieldsForNode,
   dataPathOptions,
+  fieldPathOptions,
 } from './DataDirectivesEditorControl.js';
 export {
   BINDING_TARGET_LABEL,

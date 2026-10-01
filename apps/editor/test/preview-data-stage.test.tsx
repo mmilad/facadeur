@@ -1,0 +1,83 @@
+/**
+ * @vitest-environment jsdom
+ */
+import '@testing-library/jest-dom/vitest';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { EditorSession, EditorSnapshot } from '../src/domain/session.js';
+import { PreviewDataStage } from '../src/ui/stage/PreviewDataStage.js';
+
+function snapshot(overrides: Partial<EditorSnapshot> = {}): EditorSnapshot {
+  return {
+    document: {
+      version: 1,
+      id: 'preview-stage',
+      name: 'Preview stage',
+      kind: 'component',
+      fields: [
+        { name: 'background', type: 'text' },
+        { name: 'label', type: 'text', required: true },
+        { name: 'enabled', type: 'boolean' },
+        { name: 'items', type: 'array' },
+      ],
+      previewData: { fields: { background: '{color.unknown}', label: 'Base label' } },
+      variants: [],
+      settings: {},
+      tokens: {},
+      fonts: [],
+      nodes: { root: { id: 'root', type: 'frame', children: [] } },
+      rootId: 'root',
+    },
+    activeVariantName: 'compact',
+    ...overrides,
+  } as EditorSnapshot;
+}
+
+describe('PreviewDataStage', () => {
+  afterEach(() => cleanup());
+
+  it('does not write when opened and keeps raw values including unknown tokens', () => {
+    const execute = vi.fn();
+    const session = { execute } as unknown as EditorSession;
+    render(<PreviewDataStage session={session} snap={snapshot()} />);
+
+    expect(screen.getByRole('textbox', { name: 'Background' })).toHaveValue('{color.unknown}');
+    expect(screen.getByRole('textbox', { name: 'Label' })).toHaveValue('Base label');
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it('writes only the changed field into the active variant', async () => {
+    const user = userEvent.setup();
+    const execute = vi.fn();
+    const session = { execute } as unknown as EditorSession;
+    render(<PreviewDataStage session={session} snap={snapshot()} />);
+
+    const label = screen.getByRole('textbox', { name: 'Label' });
+    await user.clear(label);
+    await user.type(label, 'Compact label');
+    await user.tab();
+
+    expect(execute).toHaveBeenCalledWith({
+      type: 'setPreviewData',
+      previewData: {
+        fields: { background: '{color.unknown}', label: 'Base label' },
+        variants: { compact: { label: 'Compact label' } },
+      },
+    });
+  });
+
+  it('does not save malformed JSON drafts', () => {
+    const execute = vi.fn();
+    const setNotice = vi.fn();
+    const session = { execute, setNotice } as unknown as EditorSession;
+    render(<PreviewDataStage session={session} snap={snapshot({ activeVariantName: null })} />);
+
+    const items = screen.getByRole('textbox', { name: 'Items' });
+    fireEvent.change(items, { target: { value: '{' } });
+    fireEvent.blur(items);
+
+    expect(execute).not.toHaveBeenCalled();
+    expect(setNotice).toHaveBeenCalledWith('items must be valid JSON', 'error');
+  });
+});

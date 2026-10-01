@@ -7,8 +7,14 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { openJsonFile, parseDocumentText } from '../../domain/files.js';
 import { isEditableTarget } from '../../domain/keyboard.js';
 import type { EditorSession } from '../../domain/session.js';
-import { isDesignDomain, type EditorSurface } from '../sidebar/design/design-domain.js';
+import {
+  EDITOR_VIEW_ITEMS,
+  isDesignDomain,
+  type EditorSurface,
+} from '../sidebar/design/design-domain.js';
 import { DesignDomainStage } from '../stage/DesignDomainStage.js';
+import { PreviewDataStage } from '../stage/PreviewDataStage.js';
+import { SchemaStage } from '../stage/SchemaStage.js';
 import { LayersPanel } from '../sidebar/layers/LayersPanel.js';
 import { ProjectTree } from '../sidebar/layers/ProjectTree.js';
 import { RightRail } from '../sidebar/properties/RightRail.js';
@@ -25,9 +31,10 @@ import { ZoomControls } from './ZoomControls.js';
 const SURFACE_PARAM = 'surface';
 
 function surfaceFromParam(value: string | null): EditorSurface {
-  if (!value || value === 'properties') return 'properties';
+  if (!value || value === 'properties' || value === 'editor') return 'editor';
+  if (value === 'schema' || value === 'preview') return value;
   if (isDesignDomain(value as EditorSurface)) return value as EditorSurface;
-  return 'properties';
+  return 'editor';
 }
 
 export function EditorShell({ session }: { session: EditorSession }) {
@@ -48,9 +55,11 @@ export function EditorShell({ session }: { session: EditorSession }) {
   useEffect(() => {
     if (seenOpenId.current === snap.openId) return;
     seenOpenId.current = snap.openId;
-    setSurfaceState('properties');
-    replaceSurface(router, pathname, searchParams, 'properties');
-  }, [snap.openId, router, pathname, searchParams]);
+    if (isDesignDomain(surface)) {
+      setSurfaceState('editor');
+      replaceSurface(router, pathname, searchParams, 'editor');
+    }
+  }, [snap.openId, router, pathname, searchParams, surface]);
 
   function setSurface(next: EditorSurface) {
     setSurfaceState(next);
@@ -96,6 +105,20 @@ export function EditorShell({ session }: { session: EditorSession }) {
           {snap.notice.text}
         </p>
       ) : null}
+      <nav className="editor-subnav" aria-label="Editor views" data-testid="editor-subnav">
+        {EDITOR_VIEW_ITEMS.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className={surface === item.id ? 'editor-subnav-item is-active' : 'editor-subnav-item'}
+            aria-current={surface === item.id ? 'page' : undefined}
+            data-surface={item.id}
+            onClick={() => setSurface(item.id)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </nav>
       <div className="workspace">
         <aside className="side side-left">
           <ResizableLeftRail
@@ -106,7 +129,7 @@ export function EditorShell({ session }: { session: EditorSession }) {
                 surface={surface}
                 onOpenAsset={(id) => {
                   session.openAsset(id);
-                  setSurface('properties');
+                  if (isDesignDomain(surface)) setSurface('editor');
                 }}
                 onOpenDesignDomain={(domain) => setSurface(domain)}
               />
@@ -116,6 +139,10 @@ export function EditorShell({ session }: { session: EditorSession }) {
         </aside>
         {isDesignDomain(surface) ? (
           <DesignDomainStage session={session} snap={snap} domain={surface} />
+        ) : surface === 'schema' ? (
+          <SchemaStage session={session} snap={snap} />
+        ) : surface === 'preview' ? (
+          <PreviewDataStage session={session} snap={snap} />
         ) : (
           <StageCanvas
             session={session}
@@ -130,9 +157,11 @@ export function EditorShell({ session }: { session: EditorSession }) {
             tool={snap.tool}
           />
         )}
-        <ResizableInspector>
-          <RightRail session={session} snap={snap} surface={surface} />
-        </ResizableInspector>
+        {surface === 'schema' || surface === 'preview' ? null : (
+          <ResizableInspector>
+            <RightRail session={session} snap={snap} surface={surface} />
+          </ResizableInspector>
+        )}
       </div>
     </div>
   );
@@ -148,7 +177,7 @@ function replaceSurface(
   surface: EditorSurface,
 ) {
   const params = new URLSearchParams(searchParams.toString());
-  if (surface === 'properties') params.delete(SURFACE_PARAM);
+  if (surface === 'editor') params.delete(SURFACE_PARAM);
   else params.set(SURFACE_PARAM, surface);
   const query = params.toString();
   router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });

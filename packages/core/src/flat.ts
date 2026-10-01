@@ -12,12 +12,14 @@ import type {
   Expose,
   FieldDefinition,
   FieldValue,
+  PreviewData,
   Layout,
   NestedNode,
   StyleBlock,
   TokenInterface,
   VariantAxis,
   VariantPreset,
+  VariantRule,
   Repeat,
 } from './schema.js';
 import { isVariantAxis, isVariantPreset } from './schema.js';
@@ -64,6 +66,7 @@ export interface InstanceNode {
   fields?: Record<string, FieldValue>;
   fieldBindings?: Record<string, string>;
   variants?: Record<string, string>;
+  variantRules?: VariantRule[];
   expose?: Expose;
 }
 
@@ -78,6 +81,8 @@ export interface FlatDocument {
   group?: string;
   rootId: string;
   fields: FieldDefinition[];
+  previewData?: PreviewData;
+  variantLabels?: Record<string, string>;
   events?: EventDefinition[];
   expose?: Expose;
   variants: VariantAxis[];
@@ -105,6 +110,8 @@ export function toFlat(file: DocumentFile): FlatDocument {
     ...(file.group ? { group: file.group } : {}),
     rootId,
     fields: file.fields ?? [],
+    ...(file.previewData ? { previewData: structuredClone(file.previewData) } : {}),
+    ...(file.variantLabels ? { variantLabels: { ...file.variantLabels } } : {}),
     events: file.events ?? [],
     ...(file.expose ? { expose: cloneExpose(file.expose) } : {}),
     variants: (file.variants ?? []).filter(isVariantAxis),
@@ -132,6 +139,8 @@ export function toNested(doc: FlatDocument): DocumentFile {
   };
   if (doc.group) file.group = doc.group;
   if (doc.fields.length) file.fields = doc.fields;
+  if (doc.previewData) file.previewData = structuredClone(doc.previewData);
+  if (doc.variantLabels) file.variantLabels = { ...doc.variantLabels };
   if (doc.events?.length) file.events = doc.events;
   if (doc.expose) file.expose = cloneExpose(doc.expose);
   const variants = [...doc.variants, ...(doc.variantPresets ?? [])];
@@ -184,6 +193,8 @@ export function canonicalizeFlat(doc: FlatDocument): FlatDocument {
     ...(doc.group ? { group: doc.group } : {}),
     rootId: doc.rootId,
     fields: doc.fields.map(cloneField),
+    ...(doc.previewData ? { previewData: structuredClone(doc.previewData) } : {}),
+    ...(doc.variantLabels ? { variantLabels: { ...doc.variantLabels } } : {}),
     ...(doc.events?.length ? { events: doc.events.map(cloneEvent) } : {}),
     ...(doc.expose ? { expose: cloneExpose(doc.expose) } : {}),
     variants: doc.variants.map(cloneVariant),
@@ -246,6 +257,7 @@ export function flattenSubtree(
     ...(node.fields ? { fields: node.fields } : {}),
     ...(node.fieldBindings ? { fieldBindings: { ...node.fieldBindings } } : {}),
     ...(node.variants ? { variants: node.variants } : {}),
+    ...(node.variantRules?.length ? { variantRules: structuredClone(node.variantRules) } : {}),
     ...(node.expose ? { expose: cloneExpose(node.expose) } : {}),
   });
   return node.id;
@@ -266,6 +278,7 @@ export function makeFlatNode(node: FlatNode): FlatNode {
       ...(fields ? { fields } : {}),
       ...(node.fieldBindings ? { fieldBindings: { ...node.fieldBindings } } : {}),
       ...(variants ? { variants } : {}),
+      ...(node.variantRules?.length ? { variantRules: structuredClone(node.variantRules) } : {}),
       ...(node.expose ? { expose: cloneExpose(node.expose) } : {}),
     };
   }
@@ -367,6 +380,7 @@ function expandNode(doc: FlatDocument, id: string, stack: Set<string>): NestedNo
       ...(node.fields ? { fields: { ...node.fields } } : {}),
       ...(node.fieldBindings ? { fieldBindings: { ...node.fieldBindings } } : {}),
       ...(node.variants ? { variants: { ...node.variants } } : {}),
+      ...(node.variantRules?.length ? { variantRules: structuredClone(node.variantRules) } : {}),
       ...(node.expose ? { expose: cloneExpose(node.expose) } : {}),
     };
   }
@@ -469,7 +483,11 @@ function cloneBinding(binding: Binding): Binding {
 }
 
 function cloneEventBindings(bindings: EventBinding[]): EventBinding[] {
-  return bindings.map((binding) => ({ event: binding.event, name: binding.name }));
+  return bindings.map((binding) => ({
+    event: binding.event,
+    name: binding.name,
+    ...(binding.payload ? { payload: { ...binding.payload } } : {}),
+  }));
 }
 
 function cloneField(field: FieldDefinition): FieldDefinition {

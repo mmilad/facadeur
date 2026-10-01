@@ -387,6 +387,106 @@ body.is-resizing-inspector {
   cursor: pointer;
 }
 
+.asset-entry {
+  min-width: 0;
+}
+
+.asset-row {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+}
+
+.asset-row > .asset {
+  flex: 1;
+  min-width: 0;
+}
+
+.asset-variants-toggle {
+  flex: none;
+  width: 24px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.asset-variants-toggle:hover {
+  background: rgba(28, 25, 21, 0.06);
+}
+
+.asset-context-menu {
+  margin: 0 8px 3px 22px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--white);
+  box-shadow: 0 4px 14px rgba(28, 25, 21, 0.12);
+}
+
+.asset-context-menu button {
+  width: 100%;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  padding: 5px 7px;
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.asset-context-menu button:hover {
+  background: rgba(28, 25, 21, 0.06);
+}
+
+.asset-variants {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 0 3px 22px;
+  border-left: 1px solid var(--line);
+  padding-left: 7px;
+}
+
+.asset-variant {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.asset-variant > button {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  padding: 4px 6px;
+  text-align: left;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.asset-variant > button:hover,
+.asset-variant.is-active > button {
+  background: #f3e6dc;
+  color: var(--ink);
+}
+
+.asset-variant > input,
+.variant-tab-entry > input {
+  width: 78px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--white);
+  padding: 3px 4px;
+  color: var(--ink);
+  font-size: 10px;
+}
+
 .asset:hover,
 .layer:hover {
   background: rgba(28, 25, 21, 0.04);
@@ -658,6 +758,13 @@ body.is-resizing-inspector {
   gap: 3px;
   overflow-x: auto;
   padding: 0 8px 0 0;
+}
+
+.variant-tab-entry {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex: none;
 }
 
 .variant-tab {

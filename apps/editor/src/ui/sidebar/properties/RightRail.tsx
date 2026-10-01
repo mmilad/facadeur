@@ -13,7 +13,7 @@ export function RightRail({
   snap: EditorSnapshot;
   surface: EditorSurface;
 }) {
-  const showViewportBar = !snap.selectedViewportId && surface === 'properties';
+  const showViewportBar = !snap.selectedViewportId && surface === 'editor';
   return (
     <section className="side-block side-block-grow inspector eu-form" aria-label="Inspector">
       {showViewportBar ? <ViewportEditBar session={session} snap={snap} /> : null}

@@ -6,6 +6,7 @@ import {
   type Layout,
   type StyleBlock,
   type TokenInterface,
+  type PreviewData,
 } from '@facadeur/core';
 import type {
   Binding,
@@ -25,6 +26,7 @@ import type {
   Repeat,
   VariantAxis,
   VariantPreset,
+  VariantRule,
 } from '@facadeur/core';
 import { isPlainObject } from '@facadeur/core';
 import * as Y from 'yjs';
@@ -36,7 +38,10 @@ export function patchDocument(doc: Y.Doc, next: FlatDocument): void {
   syncFields(doc.getArray<Y.Map<unknown>>('fields'), next.fields);
   syncEvents(doc.getArray<Y.Map<unknown>>('events'), next.events ?? []);
   syncVariants(doc.getArray<Y.Map<unknown>>('variants'), next.variants);
-  syncJsonArray(doc.getArray<unknown>('variantPresets'), (next.variantPresets ?? []) as unknown as JsonValue[]);
+  syncJsonArray(
+    doc.getArray<unknown>('variantPresets'),
+    (next.variantPresets ?? []) as unknown as JsonValue[],
+  );
   syncNodes(doc.getMap<Y.Map<unknown>>('nodes'), next);
   syncJsonObject(doc.getMap('tokens'), next.tokens);
   syncFonts(doc.getMap('fonts'), next.fonts);
@@ -47,6 +52,8 @@ export function patchDocument(doc: Y.Doc, next: FlatDocument): void {
     (next.tokenInterface ?? {}) as Record<string, JsonValue>,
   );
   syncJsonObject(doc.getMap('expose'), (next.expose ?? {}) as Record<string, JsonValue>);
+  syncJsonObject(doc.getMap('previewData'), (next.previewData ?? {}) as Record<string, JsonValue>);
+  syncJsonObject(doc.getMap('variantLabels'), next.variantLabels ?? {});
 }
 
 export function readDocument(doc: Y.Doc): FlatDocument {
@@ -75,6 +82,10 @@ export function readDocument(doc: Y.Doc): FlatDocument {
     ...readStyleBlock(doc.getMap('styles')),
     ...readTokenInterface(doc.getMap('tokenInterface')),
     ...readExpose(doc.getMap('expose')),
+    ...readPreviewData(doc.getMap('previewData')),
+    ...(Object.keys(readJsonObject(doc.getMap('variantLabels'))).length
+      ? { variantLabels: readJsonObject(doc.getMap('variantLabels')) as Record<string, string> }
+      : {}),
     nodes,
   };
 }
@@ -93,6 +104,8 @@ export function ensureDocumentMaps(doc: Y.Doc): void {
   doc.getMap('styles');
   doc.getMap('tokenInterface');
   doc.getMap('expose');
+  doc.getMap('previewData');
+  doc.getMap('variantLabels');
 }
 
 function syncMeta(meta: Y.Map<unknown>, doc: FlatDocument): void {
@@ -182,8 +195,7 @@ function syncEvents(list: Y.Array<Y.Map<unknown>>, events: EventDefinition[]): v
     syncScalar(map, 'name', event.name);
     if (event.payload) {
       syncJsonObject(ensureMap(map, 'payload'), event.payload as Record<string, JsonValue>);
-    }
-    else if (map.has('payload')) map.delete('payload');
+    } else if (map.has('payload')) map.delete('payload');
     return map;
   });
   reconcile(list, desired);
@@ -249,6 +261,12 @@ function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
     syncValueMap(map, 'fields', node.fields);
     syncStringMap(map, 'fieldBindings', node.fieldBindings);
     syncStringMap(map, 'variants', node.variants);
+    if (node.variantRules?.length)
+      syncJsonArray(
+        ensureArray<unknown>(map, 'variantRules'),
+        node.variantRules as unknown as JsonValue[],
+      );
+    else map.delete('variantRules');
     syncJsonObject(ensureMap(map, 'expose'), (node.expose ?? {}) as Record<string, JsonValue>);
     for (const key of [
       'tag',
@@ -261,7 +279,6 @@ function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
       'children',
       'eventBindings',
       'repeat',
-      'fieldBindings',
     ]) {
       if (map.has(key)) map.delete(key);
     }
@@ -276,7 +293,14 @@ function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
   syncBindings(map, node.bindings);
   syncEventBindings(map, node.eventBindings);
   syncStringMap(map, 'style', node.style);
-  for (const key of ['component', 'fields', 'variants', 'expose']) {
+  for (const key of [
+    'component',
+    'fields',
+    'fieldBindings',
+    'variants',
+    'variantRules',
+    'expose',
+  ]) {
     if (map.has(key)) map.delete(key);
   }
   if (node.type === 'frame') {
@@ -314,6 +338,9 @@ function readNode(map: Y.Map<unknown>): FlatNode {
       ...(fields ? { fields } : {}),
       ...(fieldBindings ? { fieldBindings } : {}),
       ...(variants ? { variants } : {}),
+      ...(readJsonArray(map.get('variantRules')).length
+        ? { variantRules: readJsonArray(map.get('variantRules')) as unknown as VariantRule[] }
+        : {}),
       ...(expose ? { expose } : {}),
     });
   }
@@ -384,7 +411,9 @@ function readEvents(list: Y.Array<Y.Map<unknown>>): EventDefinition[] {
     const payload = map.get('payload');
     return {
       name: stringValue(map.get('name')),
-      ...(payload instanceof Y.Map ? { payload: readJsonObject(payload) as EventDefinition['payload'] } : {}),
+      ...(payload instanceof Y.Map
+        ? { payload: readJsonObject(payload) as EventDefinition['payload'] }
+        : {}),
     };
   });
 }
@@ -620,6 +649,11 @@ function readExpose(map: Y.Map<unknown>): { expose?: Expose } {
   return { expose: value as unknown as Expose };
 }
 
+function readPreviewData(map: Y.Map<unknown>): { previewData?: PreviewData } {
+  const value = readJsonObject(map);
+  return Object.keys(value).length ? { previewData: value as PreviewData } : {};
+}
+
 function syncStringMap(
   parent: Y.Map<unknown>,
   key: string,
@@ -707,6 +741,7 @@ function syncEventBindings(map: Y.Map<unknown>, bindings: EventBinding[] | undef
     }
     syncScalar(item, 'event', binding.event);
     syncScalar(item, 'name', binding.name);
+    syncStringMap(item, 'payload', binding.payload);
   }
 }
 
@@ -717,7 +752,10 @@ function readEventBindings(value: unknown): EventBinding[] | undefined {
     if (!(item instanceof Y.Map)) continue;
     const event = item.get('event');
     const name = item.get('name');
-    if (typeof event === 'string' && typeof name === 'string') bindings.push({ event, name });
+    if (typeof event === 'string' && typeof name === 'string') {
+      const payload = readStringMap(item.get('payload')) as EventBinding['payload'];
+      bindings.push({ event, name, ...(payload ? { payload } : {}) });
+    }
   }
   return bindings.length ? bindings : undefined;
 }

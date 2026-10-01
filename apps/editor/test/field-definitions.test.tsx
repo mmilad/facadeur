@@ -32,8 +32,7 @@ describe('field definition editor', () => {
     });
   });
 
-  it('can clear a boolean default instead of forcing false', async () => {
-    const user = userEvent.setup();
+  it('keeps preview defaults out of the shared field definition editor', async () => {
     const onDefineField = vi.fn();
     render(
       <FieldsEditorControl
@@ -43,10 +42,29 @@ describe('field definition editor', () => {
       />,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Enabled' }));
-    await user.click(screen.getByRole('button', { name: 'Clear default' }));
+    expect(screen.queryByRole('button', { name: 'Clear default' })).toBeNull();
+    expect(screen.queryByRole('switch', { name: 'On' })).toBeNull();
+    expect(onDefineField).not.toHaveBeenCalled();
+  });
 
-    expect(onDefineField).toHaveBeenCalledWith({ name: 'enabled', type: 'boolean' });
+  it('creates a field contract without a runtime default', async () => {
+    const user = userEvent.setup();
+    const onDefineField = vi.fn();
+    render(
+      <FieldsEditorControl
+        fields={[]}
+        onDefineField={onDefineField}
+        onRemoveField={() => undefined}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Add field' }));
+    const nameInput = document.querySelector<HTMLInputElement>('input[name="new-field-name"]');
+    expect(nameInput).not.toBeNull();
+    await user.type(nameInput!, 'label');
+    await user.click(screen.getByRole('button', { name: 'Add field' }));
+
+    expect(onDefineField).toHaveBeenCalledWith({ name: 'label', type: 'text' });
   });
 
   it('authors nested fields for an array of objects', async () => {

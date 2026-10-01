@@ -480,6 +480,14 @@ function deriveNodeOverride(
       base.id,
     );
     if (variants) override.variants = variants as Record<string, string>;
+    assignObject(
+      override,
+      'variantRules',
+      base.variantRules,
+      editedInstance.variantRules,
+      variantName,
+      base.id,
+    );
     const layout = objectDelta(
       override,
       'layout',
@@ -765,6 +773,7 @@ function applyOverride(node: NestedNode, override: VariantNodeOverride): NestedN
       next.fieldBindings = { ...(next.fieldBindings ?? {}), ...override.fieldBindings };
     }
     if (override.variants) next.variants = { ...(next.variants ?? {}), ...override.variants };
+    if (override.variantRules) next.variantRules = structuredClone(override.variantRules);
     if (override.displayOn) next.displayOn = structuredClone(override.displayOn);
     applyUnset(next, override.unset);
     return next;
@@ -844,5 +853,6 @@ function applyUnset(node: NestedNode, paths: readonly string[] | undefined): voi
     else if (property === 'bindings' && node.type !== 'instance') delete node.bindings;
     else if (property === 'eventBindings' && node.type !== 'instance') delete node.eventBindings;
     else if (property === 'displayOn') delete node.displayOn;
+    else if (property === 'variantRules' && node.type === 'instance') delete node.variantRules;
   }
 }

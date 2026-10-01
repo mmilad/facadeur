@@ -174,6 +174,33 @@ export function validateDefinitions(doc: FlatDocument): void {
       assertValueMatches(field, value);
     }
   }
+  const presetNames = new Set((doc.variantPresets ?? []).map((preset) => preset.name));
+  for (const [name, label] of Object.entries(doc.variantLabels ?? {})) {
+    if (name !== 'default' && !presetNames.has(name)) {
+      throw new DocumentError(
+        'unknown-variant',
+        `Display name refers to unknown variant "${name}"`,
+      );
+    }
+    if (typeof label !== 'string' || !label.trim()) {
+      throw new DocumentError('schema', 'Variant display names cannot be empty');
+    }
+  }
+  const assertPreviewValues = (values: Record<string, FieldValue>) => {
+    for (const [name, value] of Object.entries(values)) {
+      const field = doc.fields.find((candidate) => candidate.name === name);
+      if (!field)
+        throw new DocumentError('unknown-field', `Preview refers to unknown field "${name}"`);
+      assertValueMatches(field, value);
+    }
+  };
+  if (doc.previewData?.fields) assertPreviewValues(doc.previewData.fields);
+  for (const [name, values] of Object.entries(doc.previewData?.variants ?? {})) {
+    if (!presetNames.has(name)) {
+      throw new DocumentError('unknown-variant', `Preview refers to unknown variant "${name}"`);
+    }
+    assertPreviewValues(values);
+  }
   for (const node of Object.values(doc.nodes)) {
     if (node.type === 'instance') continue;
     for (const binding of node.bindings ?? []) {
@@ -197,6 +224,14 @@ export function validateDefinitions(doc: FlatDocument): void {
         throw new DocumentError('schema', `Event binding "${binding.event}" needs a native event`);
       }
       const event = events.find((entry) => entry.name === binding.event);
+      for (const [key, source] of Object.entries(binding.payload ?? {})) {
+        const type = event?.payload?.[key];
+        const expected =
+          type === 'boolean' ? 'checked' : type === 'number' ? 'valueAsNumber' : 'value';
+        if (!type || source !== expected) {
+          throw new DocumentError('schema', `Event payload "${key}" cannot read "${source}"`);
+        }
+      }
       if (event && Object.values(event.payload ?? {}).some(isStructuredFieldType)) {
         throw new DocumentError(
           'schema',
@@ -335,6 +370,20 @@ function validateDataContracts(doc: FlatDocument, catalog: Map<string, DocumentF
 
     if (node.type === 'instance') {
       const target = catalog.get(node.component);
+      for (const rule of node.variantRules ?? []) {
+        const source = assertDataPath(rule.when.path, scope, `variant rule on node "${node.id}"`);
+        assertDisplayCondition(rule.when, source, `variant rule on node "${node.id}"`);
+        if (
+          rule.variant !== 'default' &&
+          target &&
+          !variantPresets(target).some((preset) => preset.name === rule.variant)
+        ) {
+          throw new DocumentError(
+            'unknown-variant',
+            `Rule on "${node.id}" refers to unknown variant "${rule.variant}"`,
+          );
+        }
+      }
       const targetFields = target ? exposedFields(target, catalog) : undefined;
       for (const [field, path] of Object.entries(node.fieldBindings ?? {})) {
         const source = assertDataPath(path, scope, `field binding "${field}" on node "${node.id}"`);
@@ -411,6 +460,9 @@ function validateVariantContracts(
     const resolved = toFlat(resolvedFile);
     const validationDoc: FlatDocument = { ...resolved, variants: [] };
     delete validationDoc.variantPresets;
+    // Editor metadata is validated on the source, whose preset identifiers exist.
+    delete validationDoc.variantLabels;
+    delete validationDoc.previewData;
     validateDefinitions(validationDoc);
     validateLibraries(validationDoc);
     validateTree(validationDoc, {
@@ -755,6 +807,7 @@ function assertVariantUnsetPaths(
     'layout',
     'bindings',
     'eventBindings',
+    'variantRules',
     'displayOn',
   ]);
   const configured = new Set(Object.keys(node).filter((key) => key !== 'unset'));
@@ -962,7 +1015,7 @@ function validateInstanceOverrides(doc: FlatDocument, catalog: Map<string, Docum
     const namedPresets = presets.filter((preset) => preset.name !== 'default');
     for (const [name, value] of Object.entries(node.variants ?? {})) {
       if (name === 'variant' && namedPresets.length > 0) {
-        if (!namedPresets.some((preset) => preset.name === value)) {
+        if (value !== 'default' && !namedPresets.some((preset) => preset.name === value)) {
           throw new DocumentError(
             'unknown-variant',
             `Instance "${node.id}" uses "${value}" for variant on "${node.component}", expected ${namedPresets.map((preset) => preset.name).join(', ')}`,
@@ -1097,6 +1150,12 @@ function assertNodeData(node: FlatNode): void {
     }
   }
   if (node.type === 'instance' && node.expose) assertExpose(node.expose);
+  if (node.type === 'instance') {
+    for (const rule of node.variantRules ?? []) {
+      assertDisplayOn(rule.when);
+      if (!ID_PATTERN.test(rule.variant)) throw new DocumentError('schema', 'Invalid rule variant');
+    }
+  }
   if (node.type === 'instance' && node.fields) {
     for (const value of Object.values(node.fields)) {
       if (typeof value === 'number' && !Number.isFinite(value)) {
