@@ -1,0 +1,46 @@
+import type { DocumentFile, DocumentStore, FieldValue, NestedNode } from '@facadeur/core';
+
+export interface RenderedNode {
+  id: string;
+  nodeType: NestedNode['type'];
+  tag: string;
+  name: string | null;
+  text: string | null;
+  attributes: Record<string, string>;
+  component: string | null;
+  fields: Record<string, FieldValue> | null;
+  variants: Record<string, string> | null;
+  ownerId: string | null;
+}
+
+export interface RenderContext {
+  catalog: Map<string, DocumentFile>;
+  records: Map<string, RenderedNode>;
+  path: string | null;
+  scope: Record<string, FieldValue>;
+  ownerId: string | null;
+  depth: number;
+  /** Document whose root children are the canvas. Used to resolve instance paths. */
+  canvasId: string | null;
+  /** Resolved canvas document for preview-only mounted variants. */
+  canvasDocument: DocumentFile | null;
+  /** Optional editor-only preparation of instance documents after variant resolution. */
+  prepareInstanceDocument?: (document: DocumentFile, variant: string | undefined) => DocumentFile;
+}
+
+export interface DocumentStyles {
+  setDocument(
+    document: DocumentFile,
+    options?: { address?: 'instance' | 'canvas'; paintRoot?: boolean },
+  ): void;
+  removeDocument?(id: string): void;
+}
+
+export interface DomRenderer {
+  readonly records: Map<string, RenderedNode>;
+  /** Paint `document` into the parent. Root frame children are the canvas contents. */
+  mount(document: DocumentFile): Map<string, RenderedNode>;
+  /** Keep this parent in sync with one store. Style changes do not rebuild elements. */
+  connect(store: DocumentStore): () => void;
+  destroy(): void;
+}

@@ -20,6 +20,74 @@ const section: DocumentFile = {
 };
 
 describe('viewport board', () => {
+  it('applies section layout styles and live edits when painting its root', () => {
+    const source: DocumentFile = {
+      ...section,
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'cards',
+            type: 'frame',
+            layout: {
+              direction: 'column',
+              breakpoints: { desktop: { direction: 'row' } },
+            },
+            children: [
+              { id: 'notes', type: 'text', text: 'Field notes' },
+              { id: 'signin', type: 'text', text: 'Sign in' },
+            ],
+          },
+        ],
+      },
+    };
+    const store = createDocumentStore(source);
+    const parent = document.createElement('div');
+    document.body.append(parent);
+    const board = createViewportBoard({
+      parent,
+      documents: [source],
+      page: source,
+      stores: [store],
+      paintRoot: true,
+      design: {},
+    });
+
+    for (const frame of board.frames()) {
+      const doc = frame.host.contentDocument();
+      const cards = doc.querySelector<HTMLElement>('[data-node="cards"]')!;
+      expect(doc.querySelector('[data-component="sheet"]')).not.toBeNull();
+      expect(doc.defaultView!.getComputedStyle(cards).display).toBe('flex');
+      expect(doc.defaultView!.getComputedStyle(cards).flexDirection).toBe('column');
+      expect(
+        [...frame.styles.controller.sheet.cssRules].map((rule) => rule.cssText).join('\n'),
+      ).toContain('flex-direction: row');
+    }
+
+    store.execute({
+      type: 'setProp',
+      nodeId: 'cards',
+      prop: 'layout',
+      value: { direction: 'row', breakpoints: { desktop: { direction: 'row' } } },
+    });
+    for (const frame of board.frames()) {
+      const doc = frame.host.contentDocument();
+      const cards = doc.querySelector<HTMLElement>('[data-node="cards"]')!;
+      expect(doc.defaultView!.getComputedStyle(cards).display).toBe('flex');
+      const rule = [...frame.styles.controller.sheet.cssRules].find(
+        (candidate) =>
+          candidate instanceof doc.defaultView!.CSSStyleRule &&
+          cards.matches(candidate.selectorText),
+      ) as CSSStyleRule | undefined;
+      expect(rule?.style.getPropertyValue('flex-direction')).toBe('row');
+    }
+
+    board.destroy();
+    store.destroy();
+    parent.remove();
+  });
+
   it('gives each breakpoint its own iframe, renderer, and style engine on one store', async () => {
     const store = createDocumentStore(section);
     const parent = document.createElement('div');

@@ -1,114 +1,39 @@
-import type {
-  Binding,
-  DocumentChange,
-  DocumentFile,
-  DocumentStore,
-  DisplayOn,
-  FieldDefinition,
-  FieldValue,
-  NestedNode,
-} from '@facadeur/core';
-import { isVariantAxis, resolveVariantDocument, toNested, variantPresets } from '@facadeur/core';
+import type { DocumentFile, NestedNode } from '@facadeur/core';
+import { toNested } from '@facadeur/core';
+import { createRenderContext } from './context.js';
+import {
+  cssString,
+  definitionForInstance,
+  hasFixedBox,
+  isStyleOnly,
+  joinId,
+  matchesDisplay,
+  MAX_DEPTH,
+  repeatKeySegment,
+  resolveFieldBindings,
+  resolveFields,
+  resolveInstance,
+  resolvePath,
+  resolveVariants,
+  selectedVariantForInstance,
+  tagFor,
+} from './resolve.js';
+import {
+  applyAttributes,
+  applyBindings,
+  applyImage,
+  clearPresentation,
+  elementFor,
+  isHtmlElement,
+  isNativeControlElement,
+  readAttributes,
+  syncLeadText,
+  syncVariants,
+} from './presentation.js';
+import type { DocumentStyles, DomRenderer, RenderContext, RenderedNode } from './types.js';
 
-export interface RenderedNode {
-  id: string;
-  nodeType: NestedNode['type'];
-  tag: string;
-  name: string | null;
-  text: string | null;
-  attributes: Record<string, string>;
-  component: string | null;
-  fields: Record<string, FieldValue> | null;
-  variants: Record<string, string> | null;
-  ownerId: string | null;
-}
-
-export interface RenderContext {
-  catalog: Map<string, DocumentFile>;
-  records: Map<string, RenderedNode>;
-  path: string | null;
-  scope: Record<string, FieldValue>;
-  ownerId: string | null;
-  depth: number;
-  /** Document whose root children are the canvas. Used to resolve instance paths. */
-  canvasId: string | null;
-  /** Resolved canvas document for preview-only mounted variants. */
-  canvasDocument: DocumentFile | null;
-  /** Optional editor-only preparation of instance documents after variant resolution. */
-  prepareInstanceDocument?: (document: DocumentFile, variant: string | undefined) => DocumentFile;
-}
-
-export interface DocumentStyles {
-  setDocument(
-    document: DocumentFile,
-    options?: { address?: 'instance' | 'canvas'; paintRoot?: boolean },
-  ): void;
-  removeDocument?(id: string): void;
-}
-
-export interface DomRenderer {
-  readonly records: Map<string, RenderedNode>;
-  /** Paint `document` into the parent. Root frame children are the canvas contents. */
-  mount(document: DocumentFile): Map<string, RenderedNode>;
-  /** Keep this parent in sync with one store. Style changes do not rebuild elements. */
-  connect(store: DocumentStore): () => void;
-  destroy(): void;
-}
-
-const EVENT_ATTRIBUTE = /^on/i;
-const BOOLEAN_ATTRIBUTES = new Set([
-  'allowfullscreen',
-  'async',
-  'autofocus',
-  'autoplay',
-  'checked',
-  'controls',
-  'default',
-  'defer',
-  'disabled',
-  'formnovalidate',
-  'hidden',
-  'itemscope',
-  'loop',
-  'multiple',
-  'muted',
-  'novalidate',
-  'open',
-  'playsinline',
-  'readonly',
-  'required',
-  'reversed',
-  'selected',
-]);
-const MAX_DEPTH = 32;
-
-function isNativeControlElement(element: Element): boolean {
-  const tag = element.tagName.toLowerCase();
-  return tag === 'input' || tag === 'select' || tag === 'textarea';
-}
-
-function hasFixedBox(node: NestedNode): boolean {
-  return (
-    node.type === 'frame' &&
-    node.layout?.width?.mode === 'fixed' &&
-    node.layout?.height?.mode === 'fixed'
-  );
-}
-
-export function createRenderContext(documents: readonly DocumentFile[]): RenderContext {
-  const catalog = new Map<string, DocumentFile>();
-  for (const document of documents) catalog.set(document.id, document);
-  return {
-    catalog,
-    records: new Map(),
-    path: null,
-    scope: {},
-    ownerId: null,
-    depth: 0,
-    canvasId: null,
-    canvasDocument: null,
-  };
-}
+export type { DocumentStyles, DomRenderer, RenderContext, RenderedNode } from './types.js';
+export { createRenderContext } from './context.js';
 
 /**
  * Paint a document's root children into `parent`.
@@ -243,7 +168,10 @@ function paintCanvas(
     return;
   }
   reconcileChildren(parent, [document.root], ctx);
-  if (paintRoot && (document.kind === 'atom' || document.kind === 'component')) {
+  if (
+    paintRoot &&
+    (document.kind === 'atom' || document.kind === 'component' || document.kind === 'section')
+  ) {
     const root = parent.firstElementChild;
     if (isHtmlElement(root) && root.dataset.id === document.root.id) {
       root.dataset.component = document.id;
@@ -277,143 +205,9 @@ function repaintComponent(parent: HTMLElement, componentId: string, ctx: RenderC
   }
 }
 
-function resolveInstance(
-  renderedId: string,
-  ctx: RenderContext,
-): {
-  instance: Extract<NestedNode, { type: 'instance' }>;
-  path: string | null;
-  scope: Record<string, FieldValue>;
-  ownerId: string | null;
-  depth: number;
-} | null {
-  const parts = renderedId.split('/');
-  const rootId = parts[0];
-  if (!rootId) return null;
-  const canvasNode = findCanvasChild(ctx, rootId);
-  if (!canvasNode) return null;
-  return walkRendered(canvasNode, parts, 0, ctx, {
-    path: null,
-    scope: ctx.scope,
-    ownerId: null,
-    depth: 0,
-  });
-}
-
-function walkRendered(
-  node: NestedNode,
-  parts: string[],
-  index: number,
-  ctx: RenderContext,
-  parent: {
-    path: string | null;
-    scope: Record<string, FieldValue>;
-    ownerId: string | null;
-    depth: number;
-  },
-): {
-  instance: Extract<NestedNode, { type: 'instance' }>;
-  path: string | null;
-  scope: Record<string, FieldValue>;
-  ownerId: string | null;
-  depth: number;
-} | null {
-  if (node.id !== parts[index]) return null;
-  const last = index === parts.length - 1;
-  if (node.type === 'instance') {
-    if (last) return { instance: node, ...parent };
-    const definition = definitionForInstance(node, ctx);
-    if (!definition || definition.root.type !== 'frame') return null;
-    const path = joinId(parent.path, node.id);
-    const scope = resolveFields(definition.fields, {
-      ...(node.fields ?? {}),
-      ...resolveFieldBindings(node.fieldBindings, parent.scope),
-    });
-    const root = definition.root;
-    const repeated = root.repeat ? repeatedItem(root.repeat, scope, parts[index + 1]) : undefined;
-    const childIndex = root.repeat ? index + 2 : index + 1;
-    const nextId = parts[childIndex];
-    const child = (root.children ?? []).find((entry) => entry.id === nextId);
-    if (!child || (root.repeat && !repeated)) return null;
-    return walkRendered(child, parts, childIndex, ctx, {
-      path: repeated ? joinId(path, repeated.key) : path,
-      scope: repeated?.scope ?? scope,
-      ownerId: path,
-      depth: parent.depth + 1,
-    });
-  }
-  if (node.type !== 'frame' || last) return null;
-  const path = joinId(parent.path, node.id);
-  const repeated = node.repeat
-    ? repeatedItem(node.repeat, parent.scope, parts[index + 1])
-    : undefined;
-  const childIndex = node.repeat ? index + 2 : index + 1;
-  const nextId = parts[childIndex];
-  const child = (node.children ?? []).find((entry) => entry.id === nextId);
-  if (!child || (node.repeat && !repeated)) return null;
-  return walkRendered(child, parts, childIndex, ctx, {
-    ...parent,
-    path: repeated ? joinId(path, repeated.key) : path,
-    scope: repeated?.scope ?? parent.scope,
-  });
-}
-
-function repeatedItem(
-  repeat: NonNullable<Extract<NestedNode, { type: 'frame' }>['repeat']>,
-  scope: Record<string, FieldValue>,
-  segment: string | undefined,
-): { key: string; scope: Record<string, FieldValue> } | undefined {
-  if (segment === undefined) return undefined;
-  const source = resolvePath(scope, repeat.path);
-  if (!Array.isArray(source)) return undefined;
-  const itemName = repeat.as ?? 'item';
-  for (const [index, item] of source.entries()) {
-    const rawKey = repeat.key ? resolvePath(item, repeat.key) : index;
-    const key = repeatKeySegment(rawKey, index);
-    if (key === segment) {
-      return { key, scope: { ...scope, [itemName]: item } };
-    }
-  }
-  return undefined;
-}
-
-function findCanvasChild(ctx: RenderContext, id: string): NestedNode | undefined {
-  const document = ctx.canvasDocument ?? (ctx.canvasId ? ctx.catalog.get(ctx.canvasId) : undefined);
-  const documents = document ? [document] : [...ctx.catalog.values()];
-  for (const entry of documents) {
-    if (entry.root.id === id) return entry.root;
-    if (entry.root.type !== 'frame') {
-      continue;
-    }
-    const child = (entry.root.children ?? []).find((node) => node.id === id);
-    if (child) return child;
-  }
-  return undefined;
-}
-
 function paint(el: HTMLElement, node: NestedNode, ctx: RenderContext): void {
   if (node.type === 'instance') paintInstance(el, node, ctx);
   else paintElement(el, node, ctx);
-}
-
-function definitionForInstance(
-  node: Extract<NestedNode, { type: 'instance' }>,
-  ctx: RenderContext,
-): DocumentFile | undefined {
-  const base = ctx.catalog.get(node.component);
-  if (!base) return undefined;
-  const hasNamedVariants = variantPresets(base).some((variant) => variant.name !== 'default');
-  const selected = hasNamedVariants ? selectedVariantForInstance(node, ctx) : undefined;
-  const resolved = selected ? resolveVariantDocument(base, selected) : base;
-  return ctx.prepareInstanceDocument?.(resolved, selected) ?? resolved;
-}
-
-function selectedVariantForInstance(
-  node: Extract<NestedNode, { type: 'instance' }>,
-  ctx: RenderContext,
-): string | undefined {
-  if (node.variants?.variant !== undefined) return node.variants.variant;
-  return node.variantRules?.find((rule) => matchesDisplay(rule.when, ctx.scope))?.variant;
 }
 
 function paintInstance(
@@ -655,230 +449,8 @@ function reconcileRepeatedChildren(
   for (const el of next) parent.append(el);
 }
 
-function tagFor(node: NestedNode, ctx: RenderContext): string {
-  if (node.type !== 'instance') {
-    return node.tag ?? (node.type === 'text' ? 'span' : node.type === 'image' ? 'img' : 'div');
-  }
-  const definition = definitionForInstance(node, ctx);
-  if (!definition || ctx.depth >= MAX_DEPTH || definition.root.type === 'instance') return 'div';
-  return definition.root.tag ?? 'div';
-}
-
-/**
- * Elements are born in the parent's document so an iframe renderer stays inside that frame.
- * `instanceof HTMLElement` is false for those nodes in the parent realm, so checks use nodeType.
- */
-function elementFor(tag: string, owner: Document): HTMLElement {
-  return owner.createElement(tag);
-}
-
-function isHtmlElement(value: unknown): value is HTMLElement {
-  return isNode(value) && value.nodeType === Node.ELEMENT_NODE && 'dataset' in value;
-}
-
-function isNode(value: unknown): value is Node {
-  return typeof value === 'object' && value !== null && 'nodeType' in value;
-}
-
-function syncLeadText(parent: HTMLElement, text: string | null): void {
-  const texts = [...parent.childNodes].filter((node) => node.nodeType === Node.TEXT_NODE);
-  if (!text) {
-    for (const node of texts) node.remove();
-    return;
-  }
-  const first = texts[0];
-  if (first) {
-    if (first.textContent !== text) first.textContent = text;
-    for (const extra of texts.slice(1)) extra.remove();
-    if (parent.firstChild !== first) parent.insertBefore(first, parent.firstChild);
-    return;
-  }
-  parent.insertBefore(parent.ownerDocument.createTextNode(text), parent.firstChild);
-}
-
-function syncVariants(el: HTMLElement, variants: Record<string, string>): void {
-  for (const attribute of [...el.attributes]) {
-    if (attribute.name === 'data-variant') {
-      if (variants.variant === undefined) el.removeAttribute(attribute.name);
-      continue;
-    }
-    if (!attribute.name.startsWith('data-variant-')) continue;
-    const axis = attribute.name.slice('data-variant-'.length);
-    if (variants[axis] === undefined) el.removeAttribute(attribute.name);
-  }
-  for (const [axis, value] of Object.entries(variants)) {
-    if (axis === 'variant') el.setAttribute('data-variant', value);
-    else el.setAttribute(`data-variant-${axis}`, value);
-  }
-}
-
 function dropRecords(records: Map<string, RenderedNode>, id: string): void {
   for (const key of [...records.keys()]) {
     if (key === id || key.startsWith(`${id}/`)) records.delete(key);
   }
-}
-
-function isStyleOnly(change: DocumentChange): boolean {
-  const command = change.command;
-  if (change.reason !== 'command' || !command) return false;
-  switch (command.type) {
-    case 'setStyle':
-    case 'setStyleBlock':
-    case 'setTokenInterface':
-    case 'setToken':
-    case 'removeToken':
-    case 'setTokenGroup':
-    case 'removeTokenGroup':
-    case 'setFont':
-    case 'removeFont':
-    case 'setBreakpoints':
-      return true;
-    case 'setProp':
-      return command.prop === 'layout';
-    default:
-      return false;
-  }
-}
-
-function resolveFields(
-  fields: FieldDefinition[] | undefined,
-  overrides: Record<string, FieldValue> | undefined,
-): Record<string, FieldValue> {
-  const resolved: Record<string, FieldValue> = {};
-  for (const field of fields ?? []) {
-    if (field.default !== undefined) resolved[field.name] = field.default;
-  }
-  for (const [name, value] of Object.entries(overrides ?? {})) resolved[name] = value;
-  return resolved;
-}
-
-function resolveVariants(
-  document: DocumentFile,
-  overrides: Record<string, string> | undefined,
-): Record<string, string> {
-  const resolved: Record<string, string> = {};
-  const hasNamedVariants = variantPresets(document).some((variant) => variant.name !== 'default');
-  for (const axis of (document.variants ?? []).filter(isVariantAxis)) {
-    const fallback = axis.default ?? axis.values[0];
-    if (fallback !== undefined) resolved[axis.name] = fallback;
-  }
-  if (hasNamedVariants) {
-    resolved.variant = overrides?.variant ?? 'default';
-  }
-  for (const [name, value] of Object.entries(overrides ?? {})) {
-    if (name === 'variant' && !hasNamedVariants) continue;
-    resolved[name] = value;
-  }
-  return resolved;
-}
-
-function clearPresentation(el: HTMLElement): void {
-  applyAttributes(el, {});
-}
-
-function applyAttributes(el: HTMLElement, attributes: Record<string, string> | undefined): void {
-  const desired: Record<string, string> = {};
-  for (const [name, value] of Object.entries(attributes ?? {})) {
-    if (EVENT_ATTRIBUTE.test(name)) continue;
-    desired[name] = value;
-  }
-  for (const attribute of [...el.attributes]) {
-    if (attribute.name.startsWith('data-') || attribute.name === 'style') continue;
-    if (desired[attribute.name] === undefined) el.removeAttribute(attribute.name);
-  }
-  for (const [name, value] of Object.entries(desired)) el.setAttribute(name, value);
-}
-
-function applyImage(el: HTMLElement, src: string | undefined, alt: string | undefined): void {
-  if (src !== undefined) el.setAttribute('src', src);
-  else el.removeAttribute('src');
-  if (alt !== undefined) el.setAttribute('alt', alt);
-  else el.removeAttribute('alt');
-}
-
-function applyBindings(
-  el: HTMLElement,
-  bindings: Binding[] | undefined,
-  scope: Record<string, FieldValue>,
-): { text: string | null; src?: string; alt?: string; hidden: boolean } {
-  let text: string | null = null;
-  let src: string | undefined;
-  let alt: string | undefined;
-  let hidden = false;
-  for (const binding of bindings ?? []) {
-    const value = scope[binding.field];
-    if (value === undefined) continue;
-    if (binding.target === 'text') text = String(value);
-    else if (
-      binding.target === 'attribute' &&
-      binding.name &&
-      !EVENT_ATTRIBUTE.test(binding.name)
-    ) {
-      if (typeof value === 'boolean' && BOOLEAN_ATTRIBUTES.has(binding.name.toLowerCase())) {
-        if (value) el.setAttribute(binding.name, '');
-        else el.removeAttribute(binding.name);
-      } else {
-        el.setAttribute(binding.name, String(value));
-      }
-    } else if (binding.target === 'style' && binding.name) {
-      el.style.setProperty(binding.name, String(value));
-    } else if (binding.target === 'src') src = String(value);
-    else if (binding.target === 'alt') alt = String(value);
-    else if (binding.target === 'visible') hidden = value === false;
-  }
-  return { text, src, alt, hidden };
-}
-
-function readAttributes(el: HTMLElement): Record<string, string> {
-  const attributes: Record<string, string> = {};
-  for (const attribute of el.attributes) {
-    if (attribute.name === 'style' || attribute.name.startsWith('data-')) continue;
-    attributes[attribute.name] = attribute.value;
-  }
-  return attributes;
-}
-
-function joinId(path: string | null, id: string): string {
-  return path ? `${path}/${id}` : id;
-}
-
-function repeatKeySegment(value: FieldValue | number | undefined, index: number): string {
-  return encodeURIComponent(String(value ?? index));
-}
-
-function resolveFieldBindings(
-  bindings: Record<string, string> | undefined,
-  scope: Record<string, FieldValue>,
-): Record<string, FieldValue> {
-  const resolved: Record<string, FieldValue> = {};
-  for (const [field, path] of Object.entries(bindings ?? {})) {
-    const value = resolvePath(scope, path);
-    if (value !== undefined) resolved[field] = value;
-  }
-  return resolved;
-}
-
-function matchesDisplay(condition: DisplayOn, scope: Record<string, FieldValue>): boolean {
-  const value = resolvePath(scope, condition.path);
-  if ('truthy' in condition) return condition.truthy ? Boolean(value) : !value;
-  if ('equals' in condition) {
-    return JSON.stringify(value) === JSON.stringify(condition.equals);
-  }
-  return false;
-}
-
-function resolvePath(
-  value: FieldValue | Record<string, FieldValue>,
-  path: string,
-): FieldValue | undefined {
-  let current: FieldValue | undefined = value as FieldValue;
-  for (const segment of path.split('.')) {
-    if (typeof current !== 'object' || current === null || Array.isArray(current)) return undefined;
-    current = current[segment];
-  }
-  return current;
-}
-
-function cssString(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 }
