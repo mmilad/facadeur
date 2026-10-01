@@ -1,6 +1,14 @@
 {
   "version": 1,
   "id": "form-input",
+  "previewData": {
+    "fields": {
+      "value": "",
+      "placeholder": "Enter a value",
+      "name": "example-input",
+      "disabled": false
+    }
+  },
   "name": "Input",
   "kind": "atom",
   "fields": [

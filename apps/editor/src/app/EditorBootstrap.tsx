@@ -1,79 +1,55 @@
 'use client';
 
-import { validateCatalog } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
-import { useMemo } from 'react';
-import button from '../../../../examples/button.json';
-import card from '../../../../examples/card.json';
-import input from '../../../../examples/input.json';
-import link from '../../../../examples/link.json';
-import media from '../../../../examples/media.json';
-import signIn from '../../../../examples/sign-in.json';
-import textarea from '../../../../examples/textarea.json';
-import variantInput from '../../../../examples/variant-input.json';
-import formControlsPage from '../../../../examples/form-controls-page.json';
-import formControlsSection from '../../../../examples/form-controls-section.json';
-import formFieldRow from '../../../../examples/form-field-row.json';
-import formInput from '../../../../examples/form-input.json';
-import formSegmented from '../../../../examples/form-segmented.json';
-import formSelect from '../../../../examples/form-select.json';
-import formTextInput from '../../../../examples/form-text-input.json';
-import formToggle from '../../../../examples/form-toggle.json';
-import specimenPage from '../../../../examples/specimen-page.json';
-import specimenSection from '../../../../examples/specimen-section.json';
-import { createEditorSession } from '../domain/session';
-import { EditorShell } from '../ui/shell/EditorShell';
-
-const sources: Record<string, string> = {
-  button: 'button.json',
-  link: 'link.json',
-  media: 'media.json',
-  input: 'input.json',
-  textarea: 'textarea.json',
-  card: 'card.json',
-  'sign-in': 'sign-in.json',
-  'specimen-section': 'specimen-section.json',
-  specimen: 'specimen-page.json',
-  'form-controls': 'form-controls-page.json',
-  'form-controls-section': 'form-controls-section.json',
-  'form-field-row': 'form-field-row.json',
-  'form-input': 'form-input.json',
-  'form-segmented': 'form-segmented.json',
-  'form-select': 'form-select.json',
-  'form-text-input': 'form-text-input.json',
-  'form-toggle': 'form-toggle.json',
-  'variant-input': 'variant-input.json',
-  'project-template': 'project-template.json',
-};
+import { useEffect, useState, useSyncExternalStore } from 'react';
+import { connectProject, loadProject } from '../domain/project/client.js';
+import { EditorShell } from '../ui/shell/EditorShell.js';
 
 export function EditorBootstrap() {
-  const session = useMemo(() => {
-    const documents = validateCatalog([
-      button,
-      link,
-      media,
-      input,
-      textarea,
-      card,
-      signIn,
-      formTextInput,
-      formInput,
-      formSelect,
-      formToggle,
-      variantInput,
-      formSegmented,
-      formFieldRow,
-      specimenSection,
-      formControlsSection,
-      specimenPage,
-      formControlsPage,
-    ]);
-    return createEditorSession({
-      documents,
-      design: createProjectTemplateDocument(),
-      sources,
-    });
-  }, []);
+  const [connection, setConnection] = useState<ReturnType<typeof connectProject> | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    const abort = new AbortController();
+    let active: ReturnType<typeof connectProject> | null = null;
+    setError(null);
+    setConnection(null);
+    void loadProject(abort.signal)
+      .then((project) => {
+        if (abort.signal.aborted) return;
+        active = connectProject(project);
+        setConnection(active);
+      })
+      .catch((error: unknown) => {
+        if (!abort.signal.aborted)
+          setError(error instanceof Error ? error.message : 'Could not load the project');
+      });
+    return () => {
+      abort.abort();
+      active?.destroy();
+    };
+  }, [attempt]);
+  if (connection) return <ConnectedEditor connection={connection} />;
+  return (
+    <main className="schema-stage">
+      <h1>{error ? 'Project unavailable' : 'Loading project…'}</h1>
+      {error ? (
+        <>
+          <p role="alert">{error}</p>
+          <p>Start the project server with the editor using pnpm dev.</p>
+          <button type="button" onClick={() => setAttempt(attempt + 1)}>
+            Retry
+          </button>
+        </>
+      ) : null}
+    </main>
+  );
+}
 
-  return <EditorShell session={session} />;
+function ConnectedEditor({ connection }: { connection: ReturnType<typeof connectProject> }) {
+  const status = useSyncExternalStore(
+    connection.subscribe,
+    connection.getStatus,
+    connection.getStatus,
+  );
+  return <EditorShell session={connection.session} connectionStatus={status} />;
 }

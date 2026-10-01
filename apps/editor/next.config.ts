@@ -10,6 +10,9 @@ const workspaceAlias = (pkg: string, entry = 'index.ts') =>
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  ...(process.env.FACADEUR_EDITOR_DIST_DIR
+    ? { distDir: process.env.FACADEUR_EDITOR_DIST_DIR }
+    : {}),
   outputFileTracingRoot: repoRoot,
   transpilePackages: [
     '@facadeur/core',
@@ -20,7 +23,13 @@ const nextConfig: NextConfig = {
     'jsonjoy-builder',
   ],
   async rewrites() {
-    return [{ source: '/__facadeur/examples', destination: '/api/facadeur/examples' }];
+    return [
+      {
+        source: '/api/projects/:path*',
+        destination: `${process.env.FACADEUR_API_URL ?? 'http://127.0.0.1:3002'}/api/projects/:path*`,
+      },
+      { source: '/__facadeur/examples', destination: '/api/facadeur/examples' },
+    ];
   },
   webpack: (config) => {
     config.resolve.extensionAlias = {

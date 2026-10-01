@@ -11,6 +11,9 @@ const meta = {
   component: FormTextInput,
   tags: ['autodocs'],
   args: {
+    label: 'Work email',
+    hint: 'Use your work email address.',
+    hasIcon: false,
     state: 'default',
   },
 } satisfies Meta<typeof FormTextInput>;

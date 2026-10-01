@@ -58,7 +58,7 @@ export interface FrameHost {
   /** Window inside the frame, for hit testing and layout. */
   contentWindow(): Window;
   setWidth(width: number): void;
-  /** Preview-only inset and alignment inside the iframe shell. Not part of the document. */
+  /** Preview alignment. Legacy innerPaddingPx is accepted but ignored. */
   setPreviewChrome(options: { innerPaddingPx: number; contentAlign: 'start' | 'center' }): void;
   /** Grow the iframe to its content. Returns the applied height in CSS pixels. */
   syncHeight(): number;
@@ -124,9 +124,8 @@ export function createFrameHost(options: FrameHostOptions): FrameHost {
   function applyPreviewChrome(frameDocument: Document): void {
     const body = frameDocument.body;
     if (!body) return;
-    const pad = previewChrome.innerPaddingPx;
     body.style.boxSizing = 'border-box';
-    body.style.padding = pad > 0 ? `${pad}px` : '';
+    body.style.padding = '0px';
     if (previewChrome.contentAlign === 'center') {
       body.style.display = 'flex';
       body.style.flexDirection = 'column';
@@ -193,7 +192,7 @@ export function createFrameHost(options: FrameHostOptions): FrameHost {
     },
     setPreviewChrome(options) {
       previewChrome = {
-        innerPaddingPx: Math.max(0, Math.round(options.innerPaddingPx)),
+        innerPaddingPx: 0,
         contentAlign: options.contentAlign === 'center' ? 'center' : 'start',
       };
       if (!mounted || destroyed) return;

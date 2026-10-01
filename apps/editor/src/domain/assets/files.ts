@@ -117,7 +117,8 @@ async function writeHandle(handle: JsonFileHandle, text: string): Promise<void> 
   await writable.close();
 }
 
-function download(name: string, text: string): void {
+/** Explicit JSON export, independent from saving the shared project. */
+export function download(name: string, text: string): void {
   const blob = new Blob([text], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');

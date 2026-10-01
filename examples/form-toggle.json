@@ -1,6 +1,12 @@
 {
   "version": 1,
   "id": "form-toggle",
+  "previewData": {
+    "fields": {
+      "label": "Use token",
+      "value": "Enabled"
+    }
+  },
   "name": "Toggle",
   "kind": "component",
   "group": "form",
@@ -17,11 +23,7 @@
   "variants": [
     {
       "name": "state",
-      "values": [
-        "on",
-        "off",
-        "disabled"
-      ],
+      "values": ["on", "off", "disabled"],
       "default": "on"
     }
   ],

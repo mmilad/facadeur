@@ -101,6 +101,7 @@ export function bootstrapSessionDocumentCatalog(options: {
   savedJson: SavedJsonBaselines;
   applyPreferredOpen: (id: string, workspace: DefaultKind) => void;
   rebuildSnapshot: () => void;
+  updates?: Readonly<Record<string, Uint8Array>>;
 }) {
   const {
     documents,
@@ -122,6 +123,7 @@ export function bootstrapSessionDocumentCatalog(options: {
     commandContext,
     assetStores,
     order,
+    updates: options.updates,
   });
   syncKinds();
   watch(designStore, 'design');

@@ -143,6 +143,7 @@ export function createViewportBoard(options: {
       const column = parent.ownerDocument.createElement('section');
       column.className = 'viewport-frame';
       column.dataset.breakpoint = breakpoint.id;
+      column.style.width = `${breakpoint.minWidth}px`;
 
       const chrome = parent.ownerDocument.createElement('div');
       chrome.className = 'viewport-chrome';

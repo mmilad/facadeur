@@ -1,6 +1,12 @@
 {
   "version": 1,
   "id": "variant-input",
+  "previewData": {
+    "fields": {
+      "label": "Project name",
+      "value": "Component library"
+    }
+  },
   "name": "Variant input",
   "kind": "component",
   "group": "form",

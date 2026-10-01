@@ -7,7 +7,9 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "pnpm --filter @facadeur/editor dev",
+    "dev": "tsx scripts/dev.ts",
+    "dev:server": "pnpm --filter @facadeur/server dev",
+    "dev:editor": "pnpm --filter @facadeur/editor dev",
     "build": "pnpm --filter @facadeur/editor build",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",

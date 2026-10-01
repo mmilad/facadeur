@@ -11,6 +11,7 @@ const meta = {
   component: Button,
   tags: ['autodocs'],
   args: {
+    label: 'Continue',
     tone: 'primary',
     size: 'md',
   },

@@ -4,7 +4,12 @@ import { createId, findParent } from '@facadeur/core';
 import { placementAllowed, refusalMessage, toolAllowed } from '../../domain/editing.js';
 import dynamic from 'next/dynamic';
 import { useEffect, useSyncExternalStore } from 'react';
-import { openJsonFile, parseDocumentText } from '../../domain/assets/files.js';
+import {
+  openJsonFile,
+  parseDocumentText,
+  documentToJson,
+  download,
+} from '../../domain/assets/files.js';
 import { isEditableTarget } from '../../domain/keyboard.js';
 import type { EditorSession } from '../../domain/session.js';
 import {
@@ -35,7 +40,13 @@ import { DocumentBreadcrumb } from './DocumentBreadcrumb.js';
 import { ZoomControls } from './ZoomControls.js';
 import { useEditorNavigation } from './useEditorNavigation.js';
 
-export function EditorShell({ session }: { session: EditorSession }) {
+export function EditorShell({
+  session,
+  connectionStatus,
+}: {
+  session: EditorSession;
+  connectionStatus?: string;
+}) {
   const snap = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
   const { surface, setSurface } = useEditorNavigation(session, snap);
   const designSurface = isDesignDomain(surface);
@@ -56,6 +67,11 @@ export function EditorShell({ session }: { session: EditorSession }) {
           />
         ) : null}
         <div className="topbar-spacer" />
+        {connectionStatus ? (
+          <span className="meta" role="status">
+            {connectionStatus}
+          </span>
+        ) : null}
         <HistoryButtons session={session} canUndo={snap.canUndo} canRedo={snap.canRedo} />
         {!designSurface ? <ZoomControls session={session} label={snap.zoomLabel} /> : null}
         {!designSurface ? (
@@ -69,6 +85,18 @@ export function EditorShell({ session }: { session: EditorSession }) {
         />
         <button type="button" className="text-button" onClick={() => void onOpen(session)}>
           Open
+        </button>
+        <button
+          type="button"
+          className="text-button"
+          onClick={() =>
+            download(
+              session.filenameFor(designSurface ? snap.design.id : snap.openId),
+              documentToJson(designSurface ? snap.design : snap.document),
+            )
+          }
+        >
+          Export JSON
         </button>
         <button
           type="button"

@@ -3,7 +3,7 @@ import { defaultBreakpoints } from '@facadeur/core';
 import { resolvedViewportChrome } from '../src/domain/viewport/viewport-chrome.js';
 
 describe('viewport chrome settings', () => {
-  it('fills defaults and clamps numeric chrome', () => {
+  it('ignores legacy padding while preserving title and alignment', () => {
     const breakpoint = defaultBreakpoints[0]!;
     const resolved = resolvedViewportChrome(breakpoint, {
       title: '  Phone preview  ',
@@ -12,7 +12,7 @@ describe('viewport chrome settings', () => {
       contentAlign: 'center',
     });
     expect(resolved.title).toBe('Phone preview');
-    expect(resolved.outerPaddingPx).toBe(120);
+    expect(resolved.outerPaddingPx).toBe(0);
     expect(resolved.innerPaddingPx).toBe(0);
     expect(resolved.contentAlign).toBe('center');
   });

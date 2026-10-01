@@ -21,7 +21,8 @@
     "jsonjoy-builder": "1.0.4",
     "next": "^15.5.3",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "yjs": "^13.6.27"
   },
   "devDependencies": {
     "@types/node": "^22.19.0",

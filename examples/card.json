@@ -1,6 +1,13 @@
 {
   "version": 1,
   "id": "card",
+  "previewData": {
+    "fields": {
+      "eyebrow": "Featured story",
+      "title": "Design with confidence",
+      "body": "Build reusable components with shared tokens and flexible variants."
+    }
+  },
   "name": "Card",
   "kind": "component",
   "fields": [

@@ -13,6 +13,7 @@ import {
 import { createDocumentStore, type YjsDocumentStore } from '@facadeur/store-yjs';
 import type { JsonFileHandle } from '../assets/files.js';
 import type { SavedJsonBaselines } from '../assets/save-state.js';
+import { markDocumentSaved, clearDocumentSaved } from '../assets/save-state.js';
 import { renderIdForNode } from '../selection/selection-model.js';
 import { resolveNestedSelection, type NestedSelection } from '../nested-selection.js';
 import type { ViewportChromeSettings } from '../viewport/viewport-chrome.js';
@@ -53,7 +54,11 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   }
   const sources = options.sources ?? {};
   const listeners = new Set<() => void>();
-  const kinds = new Map<string, string>();
+  // Hydration validates instance targets before any stores are registered.
+  // Seed the entire catalog so design and forward asset references can resolve.
+  const kinds = new Map<string, string>(
+    [...options.documents, options.design].map((file) => [file.id, file.kind]),
+  );
   const assetStores = new Map<string, YjsDocumentStore>();
   const order: string[] = [];
   const handles = new Map<string, JsonFileHandle>();
@@ -89,8 +94,9 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   const resolveKind = (componentId: string) => kinds.get(componentId);
   const commandContext: CommandContext = { resolveKind };
   let designStore: YjsDocumentStore = createDocumentStore(
-    migratePreviewData(options.design),
+    options.updates?.[designId] ? options.design : migratePreviewData(options.design),
     commandContext,
+    { update: options.updates?.[designId] },
   );
 
   function filenameFor(id: string) {
@@ -261,6 +267,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
 
   bootstrapSessionDocumentCatalog({
     documents: options.documents,
+    updates: options.updates,
     designId,
     commandContext,
     assetStores,
@@ -289,6 +296,20 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   });
 
   return {
+    syncStores: () => [designStore, ...assetStores.values()],
+    markProjectSaved(id, saved) {
+      const store = id === designId ? designStore : assetStores.get(id);
+      if (!store) return;
+      if (saved) markDocumentSaved(savedJson, id, store.getDocument());
+      else clearDocumentSaved(savedJson, id);
+      publish();
+    },
+    destroy() {
+      for (const unsubscribe of unsubs.values()) unsubscribe();
+      for (const store of assetStores.values()) store.destroy();
+      designStore.destroy();
+      listeners.clear();
+    },
     subscribe(listener) {
       listeners.add(listener);
       return () => listeners.delete(listener);
@@ -433,6 +454,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       designInput: () => designInputFromStore(designStore),
       saveOpenDocument: bindPersistDocumentSave({
         ...saveHooks,
+        saveDocument: options.saveDocument,
         validate: () => validateCatalog(boardDocumentsForOrder(order, assetStores)),
         build: () => {
           const snap = build();
@@ -441,6 +463,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       }),
       saveDesign: bindPersistDocumentSave({
         ...saveHooks,
+        saveDocument: options.saveDocument,
         build: () => {
           const snap = build();
           return { id: designId, filename: filenameFor(designId), document: snap.design };

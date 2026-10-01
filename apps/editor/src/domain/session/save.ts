@@ -28,9 +28,26 @@ export function bindPersistDocumentSave(options: {
   markSaved: (id: string, document: FlatDocument) => void;
   setNotice: (notice: EditorNotice) => void;
   publish: () => void;
+  saveDocument?: (id: string) => Promise<FlatDocument>;
 }): () => Promise<boolean> {
   return async () => {
     const target = options.build();
+    if (options.saveDocument) {
+      try {
+        options.validate?.();
+        options.setNotice({ tone: 'info', text: 'Saving…' });
+        options.publish();
+        const persisted = await options.saveDocument(target.id);
+        options.markSaved(target.id, persisted);
+        options.setNotice({ tone: 'info', text: `Saved ${target.filename}` });
+        options.publish();
+        return true;
+      } catch (error) {
+        options.setNotice({ tone: 'error', text: error instanceof Error ? error.message : 'Could not save' });
+        options.publish();
+        return false;
+      }
+    }
     return persistEditorJsonSave({
       filename: target.filename,
       document: target.document,
@@ -113,14 +130,16 @@ export function registerSessionAssetDocuments(options: {
   commandContext: CommandContext;
   assetStores: Map<string, YjsDocumentStore>;
   order: string[];
+  updates?: Readonly<Record<string, Uint8Array>>;
 }): void {
   for (const file of options.documents) {
     if (options.assetStores.has(file.id)) {
       throw new DocumentError('duplicate-id', `Duplicate document id "${file.id}"`);
     }
     if (file.id === options.designId) continue;
-    const migrated = migratePreviewData(file);
-    const store = createDocumentStore(migrated, options.commandContext);
+    const update = options.updates?.[file.id];
+    const migrated = update ? file : migratePreviewData(file);
+    const store = createDocumentStore(migrated, options.commandContext, { update });
     options.assetStores.set(file.id, store);
     options.order.push(file.id);
   }

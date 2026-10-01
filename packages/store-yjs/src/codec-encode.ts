@@ -13,7 +13,6 @@ import type {
   JsonValue,
   Layout,
   VariantAxis,
-  VariantRule,
 } from '@facadeur/core';
 import * as Y from 'yjs';
 import {

@@ -1,6 +1,15 @@
 {
   "version": 1,
   "id": "textarea",
+  "previewData": {
+    "fields": {
+      "label": "Message",
+      "value": "",
+      "placeholder": "Tell us about your project",
+      "name": "message",
+      "rows": 3
+    }
+  },
   "name": "Textarea",
   "kind": "component",
   "group": "form",
@@ -29,10 +38,7 @@
   "variants": [
     {
       "name": "resize",
-      "values": [
-        "vertical",
-        "none"
-      ],
+      "values": ["vertical", "none"],
       "default": "vertical"
     }
   ],

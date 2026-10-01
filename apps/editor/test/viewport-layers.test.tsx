@@ -81,8 +81,8 @@ describe('viewport layers UX', () => {
       root?.render(<App session={session} />);
     });
 
-    const viewportRow = [...host.querySelectorAll('button.viewport-layer')].find((button) =>
-      button.dataset.breakpoint === 'sm',
+    const viewportRow = [...host.querySelectorAll<HTMLButtonElement>('button.viewport-layer')].find(
+      (button) => button.dataset.breakpoint === 'sm',
     );
     expect(viewportRow).toBeInstanceOf(HTMLButtonElement);
 
@@ -93,9 +93,9 @@ describe('viewport layers UX', () => {
     const snap = session.getSnapshot();
     expect(snap.selectedViewportId).toBe('sm');
     expect(snap.selectedNodeId).toBeNull();
-    expect(host.querySelector('input[name="viewport-inner-padding"]')).toBeInstanceOf(
-      HTMLInputElement,
-    );
+    expect(host.querySelector('input[name="viewport-inner-padding"]')).toBeNull();
+    expect(host.querySelector('input[name="viewport-outer-padding"]')).toBeNull();
+    expect(host.querySelector('[aria-label="Content alignment"]')).not.toBeNull();
     expect(host.querySelector('.viewport-edit')).toBeNull();
 
     await act(async () => {

@@ -1,6 +1,14 @@
 {
   "version": 1,
   "id": "input",
+  "previewData": {
+    "fields": {
+      "label": "Work email",
+      "value": "",
+      "placeholder": "ada@atelier.test",
+      "name": "work-email"
+    }
+  },
   "name": "Input",
   "kind": "component",
   "group": "form",

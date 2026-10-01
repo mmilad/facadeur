@@ -1,6 +1,13 @@
 {
   "version": 1,
   "id": "form-text-input",
+  "previewData": {
+    "fields": {
+      "label": "Work email",
+      "hint": "Use your work email address.",
+      "hasIcon": false
+    }
+  },
   "name": "Text field",
   "kind": "component",
   "group": "form",
@@ -34,12 +41,7 @@
   "variants": [
     {
       "name": "state",
-      "values": [
-        "default",
-        "focused",
-        "disabled",
-        "invalid"
-      ],
+      "values": ["default", "focused", "disabled", "invalid"],
       "default": "default"
     }
   ],

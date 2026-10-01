@@ -35,14 +35,14 @@ const documents = validateCatalog([
 ]);
 
 describe('asset preview chrome', () => {
-  it('defaults inner padding for asset kinds only', () => {
+  it('defaults to zero padding for all document kinds', () => {
     expect(defaultViewportChrome('atom').innerPaddingPx).toBe(ASSET_PREVIEW_INNER_PADDING_PX);
     expect(defaultViewportChrome('component').innerPaddingPx).toBe(ASSET_PREVIEW_INNER_PADDING_PX);
     expect(defaultViewportChrome('section').innerPaddingPx).toBe(ASSET_PREVIEW_INNER_PADDING_PX);
     expect(defaultViewportChrome('page').innerPaddingPx).toBe(0);
   });
 
-  it('applies preview inset in the iframe without touching the document DSL', () => {
+  it('ignores legacy preview inset without touching the document DSL or sizing', () => {
     const buttonDoc = validateCatalog([button])[0]!;
     const store = createDocumentStore(buttonDoc);
     const parent = document.createElement('div');
@@ -65,12 +65,22 @@ describe('asset preview chrome', () => {
     expect(frame.host.contentDocument().body.style.padding).toBe(
       `${ASSET_PREVIEW_INNER_PADDING_PX}px`,
     );
+    const beforeWidth = frame.host.element.style.width;
+    const content = frame.host.contentDocument().querySelector<HTMLElement>('[data-node="root"]')!;
+    const contentPadding = frame.host.contentWindow().getComputedStyle(content).padding;
+    expect(contentPadding).not.toBe('0px');
 
     board.applyChrome(() => ({
       ...defaultViewportChrome('atom'),
       innerPaddingPx: 40,
+      outerPaddingPx: 30,
+      contentAlign: 'center',
     }));
-    expect(frame.host.contentDocument().body.style.padding).toBe('40px');
+    expect(frame.host.contentDocument().body.style.padding).toBe('0px');
+    expect(frame.column.style.padding).toBe('0px');
+    expect(frame.host.element.style.width).toBe(beforeWidth);
+    expect(frame.host.contentDocument().body.style.alignItems).toBe('center');
+    expect(frame.host.contentWindow().getComputedStyle(content).padding).toBe(contentPadding);
     expect(documentToJson(store.getDocument())).toBe(beforeJson);
 
     board.destroy();
@@ -101,10 +111,10 @@ describe('FrameHost preview chrome', () => {
     const host = createFrameHost({ id: 'mobile', width: 375 });
     host.mount(document.body);
     host.setPreviewChrome({ innerPaddingPx: 24, contentAlign: 'start' });
-    expect(host.contentDocument().body.style.padding).toBe('24px');
+    expect(host.contentDocument().body.style.padding).toBe('0px');
     expect(host.contentDocument().body.style.boxSizing).toBe('border-box');
     host.setPreviewChrome({ innerPaddingPx: 0, contentAlign: 'center' });
-    expect(host.contentDocument().body.style.padding).toBe('');
+    expect(host.contentDocument().body.style.padding).toBe('0px');
     expect(host.contentDocument().body.style.display).toBe('flex');
     host.destroy();
   });

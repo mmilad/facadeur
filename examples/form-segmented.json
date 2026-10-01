@@ -1,6 +1,11 @@
 {
   "version": 1,
   "id": "form-segmented",
+  "previewData": {
+    "fields": {
+      "label": "Alignment"
+    }
+  },
   "name": "Segmented control",
   "kind": "component",
   "group": "form",
@@ -13,11 +18,7 @@
   "variants": [
     {
       "name": "state",
-      "values": [
-        "start",
-        "center",
-        "end"
-      ],
+      "values": ["start", "center", "end"],
       "default": "start"
     }
   ],

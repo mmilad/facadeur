@@ -1,6 +1,13 @@
 {
   "version": 1,
   "id": "sign-in",
+  "previewData": {
+    "fields": {
+      "eyebrow": "Welcome back",
+      "title": "Sign in to your workspace",
+      "body": "Continue with your work email to access your projects."
+    }
+  },
   "name": "Sign in",
   "kind": "component",
   "fields": [

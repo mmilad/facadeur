@@ -10,6 +10,11 @@ const meta = {
   title: 'Components/SignIn',
   component: SignIn,
   tags: ['autodocs'],
+  args: {
+    eyebrow: 'Welcome back',
+    title: 'Sign in to your workspace',
+    body: 'Continue with your work email to access your projects.',
+  },
 } satisfies Meta<typeof SignIn>;
 
 export default meta;

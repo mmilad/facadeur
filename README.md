@@ -13,7 +13,8 @@ pnpm install
 pnpm dev
 ```
 
-Open http://localhost:3001 (Next.js). The specimen page is open. From there you can:
+Open http://localhost:3001 (Next.js). `pnpm dev` also starts the local project server on
+127.0.0.1:3002. The specimen page is open. From there you can:
 
 - Browse the project tree in the left column: Design (Tokens, Schriften), then Atoms, Components, Sections, and Pages. Click an asset to open it on the stage. The layers list under the tree follows the open document. Search filters the tree. **Neu anlegen** adds an empty document of that kind. Drag a row onto the stage to insert an instance when nesting allows it. Nesting rules still apply when a command would break them.
 - Three frames sit side by side: mobile 375, tablet 768, desktop 1440. Each iframe is that wide, so real media queries change type size and, on desktop, the card row.
@@ -22,8 +23,11 @@ Open http://localhost:3001 (Next.js). The specimen page is open. From there you 
 - Edit name, tag, text, image source, attributes, style overrides, instance fields and variants, and a root field's default in the properties panel. Each edit is a command.
 - Change a project token or font. Every viewport picks up the new CSS variables. **Save design** writes that document.
 - Undo with Ctrl+Z (Cmd+Z on macOS) and redo with Ctrl+Shift+Z.
-- **Open** reads a document JSON (File System Access API, or a file input). **Save** writes the open document back, or downloads it when the browser has neither the file API nor the dev server.
+- **Open** imports a new document JSON; replacing an existing project ID is rejected. **Save** writes the shared document to its project JSON without a file picker. **Export JSON** is the explicit download action. Edits are synchronized and durably stored separately before Save.
 - Hover shows the click target in the frame under the pointer. Escape clears the selection. **Reset view** fits the frames again.
+
+The [project API](docs/project-api.md) supports live command edits, revision-checked saves,
+and restart recovery. This initial server is local-only, without user authentication.
 
 ## Generate React and Storybook
 
@@ -61,6 +65,7 @@ pnpm test
 
 ```
 apps/editor             Next.js + React shell (stage, layers, properties, assets, tokens, fonts)
+apps/server             local project API, shared Yjs documents and durable state
 apps/storybook          Storybook 8 + Vite; generated CSF3 stories for @facadeur/ui
 packages/core           types, JSON Schema, flat model, commands, DocumentStore
 packages/store-yjs      Yjs DocumentStore, one transaction per command, undo/redo

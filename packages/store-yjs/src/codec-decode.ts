@@ -15,7 +15,6 @@ import {
   type FontFamily,
   type FontSource,
   type IconDefinition,
-  type JsonValue,
   type Layout,
   type PreviewData,
   type Repeat,
@@ -271,9 +270,9 @@ export function readTokenInterface(map: Y.Map<unknown>): { tokenInterface?: Toke
   return { tokenInterface: value as unknown as TokenInterface };
 }
 
-export function readComponentTokens(
-  map: Y.Map<unknown>,
-): { componentTokens?: FlatDocument['componentTokens'] } {
+export function readComponentTokens(map: Y.Map<unknown>): {
+  componentTokens?: FlatDocument['componentTokens'];
+} {
   const value = readJsonObject(map);
   if (!Object.keys(value).length) return {};
   return { componentTokens: value as unknown as FlatDocument['componentTokens'] };

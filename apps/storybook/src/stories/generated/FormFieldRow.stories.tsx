@@ -11,6 +11,9 @@ const meta = {
   component: FormFieldRow,
   tags: ['autodocs'],
   args: {
+    name: 'label',
+    type: 'Text',
+    value: 'Continue',
     state: 'default',
   },
 } satisfies Meta<typeof FormFieldRow>;

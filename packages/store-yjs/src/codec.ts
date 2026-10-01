@@ -55,7 +55,7 @@ export function patchDocument(doc: Y.Doc, next: FlatDocument): void {
   );
   syncJsonObject(
     doc.getMap('componentTokens'),
-    (next.componentTokens ?? {}) as Record<string, JsonValue>,
+    (next.componentTokens ?? {}) as unknown as Record<string, JsonValue>,
   );
   syncJsonObject(doc.getMap('expose'), (next.expose ?? {}) as Record<string, JsonValue>);
   syncJsonObject(doc.getMap('previewData'), (next.previewData ?? {}) as Record<string, JsonValue>);

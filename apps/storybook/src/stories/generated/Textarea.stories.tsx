@@ -11,6 +11,11 @@ const meta = {
   component: Textarea,
   tags: ['autodocs'],
   args: {
+    label: 'Message',
+    value: '',
+    placeholder: 'Tell us about your project',
+    name: 'message',
+    rows: 3,
     resize: 'vertical',
   },
 } satisfies Meta<typeof Textarea>;

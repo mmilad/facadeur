@@ -1,6 +1,13 @@
 {
   "version": 1,
   "id": "form-field-row",
+  "previewData": {
+    "fields": {
+      "name": "label",
+      "type": "Text",
+      "value": "Continue"
+    }
+  },
   "name": "Field row",
   "kind": "component",
   "group": "form",
@@ -21,10 +28,7 @@
   "variants": [
     {
       "name": "state",
-      "values": [
-        "default",
-        "selected"
-      ],
+      "values": ["default", "selected"],
       "default": "default"
     }
   ],

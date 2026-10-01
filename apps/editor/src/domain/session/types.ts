@@ -92,6 +92,11 @@ export interface EditorSnapshot {
 }
 
 export interface EditorSession {
+  /** Live stores for the project transport; rendering still uses DocumentStore. */
+  syncStores: () => import('@facadeur/store-yjs').YjsDocumentStore[];
+  /** Reflect a server snapshot save without replacing the document or Undo history. */
+  markProjectSaved: (id: string, saved: boolean) => void;
+  destroy: () => void;
   subscribe: (listener: () => void) => () => void;
   getSnapshot: () => EditorSnapshot;
   setWorkspace: (kind: DefaultKind) => void;
@@ -145,4 +150,7 @@ export interface EditorSessionOptions {
   design: DocumentFile;
   /** Document id to filename, for the examples that are not `<id>.json`. */
   sources?: Readonly<Record<string, string>>;
+  /** Hydrate exactly the server Yjs history rather than independently seeding it. */
+  updates?: Readonly<Record<string, Uint8Array>>;
+  saveDocument?: (id: string) => Promise<FlatDocument>;
 }

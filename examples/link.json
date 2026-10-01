@@ -1,6 +1,12 @@
 {
   "version": 1,
   "id": "link",
+  "previewData": {
+    "fields": {
+      "label": "Explore components",
+      "href": "#components"
+    }
+  },
   "name": "Link",
   "kind": "atom",
   "fields": [
@@ -16,20 +22,12 @@
   "variants": [
     {
       "name": "tone",
-      "values": [
-        "default",
-        "muted"
-      ],
+      "values": ["default", "muted"],
       "default": "default"
     }
   ],
   "tokenInterface": {
-    "reads": [
-      "color.accent.default",
-      "color.accent.hover",
-      "color.text.secondary",
-      "type.label"
-    ]
+    "reads": ["color.accent.default", "color.accent.hover", "color.text.secondary", "type.label"]
   },
   "styles": {
     "declarations": {

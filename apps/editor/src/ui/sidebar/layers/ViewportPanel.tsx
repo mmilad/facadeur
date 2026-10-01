@@ -82,38 +82,6 @@ export function ViewportOptionsPanel({
         placeholder={chrome.title}
         onCommit={(value) => session.setViewportChrome(breakpoint.id, { title: value })}
       />
-      <label className="field">
-        <span>Outer padding (px)</span>
-        <input
-          name="viewport-outer-padding"
-          type="number"
-          min={0}
-          max={120}
-          step={1}
-          value={chrome.outerPaddingPx}
-          onChange={(event) => {
-            const next = Number(event.target.value);
-            if (!Number.isFinite(next)) return;
-            session.setViewportChrome(breakpoint.id, { outerPaddingPx: next });
-          }}
-        />
-      </label>
-      <label className="field">
-        <span>Inner padding (px)</span>
-        <input
-          name="viewport-inner-padding"
-          type="number"
-          min={0}
-          max={160}
-          step={1}
-          value={chrome.innerPaddingPx}
-          onChange={(event) => {
-            const next = Number(event.target.value);
-            if (!Number.isFinite(next)) return;
-            session.setViewportChrome(breakpoint.id, { innerPaddingPx: next });
-          }}
-        />
-      </label>
       <div className="field">
         <span>Content alignment</span>
         <div className="viewport-edit-row" role="group" aria-label="Content alignment">

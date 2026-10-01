@@ -178,7 +178,10 @@ export interface EditorSessionSurfaceDeps {
 
 export function createEditorSessionSurface(
   deps: EditorSessionSurfaceDeps,
-): Omit<EditorSession, 'subscribe' | 'getSnapshot'> {
+): Omit<
+  EditorSession,
+  'subscribe' | 'getSnapshot' | 'syncStores' | 'markProjectSaved' | 'destroy'
+> {
   return {
     setWorkspace(kind) {
       const nextWorkspace = applyWorkspaceChange({

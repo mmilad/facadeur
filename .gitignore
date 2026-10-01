@@ -3,7 +3,10 @@ node_modules
 dist
 .vite
 .next
+.next-*/
+.test-api/
 coverage
 *.tsbuildinfo
+.facadeur/
 .DS_Store
 apps/storybook/storybook-static

@@ -454,17 +454,17 @@ describe('properties inspector tabs', () => {
       root?.render(<App session={session} />);
     });
 
-    const viewportRow = [...host.querySelectorAll('button.viewport-layer')].find((button) =>
-      button.dataset.breakpoint === 'xs',
+    const viewportRow = [...host.querySelectorAll<HTMLButtonElement>('button.viewport-layer')].find(
+      (button) => button.dataset.breakpoint === 'xs',
     );
     await act(async () => {
       viewportRow?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
     expect(host.querySelector('button[name="property-tab-content"]')).toBeNull();
-    expect(host.querySelector('input[name="viewport-inner-padding"]')).toBeInstanceOf(
-      HTMLInputElement,
-    );
+    expect(host.querySelector('input[name="viewport-title"]')).toBeInstanceOf(HTMLInputElement);
+    expect(host.querySelector('input[name="viewport-inner-padding"]')).toBeNull();
+    expect(host.querySelector('input[name="viewport-outer-padding"]')).toBeNull();
   });
 
   it('shows the selected viewport context before its preview settings', async () => {

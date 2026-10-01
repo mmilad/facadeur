@@ -2,7 +2,7 @@ import type { Command } from './types.js';
 import type { FlatDocument, FlatNode } from '../document/flat.js';
 
 export interface DocumentChange {
-  reason: 'command' | 'undo' | 'redo';
+  reason: 'command' | 'undo' | 'redo' | 'remote';
   /** Present when `reason` is `command`. Undo and redo restore the inverse. */
   command?: Command;
 }

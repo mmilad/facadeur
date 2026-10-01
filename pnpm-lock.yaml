@@ -83,6 +83,9 @@ importers:
       react-dom:
         specifier: ^19.1.1
         version: 19.3.0(react@19.3.0)
+      yjs:
+        specifier: ^13.6.27
+        version: 13.6.33
     devDependencies:
       '@types/node':
         specifier: ^22.19.0
@@ -93,6 +96,37 @@ importers:
       '@types/react-dom':
         specifier: ^19.1.9
         version: 19.3.0(@types/react@19.3.0)
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+
+  apps/server:
+    dependencies:
+      '@facadeur/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@facadeur/store-yjs':
+        specifier: workspace:*
+        version: link:../../packages/store-yjs
+      '@facadeur/tokens':
+        specifier: workspace:*
+        version: link:../../packages/tokens
+      ws:
+        specifier: ^8.21.3
+        version: 8.21.3
+      yjs:
+        specifier: ^13.6.27
+        version: 13.6.33
+    devDependencies:
+      '@types/node':
+        specifier: ^22.19.0
+        version: 22.20.4
+      '@types/ws':
+        specifier: ^8.18.1
+        version: 8.18.2
+      tsx:
+        specifier: ^4.20.5
+        version: 4.23.15
       typescript:
         specifier: ^5.9.2
         version: 5.9.3
@@ -1678,6 +1712,9 @@ packages:
 
   '@types/uuid@9.0.8':
     resolution: {integrity: sha512-jg+97EGIcY9AGHJJRaaPVgetKDsrTgbRjQ5Msgjh/DQKEFl0DtyRr/VCOyD1T2R1MNeWPK/u7JoGhlDZnKBAfA==}
+
+  '@types/ws@8.18.2':
+    resolution: {integrity: sha512-67MQl+fpWKVTT1NYdnmo3U4sc/xPo/zQBncVnI74qmQa0z/b+1g6iYqNmGCPbxO+zz2aklb08a0oHfegiVd0/w==}
 
   '@typescript-eslint/eslint-plugin@8.70.1':
     resolution: {integrity: sha512-nDNrUQ/4ruSNYbu749TRY7cfrzPtoLHEXSNBI8aaNY32LlZCajixqRf3FqcKC4p5Cam4VOHYx/t+i5+nKXvrqA==}
@@ -4262,6 +4299,10 @@ snapshots:
     optional: true
 
   '@types/uuid@9.0.8': {}
+
+  '@types/ws@8.18.2':
+    dependencies:
+      '@types/node': 22.20.4
 
   '@typescript-eslint/eslint-plugin@8.70.1(@typescript-eslint/parser@8.70.1(eslint@9.39.5)(typescript@5.9.3))(eslint@9.39.5)(typescript@5.9.3)':
     dependencies:

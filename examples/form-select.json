@@ -1,6 +1,12 @@
 {
   "version": 1,
   "id": "form-select",
+  "previewData": {
+    "fields": {
+      "label": "Property",
+      "value": "Background"
+    }
+  },
   "name": "Select",
   "kind": "component",
   "group": "form",
@@ -17,11 +23,7 @@
   "variants": [
     {
       "name": "state",
-      "values": [
-        "default",
-        "focused",
-        "disabled"
-      ],
+      "values": ["default", "focused", "disabled"],
       "default": "default"
     }
   ],

@@ -4,6 +4,87 @@
 
 ## Refactoring bei der Aufgabenplanung
 
+### Global refactor skill (2026-10-02)
+
+- Evidence: the local skill hard-codes Facadeur paths/contracts; its detector assumes a
+  monorepo layout and excludes `packages/ui` globally. Its guidelines link resolves incorrectly.
+- Boundary: bundle generic guidelines and a project-root-aware detector in the personal
+  `$refactor` skill. Keep Facadeur ownership and its existing detector in this repository.
+- Scope/contracts: tooling only; retain 450/700-line and 12-direct-file review signals,
+  behavior-preserving decisions, existing app behavior, user edits and staging.
+- Validation: skill validator, temporary Git/non-Git projects, path/exclusion/threshold
+  regression tests, and a read-only scan against this repository.
+
+### Shared Yjs project server and save/edit API (2026-10-02)
+
+- [x] Add durable project document storage with server-owned Y.Docs and validated commands.
+- [x] Add local HTTP load/edit/save endpoints and a WebSocket update channel; acknowledge
+      edits only after persistence, reject stale revisions and externally changed JSON exports.
+- [x] Hydrate editor stores from the server's Yjs history, synchronize remote edits and local
+      Undo/Redo, and separate remote transaction origins from local Undo history.
+- [x] Load the editor through the project API, save shared snapshots without a file picker,
+      expose JSON export explicitly and show connection/persistence failures.
+- [x] Verify HTTP/API edits, two-client sync, restart recovery, invalid commands/updates,
+      save conflicts, local Undo isolation, and the browser save workflow.
+
+Refactoring decisions: `create-editor-session.ts` (455 lines) remains the session coordinator;
+new transport and persistence responsibility belongs in a private `domain/project/` adapter.
+The shell directory remains one cohesive UI domain. Extract remote Yjs update observation
+within `store-yjs` before adding transport. A new `apps/server` owns independent server
+runtime, disk persistence and HTTP/WebSocket lifecycle; it consumes package public APIs.
+Preserve existing staged changes, the user's chrome-body padding, JSON/command contracts,
+sparse overrides, token resolution and local Undo. Runtime sync state is stored separately
+from explicit JSON exports. Initial scope is one local project, bound to loopback; deployment,
+authentication and multi-project management are later work.
+
+Completion: delegated store/hydration, durable repository, and sync-provider work, integrated
+HTTP transport and editor save centrally. Final scan retains the 478-line session coordinator
+and 461-line project repository: each coordinates one lifecycle; persistence and validation
+are already colocated private modules. Retain the cohesive shell directory. Existing package
+exports and nested JSON remain compatible; the store adds explicit hydration/remote APIs.
+The codec's JSON-record cast was corrected as a prerequisite for passing store typechecks.
+Browser verification used a disposable copy of examples: Save wrote Card without a picker,
+HTTP preview-data edits appeared live, a second tab hydrated the unsaved shared state, and
+server outage produced an explicit save error. Reconnection after restart retained the API
+edit and Save succeeded. No project example or user padding was modified in this verification.
+See [project-api.md](project-api.md) for endpoint contracts and local-only boundaries.
+Live catalog additions in other tabs, replacement imports, shared schema-library management,
+authentication and a browser-durable offline outbox are intentionally not included.
+Existing full-suite deviations: generated schema lacks the component-token label, the
+Storybook Media assertion still expects the previous placeholder, and bound-field editing
+expects an empty preview value despite the newly staged example data. These are unrelated
+schema/test expectation follow-ups; the API implementation does not change their contracts.
+Final focused result: 81 API/sync/store/save/shell tests pass. Full-suite result: 662 tests
+pass; only those 3 existing deviations fail. Changed
+TypeScript paths pass lint and editor/server/store typechecks; all new API/sync tests pass.
+
+### Artboard chrome and component previews (2026-10-01)
+
+- [x] Remove editor-only outer/inner artboard padding and the chrome body/screen insets;
+      retain viewport width, title and content alignment.
+- [x] Supply missing example preview data, including Card and Sign in, and check presets.
+- [x] Verify preview rendering, sparse variant inheritance, viewport settings and browser layout.
+
+Refactoring review: the affected viewport, preview-data and viewport-panel paths have no
+size candidates. Retain their cohesive boundaries: frame-host owns iframe presentation,
+viewports coordinates boards, viewport-chrome resolves settings, and examples own sample
+content. No extraction is needed for these focused corrections. Preserve document layout
+padding, runtime field contracts, preview-data overrides, exports and Undo behavior.
+Validation: targeted preview/viewport tests, example validation, editor typecheck/lint and
+browser checks of standalone and nested components across viewports.
+
+Completion: 14 example datasets added and generated Storybook args refreshed. Legacy chrome
+padding is accepted but ignored; padding controls are removed. Fixed board widths and title
+ellipsis prevent the header from widening small viewports at low zoom. All 67 targeted tests
+pass; changed TypeScript sources pass lint, and before/after scans have no candidates.
+Browser: Card and Sign in render across all six viewports, Compact retains sample content,
+all chrome/body/screen/iframe padding is zero, and frame widths match at 20% zoom. Screenshot
+checked at 52% zoom. Temporary inspector resizing was restored.
+Existing validation failures outside this change: `store-yjs/src/codec.ts:58` casts
+`ComponentTokenMap` directly to a JSON record; the committed JSON Schema is missing the
+component-token `label` property. The schema-sync assertion was excluded from the targeted
+passing run after confirming its failure separately; catalog/roundtrip checks pass.
+
 Vor Erweiterungen betroffene Dateien mit `node scripts/refactor-candidates.mjs <Pfade>`
 prüfen und die [Checkliste](refactoring-checklist.md) anwenden. Größe löst eine Prüfung aus,
 keine automatische Aufteilung. Begründete Refactors innerhalb des aktuellen Auftrags kommen

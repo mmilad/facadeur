@@ -10,6 +10,12 @@ const meta = {
   title: 'Atoms/FormInput',
   component: FormInput,
   tags: ['autodocs'],
+  args: {
+    value: '',
+    placeholder: 'Enter a value',
+    name: 'example-input',
+    disabled: false,
+  },
 } satisfies Meta<typeof FormInput>;
 
 export default meta;
