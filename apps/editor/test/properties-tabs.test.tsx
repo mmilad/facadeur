@@ -169,6 +169,7 @@ describe('properties inspector tabs', () => {
     await act(async () => {
       session.openAsset('button', 'root');
       session.selectNode('root');
+      session.execute({ type: 'setVariantLabels', labels: { default: 'Text Input' } });
     });
 
     await act(async () => {
@@ -182,7 +183,7 @@ describe('properties inspector tabs', () => {
       expect.arrayContaining([expect.objectContaining({ name: 'variant-1' })]),
     );
     expect(session.getSnapshot().document.variantLabels).toMatchObject({
-      default: 'Default',
+      default: 'Text Input',
       'variant-1': 'Dark Mode',
     });
     expect(host.querySelector('button[name="variant-tab-variant-1"]')?.textContent).toBe(

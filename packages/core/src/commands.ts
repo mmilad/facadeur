@@ -135,6 +135,7 @@ export type Command =
   | { type: 'defineVariant'; axis: VariantAxis }
   | { type: 'removeVariant'; name: string }
   | { type: 'setVariantPreset'; preset: VariantPreset }
+  | { type: 'createVariantPreset'; name: string; label: string }
   | { type: 'setVariantStyleBlock'; name: string; style: StyleBlock | null }
   | { type: 'removeVariantPreset'; name: string }
   | { type: 'setToken'; path: string; token: TokenDefinition }
@@ -244,6 +245,23 @@ export function applyCommand(
     case 'setVariantPreset':
       setVariantPreset(next, command.preset);
       break;
+    case 'createVariantPreset': {
+      const label = command.label.trim();
+      if (
+        !label ||
+        command.name === 'default' ||
+        next.variantPresets?.some((preset) => preset.name === command.name)
+      ) {
+        throw new DocumentError('schema', 'A new variant needs a unique name and a nonempty label');
+      }
+      setVariantPreset(next, { name: command.name });
+      next.variantLabels = {
+        ...(next.variantLabels ?? {}),
+        default: next.variantLabels?.default ?? 'Default',
+        [command.name]: label,
+      };
+      break;
+    }
     case 'setVariantStyleBlock':
       setVariantStyleBlock(next, command);
       break;

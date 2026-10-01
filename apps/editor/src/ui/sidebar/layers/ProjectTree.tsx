@@ -9,11 +9,9 @@ import {
   type ReactNode,
 } from 'react';
 import { blankAsset } from '../../../domain/new-asset.js';
-import {
-  nextVariantIdentity,
-  ownsVariantContract,
-  variantLabelMap,
-} from '../../../domain/variant-edit.js';
+import { ownsVariantContract } from '../../../domain/variant-edit.js';
+import { createNamedVariant, renameNamedVariant } from '../../../domain/variant-actions.js';
+import { VariantActionButton } from '../../controls/variants/VariantActionButton.js';
 import type { AssetSummary, EditorSession, EditorSnapshot } from '../../../domain/session.js';
 import {
   DESIGN_DOMAIN_ITEMS,
@@ -147,15 +145,7 @@ export function ProjectTree({
   function createVariant(assetId: string) {
     const current = session.getSnapshot();
     if (current.openId !== assetId) onOpenAsset(assetId);
-    const latest = session.getSnapshot();
-    if (!ownsVariantContract(latest.document.kind)) return;
-    const identity = nextVariantIdentity(latest.document);
-    session.execute({ type: 'setVariantPreset', preset: identity.preset });
-    const labels = variantLabelMap(latest.document, identity.name, identity.label) ?? {
-      [identity.name]: identity.label,
-    };
-    session.execute({ type: 'setVariantLabels', labels });
-    session.setActiveVariant(identity.name);
+    if (!createNamedVariant(session)) return;
     setExpandedVariants((prev) => ({ ...prev, [assetId]: true }));
     setContextAssetId(null);
   }
@@ -164,9 +154,7 @@ export function ProjectTree({
     const asset = snap.catalog.find((candidate) => candidate.id === assetId);
     if (!asset) return;
     if (session.getSnapshot().openId !== assetId) onOpenAsset(assetId);
-    const document = session.getSnapshot().document;
-    const labels = variantLabelMap(document, name, label) ?? {};
-    session.execute({ type: 'setVariantLabels', labels });
+    renameNamedVariant(session, name, label);
   }
 
   return (
@@ -354,9 +342,10 @@ function AssetRows({
                   role="listitem"
                   className={variantActive ? 'asset-variant is-active' : 'asset-variant'}
                 >
-                  <button
-                    type="button"
+                  <VariantActionButton
                     name={`variant-${asset.id}-${variant.name}`}
+                    label={variant.label}
+                    onRename={(label) => onRenameVariant(asset.id, variant.name, label)}
                     aria-current={variantActive ? 'true' : undefined}
                     onClick={() => {
                       onOpenAsset(asset.id);
@@ -364,15 +353,7 @@ function AssetRows({
                     }}
                   >
                     {variant.label}
-                  </button>
-                  <input
-                    type="text"
-                    value={variant.label}
-                    aria-label={`${variant.label} label`}
-                    onChange={(event) =>
-                      onRenameVariant(asset.id, variant.name, event.target.value)
-                    }
-                  />
+                  </VariantActionButton>
                 </div>
               );
             })}

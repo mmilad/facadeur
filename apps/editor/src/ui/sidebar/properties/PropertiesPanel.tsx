@@ -3,12 +3,9 @@
 import { useState } from 'react';
 import { findParent, type FlatDocument, type FlatNode } from '@facadeur/core';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
-import {
-  nextVariantIdentity,
-  ownsVariantContract,
-  variantLabelMap,
-  variantSummaries,
-} from '../../../domain/variant-edit.js';
+import { ownsVariantContract, variantSummaries } from '../../../domain/variant-edit.js';
+import { createNamedVariant, renameNamedVariant } from '../../../domain/variant-actions.js';
+import { VariantActionButton } from '../../controls/variants/VariantActionButton.js';
 import { AddPopover, Field, TextInput } from '../../form/index.js';
 import { ContentPanel } from './content/ContentPanel.js';
 import { StyleInspector } from './style/StyleInspector.js';
@@ -130,21 +127,7 @@ function VariantTabs({ session, snap }: { session: EditorSession; snap: EditorSn
 
   const variants = variantSummaries(snap.document);
   function addVariant() {
-    const label = newName.trim();
-    if (!label) {
-      session.setNotice('Variant labels must not be empty', 'error');
-      return;
-    }
-    const identity = nextVariantIdentity(snap.document);
-    session.execute({ type: 'setVariantPreset', preset: identity.preset });
-    const labels: Record<string, string> = {
-      ...(snap.document.variantLabels ?? {}),
-      default: 'Default',
-    };
-    labels[identity.name] = label;
-    session.execute({ type: 'setVariantLabels', labels });
-    session.setActiveVariant(identity.name);
-    setNewName('');
+    if (createNamedVariant(session, newName)) setNewName('');
   }
 
   return (
@@ -167,27 +150,17 @@ function VariantTabs({ session, snap }: { session: EditorSession; snap: EditorSn
           const active = (snap.activeVariantName ?? 'default') === variant.name;
           return (
             <div key={variant.name} className="variant-tab-entry">
-              <button
-                type="button"
+              <VariantActionButton
                 role="tab"
                 name={`variant-tab-${variant.name}`}
+                label={variant.label}
+                onRename={(label) => renameNamedVariant(session, variant.name, label)}
                 className={active ? 'variant-tab is-active' : 'variant-tab'}
                 aria-selected={active}
                 onClick={() => session.setActiveVariant(variant.isDefault ? null : variant.name)}
               >
                 {variant.label}
-              </button>
-              <input
-                type="text"
-                name={`variant-label-${variant.name}`}
-                aria-label={`${variant.label} label`}
-                value={variant.label}
-                onChange={(event) => {
-                  const labels =
-                    variantLabelMap(snap.document, variant.name, event.target.value) ?? {};
-                  session.execute({ type: 'setVariantLabels', labels });
-                }}
-              />
+              </VariantActionButton>
             </div>
           );
         })}

@@ -475,16 +475,15 @@ body.is-resizing-inspector {
   color: var(--ink);
 }
 
-.asset-variant > input,
-.variant-tab-entry > input {
-  width: 78px;
-  min-width: 0;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  background: var(--white);
-  padding: 3px 4px;
-  color: var(--ink);
-  font-size: 10px;
+.variant-actions-popover {
+  padding: 8px;
+}
+
+.variant-rename-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .asset:hover,

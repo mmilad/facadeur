@@ -237,15 +237,16 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
 
   function runWithActiveVariant(store: YjsDocumentStore, command: Command) {
     const activeStore = assetStores.get(openId);
-    if (store !== activeStore || !activeVariantName || !variantEditableCommand(command)) {
+    const variantName = snapshot?.activeVariantName;
+    if (store !== activeStore || !variantName || !variantEditableCommand(command)) {
       run(store, command);
       return;
     }
     try {
       const base = toNested(store.getDocument());
-      const active = resolveVariantDocument(base, activeVariantName);
+      const active = resolveVariantDocument(base, variantName);
       const edited = toNested(applyCommand(toFlat(active), command, { resolveKind }));
-      const preset = deriveVariantPreset(base, edited, activeVariantName);
+      const preset = deriveVariantPreset(base, edited, variantName);
       run(store, { type: 'setVariantPreset', preset });
     } catch (error) {
       notice = { tone: 'error', text: errorText(error) };
