@@ -144,18 +144,18 @@ describe('spacing domain panel', () => {
     session.executeDesign({
       type: 'setToken',
       path: 'space.5',
-      token: withTokenBreakpoint(session.getSnapshot().design.tokens, 'space.5', 'tablet', '28px'),
+      token: withTokenBreakpoint(session.getSnapshot().design.tokens, 'space.5', 'sm', '28px'),
     });
 
     await openSpacing(session);
     await act(async () => {
-      session.setFocusViewport('tablet');
+      session.setFocusViewport('sm');
       session.setEditTarget('viewport');
     });
 
-    expect(host!.textContent).toContain('Spacing overrides at tablet');
+    expect(host!.textContent).toContain('Spacing overrides at Tablet');
     const indexedBefore = readTokenTree(session.getSnapshot().design.tokens);
-    expect(indexedBefore.tokens.get('space.5')?.breakpoints.tablet).toBe('28px');
+    expect(indexedBefore.tokens.get('space.5')?.breakpoints.sm).toBe('28px');
 
     const resetButton = host!.querySelector(
       'tr[data-token-path="space.5"] .override-cue button',
@@ -166,7 +166,7 @@ describe('spacing domain panel', () => {
     });
 
     const indexedAfter = readTokenTree(session.getSnapshot().design.tokens);
-    expect(indexedAfter.tokens.get('space.5')?.breakpoints.tablet).toBeUndefined();
+    expect(indexedAfter.tokens.get('space.5')?.breakpoints.sm).toBeUndefined();
     expect(indexedAfter.tokens.get('space.5')?.value).toBe('20px');
   });
 });

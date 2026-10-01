@@ -10,16 +10,34 @@
     },
     "breakpoints": [
       {
-        "id": "mobile",
+        "id": "xs",
+        "label": "Phone",
         "minWidth": 375
       },
       {
-        "id": "tablet",
+        "id": "sm",
+        "label": "Tablet",
         "minWidth": 768
       },
       {
-        "id": "desktop",
+        "id": "md",
+        "label": "Laptop",
+        "minWidth": 1024
+      },
+      {
+        "id": "lg",
+        "label": "Desktop",
+        "minWidth": 1200
+      },
+      {
+        "id": "xl",
+        "label": "Wide",
         "minWidth": 1440
+      },
+      {
+        "id": "xxl",
+        "label": "Ultra",
+        "minWidth": 1760
       }
     ]
   },

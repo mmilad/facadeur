@@ -1,4 +1,5 @@
-import { readTokenTree, type JsonValue } from '@facadeur/core';
+import { breakpointLabel, readTokenTree } from '@facadeur/core';
+import { activeBreakpoints } from '@facadeur/tokens';
 import { useMemo, useState } from 'react';
 import {
   colorTokenRefs,
@@ -11,10 +12,7 @@ import {
 } from '../../../../domain/editing.js';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
 import { formatTokenValue } from '../../../../domain/edits/token-edit.js';
-import {
-  editorBreakpoints,
-  viewportEditContext,
-} from '../../../../domain/viewport/viewport-edit.js';
+import { viewportEditContext } from '../../../../domain/viewport/viewport-edit.js';
 import {
   projectFontRefs,
   projectFontWeightOptions,
@@ -22,6 +20,7 @@ import {
 } from '../../../controls/typography/index.js';
 import type { DesignDomain } from '../design-domain.js';
 import { designDomainLabel, tokenMatchesDomain } from '../design-domain.js';
+import { ViewportTabs } from '../ViewportTabs.js';
 import { ColorTokenAddRow } from './ColorsTokenCrud.js';
 import { RadiusTokenAddRow } from './RadiusTokenCrud.js';
 import { SpacingTokenAddRow } from './SpacingTokenCrud.js';
@@ -43,7 +42,7 @@ import {
 } from './TokenTable.js';
 import '../token-tables.css';
 
-type TokenDomain = Exclude<DesignDomain, 'fonts' | 'icons'>;
+type TokenDomain = Exclude<DesignDomain, 'fonts' | 'icons' | 'viewports'>;
 
 export function TokensDomainPanel({
   session,
@@ -63,7 +62,7 @@ export function TokensDomainPanel({
       .sort((left, right) => naturalTokenCompare(left.path, right.path));
   }, [snap.design.tokens, domain]);
   const ctx = viewportEditContext({
-    breakpoints: editorBreakpoints(snap.document, snap.design),
+    breakpoints: activeBreakpoints(snap.design.settings.breakpoints),
     focusId: snap.focusViewportId,
     editTarget: snap.editTarget,
   });
@@ -107,6 +106,7 @@ export function TokensDomainPanel({
           : token.value;
         return {
           path: token.path,
+          label: token.label,
           type: token.type,
           value: token.value,
           baseValue,
@@ -130,14 +130,21 @@ export function TokensDomainPanel({
   );
   const groups = groupTokens(visible);
   const domainTitle = designDomainLabel(domain);
+  const writing = ctx.breakpoints.find((item) => item.id === writingId);
   return (
     <div className="stack design-domain-panel">
+      <ViewportTabs
+        session={session}
+        breakpoints={ctx.breakpoints}
+        baseId={ctx.base?.id ?? null}
+        writingId={writingId}
+      />
       <TokenTableToolbar
         query={query}
         onQueryChange={setQuery}
         count={visible.length}
         total={tableTokens.length}
-        context={writingId ? `${domainTitle} overrides at ${writingId}` : undefined}
+        context={writing ? `${domainTitle} overrides at ${breakpointLabel(writing)}` : undefined}
         addAction={
           <>
             {domain === 'colors' ? <ColorTokenAddRow session={session} snap={snap} /> : null}

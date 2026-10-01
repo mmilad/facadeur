@@ -149,7 +149,7 @@ describe('shadow domain panel', () => {
       documents,
       design: createProjectTemplateDocument(),
     });
-    const tabletOverride = {
+    const smOverride = {
       blur: '40px',
       color: '#0f172a29',
       offsetX: '0px',
@@ -162,20 +162,20 @@ describe('shadow domain panel', () => {
       token: withTokenBreakpoint(
         session.getSnapshot().design.tokens,
         'shadow.lg',
-        'tablet',
-        tabletOverride,
+        'sm',
+        smOverride,
       ),
     });
 
     await openShadow(session);
     await act(async () => {
-      session.setFocusViewport('tablet');
+      session.setFocusViewport('sm');
       session.setEditTarget('viewport');
     });
 
-    expect(host!.textContent).toContain('Shadow overrides at tablet');
+    expect(host!.textContent).toContain('Shadow overrides at Tablet');
     const indexedBefore = readTokenTree(session.getSnapshot().design.tokens);
-    expect(indexedBefore.tokens.get('shadow.lg')?.breakpoints.tablet).toEqual(tabletOverride);
+    expect(indexedBefore.tokens.get('shadow.lg')?.breakpoints.sm).toEqual(smOverride);
 
     const resetButton = host!.querySelector(
       'tr[data-token-path="shadow.lg"] .override-cue button',
@@ -186,7 +186,7 @@ describe('shadow domain panel', () => {
     });
 
     const indexedAfter = readTokenTree(session.getSnapshot().design.tokens);
-    expect(indexedAfter.tokens.get('shadow.lg')?.breakpoints.tablet).toBeUndefined();
+    expect(indexedAfter.tokens.get('shadow.lg')?.breakpoints.sm).toBeUndefined();
     expect(indexedAfter.tokens.get('shadow.lg')?.value).toMatchObject({
       offsetY: '16px',
     });

@@ -17,6 +17,7 @@ import {
   readBreakpoints,
   readDeprecated,
   readDescription,
+  readLabel,
   readTier,
   readType,
   rejectUnknownReserved,
@@ -51,6 +52,7 @@ export interface TokenGroupDefinition {
 
 export interface IndexedToken {
   path: string;
+  label?: string;
   type: TokenType;
   tier?: TokenTier;
   value: JsonValue;
@@ -220,7 +222,9 @@ function walk(
     for (const [breakpoint, override] of Object.entries(breakpoints)) {
       assertBreakpointValue(type, override, path, breakpoint);
     }
+    const label = readLabel(node.$extensions, path);
     const token: IndexedToken = { path, type, value, breakpoints };
+    if (label !== undefined) token.label = label;
     if (tier) token.tier = tier;
     if (description !== undefined) token.description = description;
     if (deprecated !== undefined) token.deprecated = deprecated;

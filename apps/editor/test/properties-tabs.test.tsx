@@ -455,7 +455,7 @@ describe('properties inspector tabs', () => {
     });
 
     const viewportRow = [...host.querySelectorAll('button.viewport-layer')].find((button) =>
-      button.textContent?.includes('mobile'),
+      button.dataset.breakpoint === 'xs',
     );
     await act(async () => {
       viewportRow?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -481,13 +481,13 @@ describe('properties inspector tabs', () => {
 
     await act(async () => {
       host!
-        .querySelector('button[data-breakpoint="tablet"]')
+        .querySelector('button[data-breakpoint="sm"]')
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
     const context = host.querySelector('[data-testid="viewport-context"]');
     expect(context?.querySelector('.inspector-context-kicker')?.textContent).toBe('Viewport');
-    expect(context?.querySelector('.inspector-context-title')?.textContent).toBe('tablet · 768');
+    expect(context?.querySelector('.inspector-context-title')?.textContent).toBe('Tablet · 768');
     expect(context?.textContent).toContain('selected on stage');
   });
 });

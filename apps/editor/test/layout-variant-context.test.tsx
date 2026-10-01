@@ -16,6 +16,13 @@ const layoutDocument: DocumentFile = {
   id: 'layout-context',
   name: 'Layout context',
   kind: 'component',
+  settings: {
+    breakpoints: [
+      { id: 'mobile', minWidth: 375 },
+      { id: 'tablet', minWidth: 768 },
+      { id: 'desktop', minWidth: 1440 },
+    ],
+  },
   tokenInterface: {
     reads: ['space.gap.xs', 'space.gap.sm', 'space.gap.md', 'space.gap.lg'],
   },

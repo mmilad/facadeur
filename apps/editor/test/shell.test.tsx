@@ -399,14 +399,14 @@ describe('editor shell', () => {
     });
     await act(async () => {
       session.openAsset('button', 'root');
-      session.setFocusViewport('tablet');
+      session.setFocusViewport('sm');
     });
 
     expect(host.querySelector('button[name="edit-base"]')?.getAttribute('aria-pressed')).toBe(
       'true',
     );
     const viewportButton = host.querySelector('button[name="edit-viewport"]');
-    expect(viewportButton?.textContent).toContain('tablet · 768');
+    expect(viewportButton?.textContent).toContain('Tablet · 768');
 
     const styleTab = host.querySelector('button[name="property-tab-style"]');
     await act(async () => {
@@ -438,8 +438,8 @@ describe('editor shell', () => {
     });
     const styles = session.getSnapshot().document.styles;
     expect(styles?.declarations?.paddingInline).toBe('{padding.x}');
-    expect(styles?.breakpoints?.tablet).toBeUndefined();
-    expect(styles?.breakpoints?.desktop).toBeUndefined();
+    expect(styles?.breakpoints?.sm).toBeUndefined();
+    expect(styles?.breakpoints?.xl).toBeUndefined();
   });
 
   it('shows a drill breadcrumb and clears it when opening from the tree', async () => {

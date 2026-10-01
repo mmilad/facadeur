@@ -1,4 +1,4 @@
-import type { Breakpoint } from '@facadeur/core';
+import { breakpointLabel, type Breakpoint } from '@facadeur/core';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
 import { editorBreakpoints } from '../../../domain/viewport/viewport-edit.js';
 import { resolvedViewportChrome } from '../../../domain/viewport/viewport-chrome.js';
@@ -167,6 +167,12 @@ function BreakpointEditor({
       {breakpoints.map((breakpoint) => (
         <div key={breakpoint.id} className="viewport-breakpoint-row">
           <TextControl
+            label="Label"
+            name={`breakpoint-label-${breakpoint.id}`}
+            value={breakpoint.label ?? breakpointLabel(breakpoint)}
+            onCommit={(value) => renameBreakpointLabel(session, snap, breakpoint.id, value)}
+          />
+          <TextControl
             label="Id"
             name={`breakpoint-id-${breakpoint.id}`}
             value={breakpoint.id}
@@ -230,6 +236,35 @@ function removeViewport(session: EditorSession, snap: EditorSnapshot, breakpoint
   if (current.length <= 1) return;
   const next = current.filter((item) => item.id !== breakpointId);
   commitBreakpoints(session, snap, next);
+}
+
+function renameBreakpointLabel(
+  session: EditorSession,
+  snap: EditorSnapshot,
+  id: string,
+  rawLabel: string,
+) {
+  const current = effectiveListedBreakpoints(snap);
+  const label = rawLabel.trim();
+  const target = current.find((item) => item.id === id);
+  if (!target || label === (target.label ?? breakpointLabel(target))) return;
+  if (label && current.some((item) => item.id !== id && item.label?.trim() === label)) {
+    session.setNotice(`Viewport label "${label}" is already in use.`, 'error');
+    return;
+  }
+  commitBreakpoints(
+    session,
+    snap,
+    current.map((item) => (item.id === id ? breakpointWithLabel(item, label) : item)),
+  );
+}
+
+function breakpointWithLabel(breakpoint: Breakpoint, label: string): Breakpoint {
+  if (!label) {
+    const { label: _label, ...rest } = breakpoint;
+    return rest;
+  }
+  return { ...breakpoint, label };
 }
 
 function renameBreakpoint(

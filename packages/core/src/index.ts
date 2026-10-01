@@ -70,6 +70,7 @@ export {
   type PreviewData,
   type Binding,
   type BindingTarget,
+  breakpointLabel,
   defaultBreakpoints,
   type Breakpoint,
   type DocumentFile,

@@ -1,6 +1,6 @@
 import type { EditorSession, EditorSnapshot } from '../../domain/session.js';
 import { useMemo } from 'react';
-import { renderDesignCss } from '@facadeur/tokens';
+import { activeBreakpoints, renderDesignCss } from '@facadeur/tokens';
 import {
   FontsDomainPanel,
   IconsDomainPanel,
@@ -12,9 +12,9 @@ import {
   SETTINGS_TOKEN_DOMAIN_ITEMS,
   type DesignDomain,
 } from '../sidebar/design/design-domain.js';
-import { DesignBreakpointControl } from './DesignBreakpointControl.js';
+import { ViewportsSettingsPanel } from '../sidebar/design/ViewportsSettingsPanel.js';
 import { TokenPreviewProvider } from '../controls/fields/TokenPreviewContext.js';
-import { editorBreakpoints, viewportEditContext } from '../../domain/viewport/viewport-edit.js';
+import { viewportEditContext } from '../../domain/viewport/viewport-edit.js';
 import '../form/form.css';
 
 export function DesignDomainStage({
@@ -31,7 +31,8 @@ export function DesignDomainStage({
   const settingsView = isSettingsTokenDomain(domain);
   const title = settingsView ? 'Settings' : designDomainLabel(domain);
   const designTitle = snap.design.name?.trim() || 'project design';
-  const responsive = domain !== 'fonts' && domain !== 'icons';
+  const sharedResources = domain === 'fonts' || domain === 'icons';
+  const tokenDomain = !sharedResources && domain !== 'viewports';
   const fontStyles = useMemo(
     () =>
       renderDesignCss(
@@ -44,7 +45,7 @@ export function DesignDomainStage({
     [snap.design.fonts],
   );
   const ctx = viewportEditContext({
-    breakpoints: editorBreakpoints(snap.document, snap.design),
+    breakpoints: activeBreakpoints(snap.design.settings.breakpoints),
     focusId: snap.focusViewportId,
     editTarget: snap.editTarget,
   });
@@ -76,23 +77,23 @@ export function DesignDomainStage({
             </nav>
           ) : null}
         </div>
-        {responsive ? (
-          <DesignBreakpointControl session={session} snap={snap} />
-        ) : (
+        {sharedResources ? (
           <span className="design-resource-scope">Shared project resources</span>
-        )}
+        ) : null}
       </header>
       <div className="design-domain-body">
         <TokenPreviewProvider
           design={snap.design}
           document={snap.design}
-          breakpointId={responsive ? ctx.writingBreakpointId : null}
+          breakpointId={tokenDomain ? ctx.writingBreakpointId : null}
           breakpoints={ctx.breakpoints.slice()}
         >
           {domain === 'fonts' ? (
             <FontsDomainPanel session={session} snap={snap} />
           ) : domain === 'icons' ? (
             <IconsDomainPanel session={session} snap={snap} />
+          ) : domain === 'viewports' ? (
+            <ViewportsSettingsPanel session={session} snap={snap} />
           ) : (
             <TokensDomainPanel key={domain} session={session} snap={snap} domain={domain} />
           )}

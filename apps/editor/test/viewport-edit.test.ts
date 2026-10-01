@@ -39,21 +39,21 @@ describe('viewport edit context', () => {
         .writingBreakpointId,
     ).toBeNull();
     expect(
-      viewportEditContext({ breakpoints, focusId: 'mobile', editTarget: 'viewport' })
+      viewportEditContext({ breakpoints, focusId: 'xs', editTarget: 'viewport' })
         .writingBreakpointId,
     ).toBeNull();
     const focused = viewportEditContext({
       breakpoints,
-      focusId: 'tablet',
+      focusId: 'sm',
       editTarget: 'base',
     });
-    expect(focused.focus).toEqual({ id: 'tablet', minWidth: 768 });
+    expect(focused.focus).toEqual({ id: 'sm', label: 'Tablet', minWidth: 768 });
     expect(focused.overrideViewport?.minWidth).toBe(768);
     expect(focused.writingBreakpointId).toBeNull();
     expect(
-      viewportEditContext({ breakpoints, focusId: 'tablet', editTarget: 'viewport' })
+      viewportEditContext({ breakpoints, focusId: 'sm', editTarget: 'viewport' })
         .writingBreakpointId,
-    ).toBe('tablet');
+    ).toBe('sm');
     expect(
       viewportEditContext({ breakpoints, focusId: 'missing', editTarget: 'viewport' }).focus,
     ).toBeNull();
@@ -67,9 +67,9 @@ describe('viewport edit context', () => {
     expect(editor.getSnapshot().focusViewportId).toBeNull();
     expect(editor.getSnapshot().editTarget).toBe('base');
     editor.openAsset('button', 'root');
-    editor.setFocusViewport('tablet');
+    editor.setFocusViewport('sm');
     editor.selectNode('root');
-    expect(editor.getSnapshot().focusViewportId).toBe('tablet');
+    expect(editor.getSnapshot().focusViewportId).toBe('sm');
     expect(editor.getSnapshot().editTarget).toBe('base');
     expect(editor.getSnapshot().selectedNodeId).toBe('root');
 
@@ -78,18 +78,18 @@ describe('viewport edit context', () => {
     const style = writeStyleDeclaration(
       before.styles,
       before.rootId,
-      { nodeId: before.rootId, breakpointId: 'tablet' },
+      { nodeId: before.rootId, breakpointId: 'sm' },
       'color',
       'blue',
     );
     editor.execute({ type: 'setStyleBlock', style });
     const after = editor.getSnapshot().document;
     expect(after.styles?.declarations).toEqual(before.styles?.declarations);
-    expect(after.styles?.breakpoints?.tablet?.declarations).toMatchObject({
+    expect(after.styles?.breakpoints?.sm?.declarations).toMatchObject({
       paddingInline: '{space.5}',
       color: 'blue',
     });
-    expect(after.styles?.breakpoints?.desktop).toBeUndefined();
+    expect(after.styles?.breakpoints?.xl).toBeUndefined();
     const root = after.nodes.root;
     expect(root && 'style' in root ? root.style : undefined).toBeUndefined();
 
@@ -98,7 +98,7 @@ describe('viewport edit context', () => {
     const base = editor.getSnapshot().document;
     const styled = base.nodes.root;
     expect(styled && 'style' in styled ? styled.style : undefined).toEqual({ color: 'red' });
-    expect(base.styles?.breakpoints?.tablet?.declarations?.color).toBe('blue');
+    expect(base.styles?.breakpoints?.sm?.declarations?.color).toBe('blue');
     expect(base.styles?.declarations?.color).toBe('{color.text}');
   });
 });

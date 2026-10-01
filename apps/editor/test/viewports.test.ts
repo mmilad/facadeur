@@ -37,7 +37,7 @@ describe('viewport board', () => {
             type: 'frame',
             layout: {
               direction: 'column',
-              breakpoints: { desktop: { direction: 'row' } },
+              breakpoints: { xl: { direction: 'row' } },
             },
             children: [
               { id: 'notes', type: 'text', text: 'Field notes' },
@@ -74,7 +74,7 @@ describe('viewport board', () => {
       type: 'setProp',
       nodeId: 'cards',
       prop: 'layout',
-      value: { direction: 'row', breakpoints: { desktop: { direction: 'row' } } },
+      value: { direction: 'row', breakpoints: { xl: { direction: 'row' } } },
     });
     for (const frame of board.frames()) {
       const doc = frame.host.contentDocument();

@@ -5,6 +5,7 @@
  */
 
 import {
+  breakpointLabel,
   resolveVariantDocument,
   withPreviewData,
   toNested,
@@ -167,7 +168,7 @@ export function createViewportBoard(options: {
         width: breakpoint.minWidth,
         ownerDocument: parent.ownerDocument,
       });
-      host.element.title = `${breakpoint.id} viewport, ${breakpoint.minWidth}px`;
+      host.element.title = `${breakpointLabel(breakpoint)} viewport, ${breakpoint.minWidth}px`;
       body.append(screen);
       row.append(column);
       host.mount(screen);

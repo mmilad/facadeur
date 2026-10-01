@@ -9,6 +9,7 @@ import { naturalTokenCompare } from './TokenTable.js';
 
 export interface TableToken {
   path: string;
+  label?: string;
   type: string;
   value: JsonValue;
   effectiveValue: JsonValue;

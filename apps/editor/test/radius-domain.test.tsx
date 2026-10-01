@@ -149,20 +149,20 @@ describe('radius domain panel', () => {
       token: withTokenBreakpoint(
         session.getSnapshot().design.tokens,
         'radius.lg',
-        'tablet',
+        'sm',
         '20px',
       ),
     });
 
     await openRadius(session);
     await act(async () => {
-      session.setFocusViewport('tablet');
+      session.setFocusViewport('sm');
       session.setEditTarget('viewport');
     });
 
-    expect(host!.textContent).toContain('Radius overrides at tablet');
+    expect(host!.textContent).toContain('Radius overrides at Tablet');
     const indexedBefore = readTokenTree(session.getSnapshot().design.tokens);
-    expect(indexedBefore.tokens.get('radius.lg')?.breakpoints.tablet).toBe('20px');
+    expect(indexedBefore.tokens.get('radius.lg')?.breakpoints.sm).toBe('20px');
 
     const resetButton = host!.querySelector(
       'tr[data-token-path="radius.lg"] .override-cue button',
@@ -173,7 +173,7 @@ describe('radius domain panel', () => {
     });
 
     const indexedAfter = readTokenTree(session.getSnapshot().design.tokens);
-    expect(indexedAfter.tokens.get('radius.lg')?.breakpoints.tablet).toBeUndefined();
+    expect(indexedAfter.tokens.get('radius.lg')?.breakpoints.sm).toBeUndefined();
     expect(indexedAfter.tokens.get('radius.lg')?.value).toBe('12px');
   });
 });

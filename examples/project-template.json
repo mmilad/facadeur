@@ -11,16 +11,34 @@
   "settings": {
     "breakpoints": [
       {
-        "id": "mobile",
+        "id": "xs",
+        "label": "Phone",
         "minWidth": 375
       },
       {
-        "id": "tablet",
+        "id": "sm",
+        "label": "Tablet",
         "minWidth": 768
       },
       {
-        "id": "desktop",
+        "id": "md",
+        "label": "Laptop",
+        "minWidth": 1024
+      },
+      {
+        "id": "lg",
+        "label": "Desktop",
+        "minWidth": 1200
+      },
+      {
+        "id": "xl",
+        "label": "Wide",
         "minWidth": 1440
+      },
+      {
+        "id": "xxl",
+        "label": "Ultra",
+        "minWidth": 1760
       }
     ]
   },
@@ -396,10 +414,10 @@
         "$extensions": {
           "facadeur": {
             "breakpoints": {
-              "desktop": {
+              "xl": {
                 "fontSize": "18px"
               },
-              "tablet": {
+              "sm": {
                 "fontSize": "17px"
               }
             }
@@ -417,7 +435,7 @@
         "$extensions": {
           "facadeur": {
             "breakpoints": {
-              "desktop": {
+              "xl": {
                 "fontSize": "13px"
               }
             }
@@ -435,10 +453,10 @@
         "$extensions": {
           "facadeur": {
             "breakpoints": {
-              "desktop": {
+              "xl": {
                 "fontSize": "56px"
               },
-              "tablet": {
+              "sm": {
                 "fontSize": "48px"
               }
             }
@@ -456,10 +474,10 @@
         "$extensions": {
           "facadeur": {
             "breakpoints": {
-              "desktop": {
+              "xl": {
                 "fontSize": "40px"
               },
-              "tablet": {
+              "sm": {
                 "fontSize": "36px"
               }
             }
@@ -477,7 +495,7 @@
         "$extensions": {
           "facadeur": {
             "breakpoints": {
-              "desktop": {
+              "xl": {
                 "fontSize": "15px"
               }
             }
@@ -495,10 +513,10 @@
         "$extensions": {
           "facadeur": {
             "breakpoints": {
-              "desktop": {
+              "xl": {
                 "fontSize": "28px"
               },
-              "tablet": {
+              "sm": {
                 "fontSize": "26px"
               }
             }

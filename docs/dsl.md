@@ -27,7 +27,7 @@ Examples live in `examples/`. The JSON Schema generated from `packages/core` is 
 | `fields`               | no       | Variable fields of an atom or component: `name`, `type`, `default`.                                                 |
 | `variants`             | no       | Variant axes: `name`, `values`, optional `default`.                                                                 |
 | `settings.artboard`    | no       | `{ "width", "height" }` in pixels. The page sheet. Not a node.                                                      |
-| `settings.breakpoints` | no       | Viewport widths. Default, when omitted: mobile 375, tablet 768, desktop 1440.                                       |
+| `settings.breakpoints` | no       | Viewport widths. Default, when omitted: Phone 375 through Ultra 1760. See Breakpoints.                              |
 | `fonts`                | no       | Font families: id, CSS name, weights, source, fallbacks.                                                            |
 | `tokens`               | no       | W3C DTCG tree. A token has `$value`; a group does not.                                                              |
 | `styles`               | no       | Style block for this document: base, states, variants, breakpoints, children.                                       |
@@ -175,7 +175,7 @@ Frames render as flexbox. The default direction is `column`, alignment is stretc
 
 `min` and `max` use the same size value. `gap`, `padding`, and `margin` are token references (`{space.gap.md}`), or a box of `{ top, right, bottom, left }` for padding and margin. A raw length is rejected.
 
-`breakpoints` overrides any of those fields per breakpoint id. The base breakpoint (smallest `minWidth`, mobile 375 when the document lists none) is not a query. Larger breakpoints become `@media (min-width: Npx)`. Child fill/hug is compiled against the base direction.
+`breakpoints` overrides any of those fields per breakpoint id. The base breakpoint (smallest `minWidth`, Phone at 375 when the document lists none) is not a query. Larger breakpoints become `@media (min-width: Npx)`. Child fill/hug is compiled against the base direction.
 
 ## Style block
 
@@ -204,7 +204,7 @@ Child names match `[a-z0-9]+` (`blue`, `500`). A reference is the whole string `
 
 Supported `$type` values: `color`, `dimension`, `number`, `fontFamily`, `fontWeight`, `shadow`, `typography`.
 
-Per-breakpoint values live in `$extensions.facadeur.breakpoints`. `$value` is the base, which is the breakpoint with the smallest `minWidth`. That base is not wrapped in `@media` — its `minWidth` is the viewport width of the frame (375 for the default mobile breakpoint), not a query threshold. Each larger breakpoint emits `@media (min-width: <px>)`.
+Per-breakpoint values live in `$extensions.facadeur.breakpoints`. `$value` is the base, which is the breakpoint with the smallest `minWidth`. That base is not wrapped in `@media` — its `minWidth` is the viewport width of the frame (375 for the default `xs` breakpoint), not a query threshold. Each larger breakpoint emits `@media (min-width: <px>)`.
 
 ```json
 {
@@ -220,7 +220,7 @@ Per-breakpoint values live in `$extensions.facadeur.breakpoints`. `$value` is th
       },
       "$extensions": {
         "facadeur": {
-          "breakpoints": { "tablet": { "fontSize": "17px" }, "desktop": { "fontSize": "18px" } }
+          "breakpoints": { "sm": { "fontSize": "17px" }, "xl": { "fontSize": "18px" } }
         }
       }
     }
@@ -268,14 +268,17 @@ Allowed kinds: atom, component, and section. Pages cannot define `componentToken
 ```json
 "settings": {
   "breakpoints": [
-    { "id": "mobile", "minWidth": 375 },
-    { "id": "tablet", "minWidth": 768 },
-    { "id": "desktop", "minWidth": 1440 }
+    { "id": "xs", "label": "Phone", "minWidth": 375 },
+    { "id": "sm", "label": "Tablet", "minWidth": 768 },
+    { "id": "md", "label": "Laptop", "minWidth": 1024 },
+    { "id": "lg", "label": "Desktop", "minWidth": 1200 },
+    { "id": "xl", "label": "Wide", "minWidth": 1440 },
+    { "id": "xxl", "label": "Ultra", "minWidth": 1760 }
   ]
 }
 ```
 
-Ids match `[a-z][a-z0-9]*`. Widths are positive integers and unique. When the document omits breakpoints, CSS uses the three defaults above. A token may only name breakpoints from that list, and it may not repeat the base id inside `$extensions`.
+Ids match `[a-z][a-z0-9]*` and stay in token overrides and CSS. `label` is the name the editor shows; omit it and a known id still uses its default name. Widths are positive integers and unique. When the document omits breakpoints, CSS uses these defaults. A token may only name breakpoints from that list, and it may not repeat the base id inside `$extensions`.
 
 ## Project template
 

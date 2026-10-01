@@ -83,7 +83,11 @@ export function loadTokens(input: DesignInput = {}): ResolvedDesign {
 export function activeBreakpoints(breakpoints: readonly Breakpoint[] | undefined): Breakpoint[] {
   const source = breakpoints?.length ? breakpoints : defaultBreakpoints;
   return source
-    .map((item) => ({ id: item.id, minWidth: item.minWidth }))
+    .map((item) => ({
+      id: item.id,
+      minWidth: item.minWidth,
+      ...(item.label ? { label: item.label } : {}),
+    }))
     .sort((left, right) => left.minWidth - right.minWidth || left.id.localeCompare(right.id));
 }
 

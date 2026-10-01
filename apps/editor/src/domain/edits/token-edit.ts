@@ -52,6 +52,25 @@ export function withTokenValue(tree: TokenTree, path: string, value: JsonValue):
   return next;
 }
 
+export function withTokenLabel(tree: TokenTree, path: string, label: string): TokenDefinition {
+  const node = tokenNode(tree, path);
+  const next = withTokenValue(tree, path, node.$value as JsonValue);
+  const extensions = isPlainObject(next.$extensions)
+    ? (structuredClone(next.$extensions) as Record<string, JsonValue>)
+    : {};
+  const facadeur = isPlainObject(extensions.facadeur)
+    ? { ...(extensions.facadeur as Record<string, JsonValue>) }
+    : {};
+  const trimmed = label.trim();
+  if (trimmed) facadeur.label = trimmed;
+  else delete facadeur.label;
+  if (Object.keys(facadeur).length) extensions.facadeur = facadeur;
+  else delete extensions.facadeur;
+  if (Object.keys(extensions).length) next.$extensions = extensions;
+  else delete next.$extensions;
+  return next;
+}
+
 /**
  * Set or clear one `$extensions.facadeur.breakpoints` value.
  * `$value` and every other breakpoint stay as stored. `null` removes that key.

@@ -114,7 +114,7 @@ describe('style block and auto layout', () => {
         direction: 'row',
         gap: '{layout.gap}',
         width: { mode: 'fixed', size: { unit: '%', value: 50 } },
-        breakpoints: { tablet: { gap: '{layout.gap}' } },
+        breakpoints: { sm: { gap: '{layout.gap}' } },
       },
     });
     expect(next.nodes.root?.layout).toMatchObject({

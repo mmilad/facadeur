@@ -62,12 +62,12 @@ describe('design domain stage', () => {
     expect(host!.textContent).not.toContain('space.4');
 
     await act(async () => {
-      session.setFocusViewport('tablet');
+      session.setFocusViewport('sm');
       session.setEditTarget('viewport');
     });
-    expect(
-      (host!.querySelector('[aria-label="Token breakpoint"]') as HTMLSelectElement).value,
-    ).toBe('tablet');
+    expect(host!.querySelector('[data-viewport-tab="sm"]')?.getAttribute('aria-selected')).toBe(
+      'true',
+    );
   });
 
   it('returns to the asset preview when opening an asset from the tree', async () => {
@@ -106,20 +106,19 @@ describe('design domain stage', () => {
     expect(host!.querySelector('[aria-label="Tools"]')).toBeNull();
     expect(host!.querySelector('[data-save="design"]')).not.toBeNull();
     expect(host!.querySelector('[data-save="document"]')).toBeNull();
-    const selector = host!.querySelector('[aria-label="Token breakpoint"]') as HTMLSelectElement;
+    const desktop = host!.querySelector('[data-viewport-tab="xl"]') as HTMLButtonElement;
     await act(async () => {
-      selector.value = 'desktop';
-      selector.dispatchEvent(new Event('change', { bubbles: true }));
+      desktop.click();
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'f', bubbles: true }));
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     });
     expect(session.getSnapshot().editTarget).toBe('viewport');
-    expect(session.getSnapshot().focusViewportId).toBe('desktop');
+    expect(session.getSnapshot().focusViewportId).toBe('xl');
     expect(session.getSnapshot().selectedNodeId).toBe('root');
     expect(session.getSnapshot().tool).toBe('select');
     expect(session.getSnapshot().document).toEqual(before);
     await openSettingsDomain(host!, 'fonts', { alreadyOpen: true });
-    expect(host!.querySelector('[aria-label="Token breakpoint"]')).toBeNull();
+    expect(host!.querySelector('[aria-label="Viewports"]')).toBeNull();
     expect(host!.textContent).toContain('Shared project resources');
     await act(async () =>
       (host!.querySelector('[data-surface="editor"]') as HTMLButtonElement).click(),
@@ -127,5 +126,52 @@ describe('design domain stage', () => {
     expect(session.getSnapshot().openId).toBe('button');
     expect(session.getSnapshot().selectedNodeId).toBe('root');
     expect(host!.querySelector('[aria-label="Inspector"]')).not.toBeNull();
+  });
+
+  it('keeps the viewport list in settings and shows it above token entries', async () => {
+    const session = createEditorSession({ documents, design: createProjectTemplateDocument() });
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => root?.render(<App session={session} />));
+    await openSettingsDomain(host!, 'viewports');
+
+    expect(host!.querySelector('[data-settings-tab="viewports"]')?.getAttribute('aria-current')).toBe(
+      'page',
+    );
+    const width = host!.querySelector(
+      'input[name="settings-breakpoint-width-xl"]',
+    ) as HTMLInputElement;
+    expect(width).toBeInstanceOf(HTMLInputElement);
+    const label = host!.querySelector(
+      'input[name="settings-breakpoint-label-xs"]',
+    ) as HTMLInputElement;
+    expect(label.value).toBe('Phone');
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+    await act(async () => {
+      label.focus();
+      setter?.call(label, 'Mobile');
+      label.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    await act(async () => {
+      label.blur();
+    });
+    expect(
+      session.getSnapshot().design.settings.breakpoints?.find((item) => item.id === 'xs')?.label,
+    ).toBe('Mobile');
+    await act(async () => {
+      setter?.call(width, '1280');
+      width.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    expect(
+      session.getSnapshot().design.settings.breakpoints?.find((item) => item.id === 'xl')
+        ?.minWidth,
+    ).toBe(1280);
+
+    await openSettingsDomain(host!, 'typography', { alreadyOpen: true });
+    expect(host!.querySelector('[aria-label="Viewports"]')).toBeInstanceOf(HTMLElement);
+    expect(host!.querySelector('[data-viewport-tab="xl"]')?.textContent).toContain('1280');
+    expect(host!.querySelector('[data-viewport-tab="xs"]')?.textContent).toContain('Mobile');
+    expect(host!.querySelector('[data-viewport-tab="xs"]')?.textContent).toContain('Base');
   });
 });

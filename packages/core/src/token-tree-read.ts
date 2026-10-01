@@ -4,7 +4,7 @@ import { tokenTypes, type TokenType } from './document/schema.js';
 const TOKEN_SEGMENT = /^[a-z0-9]+$/;
 const BREAKPOINT_ID = /^[a-z][a-z0-9]*$/;
 const RESERVED = new Set(['$value', '$type', '$description', '$deprecated', '$extensions']);
-const FACADEUR_KEYS = new Set(['tier', 'breakpoints']);
+const FACADEUR_KEYS = new Set(['tier', 'breakpoints', 'label']);
 const TIERS = new Set(['primitive', 'semantic', 'component']);
 
 export function childEntries(node: Record<string, unknown>, where: string): [string, unknown][] {
@@ -95,6 +95,16 @@ export function readBreakpoints(extensions: unknown, path: string): Record<strin
     breakpoints[key] = canonicalizeJson(value);
   }
   return breakpoints;
+}
+
+export function readLabel(extensions: unknown, path: string): string | undefined {
+  if (!isPlainObject(extensions) || !isPlainObject(extensions.facadeur)) return undefined;
+  const label = extensions.facadeur.label;
+  if (label === undefined) return undefined;
+  if (typeof label !== 'string' || !label.trim()) {
+    throw new DocumentError('token-schema', `Token "${path}" label must be a non-empty string`);
+  }
+  return label.trim();
 }
 
 export function readDescription(value: unknown, where: string): string | undefined {

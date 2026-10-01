@@ -280,8 +280,8 @@ function typeStep(
     },
   };
   const breakpoints: Record<string, JsonValue> = {};
-  if (tablet !== mobile) breakpoints.tablet = { fontSize: `${tablet}px` };
-  if (desktop !== tablet) breakpoints.desktop = { fontSize: `${desktop}px` };
+  if (tablet !== mobile) breakpoints.sm = { fontSize: `${tablet}px` };
+  if (desktop !== tablet) breakpoints.xl = { fontSize: `${desktop}px` };
   if (Object.keys(breakpoints).length) {
     value.$extensions = { facadeur: { breakpoints } };
   }

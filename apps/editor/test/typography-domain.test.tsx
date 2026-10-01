@@ -177,19 +177,19 @@ describe('typography domain panel', () => {
       token: withTokenBreakpoint(
         session.getSnapshot().design.tokens,
         'type.title',
-        'tablet',
+        'sm',
         tabletOverride,
       ),
     });
     await openTypography(session);
     await act(async () => {
-      session.setFocusViewport('tablet');
+      session.setFocusViewport('sm');
       session.setEditTarget('viewport');
     });
 
-    expect(host!.textContent).toContain('Typography overrides at tablet');
+    expect(host!.textContent).toContain('Typography overrides at Tablet');
     const indexedBefore = readTokenTree(session.getSnapshot().design.tokens);
-    expect(indexedBefore.tokens.get('type.title')?.breakpoints.tablet).toEqual(tabletOverride);
+    expect(indexedBefore.tokens.get('type.title')?.breakpoints.sm).toEqual(tabletOverride);
 
     const resetButton = host!.querySelector(
       'tr[data-token-path="type.title"] .override-cue button',
@@ -200,7 +200,7 @@ describe('typography domain panel', () => {
     });
 
     const indexedAfter = readTokenTree(session.getSnapshot().design.tokens);
-    expect(indexedAfter.tokens.get('type.title')?.breakpoints.tablet).toBeUndefined();
+    expect(indexedAfter.tokens.get('type.title')?.breakpoints.sm).toBeUndefined();
     expect(indexedAfter.tokens.get('type.title')?.value).toMatchObject({
       fontSize: '24px',
     });
@@ -215,9 +215,13 @@ describe('typography domain panel', () => {
 
     expect(host!.textContent).toContain('Body');
     expect(host!.textContent).not.toContain('font.weight');
-    const tablet = host!.querySelector(
-      'input[name="token-type.body-media-tablet-fontSize"]',
-    ) as HTMLInputElement;
+    expect(host!.querySelector('[data-viewport-tab="sm"]')).toBeInstanceOf(HTMLButtonElement);
+    expect(host!.querySelector('[data-viewport-tab="xl"]')).toBeInstanceOf(HTMLButtonElement);
+
+    await act(async () => {
+      (host!.querySelector('[data-viewport-tab="sm"]') as HTMLButtonElement).click();
+    });
+    const tablet = host!.querySelector('input[name="token-type.body-fontSize"]') as HTMLInputElement;
     expect(tablet).toBeInstanceOf(HTMLInputElement);
     expect(tablet.value).toBe('17px');
 
@@ -225,7 +229,7 @@ describe('typography domain panel', () => {
 
     expect(
       readTokenTree(session.getSnapshot().design.tokens).tokens.get('type.body')?.breakpoints
-        .tablet,
+        .sm,
     ).toEqual({ fontSize: '19px' });
   });
 });

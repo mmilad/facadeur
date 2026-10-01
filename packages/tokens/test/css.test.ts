@@ -84,7 +84,7 @@ describe('CSS output', () => {
               letterSpacing: '0',
             },
             $extensions: {
-              facadeur: { breakpoints: { tablet: { fontSize: '17px' } } },
+              facadeur: { breakpoints: { sm: { fontSize: '17px' } } },
             },
           },
         },
@@ -159,12 +159,12 @@ describe('CSS output', () => {
             $type: 'dimension',
             md: {
               $value: '16px',
-              $extensions: { facadeur: { breakpoints: { mobile: '14px' } } },
+              $extensions: { facadeur: { breakpoints: { xs: '14px' } } },
             },
           },
         },
       }),
-    ).toThrow(/base breakpoint "mobile"/);
+    ).toThrow(/base breakpoint "xs"/);
   });
 });
 

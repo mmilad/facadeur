@@ -36,27 +36,30 @@ describe('tokens and fonts in the Yjs document', () => {
         type: 'setBreakpoints',
         breakpoints: [{ id: 'phone', minWidth: 390 }],
       }),
-    ).toThrow(/unknown breakpoint "desktop"/);
+    ).toThrow(/unknown breakpoint "(?:sm|xl)"/);
     store.execute({
       type: 'setBreakpoints',
       breakpoints: [
-        { id: 'mobile', minWidth: 390 },
-        { id: 'tablet', minWidth: 800 },
-        { id: 'desktop', minWidth: 1600 },
+        { id: 'xs', minWidth: 390 },
+        { id: 'sm', minWidth: 800 },
+        { id: 'xl', minWidth: 1600 },
       ],
     });
     expect(store.getDocument().fonts.map((font) => font.id)).toEqual(['sans', 'mono']);
     expect(store.getDocument().settings.breakpoints).toEqual([
-      { id: 'mobile', minWidth: 390 },
-      { id: 'tablet', minWidth: 800 },
-      { id: 'desktop', minWidth: 1600 },
+      { id: 'xs', minWidth: 390 },
+      { id: 'sm', minWidth: 800 },
+      { id: 'xl', minWidth: 1600 },
     ]);
 
     store.undo();
     expect(store.getDocument().settings.breakpoints).toEqual([
-      { id: 'mobile', minWidth: 375 },
-      { id: 'tablet', minWidth: 768 },
-      { id: 'desktop', minWidth: 1440 },
+      { id: 'xs', label: 'Phone', minWidth: 375 },
+      { id: 'sm', label: 'Tablet', minWidth: 768 },
+      { id: 'md', label: 'Laptop', minWidth: 1024 },
+      { id: 'lg', label: 'Desktop', minWidth: 1200 },
+      { id: 'xl', label: 'Wide', minWidth: 1440 },
+      { id: 'xxl', label: 'Ultra', minWidth: 1760 },
     ]);
     store.undo();
     expect(store.getDocument().fonts).toHaveLength(1);

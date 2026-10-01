@@ -28,21 +28,9 @@ export interface DesignTypographyEditorProps {
   catalogs: TypographyCatalogs;
   /** Typography references used when the whole token is an alias. */
   typographyTokens?: readonly string[];
-  /**
-   * Larger breakpoints whose font size can be declared beside the base style.
-   * `stored` is the sparse override for that breakpoint.
-   */
-  mediaQueries?: readonly TypographyMediaQuery[];
-  onCommitMediaQuery?: (breakpointId: string, next: DesignTypographyValue | null) => void;
   onCommit: (next: DesignTypographyValue | null) => void;
   /** Reset the complete breakpoint override, if the host owns that action. */
   onReset?: () => void;
-}
-
-export interface TypographyMediaQuery {
-  id: string;
-  label: string;
-  stored?: unknown;
 }
 
 function isTypographyObject(value: unknown): value is TypographyValue {
@@ -203,15 +191,8 @@ export function DesignTypographyEditor(props: DesignTypographyEditorProps) {
     if (typeof props.value === 'string') return props.value;
     const size = previewText(effective.fontSize) || 'Inherited size';
     const family = previewText(effective.fontFamily) || 'Inherited family';
-    const queries = (props.mediaQueries ?? [])
-      .map((query) => {
-        const stored = isTypographyObject(query.stored) ? query.stored : undefined;
-        const querySize = previewText(stored?.fontSize);
-        return querySize ? `${query.id} ${querySize}` : '';
-      })
-      .filter((note) => note.length > 0);
-    return [size, family, ...queries].join(' · ');
-  }, [effective.fontFamily, effective.fontSize, props.mediaQueries, props.value]);
+    return [size, family].join(' · ');
+  }, [effective.fontFamily, effective.fontSize, props.value]);
 
   const previewValue = (value: unknown): string => {
     if (Array.isArray(value)) return value.map((item) => previewValue(item)).join(', ');
@@ -239,21 +220,6 @@ export function DesignTypographyEditor(props: DesignTypographyEditorProps) {
       const parsed = text?.trim() ? parseTypographyFieldValue(key, text) : undefined;
       if (parsed !== undefined) validateTypographyField(key, parsed);
       props.onCommit(editTypographyField(stored, key, text, { breakpoint, base }));
-      setError(null);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Invalid typography value');
-    }
-  };
-
-  const commitMediaQuerySize = (query: TypographyMediaQuery, text: string | null) => {
-    try {
-      const current = isTypographyObject(query.stored) ? query.stored : {};
-      const parsed = text?.trim() ? parseTypographyFieldValue('fontSize', text) : undefined;
-      if (parsed !== undefined) validateTypographyField('fontSize', parsed);
-      props.onCommitMediaQuery?.(
-        query.id,
-        editTypographyField(current, 'fontSize', text, { breakpoint: true, base }),
-      );
       setError(null);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Invalid typography value');
@@ -313,27 +279,6 @@ export function DesignTypographyEditor(props: DesignTypographyEditorProps) {
             </div>
           );
         })}
-        {props.mediaQueries?.length && props.onCommitMediaQuery ? (
-          <fieldset className="design-typography-media">
-            <legend>Media queries</legend>
-            {props.mediaQueries.map((query) => {
-              const queryStored = isTypographyObject(query.stored) ? query.stored : undefined;
-              const querySize = formatTypographyFieldValue(queryStored?.fontSize);
-              const baseSize = formatTypographyFieldValue(base.fontSize);
-              return (
-                <TokenValueControl
-                  key={query.id}
-                  name={`${props.namePrefix}-media-${query.id}-fontSize`}
-                  label={query.label}
-                  value={querySize}
-                  tokens={catalogs.dimensionTokens}
-                  placeholder={baseSize ? `Inherited · ${baseSize}` : 'Inherited'}
-                  onCommit={(next) => commitMediaQuerySize(query, next)}
-                />
-              );
-            })}
-          </fieldset>
-        ) : null}
         <Field label="Sample">
           <div
             className="design-typography-sample"

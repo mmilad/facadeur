@@ -47,6 +47,7 @@ export function cloneBreakpoints(breakpoints: readonly Breakpoint[]): Breakpoint
   return breakpoints.map((breakpoint) => ({
     id: breakpoint.id,
     minWidth: breakpoint.minWidth,
+    ...(breakpoint.label ? { label: breakpoint.label } : {}),
   }));
 }
 
@@ -113,6 +114,7 @@ export function assertBreakpoints(breakpoints: readonly Breakpoint[] | undefined
   }
   const ids = new Set<string>();
   const widths = new Map<number, string>();
+  const labels = new Map<string, string>();
   for (const breakpoint of breakpoints) {
     if (!BREAKPOINT_ID.test(breakpoint.id)) {
       throw new DocumentError('schema', `Invalid breakpoint id "${breakpoint.id}"`);
@@ -135,6 +137,19 @@ export function assertBreakpoints(breakpoints: readonly Breakpoint[] | undefined
       );
     }
     widths.set(breakpoint.minWidth, breakpoint.id);
+    if (breakpoint.label === undefined) continue;
+    const label = breakpoint.label.trim();
+    if (!label || label.length > 48) {
+      throw new DocumentError('schema', `Breakpoint "${breakpoint.id}" needs a short label`);
+    }
+    const existingLabel = labels.get(label);
+    if (existingLabel) {
+      throw new DocumentError(
+        'schema',
+        `Breakpoints "${existingLabel}" and "${breakpoint.id}" share the label "${label}"`,
+      );
+    }
+    labels.set(label, breakpoint.id);
   }
 }
 

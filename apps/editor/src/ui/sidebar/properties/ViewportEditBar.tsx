@@ -1,3 +1,4 @@
+import { breakpointLabel } from '@facadeur/core';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
 import {
   editorBreakpoints,
@@ -19,13 +20,13 @@ export function ViewportEditBar({
   });
   const writingViewport = ctx.writingBreakpointId !== null;
   const viewportLabel = ctx.overrideViewport
-    ? `${ctx.overrideViewport.id} · ${ctx.overrideViewport.minWidth}`
+    ? `${breakpointLabel(ctx.overrideViewport)} · ${ctx.overrideViewport.minWidth}`
     : ctx.focus
-      ? `${ctx.focus.id} is Base`
+      ? `${breakpointLabel(ctx.focus)} is Base`
       : 'Viewport';
   const editingStatus =
     writingViewport && ctx.overrideViewport
-      ? `Editing: ${ctx.overrideViewport.id} override`
+      ? `Editing: ${breakpointLabel(ctx.overrideViewport)} override`
       : 'Editing: Base';
   return (
     <div className="viewport-edit">

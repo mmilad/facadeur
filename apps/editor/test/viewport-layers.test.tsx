@@ -60,11 +60,11 @@ describe('viewport layers UX', () => {
       root?.render(<App session={session} />);
     });
 
-    const tabletRow = viewportLayerButton('tablet');
-    expect(tabletRow?.querySelector('.layer-name')?.textContent).toBe('tablet · 768');
+    const tabletRow = viewportLayerButton('sm');
+    expect(tabletRow?.querySelector('.layer-name')?.textContent).toBe('Tablet · 768');
 
     await act(async () => {
-      session.setViewportChrome('tablet', { title: 'Tablet preview' });
+      session.setViewportChrome('sm', { title: 'Tablet preview' });
     });
     expect(tabletRow?.querySelector('.layer-name')?.textContent).toBe('Tablet preview');
   });
@@ -82,7 +82,7 @@ describe('viewport layers UX', () => {
     });
 
     const viewportRow = [...host.querySelectorAll('button.viewport-layer')].find((button) =>
-      button.textContent?.includes('tablet'),
+      button.dataset.breakpoint === 'sm',
     );
     expect(viewportRow).toBeInstanceOf(HTMLButtonElement);
 
@@ -91,7 +91,7 @@ describe('viewport layers UX', () => {
     });
 
     const snap = session.getSnapshot();
-    expect(snap.selectedViewportId).toBe('tablet');
+    expect(snap.selectedViewportId).toBe('sm');
     expect(snap.selectedNodeId).toBeNull();
     expect(host.querySelector('input[name="viewport-inner-padding"]')).toBeInstanceOf(
       HTMLInputElement,
@@ -99,10 +99,10 @@ describe('viewport layers UX', () => {
     expect(host.querySelector('.viewport-edit')).toBeNull();
 
     await act(async () => {
-      session.setViewportChrome('tablet', { innerPaddingPx: 24, title: 'Tablet preview' });
+      session.setViewportChrome('sm', { innerPaddingPx: 24, title: 'Tablet preview' });
     });
     const title = document.querySelector(
-      '.viewport-frame[data-breakpoint="tablet"] .viewport-chrome-title',
+      '.viewport-frame[data-breakpoint="sm"] .viewport-chrome-title',
     );
     expect(title?.textContent).toBe('Tablet preview');
   });

@@ -79,7 +79,7 @@ describe('variant overlays', () => {
             styles: {
               declarations: { color: 'navy' },
               states: { hover: { color: 'blue' } },
-              breakpoints: { tablet: { declarations: { backgroundColor: 'gainsboro' } } },
+              breakpoints: { sm: { declarations: { backgroundColor: 'gainsboro' } } },
               children: { lede: { declarations: { fontWeight: '700' } } },
             },
           },
@@ -92,7 +92,7 @@ describe('variant overlays', () => {
     expect(compact.styles).toMatchObject({
       declarations: { color: 'navy', backgroundColor: 'white' },
       states: { hover: { color: 'blue' } },
-      breakpoints: { tablet: { declarations: { backgroundColor: 'gainsboro' } } },
+      breakpoints: { sm: { declarations: { backgroundColor: 'gainsboro' } } },
       children: { lede: { declarations: { fontWeight: '700' } } },
     });
   });

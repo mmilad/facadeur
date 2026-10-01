@@ -172,10 +172,10 @@ describe('editor URL selection', () => {
   });
 
   it('restores viewport selection and switches the URL back to a layer selection', async () => {
-    routing.search = 'document=second&viewport=tablet';
+    routing.search = 'document=second&viewport=sm';
     const editor = session();
     const view = render(<App session={editor} />);
-    expect(editor.getSnapshot().selectedViewportId).toBe('tablet');
+    expect(editor.getSnapshot().selectedViewportId).toBe('sm');
     expect(editor.getSnapshot().selectedNodeId).toBeNull();
     act(() => editor.selectNode('label'));
     await waitFor(() => expect(routing.replace).toHaveBeenCalled());

@@ -199,7 +199,7 @@
                 "mode": "hug"
               },
               "breakpoints": {
-                "desktop": {
+                "xl": {
                   "gap": "{space.gap.md}"
                 }
               }
@@ -391,7 +391,7 @@
                 "mode": "hug"
               },
               "breakpoints": {
-                "desktop": {
+                "xl": {
                   "direction": "row",
                   "align": "start"
                 }
@@ -410,7 +410,7 @@
                     "mode": "hug"
                   },
                   "breakpoints": {
-                    "desktop": {
+                    "xl": {
                       "width": {
                         "mode": "fixed",
                         "size": 420
@@ -436,7 +436,7 @@
                     "mode": "hug"
                   },
                   "breakpoints": {
-                    "desktop": {
+                    "xl": {
                       "width": {
                         "mode": "fixed",
                         "size": 460

@@ -19,6 +19,6 @@ describe('viewport chrome settings', () => {
 
   it('uses breakpoint label when title is blank', () => {
     const breakpoint = { id: 'tablet', minWidth: 768 };
-    expect(resolvedViewportChrome(breakpoint, { title: '' }).title).toBe('tablet · 768');
+    expect(resolvedViewportChrome(breakpoint, { title: '' }).title).toBe('Tablet · 768');
   });
 });

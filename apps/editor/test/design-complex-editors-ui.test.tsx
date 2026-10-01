@@ -157,33 +157,6 @@ describe('complex design token editor UI', () => {
     });
   });
 
-  it('writes a media-query font size without replacing the base style', () => {
-    const commits: { id: string; next: DesignTypographyValue | null }[] = [];
-    const base = {
-      fontFamily: '{font.sans}',
-      fontSize: '16px',
-      fontWeight: 400,
-      lineHeight: 1.5,
-      letterSpacing: '0',
-    };
-    render(
-      <DesignTypographyEditor
-        namePrefix="editor"
-        value={base}
-        baseValue={base}
-        catalogs={{ ...catalogs, fontWeights: ['400', '500', '600', '700'] }}
-        mediaQueries={[{ id: 'tablet', label: 'Tablet · 768px and wider', stored: {} }]}
-        onCommitMediaQuery={(id, next) => commits.push({ id, next })}
-        onCommit={() => {}}
-      />,
-    );
-
-    act(() =>
-      setInput(host!.querySelector('input[name="editor-media-tablet-fontSize"]')!, '19px'),
-    );
-    expect(commits).toEqual([{ id: 'tablet', next: { fontSize: '19px' } }]);
-  });
-
   it('rejects clearing a required structured shadow field without mutation', () => {
     const commits: (DesignShadowInput | null)[] = [];
     render(

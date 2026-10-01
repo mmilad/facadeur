@@ -1,5 +1,12 @@
 export type DesignDomain =
-  'colors' | 'fonts' | 'icons' | 'spacing' | 'radius' | 'shadow' | 'typography';
+  | 'colors'
+  | 'fonts'
+  | 'icons'
+  | 'spacing'
+  | 'radius'
+  | 'shadow'
+  | 'typography'
+  | 'viewports';
 
 export type EditorView = 'editor' | 'schemas' | 'schema' | 'code' | 'preview';
 
@@ -25,6 +32,7 @@ export const DESIGN_DOMAIN_ITEMS: {
   { id: 'radius', label: 'Radius', keys: ['radius', 'corner', 'rounded'] },
   { id: 'shadow', label: 'Shadow', keys: ['shadow', 'elevation'] },
   { id: 'typography', label: 'Typography', keys: ['typography', 'type'] },
+  { id: 'viewports', label: 'Viewports', keys: ['viewports', 'viewport', 'breakpoint', 'media'] },
 ];
 
 /** Token domains edited under the Settings subnav (not the project sidebar). */
@@ -53,7 +61,7 @@ export function designDomainLabel(domain: DesignDomain): string {
 export function tokenMatchesDomain(
   path: string,
   type: string,
-  domain: Exclude<DesignDomain, 'fonts' | 'icons'>,
+  domain: Exclude<DesignDomain, 'fonts' | 'icons' | 'viewports'>,
 ): boolean {
   switch (domain) {
     case 'colors':

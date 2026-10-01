@@ -52,6 +52,7 @@ export const DTCG_DEFS = {
         propertyNames: { pattern: '^[a-z][a-z0-9]*$' },
         additionalProperties: { $ref: '#/$defs/jsonValue' },
       },
+      label: { type: 'string', minLength: 1 },
     },
   },
   tokenExtensions: {
@@ -141,6 +142,7 @@ export const iconDefinitionSchema = Type.Object(
 export const breakpointSchema = Type.Object(
   {
     id: Type.String({ pattern: '^[a-z][a-z0-9]*$' }),
+    label: Type.Optional(Type.String({ minLength: 1, maxLength: 48 })),
     minWidth: Type.Integer({ minimum: 1 }),
   },
   { additionalProperties: false },

@@ -1963,6 +1963,11 @@
                 "pattern": "^[a-z][a-z0-9]*$",
                 "type": "string"
               },
+              "label": {
+                "minLength": 1,
+                "maxLength": 48,
+                "type": "string"
+              },
               "minWidth": {
                 "minimum": 1,
                 "type": "integer"

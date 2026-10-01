@@ -222,10 +222,22 @@ export function isVariantPreset(variant: VariantDefinition): variant is VariantP
 
 /** Viewports used when a document does not set its own breakpoints. */
 export const defaultBreakpoints: Breakpoint[] = [
-  { id: 'mobile', minWidth: 375 },
-  { id: 'tablet', minWidth: 768 },
-  { id: 'desktop', minWidth: 1440 },
+  { id: 'xs', label: 'Phone', minWidth: 375 },
+  { id: 'sm', label: 'Tablet', minWidth: 768 },
+  { id: 'md', label: 'Laptop', minWidth: 1024 },
+  { id: 'lg', label: 'Desktop', minWidth: 1200 },
+  { id: 'xl', label: 'Wide', minWidth: 1440 },
+  { id: 'xxl', label: 'Ultra', minWidth: 1760 },
 ];
+
+/** Name shown in the editor. A stored label wins; known defaults fill in when it is omitted. */
+export function breakpointLabel(breakpoint: Pick<Breakpoint, 'id' | 'label'>): string {
+  const label = breakpoint.label?.trim();
+  if (label) return label;
+  const known = defaultBreakpoints.find((item) => item.id === breakpoint.id)?.label;
+  if (known) return known;
+  return breakpoint.id.charAt(0).toUpperCase() + breakpoint.id.slice(1);
+}
 
 function literalUnion(values: readonly string[]): TSchema {
   const literals = values.map((value) => Type.Literal(value));

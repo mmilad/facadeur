@@ -82,13 +82,13 @@ describe('instance appearance editor', () => {
       target: { value: 'hover' },
     });
     act(() => {
-      session.setFocusViewport('tablet');
+      session.setFocusViewport('sm');
       session.setEditTarget('viewport');
     });
     editOpacity('0.2');
     expect(
       session.getSnapshot().document.variantPresets?.[0]?.overrides?.styles?.children?.control
-        ?.breakpoints?.tablet?.states?.hover?.opacity,
+        ?.breakpoints?.sm?.states?.hover?.opacity,
     ).toBe('0.2');
   });
 });

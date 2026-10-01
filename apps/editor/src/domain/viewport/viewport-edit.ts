@@ -7,6 +7,7 @@ export type StyleEditMode = 'base' | 'viewport';
 export interface ViewportRef {
   id: string;
   minWidth: number;
+  label?: string;
 }
 
 export interface ViewportEditContext {
@@ -40,9 +41,9 @@ export function viewportEditContext(input: {
 }): ViewportEditContext {
   const breakpoints = activeBreakpoints(input.breakpoints);
   const first = breakpoints[0];
-  const base = first ? { id: first.id, minWidth: first.minWidth } : null;
+  const base = first ? viewportRef(first) : null;
   const match = input.focusId ? breakpoints.find((item) => item.id === input.focusId) : undefined;
-  const focus = match ? { id: match.id, minWidth: match.minWidth } : null;
+  const focus = match ? viewportRef(match) : null;
   const focusIsBase = Boolean(focus && base && focus.id === base.id);
   const overrideViewport = focus && !focusIsBase ? focus : null;
   const writingBreakpointId =
@@ -55,6 +56,14 @@ export function viewportEditContext(input: {
     editTarget: input.editTarget,
     writingBreakpointId,
     overrideViewport,
+  };
+}
+
+function viewportRef(breakpoint: Breakpoint): ViewportRef {
+  return {
+    id: breakpoint.id,
+    minWidth: breakpoint.minWidth,
+    ...(breakpoint.label ? { label: breakpoint.label } : {}),
   };
 }
 

@@ -1,4 +1,4 @@
-import type { Breakpoint } from '@facadeur/core';
+import { breakpointLabel, type Breakpoint } from '@facadeur/core';
 
 /** Default inner inset for atom, component, and section previews (editor-only). */
 export const ASSET_PREVIEW_INNER_PADDING_PX = 24;
@@ -29,7 +29,7 @@ export function defaultViewportChrome(documentKind?: string): ViewportChromeSett
 }
 
 export function defaultViewportTitle(breakpoint: Breakpoint): string {
-  return `${breakpoint.id} · ${breakpoint.minWidth}`;
+  return `${breakpointLabel(breakpoint)} · ${breakpoint.minWidth}`;
 }
 
 export function resolvedViewportChrome(

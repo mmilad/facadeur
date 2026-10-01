@@ -139,16 +139,64 @@
   display: none;
 }
 
-.design-breakpoint-control {
+.design-viewport-tabs {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0 0 12px;
+  border-bottom: 1px solid var(--line);
 }
 
-.design-breakpoint-control .eu-control {
-  width: auto;
-  max-width: 280px;
+.design-viewport-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  padding: 8px 14px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.design-viewport-tab small {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.design-viewport-tab.is-active {
+  border-bottom-color: var(--ink);
+  font-weight: 600;
+}
+
+.viewport-settings {
+  max-width: 960px;
+}
+
+.viewport-settings-list {
+  display: grid;
+  gap: 12px;
+}
+
+.viewport-settings-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 1.4fr) minmax(88px, 0.7fr) 140px minmax(180px, auto);
+  gap: 12px;
+  align-items: end;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.viewport-settings-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 32px;
 }
 
 .design-resource-scope {
@@ -163,6 +211,9 @@
   }
   .design-domain-body {
     padding: 12px;
+  }
+  .viewport-settings-row {
+    grid-template-columns: 1fr;
   }
 }
 

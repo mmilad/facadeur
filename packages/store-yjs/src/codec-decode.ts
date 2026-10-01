@@ -190,8 +190,15 @@ export function readSettings(settings: Y.Map<unknown>): DocumentSettings {
       if (!(item instanceof Y.Map)) return [];
       const id = item.get('id');
       const minWidth = item.get('minWidth');
+      const label = item.get('label');
       if (typeof id !== 'string' || typeof minWidth !== 'number') return [];
-      return [{ id, minWidth }];
+      return [
+        {
+          id,
+          minWidth,
+          ...(typeof label === 'string' && label ? { label } : {}),
+        },
+      ];
     });
     if (list.length) result.breakpoints = list;
   }

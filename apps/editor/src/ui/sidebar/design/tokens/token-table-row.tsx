@@ -23,6 +23,7 @@ import {
   type TableToken,
 } from './token-breakpoint-helpers.js';
 import { tokenLeafLabel } from './token-labels.js';
+import { withTokenLabel } from '../../../../domain/edits/token-edit.js';
 
 type ViewportContext = ReturnType<typeof viewportEditContext>;
 
@@ -50,6 +51,7 @@ export function TokenTableRow({
   const resolvePreview = useTokenResolver();
   const shownValue = token.effectiveValue;
   const text = formatTokenValue(shownValue);
+  const displayLabel = token.label ?? tokenLeafLabel(token.path);
   const colorString = token.type === 'color' && typeof shownValue === 'string' ? shownValue : null;
   const shadowString =
     token.type === 'shadow' && typeof shownValue === 'string' ? shownValue : null;
@@ -65,11 +67,23 @@ export function TokenTableRow({
     }
     commitToken(session, snap, token.path, shownValue, next ?? '', writingId);
   };
+  const commitLabel = (next: string) => {
+    session.executeDesign({
+      type: 'setToken',
+      path: token.path,
+      token: withTokenLabel(snap.design.tokens, token.path, next),
+    });
+  };
   return (
     <tr className="token-table-row" data-token-path={token.path}>
       <th scope="row">
         <div className="token-table-name">
-          <strong>{tokenLeafLabel(token.path)}</strong>
+          <input
+            className="token-table-label-input"
+            aria-label={`Label for ${token.path}`}
+            defaultValue={displayLabel}
+            onBlur={(event) => commitLabel(event.currentTarget.value)}
+          />
           <span className="token-path-id">{token.path}</span>
           {showType ? <span>{token.type}</span> : null}
         </div>
@@ -121,9 +135,7 @@ export function TokenTableRow({
               label={tokenLeafLabel(token.path)}
               value={shownValue as DesignTypographyValue}
               storedValue={
-                (writingId
-                  ? (token.override ?? token.baseValue)
-                  : token.value) as DesignTypographyValue
+                (writingId ? token.override : token.value) as DesignTypographyValue | undefined
               }
               baseValue={token.baseValue as DesignTypographyValue}
               breakpointId={writingId}
@@ -132,10 +144,6 @@ export function TokenTableRow({
               typographyTokens={typographyTokenRefs(snap.design.tokens).filter(
                 (ref) => ref !== `{${token.path}}`,
               )}
-              mediaQueries={typographyMediaQueries(token, ctx)}
-              onCommitMediaQuery={(breakpointId, next) =>
-                commitRawToken(session, snap, token.path, next, breakpointId)
-              }
               onCommit={(next) => commitRawToken(session, snap, token.path, next, writingId)}
               onReset={
                 writingId && token.override !== undefined
@@ -220,18 +228,6 @@ export function TokenTableRow({
       </td>
     </tr>
   );
-}
-
-function typographyMediaQueries(token: TableToken, ctx: ViewportContext) {
-  if (token.type !== 'typography') return undefined;
-  const baseId = ctx.base?.id;
-  return ctx.breakpoints
-    .filter((item) => item.id !== baseId)
-    .map((item) => ({
-      id: item.id,
-      label: `${item.id.charAt(0).toUpperCase()}${item.id.slice(1)} · ${item.minWidth}px and wider`,
-      stored: token.breakpoints[item.id],
-    }));
 }
 
 function TokenPreview({

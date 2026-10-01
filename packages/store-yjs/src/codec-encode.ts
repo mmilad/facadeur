@@ -65,6 +65,7 @@ function syncBreakpoints(
       const map = new Y.Map<unknown>();
       map.set('id', breakpoint.id);
       map.set('minWidth', breakpoint.minWidth);
+      if (breakpoint.label) map.set('label', breakpoint.label);
       return map;
     }),
   );
@@ -83,7 +84,8 @@ function sameBreakpoints(
     return (
       breakpoint !== undefined &&
       item.get('id') === breakpoint.id &&
-      item.get('minWidth') === breakpoint.minWidth
+      item.get('minWidth') === breakpoint.minWidth &&
+      (item.get('label') ?? undefined) === breakpoint.label
     );
   });
 }
