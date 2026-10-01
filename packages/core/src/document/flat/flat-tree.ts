@@ -1,4 +1,4 @@
-import type { FlatDocument, FlatNode, FrameNode } from './flat-types.js';
+import type { FlatDocument, FrameNode } from './flat-types.js';
 
 export function findParent(doc: FlatDocument, id: string): FrameNode | undefined {
   for (const node of Object.values(doc.nodes)) {

@@ -11,7 +11,8 @@ export function createProjectServer(
   options: { editorPort?: number } = {},
 ) {
   const editorPort = options.editorPort ?? 3001;
-  const peers = new Map<WebSocket, string>();
+  const peers = new Map<WebSocket, string | null>();
+  const knownIds = new Set(Object.keys(project.snapshot().states));
   function allowedOrigin(origin: string | undefined): boolean {
     if (!origin) return true;
     return [`http://localhost:${editorPort}`, `http://127.0.0.1:${editorPort}`].includes(origin);
@@ -39,25 +40,34 @@ export function createProjectServer(
         socket.end('HTTP/1.1 403 Forbidden\r\n\r\n');
         return;
       }
-      const id = url.searchParams.get('id') ?? '';
-      project.getState(id);
+      const documentId = url.searchParams.get('id');
+      if (documentId !== null) project.getState(documentId);
       sockets.handleUpgrade(request, socket, head, (client) => {
-        peers.set(client, id);
+        peers.set(client, documentId);
+        if (documentId === null) send(client, { type: 'catalog', project: project.snapshot() });
         client.on('close', () => peers.delete(client));
         client.on('error', () => peers.delete(client));
         client.on('message', (bytes, binary) => {
           let requestId: string | undefined;
+          let id: string | undefined = documentId ?? undefined;
+          const scope = () => (documentId === null ? { id } : {});
           try {
             if (binary) throw new Error('Expected a JSON message');
             const message = object(JSON.parse(bytes.toString()));
             if (typeof message.requestId === 'string') requestId = message.requestId;
+            if (documentId === null) {
+              if (typeof message.id === 'string') id = message.id;
+              if (!id) throw new Error('Missing document id');
+              project.getState(id);
+            }
             if (message.type === 'sync') {
-              const state = project.getState(id);
+              const state = project.getState(id!);
               const doc = new Y.Doc();
               try {
                 Y.applyUpdate(doc, decode(state.update));
                 send(client, {
                   type: 'sync',
+                  ...scope(),
                   ...state,
                   update: encode(Y.encodeStateAsUpdate(doc, decode(message.stateVector))),
                 });
@@ -66,9 +76,10 @@ export function createProjectServer(
               }
             } else if (message.type === 'update') {
               if (!requestId || requestId.length > 200) throw new Error('Missing requestId');
-              const state = project.applyUpdate(id, decode(message.update));
+              const state = project.applyUpdate(id!, decode(message.update));
               send(client, {
                 type: 'ack',
+                ...scope(),
                 requestId,
                 revision: state.revision,
                 savedRevision: state.savedRevision,
@@ -77,6 +88,7 @@ export function createProjectServer(
           } catch (error) {
             send(client, {
               type: 'error',
+              ...scope(),
               requestId,
               message: error instanceof Error ? error.message : 'Invalid update',
             });
@@ -88,8 +100,17 @@ export function createProjectServer(
     }
   });
   const unsubscribe = project.subscribe((id, state) => {
+    const created = !knownIds.has(id);
+    if (created) {
+      knownIds.add(id);
+      const catalog = { type: 'catalog', project: project.snapshot() };
+      for (const [client, documentId] of peers) {
+        if (documentId === null) send(client, catalog);
+      }
+    }
     for (const [client, documentId] of peers) {
       if (documentId === id) send(client, { type: 'update', ...state });
+      else if (documentId === null && !created) send(client, { id, type: 'update', ...state });
     }
   });
   async function handleRequest(request: IncomingMessage, response: ServerResponse) {

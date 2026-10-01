@@ -26,7 +26,6 @@ import {
   sortFieldValues,
   sortStringRecord,
 } from './flat/flat-clone.js';
-import { collectSubtree, findParent, isInsideSubtree } from './flat/flat-tree.js';
 import type { FlatDocument, FlatNode, FlatNodeBase, InstanceNode } from './flat/flat-types.js';
 
 export type {

@@ -2,7 +2,12 @@
  * @vitest-environment jsdom
  */
 import { describe, expect, it } from 'vitest';
-import { MAX_SCALE, MIN_SCALE, ZOOM_STEP_FACTOR, createStage } from '../src/domain/viewport/stage.js';
+import {
+  MAX_SCALE,
+  MIN_SCALE,
+  ZOOM_STEP_FACTOR,
+  createStage,
+} from '../src/domain/viewport/stage.js';
 
 describe('stage zoomBy', () => {
   it('steps toward the viewport center and clamps scale', () => {
@@ -17,6 +22,14 @@ describe('stage zoomBy', () => {
 
     stage.zoomBy(ZOOM_STEP_FACTOR);
     expect(stage.getScale()).toBeCloseTo(ZOOM_STEP_FACTOR, 5);
+
+    stage.setTransform(0.9972149, 40, 60);
+    stage.zoomBy(ZOOM_STEP_FACTOR);
+    expect(stage.getScale()).toBe(1);
+    expect(stageEl.style.transform).toContain('scale(1)');
+    stage.setTransform(1.03, 40, 60);
+    stage.zoomBy(1 / ZOOM_STEP_FACTOR);
+    expect(stage.getScale()).toBe(1);
 
     stage.setTransform(MAX_SCALE, 0, 0);
     stage.zoomBy(ZOOM_STEP_FACTOR);

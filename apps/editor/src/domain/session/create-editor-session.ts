@@ -39,6 +39,7 @@ import {
   createSessionSaveHooks,
 } from './session-documents.js';
 import { prepareNestedDocument } from './session-variant-context.js';
+import { bindAcceptProjectDocuments } from './session-catalog.js';
 import type {
   EditorDrag,
   EditorNotice,
@@ -52,7 +53,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   if (!options.documents.length) {
     throw new DocumentError('schema', 'The editor needs at least one document');
   }
-  const sources = options.sources ?? {};
+  const sources = { ...options.sources };
   const listeners = new Set<() => void>();
   // Hydration validates instance targets before any stores are registered.
   // Seed the entire catalog so design and forward asset references can resolve.
@@ -296,6 +297,20 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   });
 
   return {
+    acceptProjectDocuments: bindAcceptProjectDocuments({
+      assetStores,
+      getDesignStore: () => designStore,
+      kinds,
+      commandContext,
+      order,
+      sources,
+      savedJson,
+      watch,
+      publishCatalog: () => {
+        generation += 1;
+        publish();
+      },
+    }),
     syncStores: () => [designStore, ...assetStores.values()],
     markProjectSaved(id, saved) {
       const store = id === designId ? designStore : assetStores.get(id);

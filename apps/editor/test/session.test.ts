@@ -64,6 +64,18 @@ function session(extraDocuments: readonly DocumentFile[] = []) {
 }
 
 describe('editor session', () => {
+  it('reports near-100 zoom accurately and resets using the actual scale', () => {
+    const editor = session();
+    const zoom = vi.fn();
+    editor.setZoomByHandler(zoom);
+    editor.setZoom(0.9972149);
+    expect(editor.getSnapshot().zoomLabel).toBe('99.72%');
+    editor.resetZoom();
+    expect(zoom).toHaveBeenLastCalledWith(1 / 0.9972149);
+    editor.setZoom(1);
+    expect(editor.getSnapshot().zoomLabel).toBe('100%');
+    editor.destroy();
+  });
   it('opens the specimen page and filters assets by workspace', () => {
     const editor = session();
     const snap = editor.getSnapshot();

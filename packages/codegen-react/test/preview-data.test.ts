@@ -23,6 +23,7 @@ describe('preview values stay outside runtime code', () => {
     expect(code).not.toContain('PREVIEW_BASE');
     expect(code).not.toContain('PREVIEW_COMPACT');
     expect(output.stories[0]?.contents).toContain('PREVIEW_BASE');
-    expect(output.stories[0]?.contents).not.toContain('PREVIEW_COMPACT');
+    expect(output.stories[0]?.contents).toContain('PREVIEW_COMPACT');
+    expect(output.stories[0]?.contents).toContain('export const Compact: Story');
   });
 });

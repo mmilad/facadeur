@@ -14,6 +14,7 @@ const componentFiles = [
   'button.json',
   'form-input.json',
   'card.json',
+  'product-card.json',
   'input.json',
   'textarea.json',
   'sign-in.json',
@@ -154,9 +155,7 @@ describe('generateReact', () => {
     expect(tokens).toContain('@import url("https://fonts.googleapis.com');
     const css = source(files, 'styles/components.css');
     expect(css).toContain('[data-component="button"]');
-    expect(css).toContain(
-      'background: var(--button-color-bg, var(--color-accent-default))',
-    );
+    expect(css).toContain('background: var(--button-color-bg, var(--color-accent-default))');
     expect(css).toContain('font-family: var(--type-label--font-family)');
     expect(css).toContain('[data-component="button"][data-variant-tone="ghost"]');
     expect(css).toContain('[data-component="button"]:hover');
@@ -199,6 +198,7 @@ describe('generateReact', () => {
       'src/stories/generated/FormToggle.stories.tsx',
       'src/stories/generated/Input.stories.tsx',
       'src/stories/generated/Media.stories.tsx',
+      'src/stories/generated/ProductCard.stories.tsx',
       'src/stories/generated/SignIn.stories.tsx',
       'src/stories/generated/Specimen.stories.tsx',
       'src/stories/generated/SpecimenSection.stories.tsx',
@@ -209,7 +209,12 @@ describe('generateReact', () => {
     expect(button).toContain('tone:');
     expect(button).toContain('export const Default: Story = {};');
     const mediaStory = source(stories, 'src/stories/generated/Media.stories.tsx');
-    expect(mediaStory).toContain("src: '/placeholder-media'");
+    const mediaPreview = documents.find((document) => document.id === 'media')?.previewData;
+    expect(mediaStory).toContain(`src: ${JSON.stringify(mediaPreview?.fields?.src)}`);
+    const productStory = source(stories, 'src/stories/generated/ProductCard.stories.tsx');
+    expect(productStory).toContain('export const Compact: Story = {');
+    expect(productStory).toContain('variant: "compact"');
+    expect(productStory).toContain('Everyday ceramic mug');
   });
 
   it('generates a data-driven media switch with optional metadata', () => {

@@ -1,5 +1,11 @@
-import { resolvePreviewData, type DocumentFile, type FieldValue } from '@facadeur/core';
+import {
+  resolvePreviewData,
+  variantPresets,
+  type DocumentFile,
+  type FieldValue,
+} from '@facadeur/core';
 import type { ComponentFile, PropSpec } from './component.js';
+import { componentName } from './names.js';
 
 const kindTitles: Record<DocumentFile['kind'], string> = {
   atom: 'Atoms',
@@ -49,6 +55,29 @@ function renderStory(document: DocumentFile, file: ComponentFile): string {
   }
   lines.push(`} satisfies Meta<typeof ${file.component}>;`, '', 'export default meta;', '');
   lines.push(`type Story = StoryObj<typeof meta>;`, '', 'export const Default: Story = {};', '');
+  // Named variant props precede ordinary axes in the component contract.
+  const variant = file.props.find(
+    (prop) => prop.source === 'variant' && prop.fieldType === 'variant',
+  );
+  const used = new Set(['Default', 'Story', 'meta']);
+  if (variant) {
+    for (const preset of variantPresets(document).filter((preset) => preset.name !== 'default')) {
+      const name = componentName(preset.name, used);
+      lines.push(
+        `export const ${name}: Story = {`,
+        `  name: ${JSON.stringify(document.variantLabels?.[preset.name] ?? preset.name)},`,
+        '  args: {',
+        ...renderArgs(
+          file.props.filter((prop) => prop !== variant),
+          resolvePreviewData(document, preset.name),
+        ),
+        `    ${variant.name}: ${JSON.stringify(preset.name)},`,
+        '  },',
+        '};',
+        '',
+      );
+    }
+  }
   return lines.join('\n');
 }
 

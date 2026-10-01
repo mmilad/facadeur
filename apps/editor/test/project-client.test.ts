@@ -7,8 +7,10 @@ import { connectProject, loadProject, type ProjectSnapshot } from '../src/domain
 import { createProjectSync, type ProjectSyncState } from '../src/domain/project/sync.js';
 import { encodeBase64, decodeBase64 } from '../src/domain/project/encoding.js';
 import * as files from '../src/domain/assets/files.js';
+import { createProjectTransport } from '../src/domain/project/transport.js';
 
 vi.mock('../src/domain/project/sync.js', () => ({ createProjectSync: vi.fn() }));
+vi.mock('../src/domain/project/transport.js', () => ({ createProjectTransport: vi.fn() }));
 
 type SyncOptions = Parameters<typeof createProjectSync>[0];
 type SyncClient = ReturnType<typeof createProjectSync>;
@@ -24,6 +26,7 @@ beforeEach(() => {
   connections.length = 0;
   vi.stubGlobal('fetch', fetchMock);
   fetchMock.mockReset();
+  vi.mocked(createProjectTransport).mockReturnValue({ socketFor: vi.fn(), destroy: vi.fn() });
   vi.mocked(createProjectSync).mockImplementation((options) => {
     let state: ProjectSyncState = {
       status: 'connecting',
@@ -73,7 +76,13 @@ function project(): ProjectSnapshot {
     };
     store.destroy();
   }
-  return { id: 'default', documents: [document], design, sources: { card: 'card.json' }, states };
+  return {
+    id: 'default',
+    documents: [document],
+    design,
+    sources: { card: 'card.json', [design.id]: 'project-template.json' },
+    states,
+  };
 }
 function connect(snapshot = project()) {
   const adapter = connectProject(snapshot);

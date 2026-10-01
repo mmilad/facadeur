@@ -1,8 +1,4 @@
-import {
-  assertComponentTokenDefault,
-  type ComponentToken,
-  type TokenType,
-} from '@facadeur/core';
+import { assertComponentTokenDefault, type ComponentToken, type TokenType } from '@facadeur/core';
 import { useMemo, useState } from 'react';
 import {
   assertComponentTokenPath,
@@ -94,10 +90,7 @@ export function ComponentTokensPanel({
     session.execute({ type: 'removeComponentToken', path });
   }
 
-  const localPaths = useMemo(
-    () => new Set(entries.map(([path]) => path)),
-    [entries],
-  );
+  const localPaths = useMemo(() => new Set(entries.map(([path]) => path)), [entries]);
 
   return (
     <section className="component-tokens-panel eu-section" aria-label="Component tokens">
@@ -227,7 +220,9 @@ function ComponentTokenRow({
               commitValue(typeof next === 'string' ? next : JSON.stringify(next));
             }}
           />
-        ) : token.type === 'dimension' || token.type === 'number' || token.type === 'fontFamily' ||
+        ) : token.type === 'dimension' ||
+          token.type === 'number' ||
+          token.type === 'fontFamily' ||
           token.type === 'fontWeight' ? (
           <TokenValueControl
             name={`component-token-${path}`}
@@ -279,7 +274,7 @@ function scalarGlobalRefs(
 
 function ComponentTokenAddRow({
   existingPaths,
-  globalPaths,
+  globalPaths: _globalPaths,
   onAdd,
 }: {
   existingPaths: ReadonlySet<string>;

@@ -42,8 +42,13 @@ Invalid commands or updates return 400. Changed JSON sources also return 409 and
 are never silently overwritten. Storage failures are reported rather than falling
 back to a download or pretending the save succeeded.
 
-The editor connects to `/sync?project=default&id=:id` on the server via WebSocket.
-It exchanges state vectors, updates and durable acknowledgements; reconnection
+The editor uses one ordered `/sync?project=default` WebSocket stream. Its initial
+`{type:"catalog", project:...}` snapshot and subsequent catalog additions are processed
+before document frames. Sync/update requests and responses carry `id` to route them
+to their document store. New documents therefore appear in other tabs without a reload,
+and dependent instance updates cannot overtake catalog registration. The existing
+`/sync?project=default&id=:id` channel remains supported for single-document clients.
+Both exchange state vectors, updates and durable acknowledgements; reconnection
 merges outstanding tab edits with the server history. Client-generated documents
 may include an initial base64 `update` when creating a document, preserving their
 Yjs identity instead of seeding two competing histories.
@@ -52,8 +57,8 @@ Yjs identity instead of seeding two competing histories.
 
 - One local project, no authentication or production deployment yet. The server
   binds to loopback and accepts browser origins only from the configured editor.
-- Existing documents synchronize live. New catalog entries currently require a
-  reload in other tabs before they can be opened or referenced there.
+- Existing documents and new catalog entries synchronize live. Receiving a catalog
+  never replaces existing stores, local Undo history or the current selection.
 - Importing JSON over an existing project ID is deliberately rejected. Use editor
   commands or the Edit API; replacement/import migration needs its own policy.
 - Schema-library management remains browser-local; `examples/schemas.json` is not

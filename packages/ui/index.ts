@@ -27,6 +27,8 @@ export { Input } from './components/Input';
 export type { InputProps } from './components/Input';
 export { Media } from './components/Media';
 export type { MediaProps } from './components/Media';
+export { ProductCard } from './components/ProductCard';
+export type { ProductCardProps, ProductCardVariant } from './components/ProductCard';
 export { SignIn } from './components/SignIn';
 export type { SignInProps } from './components/SignIn';
 export { Specimen } from './components/Specimen';

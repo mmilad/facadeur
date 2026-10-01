@@ -2,7 +2,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { validateDocumentFile, withPreviewData, type DocumentFile } from '@facadeur/core';
+import { toFlat, validateDocumentFile, withPreviewData, type DocumentFile } from '@facadeur/core';
 import { createDomRenderer } from '@facadeur/renderer-dom';
 import { migratePreviewData } from '../src/domain/preview-data.js';
 
@@ -62,13 +62,26 @@ describe('example preview datasets', () => {
   });
 
   it('renders Specimen with SignIn samples and keeps explicit Card instance content', () => {
-    const host = renderPreview(example('specimen'));
+    const specimen = example('specimen');
+    const section = toFlat(specimen).nodes['specimen-section'];
+    const email = toFlat(example('specimen-section')).nodes['input-email'];
+    if (section?.type !== 'instance' || email?.type !== 'instance') {
+      throw new Error('Missing Specimen section or email instance');
+    }
+    const expectedEmail =
+      section.childFields?.['input-email']?.value ??
+      email.fields?.value ??
+      example('input').previewData?.fields?.value;
+    expect(expectedEmail).toEqual(expect.any(String));
+    const host = renderPreview(specimen);
     expect(host.textContent).toContain('Field notes');
     expect(host.textContent).not.toContain(example('card').previewData?.fields?.title);
     for (const name of ['eyebrow', 'title', 'body']) {
       expect(host.textContent).toContain(example('sign-in').previewData?.fields?.[name]);
     }
-    expect(host.querySelector('input')?.value).toBe('ada@atelier.test');
+    expect(host.querySelector<HTMLInputElement>('[data-node="input-email"] input')?.value).toBe(
+      expectedEmail,
+    );
     expect(host.textContent).toContain('Continue');
   });
 

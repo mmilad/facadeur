@@ -1,10 +1,14 @@
 import { isVariantAxis, variantPresets, type FieldValue, type NestedNode } from '@facadeur/core';
 import { CodegenError } from '../../names.js';
 import { assertDefault, jsLiteral } from '../catalog.js';
-import { childFieldValue, childFieldsForInstance, withChildFieldOverride } from '../child-fields.js';
+import {
+  childFieldValue,
+  childFieldsForInstance,
+  withChildFieldOverride,
+} from '../child-fields.js';
 import { conditionForNode, dataExpression, variantRuleExpression } from './data-expressions.js';
 import { jsxText } from './jsx-text.js';
-import type { Attr, CatalogEntry, ComponentImport, ElementNode, PropSpec } from '../types.js';
+import type { Attr, CatalogEntry, ComponentImport, ElementNode } from '../types.js';
 
 export function renderInstance(
   node: Extract<NestedNode, { type: 'instance' }>,

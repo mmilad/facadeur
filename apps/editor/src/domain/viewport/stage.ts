@@ -188,7 +188,9 @@ export function createStage(viewport: HTMLElement, stage: HTMLElement): StageCon
       if (!vw || !vh || factor <= 0) return;
       const mx = vw / 2;
       const my = vh / 2;
-      const nextScale = clamp(scale * factor, MIN_SCALE, MAX_SCALE);
+      const target = clamp(scale * factor, MIN_SCALE, MAX_SCALE);
+      const crossesActualSize = (scale < 1 && target >= 1) || (scale > 1 && target <= 1);
+      const nextScale = crossesActualSize || Math.abs(target - 1) < 1e-10 ? 1 : target;
       const stageX = (mx - tx) / scale;
       const stageY = (my - ty) / scale;
       tx = mx - stageX * nextScale;

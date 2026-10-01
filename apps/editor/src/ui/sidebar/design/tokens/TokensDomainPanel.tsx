@@ -8,7 +8,6 @@ import {
   fontWeightTokenRefs,
   numberTokenRefs,
   shadowTokenRefs,
-  typographyTokenRefs,
 } from '../../../../domain/editing.js';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
 import { formatTokenValue } from '../../../../domain/edits/token-edit.js';

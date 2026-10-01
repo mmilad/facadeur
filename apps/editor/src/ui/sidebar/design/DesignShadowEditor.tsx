@@ -141,7 +141,7 @@ function validateShadowField(field: DesignShadowField, value: string | boolean |
 function ShadowObjectEditor({
   value,
   namePrefix,
-  shadowTokens,
+  shadowTokens: _shadowTokens,
   dimensionTokens,
   colorTokens,
   onCommit,

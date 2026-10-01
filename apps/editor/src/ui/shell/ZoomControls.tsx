@@ -13,9 +13,16 @@ export function ZoomControls({ session, label }: { session: EditorSession; label
       >
         −
       </button>
-      <span className="zoom-readout" aria-live="polite">
+      <button
+        type="button"
+        className="zoom-readout"
+        aria-live="polite"
+        aria-label="Zoom to 100%"
+        title="Zoom to 100%"
+        onClick={() => session.resetZoom()}
+      >
         {label}
-      </span>
+      </button>
       <button
         type="button"
         className="zoom-step"

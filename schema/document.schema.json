@@ -6502,6 +6502,10 @@
           "additionalProperties": {
             "$ref": "#/$defs/jsonValue"
           }
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
         }
       }
     },

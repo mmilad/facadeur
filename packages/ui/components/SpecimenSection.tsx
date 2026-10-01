@@ -12,9 +12,10 @@ export interface SpecimenSectionProps {
   /** Instance id. Sets `data-node` so a parent style rule can address this element. */
   nodeId?: string;
   className?: string;
+  childFields?: Record<string, Record<string, unknown>>;
 }
 
-export function SpecimenSection({ nodeId, className }: SpecimenSectionProps) {
+export function SpecimenSection({ nodeId, className, childFields }: SpecimenSectionProps) {
   return (
     <div data-component="specimen-section" data-node={nodeId} className={className}>
       <div data-node="intro">
@@ -28,17 +29,97 @@ export function SpecimenSection({ nodeId, className }: SpecimenSectionProps) {
       <div data-node="buttons">
         <p data-node="label-button">Button</p>
         <div data-node="button-row">
-          <Button nodeId="btn-primary" label="Primary" tone="primary" size="md" />
-          <Button nodeId="btn-secondary" label="Secondary" tone="secondary" size="md" />
-          <Button nodeId="btn-ghost" label="Ghost" tone="ghost" size="md" />
-          <Button nodeId="btn-small" label="Small" tone="primary" size="sm" />
+          <Button
+            nodeId="btn-primary"
+            label={
+              childFields?.['btn-primary']?.label !== undefined
+                ? (childFields?.['btn-primary']?.label as string)
+                : 'Primary'
+            }
+            tone="primary"
+            size="md"
+          />
+          <Button
+            nodeId="btn-secondary"
+            label={
+              childFields?.['btn-secondary']?.label !== undefined
+                ? (childFields?.['btn-secondary']?.label as string)
+                : 'Secondary'
+            }
+            tone="secondary"
+            size="md"
+          />
+          <Button
+            nodeId="btn-ghost"
+            label={
+              childFields?.['btn-ghost']?.label !== undefined
+                ? (childFields?.['btn-ghost']?.label as string)
+                : 'Ghost'
+            }
+            tone="ghost"
+            size="md"
+          />
+          <Button
+            nodeId="btn-small"
+            label={
+              childFields?.['btn-small']?.label !== undefined
+                ? (childFields?.['btn-small']?.label as string)
+                : 'Small'
+            }
+            tone="primary"
+            size="sm"
+          />
         </div>
       </div>
       <div data-node="fields">
         <p data-node="label-input">Input</p>
         <div data-node="input-row">
-          <Input nodeId="input-email" label="Email" value="ada@atelier.test" name="email" />
-          <Input nodeId="input-search" label="Search" placeholder="Search components" name="q" />
+          <Input
+            nodeId="input-email"
+            label={
+              childFields?.['input-email']?.label !== undefined
+                ? (childFields?.['input-email']?.label as string)
+                : 'Email'
+            }
+            value={
+              childFields?.['input-email']?.value !== undefined
+                ? (childFields?.['input-email']?.value as string)
+                : 'ada@atelier.test'
+            }
+            name={
+              childFields?.['input-email']?.name !== undefined
+                ? (childFields?.['input-email']?.name as string)
+                : 'email'
+            }
+            placeholder={
+              childFields?.['input-email']?.placeholder !== undefined
+                ? (childFields?.['input-email']?.placeholder as string)
+                : undefined
+            }
+          />
+          <Input
+            nodeId="input-search"
+            label={
+              childFields?.['input-search']?.label !== undefined
+                ? (childFields?.['input-search']?.label as string)
+                : 'Search'
+            }
+            placeholder={
+              childFields?.['input-search']?.placeholder !== undefined
+                ? (childFields?.['input-search']?.placeholder as string)
+                : 'Search components'
+            }
+            name={
+              childFields?.['input-search']?.name !== undefined
+                ? (childFields?.['input-search']?.name as string)
+                : 'q'
+            }
+            value={
+              childFields?.['input-search']?.value !== undefined
+                ? (childFields?.['input-search']?.value as string)
+                : undefined
+            }
+          />
         </div>
       </div>
       <div data-node="cards">
@@ -46,11 +127,40 @@ export function SpecimenSection({ nodeId, className }: SpecimenSectionProps) {
         <div data-node="card-row">
           <Card
             nodeId="card-notes"
-            eyebrow="Layout"
-            title="Field notes"
-            body="Props fill the template. Click the title, or click the card padding to select the card itself."
+            eyebrow={
+              childFields?.['card-notes']?.eyebrow !== undefined
+                ? (childFields?.['card-notes']?.eyebrow as string)
+                : 'Layout'
+            }
+            title={
+              childFields?.['card-notes']?.title !== undefined
+                ? (childFields?.['card-notes']?.title as string)
+                : 'Field notes'
+            }
+            body={
+              childFields?.['card-notes']?.body !== undefined
+                ? (childFields?.['card-notes']?.body as string)
+                : 'Props fill the template. Click the title, or click the card padding to select the card itself.'
+            }
           />
-          <SignIn nodeId="card-signin" />
+          <SignIn
+            nodeId="card-signin"
+            eyebrow={
+              childFields?.['card-signin']?.eyebrow !== undefined
+                ? (childFields?.['card-signin']?.eyebrow as string)
+                : undefined
+            }
+            title={
+              childFields?.['card-signin']?.title !== undefined
+                ? (childFields?.['card-signin']?.title as string)
+                : undefined
+            }
+            body={
+              childFields?.['card-signin']?.body !== undefined
+                ? (childFields?.['card-signin']?.body as string)
+                : undefined
+            }
+          />
         </div>
       </div>
     </div>

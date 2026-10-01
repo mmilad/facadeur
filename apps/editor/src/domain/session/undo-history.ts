@@ -180,8 +180,14 @@ export function createEditorSessionSurface(
   deps: EditorSessionSurfaceDeps,
 ): Omit<
   EditorSession,
-  'subscribe' | 'getSnapshot' | 'syncStores' | 'markProjectSaved' | 'destroy'
+  | 'subscribe'
+  | 'getSnapshot'
+  | 'syncStores'
+  | 'markProjectSaved'
+  | 'acceptProjectDocuments'
+  | 'destroy'
 > {
+  let zoomScale = 1;
   return {
     setWorkspace(kind) {
       const nextWorkspace = applyWorkspaceChange({
@@ -397,13 +403,16 @@ export function createEditorSessionSurface(
       deps.publish();
     },
     setZoom(scale) {
-      const label = `${Math.round(scale * 100)}%`;
+      zoomScale = scale;
+      const percent = scale * 100;
+      const label = `${scale === 1 ? 100 : Math.abs(percent - 100) < 1 ? Number(percent.toFixed(2)) : Math.round(percent)}%`;
       if (label === deps.getZoomLabel()) return;
       deps.setZoomLabel(label);
       deps.publish();
     },
     setZoomByHandler: deps.setZoomByHandler,
     zoomBy: (factor) => deps.getZoomByHandler()?.(factor),
+    resetZoom: () => deps.getZoomByHandler()?.(1 / zoomScale),
     setFitHandler: deps.setFitHandler,
     fit: () => deps.getFitHandler()?.(),
     boardDocuments: deps.boardDocuments,

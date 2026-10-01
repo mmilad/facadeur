@@ -9,7 +9,6 @@ import {
   validateCatalog,
 } from '@facadeur/core';
 import type { DocumentFile } from '@facadeur/core';
-import { createDocumentStore } from '@facadeur/store-yjs';
 
 const globals = new Set(['color.accent.default', 'color.bg.canvas', 'color.neutral.600']);
 
@@ -107,28 +106,5 @@ describe('component tokens', () => {
     ] as DocumentFile[];
     expect(() => validateCatalog(catalog)).not.toThrow();
     expect(componentTokenPublicPath('input', 'color.border')).toBe('input.color.border');
-  });
-
-  it('round-trips componentTokens through Yjs and undo', () => {
-    const file: DocumentFile = {
-      version: 1,
-      id: 'chip',
-      name: 'Chip',
-      kind: 'atom',
-      root: { id: 'root', type: 'frame', tag: 'span' },
-    };
-    const store = createDocumentStore(file, { globalTokenPaths: globals });
-    store.execute({
-      type: 'setComponentToken',
-      path: 'color.bg',
-      token: { type: 'color', value: '{color.bg.canvas}' },
-    });
-    expect(store.getDocument().componentTokens?.['color.bg']).toEqual({
-      type: 'color',
-      value: '{color.bg.canvas}',
-    });
-    store.execute({ type: 'removeComponentToken', path: 'color.bg' });
-    expect(store.getDocument().componentTokens).toBeUndefined();
-    store.destroy();
   });
 });

@@ -121,7 +121,8 @@ describe('viewport board', () => {
 
     for (const frame of frames) {
       expect(frame.host.element.style.width).toBe(`${frame.breakpoint.minWidth}px`);
-      expect(frame.column.style.width).toBe(`${frame.breakpoint.minWidth}px`);
+      // Chrome sizes intrinsically around the exact-width iframe and its own padding.
+      expect(frame.column.style.width).toBe('');
       expect(frame.host.contentDocument().querySelector('[data-id="title"]')?.textContent).toBe(
         'Before',
       );
@@ -145,7 +146,7 @@ describe('viewport board', () => {
     });
     await Promise.resolve();
     expect(board.frames().map((frame) => frame.host.element.style.width)).toEqual(['320px']);
-    expect(board.frames().map((frame) => frame.column.style.width)).toEqual(['320px']);
+    expect(board.frames().map((frame) => frame.column.style.width)).toEqual(['']);
     expect(
       board.frames()[0]?.host.contentDocument().querySelector('[data-id="title"]')?.textContent,
     ).toBe('After');

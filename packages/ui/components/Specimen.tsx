@@ -14,7 +14,10 @@ export interface SpecimenProps {
 export function Specimen({ nodeId, className }: SpecimenProps) {
   return (
     <div data-component="specimen" data-node={nodeId} className={className}>
-      <SpecimenSection nodeId="specimen-section" />
+      <SpecimenSection
+        nodeId="specimen-section"
+        childFields={{ 'input-email': { value: 'ada@atelier.testyy' } }}
+      />
     </div>
   );
 }

@@ -18,15 +18,7 @@ import { collectProperties, type CssProperty } from './css-properties.js';
 export type { CssProperty } from './css-properties.js';
 export { fontStack, quoteFamily } from './css-properties.js';
 
-const TYPOGRAPHY_FIELDS = [
-  'fontFamily',
-  'fontSize',
-  'fontWeight',
-  'lineHeight',
-  'letterSpacing',
-] as const;
-
-type TypographyField = (typeof TYPOGRAPHY_FIELDS)[number];
+type TypographyField = 'fontFamily' | 'fontSize' | 'fontWeight' | 'lineHeight' | 'letterSpacing';
 type Expectation = TokenType | 'lineHeight';
 
 export interface DesignInput {

@@ -3,22 +3,27 @@
   "id": "specimen",
   "name": "Specimen",
   "kind": "page",
+  "root": {
+    "id": "root",
+    "tag": "div",
+    "type": "frame",
+    "children": [
+      {
+        "id": "specimen-section",
+        "type": "instance",
+        "component": "specimen-section",
+        "childFields": {
+          "input-email": {
+            "value": "ada@atelier.testyy"
+          }
+        }
+      }
+    ]
+  },
   "settings": {
     "artboard": {
       "width": 1040,
       "height": 860
     }
-  },
-  "root": {
-    "id": "root",
-    "type": "frame",
-    "tag": "div",
-    "children": [
-      {
-        "id": "specimen-section",
-        "type": "instance",
-        "component": "specimen-section"
-      }
-    ]
   }
 }

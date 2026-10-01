@@ -92,6 +92,15 @@ export interface EditorSnapshot {
 }
 
 export interface EditorSession {
+  /** Register new remote documents without merging updates into existing stores. */
+  acceptProjectDocuments: (
+    entries: Array<{
+      document: DocumentFile;
+      update: Uint8Array;
+      source: string;
+      saved: boolean;
+    }>,
+  ) => void;
   /** Live stores for the project transport; rendering still uses DocumentStore. */
   syncStores: () => import('@facadeur/store-yjs').YjsDocumentStore[];
   /** Reflect a server snapshot save without replacing the document or Undo history. */
@@ -131,6 +140,7 @@ export interface EditorSession {
   setZoom: (scale: number) => void;
   setZoomByHandler: (handler: ((factor: number) => void) | null) => void;
   zoomBy: (factor: number) => void;
+  resetZoom: () => void;
   setFitHandler: (handler: (() => void) | null) => void;
   fit: () => void;
   boardDocuments: () => DocumentFile[];

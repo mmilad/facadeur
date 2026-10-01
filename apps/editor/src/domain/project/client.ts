@@ -11,22 +11,18 @@ import * as Y from 'yjs';
 import { createEditorSession } from '../session.js';
 import { createProjectSync } from './sync.js';
 import { decodeBase64, encodeBase64 } from './encoding.js';
-
-interface ProjectState {
-  update: string;
-  revision: number;
-  savedRevision: number;
-}
-export interface ProjectSnapshot {
-  id: string;
-  documents: DocumentFile[];
-  design: DocumentFile;
-  sources: Record<string, string>;
-  states: Record<string, ProjectState>;
-}
+import { createProjectTransport } from './transport.js';
+import type { ProjectSnapshot, ProjectState } from './types.js';
+export type { ProjectSnapshot } from './types.js';
 
 export async function loadProject(signal?: AbortSignal): Promise<ProjectSnapshot> {
   const project = await request<ProjectSnapshot>('/api/projects/default', { signal });
+  return validateProject(project);
+}
+
+function validateProject(project: ProjectSnapshot): ProjectSnapshot {
+  if (!project || project.id !== 'default' || !project.sources || !project.states)
+    throw new Error('Invalid project catalog');
   project.documents = validateCatalog(project.documents);
   project.design = validateDocumentFile(project.design);
   for (const doc of [project.design, ...project.documents]) {
@@ -41,6 +37,7 @@ export async function loadProject(signal?: AbortSignal): Promise<ProjectSnapshot
       state.savedRevision > state.revision
     )
       throw new Error('Invalid project sync state');
+    if (typeof project.sources[doc.id] !== 'string') throw new Error('Missing project source');
   }
   return project;
 }
@@ -48,6 +45,7 @@ export async function loadProject(signal?: AbortSignal): Promise<ProjectSnapshot
 export function connectProject(project: ProjectSnapshot) {
   const clients = new Map<YjsDocumentStore, ReturnType<typeof createProjectSync>>();
   const registrations = new Map<YjsDocumentStore, Promise<void>>();
+  const failedRegistrations = new Set<YjsDocumentStore>();
   const known = new Set(Object.keys(project.states));
   const listeners = new Set<() => void>();
   let destroyed = false;
@@ -88,29 +86,55 @@ export function connectProject(project: ProjectSnapshot) {
     }
     originalLoad(file, handle);
   };
+  const socketBase = process.env.NEXT_PUBLIC_FACADEUR_SYNC_URL ?? 'ws://127.0.0.1:3002';
+  const transport = createProjectTransport({
+    url: `${socketBase}/sync?project=default`,
+    onCatalog: (incoming) => {
+      if (destroyed) return;
+      const catalog = validateProject(incoming);
+      if (catalog.design.id !== project.design.id)
+        throw new Error('Project design identity changed');
+      // Mark server identities before publishing the session, avoiding registration echoes.
+      for (const document of catalog.documents) known.add(document.id);
+      session.acceptProjectDocuments(
+        catalog.documents.map((document) => ({
+          document,
+          source: catalog.sources[document.id]!,
+          update: decodeBase64(catalog.states[document.id]!.update),
+          saved:
+            catalog.states[document.id]!.revision === catalog.states[document.id]!.savedRevision,
+        })),
+      );
+      reconcile();
+    },
+    onError: (message) => {
+      if (!destroyed) session.setNotice(message, 'error');
+    },
+  });
   function publishStatus() {
     if (destroyed) return;
     const states = [...clients.values()].map((client) => client.state());
-    const next = states.some((state) => state.status === 'error')
-      ? 'Sync error'
-      : states.some((state) => state.status === 'offline')
-        ? 'Offline — changes remain in this tab'
-        : registrations.size || states.some((state) => state.status === 'connecting')
-          ? 'Connecting…'
-          : states.some((state) => state.pending)
-            ? 'Syncing…'
-            : 'Connected';
+    const next =
+      failedRegistrations.size || states.some((state) => state.status === 'error')
+        ? 'Sync error'
+        : states.some((state) => state.status === 'offline')
+          ? 'Offline — changes remain in this tab'
+          : registrations.size || states.some((state) => state.status === 'connecting')
+            ? 'Connecting…'
+            : states.some((state) => state.pending)
+              ? 'Syncing…'
+              : 'Connected';
     if (status === next) return;
     status = next;
     for (const listener of listeners) listener();
   }
   function connect(store: YjsDocumentStore) {
     const id = store.getDocument().id;
-    const socketBase = process.env.NEXT_PUBLIC_FACADEUR_SYNC_URL ?? 'ws://127.0.0.1:3002';
     let initializing = true;
     const client = createProjectSync({
       store,
       url: `${socketBase}/sync?project=default&id=${encodeURIComponent(id)}`,
+      socketFactory: () => transport.socketFor(id),
       onState: (state) => {
         if (destroyed || initializing) return;
         if (state.status === 'synced')
@@ -134,7 +158,8 @@ export function connectProject(project: ProjectSnapshot) {
         }
       }
       for (const store of stores) {
-        if (clients.has(store) || registrations.has(store)) continue;
+        if (clients.has(store) || registrations.has(store) || failedRegistrations.has(store))
+          continue;
         const id = store.getDocument().id;
         if (known.has(id)) {
           connect(store);
@@ -153,6 +178,7 @@ export function connectProject(project: ProjectSnapshot) {
             connect(store);
           })
           .catch((error: unknown) => {
+            failedRegistrations.add(store);
             if (!destroyed)
               session.setNotice(
                 error instanceof Error ? error.message : 'Could not add document',
@@ -190,6 +216,7 @@ export function connectProject(project: ProjectSnapshot) {
       destroyed = true;
       unsubscribe();
       for (const client of clients.values()) client.destroy();
+      transport.destroy();
       clients.clear();
       listeners.clear();
       session.destroy();

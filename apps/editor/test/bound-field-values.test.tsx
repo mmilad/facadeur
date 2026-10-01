@@ -72,6 +72,7 @@ describe('content example values', () => {
     const user = userEvent.setup();
     await act(async () => {
       await user.click(placeholder!);
+      await user.clear(placeholder!);
       await user.type(placeholder!, 'Email address');
       await user.tab();
     });

@@ -1,0 +1,53 @@
+import { describe, expect, it } from 'vitest';
+import type { DocumentFile } from '@facadeur/core';
+import { createDocumentStore } from '../src/index';
+
+describe('component tokens', () => {
+  it('round-trips componentTokens through Yjs and undoes/redoes add and remove independently', () => {
+    const file: DocumentFile = {
+      version: 1,
+      id: 'chip',
+      name: 'Chip',
+      kind: 'atom',
+      root: { id: 'root', type: 'frame', tag: 'span' },
+    };
+    const token = { type: 'color' as const, value: '{color.bg.canvas}' };
+    const store = createDocumentStore(file, {
+      globalTokenPaths: new Set(['color.accent.default', 'color.bg.canvas', 'color.neutral.600']),
+    });
+    try {
+      expect(store.getDocument().componentTokens).toBeUndefined();
+      expect(store.canUndo()).toBe(false);
+      expect(store.canRedo()).toBe(false);
+
+      store.execute({ type: 'setComponentToken', path: 'color.bg', token });
+      expect(store.getDocument().componentTokens).toEqual({ 'color.bg': token });
+      expect(store.canUndo()).toBe(true);
+
+      store.execute({ type: 'removeComponentToken', path: 'color.bg' });
+      expect(store.getDocument().componentTokens).toBeUndefined();
+
+      store.undo();
+      expect(store.getDocument().componentTokens).toEqual({ 'color.bg': token });
+      expect(store.canUndo()).toBe(true);
+      expect(store.canRedo()).toBe(true);
+
+      store.undo();
+      expect(store.getDocument().componentTokens).toBeUndefined();
+      expect(store.canUndo()).toBe(false);
+      expect(store.canRedo()).toBe(true);
+
+      store.redo();
+      expect(store.getDocument().componentTokens).toEqual({ 'color.bg': token });
+      expect(store.canUndo()).toBe(true);
+      expect(store.canRedo()).toBe(true);
+
+      store.redo();
+      expect(store.getDocument().componentTokens).toBeUndefined();
+      expect(store.canUndo()).toBe(true);
+      expect(store.canRedo()).toBe(false);
+    } finally {
+      store.destroy();
+    }
+  });
+});

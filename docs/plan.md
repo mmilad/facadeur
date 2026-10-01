@@ -4,6 +4,98 @@
 
 ## Refactoring bei der Aufgabenplanung
 
+### Stable chrome during zoom (2026-10-02)
+
+- [x] Exclude header intrinsic width and keep header geometry independent of stage scale.
+- [x] Verify stable frame bounds across zoom levels and preserve iframe/padding widths.
+
+Keep stage CSS cohesive: this is a layout defect, not an extraction candidate. Preserve iframe
+breakpoint widths, body padding, pan/zoom semantics and user staging. Leave adaptive grid unchanged.
+Browser measurements at 20%, 100% and 110% show identical widths, heights and layout offsets for
+all six boards; phone width is 415px including padding, and header height remains 28px.
+Nine focused zoom/viewport tests and scoped formatting pass. Titles now scale with the artboard;
+they no longer counter-scale and change layout at low zoom.
+
+### Exact zoom (2026-10-02)
+
+- [x] Make the percentage readout an exact 100% action and stop rounding near-100 values to 100.
+- [x] Snap toolbar zoom across 100%, preserving center anchoring and smooth wheel zoom.
+
+Retain cohesive stage controller and session surface: no new responsibility boundary or extraction
+is needed. Preserve fit, pan, zoom limits and stored documents. Validate focused tests and typecheck.
+
+### Intrinsic viewport chrome width (2026-10-02)
+
+- [x] Remove the outer frame's duplicate fixed width; preserve exact iframe breakpoint widths.
+- [x] Validate breakpoint rebuilds and padded chrome containment in the browser.
+
+Boundary: viewport board and stage CSS remain cohesive; this is a sizing defect, not a structural
+refactor. Let normal intrinsic sizing include chrome padding without coupling JS to CSS values.
+Preserve padding, breakpoint semantics, frame lifecycle, selection and all existing staged changes.
+Validation: 13 viewport/chrome tests, editor typecheck and scoped lint pass. Browser measurements
+confirm all six iframe widths remain exact (375–1760px), with 20px chrome padding and no overflow.
+
+### Product Card workflow (2026-10-02)
+
+- [x] Move the adapter-specific component-token test from core to store-yjs; retain pure Core tests.
+- [x] Add Product Card fields, composed Button, image, price, preview data and sparse Compact preset.
+- [x] Include it in codegen and verify generated React/Storybook output and rendered variants.
+- [x] Exercise API edits, shared editor state, Save and restart on a disposable project copy.
+
+Boundary decision: Core tests currently import its Yjs adapter, creating an undeclared reverse
+dependency. Relocate only that adapter behavior test to store-yjs instead of adding a cyclic dev
+dependency. Preserve coverage and strengthen actual Undo/Redo assertions. Product Card belongs in
+examples; reuse current DSL/renderer/codegen contracts, no new runtime helpers or public API changes.
+Retain the cohesive server repository (461 lines); no extension is planned. Preserve all staged
+changes and Specimen content. No repository-wide formatting or changes to artboard padding.
+
+Story generation remains cohesive in its existing module: named presets now receive their own
+stories and resolved variant preview data; runtime components still exclude sample values.
+Validation includes generated-output equality, renderer assertions for both presets, a real
+server/two-editor API-Save-restart test and browser inspection of Default and Compact in Storybook.
+
+### Live catalog and green baseline checks (2026-10-02)
+
+- [x] Reconcile the three obsolete schema/preview assertions without changing DSL semantics.
+- [x] Add an additive project-wide WebSocket stream, ordering catalog additions before document updates.
+- [x] Accept remotely hydrated catalog entries without changing selection, local history or unsent edits.
+- [x] Integrate editor transport and verify two tabs, reconnect, dependent instances, Save and full checks.
+
+Refactoring prerequisite: the project adapter currently owns registration and per-document transport;
+place multiplexed socket lifecycle in a private domain/project module before integration. Keep the
+session coordinator (478 lines) cohesive; remote catalog registration belongs beside session document
+registration, not in UI controls. Keep the repository (461 lines) unchanged unless required: HTTP owns
+wire publication, not persistence. Preserve current API routes, Core commands, Yjs identity, local Undo,
+selection and user changes (including examples/specimen-page.json). No deployment/auth or replacement
+imports in this task. Validate focused behavior, full tests, type/lint and an actual two-tab browser run.
+
+Completion: three delegated slices integrated centrally. Project transport multiplexes existing
+document providers on one socket; server catalog frames precede dependent edits, including reconnect.
+Private session-catalog registration validates batches and hydrates new histories without replacing
+existing stores or changing selection, drill state, unsent edits or Undo/Redo. The coordinator remains
+cohesive at 493 lines; its registration logic stays in the owning private helper. No transport size
+candidates remain. Regenerated schema from existing DSL and UI output for the user's explicit
+Specimen child-field override; adjusted preview assertions to honor current data rather than blanks
+or historical placeholders. User example source and padding are unchanged.
+Validation: all 679 tests in 133 files pass; editor/server typechecks and scoped lint pass. Real
+two-session integration covers registration echoes, dependent instances, local Undo, Save and restart
+catch-up. Browser on an isolated copy: new component in tab A immediately appeared in tab B without
+navigation/reload; API text appeared in both, Save in B succeeded, and a fresh view rendered it.
+Stopped isolated preview servers and removed temporary Next configuration changes. Local default
+server restarted with the new channel. Remaining local-only/auth/import/schema-library boundaries
+are unchanged and documented in project-api.md.
+Final validation cleanup: full lint also exposed unused imports/parameters from existing refactors.
+Remove imports or prefix unused parameters while preserving signatures and runtime behavior; no
+additional decomposition or DSL change. Discard only the generated isolated Next verification cache.
+Broader existing gates remain separate: workspace typecheck fails because core's component-token
+test imports undeclared store-yjs (10 packages pass, core fails); global Prettier reports widespread
+existing formatting deviations.
+Do not add a cyclic dev dependency or reformat the repository silently. Editor/server typechecks,
+changed-source formatting, ESLint and the complete behavioral test suite are the completion gates
+for this scoped change; record those broader follow-ups explicitly.
+Final rerun after cleanup: ESLint passes across the repository, all 679 tests pass, changed TS
+formatting passes, and the detector retains only the cohesive 493-line session coordinator.
+
 ### Global refactor skill (2026-10-02)
 
 - Evidence: the local skill hard-codes Facadeur paths/contracts; its detector assumes a
