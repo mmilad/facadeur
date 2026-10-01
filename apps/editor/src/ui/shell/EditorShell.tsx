@@ -2,14 +2,21 @@
 
 import { createId, findParent } from '@facadeur/core';
 import { placementAllowed, refusalMessage, toolAllowed } from '../../domain/editing.js';
+import dynamic from 'next/dynamic';
 import { useEffect, useSyncExternalStore } from 'react';
 import { openJsonFile, parseDocumentText } from '../../domain/files.js';
 import { isEditableTarget } from '../../domain/keyboard.js';
 import type { EditorSession } from '../../domain/session.js';
 import { EDITOR_VIEW_ITEMS, isDesignDomain } from '../sidebar/design/design-domain.js';
+import { CodeStage } from '../stage/CodeStage.js';
 import { DesignDomainStage } from '../stage/DesignDomainStage.js';
 import { PreviewDataStage } from '../stage/PreviewDataStage.js';
 import { SchemaStage } from '../stage/SchemaStage.js';
+
+const SchemaLibraryStage = dynamic(
+  () => import('../stage/SchemaLibraryStage.js').then((mod) => mod.SchemaLibraryStage),
+  { ssr: false },
+);
 import { LayersPanel } from '../sidebar/layers/LayersPanel.js';
 import { ProjectTree } from '../sidebar/layers/ProjectTree.js';
 import { RightRail } from '../sidebar/properties/RightRail.js';
@@ -102,8 +109,12 @@ export function EditorShell({ session }: { session: EditorSession }) {
         </aside>
         {isDesignDomain(surface) ? (
           <DesignDomainStage session={session} snap={snap} domain={surface} />
+        ) : surface === 'schemas' ? (
+          <SchemaLibraryStage snap={snap} />
         ) : surface === 'schema' ? (
-          <SchemaStage session={session} snap={snap} />
+          <SchemaStage session={session} snap={snap} onOpenSchemas={() => setSurface('schemas')} />
+        ) : surface === 'code' ? (
+          <CodeStage session={session} snap={snap} />
         ) : surface === 'preview' ? (
           <PreviewDataStage session={session} snap={snap} />
         ) : (
@@ -120,7 +131,10 @@ export function EditorShell({ session }: { session: EditorSession }) {
             tool={snap.tool}
           />
         )}
-        {surface === 'schema' || surface === 'preview' ? null : (
+        {surface === 'schemas' ||
+        surface === 'schema' ||
+        surface === 'code' ||
+        surface === 'preview' ? null : (
           <ResizableInspector>
             <RightRail session={session} snap={snap} surface={surface} />
           </ResizableInspector>

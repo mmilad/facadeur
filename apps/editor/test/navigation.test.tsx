@@ -82,8 +82,17 @@ describe('editor subnavigation', () => {
     expect(host.querySelector('[data-testid="schema-stage"]')).toBeTruthy();
     expect(host.textContent).toContain('Component definition');
     expect(host.textContent).toContain('Props');
-    expect(host.textContent).toContain('React preview');
+    expect(host.textContent).toContain('Defaults');
+    expect(host.querySelector('[data-testid="code-stage"]')).toBeNull();
     expect(host.textContent).toContain('Legacy variant axes');
+    await act(async () => {
+      (host!.querySelector('[data-surface="code"]') as HTMLButtonElement).click();
+    });
+    expect(host.querySelector('[data-testid="code-stage"]')).toBeTruthy();
+    expect(host.textContent).toContain('React preview');
+    await act(async () => {
+      (host!.querySelector('[data-surface="schema"]') as HTMLButtonElement).click();
+    });
     expect(session.getSnapshot().selectedNodeId).toBe(selectedBefore);
     expect(session.getSnapshot().activeVariantName).toBe('compact');
 

@@ -1,0 +1,116 @@
+{
+  "_instructions": "This file is the schema library the Schemas tab loads. To add a schema, append an object to schemas with a stable id, a name, a short description, and a JSON Schema in schema. Use type object and properties for a component field list. Property types are string, number, integer, or boolean. Put required names in required. Use oneOf when a component accepts different shapes, as Media does for an image (alt) and a video (poster). To attach a schema to an example component, set assignments to { documentId: schemaId }. Document ids match the example file names: input, textarea, card, media. Reload the editor after editing this file. A schema changed in the browser is stored in local storage and then overrides this file for that id.",
+  "assignments": {
+    "input": "input",
+    "textarea": "textarea",
+    "card": "card",
+    "media": "media"
+  },
+  "schemas": [
+    {
+      "id": "input",
+      "name": "Input",
+      "description": "Text control props from the Input component.",
+      "schema": {
+        "type": "object",
+        "title": "Input",
+        "properties": {
+          "label": { "type": "string", "title": "Label", "default": "Label" },
+          "value": { "type": "string", "title": "Value", "default": "Value" },
+          "placeholder": { "type": "string", "title": "Placeholder", "default": "" },
+          "name": { "type": "string", "title": "Name", "default": "" }
+        }
+      }
+    },
+    {
+      "id": "textarea",
+      "name": "Textarea",
+      "description": "Text control props from the Textarea component, including rows.",
+      "schema": {
+        "type": "object",
+        "title": "Textarea",
+        "properties": {
+          "label": { "type": "string", "title": "Label", "default": "Label" },
+          "value": { "type": "string", "title": "Value", "default": "" },
+          "placeholder": { "type": "string", "title": "Placeholder", "default": "" },
+          "name": { "type": "string", "title": "Name", "default": "" },
+          "rows": { "type": "number", "title": "Rows", "default": 4 }
+        }
+      }
+    },
+    {
+      "id": "image",
+      "name": "Image",
+      "description": "Image shape taken from the Media component. Alt is the image-only field.",
+      "schema": {
+        "type": "object",
+        "title": "Image",
+        "required": ["src"],
+        "properties": {
+          "src": { "type": "string", "title": "Source" },
+          "alt": { "type": "string", "title": "Alt text" },
+          "ratio": { "type": "string", "title": "Ratio" }
+        }
+      }
+    },
+    {
+      "id": "video",
+      "name": "Video",
+      "description": "Video shape taken from the Media component. Poster is the video-only field.",
+      "schema": {
+        "type": "object",
+        "title": "Video",
+        "required": ["src"],
+        "properties": {
+          "src": { "type": "string", "title": "Source" },
+          "poster": { "type": "string", "title": "Poster" },
+          "ratio": { "type": "string", "title": "Ratio" }
+        }
+      }
+    },
+    {
+      "id": "card",
+      "name": "Card",
+      "description": "Copy fields from the Card component.",
+      "schema": {
+        "type": "object",
+        "title": "Card",
+        "properties": {
+          "eyebrow": { "type": "string", "title": "Eyebrow", "default": "Card" },
+          "title": { "type": "string", "title": "Title", "default": "Title" },
+          "body": { "type": "string", "title": "Body", "default": "" }
+        }
+      }
+    },
+    {
+      "id": "media",
+      "name": "Media",
+      "description": "Union of an image and a video. A value matches exactly one branch.",
+      "schema": {
+        "title": "Media",
+        "oneOf": [
+          {
+            "title": "Image",
+            "type": "object",
+            "required": ["src"],
+            "properties": {
+              "src": { "type": "string", "title": "Source" },
+              "alt": { "type": "string", "title": "Alt text" },
+              "ratio": { "type": "string", "title": "Ratio" }
+            }
+          },
+          {
+            "title": "Video",
+            "type": "object",
+            "required": ["src"],
+            "properties": {
+              "src": { "type": "string", "title": "Source" },
+              "poster": { "type": "string", "title": "Poster" },
+              "ratio": { "type": "string", "title": "Ratio" }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

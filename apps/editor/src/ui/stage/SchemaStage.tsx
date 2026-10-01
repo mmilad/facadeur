@@ -1,5 +1,3 @@
-import { useMemo } from 'react';
-import { codePreview } from '../../domain/code-preview.js';
 import type { EditorSession, EditorSnapshot } from '../../domain/session.js';
 import { variantLabel } from '../../domain/variant-edit.js';
 import { ComponentEvents } from '../sidebar/properties/content/ComponentEvents.js';
@@ -7,24 +5,24 @@ import { ComponentExpose } from '../sidebar/properties/content/ComponentExpose.j
 import { ComponentFields } from '../sidebar/properties/content/ComponentFields.js';
 import { ComponentVariants } from '../sidebar/properties/content/ComponentVariants.js';
 import { ownsComponentFeatures } from '../sidebar/properties/content/owns-component-features.js';
+import { SchemaUseControl } from './SchemaUseControl.js';
 
 /**
  * The schema surface edits the open document's structural contract. It uses
  * the canonical document even while a named variant is active: variants alter
  * presentation and instance values, not the component schema.
  */
-export function SchemaStage({ session, snap }: { session: EditorSession; snap: EditorSnapshot }) {
+export function SchemaStage({
+  session,
+  snap,
+  onOpenSchemas,
+}: {
+  session: EditorSession;
+  snap: EditorSnapshot;
+  onOpenSchemas: () => void;
+}) {
   const document = snap.document;
   const hasSchema = ownsComponentFeatures(document.kind);
-  const generatedCode = useMemo(
-    () =>
-      codePreview({
-        documents: session.boardDocuments(),
-        design: session.designInput(),
-        documentId: document.id,
-      }),
-    [session, snap],
-  );
 
   return (
     <section className="schema-stage eu-form" aria-label="Schema" data-testid="schema-stage">
@@ -36,7 +34,7 @@ export function SchemaStage({ session, snap }: { session: EditorSession; snap: E
         <p className="schema-stage-note">
           {snap.activeVariantName
             ? `Editing ${variantLabel(document, snap.activeVariantName)}; schema stays shared with the base document.`
-            : 'Define the fields, events, and exposed API for this document.'}
+            : 'Choose a shared schema, then keep this document’s fields, events, and exposed API.'}
         </p>
       </header>
       <div className="schema-stage-body">
@@ -47,6 +45,7 @@ export function SchemaStage({ session, snap }: { session: EditorSession; snap: E
               aria-labelledby="schema-definition-title"
             >
               <h2 id="schema-definition-title">Component definition</h2>
+              <SchemaUseControl documentId={document.id} onOpenSchemas={onOpenSchemas} />
               <h3>Props</h3>
               <ComponentFields session={session} snap={snap} />
               <ComponentEvents session={session} snap={snap} />
@@ -57,17 +56,6 @@ export function SchemaStage({ session, snap }: { session: EditorSession; snap: E
                   <ComponentVariants session={session} snap={snap} />
                 </details>
               ) : null}
-            </section>
-            <section
-              className="schema-card schema-code-preview"
-              aria-labelledby="schema-code-title"
-            >
-              <h2 id="schema-code-title">React preview</h2>
-              {generatedCode.error ? (
-                <p className="notice notice-error">{generatedCode.error}</p>
-              ) : (
-                <pre>{generatedCode.source}</pre>
-              )}
             </section>
           </div>
         ) : (

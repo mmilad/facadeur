@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
     '@facadeur/store-yjs',
     '@facadeur/style-engine',
     '@facadeur/tokens',
+    'jsonjoy-builder',
   ],
   async rewrites() {
     return [{ source: '/__facadeur/examples', destination: '/api/facadeur/examples' }];

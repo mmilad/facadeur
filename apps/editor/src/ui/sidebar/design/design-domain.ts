@@ -1,13 +1,15 @@
 export type DesignDomain =
   'colors' | 'fonts' | 'icons' | 'spacing' | 'radius' | 'shadow' | 'typography';
 
-export type EditorView = 'editor' | 'schema' | 'preview';
+export type EditorView = 'editor' | 'schemas' | 'schema' | 'code' | 'preview';
 
 export type EditorSurface = EditorView | DesignDomain;
 
 export const EDITOR_VIEW_ITEMS: { id: EditorView; label: string }[] = [
   { id: 'editor', label: 'Editor' },
+  { id: 'schemas', label: 'Schemas' },
   { id: 'schema', label: 'Schema' },
+  { id: 'code', label: 'Code' },
   { id: 'preview', label: 'Preview data' },
 ];
 
