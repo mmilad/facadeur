@@ -11,13 +11,86 @@
 
 .design-domain-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
   flex: none;
   padding: 14px 20px 10px;
   border-bottom: 1px solid var(--line);
   background: var(--sidebar);
+}
+
+.design-domain-head-main {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.design-settings-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.design-settings-tab {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: var(--white);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.design-settings-tab.is-active {
+  border-color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+}
+
+.design-sidebar-item {
+  display: block;
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.component-tokens-panel .side-note {
+  margin: 0 0 10px;
+  font-size: 12px;
+}
+
+.component-token-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.component-token-row {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.component-token-row-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.component-token-row-head strong {
+  flex: 1;
+  font-size: 13px;
+}
+
+.component-token-add {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .design-domain-breadcrumb {

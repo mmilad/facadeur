@@ -5,13 +5,23 @@
   "kind": "component",
   "group": "form",
   "fields": [
-    { "name": "label", "type": "text" },
-    { "name": "value", "type": "text" }
+    {
+      "name": "label",
+      "type": "text"
+    },
+    {
+      "name": "value",
+      "type": "text"
+    }
   ],
   "variants": [
     {
       "name": "state",
-      "values": ["on", "off", "disabled"],
+      "values": [
+        "on",
+        "off",
+        "disabled"
+      ],
       "default": "on"
     }
   ],
@@ -20,8 +30,8 @@
       "color.accent.default",
       "color.bg.muted",
       "color.text.inverse",
-      "editor.color.text",
-      "editor.color.textmuted",
+      "color.text.primary",
+      "color.text.secondary",
       "radius.full",
       "space.0",
       "space.2",
@@ -34,7 +44,7 @@
     "children": {
       "label": {
         "declarations": {
-          "color": "{editor.color.text}",
+          "color": "{color.text}",
           "font": "{type.body}",
           "margin": "{space.0}"
         }
@@ -85,7 +95,7 @@
       },
       "state": {
         "declarations": {
-          "color": "{editor.color.textmuted}",
+          "color": "{color.textmuted}",
           "font": "{type.caption}"
         }
       }
@@ -100,16 +110,32 @@
       "align": "center",
       "justify": "space-between",
       "gap": "{space.4}",
-      "width": { "mode": "fill" },
-      "height": { "mode": "hug" }
+      "width": {
+        "mode": "fill"
+      },
+      "height": {
+        "mode": "hug"
+      }
     },
     "children": [
       {
         "id": "label",
         "type": "text",
         "tag": "span",
-        "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } },
-        "bindings": [{ "field": "label", "target": "text" }]
+        "layout": {
+          "width": {
+            "mode": "hug"
+          },
+          "height": {
+            "mode": "hug"
+          }
+        },
+        "bindings": [
+          {
+            "field": "label",
+            "target": "text"
+          }
+        ]
       },
       {
         "id": "control",
@@ -119,8 +145,12 @@
           "direction": "row",
           "align": "center",
           "gap": "{space.2}",
-          "width": { "mode": "hug" },
-          "height": { "mode": "hug" }
+          "width": {
+            "mode": "hug"
+          },
+          "height": {
+            "mode": "hug"
+          }
         },
         "children": [
           {
@@ -130,8 +160,14 @@
             "layout": {
               "direction": "row",
               "align": "center",
-              "width": { "mode": "fixed", "size": 36 },
-              "height": { "mode": "fixed", "size": 20 }
+              "width": {
+                "mode": "fixed",
+                "size": 36
+              },
+              "height": {
+                "mode": "fixed",
+                "size": 20
+              }
             },
             "children": [
               {
@@ -139,8 +175,14 @@
                 "type": "frame",
                 "tag": "span",
                 "layout": {
-                  "width": { "mode": "fixed", "size": 16 },
-                  "height": { "mode": "fixed", "size": 16 }
+                  "width": {
+                    "mode": "fixed",
+                    "size": 16
+                  },
+                  "height": {
+                    "mode": "fixed",
+                    "size": 16
+                  }
                 }
               }
             ]
@@ -149,11 +191,33 @@
             "id": "state",
             "type": "text",
             "tag": "span",
-            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } },
-            "bindings": [{ "field": "value", "target": "text" }]
+            "layout": {
+              "width": {
+                "mode": "hug"
+              },
+              "height": {
+                "mode": "hug"
+              }
+            },
+            "bindings": [
+              {
+                "field": "value",
+                "target": "text"
+              }
+            ]
           }
         ]
       }
     ]
+  },
+  "componentTokens": {
+    "color.text": {
+      "type": "color",
+      "value": "{color.text.primary}"
+    },
+    "color.textmuted": {
+      "type": "color",
+      "value": "{color.text.secondary}"
+    }
   }
 }

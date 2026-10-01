@@ -1,7 +1,13 @@
+import {
+  assertComponentTokenDefault,
+  assertComponentTokenKind,
+  isLocalComponentTokenPath,
+} from '../component-tokens.js';
 import { defaultBreakpoints, isVariantAxis, type Breakpoint } from '../document/schema.js';
 import { DocumentError } from '../document/errors.js';
 import { layoutTokenRefs } from './layout.js';
 import type { FlatDocument } from '../document/flat.js';
+import type { ValidateOptions } from '../validation/tree.js';
 import type {
   StyleBlock,
   StyleChild,
@@ -73,10 +79,18 @@ export function collectTokenRefs(
   return [...refs].sort();
 }
 
-export function assertStyleContract(doc: FlatDocument): void {
+export function assertStyleContract(doc: FlatDocument, options: ValidateOptions = {}): void {
   const breakpoints = doc.settings.breakpoints?.length
     ? doc.settings.breakpoints
     : defaultBreakpoints;
+  if (doc.componentTokens) {
+    assertComponentTokenKind(doc.kind);
+    if (options.globalTokenPaths?.size) {
+      for (const token of Object.values(doc.componentTokens)) {
+        assertComponentTokenDefault(token.value, options.globalTokenPaths);
+      }
+    }
+  }
   if (doc.styles) assertStyleBlock(doc, doc.styles, breakpoints);
   for (const node of Object.values(doc.nodes)) {
     for (const id of Object.keys(node.layout?.breakpoints ?? {})) {
@@ -85,8 +99,9 @@ export function assertStyleContract(doc: FlatDocument): void {
   }
   const used = collectTokenRefs(doc);
   const reads = doc.tokenInterface?.reads ?? [];
-  if (doc.tokenInterface) assertTokenInterfacePaths(doc.tokenInterface);
+  if (doc.tokenInterface) assertTokenInterfacePaths(doc.tokenInterface, options);
   for (const ref of used) {
+    if (isLocalComponentTokenPath(doc, ref)) continue;
     if (!reads.includes(ref)) {
       throw new DocumentError(
         'schema',
@@ -196,12 +211,24 @@ function assertBreakpoint(id: string, breakpoints: readonly Breakpoint[], label:
   }
 }
 
-function assertTokenInterfacePaths(value: TokenInterface): void {
+function assertTokenInterfacePaths(value: TokenInterface, options: ValidateOptions = {}): void {
   for (const path of value.reads ?? []) {
     if (!TOKEN_PATH.test(path)) throw new DocumentError('schema', `Invalid token path "${path}"`);
   }
   for (const path of Object.keys(value.sets ?? {})) {
     if (!TOKEN_PATH.test(path)) throw new DocumentError('schema', `Invalid token path "${path}"`);
+    const dot = path.indexOf('.');
+    if (dot === -1) continue;
+    const documentId = path.slice(0, dot);
+    const localPath = path.slice(dot + 1);
+    const componentPaths = options.resolveComponentTokenPaths?.(documentId);
+    if (componentPaths === undefined) continue;
+    if (!componentPaths.has(localPath)) {
+      throw new DocumentError(
+        'schema',
+        `Set path "${path}" is not a component token on "${documentId}"`,
+      );
+    }
   }
 }
 

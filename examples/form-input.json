@@ -4,32 +4,51 @@
   "name": "Input",
   "kind": "atom",
   "fields": [
-    { "name": "value", "type": "text" },
-    { "name": "placeholder", "type": "text" },
-    { "name": "name", "type": "text" },
-    { "name": "disabled", "type": "boolean" }
+    {
+      "name": "value",
+      "type": "text"
+    },
+    {
+      "name": "placeholder",
+      "type": "text"
+    },
+    {
+      "name": "name",
+      "type": "text"
+    },
+    {
+      "name": "disabled",
+      "type": "boolean"
+    }
   ],
-  "events": [{ "name": "commit", "payload": { "value": "text" } }],
+  "events": [
+    {
+      "name": "commit",
+      "payload": {
+        "value": "text"
+      }
+    }
+  ],
   "tokenInterface": {
     "reads": [
       "color.accent.default",
-      "editor.color.border",
-      "editor.color.surface",
-      "editor.color.text",
-      "editor.radius",
+      "color.neutral.0",
+      "color.neutral.400",
+      "color.text.primary",
       "input.padding.x",
       "input.padding.y",
+      "radius.sm",
       "type.body"
     ]
   },
   "styles": {
     "declarations": {
       "appearance": "none",
-      "background": "{editor.color.surface}",
-      "border": "1px solid {editor.color.border}",
-      "borderRadius": "{editor.radius}",
+      "background": "{color.surface}",
+      "border": "1px solid {color.border}",
+      "borderRadius": "{shape.radius}",
       "boxSizing": "border-box",
-      "color": "{editor.color.text}",
+      "color": "{color.text}",
       "font": "{type.body}",
       "paddingBlock": "{input.padding.y}",
       "paddingInline": "{input.padding.x}",
@@ -41,24 +60,72 @@
         "outline": "2px solid {color.accent.default}",
         "outlineOffset": "1px"
       },
-      "disabled": { "opacity": "0.55" }
+      "disabled": {
+        "opacity": "0.55"
+      }
     }
   },
   "root": {
     "id": "root",
     "type": "frame",
     "tag": "input",
-    "attributes": { "type": "text", "autocomplete": "off" },
+    "attributes": {
+      "type": "text",
+      "autocomplete": "off"
+    },
     "layout": {
-      "width": { "mode": "fill" },
-      "height": { "mode": "hug" }
+      "width": {
+        "mode": "fill"
+      },
+      "height": {
+        "mode": "hug"
+      }
     },
     "bindings": [
-      { "field": "value", "target": "attribute", "name": "value" },
-      { "field": "placeholder", "target": "attribute", "name": "placeholder" },
-      { "field": "name", "target": "attribute", "name": "name" },
-      { "field": "disabled", "target": "attribute", "name": "disabled" }
+      {
+        "field": "value",
+        "target": "attribute",
+        "name": "value"
+      },
+      {
+        "field": "placeholder",
+        "target": "attribute",
+        "name": "placeholder"
+      },
+      {
+        "field": "name",
+        "target": "attribute",
+        "name": "name"
+      },
+      {
+        "field": "disabled",
+        "target": "attribute",
+        "name": "disabled"
+      }
     ],
-    "eventBindings": [{ "event": "commit", "name": "change" }]
+    "eventBindings": [
+      {
+        "event": "commit",
+        "name": "change"
+      }
+    ]
+  },
+  "componentTokens": {
+    "color.border": {
+      "type": "color",
+      "value": "{color.neutral.400}"
+    },
+    "color.surface": {
+      "type": "color",
+      "value": "{color.neutral.0}"
+    },
+    "color.text": {
+      "type": "color",
+      "value": "{color.text.primary}"
+    },
+    "shape.radius": {
+      "type": "dimension",
+      "value": "{radius.sm}"
+    }
   }
 }

@@ -6,6 +6,7 @@ import {
   suggestTypographyPath,
   tokenPathsReferencingTypography,
 } from '../../../../domain/edits/typography-edit.js';
+import { documentsReferencingToken } from '../../../../domain/component-tokens.js';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
 import { IconButton } from '../../../form/components/shared/IconButton.js';
 import { TokenAddAction } from './TokenAddAction.js';
@@ -61,7 +62,10 @@ export function RemoveTypographyTokenButton({
   path: string;
 }) {
   function removeTypography() {
-    const refs = tokenPathsReferencingTypography(snap.design.tokens, path);
+    const refs = [
+      ...tokenPathsReferencingTypography(snap.design.tokens, path),
+      ...documentsReferencingToken(session.boardDocuments(), path),
+    ];
     if (refs.length) {
       session.setNotice(
         `Cannot remove "${path}": {${path}} is referenced in ${refs.join(', ')}`,

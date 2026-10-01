@@ -53,6 +53,7 @@ import {
   styleStatesSchema,
   tokenInterfaceSchema,
 } from './schemas/schema-style.js';
+import { componentTokensSchema } from './schemas/schema-component-tokens.js';
 import {
   variantAxisSchema,
   variantInsertionSchema,
@@ -148,6 +149,7 @@ function documentProperties<Kind extends TSchema>(kind: Kind) {
     tokens: Type.Optional(tokenTreeSchema),
     styles: Type.Optional(styleBlockSchema),
     tokenInterface: Type.Optional(tokenInterfaceSchema),
+    componentTokens: Type.Optional(componentTokensSchema),
     root: nestedNodeSchema,
   };
 }
@@ -198,6 +200,7 @@ export type StyleLayer = Static<typeof styleLayerSchema>;
 export type StyleChild = Static<typeof styleChildSchema>;
 export type StyleBlock = Static<typeof styleBlockSchema>;
 export type TokenInterface = Static<typeof tokenInterfaceSchema>;
+export type ComponentTokens = Static<typeof componentTokensSchema>;
 export type Binding = Static<typeof bindingSchema>;
 export type NestedNode = Static<typeof nestedNodeSchema>;
 export type DocumentSettings = Static<typeof settingsSchema>;

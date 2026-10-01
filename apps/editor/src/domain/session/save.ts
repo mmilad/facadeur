@@ -110,8 +110,7 @@ export async function persistEditorJsonSave(options: {
 export function registerSessionAssetDocuments(options: {
   documents: readonly DocumentFile[];
   designId: string;
-  resolveKind: (componentId: string) => string | undefined;
-  resolveChildField?: CommandContext['resolveChildField'];
+  commandContext: CommandContext;
   assetStores: Map<string, YjsDocumentStore>;
   order: string[];
 }): void {
@@ -121,10 +120,7 @@ export function registerSessionAssetDocuments(options: {
     }
     if (file.id === options.designId) continue;
     const migrated = migratePreviewData(file);
-    const store = createDocumentStore(migrated, {
-      resolveKind: options.resolveKind,
-      resolveChildField: options.resolveChildField,
-    });
+    const store = createDocumentStore(migrated, options.commandContext);
     options.assetStores.set(file.id, store);
     options.order.push(file.id);
   }
@@ -197,8 +193,7 @@ export function loadEditorDocument(options: {
   assetStores: Map<string, YjsDocumentStore>;
   handles: Map<string, JsonFileHandle>;
   savedJson: SavedJsonBaselines;
-  resolveKind: (componentId: string) => string | undefined;
-  resolveChildField?: CommandContext['resolveChildField'];
+  commandContext: CommandContext;
   forget: (store: YjsDocumentStore | undefined) => void;
   watch: (store: YjsDocumentStore, source: 'asset' | 'design') => void;
   syncKinds: () => void;
@@ -212,10 +207,7 @@ export function loadEditorDocument(options: {
   try {
     const file = migratePreviewData(options.file);
     if (file.id === options.designId) {
-      const created = createDocumentStore(file, {
-        resolveKind: options.resolveKind,
-        resolveChildField: options.resolveChildField,
-      });
+      const created = createDocumentStore(file, options.commandContext);
       const previous = options.getDesignStore();
       options.setDesignStore(created);
       options.forget(previous);
@@ -237,10 +229,7 @@ export function loadEditorDocument(options: {
     });
     if (!options.assetStores.has(file.id)) nextFiles.push(file);
     validateCatalog(nextFiles);
-    const created = createDocumentStore(file, {
-      resolveKind: options.resolveKind,
-      resolveChildField: options.resolveChildField,
-    });
+    const created = createDocumentStore(file, options.commandContext);
     const previous = options.assetStores.get(file.id);
     options.assetStores.set(file.id, created);
     if (!options.order.includes(file.id)) options.order.push(file.id);

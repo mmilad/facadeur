@@ -4,6 +4,7 @@ import {
   isInsideSubtree,
   readTokenTree,
   type AxisSize,
+  type ComponentToken,
   type DefaultKind,
   type FlatDocument,
   type InsertNode,
@@ -12,6 +13,8 @@ import {
   type NodeType,
   type SizeValue,
 } from '@facadeur/core';
+
+import { readComponentTokens } from './component-tokens.js';
 
 import type { EditorTool } from './session.js';
 
@@ -109,6 +112,80 @@ function tokenRefsByType(tree: unknown, type: string): string[] {
     .filter((token) => token.type === type)
     .map((token) => `{${token.path}}`)
     .sort((left, right) => left.localeCompare(right));
+}
+
+function componentTokenRefsByType(
+  tokens: Readonly<Record<string, ComponentToken>> | undefined,
+  type: string,
+): string[] {
+  if (!tokens) return [];
+  return Object.entries(tokens)
+    .filter(([, token]) => token.type === type)
+    .map(([path]) => `{${path}}`)
+    .sort((left, right) => left.localeCompare(right));
+}
+
+function mergeTokenRefLists(...lists: readonly string[][]): string[] {
+  return [...new Set(lists.flat())].sort((left, right) => left.localeCompare(right));
+}
+
+/** Global design tokens plus local component tokens for the open document. */
+export function colorTokenRefsForDocument(designTree: unknown, doc: FlatDocument): string[] {
+  return mergeTokenRefLists(
+    colorTokenRefs(designTree),
+    componentTokenRefsByType(readComponentTokens(doc), 'color'),
+  );
+}
+
+export function shadowTokenRefsForDocument(designTree: unknown, doc: FlatDocument): string[] {
+  return mergeTokenRefLists(
+    shadowTokenRefs(designTree),
+    componentTokenRefsByType(readComponentTokens(doc), 'shadow'),
+  );
+}
+
+export function typographyTokenRefsForDocument(designTree: unknown, doc: FlatDocument): string[] {
+  return mergeTokenRefLists(
+    typographyTokenRefs(designTree),
+    componentTokenRefsByType(readComponentTokens(doc), 'typography'),
+  );
+}
+
+export function dimensionTokenRefsForDocument(designTree: unknown, doc: FlatDocument): string[] {
+  return mergeTokenRefLists(
+    dimensionTokenRefs(designTree),
+    componentTokenRefsByType(readComponentTokens(doc), 'dimension'),
+  );
+}
+
+export function radiusTokenRefsForDocument(designTree: unknown, doc: FlatDocument): string[] {
+  const globalRadius = radiusTokenRefs(designTree);
+  const localDimension = componentTokenRefsByType(readComponentTokens(doc), 'dimension').filter(
+    (ref) => tokenPath(ref).startsWith('radius.'),
+  );
+  const merged = mergeTokenRefLists(globalRadius, localDimension);
+  return merged.length ? merged : dimensionTokenRefsForDocument(designTree, doc);
+}
+
+export function fontFamilyTokenRefsForDocument(designTree: unknown, doc: FlatDocument): string[] {
+  return mergeTokenRefLists(
+    fontFamilyTokenRefs(designTree),
+    componentTokenRefsByType(readComponentTokens(doc), 'fontFamily'),
+  );
+}
+
+export function fontWeightTokenRefsForDocument(designTree: unknown, doc: FlatDocument): string[] {
+  return mergeTokenRefLists(
+    fontWeightTokenRefs(designTree),
+    componentTokenRefsByType(readComponentTokens(doc), 'fontWeight'),
+  );
+}
+
+export function numberTokenRefsForDocument(designTree: unknown, doc: FlatDocument): string[] {
+  return mergeTokenRefLists(
+    numberTokenRefs(designTree),
+    componentTokenRefsByType(readComponentTokens(doc), 'number'),
+  );
 }
 
 export function insertDraft(tool: InsertTool, id: string): InsertNode {

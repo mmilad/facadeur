@@ -5,20 +5,44 @@
   "kind": "component",
   "group": "form",
   "fields": [
-    { "name": "label", "type": "text" },
-    { "name": "value", "type": "text" },
-    { "name": "placeholder", "type": "text" },
-    { "name": "name", "type": "text" },
-    { "name": "rows", "type": "number" }
+    {
+      "name": "label",
+      "type": "text"
+    },
+    {
+      "name": "value",
+      "type": "text"
+    },
+    {
+      "name": "placeholder",
+      "type": "text"
+    },
+    {
+      "name": "name",
+      "type": "text"
+    },
+    {
+      "name": "rows",
+      "type": "number"
+    }
   ],
-  "variants": [{ "name": "resize", "values": ["vertical", "none"], "default": "vertical" }],
+  "variants": [
+    {
+      "name": "resize",
+      "values": [
+        "vertical",
+        "none"
+      ],
+      "default": "vertical"
+    }
+  ],
   "tokenInterface": {
     "reads": [
       "color.accent.default",
       "color.bg.muted",
       "color.neutral.400",
+      "color.text.primary",
       "color.text.secondary",
-      "input.color.text",
       "input.padding.x",
       "input.padding.y",
       "input.radius",
@@ -41,7 +65,7 @@
           "border": "1px solid {color.neutral.400}",
           "borderRadius": "{input.radius}",
           "boxSizing": "border-box",
-          "color": "{input.color.text}",
+          "color": "{color.text}",
           "font": "{type.body}",
           "display": "block",
           "letterSpacing": "0",
@@ -56,16 +80,24 @@
             "outline": "2px solid {color.accent.default}",
             "outlineOffset": "1px"
           },
-          "disabled": { "opacity": "0.5" }
+          "disabled": {
+            "opacity": "0.5"
+          }
         },
         "variants": {
           "resize": {
-            "none": { "declarations": { "resize": "none" } }
+            "none": {
+              "declarations": {
+                "resize": "none"
+              }
+            }
           }
         }
       },
       "label": {
-        "declarations": { "margin": "{space.0}" }
+        "declarations": {
+          "margin": "{space.0}"
+        }
       }
     }
   },
@@ -77,35 +109,69 @@
       "direction": "column",
       "align": "stretch",
       "gap": "{space.gap.xs}",
-      "width": { "mode": "fill" },
-      "height": { "mode": "hug" }
+      "width": {
+        "mode": "fill"
+      },
+      "height": {
+        "mode": "hug"
+      }
     },
     "children": [
       {
         "id": "label",
         "type": "text",
         "tag": "span",
-        "bindings": [{ "field": "label", "target": "text" }]
+        "bindings": [
+          {
+            "field": "label",
+            "target": "text"
+          }
+        ]
       },
       {
         "id": "control",
         "type": "frame",
         "tag": "textarea",
         "layout": {
-          "width": { "mode": "fill" },
-          "height": { "mode": "hug" }
+          "width": {
+            "mode": "fill"
+          },
+          "height": {
+            "mode": "hug"
+          }
         },
         "attributes": {
           "readonly": "readonly",
           "tabindex": "-1"
         },
         "bindings": [
-          { "field": "value", "target": "text" },
-          { "field": "placeholder", "target": "attribute", "name": "placeholder" },
-          { "field": "name", "target": "attribute", "name": "name" },
-          { "field": "rows", "target": "attribute", "name": "rows" }
+          {
+            "field": "value",
+            "target": "text"
+          },
+          {
+            "field": "placeholder",
+            "target": "attribute",
+            "name": "placeholder"
+          },
+          {
+            "field": "name",
+            "target": "attribute",
+            "name": "name"
+          },
+          {
+            "field": "rows",
+            "target": "attribute",
+            "name": "rows"
+          }
         ]
       }
     ]
+  },
+  "componentTokens": {
+    "color.text": {
+      "type": "color",
+      "value": "{color.text.primary}"
+    }
   }
 }

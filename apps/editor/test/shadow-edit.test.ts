@@ -39,12 +39,24 @@ describe('shadow-edit', () => {
   });
 
   it('finds token paths that reference a shadow token', () => {
-    const design = createProjectTemplateDocument();
-    const refs = tokenPathsReferencingShadow(design.tokens, 'shadow.md');
-    expect(refs.length).toBeGreaterThan(0);
-    expect(refs.includes('shadow.md')).toBe(false);
-    expect(refs).toContain('card.shadow');
-    expect(tokenPathsReferencingShadow(design.tokens, 'shadow.missing')).toEqual([]);
+    const tree = {
+      shadow: {
+        md: {
+          $type: 'shadow',
+          $value: {
+            offsetX: '0px',
+            offsetY: '1px',
+            blur: '2px',
+            spread: '0px',
+            color: '#000000',
+          },
+        },
+        card: { $type: 'shadow', $value: '{shadow.md}' },
+      },
+    };
+    const refs = tokenPathsReferencingShadow(tree, 'shadow.md');
+    expect(refs).toEqual(['shadow.card']);
+    expect(tokenPathsReferencingShadow(tree, 'shadow.missing')).toEqual([]);
   });
 
   it('new shadow paths match the shadow design domain', () => {

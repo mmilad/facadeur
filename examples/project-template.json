@@ -28,12 +28,20 @@
     {
       "id": "sans",
       "family": "Inter",
-      "weights": [400, 500, 600, 700],
+      "weights": [
+        400,
+        500,
+        600,
+        700
+      ],
       "source": {
         "type": "google",
         "family": "Inter"
       },
-      "fallbacks": ["system-ui", "sans-serif"]
+      "fallbacks": [
+        "system-ui",
+        "sans-serif"
+      ]
     }
   ],
   "icons": [
@@ -87,122 +95,6 @@
     }
   ],
   "tokens": {
-      "button": {
-      "$extensions": {
-        "facadeur": {
-          "tier": "component"
-        }
-      },
-      "color": {
-        "$type": "color",
-        "bg": {
-          "$value": "{color.accent.default}"
-        },
-        "text": {
-          "$value": "{color.text.inverse}"
-        }
-      },
-      "gap": {
-        "$type": "dimension",
-        "$value": "{space.gap.sm}"
-      },
-      "padding": {
-        "$type": "dimension",
-        "x": {
-          "$value": "{space.4}"
-        },
-        "y": {
-          "$value": "{space.2}"
-        }
-      },
-      "radius": {
-        "$type": "dimension",
-        "$value": "{radius.md}"
-      }
-    },
-    "card": {
-      "$extensions": {
-        "facadeur": {
-          "tier": "component"
-        }
-      },
-      "color": {
-        "$type": "color",
-        "bg": {
-          "$value": "{color.bg.canvas}"
-        },
-        "border": {
-          "$value": "{color.border.default}"
-        }
-      },
-      "gap": {
-        "$type": "dimension",
-        "$value": "{space.gap.md}"
-      },
-      "padding": {
-        "$type": "dimension",
-        "$value": "{space.inset.lg}"
-      },
-      "radius": {
-        "$type": "dimension",
-        "$value": "{radius.lg}"
-      },
-      "shadow": {
-        "$type": "shadow",
-        "$value": "{shadow.md}"
-      }
-    },
-    "editor": {
-      "$extensions": {
-        "facadeur": {
-          "tier": "component"
-        }
-      },
-      "color": {
-        "$type": "color",
-        "surface": {
-          "$value": "{color.neutral.0}"
-        },
-        "canvas": {
-          "$value": "{color.neutral.50}"
-        },
-        "border": {
-          "$value": "{color.neutral.400}"
-        },
-        "bordersubtle": {
-          "$value": "{color.neutral.200}"
-        },
-        "focus": {
-          "$value": "{color.accent.default}"
-        },
-        "text": {
-          "$value": "{color.text.primary}"
-        },
-        "textmuted": {
-          "$value": "{color.text.secondary}"
-        },
-        "danger": {
-          "$value": "{color.danger.default}"
-        }
-      },
-      "radius": {
-        "$type": "dimension",
-        "$value": "{radius.sm}"
-      },
-      "padding": {
-        "$type": "dimension",
-        "x": {
-          "$value": "{space.3}"
-        },
-        "y": {
-          "$value": "{space.2}"
-        }
-      },
-      "gap": {
-        "$type": "dimension",
-        "$value": "{space.gap.xs}"
-      }
-    },
     "color": {
       "$extensions": {
         "facadeur": {
@@ -347,42 +239,6 @@
         "semibold": {
           "$value": 600
         }
-      }
-    },
-    "input": {
-      "$extensions": {
-        "facadeur": {
-          "tier": "component"
-        }
-      },
-      "color": {
-        "$type": "color",
-        "bg": {
-          "$value": "{color.bg.canvas}"
-        },
-        "border": {
-          "$value": "{color.neutral.600}"
-        },
-        "text": {
-          "$value": "{color.text.primary}"
-        }
-      },
-      "padding": {
-        "$type": "dimension",
-        "x": {
-          "$value": "{space.3}"
-        },
-        "y": {
-          "$value": "{space.2}"
-        }
-      },
-      "radius": {
-        "$type": "dimension",
-        "$value": "{radius.sm}"
-      },
-      "shadow": {
-        "$type": "shadow",
-        "$value": "{shadow.sm}"
       }
     },
     "radius": {

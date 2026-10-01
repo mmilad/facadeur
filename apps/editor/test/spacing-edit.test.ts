@@ -33,7 +33,6 @@ describe('spacing-edit', () => {
     const design = createProjectTemplateDocument();
     const refs = tokenPathsReferencingSpacing(design.tokens, 'space.2');
     expect(refs.length).toBeGreaterThan(0);
-    expect(refs).toContain('input.padding.y');
     expect(tokenPathsReferencingSpacing(design.tokens, 'space.missing')).toEqual([]);
   });
 

@@ -1,4 +1,12 @@
 export {
+  assertComponentTokenDefault,
+  componentTokenPublicPath,
+  globalRefInComponentTokenDefault,
+  isLocalComponentTokenPath,
+  type ComponentToken,
+  type ComponentTokenMap,
+} from './component-tokens.js';
+export {
   applyCommand,
   type Command,
   type CommandContext,

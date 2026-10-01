@@ -11,6 +11,7 @@ import type {
   NestedNode,
 } from './schema.js';
 import { isVariantAxis, isVariantPreset } from './schema.js';
+import { canonicalizeComponentTokens } from '../component-tokens.js';
 import { canonicalizeStyleBlock, canonicalizeTokenInterface } from '../styles/style-block.js';
 import { canonicalizeTokenTree } from '../token-tree.js';
 import {
@@ -64,6 +65,7 @@ export function toFlat(file: DocumentFile): FlatDocument {
     ...(file.icons?.length ? { icons: file.icons } : {}),
     ...(file.styles ? { styles: file.styles } : {}),
     ...(file.tokenInterface ? { tokenInterface: file.tokenInterface } : {}),
+    ...(file.componentTokens ? { componentTokens: file.componentTokens } : {}),
     nodes,
   });
 }
@@ -103,6 +105,9 @@ export function toNested(doc: FlatDocument): DocumentFile {
   if (Object.keys(doc.tokens).length) file.tokens = canonicalizeTokenTree(doc.tokens);
   if (doc.styles) file.styles = doc.styles;
   if (doc.tokenInterface) file.tokenInterface = doc.tokenInterface;
+  if (doc.componentTokens && Object.keys(doc.componentTokens).length) {
+    file.componentTokens = doc.componentTokens;
+  }
   return file;
 }
 
@@ -125,6 +130,7 @@ export function canonicalizeFlat(doc: FlatDocument): FlatDocument {
   }
   const styles = canonicalizeStyleBlock(doc.styles);
   const tokenInterface = canonicalizeTokenInterface(doc.tokenInterface);
+  const componentTokens = canonicalizeComponentTokens(doc.componentTokens);
   return {
     version: 1,
     id: doc.id,
@@ -147,6 +153,7 @@ export function canonicalizeFlat(doc: FlatDocument): FlatDocument {
     ...(doc.icons?.length ? { icons: doc.icons.map((icon) => ({ ...icon })) } : {}),
     ...(styles ? { styles } : {}),
     ...(tokenInterface ? { tokenInterface } : {}),
+    ...(componentTokens ? { componentTokens } : {}),
     nodes,
   };
 }

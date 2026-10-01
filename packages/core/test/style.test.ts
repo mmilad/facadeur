@@ -9,16 +9,19 @@ import {
 } from '@facadeur/core';
 import type { DocumentFile } from '@facadeur/core';
 import button from '../../../examples/button.json';
+import design from '../../../examples/project-template.json';
 
 const buttonFile = button as DocumentFile;
+const designFile = design as DocumentFile;
 
 describe('style block and auto layout', () => {
   it('round-trips a style block, token interface, and layout', () => {
-    const [document] = validateCatalog([buttonFile]);
+    const documents = validateCatalog([designFile, buttonFile]);
+    const document = documents.find((item) => item.id === 'button');
     if (!document) throw new Error('missing button');
     expect(toNested(toFlat(document))).toEqual(document);
     expect(document.styles?.states?.hover?.background).toBe('{color.accent.hover}');
-    expect(document.root.layout?.gap).toBe('{button.gap}');
+    expect(document.root.layout?.gap).toBe('{layout.gap}');
   });
 
   it('validates and resolves named variant style layers without copying base styles', () => {
@@ -109,13 +112,13 @@ describe('style block and auto layout', () => {
       prop: 'layout',
       value: {
         direction: 'row',
-        gap: '{button.gap}',
+        gap: '{layout.gap}',
         width: { mode: 'fixed', size: { unit: '%', value: 50 } },
-        breakpoints: { tablet: { gap: '{button.gap}' } },
+        breakpoints: { tablet: { gap: '{layout.gap}' } },
       },
     });
     expect(next.nodes.root?.layout).toMatchObject({
-      gap: '{button.gap}',
+      gap: '{layout.gap}',
       width: { mode: 'fixed', size: { unit: '%', value: 50 } },
     });
     expect(() =>
@@ -130,8 +133,8 @@ describe('style block and auto layout', () => {
 
   it('requires reads to list every token the style block uses', () => {
     const doc = structuredClone(buttonFile);
-    doc.tokenInterface = { reads: ['button.gap'] };
-    expect(() => validateCatalog([doc])).toThrow(/tokenInterface\.reads/);
+    doc.tokenInterface = { reads: ['space.gap.sm'] };
+    expect(() => validateCatalog([designFile, doc])).toThrow(/tokenInterface\.reads/);
   });
 
   it('replaces the style block through a command', () => {

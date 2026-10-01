@@ -18,6 +18,7 @@ import textarea from '../../../examples/textarea.json';
 import { createEditorSession, type EditorSession } from '../src/domain/session.js';
 import { withTokenBreakpoint } from '../src/domain/edits/token-edit.js';
 import { App } from '../src/ui/shell/EditorShell.js';
+import { openSettingsDomain } from './settings-navigation.js';
 
 const documents = validateCatalog([
   button,
@@ -58,9 +59,7 @@ describe('shadow domain panel', () => {
     await act(async () => {
       root?.render(<App session={session} />);
     });
-    await act(async () => {
-      (host!.querySelector('[data-design-domain="shadow"]') as HTMLButtonElement).click();
-    });
+    await openSettingsDomain(host!, 'shadow');
   }
 
   async function submitNewToken(path: string) {

@@ -5,23 +5,35 @@
   "kind": "component",
   "group": "form",
   "fields": [
-    { "name": "label", "type": "text" },
-    { "name": "value", "type": "text" },
-    { "name": "placeholder", "type": "text" },
-    { "name": "name", "type": "text" }
+    {
+      "name": "label",
+      "type": "text"
+    },
+    {
+      "name": "value",
+      "type": "text"
+    },
+    {
+      "name": "placeholder",
+      "type": "text"
+    },
+    {
+      "name": "name",
+      "type": "text"
+    }
   ],
   "tokenInterface": {
     "reads": [
       "color.accent.default",
+      "color.bg.canvas",
+      "color.neutral.600",
+      "color.text.primary",
       "color.text.secondary",
-      "input.color.bg",
-      "input.color.border",
-      "input.color.text",
-      "input.padding.x",
-      "input.padding.y",
-      "input.radius",
-      "input.shadow",
+      "radius.sm",
+      "shadow.sm",
       "space.0",
+      "space.2",
+      "space.3",
       "space.gap.xs",
       "type.body",
       "type.label"
@@ -36,17 +48,17 @@
       "control": {
         "declarations": {
           "appearance": "none",
-          "background": "{input.color.bg}",
-          "border": "1px solid {input.color.border}",
-          "borderRadius": "{input.radius}",
-          "boxShadow": "{input.shadow}",
+          "background": "{color.bg}",
+          "border": "1px solid {color.border}",
+          "borderRadius": "{shape.radius}",
+          "boxShadow": "{elevation.shadow}",
           "boxSizing": "border-box",
-          "color": "{input.color.text}",
+          "color": "{color.text}",
           "display": "block",
           "font": "{type.body}",
           "letterSpacing": "0",
-          "paddingBlock": "{input.padding.y}",
-          "paddingInline": "{input.padding.x}",
+          "paddingBlock": "{padding.y}",
+          "paddingInline": "{padding.x}",
           "textTransform": "none"
         },
         "states": {
@@ -55,11 +67,15 @@
             "outline": "2px solid {color.accent.default}",
             "outlineOffset": "1px"
           },
-          "disabled": { "opacity": "0.5" }
+          "disabled": {
+            "opacity": "0.5"
+          }
         }
       },
       "label": {
-        "declarations": { "margin": "{space.0}" }
+        "declarations": {
+          "margin": "{space.0}"
+        }
       }
     }
   },
@@ -71,23 +87,36 @@
       "direction": "column",
       "align": "stretch",
       "gap": "{space.gap.xs}",
-      "width": { "mode": "fill" },
-      "height": { "mode": "hug" }
+      "width": {
+        "mode": "fill"
+      },
+      "height": {
+        "mode": "hug"
+      }
     },
     "children": [
       {
         "id": "label",
         "type": "text",
         "tag": "span",
-        "bindings": [{ "field": "label", "target": "text" }]
+        "bindings": [
+          {
+            "field": "label",
+            "target": "text"
+          }
+        ]
       },
       {
         "id": "control",
         "type": "frame",
         "tag": "input",
         "layout": {
-          "width": { "mode": "fill" },
-          "height": { "mode": "hug" }
+          "width": {
+            "mode": "fill"
+          },
+          "height": {
+            "mode": "hug"
+          }
         },
         "attributes": {
           "type": "text",
@@ -96,11 +125,53 @@
           "autocomplete": "off"
         },
         "bindings": [
-          { "field": "value", "target": "attribute", "name": "value" },
-          { "field": "placeholder", "target": "attribute", "name": "placeholder" },
-          { "field": "name", "target": "attribute", "name": "name" }
+          {
+            "field": "value",
+            "target": "attribute",
+            "name": "value"
+          },
+          {
+            "field": "placeholder",
+            "target": "attribute",
+            "name": "placeholder"
+          },
+          {
+            "field": "name",
+            "target": "attribute",
+            "name": "name"
+          }
         ]
       }
     ]
+  },
+  "componentTokens": {
+    "padding.x": {
+      "type": "dimension",
+      "value": "{space.3}"
+    },
+    "padding.y": {
+      "type": "dimension",
+      "value": "{space.2}"
+    },
+    "shape.radius": {
+      "type": "dimension",
+      "value": "{radius.sm}"
+    },
+    "color.bg": {
+      "type": "color",
+      "value": "{color.bg.canvas}"
+    },
+    "color.border": {
+      "type": "color",
+      "value": "{color.neutral.600}"
+    },
+    "color.text": {
+      "type": "color",
+      "value": "{color.text.primary}"
+    },
+    "elevation.shadow": {
+      "type": "shadow",
+      "value": "{shadow.sm}"
+    }
   }
 }

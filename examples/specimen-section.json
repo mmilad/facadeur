@@ -84,8 +84,12 @@
       "align": "stretch",
       "gap": "{space.stack.lg}",
       "padding": "{space.inset.lg}",
-      "width": { "mode": "fill" },
-      "height": { "mode": "hug" }
+      "width": {
+        "mode": "fill"
+      },
+      "height": {
+        "mode": "hug"
+      }
     },
     "children": [
       {
@@ -96,8 +100,12 @@
           "direction": "column",
           "align": "stretch",
           "gap": "{space.stack.md}",
-          "width": { "mode": "fill" },
-          "height": { "mode": "hug" }
+          "width": {
+            "mode": "fill"
+          },
+          "height": {
+            "mode": "hug"
+          }
         },
         "children": [
           {
@@ -105,14 +113,28 @@
             "type": "text",
             "tag": "p",
             "text": "facadeur",
-            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+            "layout": {
+              "width": {
+                "mode": "hug"
+              },
+              "height": {
+                "mode": "hug"
+              }
+            }
           },
           {
             "id": "heading",
             "type": "text",
             "tag": "h1",
             "text": "Specimen",
-            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+            "layout": {
+              "width": {
+                "mode": "hug"
+              },
+              "height": {
+                "mode": "hug"
+              }
+            }
           },
           {
             "id": "lede",
@@ -120,8 +142,13 @@
             "tag": "p",
             "text": "Auto layout, token styles, and a sign-in card that overrides the input border for its children.",
             "layout": {
-              "width": { "mode": "fill", "max": 640 },
-              "height": { "mode": "hug" }
+              "width": {
+                "mode": "fill",
+                "max": 640
+              },
+              "height": {
+                "mode": "hug"
+              }
             }
           }
         ]
@@ -134,8 +161,12 @@
           "direction": "column",
           "align": "stretch",
           "gap": "{space.stack.sm}",
-          "width": { "mode": "fill" },
-          "height": { "mode": "hug" }
+          "width": {
+            "mode": "fill"
+          },
+          "height": {
+            "mode": "hug"
+          }
         },
         "children": [
           {
@@ -143,7 +174,14 @@
             "type": "text",
             "tag": "p",
             "text": "Button",
-            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+            "layout": {
+              "width": {
+                "mode": "hug"
+              },
+              "height": {
+                "mode": "hug"
+              }
+            }
           },
           {
             "id": "button-row",
@@ -154,10 +192,16 @@
               "align": "center",
               "wrap": true,
               "gap": "{space.gap.sm}",
-              "width": { "mode": "fill" },
-              "height": { "mode": "hug" },
+              "width": {
+                "mode": "fill"
+              },
+              "height": {
+                "mode": "hug"
+              },
               "breakpoints": {
-                "desktop": { "gap": "{space.gap.md}" }
+                "desktop": {
+                  "gap": "{space.gap.md}"
+                }
               }
             },
             "children": [
@@ -165,29 +209,49 @@
                 "id": "btn-primary",
                 "type": "instance",
                 "component": "button",
-                "fields": { "label": "Primary" },
-                "variants": { "tone": "primary", "size": "md" }
+                "fields": {
+                  "label": "Primary"
+                },
+                "variants": {
+                  "tone": "primary",
+                  "size": "md"
+                }
               },
               {
                 "id": "btn-secondary",
                 "type": "instance",
                 "component": "button",
-                "fields": { "label": "Secondary" },
-                "variants": { "tone": "secondary", "size": "md" }
+                "fields": {
+                  "label": "Secondary"
+                },
+                "variants": {
+                  "tone": "secondary",
+                  "size": "md"
+                }
               },
               {
                 "id": "btn-ghost",
                 "type": "instance",
                 "component": "button",
-                "fields": { "label": "Ghost" },
-                "variants": { "tone": "ghost", "size": "md" }
+                "fields": {
+                  "label": "Ghost"
+                },
+                "variants": {
+                  "tone": "ghost",
+                  "size": "md"
+                }
               },
               {
                 "id": "btn-small",
                 "type": "instance",
                 "component": "button",
-                "fields": { "label": "Small" },
-                "variants": { "tone": "primary", "size": "sm" }
+                "fields": {
+                  "label": "Small"
+                },
+                "variants": {
+                  "tone": "primary",
+                  "size": "sm"
+                }
               }
             ]
           }
@@ -201,8 +265,12 @@
           "direction": "column",
           "align": "stretch",
           "gap": "{space.stack.sm}",
-          "width": { "mode": "fill" },
-          "height": { "mode": "hug" }
+          "width": {
+            "mode": "fill"
+          },
+          "height": {
+            "mode": "hug"
+          }
         },
         "children": [
           {
@@ -210,7 +278,14 @@
             "type": "text",
             "tag": "p",
             "text": "Input",
-            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+            "layout": {
+              "width": {
+                "mode": "hug"
+              },
+              "height": {
+                "mode": "hug"
+              }
+            }
           },
           {
             "id": "input-row",
@@ -221,8 +296,12 @@
               "align": "start",
               "wrap": true,
               "gap": "{space.gap.md}",
-              "width": { "mode": "fill" },
-              "height": { "mode": "hug" }
+              "width": {
+                "mode": "fill"
+              },
+              "height": {
+                "mode": "hug"
+              }
             },
             "children": [
               {
@@ -230,20 +309,38 @@
                 "type": "instance",
                 "component": "input",
                 "layout": {
-                  "width": { "mode": "fixed", "size": 300 },
-                  "height": { "mode": "hug" }
+                  "width": {
+                    "mode": "fixed",
+                    "size": 300
+                  },
+                  "height": {
+                    "mode": "hug"
+                  }
                 },
-                "fields": { "label": "Email", "value": "ada@atelier.test", "name": "email" }
+                "fields": {
+                  "label": "Email",
+                  "value": "ada@atelier.test",
+                  "name": "email"
+                }
               },
               {
                 "id": "input-search",
                 "type": "instance",
                 "component": "input",
                 "layout": {
-                  "width": { "mode": "fixed", "size": 300 },
-                  "height": { "mode": "hug" }
+                  "width": {
+                    "mode": "fixed",
+                    "size": 300
+                  },
+                  "height": {
+                    "mode": "hug"
+                  }
                 },
-                "fields": { "label": "Search", "placeholder": "Search components", "name": "q" }
+                "fields": {
+                  "label": "Search",
+                  "placeholder": "Search components",
+                  "name": "q"
+                }
               }
             ]
           }
@@ -257,8 +354,12 @@
           "direction": "column",
           "align": "stretch",
           "gap": "{space.stack.sm}",
-          "width": { "mode": "fill" },
-          "height": { "mode": "hug" }
+          "width": {
+            "mode": "fill"
+          },
+          "height": {
+            "mode": "hug"
+          }
         },
         "children": [
           {
@@ -266,7 +367,14 @@
             "type": "text",
             "tag": "p",
             "text": "Card",
-            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+            "layout": {
+              "width": {
+                "mode": "hug"
+              },
+              "height": {
+                "mode": "hug"
+              }
+            }
           },
           {
             "id": "card-row",
@@ -276,10 +384,17 @@
               "direction": "column",
               "align": "stretch",
               "gap": "{space.gap.lg}",
-              "width": { "mode": "fill" },
-              "height": { "mode": "hug" },
+              "width": {
+                "mode": "fill"
+              },
+              "height": {
+                "mode": "hug"
+              },
               "breakpoints": {
-                "desktop": { "direction": "row", "align": "start" }
+                "desktop": {
+                  "direction": "row",
+                  "align": "start"
+                }
               }
             },
             "children": [
@@ -288,10 +403,19 @@
                 "type": "instance",
                 "component": "card",
                 "layout": {
-                  "width": { "mode": "fill" },
-                  "height": { "mode": "hug" },
+                  "width": {
+                    "mode": "fill"
+                  },
+                  "height": {
+                    "mode": "hug"
+                  },
                   "breakpoints": {
-                    "desktop": { "width": { "mode": "fixed", "size": 420 } }
+                    "desktop": {
+                      "width": {
+                        "mode": "fixed",
+                        "size": 420
+                      }
+                    }
                   }
                 },
                 "fields": {
@@ -305,10 +429,19 @@
                 "type": "instance",
                 "component": "sign-in",
                 "layout": {
-                  "width": { "mode": "fill" },
-                  "height": { "mode": "hug" },
+                  "width": {
+                    "mode": "fill"
+                  },
+                  "height": {
+                    "mode": "hug"
+                  },
                   "breakpoints": {
-                    "desktop": { "width": { "mode": "fixed", "size": 460 } }
+                    "desktop": {
+                      "width": {
+                        "mode": "fixed",
+                        "size": 460
+                      }
+                    }
                   }
                 }
               }

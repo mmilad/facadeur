@@ -11,6 +11,7 @@ import { NestedFieldsPanel } from './content/NestedFieldsPanel.js';
 import { ContentPanel } from './content/ContentPanel.js';
 import { InstanceContext } from './content/InstanceContext.js';
 import { StyleInspector } from './style/StyleInspector.js';
+import { ComponentTokensPanel } from './component/ComponentTokensPanel.js';
 
 type PropertyPrimaryTab = 'content' | 'style';
 
@@ -36,6 +37,12 @@ export function PropertiesPanel({
   const node = inspectorSnap.selectedNode;
   const [primaryTab, setPrimaryTab] = useState<PropertyPrimaryTab>('content');
   const isRoot = node?.id === inspectorSnap.document.rootId;
+  const showComponentTokens =
+    node?.id === snap.document.rootId &&
+    !snap.nestedSelection &&
+    (snap.document.kind === 'atom' ||
+      snap.document.kind === 'component' ||
+      snap.document.kind === 'section');
 
   if (snap.nestedSelection) return <NestedFieldsPanel session={session} snap={snap} />;
 
@@ -88,6 +95,7 @@ export function PropertiesPanel({
           ) : null}
         </div>
       )}
+      {showComponentTokens ? <ComponentTokensPanel session={session} snap={snap} /> : null}
       <VariantTabs session={session} snap={snap} />
       <div className="tabs property-tabs" role="tablist" aria-label="Properties sections">
         {PROPERTY_PRIMARY_TABS.map(([id, label]) => (

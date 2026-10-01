@@ -7,7 +7,11 @@ import { useEffect, useSyncExternalStore } from 'react';
 import { openJsonFile, parseDocumentText } from '../../domain/assets/files.js';
 import { isEditableTarget } from '../../domain/keyboard.js';
 import type { EditorSession } from '../../domain/session.js';
-import { EDITOR_VIEW_ITEMS, isDesignDomain } from '../sidebar/design/design-domain.js';
+import {
+  EDITOR_VIEW_ITEMS,
+  isDesignDomain,
+  isSettingsTokenDomain,
+} from '../sidebar/design/design-domain.js';
 import { CodeStage } from '../stage/CodeStage.js';
 import { DesignDomainStage } from '../stage/DesignDomainStage.js';
 import { PreviewDataStage } from '../stage/PreviewDataStage.js';
@@ -86,11 +90,14 @@ export function EditorShell({ session }: { session: EditorSession }) {
       <nav className="editor-subnav" aria-label="Editor views" data-testid="editor-subnav">
         <button
           type="button"
-          className={designSurface ? 'editor-subnav-item is-active' : 'editor-subnav-item'}
-          aria-current={designSurface ? 'page' : undefined}
-          onClick={() => setSurface(designSurface ? surface : 'colors')}
+          className={
+            isSettingsTokenDomain(surface) ? 'editor-subnav-item is-active' : 'editor-subnav-item'
+          }
+          aria-current={isSettingsTokenDomain(surface) ? 'page' : undefined}
+          data-subnav="settings"
+          onClick={() => setSurface(isSettingsTokenDomain(surface) ? surface : 'colors')}
         >
-          Design
+          Settings
         </button>
         {EDITOR_VIEW_ITEMS.map((item) => (
           <button
@@ -139,7 +146,12 @@ export function EditorShell({ session }: { session: EditorSession }) {
           )}
         </aside>
         {isDesignDomain(surface) ? (
-          <DesignDomainStage session={session} snap={snap} domain={surface} />
+          <DesignDomainStage
+            session={session}
+            snap={snap}
+            domain={surface}
+            onSelectDomain={setSurface}
+          />
         ) : surface === 'schemas' ? (
           <SchemaLibraryStage snap={snap} />
         ) : surface === 'schema' ? (

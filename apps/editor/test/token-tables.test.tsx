@@ -9,6 +9,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import button from '../../../examples/button.json';
 import { createEditorSession, type EditorSession } from '../src/domain/session.js';
 import { App } from '../src/ui/shell/EditorShell.js';
+import { openSettingsDomain } from './settings-navigation.js';
 
 const documents = validateCatalog([button]);
 
@@ -36,9 +37,7 @@ describe('design token tables', () => {
     document.body.append(host);
     root = createRoot(host);
     await act(async () => root?.render(<App session={session} />));
-    await act(async () => {
-      (host!.querySelector(`[data-design-domain="${domain}"]`) as HTMLButtonElement).click();
-    });
+    await openSettingsDomain(host!, domain);
   }
 
   it('sorts numeric token paths naturally and searches names and values', async () => {

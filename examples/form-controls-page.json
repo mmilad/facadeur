@@ -4,11 +4,23 @@
   "name": "Form controls",
   "kind": "page",
   "settings": {
-    "artboard": { "width": 1180, "height": 1080 },
+    "artboard": {
+      "width": 1180,
+      "height": 1080
+    },
     "breakpoints": [
-      { "id": "mobile", "minWidth": 375 },
-      { "id": "tablet", "minWidth": 768 },
-      { "id": "desktop", "minWidth": 1440 }
+      {
+        "id": "mobile",
+        "minWidth": 375
+      },
+      {
+        "id": "tablet",
+        "minWidth": 768
+      },
+      {
+        "id": "desktop",
+        "minWidth": 1440
+      }
     ]
   },
   "root": {

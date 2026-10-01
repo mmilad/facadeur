@@ -2,14 +2,14 @@ import { useMemo, type ReactNode } from 'react';
 import { findParent, type FlatNode, type StyleBlock } from '@facadeur/core';
 import { layoutCapabilities } from '../../../../../domain/layout-capabilities.js';
 import {
-  colorTokenRefs,
-  dimensionTokenRefs,
-  fontFamilyTokenRefs,
-  fontWeightTokenRefs,
-  numberTokenRefs,
-  radiusTokenRefs,
-  shadowTokenRefs,
-  typographyTokenRefs,
+  colorTokenRefsForDocument,
+  dimensionTokenRefsForDocument,
+  fontFamilyTokenRefsForDocument,
+  fontWeightTokenRefsForDocument,
+  numberTokenRefsForDocument,
+  radiusTokenRefsForDocument,
+  shadowTokenRefsForDocument,
+  typographyTokenRefsForDocument,
 } from '../../../../../domain/editing.js';
 import type { EditorSession, EditorSnapshot } from '../../../../../domain/session.js';
 import {
@@ -154,23 +154,26 @@ export function DeclarationEditor({
     : target;
 
   const catalogs = useMemo(() => {
+    const doc = snap.document;
     const typographyCatalogs: TypographyCatalogs = {
       fontRefs: projectFontRefs(snap.design.fonts),
-      fontFamilyTokens: fontFamilyTokenRefs(snap.design.tokens),
-      fontWeightTokens: fontWeightTokenRefs(snap.design.tokens),
-      dimensionTokens: dimensionTokenRefs(snap.design.tokens),
-      numberTokens: numberTokenRefs(snap.design.tokens),
+      fontFamilyTokens: fontFamilyTokenRefsForDocument(snap.design.tokens, doc),
+      fontWeightTokens: fontWeightTokenRefsForDocument(snap.design.tokens, doc),
+      dimensionTokens: dimensionTokenRefsForDocument(snap.design.tokens, doc),
+      numberTokens: numberTokenRefsForDocument(snap.design.tokens, doc),
     };
-    const radiusTokens = radiusTokenRefs(snap.design.tokens);
+    const radiusTokens = radiusTokenRefsForDocument(snap.design.tokens, doc);
     return {
-      colorTokens: colorTokenRefs(snap.design.tokens),
-      shadowTokens: shadowTokenRefs(snap.design.tokens),
-      typographyTokens: typographyTokenRefs(snap.design.tokens),
-      dimensionTokens: dimensionTokenRefs(snap.design.tokens),
-      radiusTokens: radiusTokens.length ? radiusTokens : dimensionTokenRefs(snap.design.tokens),
+      colorTokens: colorTokenRefsForDocument(snap.design.tokens, doc),
+      shadowTokens: shadowTokenRefsForDocument(snap.design.tokens, doc),
+      typographyTokens: typographyTokenRefsForDocument(snap.design.tokens, doc),
+      dimensionTokens: dimensionTokenRefsForDocument(snap.design.tokens, doc),
+      radiusTokens: radiusTokens.length
+        ? radiusTokens
+        : dimensionTokenRefsForDocument(snap.design.tokens, doc),
       typographyCatalogs,
     };
-  }, [snap.design.fonts, snap.design.tokens]);
+  }, [snap.design.fonts, snap.design.tokens, snap.document]);
 
   return (
     <CssDeclarationsControl

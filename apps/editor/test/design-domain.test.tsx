@@ -16,6 +16,7 @@ import specimenSection from '../../../examples/specimen-section.json';
 import textarea from '../../../examples/textarea.json';
 import { createEditorSession, type EditorSession } from '../src/domain/session.js';
 import { App } from '../src/ui/shell/EditorShell.js';
+import { openSettingsDomain } from './settings-navigation.js';
 
 const documents = validateCatalog([
   button,
@@ -54,10 +55,9 @@ describe('design domain stage', () => {
       root?.render(<App session={session} />);
     });
 
-    await act(async () => {
-      (host!.querySelector('[data-design-domain="colors"]') as HTMLButtonElement).click();
-    });
-    expect(host!.textContent).toContain('Colors ·');
+    await openSettingsDomain(host!, 'colors');
+    expect(host!.textContent).toContain('Settings');
+    expect(host!.textContent).toContain('Colors');
     expect(host!.textContent).toContain('color.accent.default');
     expect(host!.textContent).not.toContain('space.4');
 
@@ -82,9 +82,7 @@ describe('design domain stage', () => {
       root?.render(<App session={session} />);
     });
 
-    await act(async () => {
-      (host!.querySelector('[data-design-domain="spacing"]') as HTMLButtonElement).click();
-    });
+    await openSettingsDomain(host!, 'spacing');
     expect(host!.querySelector('.design-domain-stage')).toBeTruthy();
 
     await act(async () => {
@@ -102,9 +100,7 @@ describe('design domain stage', () => {
     document.body.append(host);
     root = createRoot(host);
     await act(async () => root?.render(<App session={session} />));
-    await act(async () =>
-      (host!.querySelector('[data-design-domain="colors"]') as HTMLButtonElement).click(),
-    );
+    await openSettingsDomain(host!, 'colors');
     expect(host!.querySelector('[aria-label="Layers"]')).toBeNull();
     expect(host!.querySelector('[aria-label="Inspector"]')).toBeNull();
     expect(host!.querySelector('[aria-label="Tools"]')).toBeNull();
@@ -122,9 +118,7 @@ describe('design domain stage', () => {
     expect(session.getSnapshot().selectedNodeId).toBe('root');
     expect(session.getSnapshot().tool).toBe('select');
     expect(session.getSnapshot().document).toEqual(before);
-    await act(async () =>
-      (host!.querySelector('[data-design-domain="fonts"]') as HTMLButtonElement).click(),
-    );
+    await openSettingsDomain(host!, 'fonts', { alreadyOpen: true });
     expect(host!.querySelector('[aria-label="Token breakpoint"]')).toBeNull();
     expect(host!.textContent).toContain('Shared project resources');
     await act(async () =>

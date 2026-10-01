@@ -5,11 +5,19 @@
   "kind": "component",
   "group": "form",
   "fields": [
-    { "name": "label", "type": "text" },
-    { "name": "value", "type": "text" }
+    {
+      "name": "label",
+      "type": "text"
+    },
+    {
+      "name": "value",
+      "type": "text"
+    }
   ],
   "variants": [
-    { "name": "default" },
+    {
+      "name": "default"
+    },
     {
       "name": "compact",
       "overrides": {
@@ -33,14 +41,26 @@
         "id": "label",
         "type": "text",
         "tag": "span",
-        "bindings": [{ "field": "label", "target": "text" }]
+        "bindings": [
+          {
+            "field": "label",
+            "target": "text"
+          }
+        ]
       },
       {
         "id": "control",
         "type": "text",
         "tag": "input",
-        "attributes": { "type": "email" },
-        "bindings": [{ "field": "value", "target": "text" }]
+        "attributes": {
+          "type": "email"
+        },
+        "bindings": [
+          {
+            "field": "value",
+            "target": "text"
+          }
+        ]
       }
     ]
   }

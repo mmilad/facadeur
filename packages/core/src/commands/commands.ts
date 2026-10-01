@@ -25,6 +25,7 @@ import {
   setVariantPreset,
   setVariantStyleBlock,
 } from './definitions.js';
+import { removeComponentToken, setComponentToken } from './component-tokens.js';
 import { removeFont, setBreakpoints, setFont } from './design.js';
 
 export type { Command, CommandContext, InsertNode, NodeProp } from './types.js';
@@ -153,6 +154,20 @@ export function applyCommand(
     case 'setTokenInterface':
       if (command.tokenInterface === null) delete next.tokenInterface;
       else next.tokenInterface = parseTokenInterface(command.tokenInterface);
+      break;
+    case 'setComponentToken': {
+      const globalPaths = ctx.globalTokenPaths;
+      if (!globalPaths) {
+        throw new DocumentError(
+          'schema',
+          'setComponentToken requires globalTokenPaths in the command context',
+        );
+      }
+      setComponentToken(next, command.path, command.token, globalPaths);
+      break;
+    }
+    case 'removeComponentToken':
+      removeComponentToken(next, command.path);
       break;
     default: {
       const unreachable: never = command;

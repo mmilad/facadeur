@@ -5,57 +5,73 @@
   "kind": "component",
   "group": "form",
   "fields": [
-    { "name": "label", "type": "text" },
-    { "name": "hint", "type": "text" },
-    { "name": "icon", "type": "image" },
-    { "name": "hasIcon", "type": "boolean" }
+    {
+      "name": "label",
+      "type": "text"
+    },
+    {
+      "name": "hint",
+      "type": "text"
+    },
+    {
+      "name": "icon",
+      "type": "image"
+    },
+    {
+      "name": "hasIcon",
+      "type": "boolean"
+    }
   ],
   "expose": {
     "fields": {
       "value": "control.value",
       "placeholder": "control.placeholder"
     },
-    "events": { "commit": "control.commit" }
+    "events": {
+      "commit": "control.commit"
+    }
   },
   "variants": [
     {
       "name": "state",
-      "values": ["default", "focused", "disabled", "invalid"],
+      "values": [
+        "default",
+        "focused",
+        "disabled",
+        "invalid"
+      ],
       "default": "default"
     }
   ],
   "tokenInterface": {
     "reads": [
+      "color.accent.default",
+      "color.danger.default",
+      "color.neutral.0",
+      "color.neutral.400",
       "color.neutral.50",
       "color.text.primary",
       "color.text.secondary",
-      "editor.color.border",
-      "editor.color.canvas",
-      "editor.color.danger",
-      "editor.color.focus",
-      "editor.color.surface",
-      "editor.color.text",
-      "editor.color.textmuted",
-      "editor.gap",
-      "editor.padding.x",
-      "editor.padding.y",
-      "editor.radius",
       "input.padding.x",
       "input.padding.y",
+      "padding.x",
+      "padding.y",
+      "radius.sm",
       "space.0",
+      "space.gap.xs",
       "type.body",
       "type.caption"
     ]
   },
   "styles": {
     "declarations": {
-      "color": "{editor.color.text}",
+      "color": "{color.text}",
       "font": "{type.body}"
     },
     "children": {
       "label": {
         "declarations": {
-          "color": "{editor.color.textmuted}",
+          "color": "{color.textmuted}",
           "font": "{type.caption}",
           "fontWeight": "600",
           "margin": "{space.0}"
@@ -64,9 +80,9 @@
       "controlShell": {
         "declarations": {
           "alignItems": "center",
-          "background": "{editor.color.surface}",
-          "border": "1px solid {editor.color.border}",
-          "borderRadius": "{editor.radius}",
+          "background": "{color.surface}",
+          "border": "1px solid {color.border}",
+          "borderRadius": "{shape.radius}",
           "display": "flex",
           "paddingBlock": "{input.padding.y}",
           "paddingInline": "{input.padding.x}"
@@ -75,21 +91,21 @@
           "state": {
             "focused": {
               "declarations": {
-                "borderColor": "{editor.color.focus}",
-                "boxShadow": "0 0 0 2px {editor.color.focus}"
+                "borderColor": "{color.focus}",
+                "boxShadow": "0 0 0 2px {color.focus}"
               }
             },
             "disabled": {
               "declarations": {
-                "background": "{editor.color.canvas}",
+                "background": "{color.canvas}",
                 "cursor": "not-allowed",
                 "opacity": "0.65"
               }
             },
             "invalid": {
               "declarations": {
-                "borderColor": "{editor.color.danger}",
-                "boxShadow": "0 0 0 2px {editor.color.danger}"
+                "borderColor": "{color.danger}",
+                "boxShadow": "0 0 0 2px {color.danger}"
               }
             }
           }
@@ -99,14 +115,14 @@
         "declarations": {
           "flex": "0 0 16px",
           "height": "16px",
-          "marginInlineEnd": "{editor.gap}",
+          "marginInlineEnd": "{layout.gap}",
           "opacity": "0.72",
           "width": "16px"
         }
       },
       "hint": {
         "declarations": {
-          "color": "{editor.color.textmuted}",
+          "color": "{color.textmuted}",
           "font": "{type.caption}",
           "margin": "{space.0}"
         }
@@ -120,17 +136,33 @@
     "layout": {
       "direction": "column",
       "align": "stretch",
-      "gap": "{editor.gap}",
-      "width": { "mode": "fill" },
-      "height": { "mode": "hug" }
+      "gap": "{layout.gap}",
+      "width": {
+        "mode": "fill"
+      },
+      "height": {
+        "mode": "hug"
+      }
     },
     "children": [
       {
         "id": "label",
         "type": "text",
         "tag": "span",
-        "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } },
-        "bindings": [{ "field": "label", "target": "text" }]
+        "layout": {
+          "width": {
+            "mode": "hug"
+          },
+          "height": {
+            "mode": "hug"
+          }
+        },
+        "bindings": [
+          {
+            "field": "label",
+            "target": "text"
+          }
+        ]
       },
       {
         "id": "controlShell",
@@ -139,22 +171,40 @@
         "layout": {
           "direction": "row",
           "align": "center",
-          "width": { "mode": "fill" },
-          "height": { "mode": "hug" }
+          "width": {
+            "mode": "fill"
+          },
+          "height": {
+            "mode": "hug"
+          }
         },
         "children": [
           {
             "id": "leadingIcon",
             "type": "image",
             "alt": "",
-            "attributes": { "aria-hidden": "true" },
+            "attributes": {
+              "aria-hidden": "true"
+            },
             "layout": {
-              "width": { "mode": "fixed", "size": 16 },
-              "height": { "mode": "fixed", "size": 16 }
+              "width": {
+                "mode": "fixed",
+                "size": 16
+              },
+              "height": {
+                "mode": "fixed",
+                "size": 16
+              }
             },
             "bindings": [
-              { "field": "icon", "target": "src" },
-              { "field": "hasIcon", "target": "visible" }
+              {
+                "field": "icon",
+                "target": "src"
+              },
+              {
+                "field": "hasIcon",
+                "target": "visible"
+              }
             ]
           },
           {
@@ -168,9 +218,59 @@
         "id": "hint",
         "type": "text",
         "tag": "span",
-        "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } },
-        "bindings": [{ "field": "hint", "target": "text" }]
+        "layout": {
+          "width": {
+            "mode": "hug"
+          },
+          "height": {
+            "mode": "hug"
+          }
+        },
+        "bindings": [
+          {
+            "field": "hint",
+            "target": "text"
+          }
+        ]
       }
     ]
+  },
+  "componentTokens": {
+    "color.border": {
+      "type": "color",
+      "value": "{color.neutral.400}"
+    },
+    "color.canvas": {
+      "type": "color",
+      "value": "{color.neutral.50}"
+    },
+    "color.danger": {
+      "type": "color",
+      "value": "{color.danger.default}"
+    },
+    "color.focus": {
+      "type": "color",
+      "value": "{color.accent.default}"
+    },
+    "color.surface": {
+      "type": "color",
+      "value": "{color.neutral.0}"
+    },
+    "color.text": {
+      "type": "color",
+      "value": "{color.text.primary}"
+    },
+    "color.textmuted": {
+      "type": "color",
+      "value": "{color.text.secondary}"
+    },
+    "layout.gap": {
+      "type": "dimension",
+      "value": "{space.gap.xs}"
+    },
+    "shape.radius": {
+      "type": "dimension",
+      "value": "{radius.sm}"
+    }
   }
 }

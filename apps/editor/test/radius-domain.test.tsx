@@ -18,6 +18,7 @@ import textarea from '../../../examples/textarea.json';
 import { createEditorSession, type EditorSession } from '../src/domain/session.js';
 import { withTokenBreakpoint } from '../src/domain/edits/token-edit.js';
 import { App } from '../src/ui/shell/EditorShell.js';
+import { openSettingsDomain } from './settings-navigation.js';
 
 const documents = validateCatalog([
   button,
@@ -58,9 +59,7 @@ describe('radius domain panel', () => {
     await act(async () => {
       root?.render(<App session={session} />);
     });
-    await act(async () => {
-      (host!.querySelector('[data-design-domain="radius"]') as HTMLButtonElement).click();
-    });
+    await openSettingsDomain(host!, 'radius');
   }
 
   async function submitNewToken(path: string) {
@@ -102,12 +101,12 @@ describe('radius domain panel', () => {
     await openRadius(session);
 
     await act(async () => {
-      (host!.querySelector('button[name="remove-radius-radius.md"]') as HTMLButtonElement).click();
+      (host!.querySelector('button[name="remove-radius-radius.sm"]') as HTMLButtonElement).click();
     });
 
-    expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has('radius.md')).toBe(true);
+    expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has('radius.sm')).toBe(true);
     expect(session.getSnapshot().notice?.tone).toBe('error');
-    expect(session.getSnapshot().notice?.text).toMatch(/\{radius\.md\}/);
+    expect(session.getSnapshot().notice?.text).toMatch(/\{radius\.sm\}/);
   });
 
   it('rejects an invalid radius path on add', async () => {

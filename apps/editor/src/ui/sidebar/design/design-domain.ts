@@ -27,8 +27,19 @@ export const DESIGN_DOMAIN_ITEMS: {
   { id: 'typography', label: 'Typography', keys: ['typography', 'type'] },
 ];
 
+/** Token domains edited under the Settings subnav (not the project sidebar). */
+export const SETTINGS_TOKEN_DOMAIN_ITEMS = DESIGN_DOMAIN_ITEMS.filter((item) => item.id !== 'icons');
+
+export type SettingsTokenDomain = (typeof SETTINGS_TOKEN_DOMAIN_ITEMS)[number]['id'];
+
+export const SIDEBAR_DESIGN_ITEMS = DESIGN_DOMAIN_ITEMS.filter((item) => item.id === 'icons');
+
 export function isDesignDomain(surface: EditorSurface): surface is DesignDomain {
   return DESIGN_DOMAIN_ITEMS.some((item) => item.id === surface);
+}
+
+export function isSettingsTokenDomain(surface: EditorSurface): surface is SettingsTokenDomain {
+  return SETTINGS_TOKEN_DOMAIN_ITEMS.some((item) => item.id === surface);
 }
 
 export function isEditorView(surface: EditorSurface): surface is EditorView {

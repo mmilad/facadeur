@@ -4,12 +4,32 @@
   "name": "Link",
   "kind": "atom",
   "fields": [
-    { "name": "label", "type": "text" },
-    { "name": "href", "type": "link" }
+    {
+      "name": "label",
+      "type": "text"
+    },
+    {
+      "name": "href",
+      "type": "link"
+    }
   ],
-  "variants": [{ "name": "tone", "values": ["default", "muted"], "default": "default" }],
+  "variants": [
+    {
+      "name": "tone",
+      "values": [
+        "default",
+        "muted"
+      ],
+      "default": "default"
+    }
+  ],
   "tokenInterface": {
-    "reads": ["color.accent.default", "color.accent.hover", "color.text.secondary", "type.label"]
+    "reads": [
+      "color.accent.default",
+      "color.accent.hover",
+      "color.text.secondary",
+      "type.label"
+    ]
   },
   "styles": {
     "declarations": {
@@ -19,7 +39,9 @@
       "textUnderlineOffset": "0.15em"
     },
     "states": {
-      "hover": { "color": "{color.accent.hover}" },
+      "hover": {
+        "color": "{color.accent.hover}"
+      },
       "focus-visible": {
         "outline": "2px solid {color.accent.default}",
         "outlineOffset": "2px"
@@ -28,9 +50,13 @@
     "variants": {
       "tone": {
         "muted": {
-          "declarations": { "color": "{color.text.secondary}" },
+          "declarations": {
+            "color": "{color.text.secondary}"
+          },
           "states": {
-            "hover": { "color": "{color.accent.default}" }
+            "hover": {
+              "color": "{color.accent.default}"
+            }
           }
         }
       }
@@ -43,12 +69,23 @@
     "layout": {
       "direction": "row",
       "align": "center",
-      "width": { "mode": "hug" },
-      "height": { "mode": "hug" }
+      "width": {
+        "mode": "hug"
+      },
+      "height": {
+        "mode": "hug"
+      }
     },
     "bindings": [
-      { "field": "label", "target": "text" },
-      { "field": "href", "target": "attribute", "name": "href" }
+      {
+        "field": "label",
+        "target": "text"
+      },
+      {
+        "field": "href",
+        "target": "attribute",
+        "name": "href"
+      }
     ]
   }
 }

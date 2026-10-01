@@ -20,6 +20,10 @@ export interface ValidateOptions {
   rules?: Readonly<Record<string, NestingRule>>;
   /** When set, instance targets must resolve to a kind allowed by the nesting rule. */
   resolveKind?: (componentId: string) => string | undefined;
+  /** Paths of global DTCG tokens; validates component token defaults when set. */
+  globalTokenPaths?: ReadonlySet<string>;
+  /** Local component token paths for a catalog document id; validates tokenInterface.sets keys. */
+  resolveComponentTokenPaths?: (documentId: string) => ReadonlySet<string> | undefined;
 }
 
 /** Tree shape: reachable nodes, no cycles, and the kind's nesting rule. */
@@ -81,11 +85,11 @@ export function validateTree(doc: FlatDocument, options: ValidateOptions = {}): 
 }
 
 /** Fonts, breakpoints, and the DTCG tree. Reference targets are resolved by `@facadeur/tokens`. */
-export function validateLibraries(doc: FlatDocument): void {
+export function validateLibraries(doc: FlatDocument, options: ValidateOptions = {}): void {
   assertFonts(doc.fonts);
   assertBreakpoints(doc.settings.breakpoints);
   readTokenTree(doc.tokens);
-  assertStyleContract(doc);
+  assertStyleContract(doc, options);
 }
 
 export function assertNodeData(node: FlatNode): void {

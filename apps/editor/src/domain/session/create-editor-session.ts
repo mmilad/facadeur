@@ -1,10 +1,12 @@
 import {
   DocumentError,
+  readTokenTree,
   resolveChildFieldDefinition,
   resolveVariantDocument,
   toFlat,
   toNested,
   validateCatalog,
+  type CommandContext,
   type DefaultKind,
   type FlatDocument,
 } from '@facadeur/core';
@@ -85,9 +87,11 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   let snapshot: EditorSnapshot | null = null;
 
   const resolveKind = (componentId: string) => kinds.get(componentId);
-  let designStore: YjsDocumentStore = createDocumentStore(migratePreviewData(options.design), {
-    resolveKind,
-  });
+  const commandContext: CommandContext = { resolveKind };
+  let designStore: YjsDocumentStore = createDocumentStore(
+    migratePreviewData(options.design),
+    commandContext,
+  );
 
   function filenameFor(id: string) {
     return sources[id] ?? `${id}.json`;
@@ -232,6 +236,15 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     publish();
   }
 
+  commandContext.resolveChildField = (node, path, field) =>
+    resolveChildFieldDefinition(node, path, field, catalogNestedDocuments());
+
+  function prepareCommandContext() {
+    commandContext.globalTokenPaths = new Set(
+      readTokenTree(designStore.getDocument().tokens).tokens.keys(),
+    );
+  }
+
   const runWithActiveVariant = bindSessionCommandRunner({
     undoHistory,
     assetStores,
@@ -239,6 +252,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     getSnapshot: () => snapshot,
     resolveKind,
     catalogNestedDocuments,
+    prepareCommandContext,
     setErrorNotice: (message) => {
       notice = { tone: 'error', text: message };
     },
@@ -248,10 +262,9 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   bootstrapSessionDocumentCatalog({
     documents: options.documents,
     designId,
-    resolveKind,
+    commandContext,
     assetStores,
     order,
-    catalogNestedDocuments,
     syncKinds,
     watch,
     designStore,
@@ -377,9 +390,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
         assetStores,
         handles,
         savedJson,
-        resolveKind,
-        resolveChildField: (node, path, field) =>
-          resolveChildFieldDefinition(node, path, field, catalogNestedDocuments()),
+        commandContext,
         forget,
         watch,
         syncKinds,

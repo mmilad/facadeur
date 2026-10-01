@@ -179,24 +179,10 @@ describe('project template', () => {
     expect(design.properties.find((property) => property.name === '--space-gap-md')?.value).toBe(
       'var(--space-4)',
     );
-    expect(
-      design.properties.find((property) => property.name === '--button-padding-x')?.value,
-    ).toBe('var(--space-4)');
-    expect(design.properties.find((property) => property.name === '--button-gap')?.value).toBe(
-      'var(--space-gap-sm)',
+    expect(design.properties.find((property) => property.name === '--shadow-md')?.value).toBeTruthy();
+    expect(design.properties.some((property) => property.name.startsWith('--button-'))).toBe(
+      false,
     );
-    expect(design.properties.find((property) => property.name === '--card-shadow')?.value).toBe(
-      'var(--shadow-md)',
-    );
-    expect(design.properties.find((property) => property.name === '--input-color-bg')?.value).toBe(
-      'var(--color-bg-canvas)',
-    );
-    expect(design.properties.find((property) => property.name === '--input-padding-y')?.value).toBe(
-      'var(--space-2)',
-    );
-    expect(
-      design.properties.find((property) => property.name === '--input-color-border')?.value,
-    ).toBe('var(--color-neutral-600)');
     expect(css).toContain('--type-body--font-size: 16px;');
     expect(css).toContain('--type-body--font-size: 17px;');
     expect(css).toContain('--type-body--font-size: 18px;');
@@ -206,12 +192,12 @@ describe('project template', () => {
     );
   });
 
-  it('keeps component spacing on token references and primitive steps on the 4px grid', () => {
+  it('keeps the template free of component-tier groups and preserves semantic primitives', () => {
     const design = loadTokens(template);
-    for (const token of design.tokens) {
-      if (token.tier !== 'component' || token.type !== 'dimension') continue;
-      expect(token.value, token.path).toMatch(/^\{.+\}$/);
-    }
+    expect(design.tokens.some((token) => token.path.startsWith('button.'))).toBe(false);
+    expect(design.tokens.some((token) => token.path.startsWith('card.'))).toBe(false);
+    expect(design.tokens.some((token) => token.path.startsWith('editor.'))).toBe(false);
+    expect(design.tokens.some((token) => token.path.startsWith('input.'))).toBe(false);
     for (const token of design.tokens) {
       if (!token.path.startsWith('space.') || token.path.split('.').length !== 2) continue;
       if (token.path.startsWith('space.gap') || token.path.startsWith('space.inset')) continue;
@@ -221,9 +207,6 @@ describe('project template', () => {
         expect(Number(token.value.replace('px', '')) % 4, token.path).toBe(0);
       }
     }
-    expect(design.tokens.find((token) => token.path === 'button.padding.x')?.tier).toBe(
-      'component',
-    );
     expect(design.tokens.find((token) => token.path === 'color.bg.canvas')?.tier).toBe('semantic');
     expect(design.tokens.find((token) => token.path === 'color.blue.500')?.tier).toBe('primitive');
   });

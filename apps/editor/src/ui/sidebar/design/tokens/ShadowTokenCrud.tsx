@@ -6,6 +6,7 @@ import {
   suggestShadowPath,
   tokenPathsReferencingShadow,
 } from '../../../../domain/edits/shadow-edit.js';
+import { documentsReferencingToken } from '../../../../domain/component-tokens.js';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
 import { IconButton } from '../../../form/components/shared/IconButton.js';
 import { TokenAddAction } from './TokenAddAction.js';
@@ -61,7 +62,10 @@ export function RemoveShadowTokenButton({
   path: string;
 }) {
   function removeShadow() {
-    const refs = tokenPathsReferencingShadow(snap.design.tokens, path);
+    const refs = [
+      ...tokenPathsReferencingShadow(snap.design.tokens, path),
+      ...documentsReferencingToken(session.boardDocuments(), path),
+    ];
     if (refs.length) {
       session.setNotice(
         `Cannot remove "${path}": {${path}} is referenced in ${refs.join(', ')}`,

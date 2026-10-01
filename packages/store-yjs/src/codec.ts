@@ -11,6 +11,7 @@ import {
   readSettings,
   readStyleBlock,
   readTokenInterface,
+  readComponentTokens,
   readVariantPresets,
   readVariants,
 } from './codec-decode.js';
@@ -52,6 +53,10 @@ export function patchDocument(doc: Y.Doc, next: FlatDocument): void {
     doc.getMap('tokenInterface'),
     (next.tokenInterface ?? {}) as Record<string, JsonValue>,
   );
+  syncJsonObject(
+    doc.getMap('componentTokens'),
+    (next.componentTokens ?? {}) as Record<string, JsonValue>,
+  );
   syncJsonObject(doc.getMap('expose'), (next.expose ?? {}) as Record<string, JsonValue>);
   syncJsonObject(doc.getMap('previewData'), (next.previewData ?? {}) as Record<string, JsonValue>);
   syncJsonObject(doc.getMap('variantLabels'), next.variantLabels ?? {});
@@ -82,6 +87,7 @@ export function readDocument(doc: Y.Doc): FlatDocument {
     icons: readIcons(doc.getArray<Y.Map<unknown>>('icons')),
     ...readStyleBlock(doc.getMap('styles')),
     ...readTokenInterface(doc.getMap('tokenInterface')),
+    ...readComponentTokens(doc.getMap('componentTokens')),
     ...readExpose(doc.getMap('expose')),
     ...readPreviewData(doc.getMap('previewData')),
     ...(Object.keys(readJsonObject(doc.getMap('variantLabels'))).length
@@ -104,6 +110,7 @@ export function ensureDocumentMaps(doc: Y.Doc): void {
   doc.getArray('icons');
   doc.getMap('styles');
   doc.getMap('tokenInterface');
+  doc.getMap('componentTokens');
   doc.getMap('expose');
   doc.getMap('previewData');
   doc.getMap('variantLabels');

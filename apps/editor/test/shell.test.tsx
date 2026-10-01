@@ -19,6 +19,7 @@ import specimenPage from '../../../examples/specimen-page.json';
 import specimenSection from '../../../examples/specimen-section.json';
 import { createEditorSession, type EditorSession } from '../src/domain/session.js';
 import { App } from '../src/ui/shell/EditorShell.js';
+import { openSettingsDomain } from './settings-navigation.js';
 
 const documents = validateCatalog([
   button,
@@ -102,9 +103,9 @@ describe('editor shell', () => {
     expect(host.querySelector('[data-asset-id="button"]')).toBeInstanceOf(HTMLButtonElement);
     expect(host.querySelector('[data-asset-id="card"]')).toBeInstanceOf(HTMLButtonElement);
     expect(host.querySelector('[data-asset-id="specimen"]')).toBeInstanceOf(HTMLButtonElement);
-    expect(host.querySelector('[data-design-domain="colors"]')).toBeInstanceOf(HTMLButtonElement);
-    expect(host.querySelector('[data-design-domain="fonts"]')?.textContent).toContain('Fonts');
-    expect(host.querySelector('[data-design-domain="spacing"]')?.textContent).toContain('Spacing');
+    expect(host.querySelector('[data-design-domain="icons"]')?.textContent).toContain('Icons');
+    expect(host.querySelector('[data-design-domain="colors"]')).toBeNull();
+    expect(host.querySelector('[data-subnav="settings"]')?.textContent).toContain('Settings');
     const sectionRow = host.querySelector('[data-asset-id="specimen-section"]');
     expect(sectionRow).toBeInstanceOf(HTMLButtonElement);
     expect((sectionRow as HTMLButtonElement).draggable).toBe(true);
@@ -340,17 +341,13 @@ describe('editor shell', () => {
     await act(async () => {
       setInput(search as HTMLInputElement, '');
     });
-    await act(async () => {
-      (view.querySelector('[data-design-domain="colors"]') as HTMLButtonElement).click();
-    });
+    await openSettingsDomain(view, 'colors');
     expect(view.querySelector('.design-domain-stage[data-design-domain="colors"]')).toBeTruthy();
     expect(view.querySelector('input[name="token-filter"]')).toBeInstanceOf(HTMLInputElement);
     expect(view.querySelector('iframe')).toBeNull();
     expect(session.getSnapshot().openId).toBe('specimen');
 
-    await act(async () => {
-      (view.querySelector('[data-design-domain="fonts"]') as HTMLButtonElement).click();
-    });
+    await openSettingsDomain(view, 'fonts', { alreadyOpen: true });
     expect(view.querySelector('.design-domain-stage[data-design-domain="fonts"]')).toBeTruthy();
     await act(async () => {
       (view.querySelector('button[name="font-details-sans"]') as HTMLButtonElement).click();
@@ -424,7 +421,7 @@ describe('editor shell', () => {
     const padding = host.querySelector(
       'button[name="style-root-base-base-paddingInline"]',
     ) as HTMLButtonElement;
-    expect(padding.textContent).toContain('button.padding.x');
+    expect(padding.textContent).toContain('padding.x');
 
     await act(async () => {
       viewportButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -440,7 +437,7 @@ describe('editor shell', () => {
       reset?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
     const styles = session.getSnapshot().document.styles;
-    expect(styles?.declarations?.paddingInline).toBe('{button.padding.x}');
+    expect(styles?.declarations?.paddingInline).toBe('{padding.x}');
     expect(styles?.breakpoints?.tablet).toBeUndefined();
     expect(styles?.breakpoints?.desktop).toBeUndefined();
   });

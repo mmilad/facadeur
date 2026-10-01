@@ -12,6 +12,8 @@ export function bindSessionCommandRunner(deps: {
   getSnapshot: () => EditorSnapshot | null;
   resolveKind: (componentId: string) => string | undefined;
   catalogNestedDocuments: () => Map<string, ReturnType<typeof toNested>>;
+  /** Stores close over one context object. Refresh design token paths before each command. */
+  prepareCommandContext: () => void;
   setErrorNotice: (message: string) => void;
   publish: () => void;
 }) {
@@ -22,6 +24,7 @@ export function bindSessionCommandRunner(deps: {
     getSnapshot,
     resolveKind,
     catalogNestedDocuments,
+    prepareCommandContext,
     setErrorNotice,
     publish,
   } = deps;
@@ -29,6 +32,7 @@ export function bindSessionCommandRunner(deps: {
   function run(store: YjsDocumentStore, command: Command) {
     undoHistory.noteCommand(store);
     try {
+      prepareCommandContext();
       store.execute(command);
     } catch (error) {
       setErrorNotice(errorText(error));

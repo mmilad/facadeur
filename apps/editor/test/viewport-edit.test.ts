@@ -99,7 +99,7 @@ describe('viewport edit context', () => {
     const styled = base.nodes.root;
     expect(styled && 'style' in styled ? styled.style : undefined).toEqual({ color: 'red' });
     expect(base.styles?.breakpoints?.tablet?.declarations?.color).toBe('blue');
-    expect(base.styles?.declarations?.color).toBe('{button.color.text}');
+    expect(base.styles?.declarations?.color).toBe('{color.text}');
   });
 });
 

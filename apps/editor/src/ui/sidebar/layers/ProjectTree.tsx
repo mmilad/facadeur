@@ -6,7 +6,7 @@ import { createNamedVariant, renameNamedVariant } from '../../../domain/variant-
 import { AssetRows } from './AssetRows.js';
 import type { AssetSummary, EditorSession, EditorSnapshot } from '../../../domain/session.js';
 import {
-  DESIGN_DOMAIN_ITEMS,
+  SIDEBAR_DESIGN_ITEMS,
   type DesignDomain,
   type EditorSurface,
 } from '../design/design-domain.js';
@@ -91,17 +91,15 @@ export function ProjectTree({
     };
   }, [contextAssetId]);
 
-  const designLabelHit = needle.length > 0 && 'design'.includes(needle);
-  const designItems = useMemo(
+  const sidebarDesignItems = useMemo(
     () =>
-      DESIGN_DOMAIN_ITEMS.filter(
+      SIDEBAR_DESIGN_ITEMS.filter(
         (item) =>
           !needle ||
-          designLabelHit ||
           item.label.toLowerCase().includes(needle) ||
           item.keys.some((key) => key.includes(needle)),
       ),
-    [designLabelHit, needle],
+    [needle],
   );
 
   const groups = useMemo(
@@ -146,7 +144,7 @@ export function ProjectTree({
   );
 
   const empty =
-    needle.length > 0 && designItems.length === 0 && groups.every((group) => !group.show);
+    needle.length > 0 && sidebarDesignItems.length === 0 && groups.every((group) => !group.show);
 
   function toggle(id: string) {
     if (needle) return;
@@ -191,27 +189,18 @@ export function ProjectTree({
       </label>
       <p className="side-note">Drag a row onto the stage to insert an instance.</p>
       <div className="side-scroll">
-        {!needle || designItems.length > 0 ? (
-          <TreeGroup
-            id="design"
-            label="Design"
-            open={isOpen('design', needle, expanded)}
-            onToggle={() => toggle('design')}
+        {sidebarDesignItems.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className={surface === item.id ? 'asset design-sidebar-item is-active' : 'asset design-sidebar-item'}
+            data-design-domain={item.id}
+            aria-pressed={surface === item.id}
+            onClick={() => onOpenDesignDomain(item.id)}
           >
-            {designItems.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className={surface === item.id ? 'asset is-active' : 'asset'}
-                data-design-domain={item.id}
-                aria-pressed={surface === item.id}
-                onClick={() => onOpenDesignDomain(item.id)}
-              >
-                <span className="asset-name">{item.label}</span>
-              </button>
-            ))}
-          </TreeGroup>
-        ) : null}
+            <span className="asset-name">{item.label}</span>
+          </button>
+        ))}
         {groups.map((group) =>
           group.show ? (
             <TreeGroup

@@ -17,6 +17,7 @@ import specimenSection from '../../../examples/specimen-section.json';
 import textarea from '../../../examples/textarea.json';
 import { createEditorSession, type EditorSession } from '../src/domain/session.js';
 import { App } from '../src/ui/shell/EditorShell.js';
+import { openSettingsDomain } from './settings-navigation.js';
 
 const documents = validateCatalog([
   button,
@@ -57,9 +58,7 @@ describe('colors domain panel', () => {
     await act(async () => {
       root?.render(<App session={session} />);
     });
-    await act(async () => {
-      (host!.querySelector('[data-design-domain="colors"]') as HTMLButtonElement).click();
-    });
+    await openSettingsDomain(host!, 'colors');
   }
 
   async function submitNewToken(path: string) {

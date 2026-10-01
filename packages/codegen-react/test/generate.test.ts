@@ -154,7 +154,9 @@ describe('generateReact', () => {
     expect(tokens).toContain('@import url("https://fonts.googleapis.com');
     const css = source(files, 'styles/components.css');
     expect(css).toContain('[data-component="button"]');
-    expect(css).toContain('background: var(--button-color-bg)');
+    expect(css).toContain(
+      'background: var(--button-color-bg, var(--color-accent-default))',
+    );
     expect(css).toContain('font-family: var(--type-label--font-family)');
     expect(css).toContain('[data-component="button"][data-variant-tone="ghost"]');
     expect(css).toContain('[data-component="button"]:hover');

@@ -5,23 +5,38 @@
   "kind": "component",
   "group": "form",
   "fields": [
-    { "name": "name", "type": "text" },
-    { "name": "type", "type": "text" },
-    { "name": "value", "type": "text" }
+    {
+      "name": "name",
+      "type": "text"
+    },
+    {
+      "name": "type",
+      "type": "text"
+    },
+    {
+      "name": "value",
+      "type": "text"
+    }
   ],
-  "variants": [{ "name": "state", "values": ["default", "selected"], "default": "default" }],
+  "variants": [
+    {
+      "name": "state",
+      "values": [
+        "default",
+        "selected"
+      ],
+      "default": "default"
+    }
+  ],
   "tokenInterface": {
     "reads": [
       "color.bg.muted",
+      "color.neutral.0",
+      "color.neutral.200",
       "color.text.primary",
-      "editor.color.bordersubtle",
-      "editor.color.surface",
-      "editor.color.text",
-      "editor.color.textmuted",
-      "editor.padding.x",
-      "editor.padding.y",
-      "editor.radius",
+      "color.text.secondary",
       "space.0",
+      "space.2",
       "space.3",
       "type.body",
       "type.caption"
@@ -29,11 +44,11 @@
   },
   "styles": {
     "declarations": {
-      "background": "{editor.color.surface}",
-      "borderBottom": "1px solid {editor.color.bordersubtle}",
+      "background": "{color.surface}",
+      "borderBottom": "1px solid {color.bordersubtle}",
       "font": "{type.body}",
-      "paddingBlock": "{editor.padding.y}",
-      "paddingInline": "{editor.padding.x}"
+      "paddingBlock": "{padding.y}",
+      "paddingInline": "{padding.x}"
     },
     "variants": {
       "state": {
@@ -47,19 +62,19 @@
     "children": {
       "name": {
         "declarations": {
-          "color": "{editor.color.text}",
+          "color": "{color.text}",
           "fontWeight": "600"
         }
       },
       "type": {
         "declarations": {
-          "color": "{editor.color.textmuted}",
+          "color": "{color.textmuted}",
           "font": "{type.caption}"
         }
       },
       "value": {
         "declarations": {
-          "color": "{editor.color.textmuted}",
+          "color": "{color.textmuted}",
           "font": "{type.caption}"
         }
       }
@@ -73,31 +88,99 @@
       "direction": "row",
       "align": "center",
       "gap": "{space.3}",
-      "width": { "mode": "fill" },
-      "height": { "mode": "hug" }
+      "width": {
+        "mode": "fill"
+      },
+      "height": {
+        "mode": "hug"
+      }
     },
     "children": [
       {
         "id": "name",
         "type": "text",
         "tag": "span",
-        "layout": { "width": { "mode": "fixed", "size": 150 }, "height": { "mode": "hug" } },
-        "bindings": [{ "field": "name", "target": "text" }]
+        "layout": {
+          "width": {
+            "mode": "fixed",
+            "size": 150
+          },
+          "height": {
+            "mode": "hug"
+          }
+        },
+        "bindings": [
+          {
+            "field": "name",
+            "target": "text"
+          }
+        ]
       },
       {
         "id": "type",
         "type": "text",
         "tag": "span",
-        "layout": { "width": { "mode": "fixed", "size": 100 }, "height": { "mode": "hug" } },
-        "bindings": [{ "field": "type", "target": "text" }]
+        "layout": {
+          "width": {
+            "mode": "fixed",
+            "size": 100
+          },
+          "height": {
+            "mode": "hug"
+          }
+        },
+        "bindings": [
+          {
+            "field": "type",
+            "target": "text"
+          }
+        ]
       },
       {
         "id": "value",
         "type": "text",
         "tag": "span",
-        "layout": { "width": { "mode": "fill" }, "height": { "mode": "hug" } },
-        "bindings": [{ "field": "value", "target": "text" }]
+        "layout": {
+          "width": {
+            "mode": "fill"
+          },
+          "height": {
+            "mode": "hug"
+          }
+        },
+        "bindings": [
+          {
+            "field": "value",
+            "target": "text"
+          }
+        ]
       }
     ]
+  },
+  "componentTokens": {
+    "color.bordersubtle": {
+      "type": "color",
+      "value": "{color.neutral.200}"
+    },
+    "color.surface": {
+      "type": "color",
+      "value": "{color.neutral.0}"
+    },
+    "color.text": {
+      "type": "color",
+      "value": "{color.text.primary}"
+    },
+    "color.textmuted": {
+      "type": "color",
+      "value": "{color.text.secondary}"
+    },
+    "padding.x": {
+      "type": "dimension",
+      "value": "{space.3}"
+    },
+    "padding.y": {
+      "type": "dimension",
+      "value": "{space.2}"
+    }
   }
 }

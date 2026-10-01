@@ -6,6 +6,7 @@ import {
   suggestColorPath,
   tokenPathsReferencingColor,
 } from '../../../../domain/edits/color-edit.js';
+import { documentsReferencingToken } from '../../../../domain/component-tokens.js';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
 import { IconButton } from '../../../form/components/shared/IconButton.js';
 import { TokenAddAction } from './TokenAddAction.js';
@@ -61,7 +62,10 @@ export function RemoveColorTokenButton({
   path: string;
 }) {
   function removeColor() {
-    const refs = tokenPathsReferencingColor(snap.design.tokens, path);
+    const refs = [
+      ...tokenPathsReferencingColor(snap.design.tokens, path),
+      ...documentsReferencingToken(session.boardDocuments(), path),
+    ];
     if (refs.length) {
       session.setNotice(
         `Cannot remove "${path}": {${path}} is referenced in ${refs.join(', ')}`,

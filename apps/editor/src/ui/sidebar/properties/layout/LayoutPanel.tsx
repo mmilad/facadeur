@@ -6,7 +6,7 @@ import {
 } from '@facadeur/core';
 import {
   clearLayoutBreakpoint,
-  dimensionTokenRefs,
+  dimensionTokenRefsForDocument,
   writeLayoutFields,
   type LayoutPatch,
 } from '../../../../domain/editing.js';
@@ -41,7 +41,7 @@ export function LayoutPanel({
     editTarget: snap.editTarget,
   });
   const breakpointId = ctx.writingBreakpointId;
-  const tokens = dimensionTokenRefs(snap.design.tokens);
+  const tokens = dimensionTokenRefsForDocument(snap.design.tokens, snap.document);
   const cueViewport = ctx.overrideViewport;
   const variantEntry = snap.activeVariantName
     ? variantNodeEntry(snap.document, snap.activeVariantName, node.id)

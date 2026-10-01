@@ -20,6 +20,7 @@ import type {
   VariantPreset,
   VariantRule,
 } from '../document/schema.js';
+import type { ComponentToken } from '../component-tokens.js';
 import type { TokenDefinition, TokenGroupDefinition } from '../token-tree.js';
 
 export interface CommandContext extends ValidateOptions {
@@ -30,6 +31,8 @@ export interface CommandContext extends ValidateOptions {
     path: string,
     field: string,
   ) => FieldDefinition | undefined;
+  /** Global DTCG paths from the design document; used when applying token commands. */
+  globalTokenPaths?: ReadonlySet<string>;
 }
 
 /** Node passed to `insert`. Ids are assigned when omitted. */
@@ -111,4 +114,6 @@ export type Command =
   | { type: 'removeFont'; id: string }
   | { type: 'setBreakpoints'; breakpoints: Breakpoint[] }
   | { type: 'setStyleBlock'; style: StyleBlock | null }
-  | { type: 'setTokenInterface'; tokenInterface: TokenInterface | null };
+  | { type: 'setTokenInterface'; tokenInterface: TokenInterface | null }
+  | { type: 'setComponentToken'; path: string; token: ComponentToken }
+  | { type: 'removeComponentToken'; path: string };

@@ -32,6 +32,7 @@ Examples live in `examples/`. The JSON Schema generated from `packages/core` is 
 | `tokens`               | no       | W3C DTCG tree. A token has `$value`; a group does not.                                                              |
 | `styles`               | no       | Style block for this document: base, states, variants, breakpoints, children.                                       |
 | `tokenInterface`       | no       | `reads` and `sets`: tokens this document uses and overrides for descendants.                                        |
+| `componentTokens`    | no       | Local tokens owned by this atom, component, or section (not pages).                                                   |
 | `root`                 | yes      | The canvas node. Nesting rules apply to what is inside it.                                                          |
 
 Field types are `text`, `richText`, `image`, `link`, `boolean`, `enum`, `number`, and `token`. Enum fields also carry `options`. `richText` is reserved; nothing renders rich text yet.
@@ -182,7 +183,7 @@ Frames render as flexbox. The default direction is `column`, alignment is stretc
 
 Values may contain token references. `font: "{type.body}"` expands to the typography longhands (`font-family`, `font-size`, `font-weight`, `line-height`, `letter-spacing`). Spacing properties in the block are token references only.
 
-`tokenInterface.reads` lists every token path the style block and layout use. `tokenInterface.sets` maps a token path to a value and emits that custom property on the component root, so descendants inherit the override. `{font.sans}` is a font family, not a read. A path like `{font.weight.regular}` is a token and is a read.
+`tokenInterface.reads` lists every **global** token path the style block and layout use. References to this document's own `componentTokens` use `{local.path}` in styles but are not listed in `reads`. Each component token default that is a single `{global.path}` reference is listed in `reads` (same adopt behavior as other commands). `tokenInterface.sets` maps a token path to a value and emits that custom property on the component root, so descendants inherit the override. A set key such as `input.color.border` targets another catalog document's component token when `input` is a document id; otherwise the key is treated as a global token path (for example `color.text.primary`). `{font.sans}` is a font family, not a read. A path like `{font.weight.regular}` is a token and is a read.
 
 `style` on a primitive node is still the `setStyle` map. It overrides the style block's base declaration for the same property. States, variants, and breakpoints stay above that.
 
@@ -240,6 +241,14 @@ Segments are joined with a single hyphen, so each path has one name. A typograph
 
 `{font.sans}` points at the font with id `sans`, not at a DTCG token. A token must not occupy that same path.
 
+### Component tokens
+
+Component files do not store local tokens in the design `tokens` tree. They use `componentTokens`: a flat map from a token path (`color.border`, `padding.x`, …) to `{ type, value }`. The default `value` is a literal with no `{…}`, or exactly one `{global.path}` reference. Local-to-local references in defaults are rejected.
+
+The public path is `<documentId>.<localPath>` (for example `input.color.border`). CSS uses the same hyphenation as global tokens (`--input-color-border`). In the owning document's compiled styles, `{color.border}` becomes `var(--input-color-border, <fallback>)` where the fallback is `var(--global-path)` when the default is a single global reference, otherwise the literal. The owning root rule does **not** assign `--input-color-border`; a parent's `tokenInterface.sets` entry emits that variable so inheritance wins and the fallback applies only when the variable is unset.
+
+Allowed kinds: atom, component, and section. Pages cannot define `componentTokens`. Commands: `setComponentToken`, `removeComponentToken`. Before `setComponentToken`, the editor should call `assertComponentTokenDefault(value, globalPaths)` with paths from the design document.
+
 ## Fonts
 
 ```json
@@ -270,7 +279,7 @@ Ids match `[a-z][a-z0-9]*`. Widths are positive integers and unique. When the do
 
 ## Project template
 
-`examples/project-template.json` is an optional starter: the default palette, a 4px spacing scale, radius, shadows, the Inter family, and a type scale. `createProjectTemplate()` in `@facadeur/tokens` returns the same fragment. Spacing steps are `space.0` through `space.24` (the name is the step on a 4px grid, so `space.4` is 16px). `space.gap`, `space.inset`, and `space.stack` are the aliases gap, padding, and margin should use. Component tokens reference those aliases.
+`examples/project-template.json` is an optional starter: the default palette, a 4px spacing scale, radius, shadows, the Inter family, and a type scale. `createProjectTemplate()` in `@facadeur/tokens` returns the same fragment. Spacing steps are `space.0` through `space.24` (the name is the step on a 4px grid, so `space.4` is 16px). `space.gap`, `space.inset`, and `space.stack` are the aliases gap, padding, and margin should use. Palette tokens stay in the design file; atoms and components own their local tokens in `componentTokens` (see above).
 
 A new project also starts with two atoms, listed by `starterAtomIds`: `button` and `link`. The form controls `input` and `textarea` are listed separately by `starterFormIds` and live in the `form` group (`examples/button.json`, `examples/link.json`, `examples/input.json`, `examples/textarea.json`). They define fields and, where it matters, variant axes. `link` binds `label` and `href`. `textarea` follows `input`, adds a `rows` field, and uses a `resize` axis on the control.
 
@@ -280,7 +289,7 @@ A new project also starts with two atoms, listed by `starterAtomIds`: `button` a
 {
   id, name, kind, rootId,
   fields, variants, settings,
-  tokens, fonts, styles, tokenInterface,
+  tokens, fonts, styles, tokenInterface, componentTokens,
   nodes: {
     "<id>": { type, children: ["<child-id>", ...] }
   }
@@ -293,7 +302,7 @@ Only frames have `children`. Ids are unique inside one document. `toFlat` / `toN
 
 Documents change only through commands. Each command is one transaction in the Yjs store. Undo and redo walk those transactions.
 
-`insert`, `remove`, `move`, `wrap`, `setProp`, `setStyle`, `setField`, `setVariant`, `defineField`, `removeField`, `defineVariant`, `removeVariant`, `setToken`, `removeToken`, `setTokenGroup`, `removeTokenGroup`, `setFont`, `removeFont`, `setBreakpoints`, `setStyleBlock`, `setVariantStyleBlock`, `setTokenInterface`. `wrap` puts the node in a new frame at the same index. A command that introduces a token reference (`insert`, layout, `setStyle`, `setStyleBlock`, `setVariantStyleBlock`) adds that path to `tokenInterface.reads`. `removeField` also drops bindings that named the field. `removeVariant`, and `defineVariant` when a value disappears, drop the matching style-block layers on the root and on children. Sections and pages cannot define fields or variant axes.
+`insert`, `remove`, `move`, `wrap`, `setProp`, `setStyle`, `setField`, `setVariant`, `defineField`, `removeField`, `defineVariant`, `removeVariant`, `setToken`, `removeToken`, `setTokenGroup`, `removeTokenGroup`, `setFont`, `removeFont`, `setBreakpoints`, `setStyleBlock`, `setVariantStyleBlock`, `setTokenInterface`, `setComponentToken`, `removeComponentToken`. `wrap` puts the node in a new frame at the same index. A command that introduces a token reference (`insert`, layout, `setStyle`, `setStyleBlock`, `setVariantStyleBlock`) adds that path to `tokenInterface.reads` when it is global; local component token references are omitted. `setComponentToken` adds global paths from the default to `reads`. `removeField` also drops bindings that named the field. `removeVariant`, and `defineVariant` when a value disappears, drop the matching style-block layers on the root and on children. Sections and pages cannot define fields or variant axes.
 
 `setField` and `setVariant` apply to instances. `setStyle` writes a style map on a primitive node; it does not apply to instances. `setStyleBlock` replaces the document style block. `setVariantStyleBlock` replaces one named preset's sparse `overrides.styles` block and removes that preset's backwards-compatible reserved style layer. `setTokenInterface` replaces `reads` / `sets`. The style engine paints both. `move.index` is the index in the destination child list after the node has been taken out of its current parent. `setToken` replaces one token and creates missing groups along the path. `setBreakpoints` with an empty list clears the document's breakpoints, and CSS falls back to the defaults. The store resolves token references before it commits, so a cycle or a missing target never lands in the document.
 

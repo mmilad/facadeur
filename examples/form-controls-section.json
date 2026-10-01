@@ -7,15 +7,14 @@
   "tokenInterface": {
     "reads": [
       "color.bg.canvas",
+      "color.neutral.200",
+      "color.text",
       "color.text.primary",
       "color.text.secondary",
-      "editor.color.bordersubtle",
-      "editor.color.text",
-      "editor.color.textmuted",
-      "editor.gap",
-      "editor.padding.x",
-      "editor.padding.y",
-      "editor.radius",
+      "color.textmuted",
+      "padding.x",
+      "padding.y",
+      "radius.sm",
       "space.0",
       "space.2",
       "space.3",
@@ -51,7 +50,10 @@
         }
       },
       "intro-text": {
-        "declarations": { "color": "{color.text.secondary}", "font": "{type.body}" }
+        "declarations": {
+          "color": "{color.text.secondary}",
+          "font": "{type.body}"
+        }
       },
       "text-input-title": {
         "declarations": {
@@ -90,8 +92,8 @@
       },
       "field-list": {
         "declarations": {
-          "border": "1px solid {editor.color.bordersubtle}",
-          "borderRadius": "{editor.radius}"
+          "border": "1px solid {color.bordersubtle}",
+          "borderRadius": "{shape.radius}"
         }
       }
     }
@@ -103,18 +105,43 @@
       "items": {
         "type": "object",
         "fields": [
-          { "name": "id", "type": "text", "required": true },
+          {
+            "name": "id",
+            "type": "text",
+            "required": true
+          },
           {
             "name": "kind",
             "type": "enum",
             "required": true,
-            "options": ["input", "textarea", "select", "toggle"]
+            "options": [
+              "input",
+              "textarea",
+              "select",
+              "toggle"
+            ]
           },
-          { "name": "label", "type": "text", "required": true },
-          { "name": "value", "type": "text" },
-          { "name": "placeholder", "type": "text" },
-          { "name": "hint", "type": "text" },
-          { "name": "rows", "type": "number" }
+          {
+            "name": "label",
+            "type": "text",
+            "required": true
+          },
+          {
+            "name": "value",
+            "type": "text"
+          },
+          {
+            "name": "placeholder",
+            "type": "text"
+          },
+          {
+            "name": "hint",
+            "type": "text"
+          },
+          {
+            "name": "rows",
+            "type": "number"
+          }
         ]
       },
       "default": [
@@ -135,7 +162,11 @@
           "kind": "select",
           "label": "Property"
         },
-        { "id": "enabled", "kind": "toggle", "label": "Use token" }
+        {
+          "id": "enabled",
+          "kind": "toggle",
+          "label": "Use token"
+        }
       ]
     }
   ],
@@ -148,8 +179,12 @@
       "align": "stretch",
       "gap": "{space.8}",
       "padding": "{space.8}",
-      "width": { "mode": "fill" },
-      "height": { "mode": "hug" }
+      "width": {
+        "mode": "fill"
+      },
+      "height": {
+        "mode": "hug"
+      }
     },
     "children": [
       {
@@ -160,8 +195,12 @@
           "direction": "column",
           "align": "start",
           "gap": "{space.4}",
-          "width": { "mode": "fill" },
-          "height": { "mode": "hug" }
+          "width": {
+            "mode": "fill"
+          },
+          "height": {
+            "mode": "hug"
+          }
         },
         "children": [
           {
@@ -169,21 +208,43 @@
             "type": "text",
             "tag": "p",
             "text": "facadeur · editor kit",
-            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+            "layout": {
+              "width": {
+                "mode": "hug"
+              },
+              "height": {
+                "mode": "hug"
+              }
+            }
           },
           {
             "id": "title",
             "type": "text",
             "tag": "h1",
             "text": "Controls",
-            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+            "layout": {
+              "width": {
+                "mode": "hug"
+              },
+              "height": {
+                "mode": "hug"
+              }
+            }
           },
           {
             "id": "intro-text",
             "type": "text",
             "tag": "p",
             "text": "A small, token-driven control language for the editor inspector.",
-            "layout": { "width": { "mode": "fill", "max": 680 }, "height": { "mode": "hug" } }
+            "layout": {
+              "width": {
+                "mode": "fill",
+                "max": 680
+              },
+              "height": {
+                "mode": "hug"
+              }
+            }
           }
         ]
       },
@@ -195,8 +256,12 @@
           "direction": "column",
           "align": "stretch",
           "gap": "{space.gap.md}",
-          "width": { "mode": "fill" },
-          "height": { "mode": "hug" }
+          "width": {
+            "mode": "fill"
+          },
+          "height": {
+            "mode": "hug"
+          }
         },
         "children": [
           {
@@ -204,7 +269,14 @@
             "type": "text",
             "tag": "h2",
             "text": "Native text controls",
-            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+            "layout": {
+              "width": {
+                "mode": "hug"
+              },
+              "height": {
+                "mode": "hug"
+              }
+            }
           },
           {
             "id": "native-text-controls-row",
@@ -215,8 +287,12 @@
               "align": "start",
               "wrap": true,
               "gap": "{space.gap.md}",
-              "width": { "mode": "fill" },
-              "height": { "mode": "hug" }
+              "width": {
+                "mode": "fill"
+              },
+              "height": {
+                "mode": "hug"
+              }
             },
             "children": [
               {
@@ -224,20 +300,37 @@
                 "type": "instance",
                 "component": "input",
                 "layout": {
-                  "width": { "mode": "fixed", "size": 250 },
-                  "height": { "mode": "hug" }
+                  "width": {
+                    "mode": "fixed",
+                    "size": 250
+                  },
+                  "height": {
+                    "mode": "hug"
+                  }
                 },
-                "fields": { "label": "Input", "value": "Value" }
+                "fields": {
+                  "label": "Input",
+                  "value": "Value"
+                }
               },
               {
                 "id": "native-textarea",
                 "type": "instance",
                 "component": "textarea",
                 "layout": {
-                  "width": { "mode": "fixed", "size": 250 },
-                  "height": { "mode": "hug" }
+                  "width": {
+                    "mode": "fixed",
+                    "size": 250
+                  },
+                  "height": {
+                    "mode": "hug"
+                  }
                 },
-                "fields": { "label": "Textarea", "value": "Write a message", "rows": 3 }
+                "fields": {
+                  "label": "Textarea",
+                  "value": "Write a message",
+                  "rows": 3
+                }
               }
             ]
           }
@@ -251,8 +344,12 @@
           "direction": "column",
           "align": "stretch",
           "gap": "{space.gap.md}",
-          "width": { "mode": "fill" },
-          "height": { "mode": "hug" }
+          "width": {
+            "mode": "fill"
+          },
+          "height": {
+            "mode": "hug"
+          }
         },
         "children": [
           {
@@ -260,7 +357,14 @@
             "type": "text",
             "tag": "h2",
             "text": "Text field states",
-            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+            "layout": {
+              "width": {
+                "mode": "hug"
+              },
+              "height": {
+                "mode": "hug"
+              }
+            }
           },
           {
             "id": "text-input-row",
@@ -271,8 +375,12 @@
               "align": "start",
               "wrap": true,
               "gap": "{space.gap.md}",
-              "width": { "mode": "fill" },
-              "height": { "mode": "hug" }
+              "width": {
+                "mode": "fill"
+              },
+              "height": {
+                "mode": "hug"
+              }
             },
             "children": [
               {
@@ -280,19 +388,35 @@
                 "type": "instance",
                 "component": "form-text-input",
                 "layout": {
-                  "width": { "mode": "fixed", "size": 250 },
-                  "height": { "mode": "hug" }
+                  "width": {
+                    "mode": "fixed",
+                    "size": 250
+                  },
+                  "height": {
+                    "mode": "hug"
+                  }
                 },
-                "fields": { "label": "Label", "value": "Button", "hint": "Default" },
-                "variants": { "state": "default" }
+                "fields": {
+                  "label": "Label",
+                  "value": "Button",
+                  "hint": "Default"
+                },
+                "variants": {
+                  "state": "default"
+                }
               },
               {
                 "id": "input-focused",
                 "type": "instance",
                 "component": "form-text-input",
                 "layout": {
-                  "width": { "mode": "fixed", "size": 250 },
-                  "height": { "mode": "hug" }
+                  "width": {
+                    "mode": "fixed",
+                    "size": 250
+                  },
+                  "height": {
+                    "mode": "hug"
+                  }
                 },
                 "fields": {
                   "label": "Label",
@@ -301,29 +425,53 @@
                   "hasIcon": true,
                   "icon": "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Ccircle cx=%226.5%22 cy=%226.5%22 r=%223.5%22 fill=%22none%22 stroke=%22%236f675e%22 stroke-width=%221.5%22/%3E%3Cpath d=%22m9.2 9.2 4.2 4.2%22 fill=%22none%22 stroke=%22%236f675e%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/%3E%3C/svg%3E"
                 },
-                "variants": { "state": "focused" }
+                "variants": {
+                  "state": "focused"
+                }
               },
               {
                 "id": "input-invalid",
                 "type": "instance",
                 "component": "form-text-input",
                 "layout": {
-                  "width": { "mode": "fixed", "size": 250 },
-                  "height": { "mode": "hug" }
+                  "width": {
+                    "mode": "fixed",
+                    "size": 250
+                  },
+                  "height": {
+                    "mode": "hug"
+                  }
                 },
-                "fields": { "label": "Label", "value": "Button", "hint": "Invalid value" },
-                "variants": { "state": "invalid" }
+                "fields": {
+                  "label": "Label",
+                  "value": "Button",
+                  "hint": "Invalid value"
+                },
+                "variants": {
+                  "state": "invalid"
+                }
               },
               {
                 "id": "input-disabled",
                 "type": "instance",
                 "component": "form-text-input",
                 "layout": {
-                  "width": { "mode": "fixed", "size": 250 },
-                  "height": { "mode": "hug" }
+                  "width": {
+                    "mode": "fixed",
+                    "size": 250
+                  },
+                  "height": {
+                    "mode": "hug"
+                  }
                 },
-                "fields": { "label": "Label", "value": "Disabled", "hint": "Disabled" },
-                "variants": { "state": "disabled" }
+                "fields": {
+                  "label": "Label",
+                  "value": "Disabled",
+                  "hint": "Disabled"
+                },
+                "variants": {
+                  "state": "disabled"
+                }
               }
             ]
           }
@@ -337,8 +485,12 @@
           "direction": "column",
           "align": "stretch",
           "gap": "{space.gap.md}",
-          "width": { "mode": "fill" },
-          "height": { "mode": "hug" }
+          "width": {
+            "mode": "fill"
+          },
+          "height": {
+            "mode": "hug"
+          }
         },
         "children": [
           {
@@ -346,7 +498,14 @@
             "type": "text",
             "tag": "h2",
             "text": "Selection and options",
-            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+            "layout": {
+              "width": {
+                "mode": "hug"
+              },
+              "height": {
+                "mode": "hug"
+              }
+            }
           },
           {
             "id": "selection-row",
@@ -357,8 +516,12 @@
               "align": "start",
               "wrap": true,
               "gap": "{space.gap.lg}",
-              "width": { "mode": "fill" },
-              "height": { "mode": "hug" }
+              "width": {
+                "mode": "fill"
+              },
+              "height": {
+                "mode": "hug"
+              }
             },
             "children": [
               {
@@ -366,77 +529,146 @@
                 "type": "instance",
                 "component": "form-select",
                 "layout": {
-                  "width": { "mode": "fixed", "size": 250 },
-                  "height": { "mode": "hug" }
+                  "width": {
+                    "mode": "fixed",
+                    "size": 250
+                  },
+                  "height": {
+                    "mode": "hug"
+                  }
                 },
-                "fields": { "label": "Token", "value": "color.text.primary" },
-                "variants": { "state": "default" }
+                "fields": {
+                  "label": "Token",
+                  "value": "color.text.primary"
+                },
+                "variants": {
+                  "state": "default"
+                }
               },
               {
                 "id": "select-focused",
                 "type": "instance",
                 "component": "form-select",
                 "layout": {
-                  "width": { "mode": "fixed", "size": 250 },
-                  "height": { "mode": "hug" }
+                  "width": {
+                    "mode": "fixed",
+                    "size": 250
+                  },
+                  "height": {
+                    "mode": "hug"
+                  }
                 },
-                "fields": { "label": "Property", "value": "border color" },
-                "variants": { "state": "focused" }
+                "fields": {
+                  "label": "Property",
+                  "value": "border color"
+                },
+                "variants": {
+                  "state": "focused"
+                }
               },
               {
                 "id": "select-disabled",
                 "type": "instance",
                 "component": "form-select",
                 "layout": {
-                  "width": { "mode": "fixed", "size": 250 },
-                  "height": { "mode": "hug" }
+                  "width": {
+                    "mode": "fixed",
+                    "size": 250
+                  },
+                  "height": {
+                    "mode": "hug"
+                  }
                 },
-                "fields": { "label": "Breakpoint", "value": "Base" },
-                "variants": { "state": "disabled" }
+                "fields": {
+                  "label": "Breakpoint",
+                  "value": "Base"
+                },
+                "variants": {
+                  "state": "disabled"
+                }
               },
               {
                 "id": "alignment",
                 "type": "instance",
                 "component": "form-segmented",
                 "layout": {
-                  "width": { "mode": "fixed", "size": 270 },
-                  "height": { "mode": "hug" }
+                  "width": {
+                    "mode": "fixed",
+                    "size": 270
+                  },
+                  "height": {
+                    "mode": "hug"
+                  }
                 },
-                "fields": { "label": "Alignment" },
-                "variants": { "state": "start" }
+                "fields": {
+                  "label": "Alignment"
+                },
+                "variants": {
+                  "state": "start"
+                }
               },
               {
                 "id": "toggle-on",
                 "type": "instance",
                 "component": "form-toggle",
                 "layout": {
-                  "width": { "mode": "fixed", "size": 180 },
-                  "height": { "mode": "hug" }
+                  "width": {
+                    "mode": "fixed",
+                    "size": 180
+                  },
+                  "height": {
+                    "mode": "hug"
+                  }
                 },
-                "fields": { "label": "Use token", "value": "On" },
-                "variants": { "state": "on" }
+                "fields": {
+                  "label": "Use token",
+                  "value": "On"
+                },
+                "variants": {
+                  "state": "on"
+                }
               },
               {
                 "id": "toggle-off",
                 "type": "instance",
                 "component": "form-toggle",
                 "layout": {
-                  "width": { "mode": "fixed", "size": 180 },
-                  "height": { "mode": "hug" }
+                  "width": {
+                    "mode": "fixed",
+                    "size": 180
+                  },
+                  "height": {
+                    "mode": "hug"
+                  }
                 },
-                "fields": { "label": "Use token", "value": "Off" },
-                "variants": { "state": "off" }
+                "fields": {
+                  "label": "Use token",
+                  "value": "Off"
+                },
+                "variants": {
+                  "state": "off"
+                }
               },
               {
                 "id": "toggle-disabled",
                 "type": "instance",
                 "component": "form-toggle",
                 "layout": {
-                  "width": { "mode": "fixed", "size": 180 },
-                  "height": { "mode": "hug" }
+                  "width": {
+                    "mode": "fixed",
+                    "size": 180
+                  },
+                  "height": {
+                    "mode": "hug"
+                  }
                 },
-                "fields": { "label": "Use token", "value": "Disabled" },
-                "variants": { "state": "disabled" }
+                "fields": {
+                  "label": "Use token",
+                  "value": "Disabled"
+                },
+                "variants": {
+                  "state": "disabled"
+                }
               }
             ]
           }
@@ -450,8 +682,12 @@
           "direction": "column",
           "align": "stretch",
           "gap": "{space.gap.md}",
-          "width": { "mode": "fill" },
-          "height": { "mode": "hug" }
+          "width": {
+            "mode": "fill"
+          },
+          "height": {
+            "mode": "hug"
+          }
         },
         "children": [
           {
@@ -459,14 +695,28 @@
             "type": "text",
             "tag": "h2",
             "text": "Field definition",
-            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+            "layout": {
+              "width": {
+                "mode": "hug"
+              },
+              "height": {
+                "mode": "hug"
+              }
+            }
           },
           {
             "id": "field-note",
             "type": "text",
             "tag": "p",
             "text": "Compact rows keep component definitions scannable; details can open on demand.",
-            "layout": { "width": { "mode": "fill" }, "height": { "mode": "hug" } }
+            "layout": {
+              "width": {
+                "mode": "fill"
+              },
+              "height": {
+                "mode": "hug"
+              }
+            }
           },
           {
             "id": "field-list",
@@ -476,8 +726,12 @@
               "direction": "column",
               "align": "stretch",
               "gap": "{space.0}",
-              "width": { "mode": "fill" },
-              "height": { "mode": "hug" }
+              "width": {
+                "mode": "fill"
+              },
+              "height": {
+                "mode": "hug"
+              }
             },
             "children": [
               {
@@ -489,8 +743,12 @@
                   "align": "center",
                   "gap": "{space.3}",
                   "padding": "{space.2}",
-                  "width": { "mode": "fill" },
-                  "height": { "mode": "hug" }
+                  "width": {
+                    "mode": "fill"
+                  },
+                  "height": {
+                    "mode": "hug"
+                  }
                 },
                 "children": [
                   {
@@ -499,8 +757,13 @@
                     "tag": "span",
                     "text": "Name",
                     "layout": {
-                      "width": { "mode": "fixed", "size": 150 },
-                      "height": { "mode": "hug" }
+                      "width": {
+                        "mode": "fixed",
+                        "size": 150
+                      },
+                      "height": {
+                        "mode": "hug"
+                      }
                     }
                   },
                   {
@@ -509,8 +772,13 @@
                     "tag": "span",
                     "text": "Type",
                     "layout": {
-                      "width": { "mode": "fixed", "size": 100 },
-                      "height": { "mode": "hug" }
+                      "width": {
+                        "mode": "fixed",
+                        "size": 100
+                      },
+                      "height": {
+                        "mode": "hug"
+                      }
                     }
                   },
                   {
@@ -518,7 +786,14 @@
                     "type": "text",
                     "tag": "span",
                     "text": "Default",
-                    "layout": { "width": { "mode": "fill" }, "height": { "mode": "hug" } }
+                    "layout": {
+                      "width": {
+                        "mode": "fill"
+                      },
+                      "height": {
+                        "mode": "hug"
+                      }
+                    }
                   }
                 ]
               },
@@ -526,20 +801,34 @@
                 "id": "field-label",
                 "type": "instance",
                 "component": "form-field-row",
-                "fields": { "name": "label", "type": "text", "value": "Button" }
+                "fields": {
+                  "name": "label",
+                  "type": "text",
+                  "value": "Button"
+                }
               },
               {
                 "id": "field-tone",
                 "type": "instance",
                 "component": "form-field-row",
-                "fields": { "name": "tone", "type": "enum", "value": "primary" },
-                "variants": { "state": "selected" }
+                "fields": {
+                  "name": "tone",
+                  "type": "enum",
+                  "value": "primary"
+                },
+                "variants": {
+                  "state": "selected"
+                }
               },
               {
                 "id": "field-disabled",
                 "type": "instance",
                 "component": "form-field-row",
-                "fields": { "name": "disabled", "type": "boolean", "value": "false" }
+                "fields": {
+                  "name": "disabled",
+                  "type": "boolean",
+                  "value": "false"
+                }
               }
             ]
           },
@@ -547,9 +836,21 @@
             "id": "add-field",
             "type": "instance",
             "component": "button",
-            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } },
-            "fields": { "label": "+ Add field" },
-            "variants": { "tone": "secondary", "size": "sm" }
+            "layout": {
+              "width": {
+                "mode": "hug"
+              },
+              "height": {
+                "mode": "hug"
+              }
+            },
+            "fields": {
+              "label": "+ Add field"
+            },
+            "variants": {
+              "tone": "secondary",
+              "size": "sm"
+            }
           }
         ]
       },
@@ -561,8 +862,12 @@
           "direction": "column",
           "align": "stretch",
           "gap": "{space.gap.md}",
-          "width": { "mode": "fill" },
-          "height": { "mode": "hug" }
+          "width": {
+            "mode": "fill"
+          },
+          "height": {
+            "mode": "hug"
+          }
         },
         "children": [
           {
@@ -570,26 +875,44 @@
             "type": "text",
             "tag": "h2",
             "text": "Data-driven form",
-            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+            "layout": {
+              "width": {
+                "mode": "hug"
+              },
+              "height": {
+                "mode": "hug"
+              }
+            }
           },
           {
             "id": "data-form",
             "type": "frame",
             "tag": "div",
-            "repeat": { "path": "formFields", "as": "field", "key": "id" },
+            "repeat": {
+              "path": "formFields",
+              "as": "field",
+              "key": "id"
+            },
             "layout": {
               "direction": "column",
               "align": "stretch",
               "gap": "{space.gap.md}",
-              "width": { "mode": "fill" },
-              "height": { "mode": "hug" }
+              "width": {
+                "mode": "fill"
+              },
+              "height": {
+                "mode": "hug"
+              }
             },
             "children": [
               {
                 "id": "data-input",
                 "type": "instance",
                 "component": "form-text-input",
-                "displayOn": { "path": "field.kind", "equals": "input" },
+                "displayOn": {
+                  "path": "field.kind",
+                  "equals": "input"
+                },
                 "fieldBindings": {
                   "label": "field.label",
                   "hint": "field.hint",
@@ -601,7 +924,10 @@
                 "id": "data-textarea",
                 "type": "instance",
                 "component": "textarea",
-                "displayOn": { "path": "field.kind", "equals": "textarea" },
+                "displayOn": {
+                  "path": "field.kind",
+                  "equals": "textarea"
+                },
                 "fieldBindings": {
                   "label": "field.label",
                   "value": "field.value",
@@ -613,20 +939,42 @@
                 "id": "data-select",
                 "type": "instance",
                 "component": "form-select",
-                "displayOn": { "path": "field.kind", "equals": "select" },
-                "fieldBindings": { "label": "field.label", "value": "field.value" }
+                "displayOn": {
+                  "path": "field.kind",
+                  "equals": "select"
+                },
+                "fieldBindings": {
+                  "label": "field.label",
+                  "value": "field.value"
+                }
               },
               {
                 "id": "data-toggle",
                 "type": "instance",
                 "component": "form-toggle",
-                "displayOn": { "path": "field.kind", "equals": "toggle" },
-                "fieldBindings": { "label": "field.label", "value": "field.value" }
+                "displayOn": {
+                  "path": "field.kind",
+                  "equals": "toggle"
+                },
+                "fieldBindings": {
+                  "label": "field.label",
+                  "value": "field.value"
+                }
               }
             ]
           }
         ]
       }
     ]
+  },
+  "componentTokens": {
+    "color.bordersubtle": {
+      "type": "color",
+      "value": "{color.neutral.200}"
+    },
+    "shape.radius": {
+      "type": "dimension",
+      "value": "{radius.sm}"
+    }
   }
 }

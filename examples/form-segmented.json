@@ -4,27 +4,35 @@
   "name": "Segmented control",
   "kind": "component",
   "group": "form",
-  "fields": [{ "name": "label", "type": "text" }],
+  "fields": [
+    {
+      "name": "label",
+      "type": "text"
+    }
+  ],
   "variants": [
     {
       "name": "state",
-      "values": ["start", "center", "end"],
+      "values": [
+        "start",
+        "center",
+        "end"
+      ],
       "default": "start"
     }
   ],
   "tokenInterface": {
     "reads": [
       "color.bg.muted",
+      "color.neutral.0",
+      "color.neutral.400",
       "color.text.primary",
-      "editor.color.border",
-      "editor.color.surface",
-      "editor.color.text",
-      "editor.color.textmuted",
-      "editor.gap",
-      "editor.padding.x",
-      "editor.padding.y",
-      "editor.radius",
+      "color.text.secondary",
+      "radius.sm",
       "space.0",
+      "space.2",
+      "space.3",
+      "space.gap.xs",
       "type.body",
       "type.caption"
     ]
@@ -33,7 +41,7 @@
     "children": {
       "label": {
         "declarations": {
-          "color": "{editor.color.textmuted}",
+          "color": "{color.textmuted}",
           "font": "{type.caption}",
           "fontWeight": "600",
           "margin": "{space.0}"
@@ -42,27 +50,27 @@
       "options": {
         "declarations": {
           "background": "{color.bg.muted}",
-          "border": "1px solid {editor.color.border}",
-          "borderRadius": "{editor.radius}",
+          "border": "1px solid {color.border}",
+          "borderRadius": "{shape.radius}",
           "display": "flex",
           "font": "{type.caption}",
-          "paddingBlock": "{editor.padding.y}",
-          "paddingInline": "{editor.padding.x}"
+          "paddingBlock": "{padding.y}",
+          "paddingInline": "{padding.x}"
         }
       },
       "start": {
         "declarations": {
-          "color": "{editor.color.textmuted}",
-          "paddingBlock": "{editor.padding.y}",
-          "paddingInline": "{editor.padding.x}"
+          "color": "{color.textmuted}",
+          "paddingBlock": "{padding.y}",
+          "paddingInline": "{padding.x}"
         },
         "variants": {
           "state": {
             "start": {
               "declarations": {
-                "background": "{editor.color.surface}",
-                "borderRadius": "{editor.radius}",
-                "color": "{editor.color.text}",
+                "background": "{color.surface}",
+                "borderRadius": "{shape.radius}",
+                "color": "{color.text}",
                 "fontWeight": "600"
               }
             }
@@ -71,17 +79,17 @@
       },
       "center": {
         "declarations": {
-          "color": "{editor.color.textmuted}",
-          "paddingBlock": "{editor.padding.y}",
-          "paddingInline": "{editor.padding.x}"
+          "color": "{color.textmuted}",
+          "paddingBlock": "{padding.y}",
+          "paddingInline": "{padding.x}"
         },
         "variants": {
           "state": {
             "center": {
               "declarations": {
-                "background": "{editor.color.surface}",
-                "borderRadius": "{editor.radius}",
-                "color": "{editor.color.text}",
+                "background": "{color.surface}",
+                "borderRadius": "{shape.radius}",
+                "color": "{color.text}",
                 "fontWeight": "600"
               }
             }
@@ -90,17 +98,17 @@
       },
       "end": {
         "declarations": {
-          "color": "{editor.color.textmuted}",
-          "paddingBlock": "{editor.padding.y}",
-          "paddingInline": "{editor.padding.x}"
+          "color": "{color.textmuted}",
+          "paddingBlock": "{padding.y}",
+          "paddingInline": "{padding.x}"
         },
         "variants": {
           "state": {
             "end": {
               "declarations": {
-                "background": "{editor.color.surface}",
-                "borderRadius": "{editor.radius}",
-                "color": "{editor.color.text}",
+                "background": "{color.surface}",
+                "borderRadius": "{shape.radius}",
+                "color": "{color.text}",
                 "fontWeight": "600"
               }
             }
@@ -116,17 +124,33 @@
     "layout": {
       "direction": "column",
       "align": "stretch",
-      "gap": "{editor.gap}",
-      "width": { "mode": "fill" },
-      "height": { "mode": "hug" }
+      "gap": "{layout.gap}",
+      "width": {
+        "mode": "fill"
+      },
+      "height": {
+        "mode": "hug"
+      }
     },
     "children": [
       {
         "id": "label",
         "type": "text",
         "tag": "span",
-        "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } },
-        "bindings": [{ "field": "label", "target": "text" }]
+        "layout": {
+          "width": {
+            "mode": "hug"
+          },
+          "height": {
+            "mode": "hug"
+          }
+        },
+        "bindings": [
+          {
+            "field": "label",
+            "target": "text"
+          }
+        ]
       },
       {
         "id": "options",
@@ -136,8 +160,12 @@
           "direction": "row",
           "align": "center",
           "gap": "{space.0}",
-          "width": { "mode": "hug" },
-          "height": { "mode": "hug" }
+          "width": {
+            "mode": "hug"
+          },
+          "height": {
+            "mode": "hug"
+          }
         },
         "children": [
           {
@@ -145,24 +173,79 @@
             "type": "text",
             "tag": "span",
             "text": "Start",
-            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+            "layout": {
+              "width": {
+                "mode": "hug"
+              },
+              "height": {
+                "mode": "hug"
+              }
+            }
           },
           {
             "id": "center",
             "type": "text",
             "tag": "span",
             "text": "Center",
-            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+            "layout": {
+              "width": {
+                "mode": "hug"
+              },
+              "height": {
+                "mode": "hug"
+              }
+            }
           },
           {
             "id": "end",
             "type": "text",
             "tag": "span",
             "text": "End",
-            "layout": { "width": { "mode": "hug" }, "height": { "mode": "hug" } }
+            "layout": {
+              "width": {
+                "mode": "hug"
+              },
+              "height": {
+                "mode": "hug"
+              }
+            }
           }
         ]
       }
     ]
+  },
+  "componentTokens": {
+    "color.border": {
+      "type": "color",
+      "value": "{color.neutral.400}"
+    },
+    "color.surface": {
+      "type": "color",
+      "value": "{color.neutral.0}"
+    },
+    "color.text": {
+      "type": "color",
+      "value": "{color.text.primary}"
+    },
+    "color.textmuted": {
+      "type": "color",
+      "value": "{color.text.secondary}"
+    },
+    "layout.gap": {
+      "type": "dimension",
+      "value": "{space.gap.xs}"
+    },
+    "padding.x": {
+      "type": "dimension",
+      "value": "{space.3}"
+    },
+    "padding.y": {
+      "type": "dimension",
+      "value": "{space.2}"
+    },
+    "shape.radius": {
+      "type": "dimension",
+      "value": "{radius.sm}"
+    }
   }
 }

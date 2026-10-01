@@ -31,9 +31,7 @@ describe('radius-edit', () => {
 
   it('finds token paths that reference a radius token', () => {
     const design = createProjectTemplateDocument();
-    const refs = tokenPathsReferencingRadius(design.tokens, 'radius.md');
-    expect(refs.length).toBeGreaterThan(0);
-    expect(refs.includes('radius.md')).toBe(false);
+    expect(tokenPathsReferencingRadius(design.tokens, 'radius.md')).toEqual([]);
     expect(tokenPathsReferencingRadius(design.tokens, 'radius.missing')).toEqual([]);
   });
 

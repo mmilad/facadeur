@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react';
 import type { FlatNode } from '@facadeur/core';
 import {
-  colorTokenRefs,
-  dimensionTokenRefs,
-  fontFamilyTokenRefs,
-  fontWeightTokenRefs,
-  numberTokenRefs,
-  shadowTokenRefs,
+  colorTokenRefsForDocument,
+  dimensionTokenRefsForDocument,
+  fontFamilyTokenRefsForDocument,
+  fontWeightTokenRefsForDocument,
+  numberTokenRefsForDocument,
+  shadowTokenRefsForDocument,
 } from '../../../../../domain/editing.js';
 import type { EditorSession, EditorSnapshot } from '../../../../../domain/session.js';
 import { ColorControl, isColorStyleProperty } from '../../../../controls/color/index.js';
@@ -30,17 +30,23 @@ export function StyleOverridesPanel({
 }) {
   const [property, setProperty] = useState('');
   const [value, setValue] = useState('');
-  const colorTokens = useMemo(() => colorTokenRefs(snap.design.tokens), [snap.design.tokens]);
-  const shadowTokens = useMemo(() => shadowTokenRefs(snap.design.tokens), [snap.design.tokens]);
+  const colorTokens = useMemo(
+    () => colorTokenRefsForDocument(snap.design.tokens, snap.document),
+    [snap.design.tokens, snap.document],
+  );
+  const shadowTokens = useMemo(
+    () => shadowTokenRefsForDocument(snap.design.tokens, snap.document),
+    [snap.design.tokens, snap.document],
+  );
   const typographyCatalogs = useMemo<TypographyCatalogs>(
     () => ({
       fontRefs: projectFontRefs(snap.design.fonts),
-      fontFamilyTokens: fontFamilyTokenRefs(snap.design.tokens),
-      fontWeightTokens: fontWeightTokenRefs(snap.design.tokens),
-      dimensionTokens: dimensionTokenRefs(snap.design.tokens),
-      numberTokens: numberTokenRefs(snap.design.tokens),
+      fontFamilyTokens: fontFamilyTokenRefsForDocument(snap.design.tokens, snap.document),
+      fontWeightTokens: fontWeightTokenRefsForDocument(snap.design.tokens, snap.document),
+      dimensionTokens: dimensionTokenRefsForDocument(snap.design.tokens, snap.document),
+      numberTokens: numberTokenRefsForDocument(snap.design.tokens, snap.document),
     }),
-    [snap.design.fonts, snap.design.tokens],
+    [snap.design.fonts, snap.design.tokens, snap.document],
   );
   const entries = Object.entries(node.style ?? {});
   const addingColor = isColorStyleProperty(property);

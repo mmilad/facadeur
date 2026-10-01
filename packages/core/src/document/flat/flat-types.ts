@@ -19,6 +19,7 @@ import type {
   VariantRule,
   Repeat,
 } from '../schema.js';
+import type { ComponentTokenMap } from '../../component-tokens.js';
 import type { TokenTree } from '../../token-tree.js';
 
 export interface FlatNodeBase {
@@ -92,5 +93,7 @@ export interface FlatDocument {
   styles?: StyleBlock;
   /** Tokens this component reads, and tokens it sets for descendants. */
   tokenInterface?: TokenInterface;
+  /** Local tokens owned by this document; defaults reference globals or literals. */
+  componentTokens?: ComponentTokenMap;
   nodes: Record<string, FlatNode>;
 }

@@ -29,7 +29,9 @@ describe('component style block', () => {
 
   it('emits token references, states, variants, and a real media query', () => {
     expect(compiled).toContain('[data-component="button"]');
-    expect(compiled).toContain('background: var(--button-color-bg)');
+    expect(compiled).toContain(
+      'background: var(--button-color-bg, var(--color-accent-default))',
+    );
     expect(compiled).toContain('font-family: var(--type-label--font-family)');
     expect(compiled).toContain('font-size: var(--type-label--font-size)');
     expect(compiled).toContain('[data-component="button"]:hover');
@@ -42,8 +44,8 @@ describe('component style block', () => {
     expect(compiled).toContain('display: flex');
     expect(compiled).toContain('flex-direction: row');
     expect(compiled).toContain('width: fit-content');
-    expect(compiled).toContain('gap: var(--button-gap)');
-    expect(compiled).toContain('padding-inline: var(--button-padding-x)');
+    expect(compiled).toContain('gap: var(--button-layout-gap, var(--space-gap-sm))');
+    expect(compiled).toContain('padding-inline: var(--button-padding-x, var(--space-4))');
   });
 
   it('keeps native form controls out of the frame flex layout', () => {
@@ -292,6 +294,36 @@ describe('style engine and renderer', () => {
     engine.destroy();
   });
 
+  it('uses local token fallbacks on the owner and parent sets on descendants', () => {
+    const inputDoc: DocumentFile = {
+      version: 1,
+      id: 'input',
+      name: 'Input',
+      kind: 'component',
+      componentTokens: {
+        'color.border': { type: 'color', value: '{color.neutral.600}' },
+      },
+      tokenInterface: { reads: ['color.neutral.600'] },
+      styles: {
+        children: {
+          control: {
+            declarations: { border: '1px solid {color.border}' },
+          },
+        },
+      },
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [{ id: 'control', type: 'frame', tag: 'input' }],
+      },
+    };
+    const css = text(compileDocument(inputDoc));
+    expect(css).toContain(
+      'border: 1px solid var(--input-color-border, var(--color-neutral-600))',
+    );
+    expect(css).not.toMatch(/\[data-component="input"\][^{]*--input-color-border:/);
+  });
+
   it('paints token sets and updates a style rule without replacing the element', () => {
     const engine = createStyleEngine(document);
     engine.setDesign({
@@ -299,9 +331,6 @@ describe('style engine and renderer', () => {
         color: {
           $type: 'color',
           accent: { default: { $value: '#2563eb' } },
-        },
-        input: {
-          color: { $type: 'color', border: { $value: '{color.accent.default}' } },
         },
       },
     });

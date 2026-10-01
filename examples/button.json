@@ -3,32 +3,47 @@
   "id": "button",
   "name": "Button",
   "kind": "atom",
-  "fields": [{ "name": "label", "type": "text" }],
+  "fields": [
+    {
+      "name": "label",
+      "type": "text"
+    }
+  ],
   "variants": [
     {
       "name": "tone",
-      "values": ["primary", "secondary", "ghost"],
+      "values": [
+        "primary",
+        "secondary",
+        "ghost"
+      ],
       "default": "primary"
     },
-    { "name": "size", "values": ["sm", "md"], "default": "md" }
+    {
+      "name": "size",
+      "values": [
+        "sm",
+        "md"
+      ],
+      "default": "md"
+    }
   ],
   "tokenInterface": {
     "reads": [
-      "button.color.bg",
-      "button.color.text",
-      "button.gap",
-      "button.padding.x",
-      "button.padding.y",
       "color.accent.default",
       "color.accent.hover",
       "color.bg.muted",
       "color.border.default",
+      "color.text.inverse",
       "color.text.primary",
       "color.text.secondary",
       "radius.full",
       "space.1",
+      "space.2",
       "space.3",
+      "space.4",
       "space.5",
+      "space.gap.sm",
       "type.caption",
       "type.label"
     ]
@@ -36,25 +51,29 @@
   "styles": {
     "declarations": {
       "appearance": "none",
-      "background": "{button.color.bg}",
+      "background": "{color.bg}",
       "border": "1px solid transparent",
       "borderRadius": "{radius.full}",
-      "color": "{button.color.text}",
+      "color": "{color.text}",
       "cursor": "pointer",
       "font": "{type.label}",
       "letterSpacing": "0.01em",
       "lineHeight": "1",
-      "paddingBlock": "{button.padding.y}",
-      "paddingInline": "{button.padding.x}",
+      "paddingBlock": "{padding.y}",
+      "paddingInline": "{padding.x}",
       "whiteSpace": "nowrap"
     },
     "states": {
-      "hover": { "background": "{color.accent.hover}" },
+      "hover": {
+        "background": "{color.accent.hover}"
+      },
       "focus-visible": {
         "outline": "2px solid {color.accent.default}",
         "outlineOffset": "2px"
       },
-      "disabled": { "opacity": "0.5" }
+      "disabled": {
+        "opacity": "0.5"
+      }
     },
     "variants": {
       "size": {
@@ -86,14 +105,18 @@
             "color": "{color.text.primary}"
           },
           "states": {
-            "hover": { "background": "{color.bg.muted}" }
+            "hover": {
+              "background": "{color.bg.muted}"
+            }
           }
         }
       }
     },
     "breakpoints": {
       "tablet": {
-        "declarations": { "paddingInline": "{space.5}" }
+        "declarations": {
+          "paddingInline": "{space.5}"
+        }
       }
     }
   },
@@ -101,15 +124,48 @@
     "id": "root",
     "type": "frame",
     "tag": "button",
-    "attributes": { "type": "button" },
+    "attributes": {
+      "type": "button"
+    },
     "layout": {
       "direction": "row",
       "align": "center",
       "justify": "center",
-      "gap": "{button.gap}",
-      "width": { "mode": "hug" },
-      "height": { "mode": "hug" }
+      "gap": "{layout.gap}",
+      "width": {
+        "mode": "hug"
+      },
+      "height": {
+        "mode": "hug"
+      }
     },
-    "bindings": [{ "field": "label", "target": "text" }]
+    "bindings": [
+      {
+        "field": "label",
+        "target": "text"
+      }
+    ]
+  },
+  "componentTokens": {
+    "padding.x": {
+      "type": "dimension",
+      "value": "{space.4}"
+    },
+    "padding.y": {
+      "type": "dimension",
+      "value": "{space.2}"
+    },
+    "layout.gap": {
+      "type": "dimension",
+      "value": "{space.gap.sm}"
+    },
+    "color.bg": {
+      "type": "color",
+      "value": "{color.accent.default}"
+    },
+    "color.text": {
+      "type": "color",
+      "value": "{color.text.inverse}"
+    }
   }
 }

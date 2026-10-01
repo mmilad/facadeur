@@ -9,6 +9,7 @@ import {
   type Expose,
   type FieldDefinition,
   type FieldValue,
+  type FlatDocument,
   type FlatNode,
   type FontFaceFile,
   type FontFamily,
@@ -261,6 +262,14 @@ export function readTokenInterface(map: Y.Map<unknown>): { tokenInterface?: Toke
   const value = readJsonObject(map);
   if (!Object.keys(value).length) return {};
   return { tokenInterface: value as unknown as TokenInterface };
+}
+
+export function readComponentTokens(
+  map: Y.Map<unknown>,
+): { componentTokens?: FlatDocument['componentTokens'] } {
+  const value = readJsonObject(map);
+  if (!Object.keys(value).length) return {};
+  return { componentTokens: value as unknown as FlatDocument['componentTokens'] };
 }
 
 export function readExpose(map: Y.Map<unknown>): { expose?: Expose } {

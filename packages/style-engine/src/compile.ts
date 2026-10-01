@@ -13,7 +13,7 @@ import {
   type StyleBlock,
   type StyleChild,
 } from '@facadeur/core';
-import { expandDeclarations, mergeDeclarations, substituteRefs } from './values.js';
+import { expandDeclarations, mergeDeclarations, substituteRefs, type SubstituteContext } from './values.js';
 
 export interface CompiledRule {
   key: string;
@@ -81,6 +81,10 @@ function compileSingleDocument(
   const rules: CompiledRule[] = [];
   const rootRendered =
     options.paintRoot === true || !(address === 'canvas' && document.root.type === 'frame');
+  const substituteContext: SubstituteContext = {
+    documentId: document.id,
+    ...(document.componentTokens ? { componentTokens: document.componentTokens } : {}),
+  };
   walk(document, document.root, {
     address,
     breakpoints,
@@ -89,6 +93,7 @@ function compileSingleDocument(
     isRoot: true,
     rendered: rootRendered,
     variantScope: options.variantScope,
+    substituteContext,
     rules,
   });
   return rules.filter((rule) => rule.declarations.length > 0);
@@ -114,6 +119,7 @@ interface WalkState {
   isRoot: boolean;
   rendered: boolean;
   variantScope?: string;
+  substituteContext: SubstituteContext;
   rules: CompiledRule[];
 }
 
@@ -136,11 +142,12 @@ function walk(document: DocumentFile, node: NestedNode, state: WalkState): void 
 function emitNode(document: DocumentFile, node: NestedNode, state: WalkState): void {
   const selector = selectorFor(document, node, state);
   const layer = styleLayerFor(document.styles, node, state.isRoot);
+  const context = state.substituteContext;
   const base = mergeDeclarations([
-    layoutDeclarations(node, state.parentDirection),
+    layoutDeclarations(node, state.parentDirection, context),
     state.isRoot ? tokenSetDeclarations(document) : [],
-    expandDeclarations(layer?.declarations),
-    node.type === 'instance' ? [] : expandDeclarations(node.style),
+    expandDeclarations(layer?.declarations, context),
+    node.type === 'instance' ? [] : expandDeclarations(node.style, context),
   ]);
   push(state, `${document.id}:${node.id}:base`, selector, base);
 
@@ -150,7 +157,7 @@ function emitNode(document: DocumentFile, node: NestedNode, state: WalkState): v
       state,
       `${document.id}:${node.id}:state:${name}`,
       `${selector}:${name}`,
-      expandDeclarations(declarations),
+      expandDeclarations(declarations, context),
     );
   }
 
@@ -161,7 +168,7 @@ function emitNode(document: DocumentFile, node: NestedNode, state: WalkState): v
         state,
         `${document.id}:${node.id}:variant:${axis}:${value}`,
         variantSelector,
-        expandDeclarations(variant.declarations),
+        expandDeclarations(variant.declarations, context),
       );
       for (const [name, declarations] of Object.entries(variant.states ?? {})) {
         if (!declarations) continue;
@@ -169,7 +176,7 @@ function emitNode(document: DocumentFile, node: NestedNode, state: WalkState): v
           state,
           `${document.id}:${node.id}:variant:${axis}:${value}:state:${name}`,
           `${variantSelector}:${name}`,
-          expandDeclarations(declarations),
+          expandDeclarations(declarations, context),
         );
       }
     }
@@ -184,7 +191,7 @@ function emitNode(document: DocumentFile, node: NestedNode, state: WalkState): v
       state,
       `${document.id}:${node.id}:style:${id}`,
       selector,
-      expandDeclarations(breakpointLayer.declarations),
+      expandDeclarations(breakpointLayer.declarations, context),
       minWidth,
     );
     for (const [name, declarations] of Object.entries(breakpointLayer.states ?? {})) {
@@ -193,7 +200,7 @@ function emitNode(document: DocumentFile, node: NestedNode, state: WalkState): v
         state,
         `${document.id}:${node.id}:style:${id}:state:${name}`,
         `${selector}:${name}`,
-        expandDeclarations(declarations),
+        expandDeclarations(declarations, context),
         minWidth,
       );
     }
@@ -208,7 +215,7 @@ function emitNode(document: DocumentFile, node: NestedNode, state: WalkState): v
         state,
         `${document.id}:${node.id}:layout:${id}`,
         selector,
-        layoutOverrideDeclarations(node, override, state.parentDirection),
+        layoutOverrideDeclarations(node, override, state.parentDirection, context),
         minWidth,
       );
     }
@@ -296,23 +303,25 @@ function customProperty(path: string): string {
 function layoutDeclarations(
   node: NestedNode,
   parentDirection: 'row' | 'column' | undefined,
+  context?: SubstituteContext,
 ): [string, string][] {
   if (node.type === 'frame') {
     // Native controls are leaves even when the document DSL represents them as
     // frames so they can carry layout and bindings. They must not receive the
     // frame's flex-container declarations.
     if (node.tag && NATIVE_CONTROL_TAGS.has(node.tag.toLowerCase())) {
-      return placementDeclarations(node.layout, parentDirection, false);
+      return placementDeclarations(node.layout, parentDirection, false, context);
     }
-    return frameDeclarations(node.layout, parentDirection);
+    return frameDeclarations(node.layout, parentDirection, context);
   }
   if (!node.layout) return [];
-  return placementDeclarations(node.layout, parentDirection, false);
+  return placementDeclarations(node.layout, parentDirection, false, context);
 }
 
 function frameDeclarations(
   layout: Layout | undefined,
   parentDirection: 'row' | 'column' | undefined,
+  context?: SubstituteContext,
 ): [string, string][] {
   const direction = layout?.direction ?? 'column';
   const justify = layout?.justify ?? 'start';
@@ -326,10 +335,12 @@ function frameDeclarations(
     ['justify-content', JUSTIFY[justify]],
     ['align-items', ALIGN[align]],
   ];
-  if (layout?.gap) decls.push(['gap', substituteRefs(layout.gap)]);
-  if (layout?.padding) decls.push(...spacingDeclarations('padding', layout.padding));
-  if (layout?.margin) decls.push(...spacingDeclarations('margin', layout.margin));
-  decls.push(...placementDeclarations(layout, parentDirection, true).filter(keepPlacement));
+  if (layout?.gap) decls.push(['gap', substituteRefs(layout.gap, context)]);
+  if (layout?.padding) decls.push(...spacingDeclarations('padding', layout.padding, context));
+  if (layout?.margin) decls.push(...spacingDeclarations('margin', layout.margin, context));
+  decls.push(
+    ...placementDeclarations(layout, parentDirection, true, context).filter(keepPlacement),
+  );
   return decls;
 }
 
@@ -352,6 +363,7 @@ function placementDeclarations(
   layout: Layout | LayoutOverride | undefined,
   parentDirection: 'row' | 'column' | undefined,
   isFrame: boolean,
+  context?: SubstituteContext,
 ): [string, string][] {
   if (!layout) return [];
   const decls: [string, string][] = [];
@@ -360,9 +372,11 @@ function placementDeclarations(
     if (layout.x !== undefined) decls.push(['left', `${layout.x}px`]);
     if (layout.y !== undefined) decls.push(['top', `${layout.y}px`]);
   }
-  if (layout.margin && !isFrame) decls.push(...spacingDeclarations('margin', layout.margin));
-  decls.push(...axisDeclarations('width', layout.width, parentDirection));
-  decls.push(...axisDeclarations('height', layout.height, parentDirection));
+  if (layout.margin && !isFrame) {
+    decls.push(...spacingDeclarations('margin', layout.margin, context));
+  }
+  decls.push(...axisDeclarations('width', layout.width, parentDirection, context));
+  decls.push(...axisDeclarations('height', layout.height, parentDirection, context));
   return decls;
 }
 
@@ -370,6 +384,7 @@ function layoutOverrideDeclarations(
   node: NestedNode,
   override: LayoutOverride,
   parentDirection: 'row' | 'column' | undefined,
+  context?: SubstituteContext,
 ): [string, string][] {
   const decls: [string, string][] = [];
   if (node.type === 'frame') {
@@ -380,25 +395,31 @@ function layoutOverrideDeclarations(
     if (override.position) {
       decls.push(['position', override.position === 'absolute' ? 'absolute' : 'relative']);
     }
-    if (override.gap) decls.push(['gap', substituteRefs(override.gap)]);
-    if (override.padding) decls.push(...spacingDeclarations('padding', override.padding));
+    if (override.gap) decls.push(['gap', substituteRefs(override.gap, context)]);
+    if (override.padding) decls.push(...spacingDeclarations('padding', override.padding, context));
   }
-  if (override.margin) decls.push(...spacingDeclarations('margin', override.margin));
+  if (override.margin) decls.push(...spacingDeclarations('margin', override.margin, context));
   if (override.position === 'absolute') {
     decls.push(['position', 'absolute']);
     if (override.x !== undefined) decls.push(['left', `${override.x}px`]);
     if (override.y !== undefined) decls.push(['top', `${override.y}px`]);
   }
-  decls.push(...axisDeclarations('width', override.width, parentDirection));
-  decls.push(...axisDeclarations('height', override.height, parentDirection));
+  decls.push(...axisDeclarations('width', override.width, parentDirection, context));
+  decls.push(...axisDeclarations('height', override.height, parentDirection, context));
   return mergeDeclarations([decls]);
 }
 
-function spacingDeclarations(property: 'padding' | 'margin', value: Spacing): [string, string][] {
-  if (typeof value === 'string') return [[property, substituteRefs(value)]];
+function spacingDeclarations(
+  property: 'padding' | 'margin',
+  value: Spacing,
+  context?: SubstituteContext,
+): [string, string][] {
+  if (typeof value === 'string') return [[property, substituteRefs(value, context)]];
   return (['top', 'right', 'bottom', 'left'] as const).flatMap((side) => {
     const item = value[side];
-    return item ? [[`${property}-${side}`, substituteRefs(item)] as [string, string]] : [];
+    return item
+      ? [[`${property}-${side}`, substituteRefs(item, context)] as [string, string]]
+      : [];
   });
 }
 
@@ -406,6 +427,7 @@ function axisDeclarations(
   axis: 'width' | 'height',
   size: AxisSize | undefined,
   parentDirection: 'row' | 'column' | undefined,
+  context?: SubstituteContext,
 ): [string, string][] {
   if (!size) return [];
   const decls: [string, string][] = [];
@@ -420,20 +442,26 @@ function axisDeclarations(
       decls.push(['align-self', 'stretch'], [axis, 'auto']);
     } else decls.push([axis, '100%']);
   } else if (size.size !== undefined) {
-    decls.push([axis, formatSize(size.size)], ['flex', '0 0 auto']);
+    decls.push([axis, formatSize(size.size, context)], ['flex', '0 0 auto']);
   }
   if (size.min !== undefined) {
-    decls.push([axis === 'width' ? 'min-width' : 'min-height', formatSize(size.min)]);
+    decls.push([
+      axis === 'width' ? 'min-width' : 'min-height',
+      formatSize(size.min, context),
+    ]);
   }
   if (size.max !== undefined) {
-    decls.push([axis === 'width' ? 'max-width' : 'max-height', formatSize(size.max)]);
+    decls.push([
+      axis === 'width' ? 'max-width' : 'max-height',
+      formatSize(size.max, context),
+    ]);
   }
   return decls;
 }
 
-function formatSize(value: SizeValue): string {
+function formatSize(value: SizeValue, context?: SubstituteContext): string {
   if (typeof value === 'number') return `${value}px`;
-  if (typeof value === 'string') return substituteRefs(value);
+  if (typeof value === 'string') return substituteRefs(value, context);
   return `${value.value}%`;
 }
 

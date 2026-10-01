@@ -52,6 +52,7 @@ export function createDocumentStore(
       doc.getMap('fonts'),
       doc.getMap('styles'),
       doc.getMap('tokenInterface'),
+      doc.getMap('componentTokens'),
     ],
     {
       trackedOrigins: new Set([COMMAND_ORIGIN]),

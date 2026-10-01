@@ -12,8 +12,28 @@ import { assertValueMatches } from './assertions.js';
 import { validateDataContracts } from './data-contracts.js';
 import { validateDefinitions } from './definitions.js';
 import { exposedFields, validateExposedContracts } from './catalog-exposed.js';
-import { validateLibraries, validateTree } from './tree.js';
+import { readTokenTree } from '../token-tree.js';
+import { validateLibraries, validateTree, type ValidateOptions } from './tree.js';
 import { validateDocumentFile } from './schema.js';
+
+function catalogValidateOptions(byId: Map<string, DocumentFile>): ValidateOptions {
+  const globalTokenPaths = new Set<string>();
+  for (const file of byId.values()) {
+    if (!file.tokens || !Object.keys(file.tokens).length) continue;
+    for (const token of readTokenTree(file.tokens).tokens.values()) {
+      globalTokenPaths.add(token.path);
+    }
+  }
+  return {
+    resolveKind: (componentId) => byId.get(componentId)?.kind,
+    globalTokenPaths,
+    resolveComponentTokenPaths: (documentId) => {
+      const tokens = byId.get(documentId)?.componentTokens;
+      if (!tokens) return undefined;
+      return new Set(Object.keys(tokens));
+    },
+  };
+}
 
 /** Schema, nesting, and — when every file is passed together — instance targets. */
 export function validateCatalog(files: readonly unknown[]): DocumentFile[] {
@@ -25,13 +45,12 @@ export function validateCatalog(files: readonly unknown[]): DocumentFile[] {
     }
     byId.set(document.id, document);
   }
+  const catalogOptions = catalogValidateOptions(byId);
   for (const document of documents) {
     const flat = toFlat(document);
     validateDefinitions(flat);
-    validateLibraries(flat);
-    validateTree(flat, {
-      resolveKind: (componentId) => byId.get(componentId)?.kind,
-    });
+    validateLibraries(flat, catalogOptions);
+    validateTree(flat, catalogOptions);
     validateExposedContracts(document, byId);
     validateDataContracts(flat, byId);
     validateVariantContracts(document, byId);
@@ -61,10 +80,8 @@ function validateVariantContracts(
     delete validationDoc.variantLabels;
     delete validationDoc.previewData;
     validateDefinitions(validationDoc);
-    validateLibraries(validationDoc);
-    validateTree(validationDoc, {
-      resolveKind: (componentId) => catalog.get(componentId)?.kind,
-    });
+    validateLibraries(validationDoc, catalogValidateOptions(catalog));
+    validateTree(validationDoc, catalogValidateOptions(catalog));
     validateDataContracts(validationDoc, catalog);
     validateInstanceOverrides(validationDoc, catalog);
   }

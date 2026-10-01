@@ -4,22 +4,31 @@
   "name": "Card",
   "kind": "component",
   "fields": [
-    { "name": "eyebrow", "type": "text" },
-    { "name": "title", "type": "text" },
-    { "name": "body", "type": "text" }
+    {
+      "name": "eyebrow",
+      "type": "text"
+    },
+    {
+      "name": "title",
+      "type": "text"
+    },
+    {
+      "name": "body",
+      "type": "text"
+    }
   ],
   "tokenInterface": {
     "reads": [
-      "card.color.bg",
-      "card.color.border",
-      "card.gap",
-      "card.padding",
-      "card.radius",
-      "card.shadow",
       "color.accent.default",
+      "color.bg.canvas",
+      "color.border.default",
       "color.text.primary",
       "color.text.secondary",
+      "radius.lg",
+      "shadow.md",
       "space.0",
+      "space.gap.md",
+      "space.inset.lg",
       "type.body",
       "type.caption",
       "type.title"
@@ -27,10 +36,10 @@
   },
   "styles": {
     "declarations": {
-      "background": "{card.color.bg}",
-      "border": "1px solid {card.color.border}",
-      "borderRadius": "{card.radius}",
-      "boxShadow": "{card.shadow}"
+      "background": "{color.bg}",
+      "border": "1px solid {color.border}",
+      "borderRadius": "{shape.radius}",
+      "boxShadow": "{elevation.shadow}"
     },
     "children": {
       "body": {
@@ -65,30 +74,75 @@
     "layout": {
       "direction": "column",
       "align": "stretch",
-      "gap": "{card.gap}",
-      "padding": "{card.padding}",
-      "width": { "mode": "fill" },
-      "height": { "mode": "hug" }
+      "gap": "{layout.gap}",
+      "padding": "{layout.padding}",
+      "width": {
+        "mode": "fill"
+      },
+      "height": {
+        "mode": "hug"
+      }
     },
     "children": [
       {
         "id": "eyebrow",
         "type": "text",
         "tag": "p",
-        "bindings": [{ "field": "eyebrow", "target": "text" }]
+        "bindings": [
+          {
+            "field": "eyebrow",
+            "target": "text"
+          }
+        ]
       },
       {
         "id": "title",
         "type": "text",
         "tag": "h2",
-        "bindings": [{ "field": "title", "target": "text" }]
+        "bindings": [
+          {
+            "field": "title",
+            "target": "text"
+          }
+        ]
       },
       {
         "id": "body",
         "type": "text",
         "tag": "p",
-        "bindings": [{ "field": "body", "target": "text" }]
+        "bindings": [
+          {
+            "field": "body",
+            "target": "text"
+          }
+        ]
       }
     ]
+  },
+  "componentTokens": {
+    "layout.padding": {
+      "type": "dimension",
+      "value": "{space.inset.lg}"
+    },
+    "layout.gap": {
+      "type": "dimension",
+      "value": "{space.gap.md}"
+    },
+    "shape.radius": {
+      "type": "dimension",
+      "value": "{radius.lg}"
+    },
+    "elevation.shadow": {
+      "type": "shadow",
+      "value": "{shadow.md}"
+    },
+    "color.bg": {
+      "type": "color",
+      "value": "{color.bg.canvas}"
+    },
+    "color.border": {
+      "type": "color",
+      "value": "{color.border.default}"
+    }
   }
 }

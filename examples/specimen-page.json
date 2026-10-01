@@ -4,7 +4,10 @@
   "name": "Specimen",
   "kind": "page",
   "settings": {
-    "artboard": { "width": 1040, "height": 860 }
+    "artboard": {
+      "width": 1040,
+      "height": 860
+    }
   },
   "root": {
     "id": "root",

@@ -1,7 +1,7 @@
 import {
   DocumentError,
-  resolveChildFieldDefinition,
   toNested,
+  type CommandContext,
   type DefaultKind,
   type FlatDocument,
 } from '@facadeur/core';
@@ -92,10 +92,9 @@ export function bindSessionDocumentStores(deps: {
 export function bootstrapSessionDocumentCatalog(options: {
   documents: EditorSessionOptions['documents'];
   designId: string;
-  resolveKind: (componentId: string) => string | undefined;
+  commandContext: CommandContext;
   assetStores: Map<string, YjsDocumentStore>;
   order: string[];
-  catalogNestedDocuments: () => Map<string, ReturnType<typeof toNested>>;
   syncKinds: () => void;
   watch: (store: YjsDocumentStore, source: 'asset' | 'design') => void;
   designStore: YjsDocumentStore;
@@ -106,10 +105,9 @@ export function bootstrapSessionDocumentCatalog(options: {
   const {
     documents,
     designId,
-    resolveKind,
+    commandContext,
     assetStores,
     order,
-    catalogNestedDocuments,
     syncKinds,
     watch,
     designStore,
@@ -121,11 +119,9 @@ export function bootstrapSessionDocumentCatalog(options: {
   registerSessionAssetDocuments({
     documents,
     designId,
-    resolveKind,
+    commandContext,
     assetStores,
     order,
-    resolveChildField: (node, path, field) =>
-      resolveChildFieldDefinition(node, path, field, catalogNestedDocuments()),
   });
   syncKinds();
   watch(designStore, 'design');

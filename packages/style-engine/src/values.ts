@@ -1,10 +1,20 @@
-import { isFontFamilyRef } from '@facadeur/core';
+import {
+  componentTokenPublicPath,
+  globalRefInComponentTokenDefault,
+  isFontFamilyRef,
+  type ComponentToken,
+} from '@facadeur/core';
 import {
   fontCustomProperty,
   tokenCustomProperty,
   typographyCustomProperty,
 } from '@facadeur/tokens';
 import { toKebab } from './controller.js';
+
+export interface SubstituteContext {
+  documentId: string;
+  componentTokens?: Record<string, ComponentToken>;
+}
 
 const TYPOGRAPHY_FIELDS = [
   'fontFamily',
@@ -16,12 +26,23 @@ const TYPOGRAPHY_FIELDS = [
 
 const SINGLE_REF = /^\{([a-z][a-z0-9]*(?:\.[a-z0-9]+)*)\}$/;
 
+function componentTokenFallback(value: string): string {
+  const globalRef = globalRefInComponentTokenDefault(value);
+  if (globalRef) return `var(${tokenCustomProperty(globalRef)})`;
+  return value;
+}
+
 /** Replace `{token.path}` and `{font.id}` with `var(--…)`. */
-export function substituteRefs(value: string): string {
+export function substituteRefs(value: string, context?: SubstituteContext): string {
   return value.replace(/\{([a-z][a-z0-9]*(?:\.[a-z0-9]+)*)\}/g, (_match, path: string) => {
     if (isFontFamilyRef(path)) {
       const id = path.split('.')[1];
       return `var(${fontCustomProperty(id ?? path)})`;
+    }
+    if (context?.componentTokens?.[path]) {
+      const publicPath = componentTokenPublicPath(context.documentId, path);
+      const fallback = componentTokenFallback(context.componentTokens[path].value);
+      return `var(${tokenCustomProperty(publicPath)}, ${fallback})`;
     }
     return `var(${tokenCustomProperty(path)})`;
   });
@@ -34,6 +55,7 @@ export function substituteRefs(value: string): string {
  */
 export function expandDeclarations(
   declarations: Record<string, string> | undefined,
+  context?: SubstituteContext,
 ): [string, string][] {
   if (!declarations) return [];
   const out: [string, string][] = [];
@@ -45,7 +67,7 @@ export function expandDeclarations(
       }
       continue;
     }
-    out.push([toKebab(property), substituteRefs(value)]);
+    out.push([toKebab(property), substituteRefs(value, context)]);
   }
   return out;
 }
