@@ -5,6 +5,7 @@ import {
   type FlatDocument,
   type PreviewData,
 } from '@facadeur/core';
+import { parseFieldValue } from './field-values.js';
 
 export type PreviewValueSource = 'variant' | 'base' | 'legacy' | 'missing';
 
@@ -100,94 +101,5 @@ export function parsePreviewFieldValue(
   field: FieldDefinition,
   raw: string,
 ): FieldValue | undefined {
-  if (['text', 'richText', 'image', 'link', 'token'].includes(field.type)) return raw;
-  if (raw.trim() === '') return undefined;
-  if (field.type === 'number') {
-    const value = Number(raw);
-    if (!Number.isFinite(value)) throw new Error(`${field.name} must be a number`);
-    return value;
-  }
-  if (field.type === 'boolean') return raw === 'true';
-  if (field.type === 'array' || field.type === 'object') {
-    let value: unknown;
-    try {
-      value = JSON.parse(raw);
-    } catch {
-      throw new Error(`${field.name} must be valid JSON`);
-    }
-    if (!isFieldValue(value)) throw new Error(`${field.name} contains an unsupported JSON value`);
-    if (field.type === 'array' && !Array.isArray(value))
-      throw new Error(`${field.name} must be a JSON array`);
-    if (field.type === 'object' && (!isRecord(value) || Array.isArray(value))) {
-      throw new Error(`${field.name} must be a JSON object`);
-    }
-    assertTypedValue(field, value);
-    return value;
-  }
-  if (field.type === 'enum' && !field.options?.includes(raw)) {
-    throw new Error(`${field.name} must be one of ${field.options?.join(', ')}`);
-  }
-  return raw;
-}
-
-function assertTypedValue(field: FieldDefinition, value: FieldValue): void {
-  if (field.type === 'array') {
-    if (!Array.isArray(value)) throw new Error(`${field.name} must be a JSON array`);
-    if (field.items) {
-      for (const item of value) {
-        assertTypedValue(
-          {
-            name: `${field.name}[]`,
-            type: field.items.type,
-            ...(field.items.options ? { options: field.items.options } : {}),
-            ...(field.items.fields
-              ? { items: { type: field.items.type, fields: field.items.fields } }
-              : {}),
-          },
-          item,
-        );
-      }
-    }
-    return;
-  }
-  if (field.type === 'object') {
-    if (!isRecord(value)) throw new Error(`${field.name} must be a JSON object`);
-    for (const nested of field.items?.fields ?? []) {
-      const nestedValue = value[nested.name];
-      if (nestedValue === undefined) {
-        if (nested.required) throw new Error(`${field.name} is missing "${nested.name}"`);
-      } else {
-        assertTypedValue(nested, nestedValue);
-      }
-    }
-    return;
-  }
-  if (field.type === 'boolean' && typeof value !== 'boolean') {
-    throw new Error(`${field.name} must be a boolean`);
-  }
-  if (field.type === 'number' && (typeof value !== 'number' || !Number.isFinite(value))) {
-    throw new Error(`${field.name} must be a number`);
-  }
-  if (field.type === 'enum' && (typeof value !== 'string' || !field.options?.includes(value))) {
-    throw new Error(`${field.name} must be one of ${field.options?.join(', ')}`);
-  }
-  if (
-    field.type !== 'boolean' &&
-    field.type !== 'number' &&
-    field.type !== 'enum' &&
-    typeof value !== 'string'
-  ) {
-    throw new Error(`${field.name} must be a string`);
-  }
-}
-
-function isFieldValue(value: unknown): value is FieldValue {
-  if (typeof value === 'string' || typeof value === 'boolean') return true;
-  if (typeof value === 'number') return Number.isFinite(value);
-  if (Array.isArray(value)) return value.every(isFieldValue);
-  return isRecord(value) && Object.values(value).every(isFieldValue);
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+  return parseFieldValue(field, raw, { trimStrings: false, empty: 'preserve' });
 }

@@ -12,6 +12,7 @@ export function VariantRulesEditor({
   variantLabels,
   onChange,
   onInvalid,
+  onClearSelection,
 }: {
   node: Extract<FlatNode, { type: 'instance' }>;
   fields: FieldDefinition[];
@@ -19,9 +20,11 @@ export function VariantRulesEditor({
   variantLabels?: Readonly<Record<string, string>>;
   onChange: (value: VariantRule[] | null) => void;
   onInvalid?: (message: string) => void;
+  onClearSelection?: () => void;
 }) {
   const paths = fieldPathOptions(fields);
   const rules = node.variantRules ?? [];
+  const hasNamedVariants = (presets ?? []).some((preset) => preset.name !== 'default');
   const variantOptions = [
     { value: 'default', label: variantLabels?.default?.trim() || 'Default' },
     ...(presets ?? [])
@@ -60,10 +63,23 @@ export function VariantRulesEditor({
 
   return (
     <Section title="Variant rules" collapsible defaultOpen>
+      <p className="meta">
+        The first matching rule selects the variant. If none matches, the base variant is used.
+      </p>
       {node.variants?.variant ? (
-        <p className="meta">Explicit selection takes priority; clear it to use rules.</p>
+        <>
+          <p className="meta">Explicit selection takes priority; clear it to use rules.</p>
+          {onClearSelection ? (
+            <button type="button" className="text-button" onClick={() => onClearSelection()}>
+              Use variant rules
+            </button>
+          ) : null}
+        </>
       ) : null}
       {rules.length === 0 ? <p className="meta">No instance variant rules yet.</p> : null}
+      {!hasNamedVariants ? (
+        <p className="meta">Create a named variant on the component before adding rules.</p>
+      ) : null}
       <Stack gap={12}>
         {rules.map((rule, index) => (
           <div key={`${index}-${rule.variant}`} className="variant-rule-card">
@@ -72,6 +88,7 @@ export function VariantRulesEditor({
               paths={paths}
               title={`Rule ${index + 1} condition`}
               namePrefix={`variant-rule-${index}-`}
+              removable={false}
               onChange={(when) => {
                 if (when) patchRule(index, { when });
               }}
@@ -123,7 +140,7 @@ export function VariantRulesEditor({
         type="button"
         className="text-button"
         name="add-variant-rule"
-        disabled={paths.length === 0 || variantOptions.length === 0}
+        disabled={paths.length === 0 || !hasNamedVariants}
         onClick={addRule}
       >
         Add variant rule

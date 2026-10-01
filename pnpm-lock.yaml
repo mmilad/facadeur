@@ -47,6 +47,9 @@ importers:
 
   apps/editor:
     dependencies:
+      '@facadeur/codegen-react':
+        specifier: workspace:*
+        version: link:../../packages/codegen-react
       '@facadeur/core':
         specifier: workspace:*
         version: link:../../packages/core

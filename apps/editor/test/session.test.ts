@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import * as files from '../src/domain/files.js';
-import { readTokenTree, type DocumentFile, validateCatalog } from '@facadeur/core';
+import {
+  readTokenTree,
+  resolvePreviewData,
+  type DocumentFile,
+  validateCatalog,
+} from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import button from '../../../examples/button.json';
 import card from '../../../examples/card.json';
@@ -31,6 +36,13 @@ const variantComponent: DocumentFile = {
   },
 };
 
+const inheritedVariantComponent: DocumentFile = {
+  ...variantComponent,
+  id: 'inherited-variant-component',
+  name: 'Inherited variant component',
+  variants: [{ name: 'default' }, { name: 'compact' }],
+};
+
 const documents = validateCatalog([
   button,
   link,
@@ -43,9 +55,9 @@ const documents = validateCatalog([
   variantComponent,
 ]);
 
-function session() {
+function session(extraDocuments: readonly DocumentFile[] = []) {
   return createEditorSession({
-    documents,
+    documents: [...documents, ...extraDocuments],
     design: createProjectTemplateDocument(),
     sources: { specimen: 'specimen-page.json' },
   });
@@ -123,6 +135,49 @@ describe('editor session', () => {
     expect(
       editor.boardDocuments().find((document) => document.id === 'variant-component')?.variants,
     ).toEqual([{ name: 'default' }, { name: 'compact' }]);
+  });
+
+  it('flows base preview changes through inherited variants and restores overrides with undo', () => {
+    const editor = session([inheritedVariantComponent]);
+    editor.openAsset('inherited-variant-component', 'root');
+    editor.setActiveVariant('compact');
+
+    editor.execute({ type: 'setPreviewData', previewData: { fields: { label: 'Changed base' } } });
+    expect(resolvePreviewData(editor.getSnapshot().document, 'compact').label).toBe('Changed base');
+
+    editor.execute({
+      type: 'setPreviewData',
+      previewData: {
+        fields: { label: 'Changed base' },
+        variants: { compact: { label: 'Local override' } },
+      },
+    });
+    expect(resolvePreviewData(editor.getSnapshot().document, 'compact').label).toBe(
+      'Local override',
+    );
+
+    editor.execute({
+      type: 'setPreviewData',
+      previewData: {
+        fields: { label: 'Newest base' },
+        variants: { compact: { label: 'Local override' } },
+      },
+    });
+    expect(resolvePreviewData(editor.getSnapshot().document, 'compact').label).toBe(
+      'Local override',
+    );
+
+    editor.execute({ type: 'setPreviewData', previewData: { fields: { label: 'Newest base' } } });
+    expect(resolvePreviewData(editor.getSnapshot().document, 'compact').label).toBe('Newest base');
+
+    editor.undo();
+    expect(resolvePreviewData(editor.getSnapshot().document, 'compact').label).toBe(
+      'Local override',
+    );
+    editor.undo();
+    expect(resolvePreviewData(editor.getSnapshot().document, 'compact').label).toBe(
+      'Local override',
+    );
   });
 
   it('migrates legacy variant styles when editing the active variant', () => {

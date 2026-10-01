@@ -9,6 +9,7 @@ export function InstanceOverridesControl({
   masterName,
   fields,
   variants,
+  variantLabels,
   fieldOverrides,
   fieldBindings = undefined,
   dataFields = [],
@@ -22,6 +23,7 @@ export function InstanceOverridesControl({
   masterName: string;
   fields: FieldDefinition[];
   variants: VariantAxis[];
+  variantLabels?: Readonly<Record<string, string>>;
   fieldOverrides: Record<string, FieldValue> | undefined;
   fieldBindings?: Record<string, string> | undefined;
   dataFields?: FieldDefinition[];
@@ -75,13 +77,26 @@ export function InstanceOverridesControl({
       {variants.map((axis) => {
         const current = variantOverrides?.[axis.name] ?? '';
         return (
-          <Field key={axis.name} label={axis.name}>
+          <Field key={axis.name} label={axis.name === 'variant' ? 'Variant selection' : axis.name}>
             <Select
               name={`variant-${axis.name}`}
+              aria-label={axis.name === 'variant' ? 'Variant selection' : axis.name}
               value={current}
               options={[
-                { value: '', label: `Default (${axis.default ?? axis.values[0]})` },
-                ...axis.values.map((value) => ({ value, label: value })),
+                {
+                  value: '',
+                  label:
+                    axis.name === 'variant'
+                      ? 'Automatic (use rules)'
+                      : `Default (${axis.default ?? axis.values[0]})`,
+                },
+                ...axis.values.map((value) => ({
+                  value,
+                  label:
+                    axis.name === 'variant'
+                      ? (variantLabels?.[value] ?? (value === 'default' ? 'Default' : value))
+                      : value,
+                })),
               ]}
               onCommit={(next) => onSetVariant(axis.name, next || null)}
             />

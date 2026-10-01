@@ -18,9 +18,18 @@ function node(variantRules: VariantRule[] = []) {
 describe('variant rules editor', () => {
   afterEach(() => cleanup());
 
+  it('does not author variant rules for a component without named variants', () => {
+    render(
+      <VariantRulesEditor node={node()} fields={fields} presets={[]} onChange={() => undefined} />,
+    );
+    expect(screen.getByRole('button', { name: 'Add variant rule' })).toBeDisabled();
+    expect(screen.getByText(/Create a named variant/)).toBeVisible();
+  });
+
   it('adds a rule with the first condition and default variant', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
+    const onClearSelection = vi.fn();
     const { rerender } = render(
       <VariantRulesEditor
         node={{ ...node(), variants: { variant: 'wide' } }}
@@ -28,12 +37,15 @@ describe('variant rules editor', () => {
         presets={presets}
         variantLabels={{ default: 'Base', compact: 'Compact', wide: 'Wide' }}
         onChange={onChange}
+        onClearSelection={onClearSelection}
       />,
     );
 
     expect(
       screen.getByText('Explicit selection takes priority; clear it to use rules.'),
     ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Use variant rules' }));
+    expect(onClearSelection).toHaveBeenCalledExactlyOnceWith();
 
     await user.click(screen.getByRole('button', { name: 'Add variant rule' }));
 

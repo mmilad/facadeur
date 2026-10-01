@@ -1,8 +1,8 @@
 import type { Binding, EventBinding, FlatNode } from '@facadeur/core';
 import { useMemo } from 'react';
+import { codePreview } from '../../domain/code-preview.js';
 import type { EditorSession, EditorSnapshot } from '../../domain/session.js';
 import { variantLabel } from '../../domain/variant-edit.js';
-import { generateReact } from '../../../../../packages/codegen-react/src/generate.js';
 import { BindingsEditorControl, EventBindingsEditorControl } from '../controls/data/index.js';
 import { Field, Select } from '../form/index.js';
 import { ComponentEvents } from '../sidebar/properties/content/ComponentEvents.js';
@@ -27,7 +27,15 @@ export function SchemaStage({ session, snap }: { session: EditorSession; snap: E
     : elementDocument.nodes[elementDocument.rootId];
   const selectedElement = selectedNode?.type === 'instance' ? undefined : selectedNode;
   const hasSchema = ownsComponentFeatures(document.kind);
-  const generatedCode = useMemo(() => codePreview(session, snap), [session, snap]);
+  const generatedCode = useMemo(
+    () =>
+      codePreview({
+        documents: session.boardDocuments(),
+        design: session.designInput(),
+        documentId: document.id,
+      }),
+    [session, snap],
+  );
 
   return (
     <section className="schema-stage eu-form" aria-label="Schema" data-testid="schema-stage">
@@ -106,27 +114,6 @@ export function SchemaStage({ session, snap }: { session: EditorSession; snap: E
       </div>
     </section>
   );
-}
-
-function codePreview(
-  session: EditorSession,
-  snap: EditorSnapshot,
-): { source?: string; error?: string } {
-  try {
-    const files = generateReact({
-      documents: session.boardDocuments(),
-      design: session.designInput(),
-    }).ui;
-    const source = files.find(
-      (file) =>
-        file.path.startsWith('components/') &&
-        file.contents.includes(`data-component='${snap.document.id}'`),
-    )?.contents;
-    if (!source) return { error: `No generated component was found for "${snap.document.id}".` };
-    return { source };
-  } catch (error) {
-    return { error: error instanceof Error ? error.message : 'Could not generate React preview.' };
-  }
 }
 
 function ElementBindings({

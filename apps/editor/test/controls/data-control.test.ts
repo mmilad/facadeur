@@ -49,23 +49,50 @@ describe('data control helpers', () => {
   it('parses instance field values', () => {
     expect(parseInstanceFieldValue({ name: 'n', type: 'number' }, '3')).toBe(3);
     expect(() => parseInstanceFieldValue({ name: 'n', type: 'number' }, 'x')).toThrow();
-    expect(parseInstanceFieldValue({ name: 'items', type: 'array' }, '[{"kind":"input"}]')).toEqual([
-      { kind: 'input' },
-    ]);
+    expect(parseInstanceFieldValue({ name: 'items', type: 'array' }, '[{"kind":"input"}]')).toEqual(
+      [{ kind: 'input' }],
+    );
     expect(parseInstanceFieldValue({ name: 'data', type: 'object' }, '{"title":"Hello"}')).toEqual({
       title: 'Hello',
     });
-    expect(() => parseInstanceFieldValue({ name: 'items', type: 'array' }, '{"kind":"input"}')).toThrow(
-      /array/,
-    );
-    expect(() => parseInstanceFieldValue({ name: 'data', type: 'object' }, '{"title":null}')).toThrow(
-      /unsupported JSON/,
-    );
+    expect(() =>
+      parseInstanceFieldValue({ name: 'items', type: 'array' }, '{"kind":"input"}'),
+    ).toThrow(/array/);
+    expect(() =>
+      parseInstanceFieldValue({ name: 'data', type: 'object' }, '{"title":null}'),
+    ).toThrow(/unsupported JSON/);
   });
 
   it('humanizes field names without changing their stored keys', () => {
     expect(fieldDisplayLabel('hasIcon')).toBe('Show leading icon');
     expect(fieldDisplayLabel('control_value')).toBe('Control value');
+  });
+
+  it('validates instance values against the same nested contract as preview data', () => {
+    const field: FieldDefinition = {
+      name: 'items',
+      type: 'array',
+      items: {
+        type: 'object',
+        fields: [
+          { name: 'count', type: 'number', required: true },
+          { name: 'kind', type: 'enum', options: ['input', 'toggle'], required: true },
+        ],
+      },
+    };
+    expect(parseInstanceFieldValue(field, '[{"count":0,"kind":"input"}]')).toEqual([
+      { count: 0, kind: 'input' },
+    ]);
+    expect(() => parseInstanceFieldValue(field, '[{"count":"0","kind":"input"}]')).toThrow(
+      /number/,
+    );
+    expect(() => parseInstanceFieldValue(field, '[{"count":0,"kind":"unknown"}]')).toThrow(
+      /one of/,
+    );
+    expect(() => parseInstanceFieldValue(field, '[{"kind":"input"}]')).toThrow(/missing/);
+    expect(() => parseInstanceFieldValue({ name: 'enabled', type: 'boolean' }, 'nope')).toThrow();
+    expect(parseInstanceFieldValue({ name: 'enabled', type: 'boolean' }, 'false')).toBe(false);
+    expect(parseInstanceFieldValue({ name: 'label', type: 'text' }, '  Label  ')).toBe('  Label  ');
   });
 });
 

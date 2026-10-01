@@ -113,6 +113,9 @@ export function ContentPanel({
             fields={dataFieldsForNode(snap.document, node.id)}
             presets={snap.componentTarget?.variantPresets}
             variantLabels={snap.componentTarget?.variantLabels}
+            onClearSelection={() =>
+              session.execute({ type: 'setVariant', nodeId: node.id, axis: 'variant', value: null })
+            }
             onChange={(value) =>
               session.execute({ type: 'setProp', nodeId: node.id, prop: 'variantRules', value })
             }
@@ -160,7 +163,13 @@ function InstanceFields({
     <InstanceOverridesControl
       masterName={target.name}
       fields={snap.componentFields}
-      variants={target.variants}
+      variants={[
+        ...target.variants,
+        ...(snap.componentVariants.length > 1
+          ? [{ name: 'variant', values: snap.componentVariants.map((variant) => variant.name) }]
+          : []),
+      ]}
+      variantLabels={target.variantLabels}
       fieldOverrides={node.fields}
       fieldBindings={node.fieldBindings}
       dataFields={dataFieldsForNode(snap.document, node.id)}

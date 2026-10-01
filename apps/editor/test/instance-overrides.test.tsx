@@ -2,13 +2,37 @@
  * @vitest-environment jsdom
  */
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { InstanceOverridesControl } from '../src/ui/controls/instance/InstanceOverridesControl.js';
 
 describe('instance override editor', () => {
   afterEach(() => cleanup());
+
+  it('selects named variants by label and can return to automatic rules', async () => {
+    const onSetVariant = vi.fn();
+    const { container } = render(
+      <InstanceOverridesControl
+        masterName="Input"
+        fields={[]}
+        variants={[{ name: 'variant', values: ['default', 'variant-1'] }]}
+        variantLabels={{ default: 'Base Input', 'variant-1': 'Checkbox' }}
+        fieldOverrides={undefined}
+        variantOverrides={{ variant: 'variant-1' }}
+        onOpenMaster={() => undefined}
+        onSetField={() => undefined}
+        onSetVariant={onSetVariant}
+      />,
+    );
+    expect(screen.getByRole('option', { name: 'Base Input' })).toBeInTheDocument();
+    const select = container.querySelector('select[name="variant-variant"]')!;
+    const user = userEvent.setup();
+    await user.selectOptions(select, 'default');
+    expect(onSetVariant).toHaveBeenLastCalledWith('variant', 'default');
+    await user.selectOptions(select, '');
+    expect(onSetVariant).toHaveBeenLastCalledWith('variant', null);
+  });
 
   it('edits array overrides as structured JSON instead of a string', () => {
     const onSetField = vi.fn();

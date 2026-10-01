@@ -5,6 +5,7 @@ import {
   patchPreviewData,
   previewValueSource,
 } from '../../domain/preview-data.js';
+import { variantLabel } from '../../domain/variant-edit.js';
 import { fieldDisplayLabel } from '../controls/data/field-label.js';
 import { Field, NumberInput, Select, Stack, TextArea, TextInput, Toggle } from '../form/index.js';
 
@@ -18,6 +19,7 @@ export function PreviewDataStage({
 }) {
   const document = snap.document;
   const values = resolvePreviewData(document, snap.activeVariantName);
+  const baseLabel = variantLabel(document, 'default');
 
   function write(field: FieldDefinition, value: FieldValue | undefined) {
     session.execute({
@@ -64,6 +66,8 @@ export function PreviewDataStage({
                     field={field}
                     value={values[field.name]}
                     source={previewValueSource(document, field, snap.activeVariantName)}
+                    variantName={snap.activeVariantName}
+                    baseLabel={baseLabel}
                     canClear={hasExplicitPreviewValue(
                       document.previewData,
                       snap.activeVariantName,
@@ -90,6 +94,8 @@ function PreviewField({
   field,
   value,
   source,
+  variantName,
+  baseLabel,
   canClear,
   onChange,
   onInvalid,
@@ -97,21 +103,29 @@ function PreviewField({
   field: FieldDefinition;
   value: FieldValue | undefined;
   source: ReturnType<typeof previewValueSource>;
+  variantName: string | null;
+  baseLabel: string;
   canClear: boolean;
   onChange: (value: FieldValue | undefined) => void;
   onInvalid: (message: string) => void;
 }) {
   const label = fieldDisplayLabel(field.name);
-  const hint = `${sourceLabel(source)}${field.required ? ' · Required' : ''}`;
+  const hint = `${sourceLabel(source, variantName, baseLabel)}${field.required ? ' · Required' : ''}`;
+  const status = (
+    <span className="eu-field__hint" aria-label={hint}>
+      {hint}
+    </span>
+  );
   const clear = canClear ? (
     <button type="button" className="text-button" onClick={() => onChange(undefined)}>
-      Clear override
+      {variantName ? `Reset to ${baseLabel}` : 'Clear preview value'}
     </button>
   ) : null;
 
   if (field.type === 'boolean') {
     return (
-      <Field label={label} hint={hint} required={field.required}>
+      <Field label={label} required={field.required}>
+        {status}
         <div className="eu-form-row">
           <Toggle
             name={`preview-${field.name}`}
@@ -129,7 +143,8 @@ function PreviewField({
 
   if (field.type === 'enum') {
     return (
-      <Field label={label} hint={hint} required={field.required}>
+      <Field label={label} required={field.required}>
+        {status}
         <div className="eu-form-row">
           <Select
             name={`preview-${field.name}`}
@@ -156,7 +171,8 @@ function PreviewField({
 
   if (field.type === 'number') {
     return (
-      <Field label={label} hint={hint} required={field.required}>
+      <Field label={label} required={field.required}>
+        {status}
         <div className="eu-form-row">
           <NumberInput
             name={`preview-${field.name}`}
@@ -173,7 +189,8 @@ function PreviewField({
 
   if (field.type === 'array' || field.type === 'object') {
     return (
-      <Field label={label} hint={hint} required={field.required}>
+      <Field label={label} required={field.required}>
+        {status}
         <div className="eu-form-row eu-form-row-top">
           <TextArea
             name={`preview-${field.name}`}
@@ -197,7 +214,8 @@ function PreviewField({
   }
 
   return (
-    <Field label={label} hint={hint} required={field.required}>
+    <Field label={label} required={field.required}>
+      {status}
       <div className="eu-form-row">
         <TextInput
           name={`preview-${field.name}`}
@@ -216,14 +234,18 @@ function MissingPreviewHint() {
   return <span className="eu-field__hint">Required preview value is missing.</span>;
 }
 
-function sourceLabel(source: ReturnType<typeof previewValueSource>): string {
+function sourceLabel(
+  source: ReturnType<typeof previewValueSource>,
+  variantName: string | null,
+  baseLabel: string,
+): string {
   switch (source) {
     case 'variant':
       return 'Variant override';
     case 'base':
-      return 'Base preview value';
+      return variantName ? `Inherited from ${baseLabel}` : 'Base preview value';
     case 'legacy':
-      return 'Legacy default';
+      return variantName ? `Inherited from ${baseLabel}` : 'Legacy default';
     default:
       return 'Missing preview value';
   }

@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@facadeur/codegen-react": "workspace:*",
     "@facadeur/core": "workspace:*",
     "@facadeur/renderer-dom": "workspace:*",
     "@facadeur/store-yjs": "workspace:*",

@@ -5,6 +5,7 @@ import {
   type FieldValue,
   type VariantAxis,
 } from '@facadeur/core';
+import { parseFieldValue } from './field-values.js';
 
 /** Types the editor can create. `richText` stays in the schema for later. */
 export const creatableFieldTypes = [
@@ -145,35 +146,7 @@ function draftDefault(
   booleanDefault: boolean,
 ): FieldValue | undefined {
   if (field.type === 'boolean') return booleanDefault;
-  const text = raw.trim();
-  if (!text) return undefined;
-  if (field.type === 'array' || field.type === 'object') {
-    let value: unknown;
-    try {
-      value = JSON.parse(text);
-    } catch {
-      throw new Error(`${field.name} must be valid JSON`);
-    }
-    if (field.type === 'array' && !Array.isArray(value)) {
-      throw new Error(`${field.name} must be a JSON array`);
-    }
-    if (
-      field.type === 'object' &&
-      (value === null || typeof value !== 'object' || Array.isArray(value))
-    ) {
-      throw new Error(`${field.name} must be a JSON object`);
-    }
-    return value as FieldValue;
-  }
-  if (field.type === 'number') {
-    const value = Number(text);
-    if (!Number.isFinite(value)) throw new Error(`${field.name} must be a number`);
-    return value;
-  }
-  if (field.type === 'enum' && !field.options?.includes(text)) {
-    throw new Error(`${field.name} must be one of ${field.options?.join(', ')}`);
-  }
-  return text;
+  return parseFieldValue(field, raw, { trimStrings: true, empty: 'undefined' });
 }
 
 function cloneField(field: FieldDefinition): FieldDefinition {

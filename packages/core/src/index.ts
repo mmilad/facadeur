@@ -146,5 +146,6 @@ export {
   validateDocumentFile,
   validateLibraries,
   validateTree,
+  assertValueMatches,
   type ValidateOptions,
 } from './validate.js';

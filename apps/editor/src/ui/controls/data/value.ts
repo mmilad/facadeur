@@ -6,6 +6,7 @@ import type {
   FieldValue,
 } from '@facadeur/core';
 import { creatableFieldTypes } from '../../../domain/definitions.js';
+import { parseFieldValue } from '../../../domain/field-values.js';
 
 export const BINDING_TARGET_LABEL: Record<BindingTarget, string> = {
   text: 'Text',
@@ -57,40 +58,9 @@ export function normalizeBindingTargetChange(binding: Binding, target: BindingTa
   return { field: binding.field, target, ...(name ? { name } : {}) };
 }
 
+/** Empty overrides are removed by the control; supplied values follow the shared contract. */
 export function parseInstanceFieldValue(field: FieldDefinition, raw: string): FieldValue {
-  if (field.type === 'number') {
-    const value = Number(raw);
-    if (!Number.isFinite(value)) throw new Error(`${field.name} must be a number`);
-    return value;
-  }
-  if (field.type === 'boolean') return raw === 'true';
-  if (field.type === 'array' || field.type === 'object') {
-    let value: unknown;
-    try {
-      value = JSON.parse(raw);
-    } catch {
-      throw new Error(`${field.name} must be valid JSON`);
-    }
-    if (!isFieldValue(value)) throw new Error(`${field.name} contains an unsupported JSON value`);
-    if (field.type === 'array' && !Array.isArray(value)) {
-      throw new Error(`${field.name} must be a JSON array`);
-    }
-    if (field.type === 'object' && (!isRecord(value) || Array.isArray(value))) {
-      throw new Error(`${field.name} must be a JSON object`);
-    }
-    return value;
-  }
-  return raw;
-}
-
-function isFieldValue(value: unknown): value is FieldValue {
-  if (typeof value === 'string' || typeof value === 'boolean') return true;
-  if (typeof value === 'number') return Number.isFinite(value);
-  if (Array.isArray(value)) return value.every(isFieldValue);
-  if (isRecord(value)) return Object.values(value).every(isFieldValue);
-  return false;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+  const value = parseFieldValue(field, raw, { empty: 'preserve' });
+  if (value === undefined) throw new Error(`${field.name} needs a value`);
+  return value;
 }
