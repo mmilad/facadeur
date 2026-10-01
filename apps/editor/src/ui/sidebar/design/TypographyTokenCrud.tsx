@@ -1,5 +1,5 @@
 import { readTokenTree } from '@facadeur/core';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import {
   assertTypographyTokenPath,
   createDefaultTypographyToken,
@@ -7,7 +7,8 @@ import {
   tokenPathsReferencingTypography,
 } from '../../../domain/typography-edit.js';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
-import { Field, TextInput } from '../../form/index.js';
+import { IconButton } from '../../form/components/shared/IconButton.js';
+import { TokenAddAction } from './TokenAddAction.js';
 
 export function TypographyTokenAddRow({
   session,
@@ -20,42 +21,33 @@ export function TypographyTokenAddRow({
     const indexed = readTokenTree(snap.design.tokens);
     return [...indexed.tokens.keys()];
   }, [snap.design.tokens]);
-  const [newPath, setNewPath] = useState(() => suggestTypographyPath(existingPaths));
+  const newPath = suggestTypographyPath(existingPaths);
 
-  function addTypography() {
+  function addTypography(pathValue: string): string | false {
     try {
-      const path = newPath.trim();
+      const path = pathValue.trim();
       assertTypographyTokenPath(path);
       const indexed = readTokenTree(snap.design.tokens);
       if (indexed.tokens.has(path)) {
         throw new Error(`Typography "${path}" already exists`);
       }
       session.executeDesign({ type: 'setToken', path, token: createDefaultTypographyToken() });
-      setNewPath(suggestTypographyPath([...existingPaths, path]));
+      return suggestTypographyPath([...existingPaths, path]);
     } catch (error) {
       session.setNotice(error instanceof Error ? error.message : 'Invalid typography', 'error');
+      return false;
     }
   }
 
   return (
-    <div className="font-add-row">
-      <Field label="Path">
-        <TextInput
-          name="new-typography-path"
-          value={newPath}
-          placeholder="type.hero"
-          onChange={setNewPath}
-        />
-      </Field>
-      <button
-        type="button"
-        className="text-button"
-        name="add-typography"
-        onClick={() => addTypography()}
-      >
-        Add typography
-      </button>
-    </div>
+    <TokenAddAction
+      label="Add typography token"
+      actionName="add-typography"
+      inputName="new-typography-path"
+      initialPath={newPath}
+      placeholder="type.hero"
+      onAdd={addTypography}
+    />
   );
 }
 
@@ -81,13 +73,21 @@ export function RemoveTypographyTokenButton({
   }
 
   return (
-    <button
-      type="button"
-      className="text-button"
+    <IconButton
+      className="token-action-remove"
+      label={`Remove typography ${path}`}
       name={`remove-typography-${path}`}
       onClick={() => removeTypography()}
     >
-      Remove typography
-    </button>
+      <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+        <path
+          d="M3 5h10m-8 0v8h6V5m-5-2h4l1 2H5l1-2Z"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </IconButton>
   );
 }

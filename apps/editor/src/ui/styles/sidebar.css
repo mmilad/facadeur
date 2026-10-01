@@ -946,30 +946,3 @@ body.is-resizing-inspector {
   margin-bottom: 10px;
   flex: none;
 }
-
-.font-card {
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  margin: 0 0 12px;
-  padding: 8px 10px 4px;
-}
-
-.font-card legend {
-  padding: 0 4px;
-  font-family: var(--mono);
-  font-size: 12px;
-}
-
-.font-add-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 8px 12px;
-  margin-bottom: 12px;
-}
-
-.font-add-row .field {
-  flex: 1;
-  min-width: 160px;
-  margin: 0;
-}

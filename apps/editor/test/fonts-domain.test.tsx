@@ -69,10 +69,13 @@ describe('fonts domain panel', () => {
     });
     await openFonts(session);
 
-    const idInput = host!.querySelector('input[name="new-font-id"]') as HTMLInputElement;
+    await act(async () => {
+      (host!.querySelector('button[name="add-font-trigger"]') as HTMLButtonElement).click();
+    });
+    const idInput = document.querySelector('input[name="new-font-id"]') as HTMLInputElement;
     setInput(idInput, 'display');
     await act(async () => {
-      (host!.querySelector('button[name="add-font"]') as HTMLButtonElement).click();
+      (document.querySelector('button[name="add-font"]') as HTMLButtonElement).click();
     });
 
     const snap = session.getSnapshot();
@@ -111,6 +114,9 @@ describe('fonts domain panel', () => {
     });
     await openFonts(session);
 
+    await act(async () => {
+      (host!.querySelector('button[name="font-details-sans"]') as HTMLButtonElement).click();
+    });
     const fallbacks = host!.querySelector('input[name="font-sans-fallbacks"]') as HTMLInputElement;
     await act(async () => {
       fireEvent.change(fallbacks, { target: { value: 'Helvetica' } });
@@ -120,5 +126,31 @@ describe('fonts domain panel', () => {
     expect(session.getSnapshot().design.fonts[0]?.fallbacks).toEqual(['system-ui', 'sans-serif']);
     expect(session.getSnapshot().notice?.tone).toBe('error');
     expect(session.getSnapshot().notice?.text).toMatch(/generic family/i);
+  });
+
+  it('searches resource metadata and expands the compact detail row', async () => {
+    const session = createEditorSession({
+      documents,
+      design: createProjectTemplateDocument(),
+    });
+    await openFonts(session);
+
+    await act(async () => {
+      (host!.querySelector('button[name="font-details-sans"]') as HTMLButtonElement).click();
+    });
+    const search = host!.querySelector('input[name="font-search"]') as HTMLInputElement;
+    await act(async () => {
+      fireEvent.change(search, { target: { value: 'google' } });
+    });
+    expect(host!.querySelectorAll('.font-row')).toHaveLength(1);
+    expect(host!.textContent).toContain('Google · Inter');
+
+    await act(async () => {
+      (host!.querySelector('button[name="font-details-sans"]') as HTMLButtonElement).click();
+    });
+    expect(host!.querySelector('input[name="font-sans-fallbacks"]')).toBeNull();
+    expect(
+      host!.querySelector('button[aria-label="Remove font sans"]')?.getAttribute('title'),
+    ).toBe('Remove font sans');
   });
 });

@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import type { FlatDocument } from '@facadeur/core';
+import type { Breakpoint, FlatDocument } from '@facadeur/core';
 import { loadTokens, tokenCustomProperty, fontCustomProperty } from '@facadeur/tokens';
 
 const TokenPreviewContext = createContext<(reference: string) => string | undefined>(
@@ -13,6 +13,7 @@ export function TokenPreviewProvider({
   breakpointId,
   children,
   declarations,
+  breakpoints,
 }: {
   design: FlatDocument;
   document: FlatDocument;
@@ -20,13 +21,15 @@ export function TokenPreviewProvider({
   children: ReactNode;
   /** Effective custom properties at the selected element, including local instance rules. */
   declarations?: Readonly<Record<string, string>>;
+  /** Optional editor preview breakpoints; storage remains owned by the design. */
+  breakpoints?: Breakpoint[];
 }) {
   const resolve = useMemo(() => {
     try {
       const compiled = loadTokens({
         tokens: design.tokens,
         fonts: design.fonts,
-        breakpoints: design.settings.breakpoints,
+        breakpoints: breakpoints ?? design.settings.breakpoints,
       });
       const properties = new Map<string, string>();
       const targetWidth = compiled.breakpoints.find((item) => item.id === breakpointId)?.minWidth;
@@ -88,10 +91,16 @@ export function TokenPreviewProvider({
     document.tokenInterface,
     breakpointId,
     declarations,
+    breakpoints,
   ]);
   return <TokenPreviewContext.Provider value={resolve}>{children}</TokenPreviewContext.Provider>;
 }
 
 export function useTokenPreview(reference: string) {
-  return useContext(TokenPreviewContext)(reference);
+  return useTokenResolver()(reference);
+}
+
+/** Resolve several preview fields without calling hooks inside loops or callbacks. */
+export function useTokenResolver() {
+  return useContext(TokenPreviewContext);
 }

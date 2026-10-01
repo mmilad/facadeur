@@ -1,5 +1,5 @@
 import { readTokenTree } from '@facadeur/core';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import {
   assertRadiusTokenPath,
   createDefaultRadiusToken,
@@ -7,7 +7,8 @@ import {
   tokenPathsReferencingRadius,
 } from '../../../domain/radius-edit.js';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
-import { Field, TextInput } from '../../form/index.js';
+import { IconButton } from '../../form/components/shared/IconButton.js';
+import { TokenAddAction } from './TokenAddAction.js';
 
 export function RadiusTokenAddRow({
   session,
@@ -20,37 +21,33 @@ export function RadiusTokenAddRow({
     const indexed = readTokenTree(snap.design.tokens);
     return [...indexed.tokens.keys()];
   }, [snap.design.tokens]);
-  const [newPath, setNewPath] = useState(() => suggestRadiusPath(existingPaths));
+  const newPath = suggestRadiusPath(existingPaths);
 
-  function addRadius() {
+  function addRadius(pathValue: string): string | false {
     try {
-      const path = newPath.trim();
+      const path = pathValue.trim();
       assertRadiusTokenPath(path);
       const indexed = readTokenTree(snap.design.tokens);
       if (indexed.tokens.has(path)) {
         throw new Error(`Radius "${path}" already exists`);
       }
       session.executeDesign({ type: 'setToken', path, token: createDefaultRadiusToken() });
-      setNewPath(suggestRadiusPath([...existingPaths, path]));
+      return suggestRadiusPath([...existingPaths, path]);
     } catch (error) {
       session.setNotice(error instanceof Error ? error.message : 'Invalid radius', 'error');
+      return false;
     }
   }
 
   return (
-    <div className="font-add-row">
-      <Field label="Path">
-        <TextInput
-          name="new-radius-path"
-          value={newPath}
-          placeholder="radius.corner.lg"
-          onChange={setNewPath}
-        />
-      </Field>
-      <button type="button" className="text-button" name="add-radius" onClick={() => addRadius()}>
-        Add radius
-      </button>
-    </div>
+    <TokenAddAction
+      label="Add radius token"
+      actionName="add-radius"
+      inputName="new-radius-path"
+      initialPath={newPath}
+      placeholder="radius.corner.lg"
+      onAdd={addRadius}
+    />
   );
 }
 
@@ -76,13 +73,21 @@ export function RemoveRadiusTokenButton({
   }
 
   return (
-    <button
-      type="button"
-      className="text-button"
+    <IconButton
+      className="token-action-remove"
+      label={`Remove radius ${path}`}
       name={`remove-radius-${path}`}
       onClick={() => removeRadius()}
     >
-      Remove radius
-    </button>
+      <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+        <path
+          d="M3 5h10m-8 0v8h6V5m-5-2h4l1 2H5l1-2Z"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </IconButton>
   );
 }

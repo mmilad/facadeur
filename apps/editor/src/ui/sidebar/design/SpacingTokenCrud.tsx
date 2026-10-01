@@ -1,5 +1,5 @@
 import { readTokenTree } from '@facadeur/core';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import {
   assertSpacingTokenPath,
   createDefaultSpacingToken,
@@ -7,7 +7,8 @@ import {
   tokenPathsReferencingSpacing,
 } from '../../../domain/spacing-edit.js';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
-import { Field, TextInput } from '../../form/index.js';
+import { IconButton } from '../../form/components/shared/IconButton.js';
+import { TokenAddAction } from './TokenAddAction.js';
 
 export function SpacingTokenAddRow({
   session,
@@ -20,37 +21,33 @@ export function SpacingTokenAddRow({
     const indexed = readTokenTree(snap.design.tokens);
     return [...indexed.tokens.keys()];
   }, [snap.design.tokens]);
-  const [newPath, setNewPath] = useState(() => suggestSpacingPath(existingPaths));
+  const newPath = suggestSpacingPath(existingPaths);
 
-  function addSpacing() {
+  function addSpacing(pathValue: string): string | false {
     try {
-      const path = newPath.trim();
+      const path = pathValue.trim();
       assertSpacingTokenPath(path);
       const indexed = readTokenTree(snap.design.tokens);
       if (indexed.tokens.has(path)) {
         throw new Error(`Spacing "${path}" already exists`);
       }
       session.executeDesign({ type: 'setToken', path, token: createDefaultSpacingToken() });
-      setNewPath(suggestSpacingPath([...existingPaths, path]));
+      return suggestSpacingPath([...existingPaths, path]);
     } catch (error) {
       session.setNotice(error instanceof Error ? error.message : 'Invalid spacing', 'error');
+      return false;
     }
   }
 
   return (
-    <div className="font-add-row">
-      <Field label="Path">
-        <TextInput
-          name="new-spacing-path"
-          value={newPath}
-          placeholder="space.gap.xl"
-          onChange={setNewPath}
-        />
-      </Field>
-      <button type="button" className="text-button" name="add-spacing" onClick={() => addSpacing()}>
-        Add spacing
-      </button>
-    </div>
+    <TokenAddAction
+      label="Add spacing token"
+      actionName="add-spacing"
+      inputName="new-spacing-path"
+      initialPath={newPath}
+      placeholder="space.gap.xl"
+      onAdd={addSpacing}
+    />
   );
 }
 
@@ -76,13 +73,21 @@ export function RemoveSpacingTokenButton({
   }
 
   return (
-    <button
-      type="button"
-      className="text-button"
+    <IconButton
+      className="token-action-remove"
+      label={`Remove spacing ${path}`}
       name={`remove-spacing-${path}`}
       onClick={() => removeSpacing()}
     >
-      Remove spacing
-    </button>
+      <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+        <path
+          d="M3 5h10m-8 0v8h6V5m-5-2h4l1 2H5l1-2Z"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </IconButton>
   );
 }

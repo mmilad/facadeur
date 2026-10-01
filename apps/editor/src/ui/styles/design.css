@@ -10,6 +10,10 @@
 }
 
 .design-domain-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   flex: none;
   padding: 14px 20px 10px;
   border-bottom: 1px solid var(--line);
@@ -34,10 +38,6 @@
   padding: 16px 20px 24px;
 }
 
-.design-domain-body > .viewport-edit {
-  flex: none;
-}
-
 .design-domain-body > .design-domain-panel {
   flex: 1;
   min-height: 0;
@@ -45,78 +45,46 @@
 }
 
 .design-domain-panel {
-  max-width: 960px;
-}
-
-.icons-domain-panel {
-  max-width: 720px;
-}
-
-.icon-category {
-  margin-top: 14px;
-}
-
-.icon-category h2 {
-  margin: 0 0 8px;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.icon-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
-  gap: 8px;
-}
-
-.icon-card {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 3px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 10px;
-  background: var(--sidebar);
-}
-
-.icon-card:hover {
-  border-color: var(--accent);
-}
-
-.icon-preview {
-  display: grid;
-  place-items: center;
   width: 100%;
-  height: 52px;
-  margin-bottom: 4px;
-  border-radius: 6px;
-  background: var(--white);
+  max-width: none;
 }
 
-.icon-preview img {
-  width: 24px;
-  height: 24px;
+.design-project-navigation {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
 }
 
-.icon-card strong,
-.icon-card span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.design-project-navigation .side-note {
+  display: none;
 }
 
-.icon-card strong {
+.design-breakpoint-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 12px;
-  font-weight: 600;
 }
 
-.icon-card span {
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: 10px;
+.design-breakpoint-control .eu-control {
+  width: auto;
+  max-width: 280px;
+}
+
+.design-resource-scope {
+  color: var(--eu-fg-muted);
+  font-size: 12px;
+}
+
+@media (max-width: 760px) {
+  .design-domain-head {
+    flex-wrap: wrap;
+    padding: 12px;
+  }
+  .design-domain-body {
+    padding: 12px;
+  }
 }
 
 .schema-stage {

@@ -1,5 +1,5 @@
 import { readTokenTree } from '@facadeur/core';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import {
   assertColorTokenPath,
   createDefaultColorToken,
@@ -7,7 +7,8 @@ import {
   tokenPathsReferencingColor,
 } from '../../../domain/color-edit.js';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
-import { Field, TextInput } from '../../form/index.js';
+import { IconButton } from '../../form/components/shared/IconButton.js';
+import { TokenAddAction } from './TokenAddAction.js';
 
 export function ColorTokenAddRow({
   session,
@@ -20,37 +21,33 @@ export function ColorTokenAddRow({
     const indexed = readTokenTree(snap.design.tokens);
     return [...indexed.tokens.keys()];
   }, [snap.design.tokens]);
-  const [newPath, setNewPath] = useState(() => suggestColorPath(existingPaths));
+  const newPath = suggestColorPath(existingPaths);
 
-  function addColor() {
+  function addColor(pathValue: string): string | false {
     try {
-      const path = newPath.trim();
+      const path = pathValue.trim();
       assertColorTokenPath(path);
       const indexed = readTokenTree(snap.design.tokens);
       if (indexed.tokens.has(path)) {
         throw new Error(`Color "${path}" already exists`);
       }
       session.executeDesign({ type: 'setToken', path, token: createDefaultColorToken() });
-      setNewPath(suggestColorPath([...existingPaths, path]));
+      return suggestColorPath([...existingPaths, path]);
     } catch (error) {
       session.setNotice(error instanceof Error ? error.message : 'Invalid color', 'error');
+      return false;
     }
   }
 
   return (
-    <div className="font-add-row">
-      <Field label="Path">
-        <TextInput
-          name="new-color-path"
-          value={newPath}
-          placeholder="color.accent.default"
-          onChange={setNewPath}
-        />
-      </Field>
-      <button type="button" className="text-button" name="add-color" onClick={() => addColor()}>
-        Add color
-      </button>
-    </div>
+    <TokenAddAction
+      label="Add color token"
+      actionName="add-color"
+      inputName="new-color-path"
+      initialPath={newPath}
+      placeholder="color.accent.default"
+      onAdd={addColor}
+    />
   );
 }
 
@@ -76,13 +73,21 @@ export function RemoveColorTokenButton({
   }
 
   return (
-    <button
-      type="button"
-      className="text-button"
+    <IconButton
+      className="token-action-remove"
+      label={`Remove color ${path}`}
       name={`remove-color-${path}`}
       onClick={() => removeColor()}
     >
-      Remove color
-    </button>
+      <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+        <path
+          d="M3 5h10m-8 0v8h6V5m-5-2h4l1 2H5l1-2Z"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </IconButton>
   );
 }

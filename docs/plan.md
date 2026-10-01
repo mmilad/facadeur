@@ -51,6 +51,23 @@ Lint und Formatierung der geänderten Quellen, generierter React-Code semantisch
 Browser: lokale Label-/Placeholder-Overrides in allen drei Viewports, andere Inputs unverändert,
 Reset auf vererbte Werte; Teständerungen zurückgesetzt.
 
+### Design workspace UI (2026-10-01)
+
+- [ ] Fix shared form scope and global token previews; replace canvas-dependent breakpoint selection.
+- [ ] Hide canvas-only rails/tools in Design, preserve editor selection and centralize design saving.
+- [ ] Extract a shared token table/toolbar and domain value adapters before extending the lists.
+      Evidence: repeated CRUD markup and type branching; structured shadows currently fall back
+      to JSON, partial typography hides inherited fields. Keep parsers/validation in their domains.
+- [ ] Compact Colors/Spacing/Radius tables with natural sorting, hierarchy, aliases, previews,
+      inherited values and sparse breakpoint resets; Fonts table and selectable Icons grid.
+- [ ] Structured Shadow and expandable Typography editors preserve stored formats and aliases.
+- [ ] Validate field edits, inheritance, reset, Undo, metadata, responsive context and browser UI.
+
+No token renames, source import workflows, icon CRUD, dependency additions, or model changes.
+Existing command ownership, public APIs, storage, sparse breakpoint semantics and codegen remain.
+The candidate scan has no size findings: extraction is justified by shared interaction responsibilities,
+not file length. Domain CRUD validation stays domain-owned; unrelated refactors remain in backlog.
+
 ### Refactoring-Backlog
 
 Team-Pass (2026-10-01): Validation, Commands und Variants fachlich extrahieren.

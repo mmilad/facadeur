@@ -34,7 +34,8 @@ import { useEditorNavigation } from './useEditorNavigation.js';
 export function EditorShell({ session }: { session: EditorSession }) {
   const snap = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
   const { surface, setSurface } = useEditorNavigation(session, snap);
-  useEditorKeys(session);
+  const designSurface = isDesignDomain(surface);
+  useEditorKeys(session, surface === 'editor');
 
   return (
     <div className="app">
@@ -42,29 +43,36 @@ export function EditorShell({ session }: { session: EditorSession }) {
         <div className="brand">facadeur</div>
         <DocumentBreadcrumb session={session} snap={snap} />
         <KindBadge kind={snap.document.kind} />
-        <ToolBar
-          session={session}
-          tool={snap.tool}
-          kind={snap.document.kind}
-          icons={snap.design.icons}
-        />
+        {!designSurface ? (
+          <ToolBar
+            session={session}
+            tool={snap.tool}
+            kind={snap.document.kind}
+            icons={snap.design.icons}
+          />
+        ) : null}
         <div className="topbar-spacer" />
         <HistoryButtons session={session} canUndo={snap.canUndo} canRedo={snap.canRedo} />
-        <ZoomControls session={session} label={snap.zoomLabel} />
-        <button type="button" className="text-button" onClick={() => session.fit()}>
-          Reset view
-        </button>
-        <UnsavedIndicator documentDirty={snap.documentDirty} designDirty={snap.designDirty} />
+        {!designSurface ? <ZoomControls session={session} label={snap.zoomLabel} /> : null}
+        {!designSurface ? (
+          <button type="button" className="text-button" onClick={() => session.fit()}>
+            Reset view
+          </button>
+        ) : null}
+        <UnsavedIndicator
+          documentDirty={!designSurface && snap.documentDirty}
+          designDirty={snap.designDirty}
+        />
         <button type="button" className="text-button" onClick={() => void onOpen(session)}>
           Open
         </button>
         <button
           type="button"
           className="text-button"
-          data-save="document"
-          onClick={() => void session.saveOpenDocument()}
+          data-save={designSurface ? 'design' : 'document'}
+          onClick={() => void (designSurface ? session.saveDesign() : session.saveOpenDocument())}
         >
-          Save
+          {designSurface ? 'Save design' : 'Save'}
         </button>
       </header>
       {snap.notice ? (
@@ -76,6 +84,14 @@ export function EditorShell({ session }: { session: EditorSession }) {
         </p>
       ) : null}
       <nav className="editor-subnav" aria-label="Editor views" data-testid="editor-subnav">
+        <button
+          type="button"
+          className={designSurface ? 'editor-subnav-item is-active' : 'editor-subnav-item'}
+          aria-current={designSurface ? 'page' : undefined}
+          onClick={() => setSurface(designSurface ? surface : 'colors')}
+        >
+          Design
+        </button>
         {EDITOR_VIEW_ITEMS.map((item) => (
           <button
             key={item.id}
@@ -91,21 +107,36 @@ export function EditorShell({ session }: { session: EditorSession }) {
       </nav>
       <div className="workspace">
         <aside className="side side-left">
-          <ResizableLeftRail
-            project={
+          {designSurface ? (
+            <div className="design-project-navigation">
               <ProjectTree
                 session={session}
                 snap={snap}
                 surface={surface}
                 onOpenAsset={(id) => {
                   session.openAsset(id);
-                  if (isDesignDomain(surface)) setSurface('editor');
+                  setSurface('editor');
                 }}
-                onOpenDesignDomain={(domain) => setSurface(domain)}
+                onOpenDesignDomain={setSurface}
               />
-            }
-            layers={<LayersPanel session={session} snap={snap} />}
-          />
+            </div>
+          ) : (
+            <ResizableLeftRail
+              project={
+                <ProjectTree
+                  session={session}
+                  snap={snap}
+                  surface={surface}
+                  onOpenAsset={(id) => {
+                    session.openAsset(id);
+                    if (isDesignDomain(surface)) setSurface('editor');
+                  }}
+                  onOpenDesignDomain={(domain) => setSurface(domain)}
+                />
+              }
+              layers={<LayersPanel session={session} snap={snap} />}
+            />
+          )}
         </aside>
         {isDesignDomain(surface) ? (
           <DesignDomainStage session={session} snap={snap} domain={surface} />
@@ -131,7 +162,8 @@ export function EditorShell({ session }: { session: EditorSession }) {
             tool={snap.tool}
           />
         )}
-        {surface === 'schemas' ||
+        {designSurface ||
+        surface === 'schemas' ||
         surface === 'schema' ||
         surface === 'code' ||
         surface === 'preview' ? null : (
@@ -147,7 +179,7 @@ export function EditorShell({ session }: { session: EditorSession }) {
 /** @deprecated Use EditorShell — kept for tests importing App. */
 export const App = EditorShell;
 
-function useEditorKeys(session: EditorSession) {
+function useEditorKeys(session: EditorSession, canvasActive: boolean) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (isEditableTarget(event.target)) return;
@@ -158,6 +190,7 @@ function useEditorKeys(session: EditorSession) {
         else session.undo();
         return;
       }
+      if (!canvasActive) return;
       if (key === 'g' && event.altKey && (event.ctrlKey || event.metaKey) && !event.shiftKey) {
         event.preventDefault();
         const snap = session.getSnapshot();
@@ -196,7 +229,7 @@ function useEditorKeys(session: EditorSession) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [session]);
+  }, [session, canvasActive]);
 }
 
 async function onOpen(session: EditorSession) {

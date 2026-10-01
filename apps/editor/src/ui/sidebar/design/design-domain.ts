@@ -54,7 +54,12 @@ export function tokenMatchesDomain(
     case 'shadow':
       return type === 'shadow' || path.startsWith('shadow.');
     case 'typography':
-      return type === 'typography' || path.startsWith('type.');
+      return (
+        type === 'typography' ||
+        type === 'fontFamily' ||
+        type === 'fontWeight' ||
+        path.startsWith('type.')
+      );
     default:
       return false;
   }

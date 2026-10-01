@@ -1,5 +1,5 @@
 import { readTokenTree } from '@facadeur/core';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import {
   assertShadowTokenPath,
   createDefaultShadowToken,
@@ -7,7 +7,8 @@ import {
   tokenPathsReferencingShadow,
 } from '../../../domain/shadow-edit.js';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
-import { Field, TextInput } from '../../form/index.js';
+import { IconButton } from '../../form/components/shared/IconButton.js';
+import { TokenAddAction } from './TokenAddAction.js';
 
 export function ShadowTokenAddRow({
   session,
@@ -20,37 +21,33 @@ export function ShadowTokenAddRow({
     const indexed = readTokenTree(snap.design.tokens);
     return [...indexed.tokens.keys()];
   }, [snap.design.tokens]);
-  const [newPath, setNewPath] = useState(() => suggestShadowPath(existingPaths));
+  const newPath = suggestShadowPath(existingPaths);
 
-  function addShadow() {
+  function addShadow(pathValue: string): string | false {
     try {
-      const path = newPath.trim();
+      const path = pathValue.trim();
       assertShadowTokenPath(path);
       const indexed = readTokenTree(snap.design.tokens);
       if (indexed.tokens.has(path)) {
         throw new Error(`Shadow "${path}" already exists`);
       }
       session.executeDesign({ type: 'setToken', path, token: createDefaultShadowToken() });
-      setNewPath(suggestShadowPath([...existingPaths, path]));
+      return suggestShadowPath([...existingPaths, path]);
     } catch (error) {
       session.setNotice(error instanceof Error ? error.message : 'Invalid shadow', 'error');
+      return false;
     }
   }
 
   return (
-    <div className="font-add-row">
-      <Field label="Path">
-        <TextInput
-          name="new-shadow-path"
-          value={newPath}
-          placeholder="shadow.elevated.md"
-          onChange={setNewPath}
-        />
-      </Field>
-      <button type="button" className="text-button" name="add-shadow" onClick={() => addShadow()}>
-        Add shadow
-      </button>
-    </div>
+    <TokenAddAction
+      label="Add shadow token"
+      actionName="add-shadow"
+      inputName="new-shadow-path"
+      initialPath={newPath}
+      placeholder="shadow.elevated.md"
+      onAdd={addShadow}
+    />
   );
 }
 
@@ -76,13 +73,21 @@ export function RemoveShadowTokenButton({
   }
 
   return (
-    <button
-      type="button"
-      className="text-button"
+    <IconButton
+      className="token-action-remove"
+      label={`Remove shadow ${path}`}
       name={`remove-shadow-${path}`}
       onClick={() => removeShadow()}
     >
-      Remove shadow
-    </button>
+      <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+        <path
+          d="M3 5h10m-8 0v8h6V5m-5-2h4l1 2H5l1-2Z"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </IconButton>
   );
 }

@@ -65,7 +65,9 @@ describe('design domain stage', () => {
       session.setFocusViewport('tablet');
       session.setEditTarget('viewport');
     });
-    expect(host!.textContent).toContain('Colors overrides at tablet');
+    expect(
+      (host!.querySelector('[aria-label="Token breakpoint"]') as HTMLSelectElement).value,
+    ).toBe('tablet');
   });
 
   it('returns to the asset preview when opening an asset from the tree', async () => {
@@ -90,5 +92,46 @@ describe('design domain stage', () => {
     });
     expect(host!.querySelector('.design-domain-stage')).toBeNull();
     expect(document.querySelector('iframe')).toBeTruthy();
+  });
+  it('preserves element selection, hides canvas editing and selects token breakpoints directly', async () => {
+    const session = createEditorSession({ documents, design: createProjectTemplateDocument() });
+    session.openAsset('button');
+    session.selectNode('root');
+    const before = session.getSnapshot().document;
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => root?.render(<App session={session} />));
+    await act(async () =>
+      (host!.querySelector('[data-design-domain="colors"]') as HTMLButtonElement).click(),
+    );
+    expect(host!.querySelector('[aria-label="Layers"]')).toBeNull();
+    expect(host!.querySelector('[aria-label="Inspector"]')).toBeNull();
+    expect(host!.querySelector('[aria-label="Tools"]')).toBeNull();
+    expect(host!.querySelector('[data-save="design"]')).not.toBeNull();
+    expect(host!.querySelector('[data-save="document"]')).toBeNull();
+    const selector = host!.querySelector('[aria-label="Token breakpoint"]') as HTMLSelectElement;
+    await act(async () => {
+      selector.value = 'desktop';
+      selector.dispatchEvent(new Event('change', { bubbles: true }));
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'f', bubbles: true }));
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    });
+    expect(session.getSnapshot().editTarget).toBe('viewport');
+    expect(session.getSnapshot().focusViewportId).toBe('desktop');
+    expect(session.getSnapshot().selectedNodeId).toBe('root');
+    expect(session.getSnapshot().tool).toBe('select');
+    expect(session.getSnapshot().document).toEqual(before);
+    await act(async () =>
+      (host!.querySelector('[data-design-domain="fonts"]') as HTMLButtonElement).click(),
+    );
+    expect(host!.querySelector('[aria-label="Token breakpoint"]')).toBeNull();
+    expect(host!.textContent).toContain('Shared project resources');
+    await act(async () =>
+      (host!.querySelector('[data-surface="editor"]') as HTMLButtonElement).click(),
+    );
+    expect(session.getSnapshot().openId).toBe('button');
+    expect(session.getSnapshot().selectedNodeId).toBe('root');
+    expect(host!.querySelector('[aria-label="Inspector"]')).not.toBeNull();
   });
 });
