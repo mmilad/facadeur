@@ -22,6 +22,7 @@ import {
   resetTokenBreakpoint,
   type TableToken,
 } from './token-breakpoint-helpers.js';
+import { tokenLeafLabel } from './token-labels.js';
 
 type ViewportContext = ReturnType<typeof viewportEditContext>;
 
@@ -68,7 +69,8 @@ export function TokenTableRow({
     <tr className="token-table-row" data-token-path={token.path}>
       <th scope="row">
         <div className="token-table-name">
-          <strong>{token.path}</strong>
+          <strong>{tokenLeafLabel(token.path)}</strong>
+          <span className="token-path-id">{token.path}</span>
           {showType ? <span>{token.type}</span> : null}
         </div>
       </th>
@@ -116,7 +118,7 @@ export function TokenTableRow({
           ) : token.type === 'typography' ? (
             <DesignTypographyEditor
               namePrefix={`token-${token.path}`}
-              label={tokenLabel}
+              label={tokenLeafLabel(token.path)}
               value={shownValue as DesignTypographyValue}
               storedValue={
                 (writingId
@@ -130,6 +132,10 @@ export function TokenTableRow({
               typographyTokens={typographyTokenRefs(snap.design.tokens).filter(
                 (ref) => ref !== `{${token.path}}`,
               )}
+              mediaQueries={typographyMediaQueries(token, ctx)}
+              onCommitMediaQuery={(breakpointId, next) =>
+                commitRawToken(session, snap, token.path, next, breakpointId)
+              }
               onCommit={(next) => commitRawToken(session, snap, token.path, next, writingId)}
               onReset={
                 writingId && token.override !== undefined
@@ -214,6 +220,18 @@ export function TokenTableRow({
       </td>
     </tr>
   );
+}
+
+function typographyMediaQueries(token: TableToken, ctx: ViewportContext) {
+  if (token.type !== 'typography') return undefined;
+  const baseId = ctx.base?.id;
+  return ctx.breakpoints
+    .filter((item) => item.id !== baseId)
+    .map((item) => ({
+      id: item.id,
+      label: `${item.id.charAt(0).toUpperCase()}${item.id.slice(1)} · ${item.minWidth}px and wider`,
+      stored: token.breakpoints[item.id],
+    }));
 }
 
 function TokenPreview({

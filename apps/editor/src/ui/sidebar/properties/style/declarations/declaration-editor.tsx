@@ -25,7 +25,11 @@ import {
 import { editorBreakpoints, viewportEditContext } from '../../../../../domain/viewport/viewport-edit.js';
 import { CssDeclarationsControl } from '../../../../controls/generic/index.js';
 import type { StructuredDeclarationGroup } from '../../../../controls/generic/CssDeclarationsControl.js';
-import { projectFontRefs, type TypographyCatalogs } from '../../../../controls/typography/index.js';
+import {
+  projectFontRefs,
+  projectFontWeightOptions,
+  type TypographyCatalogs,
+} from '../../../../controls/typography/index.js';
 import { OverrideCue } from '../../ViewportEditBar.js';
 
 export function DeclarationEditor({
@@ -158,6 +162,7 @@ export function DeclarationEditor({
     const typographyCatalogs: TypographyCatalogs = {
       fontRefs: projectFontRefs(snap.design.fonts),
       fontFamilyTokens: fontFamilyTokenRefsForDocument(snap.design.tokens, doc),
+      fontWeights: projectFontWeightOptions(snap.design.fonts),
       fontWeightTokens: fontWeightTokenRefsForDocument(snap.design.tokens, doc),
       dimensionTokens: dimensionTokenRefsForDocument(snap.design.tokens, doc),
       numberTokens: numberTokenRefsForDocument(snap.design.tokens, doc),

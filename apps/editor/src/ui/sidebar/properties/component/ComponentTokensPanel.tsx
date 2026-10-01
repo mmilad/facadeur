@@ -25,7 +25,12 @@ import type { EditorSession, EditorSnapshot } from '../../../../domain/session.j
 import { ColorControl } from '../../../controls/color/index.js';
 import { TextControl } from '../../../controls/fields/index.js';
 import { TokenValueControl } from '../../../controls/fields/TokenValueControl.js';
-import { projectFontRefs, type TypographyCatalogs } from '../../../controls/typography/index.js';
+import {
+  projectFontRefs,
+  projectFontWeightOptions,
+  type TypographyCatalogs,
+} from '../../../controls/typography/index.js';
+import { tokenTitle } from '../../design/tokens/token-labels.js';
 import { DesignShadowEditor, type DesignShadowInput } from '../../design/DesignShadowEditor.js';
 import {
   DesignTypographyEditor,
@@ -68,6 +73,7 @@ export function ComponentTokensPanel({
     () => ({
       fontRefs: projectFontRefs(snap.design.fonts),
       fontFamilyTokens: fontFamilyTokenRefs(snap.design.tokens),
+      fontWeights: projectFontWeightOptions(snap.design.fonts),
       fontWeightTokens: fontWeightTokenRefs(snap.design.tokens),
       dimensionTokens: dimensionTokenRefs(snap.design.tokens),
       numberTokens: numberTokenRefs(snap.design.tokens),
@@ -161,13 +167,14 @@ function ComponentTokenRow({
   onCommit: (token: ComponentToken) => void;
   onRemove: () => void;
 }) {
-  const label = `${path} · ${token.type}`;
+  const label = `${tokenTitle(path)} · ${token.type}`;
   const commitValue = (value: string) => onCommit({ ...token, value });
 
   return (
     <li className="component-token-row" data-component-token-path={path}>
       <div className="component-token-row-head">
-        <strong>{path}</strong>
+        <strong>{tokenTitle(path)}</strong>
+        <span className="token-path-id">{path}</span>
         <span>{token.type}</span>
         <IconButton
           className="token-action-remove"

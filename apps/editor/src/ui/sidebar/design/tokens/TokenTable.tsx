@@ -72,12 +72,14 @@ export function TokenTable({ children }: { children: ReactNode }) {
 
 export function TokenTableGroup({
   path,
+  label,
   count,
   open,
   onToggle,
   children,
 }: {
   path: string;
+  label?: string;
   count: number;
   open: boolean;
   onToggle: () => void;
@@ -94,7 +96,7 @@ export function TokenTableGroup({
             onClick={onToggle}
           >
             <span aria-hidden="true">{open ? '▾' : '▸'}</span>
-            <span>{path}</span>
+            <span>{label ?? path}</span>
             <small>{count}</small>
           </button>
         </th>

@@ -28,6 +28,27 @@ export function fontFamilyRef(id: string): string {
   return `{font.${id}}`;
 }
 
+const WEIGHT_NAMES: Record<number, string> = {
+  100: 'Thin',
+  200: 'Extra light',
+  300: 'Light',
+  400: 'Regular',
+  500: 'Medium',
+  600: 'Semibold',
+  700: 'Bold',
+  800: 'Extra bold',
+  900: 'Black',
+};
+
+export function formatFontWeight(weight: number): string {
+  const name = WEIGHT_NAMES[weight];
+  return name ? `${name} ${weight}` : String(weight);
+}
+
+export function formatFontWeightList(weights: readonly number[]): string {
+  return weights.map(formatFontWeight).join(', ');
+}
+
 export function suggestFontId(existing: readonly string[]): string {
   const taken = new Set(existing);
   if (!taken.has('font')) return 'font';

@@ -15,7 +15,11 @@ import {
   editorBreakpoints,
   viewportEditContext,
 } from '../../../../domain/viewport/viewport-edit.js';
-import { projectFontRefs, type TypographyCatalogs } from '../../../controls/typography/index.js';
+import {
+  projectFontRefs,
+  projectFontWeightOptions,
+  type TypographyCatalogs,
+} from '../../../controls/typography/index.js';
 import type { DesignDomain } from '../design-domain.js';
 import { designDomainLabel, tokenMatchesDomain } from '../design-domain.js';
 import { ColorTokenAddRow } from './ColorsTokenCrud.js';
@@ -29,6 +33,7 @@ import {
   type TableToken,
 } from './token-breakpoint-helpers.js';
 import { TokenTableRow } from './token-table-row.js';
+import { tokenLeafLabel, tokenTitle } from './token-labels.js';
 import {
   naturalTokenCompare,
   tokenMatchesQuery,
@@ -69,6 +74,7 @@ export function TokensDomainPanel({
     () => ({
       fontRefs: projectFontRefs(snap.design.fonts),
       fontFamilyTokens: fontFamilyTokenRefs(snap.design.tokens),
+      fontWeights: projectFontWeightOptions(snap.design.fonts),
       fontWeightTokens: fontWeightTokenRefs(snap.design.tokens),
       dimensionTokens: dimensionTokenRefs(snap.design.tokens),
       numberTokens: numberTokenRefs(snap.design.tokens),
@@ -106,6 +112,7 @@ export function TokensDomainPanel({
           baseValue,
           effectiveValue,
           override,
+          breakpoints: token.breakpoints,
           inherited: Boolean(writingId && override === undefined),
           deprecated: token.deprecated,
         };
@@ -114,7 +121,10 @@ export function TokensDomainPanel({
   );
   const visible = tableTokens.filter((token) =>
     tokenMatchesQuery(
-      { path: token.path, valueText: formatTokenValue(token.effectiveValue) },
+      {
+        path: `${tokenLeafLabel(token.path)} ${tokenTitle(token.path)} ${token.path}`,
+        valueText: formatTokenValue(token.effectiveValue),
+      },
       query,
     ),
   );
@@ -154,6 +164,7 @@ export function TokensDomainPanel({
               <TokenTableGroup
                 key={group.path}
                 path={group.path}
+                label={tokenTitle(group.path)}
                 count={group.tokens.length}
                 open={open}
                 onToggle={() =>

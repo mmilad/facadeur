@@ -34,8 +34,10 @@ const documents = validateCatalog([
 function setInput(input: HTMLInputElement, value: string) {
   const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
   setter?.call(input, value);
+  input.focus();
   input.dispatchEvent(new Event('input', { bubbles: true }));
   input.dispatchEvent(new Event('change', { bubbles: true }));
+  input.blur();
 }
 
 describe('typography domain panel', () => {
@@ -93,12 +95,13 @@ describe('typography domain panel', () => {
       value: {
         fontFamily: '{font.sans}',
         fontSize: '16px',
-        fontWeight: '{font.weight.regular}',
+        fontWeight: 400,
         letterSpacing: '0',
         lineHeight: 1.5,
       },
     });
     expect(host!.textContent).toContain('type.hero');
+    expect(host!.textContent).toContain('Hero');
   });
 
   it('blocks removing a typography token that other tokens still reference', async () => {
@@ -164,7 +167,7 @@ describe('typography domain panel', () => {
     const tabletOverride = {
       fontFamily: '{font.sans}',
       fontSize: '20px',
-      fontWeight: '{font.weight.medium}',
+      fontWeight: 500,
       lineHeight: 1.4,
       letterSpacing: '0',
     };
@@ -178,7 +181,6 @@ describe('typography domain panel', () => {
         tabletOverride,
       ),
     });
-
     await openTypography(session);
     await act(async () => {
       session.setFocusViewport('tablet');
@@ -202,5 +204,28 @@ describe('typography domain panel', () => {
     expect(indexedAfter.tokens.get('type.title')?.value).toMatchObject({
       fontSize: '24px',
     });
+  });
+
+  it('shows a type style by its label and writes a media-query size on that row', async () => {
+    const session = createEditorSession({
+      documents,
+      design: createProjectTemplateDocument(),
+    });
+    await openTypography(session);
+
+    expect(host!.textContent).toContain('Body');
+    expect(host!.textContent).not.toContain('font.weight');
+    const tablet = host!.querySelector(
+      'input[name="token-type.body-media-tablet-fontSize"]',
+    ) as HTMLInputElement;
+    expect(tablet).toBeInstanceOf(HTMLInputElement);
+    expect(tablet.value).toBe('17px');
+
+    await act(async () => setInput(tablet, '19px'));
+
+    expect(
+      readTokenTree(session.getSnapshot().design.tokens).tokens.get('type.body')?.breakpoints
+        .tablet,
+    ).toEqual({ fontSize: '19px' });
   });
 });

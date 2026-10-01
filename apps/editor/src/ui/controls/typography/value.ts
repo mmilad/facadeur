@@ -38,6 +38,15 @@ export function projectFontRefs(fonts: readonly Pick<FontFamily, 'id'>[]): strin
   return fonts.map((font) => `{font.${font.id}}`).sort((left, right) => left.localeCompare(right));
 }
 
+/** Weights declared on the project fonts. Typography picks one of these numbers. */
+export function projectFontWeightOptions(
+  fonts: readonly { weights: readonly number[] }[],
+): string[] {
+  return [...new Set(fonts.flatMap((font) => font.weights))]
+    .sort((left, right) => left - right)
+    .map(String);
+}
+
 export function isTypographyValue(value: unknown): value is TypographyValue {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

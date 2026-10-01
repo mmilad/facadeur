@@ -183,7 +183,7 @@ Frames render as flexbox. The default direction is `column`, alignment is stretc
 
 Values may contain token references. `font: "{type.body}"` expands to the typography longhands (`font-family`, `font-size`, `font-weight`, `line-height`, `letter-spacing`). Spacing properties in the block are token references only.
 
-`tokenInterface.reads` lists every **global** token path the style block and layout use. References to this document's own `componentTokens` use `{local.path}` in styles but are not listed in `reads`. Each component token default that is a single `{global.path}` reference is listed in `reads` (same adopt behavior as other commands). `tokenInterface.sets` maps a token path to a value and emits that custom property on the component root, so descendants inherit the override. A set key such as `input.color.border` targets another catalog document's component token when `input` is a document id; otherwise the key is treated as a global token path (for example `color.text.primary`). `{font.sans}` is a font family, not a read. A path like `{font.weight.regular}` is a token and is a read.
+`tokenInterface.reads` lists every **global** token path the style block and layout use. References to this document's own `componentTokens` use `{local.path}` in styles but are not listed in `reads`. Each component token default that is a single `{global.path}` reference is listed in `reads` (same adopt behavior as other commands). `tokenInterface.sets` maps a token path to a value and emits that custom property on the component root, so descendants inherit the override. A set key such as `input.color.border` targets another catalog document's component token when `input` is a document id; otherwise the key is treated as a global token path (for example `color.text.primary`). `{font.sans}` is a font family, not a read. Font weight on a type style is a number from that family's `weights` (400, 500, 600, 700), not its own token group. Any other braced path is a token and is a read.
 
 `style` on a primitive node is still the `setStyle` map. It overrides the style block's base declaration for the same property. States, variants, and breakpoints stay above that.
 
@@ -200,7 +200,7 @@ Selectors:
 
 `tokens` is a [W3C DTCG](https://tr.designtokens.org/format/) tree. An object with `$value` is a token. Any other object is a group. `$type` on a group is inherited by the tokens inside it; a token's own `$type` wins. The same rule applies to `$extensions.facadeur.tier` (`primitive`, `semantic`, or `component`). Tier is metadata for authors. It is not part of the CSS name.
 
-Child names match `[a-z0-9]+` (`blue`, `500`). A reference is the whole string `{color.blue.500}`. The stored value stays unresolved. `@facadeur/tokens` resolves it when building CSS, and the Yjs store rejects a command that introduces a cycle or a missing target.
+Child names match `[a-z0-9]+` (`blue`, `500`). A reference is the whole string `{color.blue.500}`. The dotted path is the stable id used by references and CSS names. Groups organize the tree; they are not part of the author-facing name. The editor shows a spaced label (`Body`, `Color text`) and keeps the path as the id. The stored value stays unresolved. `@facadeur/tokens` resolves it when building CSS, and the Yjs store rejects a command that introduces a cycle or a missing target.
 
 Supported `$type` values: `color`, `dimension`, `number`, `fontFamily`, `fontWeight`, `shadow`, `typography`.
 
@@ -214,7 +214,7 @@ Per-breakpoint values live in `$extensions.facadeur.breakpoints`. `$value` is th
       "$value": {
         "fontFamily": "{font.sans}",
         "fontSize": "16px",
-        "fontWeight": "{font.weight.regular}",
+        "fontWeight": 400,
         "lineHeight": 1.5,
         "letterSpacing": "0"
       },

@@ -58,7 +58,7 @@ describe('component tokens inspector', () => {
     expect(host.querySelector('[data-component-token-path="color.bg"]')).toBeTruthy();
 
     const pickerToggle = host.querySelector(
-      '[aria-label^="Choose color.bg"]',
+      '[aria-label^="Choose Color Bg"]',
     ) as HTMLButtonElement;
     await act(async () => {
       pickerToggle.click();

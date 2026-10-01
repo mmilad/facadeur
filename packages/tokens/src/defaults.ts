@@ -151,25 +151,15 @@ export const defaultTokenTree: TokenTree = {
       },
     },
   },
-  font: {
-    weight: {
-      $type: 'fontWeight',
-      $extensions: { facadeur: { tier: 'primitive' } },
-      regular: { $value: 400 },
-      medium: { $value: 500 },
-      semibold: { $value: 600 },
-      bold: { $value: 700 },
-    },
-  },
   type: {
     $type: 'typography',
     $extensions: { facadeur: { tier: 'semantic' } },
-    display: typeStep(40, 48, 56, '{font.weight.semibold}', 1.1),
-    heading: typeStep(32, 36, 40, '{font.weight.semibold}', 1.2),
-    title: typeStep(24, 26, 28, '{font.weight.semibold}', 1.25),
-    body: typeStep(16, 17, 18, '{font.weight.regular}', 1.5),
-    label: typeStep(14, 14, 15, '{font.weight.medium}', 1.4),
-    caption: typeStep(12, 12, 13, '{font.weight.regular}', 1.4),
+    display: typeStep(40, 48, 56, 600, 1.1),
+    heading: typeStep(32, 36, 40, 600, 1.2),
+    title: typeStep(24, 26, 28, 600, 1.25),
+    body: typeStep(16, 17, 18, 400, 1.5),
+    label: typeStep(14, 14, 15, 500, 1.4),
+    caption: typeStep(12, 12, 13, 400, 1.4),
   },
 };
 
@@ -277,7 +267,7 @@ function typeStep(
   mobile: number,
   tablet: number,
   desktop: number,
-  weight: string,
+  weight: number,
   lineHeight: number,
 ): TokenTree {
   const value: TokenTree = {

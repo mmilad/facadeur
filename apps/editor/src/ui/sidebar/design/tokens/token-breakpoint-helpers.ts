@@ -14,6 +14,7 @@ export interface TableToken {
   effectiveValue: JsonValue;
   baseValue: JsonValue;
   override: JsonValue | undefined;
+  breakpoints: Record<string, JsonValue>;
   inherited: boolean;
   deprecated: boolean | string | undefined;
 }

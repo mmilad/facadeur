@@ -159,7 +159,7 @@ export function TokenValueControl({
                   aria-pressed={value === token}
                   onClick={() => pick(token)}
                 >
-                  ◇ {token.slice(1, -1)}
+                  {isTokenReference(token) ? `◇ ${token.slice(1, -1)}` : token}
                 </button>
               ))}
               {!options.length ? <span className="eu-field__hint">No matching tokens.</span> : null}

@@ -4,6 +4,7 @@ import {
   assertFontId,
   createDefaultFont,
   editedFont,
+  formatFontWeightList,
   parseFontFallbacks,
   parseFontWeights,
   suggestFontId,
@@ -223,7 +224,7 @@ function FontTableRows({
         <td className="font-family-cell">{font.family}</td>
         <td>{source}</td>
         <td>
-          <span className="font-weights">{font.weights.join(', ')}</span>
+          <span className="font-weights">{formatFontWeightList(font.weights)}</span>
         </td>
         <td className="font-actions">
           <button
@@ -301,6 +302,9 @@ function FontTableRows({
                     }
                   }}
                 />
+                <p className="meta">
+                  {formatFontWeightList(font.weights)}. Typography styles pick one of these.
+                </p>
               </section>
             </div>
           </td>

@@ -11,6 +11,7 @@ export {
   isTokenRef,
   KNOWN_TYPOGRAPHY_STYLE_PROPERTIES,
   projectFontRefs,
+  projectFontWeightOptions,
   parseTypographyFieldValue,
   TYPOGRAPHY_VALUE_KEYS,
   type TypographyFieldMode,

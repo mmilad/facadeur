@@ -38,6 +38,8 @@ function assignTypographyField(
 export interface TypographyCatalogs {
   fontRefs: readonly string[];
   fontFamilyTokens: readonly string[];
+  /** Numeric weights from the project fonts, such as "400". */
+  fontWeights?: readonly string[];
   fontWeightTokens: readonly string[];
   dimensionTokens: readonly string[];
   numberTokens: readonly string[];
@@ -82,7 +84,7 @@ function tokenOptionsForKey(
   catalogs: TypographyCatalogs,
 ): readonly string[] {
   if (key === 'fontFamily') return [...catalogs.fontRefs, ...catalogs.fontFamilyTokens];
-  if (key === 'fontWeight') return catalogs.fontWeightTokens;
+  if (key === 'fontWeight') return [...(catalogs.fontWeights ?? []), ...catalogs.fontWeightTokens];
   if (key === 'lineHeight') return [...catalogs.dimensionTokens, ...catalogs.numberTokens];
   return catalogs.dimensionTokens;
 }

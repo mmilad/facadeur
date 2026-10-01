@@ -219,28 +219,6 @@
         }
       }
     },
-    "font": {
-      "weight": {
-        "$extensions": {
-          "facadeur": {
-            "tier": "primitive"
-          }
-        },
-        "$type": "fontWeight",
-        "bold": {
-          "$value": 700
-        },
-        "medium": {
-          "$value": 500
-        },
-        "regular": {
-          "$value": 400
-        },
-        "semibold": {
-          "$value": 600
-        }
-      }
-    },
     "radius": {
       "$extensions": {
         "facadeur": {
@@ -430,7 +408,7 @@
         "$value": {
           "fontFamily": "{font.sans}",
           "fontSize": "16px",
-          "fontWeight": "{font.weight.regular}",
+          "fontWeight": 400,
           "letterSpacing": "0",
           "lineHeight": 1.5
         }
@@ -448,7 +426,7 @@
         "$value": {
           "fontFamily": "{font.sans}",
           "fontSize": "12px",
-          "fontWeight": "{font.weight.regular}",
+          "fontWeight": 400,
           "letterSpacing": "0",
           "lineHeight": 1.4
         }
@@ -469,7 +447,7 @@
         "$value": {
           "fontFamily": "{font.sans}",
           "fontSize": "40px",
-          "fontWeight": "{font.weight.semibold}",
+          "fontWeight": 600,
           "letterSpacing": "0",
           "lineHeight": 1.1
         }
@@ -490,7 +468,7 @@
         "$value": {
           "fontFamily": "{font.sans}",
           "fontSize": "32px",
-          "fontWeight": "{font.weight.semibold}",
+          "fontWeight": 600,
           "letterSpacing": "0",
           "lineHeight": 1.2
         }
@@ -508,7 +486,7 @@
         "$value": {
           "fontFamily": "{font.sans}",
           "fontSize": "14px",
-          "fontWeight": "{font.weight.medium}",
+          "fontWeight": 500,
           "letterSpacing": "0",
           "lineHeight": 1.4
         }
@@ -529,7 +507,7 @@
         "$value": {
           "fontFamily": "{font.sans}",
           "fontSize": "24px",
-          "fontWeight": "{font.weight.semibold}",
+          "fontWeight": 600,
           "letterSpacing": "0",
           "lineHeight": 1.25
         }

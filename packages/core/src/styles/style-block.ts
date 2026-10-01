@@ -312,7 +312,7 @@ function collectLayerRefs(layer: StyleLayer, refs: Set<string>): void {
   }
 }
 
-/** `{font.sans}` names a family. `{font.weight.regular}` is a token. */
+/** `{font.sans}` names a family. Any other reference is a token. */
 export function refsInText(value: string): string[] {
   const refs: string[] = [];
   for (const match of value.matchAll(TOKEN_REF)) {

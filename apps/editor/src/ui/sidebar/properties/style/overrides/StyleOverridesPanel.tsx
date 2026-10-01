@@ -15,6 +15,7 @@ import { ShadowControl, isShadowStyleProperty } from '../../../../controls/shado
 import {
   isTypographyStyleProperty,
   projectFontRefs,
+  projectFontWeightOptions,
   TypographyStyleControl,
   type TypographyCatalogs,
 } from '../../../../controls/typography/index.js';
@@ -42,6 +43,7 @@ export function StyleOverridesPanel({
     () => ({
       fontRefs: projectFontRefs(snap.design.fonts),
       fontFamilyTokens: fontFamilyTokenRefsForDocument(snap.design.tokens, snap.document),
+      fontWeights: projectFontWeightOptions(snap.design.fonts),
       fontWeightTokens: fontWeightTokenRefsForDocument(snap.design.tokens, snap.document),
       dimensionTokens: dimensionTokenRefsForDocument(snap.design.tokens, snap.document),
       numberTokens: numberTokenRefsForDocument(snap.design.tokens, snap.document),

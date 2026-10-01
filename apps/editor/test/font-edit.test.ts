@@ -3,6 +3,7 @@ import { createProjectTemplateDocument } from '@facadeur/tokens';
 import {
   createDefaultFont,
   editedFont,
+  formatFontWeightList,
   parseFontFallbacks,
   parseFontWeights,
   suggestFontId,
@@ -28,6 +29,9 @@ describe('font-edit', () => {
 
   it('parses weights and fallbacks', () => {
     expect(parseFontWeights('400, 600')).toEqual([400, 600]);
+    expect(formatFontWeightList([400, 500, 600, 700])).toBe(
+      'Regular 400, Medium 500, Semibold 600, Bold 700',
+    );
     expect(parseFontFallbacks('system-ui, sans-serif')).toEqual(['system-ui', 'sans-serif']);
     expect(() => parseFontFallbacks('Helvetica')).toThrow(/generic family/i);
     expect(() => parseFontWeights('')).toThrow(/at least one weight/i);

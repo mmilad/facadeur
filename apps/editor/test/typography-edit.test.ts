@@ -17,7 +17,7 @@ describe('typography-edit', () => {
       $value: {
         fontFamily: '{font.sans}',
         fontSize: '16px',
-        fontWeight: '{font.weight.regular}',
+        fontWeight: 400,
         letterSpacing: '0',
         lineHeight: 1.5,
       },
@@ -62,6 +62,7 @@ describe('typography-edit', () => {
     assertTypographyTokenPath(path);
     const token = createDefaultTypographyToken();
     expect(tokenMatchesDomain(path, token.$type ?? 'typography', 'typography')).toBe(true);
+    expect(tokenMatchesDomain('font.weight.bold', 'fontWeight', 'typography')).toBe(false);
     const indexed = readTokenTree(design.tokens);
     expect(indexed.tokens.has(path)).toBe(false);
   });

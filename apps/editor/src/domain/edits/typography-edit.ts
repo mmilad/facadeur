@@ -41,7 +41,7 @@ export function createDefaultTypographyToken(): TokenDefinition {
     $value: {
       fontFamily: '{font.sans}',
       fontSize: '16px',
-      fontWeight: '{font.weight.regular}',
+      fontWeight: 400,
       letterSpacing: '0',
       lineHeight: 1.5,
     },
