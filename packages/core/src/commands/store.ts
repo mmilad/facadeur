@@ -1,4 +1,4 @@
-import type { Command } from './commands.js';
+import type { Command } from './types.js';
 import type { FlatDocument, FlatNode } from '../document/flat.js';
 
 export interface DocumentChange {

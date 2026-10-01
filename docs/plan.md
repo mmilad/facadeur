@@ -12,29 +12,42 @@ Aktuelle Nutzerentscheidungen haben Vorrang vor historischen Architekturentschei
 
 ### Refactoring-Backlog
 
+Team-Pass (2026-10-01): Validation, Commands und Variants fachlich extrahieren.
+Abschlusskriterien: öffentliche Exports/Entry Points erhalten; keine Schema-, API- oder
+Verhaltensänderungen; keine Runtime-Zyklen; bestehende Contracts-, Command-/Undo-, Varianten-,
+Roundtrip- und Codegen-Tests bestehen. Gemeinsame Integration und Browser-Smoke-Check durch
+den Teamleiter nach den drei unabhängigen Extraktionen. Andere Kandidaten bleiben außerhalb
+dieses Passes.
+
 Organisationsentscheidung vom 2026-10-01: Core wird nach `document/`, `commands/`, `variants/`
 und `styles/` gegliedert. Private Helfer bleiben beim jeweiligen Domain-Modul;
 paketübergreifende Wiederverwendung erfolgt über `@facadeur/core`, ohne Deep Imports oder
 neues Utility-Paket. Der öffentliche Entry Point und alle bestehenden Contracts bleiben erhalten.
-`validate.ts` und `token-tree.ts` bleiben bis zu einer sinnvollen Extraktion einzelne Module.
+`token-tree.ts` bleibt ein einzelnes Modul; `validate.ts` ist nach fachlicher Extraktion eine Compatibility-Fassade.
 Die unten offenen Größen-Kandidaten gelten nach dem Verschieben weiterhin: Organisation
 allein löst keine übergroßen Verantwortlichkeiten.
 
-Nächste fachliche Extraktionen: Validierung nach lokalen Definitionen, Baum-/Dokumentregeln
-und katalogübergreifenden Contracts prüfen; Commands nach Dispatcher und Mutation-Familien;
+In diesem Pass umgesetzte fachliche Extraktionen: Validierung nach lokalen Definitionen, Baum-/Dokumentregeln
+und katalogübergreifenden Contracts; Commands nach Dispatcher und Mutation-Familien;
 Varianten nach Auflösung/Anwendung und Ableitung von Deltas. Dabei gemeinsame Helfer erst
 nach belegter Wiederverwendung extrahieren und bidirektionale Varianten-/Roundtrip-Tests erhalten.
 
-- **Validation:** `validation/document.ts` für Schema-Eingang, Definitionen, Tree/Libraries und
-  lokale Assertions; `validation/catalog.ts` für Expose-, Data-/Variant-Contracts und
-  Instanz-Overrides. Catalog importiert Document, nie umgekehrt. Prüfen: Catalog-Contracts,
-  Feldkompatibilität, Fehlerverhalten und unverändertes JSON-Schema.
-- **Commands:** Dispatcher und öffentliche Command-Typen behalten Cloning, Canonicalization und
-  finale Validierung. Struktur-, Node/Property- und Definition/Design-Mutationen werden private
-  Module. Prüfen: bestehende Command-Fälle, atomare Ablehnung, Yjs-Roundtrip und Undo/Redo.
-- **Variants:** Resolver/Anwendung und Deriver/Deltas trennen. Gemeinsame Style-Layer-Helfer nur
-  bei tatsächlicher Verwendung beider Seiten teilen. Prüfen: Resolve/Derive-Roundtrip, Sparse
-  Overrides, entfernte/eingefügte Nodes, States/Breakpoints und Codegen-Ausgabe.
+- **Validation:** `validation/schema.ts` übernimmt den Schema-Eingang, `assertions.ts`
+  lokale Assertions, `tree.ts` Baum-/Library-Regeln und `definitions.ts` Definitionen.
+  `catalog-exposed.ts` und `data-contracts.ts` kapseln übergreifende Contracts;
+  `catalog.ts` koordiniert die Katalogprüfung. `validate.ts` erhält die bisherigen Exports.
+- **Commands:** `commands.ts` behält Cloning, Dispatch, Canonicalization und finale Validierung.
+  `types.ts` enthält Command-Typen; `structure.ts`, `node.ts`, `definitions.ts` und `design.ts`
+  enthalten die Mutation-Familien. Node-/Value-/Token-Read-Helfer sind nur bei belegter
+  Wiederverwendung geteilt. Atomare Ablehnung und der Undo-Vertrag bleiben erhalten.
+- **Variants:** `resolve.ts` übernimmt Auflösung/Anwendung, `derive.ts` die Preset-Ableitung
+  und `derive-node.ts` Node-Deltas. `style-layers.ts` enthält den tatsächlich gemeinsam
+  verwendeten Layer-Helfer. `variants.ts` erhält den bisherigen Entry Point.
+
+Abgeschlossen: 530 Tests in 108 Dateien, Core-/Editor-Typechecks, Core-Lint und Formatprüfung
+bestanden. Browser-Smoke-Check mit Layout-Änderung und Undo bestanden. Alle 131 ursprünglichen
+Funktionskörper erhalten; keine fehlenden Runtime-Imports oder Runtime-Zyklen. Öffentliche
+API, Schema und Datenmodell unverändert.
 
 Dependency-Grenzen: Validation darf Variants verwenden, nicht umgekehrt; Commands dürfen
 Validation verwenden, nicht umgekehrt. `styles/style-block.ts` verwendet `FlatDocument` nur
@@ -46,18 +59,18 @@ Erster Größen-Scan vom 2026-10-01. Offene Einträge sind **Prüfaufträge**, k
 Refactors. Vor Umsetzung konkrete Verantwortlichkeiten, Grenzen und Verhaltenstests festlegen.
 Bei zusammenhängendem Code darf die Entscheidung ausdrücklich „beibehalten“ lauten.
 
-| Status                    | Kandidat                                                  | Nächste Prüfung                                                                                     |
+| Status                    | Kandidat                                                  | Ergebnis / nächste Prüfung                                                                          |
 | ------------------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Offen                     | `packages/core/src/validate.ts`                           | Grenzen zwischen Validierungsbereichen prüfen; gemeinsame Invarianten erhalten.                     |
-| Offen                     | `packages/core/src/commands/commands.ts`                  | Dispatch und Command-Familien prüfen; atomare Validierung und Undo-Vertrag erhalten.                |
+| Erledigt                  | `packages/core/src/validate.ts`                           | Schema, lokale Regeln und Catalog-Contracts extrahiert; Exports und Invarianten erhalten.           |
+| Erledigt                  | `packages/core/src/commands/commands.ts`                  | Kleiner Dispatcher und Mutation-Familien; atomare Validierung und Undo-Vertrag erhalten.            |
 | Offen                     | `packages/store-yjs/src/codec.ts`                         | Grenzen zwischen Kodierung und Dekodierung prüfen; Roundtrip und Legacy-Formate erhalten.           |
-| Offen                     | `packages/core/src/variants/variants.ts`                  | Auflösung und Ableitung von Overrides auf unabhängige Verantwortung prüfen.                         |
-| Offen                     | `packages/core/src/document/schema.ts`                    | Kohäsion prüfen; reine Länge rechtfertigt keine Aufteilung der Schema-Definitionen.                 |
+| Erledigt                  | `packages/core/src/variants/variants.ts`                  | Resolver, Preset-Ableitung und Node-Deltas getrennt; Sparse-Override-Verhalten erhalten.            |
+| Beibehalten nach Prüfung  | `packages/core/src/document/schema.ts`                    | Kohäsion prüfen; reine Länge rechtfertigt keine Aufteilung der Schema-Definitionen.                 |
 | Offen                     | `apps/editor/src/ui/stage/StageCanvas.tsx`                | Interaktionen, Board-Lifecycle und Darstellung auf getrennte Verantwortung prüfen.                  |
-| Offen                     | `packages/core/src/token-tree.ts`                         | Gemeinsame Traversierung und Operationen auf echte Duplikation prüfen.                              |
+| Beibehalten nach Prüfung  | `packages/core/src/token-tree.ts`                         | Gemeinsame Traversierung und Operationen auf echte Duplikation prüfen.                              |
 | Offen                     | `packages/codegen-react/src/component/render.ts`          | Datenauflösung und Code-Ausgabe prüfen; erzeugte Ausgabe erhalten.                                  |
-| Offen                     | `packages/core/src/document/flat.ts`                      | Grenzen der Konvertierung prüfen; bidirektionale Invarianten erhalten.                              |
-| Offen                     | `packages/core/src/styles/style-block.ts`                 | Layer-Operationen prüfen; Sparse-Override-Semantik erhalten.                                        |
+| Beibehalten nach Prüfung  | `packages/core/src/document/flat.ts`                      | Grenzen der Konvertierung prüfen; bidirektionale Invarianten erhalten.                              |
+| Beibehalten nach Prüfung  | `packages/core/src/styles/style-block.ts`                 | Layer-Operationen prüfen; Sparse-Override-Semantik erhalten.                                        |
 | Offen                     | `packages/tokens/src/resolve.ts`                          | Kohäsion der Token-Auflösung vor weiterer Erweiterung prüfen.                                       |
 | Offen                     | `apps/editor/src/ui/sidebar/layers/ProjectTree.tsx`       | Baumdarstellung, Aktionen und Kontextmenüs auf wiederverwendbare Interaktionen prüfen.              |
 | Offen                     | `apps/editor/src/domain/session/create-editor-session.ts` | Session-Koordination und Subscriptions auf klare Zuständigkeiten prüfen.                            |
