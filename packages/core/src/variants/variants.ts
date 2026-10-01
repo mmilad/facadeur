@@ -1,4 +1,4 @@
-import { DocumentError } from './errors.js';
+import { DocumentError } from '../document/errors.js';
 import {
   isVariantAxis,
   type DocumentFile,
@@ -11,7 +11,7 @@ import {
   type StyleLayer,
   type Layout,
   type LayoutOverride,
-} from './schema.js';
+} from '../document/schema.js';
 
 /** Return named overlay variants without exposing the legacy axis definitions. */
 export function variantPresets(document: DocumentFile): VariantPreset[] {

@@ -1,6 +1,6 @@
 import { DocumentError } from './errors.js';
-import { cloneBreakpoints, cloneFonts } from './libraries.js';
-import { canonicalizeLayout } from './layout.js';
+import { cloneBreakpoints, cloneFonts } from '../styles/libraries.js';
+import { canonicalizeLayout } from '../styles/layout.js';
 import type { FontFamily, IconDefinition } from './schema.js';
 import type {
   Binding,
@@ -23,8 +23,8 @@ import type {
   Repeat,
 } from './schema.js';
 import { isVariantAxis, isVariantPreset } from './schema.js';
-import { canonicalizeStyleBlock, canonicalizeTokenInterface } from './style-block.js';
-import { canonicalizeTokenTree, type TokenTree } from './token-tree.js';
+import { canonicalizeStyleBlock, canonicalizeTokenInterface } from '../styles/style-block.js';
+import { canonicalizeTokenTree, type TokenTree } from '../token-tree.js';
 
 export interface FlatNodeBase {
   id: string;

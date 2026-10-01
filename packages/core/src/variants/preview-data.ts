@@ -1,5 +1,10 @@
-import { isVariantPreset, type DocumentFile, type FieldValue, type PreviewData } from './schema.js';
-import type { FlatDocument } from './flat.js';
+import {
+  isVariantPreset,
+  type DocumentFile,
+  type FieldValue,
+  type PreviewData,
+} from '../document/schema.js';
+import type { FlatDocument } from '../document/flat.js';
 
 type PreviewDocument = DocumentFile | FlatDocument;
 

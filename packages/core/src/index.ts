@@ -4,10 +4,10 @@ export {
   type CommandContext,
   type InsertNode,
   type NodeProp,
-} from './commands.js';
-export { DocumentError } from './errors.js';
-export { canonicalizeJson, isJsonValue, isPlainObject, type JsonValue } from './json.js';
-export { assertBreakpoints, assertFont, assertFonts, fontStyles } from './libraries.js';
+} from './commands/commands.js';
+export { DocumentError } from './document/errors.js';
+export { canonicalizeJson, isJsonValue, isPlainObject, type JsonValue } from './document/json.js';
+export { assertBreakpoints, assertFont, assertFonts, fontStyles } from './styles/libraries.js';
 export {
   canonicalizeFlat,
   collectSubtree,
@@ -23,9 +23,9 @@ export {
   type ImageNode,
   type InstanceNode,
   type TextNode,
-} from './flat.js';
-export { createId, ID_PATTERN, TAG_PATTERN } from './ids.js';
-export { canonicalizeLayout, layoutTokenRefs, parseLayout } from './layout.js';
+} from './document/flat.js';
+export { createId, ID_PATTERN, TAG_PATTERN } from './document/ids.js';
+export { canonicalizeLayout, layoutTokenRefs, parseLayout } from './styles/layout.js';
 export {
   defaultKinds,
   defaultNestingRules,
@@ -33,7 +33,7 @@ export {
   type DefaultKind,
   type NestingRule,
   type NodeType,
-} from './kinds.js';
+} from './document/kinds.js';
 export {
   DOCUMENT_SCHEMA_ID,
   bindingTargets,
@@ -96,7 +96,7 @@ export {
   type VariantNodeOverride,
   type VariantOverrides,
   type VariantPreset,
-} from './schema.js';
+} from './document/schema.js';
 export {
   readTokenTree,
   removeGroupFromTree,
@@ -113,9 +113,13 @@ export {
   type TokenTier,
   type TokenTree,
 } from './token-tree.js';
-export { type DocumentChange, type DocumentStore } from './store.js';
-export { deriveVariantPreset, resolveVariantDocument, variantPresets } from './variants.js';
-export { resolvePreviewData, withPreviewData } from './preview-data.js';
+export { type DocumentChange, type DocumentStore } from './commands/store.js';
+export {
+  deriveVariantPreset,
+  resolveVariantDocument,
+  variantPresets,
+} from './variants/variants.js';
+export { resolvePreviewData, withPreviewData } from './variants/preview-data.js';
 export {
   assertStyleContract,
   assertStyleMap,
@@ -128,7 +132,7 @@ export {
   parseStyleBlock,
   parseTokenInterface,
   refsInText,
-} from './style-block.js';
+} from './styles/style-block.js';
 export {
   assertDefinitionKind,
   assertDisplayOn,

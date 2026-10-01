@@ -1,6 +1,6 @@
-import { DocumentError } from './errors.js';
-import { canonicalizeJson, isJsonValue, isPlainObject, type JsonValue } from './json.js';
-import { tokenTypes, type TokenType } from './schema.js';
+import { DocumentError } from './document/errors.js';
+import { canonicalizeJson, isJsonValue, isPlainObject, type JsonValue } from './document/json.js';
+import { tokenTypes, type TokenType } from './document/schema.js';
 
 /** One path segment. Digits are allowed (`500`); hyphens are not, so CSS names stay unique. */
 export const TOKEN_SEGMENT = /^[a-z0-9]+$/;

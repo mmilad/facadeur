@@ -1,10 +1,10 @@
 import Ajv, { type ErrorObject, type ValidateFunction } from 'ajv';
-import { DocumentError } from './errors.js';
-import { type FlatDocument, type FlatNode, toFlat } from './flat.js';
-import { ID_PATTERN } from './ids.js';
-import { defaultNestingRules, type NestingRule } from './kinds.js';
-import { assertBreakpoints, assertFonts } from './libraries.js';
-import { parseLayout } from './layout.js';
+import { DocumentError } from './document/errors.js';
+import { type FlatDocument, type FlatNode, toFlat } from './document/flat.js';
+import { ID_PATTERN } from './document/ids.js';
+import { defaultNestingRules, type NestingRule } from './document/kinds.js';
+import { assertBreakpoints, assertFonts } from './styles/libraries.js';
+import { parseLayout } from './styles/layout.js';
 import {
   createDocumentSchema,
   documentFileSchema,
@@ -22,10 +22,10 @@ import {
   type Repeat,
   type VariantPreset,
   isVariantAxis,
-} from './schema.js';
-import { resolveVariantDocument, variantPresets } from './variants.js';
+} from './document/schema.js';
+import { resolveVariantDocument, variantPresets } from './variants/variants.js';
 import { readTokenTree } from './token-tree.js';
-import { assertStyleContract } from './style-block.js';
+import { assertStyleContract } from './styles/style-block.js';
 
 export interface ValidateOptions {
   rules?: Readonly<Record<string, NestingRule>>;

@@ -1,5 +1,5 @@
 import type { Command } from './commands.js';
-import type { FlatDocument, FlatNode } from './flat.js';
+import type { FlatDocument, FlatNode } from '../document/flat.js';
 
 export interface DocumentChange {
   reason: 'command' | 'undo' | 'redo';

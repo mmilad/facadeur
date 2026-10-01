@@ -1,4 +1,4 @@
-import { DocumentError } from './errors.js';
+import { DocumentError } from '../document/errors.js';
 import {
   canonicalizeFlat,
   collectSubtree,
@@ -9,11 +9,11 @@ import {
   type FlatDocument,
   type FlatNode,
   type FrameNode,
-} from './flat.js';
-import { createId, ID_PATTERN, TAG_PATTERN } from './ids.js';
-import type { NodeType } from './kinds.js';
-import { assertBreakpoints, assertFont, cloneBreakpoints, cloneFont } from './libraries.js';
-import { parseLayout } from './layout.js';
+} from '../document/flat.js';
+import { createId, ID_PATTERN, TAG_PATTERN } from '../document/ids.js';
+import type { NodeType } from '../document/kinds.js';
+import { assertBreakpoints, assertFont, cloneBreakpoints, cloneFont } from '../styles/libraries.js';
+import { parseLayout } from '../styles/layout.js';
 import type {
   Binding,
   Breakpoint,
@@ -33,8 +33,8 @@ import type {
   VariantAxis,
   VariantPreset,
   VariantRule,
-} from './schema.js';
-import { isVariantAxis } from './schema.js';
+} from '../document/schema.js';
+import { isVariantAxis } from '../document/schema.js';
 import {
   assertStyleMap,
   collectTokenRefs,
@@ -42,7 +42,7 @@ import {
   omitVariantValues,
   parseStyleBlock,
   parseTokenInterface,
-} from './style-block.js';
+} from '../styles/style-block.js';
 import {
   removeGroupFromTree,
   removeTokenFromTree,
@@ -50,8 +50,8 @@ import {
   setTokenInTree,
   type TokenDefinition,
   type TokenGroupDefinition,
-} from './token-tree.js';
-import { assertValueMatches } from './validate.js';
+} from '../token-tree.js';
+import { assertValueMatches } from '../validate.js';
 import {
   assertAttributes,
   assertBindings,
@@ -69,7 +69,7 @@ import {
   validateLibraries,
   validateTree,
   type ValidateOptions,
-} from './validate.js';
+} from '../validate.js';
 
 export interface CommandContext extends ValidateOptions {
   createId?: () => string;

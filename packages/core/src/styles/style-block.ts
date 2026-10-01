@@ -1,7 +1,7 @@
-import { defaultBreakpoints, isVariantAxis, type Breakpoint } from './schema.js';
-import { DocumentError } from './errors.js';
+import { defaultBreakpoints, isVariantAxis, type Breakpoint } from '../document/schema.js';
+import { DocumentError } from '../document/errors.js';
 import { layoutTokenRefs } from './layout.js';
-import type { FlatDocument } from './flat.js';
+import type { FlatDocument } from '../document/flat.js';
 import type {
   StyleBlock,
   StyleChild,
@@ -9,7 +9,7 @@ import type {
   StyleLayer,
   StyleStates,
   TokenInterface,
-} from './schema.js';
+} from '../document/schema.js';
 
 const TOKEN_REF = /\{([a-z][a-z0-9]*(?:\.[a-z0-9]+)*)\}/g;
 const TOKEN_PATH = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+)+$/;

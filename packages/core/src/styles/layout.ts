@@ -1,5 +1,12 @@
-import { DocumentError } from './errors.js';
-import type { AxisSize, Layout, LayoutOverride, SizeValue, Spacing, SpacingBox } from './schema.js';
+import { DocumentError } from '../document/errors.js';
+import type {
+  AxisSize,
+  Layout,
+  LayoutOverride,
+  SizeValue,
+  Spacing,
+  SpacingBox,
+} from '../document/schema.js';
 
 const TOKEN_REF = /^\{[a-z][a-z0-9]*(?:\.[a-z0-9]+)+\}$/;
 const BREAKPOINT_ID = /^[a-z][a-z0-9]*$/;

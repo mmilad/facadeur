@@ -2,6 +2,67 @@
 
 > Lebendes Dokument. Coding-Agenten: Lies zuerst **Prinzipien** und **Entscheidungen**, arbeite dann den ersten offenen Meilenstein ab und hake erledigte Punkte (`- [x]`) im selben PR ab. Neue Erkenntnisse oder Abweichungen kommen unter „Entscheidungslog“ ans Ende.
 
+## Refactoring bei der Aufgabenplanung
+
+Vor Erweiterungen betroffene Dateien mit `node scripts/refactor-candidates.mjs <Pfade>`
+prüfen und die [Checkliste](refactoring-checklist.md) anwenden. Größe löst eine Prüfung aus,
+keine automatische Aufteilung. Begründete Refactors innerhalb des aktuellen Auftrags kommen
+vor die davon abhängige Feature-Arbeit in den Aufgabenplan. Andere Kandidaten bleiben im Backlog.
+Aktuelle Nutzerentscheidungen haben Vorrang vor historischen Architekturentscheidungen unten.
+
+### Refactoring-Backlog
+
+Organisationsentscheidung vom 2026-10-01: Core wird nach `document/`, `commands/`, `variants/`
+und `styles/` gegliedert. Private Helfer bleiben beim jeweiligen Domain-Modul;
+paketübergreifende Wiederverwendung erfolgt über `@facadeur/core`, ohne Deep Imports oder
+neues Utility-Paket. Der öffentliche Entry Point und alle bestehenden Contracts bleiben erhalten.
+`validate.ts` und `token-tree.ts` bleiben bis zu einer sinnvollen Extraktion einzelne Module.
+Die unten offenen Größen-Kandidaten gelten nach dem Verschieben weiterhin: Organisation
+allein löst keine übergroßen Verantwortlichkeiten.
+
+Nächste fachliche Extraktionen: Validierung nach lokalen Definitionen, Baum-/Dokumentregeln
+und katalogübergreifenden Contracts prüfen; Commands nach Dispatcher und Mutation-Familien;
+Varianten nach Auflösung/Anwendung und Ableitung von Deltas. Dabei gemeinsame Helfer erst
+nach belegter Wiederverwendung extrahieren und bidirektionale Varianten-/Roundtrip-Tests erhalten.
+
+- **Validation:** `validation/document.ts` für Schema-Eingang, Definitionen, Tree/Libraries und
+  lokale Assertions; `validation/catalog.ts` für Expose-, Data-/Variant-Contracts und
+  Instanz-Overrides. Catalog importiert Document, nie umgekehrt. Prüfen: Catalog-Contracts,
+  Feldkompatibilität, Fehlerverhalten und unverändertes JSON-Schema.
+- **Commands:** Dispatcher und öffentliche Command-Typen behalten Cloning, Canonicalization und
+  finale Validierung. Struktur-, Node/Property- und Definition/Design-Mutationen werden private
+  Module. Prüfen: bestehende Command-Fälle, atomare Ablehnung, Yjs-Roundtrip und Undo/Redo.
+- **Variants:** Resolver/Anwendung und Deriver/Deltas trennen. Gemeinsame Style-Layer-Helfer nur
+  bei tatsächlicher Verwendung beider Seiten teilen. Prüfen: Resolve/Derive-Roundtrip, Sparse
+  Overrides, entfernte/eingefügte Nodes, States/Breakpoints und Codegen-Ausgabe.
+
+Dependency-Grenzen: Validation darf Variants verwenden, nicht umgekehrt; Commands dürfen
+Validation verwenden, nicht umgekehrt. `styles/style-block.ts` verwendet `FlatDocument` nur
+als Typ, weil `document/flat.ts` Style-Canonicalization benötigt. Token-Tree bleibt unabhängig
+von FlatDocument. Schema, Flat-Konvertierung, Style-Block und Token-Tree werden vorerst
+beibehalten, solange keine konkrete Verantwortungsgrenze den Roundtrip-Risiken gegenübersteht.
+
+Erster Größen-Scan vom 2026-10-01. Offene Einträge sind **Prüfaufträge**, keine beschlossenen
+Refactors. Vor Umsetzung konkrete Verantwortlichkeiten, Grenzen und Verhaltenstests festlegen.
+Bei zusammenhängendem Code darf die Entscheidung ausdrücklich „beibehalten“ lauten.
+
+| Status                    | Kandidat                                                  | Nächste Prüfung                                                                                     |
+| ------------------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Offen                     | `packages/core/src/validate.ts`                           | Grenzen zwischen Validierungsbereichen prüfen; gemeinsame Invarianten erhalten.                     |
+| Offen                     | `packages/core/src/commands/commands.ts`                  | Dispatch und Command-Familien prüfen; atomare Validierung und Undo-Vertrag erhalten.                |
+| Offen                     | `packages/store-yjs/src/codec.ts`                         | Grenzen zwischen Kodierung und Dekodierung prüfen; Roundtrip und Legacy-Formate erhalten.           |
+| Offen                     | `packages/core/src/variants/variants.ts`                  | Auflösung und Ableitung von Overrides auf unabhängige Verantwortung prüfen.                         |
+| Offen                     | `packages/core/src/document/schema.ts`                    | Kohäsion prüfen; reine Länge rechtfertigt keine Aufteilung der Schema-Definitionen.                 |
+| Offen                     | `apps/editor/src/ui/stage/StageCanvas.tsx`                | Interaktionen, Board-Lifecycle und Darstellung auf getrennte Verantwortung prüfen.                  |
+| Offen                     | `packages/core/src/token-tree.ts`                         | Gemeinsame Traversierung und Operationen auf echte Duplikation prüfen.                              |
+| Offen                     | `packages/codegen-react/src/component/render.ts`          | Datenauflösung und Code-Ausgabe prüfen; erzeugte Ausgabe erhalten.                                  |
+| Offen                     | `packages/core/src/document/flat.ts`                      | Grenzen der Konvertierung prüfen; bidirektionale Invarianten erhalten.                              |
+| Offen                     | `packages/core/src/styles/style-block.ts`                 | Layer-Operationen prüfen; Sparse-Override-Semantik erhalten.                                        |
+| Offen                     | `packages/tokens/src/resolve.ts`                          | Kohäsion der Token-Auflösung vor weiterer Erweiterung prüfen.                                       |
+| Offen                     | `apps/editor/src/ui/sidebar/layers/ProjectTree.tsx`       | Baumdarstellung, Aktionen und Kontextmenüs auf wiederverwendbare Interaktionen prüfen.              |
+| Offen                     | `apps/editor/src/domain/session/create-editor-session.ts` | Session-Koordination und Subscriptions auf klare Zuständigkeiten prüfen.                            |
+| Beibehalten nach Refactor | `packages/renderer-dom/src/render.ts`                     | Rendering/Reconciliation bleibt zusammen; Resolution, Presentation und Contracts wurden extrahiert. |
+
 ## Ziel
 
 facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen und Pages werden auf einer zoombaren Bühne gebaut, ähnlich wie in Figma. Die Quelle der Wahrheit ist JSON (unsere DSL). Daraus werden echte DOM-Elemente gerendert und später Framework-Code generiert (zuerst React für Next.js). Zielgruppe ist zuerst der Autor selbst, später Designer als Produkt.

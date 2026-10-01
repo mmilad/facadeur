@@ -1,5 +1,11 @@
-import { DocumentError } from './errors.js';
-import type { Breakpoint, FontFaceFile, FontFamily, FontSource, FontStyle } from './schema.js';
+import { DocumentError } from '../document/errors.js';
+import type {
+  Breakpoint,
+  FontFaceFile,
+  FontFamily,
+  FontSource,
+  FontStyle,
+} from '../document/schema.js';
 
 /** CSS generic families. A font stack must end on one so it always resolves. */
 const GENERIC_FAMILIES = new Set([

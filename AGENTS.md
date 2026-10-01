@@ -8,6 +8,10 @@ and repeat it on affected paths before completion. With no arguments it scans ma
 
 Size is a review signal, never an instruction to split a file automatically. Also review smaller
 files when responsibilities, duplicated behavior, or repeated conditionals justify it.
+Apply the checklist's directory and ownership rules: organize by domain, colocate private
+helpers, share within a package only for actual common behavior, and share across packages
+through the owning package's public API. Do not create generic utility packages or deep imports
+merely to reduce file size. Review a flat directory when unrelated domains accumulate there.
 Add a justified, in-scope refactor to the current task plan before the feature that depends on it.
 Record unrelated candidates in the refactoring backlog in `docs/plan.md`; do not silently expand
 the user's task. For each candidate, state the evidence, chosen boundary/pattern, preserved
