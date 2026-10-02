@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { createId, listComponentTokens, validateCatalog } from '@facadeur/core';
+import { createId, listComponentTokens } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -10,8 +10,9 @@ import button from '../../../examples/button.json';
 import { readComponentTokens } from '../src/domain/component-tokens.js';
 import { createEditorSession, type EditorSession } from '../src/domain/session.js';
 import { App } from '../src/ui/shell/EditorShell.js';
+import { expandExampleCatalog } from './fixtures/example-catalog.js';
 
-const documents = validateCatalog([button]);
+const documents = expandExampleCatalog([button]);
 
 function tokenValueByPath(doc: ReturnType<EditorSession['getSnapshot']>['document'], path: string) {
   return listComponentTokens(readComponentTokens(doc)).find((entry) => entry.path === path)?.value;
@@ -88,5 +89,55 @@ describe('component tokens inspector', () => {
     });
 
     expect(tokenValueByPath(session.getSnapshot().document, 'color.bg')).toBe('#336699');
+  });
+
+  it('selects a global reference by its saved label and preserves the reference', async () => {
+    const design = structuredClone(createProjectTemplateDocument());
+    const accentDefault = (
+      design.tokens as unknown as {
+        color: { accent: { default: { $value: string; $extensions?: object } } };
+      }
+    ).color.accent.default;
+    accentDefault.$extensions = { facadeur: { label: 'Warm' } };
+    const session = createEditorSession({ documents, design });
+    session.openAsset('button', 'root');
+    const id = createId();
+    await act(async () => {
+      session.execute({
+        type: 'setComponentToken',
+        id,
+        path: 'color.bg',
+        token: { type: 'color', value: '{color.neutral.0}' },
+      });
+    });
+
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => root?.render(<App session={session} />));
+    await act(async () => {
+      host!
+        .querySelector('button[name="property-tab-tokens"]')
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    const tokenRow = host.querySelector('[data-component-token-path="color.bg"]')!;
+    await act(async () => {
+      (tokenRow.querySelector('[aria-label^="Choose"]') as HTMLButtonElement).click();
+    });
+    const search = document.querySelector<HTMLInputElement>(
+      '.token-value-picker input[type="search"]',
+    )!;
+    await act(async () => setInput(search, 'Warm'));
+    const globalOption = [
+      ...document.querySelectorAll<HTMLButtonElement>('.token-value-options button'),
+    ].find((button) => button.textContent?.startsWith('◇ Warm'));
+    expect(globalOption).toBeDefined();
+    await act(async () => globalOption?.click());
+
+    expect(tokenRow.querySelector('.token-value-reference')?.textContent?.trim()).toBe('◇ Warm');
+    expect(tokenValueByPath(session.getSnapshot().document, 'color.bg')).toBe(
+      '{color.accent.default}',
+    );
   });
 });

@@ -4,6 +4,7 @@ import '../../form/form.css';
 import {
   useTokenPreview,
   useTokenLabel,
+  useTokenValueLabel,
   useTokenResolver,
   useTokenSearchValue,
 } from './TokenPreviewContext.js';
@@ -51,6 +52,7 @@ export function TokenValueControl({
   const reference = isTokenReference(value);
   const resolved = useTokenPreview(value);
   const labelFor = useTokenLabel();
+  const valueLabelFor = useTokenValueLabel();
   const resolve = useTokenResolver();
   const searchValue = useTokenSearchValue();
   const path = reference ? value.trim().slice(1, -1) : value;
@@ -97,7 +99,7 @@ export function TokenValueControl({
             }}
           >
             {reference ? <span aria-label="Token reference">◇ </span> : null}
-            {(reference ? labelFor(value) : path) || placeholder || 'Inherited'}
+            {(reference ? valueLabelFor(value) : path) || placeholder || 'Inherited'}
           </button>
         ) : (
           <TextInput

@@ -4,12 +4,13 @@ import { act, useSyncExternalStore } from 'react';
 import { cleanup, render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, it } from 'vitest';
-import { validateCatalog, type DocumentFile } from '@facadeur/core';
+import type { DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { createEditorSession, type EditorSession } from '../src/domain/session.js';
 import { StyleInspector } from '../src/ui/sidebar/properties/style/StyleInspector.js';
 import { gridDeclarations } from '../src/ui/sidebar/properties/layout/grid/edits.js';
 import { shownAxis } from '../src/ui/sidebar/properties/layout/sizing.js';
+import { expandExampleCatalog } from './fixtures/example-catalog.js';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 afterEach(cleanup);
@@ -69,7 +70,7 @@ it.each([
   'distinguishes Auto from Inherit for a Hug master (variant %s, viewport %s)',
   async (variant, viewport) => {
     const session = createEditorSession({
-      documents: validateCatalog([file, master]),
+      documents: expandExampleCatalog([file, master]),
       design: createProjectTemplateDocument(),
     });
     session.openAsset(file.id, 'root');
@@ -113,7 +114,7 @@ it('keeps manual CSS height separate and synchronizes edits with the guided size
     root: { id: 'root', type: 'frame', style: { height: 'fit-content' }, children: [] },
   };
   const session = createEditorSession({
-    documents: validateCatalog([native]),
+    documents: expandExampleCatalog([native]),
     design: createProjectTemplateDocument(),
   });
   session.openAsset(file.id, 'root');
@@ -148,7 +149,7 @@ it('replaces a legacy Hug height atomically while preserving width and unrelated
     },
   };
   const session = createEditorSession({
-    documents: validateCatalog([native]),
+    documents: expandExampleCatalog([native]),
     design: createProjectTemplateDocument(),
   });
   session.openAsset(file.id, 'root');
@@ -192,7 +193,7 @@ it.each([false, true])(
         : file.variants,
     };
     const session = createEditorSession({
-      documents: validateCatalog([native]),
+      documents: expandExampleCatalog([native]),
       design: createProjectTemplateDocument(),
     });
     session.openAsset(file.id, 'root');

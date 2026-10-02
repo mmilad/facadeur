@@ -36,9 +36,7 @@ describe('binding slots', () => {
 
   it('offers src and alt on image nodes', () => {
     const slots = slotsForNode('image');
-    expect(slots.map((slot) => slot.id)).toEqual(
-      expect.arrayContaining(['src', 'alt']),
-    );
+    expect(slots.map((slot) => slot.id)).toEqual(expect.arrayContaining(['src', 'alt']));
     expect(slots.some((slot) => slot.id === 'value')).toBe(false);
     expect(slots.filter((slot) => slot.target === 'attribute' && slot.name === 'src')).toHaveLength(
       0,

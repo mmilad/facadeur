@@ -13,6 +13,7 @@ import {
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
 import { IconButton } from '../../../form/components/shared/IconButton.js';
 import { TokenAddAction } from './TokenAddAction.js';
+import { useTokenLabel } from '../../../controls/fields/TokenPreviewContext.js';
 
 export function TypographyTokenAddRow({
   session,
@@ -69,6 +70,7 @@ export function RemoveTypographyTokenButton({
   snap: EditorSnapshot;
   path: string;
 }) {
+  const labelFor = useTokenLabel();
   function removeTypography() {
     const refs = [
       ...tokenPathsReferencingTypography(snap.design.tokens, path),
@@ -87,7 +89,7 @@ export function RemoveTypographyTokenButton({
   return (
     <IconButton
       className="token-action-remove"
-      label={`Remove typography ${path}`}
+      label={`Remove typography ${labelFor(path)}`}
       name={`remove-typography-${path}`}
       onClick={() => removeTypography()}
     >

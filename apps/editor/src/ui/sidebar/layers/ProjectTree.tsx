@@ -80,9 +80,7 @@ export function ProjectTree({
   }, [assetContextMenu, snap.catalog]);
 
   useEffect(() => {
-    setAssetContextMenu((current) =>
-      current && current.assetId !== snap.openId ? null : current,
-    );
+    setAssetContextMenu((current) => (current && current.assetId !== snap.openId ? null : current));
   }, [snap.openId]);
 
   useEffect(() => {
@@ -209,7 +207,11 @@ export function ProjectTree({
           <button
             key={item.id}
             type="button"
-            className={surface === item.id ? 'asset design-sidebar-item is-active' : 'asset design-sidebar-item'}
+            className={
+              surface === item.id
+                ? 'asset design-sidebar-item is-active'
+                : 'asset design-sidebar-item'
+            }
             data-design-domain={item.id}
             aria-pressed={surface === item.id}
             onClick={() => onOpenDesignDomain(item.id)}

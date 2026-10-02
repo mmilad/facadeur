@@ -91,10 +91,11 @@ describe('applyCommand', () => {
         fields: { value: 'control.value', placeholder: 'control.placeholder' },
         events: { commit: 'control.commit' },
       },
+      tokenInterface: { reads: ['space.0'] },
       styles: {
         children: {
           control: { declarations: { color: 'red' } },
-          label: { declarations: { margin: '0' } },
+          label: { declarations: { margin: '{space.0}' } },
         },
       },
       root: {
@@ -108,7 +109,7 @@ describe('applyCommand', () => {
     });
     doc = applyCommand(doc, { type: 'remove', nodeId: 'control' });
     expect(doc.nodes.control).toBeUndefined();
-    expect(doc.styles?.children).toEqual({ label: { declarations: { margin: '0' } } });
+    expect(doc.styles?.children).toEqual({ label: { declarations: { margin: '{space.0}' } } });
     expect(doc.expose).toBeUndefined();
   });
 

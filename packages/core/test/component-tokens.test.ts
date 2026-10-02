@@ -26,6 +26,7 @@ describe('component tokens', () => {
           path: 'color.border',
           type: 'color',
           value: '{color.neutral.600}',
+          label: 'Outline',
         },
       },
       tokenInterface: { reads: ['color.neutral.600'] },
@@ -41,13 +42,14 @@ describe('component tokens', () => {
       name: 'Input',
       kind: 'component',
       componentTokens: {
-        'color.border': { type: 'color', value: '{color.neutral.600}' },
-      },
+        'color.border': { type: 'color', value: '{color.neutral.600}', label: 'Outline' },
+      } as unknown as DocumentFile['componentTokens'],
       root: { id: 'root', type: 'frame', tag: 'div' },
     });
     const tokens = listComponentTokens(flat.componentTokens);
     expect(tokens).toHaveLength(1);
     expect(tokens[0]?.path).toBe('color.border');
+    expect(tokens[0]?.label).toBe('Outline');
     expect(tokens[0]?.id).toMatch(/^n_/);
   });
 

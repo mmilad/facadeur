@@ -13,6 +13,7 @@ import {
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
 import { IconButton } from '../../../form/components/shared/IconButton.js';
 import { TokenAddAction } from './TokenAddAction.js';
+import { useTokenLabel } from '../../../controls/fields/TokenPreviewContext.js';
 
 export function RadiusTokenAddRow({
   session,
@@ -69,6 +70,7 @@ export function RemoveRadiusTokenButton({
   snap: EditorSnapshot;
   path: string;
 }) {
+  const labelFor = useTokenLabel();
   function removeRadius() {
     const refs = [
       ...tokenPathsReferencingRadius(snap.design.tokens, path),
@@ -87,7 +89,7 @@ export function RemoveRadiusTokenButton({
   return (
     <IconButton
       className="token-action-remove"
-      label={`Remove radius ${path}`}
+      label={`Remove radius ${labelFor(path)}`}
       name={`remove-radius-${path}`}
       onClick={() => removeRadius()}
     >

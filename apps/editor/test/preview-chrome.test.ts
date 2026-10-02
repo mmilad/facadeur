@@ -2,16 +2,8 @@
  * @vitest-environment jsdom
  */
 import { describe, expect, it } from 'vitest';
-import { validateCatalog } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import button from '../../../examples/button.json';
-import card from '../../../examples/card.json';
-import input from '../../../examples/input.json';
-import link from '../../../examples/link.json';
-import signIn from '../../../examples/sign-in.json';
-import specimenPage from '../../../examples/specimen-page.json';
-import specimenSection from '../../../examples/specimen-section.json';
-import textarea from '../../../examples/textarea.json';
 import { documentToJson } from '../src/domain/assets/files.js';
 import { createFrameHost } from '../src/domain/viewport/frame-host.js';
 import { createEditorSession } from '../src/domain/session.js';
@@ -22,17 +14,9 @@ import {
 } from '../src/domain/viewport/viewport-chrome.js';
 import { createViewportBoard } from '../src/domain/viewport/viewports.js';
 import { createDocumentStore } from '@facadeur/store-yjs';
+import { editorStandardCatalog, expandExampleCatalog } from './fixtures/example-catalog.js';
 
-const documents = validateCatalog([
-  button,
-  link,
-  input,
-  textarea,
-  card,
-  signIn,
-  specimenSection,
-  specimenPage,
-]);
+const documents = editorStandardCatalog();
 
 describe('asset preview chrome', () => {
   it('defaults to zero padding for all document kinds', () => {
@@ -43,7 +27,7 @@ describe('asset preview chrome', () => {
   });
 
   it('ignores legacy preview inset without touching the document DSL or sizing', () => {
-    const buttonDoc = validateCatalog([button])[0]!;
+    const buttonDoc = expandExampleCatalog([button])[0]!;
     const store = createDocumentStore(buttonDoc);
     const parent = document.createElement('div');
     document.body.append(parent);

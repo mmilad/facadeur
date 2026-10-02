@@ -81,8 +81,7 @@ function BindingRow({
   onInvalid?: (message: string) => void;
 }) {
   const resolvedSlot = slotForBinding(binding, slots);
-  const isCustomSlot =
-    resolvedSlot.id === 'attribute:custom' || resolvedSlot.id === 'style:custom';
+  const isCustomSlot = resolvedSlot.id === 'attribute:custom' || resolvedSlot.id === 'style:custom';
   const options = bindingFieldOptions(fields, binding.field);
 
   function commit(next: Binding | null) {

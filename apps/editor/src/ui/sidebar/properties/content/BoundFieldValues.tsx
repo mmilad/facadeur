@@ -7,7 +7,10 @@ import {
 } from '@facadeur/core';
 import { parsePreviewFieldValue, patchPreviewData } from '../../../../domain/preview-data.js';
 import { schemaFieldDefaultsFor } from '../../../../domain/schema/schema-defaults.js';
-import { getSchemaLibrary, subscribeSchemaLibrary } from '../../../../domain/schema/schema-library.js';
+import {
+  getSchemaLibrary,
+  subscribeSchemaLibrary,
+} from '../../../../domain/schema/schema-library.js';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
 import { variantLabel } from '../../../../domain/edits/variant-edit.js';
 import { fieldDisplayLabel } from '../../../controls/data/field-label.js';
@@ -35,12 +38,7 @@ export function BoundFieldValues({
   function write(field: FieldDefinition, value: FieldValue | undefined) {
     session.execute({
       type: 'setPreviewData',
-      previewData: patchPreviewData(
-        snap.document.previewData,
-        variantName,
-        field.name,
-        value,
-      ),
+      previewData: patchPreviewData(snap.document.previewData, variantName, field.name, value),
     });
   }
 
@@ -119,8 +117,7 @@ function BoundFieldControl({
       </Field>
     );
   }
-  const text =
-    value === undefined ? '' : typeof value === 'string' ? value : JSON.stringify(value);
+  const text = value === undefined ? '' : typeof value === 'string' ? value : JSON.stringify(value);
   return (
     <TextControl
       label={label}

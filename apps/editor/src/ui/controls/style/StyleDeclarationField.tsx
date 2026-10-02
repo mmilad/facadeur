@@ -5,6 +5,8 @@ import { ShadowControl } from '../shadow/index.js';
 import { TextControl } from '../fields/index.js';
 import { TypographyStyleControl, type TypographyCatalogs } from '../typography/index.js';
 import { useTokenOptions } from '../token-options.js';
+import { useTokenValueLabel } from '../fields/TokenPreviewContext.js';
+import { isTokenReference } from '../fields/TokenValueControl.js';
 import {
   enumOptionLabel,
   enumOptionsForProperty,
@@ -39,6 +41,8 @@ export function StyleDeclarationField({
 }) {
   const kind = styleDeclarationKind(property);
   const tokenOptions = useTokenOptions();
+  const tokenValueLabel = useTokenValueLabel();
+  const currentLabel = isTokenReference(value) ? tokenValueLabel(value) : undefined;
   const label = stylePropertyLabel(property);
   const enumOptions = enumOptionsForProperty(property);
 
@@ -84,6 +88,7 @@ export function StyleDeclarationField({
           <Combobox
             name={name}
             value={value}
+            currentLabel={currentLabel}
             options={tokenOptions(typographyTokens, value)}
             onCommit={onCommit}
           />
@@ -96,6 +101,7 @@ export function StyleDeclarationField({
           <Combobox
             name={name}
             value={value}
+            currentLabel={currentLabel}
             placeholder={placeholder}
             options={tokenOptions(dimensionTokens, value)}
             onCommit={onCommit}

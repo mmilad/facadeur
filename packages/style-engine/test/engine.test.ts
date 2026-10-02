@@ -8,7 +8,7 @@ import { createStyleEngine, type CompiledRule } from '@facadeur/style-engine';
 import { compileDocument } from '@facadeur/style-engine';
 import button from '../../../examples/button.json';
 import formSegmented from '../../../examples/form-segmented.json';
-import input from '../../../examples/input.json';
+import formInput from '../../../examples/form-input.json';
 import textarea from '../../../examples/textarea.json';
 import type { DocumentFile } from '@facadeur/core';
 
@@ -29,9 +29,7 @@ describe('component style block', () => {
 
   it('emits token references, states, variants, and a real media query', () => {
     expect(compiled).toContain('[data-component="button"]');
-    expect(compiled).toContain(
-      'background: var(--button-color-bg, var(--color-accent-default))',
-    );
+    expect(compiled).toContain('background: var(--button-color-bg, var(--color-accent-default))');
     expect(compiled).toContain('font-family: var(--type-label--font-family)');
     expect(compiled).toContain('font-size: var(--type-label--font-size)');
     expect(compiled).toContain('[data-component="button"]:hover');
@@ -49,14 +47,18 @@ describe('component style block', () => {
   });
 
   it('keeps native form controls out of the frame flex layout', () => {
-    for (const document of [input, textarea] as DocumentFile[]) {
-      const control = compileDocument(document).find((rule) =>
-        rule.selector.includes('[data-node="control"]'),
-      );
-      expect(control?.declarations).toContainEqual(['display', 'block']);
-      expect(control?.declarations).toContainEqual(['box-sizing', 'border-box']);
-      expect(control?.declarations.some(([name]) => name === 'flex-direction')).toBe(false);
-    }
+    const formControl = compileDocument(formInput as DocumentFile).find((rule) =>
+      rule.selector.includes('[data-component="form-input"]'),
+    );
+    expect(formControl?.declarations).toContainEqual(['box-sizing', 'border-box']);
+    expect(formControl?.declarations.some(([name]) => name === 'flex-direction')).toBe(false);
+
+    const textareaControl = compileDocument(textarea as DocumentFile).find((rule) =>
+      rule.selector.includes('[data-node="control"]'),
+    );
+    expect(textareaControl?.declarations).toContainEqual(['display', 'block']);
+    expect(textareaControl?.declarations).toContainEqual(['box-sizing', 'border-box']);
+    expect(textareaControl?.declarations.some(([name]) => name === 'flex-direction')).toBe(false);
   });
 
   it('applies the segmented selection state to the matching option', () => {
@@ -301,7 +303,11 @@ describe('style engine and renderer', () => {
       name: 'Input',
       kind: 'component',
       componentTokens: {
-        'color.border': { type: 'color', value: '{color.neutral.600}' },
+        n_border: {
+          path: 'color.border',
+          type: 'color',
+          value: '{color.neutral.600}',
+        },
       },
       tokenInterface: { reads: ['color.neutral.600'] },
       styles: {
@@ -318,9 +324,7 @@ describe('style engine and renderer', () => {
       },
     };
     const css = text(compileDocument(inputDoc));
-    expect(css).toContain(
-      'border: 1px solid var(--input-color-border, var(--color-neutral-600))',
-    );
+    expect(css).toContain('border: 1px solid var(--input-color-border, var(--color-neutral-600))');
     expect(css).not.toMatch(/\[data-component="input"\][^{]*--input-color-border:/);
   });
 

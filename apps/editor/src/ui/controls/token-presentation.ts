@@ -23,7 +23,10 @@ export function tokenTitle(path: string): string {
 export function tokenDisplayLabel(reference: string, label?: string): string {
   const path = tokenPath(reference);
   const parts = path.split('.');
-  const leaf = label?.trim() || tokenLeafLabel(path);
+  const savedLabel = label?.trim();
+  if (savedLabel) return savedLabel;
+
+  const leaf = tokenLeafLabel(path);
   const group = parts.length > 1 ? tokenTitle(parts.slice(0, -1).join('.')) : '';
   // A namespace alone is not a useful group name (color.brand => Brand).
   const prefix = parts.length === 2 && namespaces.has(parts[0]!) ? '' : group;

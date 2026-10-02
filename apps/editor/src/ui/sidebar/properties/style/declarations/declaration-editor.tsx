@@ -27,6 +27,7 @@ import {
   viewportEditContext,
 } from '../../../../../domain/viewport/viewport-edit.js';
 import { CssDeclarationsControl } from '../../../../controls/generic/index.js';
+import { TokenValueLabelProvider } from '../../../../controls/fields/TokenPreviewContext.js';
 import type { StructuredDeclarationGroup } from '../../../../controls/generic/CssDeclarationsControl.js';
 import {
   projectFontRefs,
@@ -43,6 +44,7 @@ export function DeclarationEditor({
   renderStructuredSection,
   inheritedDeclarations,
   instanceRoot,
+  inheritedTokenDocument,
 }: {
   session: EditorSession;
   snap: EditorSnapshot;
@@ -50,6 +52,8 @@ export function DeclarationEditor({
   renderStructuredSection?: (group: StructuredDeclarationGroup, content: ReactNode) => ReactNode;
   /** Effective referenced master root styles; writes still belong to this document. */
   inheritedDeclarations?: Record<string, string>;
+  /** Token label owner for values inherited from a selected component master. */
+  inheritedTokenDocument?: EditorSnapshot['activeDocument'];
   instanceRoot?: FlatNode;
 }) {
   const ctx = viewportEditContext({
@@ -170,6 +174,25 @@ export function DeclarationEditor({
     instance || namedVariant || displayBreakpointId !== undefined,
     !namedVariant,
   );
+  const ownEffectiveEntries = instance
+    ? effectiveStyleDeclarations(
+        namedVariant ? variantBlock : canonicalBlock,
+        snap.document.rootId,
+        effectiveTarget,
+        ctx.breakpoints,
+      )
+    : {};
+  const inheritedTokenProperties = new Set(
+    Object.keys(baseEntries)
+      .filter(
+        (property) =>
+          !Object.keys(ownEffectiveEntries).some(
+            (ownProperty) =>
+              canonicalStyleProperty(ownProperty) === canonicalStyleProperty(property),
+          ),
+      )
+      .map(canonicalStyleProperty),
+  );
   const writeTarget: StyleEditTarget = writingBreakpointId
     ? { ...target, breakpointId: writingBreakpointId }
     : target;
@@ -212,6 +235,19 @@ export function DeclarationEditor({
             : undefined,
       }))}
       variantViewportNote={Boolean(target.axis && snap.editTarget === 'viewport')}
+      renderValueLabelScope={(property, content) => {
+        if (
+          !inheritedTokenDocument ||
+          !inheritedTokenProperties.has(canonicalStyleProperty(property))
+        ) {
+          return content;
+        }
+        return (
+          <TokenValueLabelProvider design={snap.design} document={inheritedTokenDocument}>
+            {content}
+          </TokenValueLabelProvider>
+        );
+      }}
       declarationName={(property) => declarationName(target, property)}
       onCommitDeclaration={(property, next, overridden) => {
         const trimmed = next.trim();

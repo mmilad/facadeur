@@ -112,10 +112,8 @@ describe('generateReact', () => {
     const input = source(files, 'components/Input.tsx');
     expect(input).toContain("data-component='input'");
     expect(input).toContain("data-node='label'");
-    expect(input).toContain("data-node='control'");
-    expect(input).toContain('readOnly');
-    expect(input).toContain('tabIndex={-1}');
-    expect(input).toContain("autoComplete='off'");
+    expect(input).toContain("from './FormInput'");
+    expect(input).toContain("nodeId='control'");
     expect(input).toContain('value={value}');
     expect(input).toContain('placeholder={placeholder}');
     expect(input).toContain('name={name}');
@@ -163,7 +161,7 @@ describe('generateReact', () => {
     expect(css).toContain('[data-component="button"]:disabled');
     expect(css).toContain('@media (min-width: 768px)');
     expect(css).not.toContain('min-width: 375px');
-    expect(css).toContain('[data-component="input"] [data-node="control"]');
+    expect(css).toContain('[data-component="form-input"]');
     expect(css).toContain('--input-color-border: var(--color-accent-default)');
     expect(css.indexOf('[data-component="button"]')).toBeLessThan(
       css.indexOf('@media (min-width: 768px)'),
@@ -177,10 +175,10 @@ describe('generateReact', () => {
   });
 
   it('can emit component-local CSS and imports it from the generated index', () => {
-    const generated = generateReact({ documents: [documents[0]!] , styles: 'component-local' });
+    const generated = generateReact({ documents: [documents[0]!], styles: 'component-local' });
     expect(generated.ui.some((file) => file.path === 'styles/components.css')).toBe(false);
     expect(source(generated.ui, 'components/Button.css')).toContain('[data-component="button"]');
-    expect(source(generated.ui, 'index.ts')).toContain("import './components/Button.css';");
+    expect(source(generated.ui, 'components/Button.tsx')).toContain("import './Button.css'");
   });
 
   it('prunes unreachable documents from components, styles, and stories', () => {

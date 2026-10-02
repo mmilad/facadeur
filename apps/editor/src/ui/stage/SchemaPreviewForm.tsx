@@ -1,5 +1,9 @@
 import { useMemo } from 'react';
-import type { ComponentSchemaUse, NamedSchema, PreviewControl } from '../../domain/schema/schema-use.js';
+import type {
+  ComponentSchemaUse,
+  NamedSchema,
+  PreviewControl,
+} from '../../domain/schema/schema-use.js';
 import {
   getAt,
   matchingChoice,
@@ -7,7 +11,10 @@ import {
   retargetControl,
   setAt,
 } from '../../domain/schema/schema-use.js';
-import { getComponentSchemaUse, setComponentSchemaUse } from '../../domain/schema/schema-library.js';
+import {
+  getComponentSchemaUse,
+  setComponentSchemaUse,
+} from '../../domain/schema/schema-library.js';
 import { Checkbox, Combobox, Field, NumberInput, Stack, TextInput } from '../form/index.js';
 
 function joinPath(parent: string, name: string): string {
@@ -18,7 +25,9 @@ function seedControl(control: PreviewControl): unknown {
   if (control.kind === 'object' || control.kind === 'choice') {
     const record: Record<string, unknown> = {};
     const source =
-      control.kind === 'choice' ? (control.children?.[0]?.children ?? []) : (control.children ?? []);
+      control.kind === 'choice'
+        ? (control.children?.[0]?.children ?? [])
+        : (control.children ?? []);
     for (const child of source) {
       const key = child.path.split('.').pop();
       if (key) record[key] = seedControl(child);
@@ -41,10 +50,7 @@ export function SchemaPreviewForm({
   use: ComponentSchemaUse | null;
   schemas: NamedSchema[];
 }) {
-  const controls = useMemo(
-    () => (use ? previewControlsForUse(use, schemas) : []),
-    [use, schemas],
-  );
+  const controls = useMemo(() => (use ? previewControlsForUse(use, schemas) : []), [use, schemas]);
   const defaults = use?.defaults;
 
   function commitDefaults(nextDefaults: unknown) {

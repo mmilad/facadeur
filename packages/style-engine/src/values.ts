@@ -11,9 +11,12 @@ import {
 } from '@facadeur/tokens';
 import { toKebab } from './controller.js';
 
+export type ComponentTokenSubstitute = Pick<ComponentToken, 'type' | 'value'>;
+
 export interface SubstituteContext {
   documentId: string;
-  componentTokens?: Record<string, ComponentToken>;
+  /** Local defaults keyed by token path (path is not repeated on each entry). */
+  componentTokens?: Record<string, ComponentTokenSubstitute>;
 }
 
 const TYPOGRAPHY_FIELDS = [

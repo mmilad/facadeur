@@ -9,9 +9,7 @@ import {
 
 export type { ComponentToken };
 
-export function readComponentTokens(
-  doc: FlatDocument,
-): Record<string, ComponentToken> | undefined {
+export function readComponentTokens(doc: FlatDocument): Record<string, ComponentToken> | undefined {
   return (doc as FlatDocument & { componentTokens?: Record<string, ComponentToken> })
     .componentTokens;
 }
@@ -54,7 +52,7 @@ export function documentsReferencingToken(
   documents: readonly {
     id: string;
     tokenInterface?: { reads?: string[] };
-    componentTokens?: Record<string, { value: string }>;
+    componentTokens?: Record<string, Pick<ComponentToken, 'path' | 'value'>>;
   }[],
   tokenPath: string,
 ): string[] {
@@ -114,7 +112,10 @@ export function pathFromDesignTokenLabel(
   if (!trimmed) {
     throw new Error('Label is required');
   }
-  const segments = trimmed.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+  const segments = trimmed
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
   if (!segments.length) {
     throw new Error('Label is required');
   }
@@ -135,10 +136,7 @@ export function pathFromComponentTokenLabel(
   return pathFromDesignTokenLabel(label, componentTokenTypeNamespace(type), existing);
 }
 
-export function suggestComponentTokenPath(
-  prefix: string,
-  existing: ReadonlySet<string>,
-): string {
+export function suggestComponentTokenPath(prefix: string, existing: ReadonlySet<string>): string {
   const base = prefix.trim() || 'color.custom';
   if (!existing.has(base)) return base;
   for (let index = 2; index < 10_000; index += 1) {
@@ -148,7 +146,7 @@ export function suggestComponentTokenPath(
   throw new Error('Could not find an unused token path');
 }
 
-export function defaultComponentToken(type: TokenType): ComponentToken {
+export function defaultComponentToken(type: TokenType): Omit<ComponentToken, 'path'> {
   switch (type) {
     case 'color':
       return { type, value: '#000000' };

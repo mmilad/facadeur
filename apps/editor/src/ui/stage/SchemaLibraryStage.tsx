@@ -43,8 +43,7 @@ export function SchemaLibraryStage({ snap }: { snap: EditorSnapshot }) {
   const assignedId = library.assignments[snap.document.id];
   const [pickedId, setPickedId] = useState<string | null>(null);
   const selected =
-    library.schemas.find((schema) => schema.id === (pickedId ?? assignedId)) ??
-    library.schemas[0];
+    library.schemas.find((schema) => schema.id === (pickedId ?? assignedId)) ?? library.schemas[0];
 
   return (
     <section
@@ -59,8 +58,8 @@ export function SchemaLibraryStage({ snap }: { snap: EditorSnapshot }) {
           <h1>Schemas</h1>
         </div>
         <p className="schema-stage-note">
-          One of is a union, such as Media’s image or video. Any of matches at least one option.
-          A string schema can list an enum. Add another contract in examples/schemas.json, then
+          One of is a union, such as Media’s image or video. Any of matches at least one option. A
+          string schema can list an enum. Add another contract in examples/schemas.json, then
           reload.
         </p>
       </header>
@@ -101,7 +100,9 @@ export function SchemaLibraryStage({ snap }: { snap: EditorSnapshot }) {
             onChange={(next) => updateLibrarySchema(selected.id, next)}
           />
         ) : (
-          <p className="inspector-empty">Create a schema to describe a reusable component contract.</p>
+          <p className="inspector-empty">
+            Create a schema to describe a reusable component contract.
+          </p>
         )}
       </div>
     </section>

@@ -26,14 +26,14 @@ Before editing, answer:
 
 Classify the pressure before choosing a boundary:
 
-| Pressure | Boundary to consider | Do not do |
-| --- | --- | --- |
-| Pure calculation mixed with effects | Pure domain module with explicit inputs/outputs | Pass a global store or DOM into every helper |
-| Independent state transition or subscription | Focused hook/controller next to its feature | Extract each callback into a utility |
-| Repeated behavior with identical semantics | One owner at the common package/domain layer | Merge merely similar markup or names |
-| Repeated cases with the same contract | Typed configuration/dispatch table | Replace meaningful branching with a generic registry |
-| Cohesive UI plus private helpers | Feature directory | Create `utils/`, `services/`, or `helpers/` dumping grounds |
-| Cross-package contract | Owning package public entry point | Deep-import another package's implementation |
+| Pressure                                     | Boundary to consider                            | Do not do                                                   |
+| -------------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------- |
+| Pure calculation mixed with effects          | Pure domain module with explicit inputs/outputs | Pass a global store or DOM into every helper                |
+| Independent state transition or subscription | Focused hook/controller next to its feature     | Extract each callback into a utility                        |
+| Repeated behavior with identical semantics   | One owner at the common package/domain layer    | Merge merely similar markup or names                        |
+| Repeated cases with the same contract        | Typed configuration/dispatch table              | Replace meaningful branching with a generic registry        |
+| Cohesive UI plus private helpers             | Feature directory                               | Create `utils/`, `services/`, or `helpers/` dumping grounds |
+| Cross-package contract                       | Owning package public entry point               | Deep-import another package's implementation                |
 
 Choose **keep** when the code is cohesive and extraction adds indirection or cycles; **extract**
 when responsibilities have separate reasons to change or one part can be independently tested;

@@ -5,11 +5,12 @@ import '@testing-library/jest-dom/vitest';
 import { act, useSyncExternalStore } from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { validateCatalog, type DocumentFile } from '@facadeur/core';
+import type { DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createEditorSession, type EditorSession } from '../src/domain/session.js';
 import { LayoutPanel } from '../src/ui/sidebar/properties/layout/LayoutPanel.js';
+import { expandExampleCatalog } from './fixtures/example-catalog.js';
 
 const layoutDocument: DocumentFile = {
   version: 1,
@@ -74,7 +75,7 @@ function LayoutHarness({ session }: { session: EditorSession }) {
 
 function setup(document: DocumentFile = layoutDocument) {
   const session = createEditorSession({
-    documents: validateCatalog([document]),
+    documents: expandExampleCatalog([document]),
     design: createProjectTemplateDocument(),
   });
   session.openAsset('layout-context', 'root');

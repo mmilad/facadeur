@@ -42,6 +42,7 @@ import {
 } from '../../design/DesignTypographyEditor.js';
 import { IconButton } from '../../../form/components/shared/IconButton.js';
 import { Field, Select } from '../../../form/index.js';
+import { TextInput } from '../../../form/components/input/TextInput.js';
 import { TokenAddAction } from '../../design/tokens/TokenAddAction.js';
 import '../../design/token-tables.css';
 
@@ -110,8 +111,6 @@ export function ComponentTokensPanel({
           (for example {previewComponentTokenCssVar(doc.id, 'color.bg')}).
         </p>
         <ComponentTokenAddRow
-          existingPaths={localPaths}
-          globalPaths={globalPaths}
           onAdd={(label, type) => {
             try {
               const path = pathFromComponentTokenLabel(label, type, localPaths);
@@ -185,6 +184,7 @@ function ComponentTokenRow({
     onCommit({ type, value: nextValue, ...(label ? { label } : {}) });
   const commitLabel = (nextLabel: string) => {
     const trimmed = nextLabel.trim();
+    if (trimmed === displayLabel) return;
     onCommit({
       type,
       value,
@@ -193,7 +193,11 @@ function ComponentTokenRow({
   };
 
   return (
-    <li className="component-token-row" data-component-token-id={id} data-component-token-path={path}>
+    <li
+      className="component-token-row"
+      data-component-token-id={id}
+      data-component-token-path={path}
+    >
       <IconButton
         className="component-token-row-remove token-action-remove"
         label={`Remove ${displayLabel}`}
@@ -201,81 +205,77 @@ function ComponentTokenRow({
         onClick={onRemove}
       >
         <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-          <path
-            d="M4 4l8 8m0-8-8 8"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-          />
+          <path d="M4 4l8 8m0-8-8 8" fill="none" stroke="currentColor" strokeLinecap="round" />
         </svg>
       </IconButton>
       <div className="component-token-row-main">
         <div className="component-token-row-ident">
-          <input
+          <TextInput
+            key={label ?? ''}
             className="token-table-label-input component-token-row-label"
             aria-label={`Label for ${previewComponentTokenCssVar(documentId, path)}`}
-            defaultValue={displayLabel}
-            onBlur={(event) => commitLabel(event.currentTarget.value)}
+            value={displayLabel}
+            onCommit={commitLabel}
           />
           <span className="component-token-row-var">
             {previewComponentTokenCssVar(documentId, path)}
           </span>
         </div>
         <div className="component-token-row-value">
-        {type === 'color' ? (
-          <ColorControl
-            name={`component-token-${id}`}
-            label=""
-            value={value}
-            colorTokens={globalColorTokens}
-            onCommit={(next) => commitValue(next ?? '')}
-          />
-        ) : type === 'shadow' ? (
-          <DesignShadowEditor
-            namePrefix={`component-token-${id}`}
-            value={value as DesignShadowInput}
-            shadowTokens={globalShadowTokens}
-            dimensionTokens={typographyCatalogs.dimensionTokens}
-            colorTokens={globalColorTokens}
-            onCommit={(next) => {
-              if (next === null) return;
-              commitValue(typeof next === 'string' ? next : JSON.stringify(next));
-            }}
-          />
-        ) : type === 'typography' ? (
-          <DesignTypographyEditor
-            namePrefix={`component-token-${id}`}
-            value={value as DesignTypographyValue}
-            catalogs={typographyCatalogs}
-            typographyTokens={globalTypographyTokens}
-            onCommit={(next) => {
-              if (next === null) return;
-              commitValue(typeof next === 'string' ? next : JSON.stringify(next));
-            }}
-          />
-        ) : type === 'dimension' ||
-          type === 'number' ||
-          type === 'fontFamily' ||
-          type === 'fontWeight' ? (
-          <TokenValueControl
-            name={`component-token-${id}`}
-            value={value}
-            tokens={scalarGlobalRefs(type, {
-              dimension: globalDimensionTokens,
-              number: typographyCatalogs.numberTokens,
-              fontFamily: typographyCatalogs.fontFamilyTokens,
-              fontWeight: typographyCatalogs.fontWeightTokens,
-            })}
-            onCommit={(next) => commitValue(next ?? '')}
-          />
-        ) : (
-          <TextControl
-            name={`component-token-${id}`}
-            label=""
-            value={value}
-            onCommit={commitValue}
-          />
-        )}
+          {type === 'color' ? (
+            <ColorControl
+              name={`component-token-${id}`}
+              label=""
+              value={value}
+              colorTokens={globalColorTokens}
+              onCommit={(next) => commitValue(next ?? '')}
+            />
+          ) : type === 'shadow' ? (
+            <DesignShadowEditor
+              namePrefix={`component-token-${id}`}
+              value={value as DesignShadowInput}
+              shadowTokens={globalShadowTokens}
+              dimensionTokens={typographyCatalogs.dimensionTokens}
+              colorTokens={globalColorTokens}
+              onCommit={(next) => {
+                if (next === null) return;
+                commitValue(typeof next === 'string' ? next : JSON.stringify(next));
+              }}
+            />
+          ) : type === 'typography' ? (
+            <DesignTypographyEditor
+              namePrefix={`component-token-${id}`}
+              value={value as DesignTypographyValue}
+              catalogs={typographyCatalogs}
+              typographyTokens={globalTypographyTokens}
+              onCommit={(next) => {
+                if (next === null) return;
+                commitValue(typeof next === 'string' ? next : JSON.stringify(next));
+              }}
+            />
+          ) : type === 'dimension' ||
+            type === 'number' ||
+            type === 'fontFamily' ||
+            type === 'fontWeight' ? (
+            <TokenValueControl
+              name={`component-token-${id}`}
+              value={value}
+              tokens={scalarGlobalRefs(type, {
+                dimension: globalDimensionTokens,
+                number: typographyCatalogs.numberTokens,
+                fontFamily: typographyCatalogs.fontFamilyTokens,
+                fontWeight: typographyCatalogs.fontWeightTokens,
+              })}
+              onCommit={(next) => commitValue(next ?? '')}
+            />
+          ) : (
+            <TextControl
+              name={`component-token-${id}`}
+              label=""
+              value={value}
+              onCommit={commitValue}
+            />
+          )}
         </div>
       </div>
     </li>
@@ -306,12 +306,8 @@ function scalarGlobalRefs(
 }
 
 function ComponentTokenAddRow({
-  existingPaths,
-  globalPaths: _globalPaths,
   onAdd,
 }: {
-  existingPaths: ReadonlySet<string>;
-  globalPaths: ReadonlySet<string>;
   onAdd: (label: string, type: TokenType) => true | false;
 }) {
   const [type, setType] = useState<TokenType>('color');

@@ -53,8 +53,8 @@ export function LayersPanel({ session, snap }: { session: EditorSession; snap: E
       <strong className="layers-document-title">{snap.document.name}</strong>
       <p className="side-note">
         Expand an instance to select nested fields. Edit a master from its inspector. With a layer
-        selected, press Delete or Backspace to remove it (not the root), or right-click a layer
-        for insert and delete actions.
+        selected, press Delete or Backspace to remove it (not the root), or right-click a layer for
+        insert and delete actions.
       </p>
       <div className="side-scroll">
         {snap.layers ? (

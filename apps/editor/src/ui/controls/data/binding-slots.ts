@@ -39,7 +39,10 @@ function attributeSlots(names: string[]): BindingSlot[] {
   return names.map(attributeSlot);
 }
 
-function appendVisibilityStyleAndCustom(slots: BindingSlot[], includeStyle: boolean): BindingSlot[] {
+function appendVisibilityStyleAndCustom(
+  slots: BindingSlot[],
+  includeStyle: boolean,
+): BindingSlot[] {
   slots.push(VISIBILITY_SLOT);
   if (includeStyle) {
     slots.push(STYLE_CUSTOM_SLOT);
@@ -106,14 +109,14 @@ function slotsForFrameTag(tag: string | undefined): BindingSlot[] {
     case 'label':
       return appendVisibilityStyleAndCustom([...attributeSlots([...LABEL_ATTRIBUTES])], true);
     default:
-      return appendVisibilityStyleAndCustom([...attributeSlots([...GENERIC_FRAME_ATTRIBUTES])], true);
+      return appendVisibilityStyleAndCustom(
+        [...attributeSlots([...GENERIC_FRAME_ATTRIBUTES])],
+        true,
+      );
   }
 }
 
-export function slotsForNode(
-  nodeType: 'frame' | 'text' | 'image',
-  tag?: string,
-): BindingSlot[] {
+export function slotsForNode(nodeType: 'frame' | 'text' | 'image', tag?: string): BindingSlot[] {
   if (nodeType === 'text') {
     return [TEXT_SLOT, VISIBILITY_SLOT, ATTRIBUTE_CUSTOM_SLOT];
   }
@@ -129,7 +132,9 @@ function isNamelessTarget(target: BindingTarget): boolean {
 
 export function slotForBinding(binding: Binding, slots: BindingSlot[]): BindingSlot {
   if (isNamelessTarget(binding.target)) {
-    const match = slots.find((slot) => slot.target === binding.target && slot.id === binding.target);
+    const match = slots.find(
+      (slot) => slot.target === binding.target && slot.id === binding.target,
+    );
     if (match) return match;
   }
 
@@ -153,11 +158,7 @@ export function slotForBinding(binding: Binding, slots: BindingSlot[]): BindingS
   return fallback ?? ATTRIBUTE_CUSTOM_SLOT;
 }
 
-export function bindingFromSlot(
-  field: string,
-  slot: BindingSlot,
-  customName?: string,
-): Binding {
+export function bindingFromSlot(field: string, slot: BindingSlot, customName?: string): Binding {
   if (slot.id === 'attribute:custom' || slot.id === 'style:custom') {
     const name = customName?.trim();
     return { field, target: slot.target, ...(name ? { name } : {}) };

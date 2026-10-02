@@ -3,14 +3,14 @@
  */
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { validateCatalog } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { afterEach, describe, expect, it } from 'vitest';
 import button from '../../../examples/button.json';
 import { createEditorSession, type EditorSession } from '../src/domain/session.js';
 import { App } from '../src/ui/shell/EditorShell.js';
+import { expandExampleCatalog } from './fixtures/example-catalog.js';
 
-const documents = validateCatalog([button]);
+const documents = expandExampleCatalog([button]);
 
 describe('icons domain panel', () => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;

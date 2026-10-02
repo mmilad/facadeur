@@ -5,10 +5,11 @@ import '@testing-library/jest-dom/vitest';
 import { StrictMode, type ComponentProps } from 'react';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { toFlat, validateCatalog } from '@facadeur/core';
+import { toFlat } from '@facadeur/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { layoutCapabilities } from '../../src/domain/layout-capabilities.js';
 import { LayoutControl } from '../../src/ui/controls/layout/LayoutControl.js';
+import { expandExampleCatalog } from '../fixtures/example-catalog.js';
 
 type Props = ComponentProps<typeof LayoutControl>;
 function setup(overrides: Partial<Props> = {}) {
@@ -159,7 +160,7 @@ describe('layout icon controls', () => {
   it('keeps inactive retained values visible and disabled while their reset remains usable', async () => {
     const capabilities = layoutCapabilities({
       document: toFlat(
-        validateCatalog([
+        expandExampleCatalog([
           {
             version: 1,
             id: 'test',

@@ -4,32 +4,15 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { readTokenTree } from '@facadeur/core';
-import { validateCatalog } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { afterEach, describe, expect, it } from 'vitest';
-import button from '../../../examples/button.json';
-import card from '../../../examples/card.json';
-import input from '../../../examples/input.json';
-import link from '../../../examples/link.json';
-import signIn from '../../../examples/sign-in.json';
-import specimenPage from '../../../examples/specimen-page.json';
-import specimenSection from '../../../examples/specimen-section.json';
-import textarea from '../../../examples/textarea.json';
 import { createEditorSession, type EditorSession } from '../src/domain/session.js';
 import { withTokenBreakpoint } from '../src/domain/edits/token-edit.js';
 import { App } from '../src/ui/shell/EditorShell.js';
+import { editorStandardCatalog } from './fixtures/example-catalog.js';
 import { openSettingsDomain } from './settings-navigation.js';
 
-const documents = validateCatalog([
-  button,
-  link,
-  input,
-  textarea,
-  card,
-  signIn,
-  specimenSection,
-  specimenPage,
-]);
+const documents = editorStandardCatalog();
 
 function setInput(input: HTMLInputElement, value: string) {
   const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
@@ -142,7 +125,7 @@ describe('typography domain panel', () => {
     expect(session.getSnapshot().notice?.text).toMatch(/label is required/i);
   });
 
-  it('rejects duplicate typography paths on add', async () => {
+  it('suffixes a generated typography path when the label collides', async () => {
     const session = createEditorSession({
       documents,
       design: createProjectTemplateDocument(),
@@ -151,8 +134,10 @@ describe('typography domain panel', () => {
 
     await submitNewToken('Body');
 
-    expect(session.getSnapshot().notice?.tone).toBe('error');
-    expect(session.getSnapshot().notice?.text).toMatch(/already exists/i);
+    expect(
+      readTokenTree(session.getSnapshot().design.tokens).tokens.get('type.body2'),
+    ).toMatchObject({ type: 'typography' });
+    expect(session.getSnapshot().notice?.tone).not.toBe('error');
   });
 
   it('shows viewport override cues and resets a typography token override', async () => {
@@ -217,15 +202,16 @@ describe('typography domain panel', () => {
     await act(async () => {
       (host!.querySelector('[data-viewport-tab="sm"]') as HTMLButtonElement).click();
     });
-    const tablet = host!.querySelector('input[name="token-type.body-fontSize"]') as HTMLInputElement;
+    const tablet = host!.querySelector(
+      'input[name="token-type.body-fontSize"]',
+    ) as HTMLInputElement;
     expect(tablet).toBeInstanceOf(HTMLInputElement);
     expect(tablet.value).toBe('17px');
 
     await act(async () => setInput(tablet, '19px'));
 
     expect(
-      readTokenTree(session.getSnapshot().design.tokens).tokens.get('type.body')?.breakpoints
-        .sm,
+      readTokenTree(session.getSnapshot().design.tokens).tokens.get('type.body')?.breakpoints.sm,
     ).toEqual({ fontSize: '19px' });
   });
 });

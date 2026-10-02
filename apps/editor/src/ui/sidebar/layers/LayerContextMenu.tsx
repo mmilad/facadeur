@@ -141,9 +141,7 @@ function InsertSubmenu({
       {open ? (
         <div
           className={
-            flyoutSide === 'left'
-              ? 'context-menu-flyout is-left'
-              : 'context-menu-flyout is-right'
+            flyoutSide === 'left' ? 'context-menu-flyout is-left' : 'context-menu-flyout is-right'
           }
           role="menu"
           aria-label={label}

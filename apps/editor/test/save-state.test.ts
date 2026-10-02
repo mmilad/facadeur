@@ -1,14 +1,5 @@
-import { validateCatalog } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { describe, expect, it } from 'vitest';
-import button from '../../../examples/button.json';
-import card from '../../../examples/card.json';
-import input from '../../../examples/input.json';
-import link from '../../../examples/link.json';
-import signIn from '../../../examples/sign-in.json';
-import textarea from '../../../examples/textarea.json';
-import specimenPage from '../../../examples/specimen-page.json';
-import specimenSection from '../../../examples/specimen-section.json';
 import {
   clearDocumentSaved,
   isDocumentDirty,
@@ -16,17 +7,9 @@ import {
   type SavedJsonBaselines,
 } from '../src/domain/assets/save-state.js';
 import { createEditorSession } from '../src/domain/session.js';
+import { editorStandardCatalog } from './fixtures/example-catalog.js';
 
-const documents = validateCatalog([
-  button,
-  link,
-  input,
-  textarea,
-  card,
-  signIn,
-  specimenSection,
-  specimenPage,
-]);
+const documents = editorStandardCatalog();
 
 describe('save-state baselines', () => {
   it('tracks dirty per id from baselines', () => {

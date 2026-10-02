@@ -4,32 +4,15 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { readTokenTree } from '@facadeur/core';
-import { validateCatalog } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { afterEach, describe, expect, it } from 'vitest';
-import button from '../../../examples/button.json';
-import card from '../../../examples/card.json';
-import input from '../../../examples/input.json';
-import link from '../../../examples/link.json';
-import signIn from '../../../examples/sign-in.json';
-import specimenPage from '../../../examples/specimen-page.json';
-import specimenSection from '../../../examples/specimen-section.json';
-import textarea from '../../../examples/textarea.json';
 import { createEditorSession, type EditorSession } from '../src/domain/session.js';
 import { withTokenBreakpoint } from '../src/domain/edits/token-edit.js';
 import { App } from '../src/ui/shell/EditorShell.js';
+import { editorStandardCatalog } from './fixtures/example-catalog.js';
 import { openSettingsDomain } from './settings-navigation.js';
 
-const documents = validateCatalog([
-  button,
-  link,
-  input,
-  textarea,
-  card,
-  signIn,
-  specimenSection,
-  specimenPage,
-]);
+const documents = editorStandardCatalog();
 
 function setInput(input: HTMLInputElement, value: string) {
   const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
@@ -125,7 +108,7 @@ describe('radius domain panel', () => {
     expect(session.getSnapshot().notice?.text).toMatch(/label is required/i);
   });
 
-  it('rejects duplicate radius paths on add', async () => {
+  it('suffixes a generated radius path when the label collides', async () => {
     const session = createEditorSession({
       documents,
       design: createProjectTemplateDocument(),
@@ -134,8 +117,10 @@ describe('radius domain panel', () => {
 
     await submitNewToken('Md');
 
-    expect(session.getSnapshot().notice?.tone).toBe('error');
-    expect(session.getSnapshot().notice?.text).toMatch(/already exists/i);
+    expect(
+      readTokenTree(session.getSnapshot().design.tokens).tokens.get('radius.md2'),
+    ).toMatchObject({ type: 'dimension' });
+    expect(session.getSnapshot().notice?.tone).not.toBe('error');
   });
 
   it('shows viewport override cues and resets a radius token override', async () => {
@@ -146,12 +131,7 @@ describe('radius domain panel', () => {
     session.executeDesign({
       type: 'setToken',
       path: 'radius.lg',
-      token: withTokenBreakpoint(
-        session.getSnapshot().design.tokens,
-        'radius.lg',
-        'sm',
-        '20px',
-      ),
+      token: withTokenBreakpoint(session.getSnapshot().design.tokens, 'radius.lg', 'sm', '20px'),
     });
 
     await openRadius(session);
@@ -164,9 +144,7 @@ describe('radius domain panel', () => {
     const indexedBefore = readTokenTree(session.getSnapshot().design.tokens);
     expect(indexedBefore.tokens.get('radius.lg')?.breakpoints.sm).toBe('20px');
 
-    const resetButton = host!.querySelector(
-      'tr[data-token-path="radius.lg"] .override-cue button',
-    );
+    const resetButton = host!.querySelector('tr[data-token-path="radius.lg"] .override-cue button');
     expect(resetButton).toBeInstanceOf(HTMLButtonElement);
     await act(async () => {
       (resetButton as HTMLButtonElement).click();

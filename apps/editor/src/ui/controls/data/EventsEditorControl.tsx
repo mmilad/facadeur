@@ -1,9 +1,6 @@
 import type { EventDefinition } from '@facadeur/core';
 import { useState } from 'react';
-import {
-  eventDefinitionFromDraft,
-  eventPayloadText,
-} from '../../../domain/events.js';
+import { eventDefinitionFromDraft, eventPayloadText } from '../../../domain/events.js';
 import { Field, Section, Stack, TextInput } from '../../form/index.js';
 import '../../form/form.css';
 

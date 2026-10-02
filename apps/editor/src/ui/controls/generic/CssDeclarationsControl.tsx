@@ -44,6 +44,7 @@ export function CssDeclarationsControl({
   onAddDeclaration,
   renderStructuredSection,
   renderAfterRow,
+  renderValueLabelScope,
   layoutCapabilities,
   emptyMessage = 'No declarations.',
 }: {
@@ -58,6 +59,8 @@ export function CssDeclarationsControl({
   /** Render guided controls independently of the manual declaration rows. */
   renderStructuredSection?: (group: StructuredDeclarationGroup, content: ReactNode) => ReactNode;
   renderAfterRow?: (property: string, overridden: boolean) => ReactNode;
+  /** Scope the displayed token label for values inherited from another owner. */
+  renderValueLabelScope?: (property: string, content: ReactNode) => ReactNode;
   /** Context used to keep existing but inactive layout declarations visible and disabled. */
   layoutCapabilities?: LayoutCapabilities;
   emptyMessage?: ReactNode;
@@ -117,6 +120,11 @@ export function CssDeclarationsControl({
     ) : null;
   }
 
+  function scopeCompound(keys: readonly string[], content: ReactNode): ReactNode {
+    if (!renderValueLabelScope) return content;
+    return keys.reduce<ReactNode>((node, key) => renderValueLabelScope(key, node), content);
+  }
+
   const groups = groupDeclarations(entries);
   groups.sort((left, right) => GROUP_ORDER.indexOf(left.id) - GROUP_ORDER.indexOf(right.id));
 
@@ -136,26 +144,32 @@ export function CssDeclarationsControl({
         <Section title="Border & Radius">
           {border ? (
             <div className="declaration-compound" key="border-control">
-              <BorderControl
-                namePrefix={declarationName('border')}
-                value={border}
-                colorTokens={catalogs.colorTokens}
-                dimensionTokens={catalogs.dimensionTokens}
-                onCommit={(next) => replaceKeys(borderDeclarationKeys(), serializeBorder(next))}
-              />
+              {scopeCompound(
+                borderDeclarationKeys(),
+                <BorderControl
+                  namePrefix={declarationName('border')}
+                  value={border}
+                  colorTokens={catalogs.colorTokens}
+                  dimensionTokens={catalogs.dimensionTokens}
+                  onCommit={(next) => replaceKeys(borderDeclarationKeys(), serializeBorder(next))}
+                />,
+              )}
               {compoundAfter(borderDeclarationKeys())}
             </div>
           ) : null}
           {borderRadius ? (
             <div className="declaration-compound" key="radius-control">
-              <BorderRadiusControl
-                namePrefix={declarationName('radius')}
-                value={borderRadius}
-                radiusTokens={catalogs.radiusTokens}
-                onCommit={(next) =>
-                  replaceKeys(borderRadiusDeclarationKeys(), serializeBorderRadius(next))
-                }
-              />
+              {scopeCompound(
+                borderRadiusDeclarationKeys(),
+                <BorderRadiusControl
+                  namePrefix={declarationName('radius')}
+                  value={borderRadius}
+                  radiusTokens={catalogs.radiusTokens}
+                  onCommit={(next) =>
+                    replaceKeys(borderRadiusDeclarationKeys(), serializeBorderRadius(next))
+                  }
+                />,
+              )}
               {compoundAfter(borderRadiusDeclarationKeys())}
             </div>
           ) : null}
@@ -172,6 +186,7 @@ export function CssDeclarationsControl({
                 declarationName={declarationName}
                 catalogs={catalogs}
                 layoutCapabilities={layoutCapabilities}
+                renderValueLabelScope={renderValueLabelScope}
                 onCommitDeclaration={onCommitDeclaration}
                 renderAfterRow={renderAfterRow}
               />
@@ -232,6 +247,7 @@ function DeclarationRow({
   declarationName,
   catalogs,
   layoutCapabilities,
+  renderValueLabelScope,
   onCommitDeclaration,
   renderAfterRow,
 }: {
@@ -239,6 +255,7 @@ function DeclarationRow({
   declarationName: (property: string) => string;
   catalogs: StyleDeclarationCatalogs;
   layoutCapabilities?: LayoutCapabilities;
+  renderValueLabelScope?: (property: string, content: ReactNode) => ReactNode;
   onCommitDeclaration: (property: string, raw: string, overridden: boolean) => void;
   renderAfterRow?: (property: string, overridden: boolean) => ReactNode;
 }) {
@@ -260,11 +277,12 @@ function DeclarationRow({
       after={disabled ? undefined : reset}
     />
   );
-  if (!disabled) return field;
+  const scopedField = renderValueLabelScope?.(item.property, field) ?? field;
+  if (!disabled) return scopedField;
   return (
     <div className="layout-capability-row">
       <fieldset disabled className="layout-capability-disabled">
-        {field}
+        {scopedField}
       </fieldset>
       <p className="meta layout-capability-note">
         {capability?.reason ?? 'This value is inactive in the current layout context.'} {reset}

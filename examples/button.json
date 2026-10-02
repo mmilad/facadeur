@@ -17,19 +17,12 @@
   "variants": [
     {
       "name": "tone",
-      "values": [
-        "primary",
-        "secondary",
-        "ghost"
-      ],
+      "values": ["primary", "secondary", "ghost"],
       "default": "primary"
     },
     {
       "name": "size",
-      "values": [
-        "sm",
-        "md"
-      ],
+      "values": ["sm", "md"],
       "default": "md"
     }
   ],

@@ -1,9 +1,5 @@
 import { breakpointLabel, type Breakpoint } from '@facadeur/core';
-import {
-  activeBreakpoints,
-  configuredBreakpoints,
-  isBreakpointEnabled,
-} from '@facadeur/tokens';
+import { activeBreakpoints, configuredBreakpoints, isBreakpointEnabled } from '@facadeur/tokens';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
 import { TextControl } from '../../controls/fields/index.js';
 import { IconButton } from '../../form/components/shared/IconButton.js';
@@ -23,10 +19,10 @@ export function ViewportsSettingsPanel({
   return (
     <div className="stack design-domain-panel viewport-settings">
       <p className="side-note">
-        The label is the name on tabs and the canvas. The id stays in token overrides. The
-        narrowest active viewport is the base layer and does not use a media query. Each wider
-        active viewport adds a min-width query. Use the eye control to hide a viewport without
-        deleting its overrides.
+        The label is the name on tabs and the canvas. The id stays in token overrides. The narrowest
+        active viewport is the base layer and does not use a media query. Each wider active viewport
+        adds a min-width query. Use the eye control to hide a viewport without deleting its
+        overrides.
       </p>
       <div className="viewport-settings-list">
         {breakpoints.map((breakpoint) => {
@@ -37,9 +33,7 @@ export function ViewportsSettingsPanel({
             <div
               key={breakpoint.id}
               className={
-                enabled
-                  ? 'viewport-settings-row'
-                  : 'viewport-settings-row is-viewport-inactive'
+                enabled ? 'viewport-settings-row' : 'viewport-settings-row is-viewport-inactive'
               }
             >
               <TextControl
@@ -87,9 +81,7 @@ export function ViewportsSettingsPanel({
                 </span>
                 <div className="viewport-settings-actions">
                   <IconButton
-                    className={
-                      enabled ? 'viewport-toggle-active' : 'viewport-toggle-inactive'
-                    }
+                    className={enabled ? 'viewport-toggle-active' : 'viewport-toggle-inactive'}
                     label={
                       enabled
                         ? `Hide viewport ${breakpointLabel(breakpoint)}`
@@ -103,7 +95,9 @@ export function ViewportsSettingsPanel({
                         ? 'At least one viewport must stay active.'
                         : undefined
                     }
-                    onClick={() => toggleBreakpointEnabled(session, snap, breakpoints, breakpoint.id)}
+                    onClick={() =>
+                      toggleBreakpointEnabled(session, snap, breakpoints, breakpoint.id)
+                    }
                   >
                     {enabled ? <EyeOpenIcon /> : <EyeClosedIcon />}
                   </IconButton>
@@ -125,7 +119,11 @@ export function ViewportsSettingsPanel({
           );
         })}
       </div>
-      <button type="button" className="text-button" onClick={() => addViewport(session, snap, breakpoints)}>
+      <button
+        type="button"
+        className="text-button"
+        onClick={() => addViewport(session, snap, breakpoints)}
+      >
         Add viewport
       </button>
     </div>
@@ -174,11 +172,7 @@ function TrashIcon() {
   );
 }
 
-function commitDesignBreakpoints(
-  session: EditorSession,
-  snap: EditorSnapshot,
-  next: Breakpoint[],
-) {
+function commitDesignBreakpoints(session: EditorSession, snap: EditorSnapshot, next: Breakpoint[]) {
   const sorted = configuredBreakpoints(next);
   session.executeDesign({ type: 'setBreakpoints', breakpoints: sorted });
   const active = activeBreakpoints(sorted);
@@ -277,7 +271,10 @@ function addViewport(session: EditorSession, snap: EditorSnapshot, current: read
     id = `wide${index}`;
     index += 1;
   }
-  commitDesignBreakpoints(session, snap, [...current, { id, minWidth: max > 0 ? max + 320 : 1280 }]);
+  commitDesignBreakpoints(session, snap, [
+    ...current,
+    { id, minWidth: max > 0 ? max + 320 : 1280 },
+  ]);
   session.setFocusViewport(id);
   session.setEditTarget('viewport');
 }

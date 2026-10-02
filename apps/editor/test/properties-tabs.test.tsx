@@ -5,19 +5,11 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
-import { validateCatalog, type DocumentFile } from '@facadeur/core';
+import type { DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
-import button from '../../../examples/button.json';
-import card from '../../../examples/card.json';
-import input from '../../../examples/input.json';
-import link from '../../../examples/link.json';
-import signIn from '../../../examples/sign-in.json';
-import formToggle from '../../../examples/form-toggle.json';
-import specimenPage from '../../../examples/specimen-page.json';
-import specimenSection from '../../../examples/specimen-section.json';
-import textarea from '../../../examples/textarea.json';
 import { createEditorSession, type EditorSession } from '../src/domain/session.js';
 import { App } from '../src/ui/shell/EditorShell.js';
+import { expandExampleCatalog } from './fixtures/example-catalog.js';
 
 const variantComponent: DocumentFile = {
   version: 1,
@@ -31,16 +23,16 @@ const variantComponent: DocumentFile = {
   root: { id: 'root', type: 'text', tag: 'span', text: 'Base' },
 };
 
-const documents = validateCatalog([
-  button,
-  link,
-  input,
-  textarea,
-  formToggle,
-  card,
-  signIn,
-  specimenSection,
-  specimenPage,
+const documents = expandExampleCatalog([
+  'button',
+  'link',
+  'input',
+  'textarea',
+  'form-toggle',
+  'card',
+  'sign-in',
+  'specimen-section',
+  'specimen',
   variantComponent,
 ]);
 
@@ -233,7 +225,7 @@ describe('properties inspector tabs', () => {
       root?.render(<App session={session} />);
     });
     await act(async () => {
-      session.openAsset('input', 'root');
+      session.openAsset('textarea', 'root');
       session.selectNode('control');
     });
     await act(async () => {
@@ -276,7 +268,7 @@ describe('properties inspector tabs', () => {
       root?.render(<App session={session} />);
     });
     await act(async () => {
-      session.openAsset('input', 'root');
+      session.openAsset('textarea', 'root');
       session.selectNode('control');
     });
     await act(async () => {

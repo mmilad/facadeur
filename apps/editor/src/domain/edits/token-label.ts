@@ -6,6 +6,9 @@ export function designTokenWithLabel(token: TokenDefinition, label: string): Tok
   const extensions = isPlainObject(token.$extensions)
     ? { ...(token.$extensions as Record<string, unknown>) }
     : {};
-  extensions.facadeur = { ...(isPlainObject(extensions.facadeur) ? extensions.facadeur : {}), label: trimmed };
+  extensions.facadeur = {
+    ...(isPlainObject(extensions.facadeur) ? extensions.facadeur : {}),
+    label: trimmed,
+  };
   return { ...token, $extensions: extensions as TokenDefinition['$extensions'] };
 }

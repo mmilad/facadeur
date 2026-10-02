@@ -8,6 +8,7 @@ export function Combobox({
   name,
   value: valueProp,
   options,
+  currentLabel,
   disabled,
   invalid,
   onChange,
@@ -17,6 +18,8 @@ export function Combobox({
   name?: string;
   value?: string;
   options: SelectOption[];
+  /** Display override for the selected value; option labels stay unchanged. */
+  currentLabel?: string;
   disabled?: boolean;
   invalid?: boolean;
   onChange?: (value: string) => void;
@@ -42,7 +45,10 @@ export function Combobox({
     );
   }, [options, query]);
 
-  const selectedLabel = options.find((option) => option.value === value)?.label ?? '';
+  const selectedLabel =
+    currentLabel ??
+    (options.find((option) => option.value === value)?.label as string | undefined) ??
+    '';
 
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>

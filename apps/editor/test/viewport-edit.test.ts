@@ -2,34 +2,17 @@ import { describe, expect, it } from 'vitest';
 import {
   defaultBreakpoints,
   readTokenTree,
-  validateCatalog,
   type TokenDefinition,
   type TokenTree,
 } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
-import button from '../../../examples/button.json';
-import card from '../../../examples/card.json';
-import input from '../../../examples/input.json';
-import link from '../../../examples/link.json';
-import signIn from '../../../examples/sign-in.json';
-import specimenPage from '../../../examples/specimen-page.json';
-import specimenSection from '../../../examples/specimen-section.json';
-import textarea from '../../../examples/textarea.json';
 import { createEditorSession } from '../src/domain/session.js';
 import { writeStyleDeclaration } from '../src/domain/edits/style-edit.js';
 import { withTokenBreakpoint } from '../src/domain/edits/token-edit.js';
 import { viewportEditContext } from '../src/domain/viewport/viewport-edit.js';
+import { editorStandardCatalog } from './fixtures/example-catalog.js';
 
-const documents = validateCatalog([
-  button,
-  link,
-  input,
-  textarea,
-  card,
-  signIn,
-  specimenSection,
-  specimenPage,
-]);
+const documents = editorStandardCatalog();
 
 describe('viewport edit context', () => {
   it('keeps writes on Base until a wider viewport is the edit target', () => {

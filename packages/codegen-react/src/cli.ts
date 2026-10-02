@@ -23,8 +23,7 @@ async function main(): Promise<void> {
         throw new Error(`Invalid --styles value "${value}"`);
       }
       styles = value;
-    }
-    else if (arg === '--entries') entries = args[(index += 1)]?.split(',');
+    } else if (arg === '--entries') entries = args[(index += 1)]?.split(',');
     else if (arg?.startsWith('--')) throw new Error(`Unknown option ${arg}`);
     else if (arg) files.push(arg);
   }
@@ -37,7 +36,12 @@ async function main(): Promise<void> {
   const design = designPath
     ? designFromDocument(validateDocumentFile(JSON.parse(readFileSync(designPath, 'utf8'))))
     : undefined;
-  const { ui, stories } = generateReact({ documents, ...(design ? { design } : {}), styles, entries });
+  const { ui, stories } = generateReact({
+    documents,
+    ...(design ? { design } : {}),
+    styles,
+    entries,
+  });
   await writeFiles(resolve(out), ui);
   if (storybook) {
     await writeFiles(resolve(storybook), stories);

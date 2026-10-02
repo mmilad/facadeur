@@ -27,8 +27,8 @@
   },
   "tokenInterface": {
     "reads": [
-      "color.text.secondary",
       "color.border.default",
+      "color.text.secondary",
       "space.0",
       "space.gap.xs",
       "type.label"
@@ -77,7 +77,12 @@
       {
         "id": "control",
         "type": "instance",
-        "component": "form-input"
+        "component": "form-input",
+        "fieldBindings": {
+          "value": "value",
+          "placeholder": "placeholder",
+          "name": "name"
+        }
       }
     ]
   },

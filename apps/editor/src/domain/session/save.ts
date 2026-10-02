@@ -43,7 +43,10 @@ export function bindPersistDocumentSave(options: {
         options.publish();
         return true;
       } catch (error) {
-        options.setNotice({ tone: 'error', text: error instanceof Error ? error.message : 'Could not save' });
+        options.setNotice({
+          tone: 'error',
+          text: error instanceof Error ? error.message : 'Could not save',
+        });
         options.publish();
         return false;
       }

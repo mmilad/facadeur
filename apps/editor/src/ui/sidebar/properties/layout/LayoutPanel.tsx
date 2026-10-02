@@ -5,6 +5,10 @@ import {
   type VariantNodeOverride,
   type VariantPreset,
 } from '@facadeur/core';
+import type { ReactNode } from 'react';
+import { resolveSelectedInstance } from '../../../../domain/instance-variant-context.js';
+import { TokenValueLabelProvider } from '../../../controls/fields/TokenPreviewContext.js';
+import type { LayoutField } from '../../../../domain/layout-capabilities.js';
 import {
   clearLayoutBreakpoint,
   dimensionTokenRefsForDocument,
@@ -280,6 +284,30 @@ export function LayoutPanel({
     });
   }
 
+  const masterDocument = resolveSelectedInstance(snap)?.document;
+
+  function layoutFieldOwn(key: keyof LayoutOverride): boolean {
+    const own = breakpointId
+      ? (variantEntry ? ownLayout : node.layout)?.breakpoints?.[breakpointId]
+      : variantEntry
+        ? ownLayout
+        : node.layout;
+    if (own?.[key] !== undefined) return true;
+    if (key === 'width' || key === 'height') return gridField(key).overridden;
+    return false;
+  }
+
+  function renderValueLabelScope(field: LayoutField, content: ReactNode): ReactNode {
+    if (effectiveNode.type !== 'instance' || !masterDocument || layoutFieldOwn(field)) {
+      return content;
+    }
+    return (
+      <TokenValueLabelProvider design={snap.design} document={masterDocument}>
+        {content}
+      </TokenValueLabelProvider>
+    );
+  }
+
   function inactiveReset(key: keyof LayoutOverride) {
     const own = breakpointId
       ? (variantEntry ? ownLayout : node.layout)?.breakpoints?.[breakpointId]
@@ -359,6 +387,7 @@ export function LayoutPanel({
         onCommit={commit}
         afterField={cue}
         resetField={inactiveReset}
+        renderValueLabelScope={renderValueLabelScope}
         section={section}
         sectionContent={{
           ...sectionContent,

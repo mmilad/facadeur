@@ -26,9 +26,7 @@ describe('bindings editor', () => {
       />,
     );
 
-    const slotSelect = document.querySelector(
-      'select[name="binding-slot-0"]',
-    ) as HTMLSelectElement;
+    const slotSelect = document.querySelector('select[name="binding-slot-0"]') as HTMLSelectElement;
     expect(slotSelect.value).toBe('value');
     expect(document.querySelector('select[name="binding-target-0"]')).toBeNull();
 

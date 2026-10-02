@@ -7,7 +7,10 @@ import {
   styleStateNames,
   type StyleStateName,
 } from '../../../../domain/edits/style-edit.js';
-import { editorBreakpoints, viewportEditContext } from '../../../../domain/viewport/viewport-edit.js';
+import {
+  editorBreakpoints,
+  viewportEditContext,
+} from '../../../../domain/viewport/viewport-edit.js';
 import { TokenPreviewProvider } from '../../../controls/fields/TokenPreviewContext.js';
 import type { StructuredDeclarationGroup } from '../../../controls/generic/CssDeclarationsControl.js';
 import { Field, Select } from '../../../form/index.js';
@@ -123,6 +126,7 @@ export function StyleInspector({
           session={session}
           snap={snap}
           inheritedDeclarations={inheritedDeclarations}
+          inheritedTokenDocument={master}
           instanceRoot={masterRoot}
           target={{
             nodeId: styleNode.id,

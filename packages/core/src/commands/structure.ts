@@ -89,7 +89,7 @@ function pruneExposeMap(
   if (!map) return undefined;
   const next: Record<string, string> = {};
   for (const [name, path] of Object.entries(map)) {
-    const root = path.split('.')[0];
+    const root = path.split('.')[0] ?? path;
     if (!removed.has(root)) next[name] = path;
   }
   return Object.keys(next).length ? next : undefined;

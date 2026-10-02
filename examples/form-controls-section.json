@@ -114,12 +114,7 @@
             "name": "kind",
             "type": "enum",
             "required": true,
-            "options": [
-              "input",
-              "textarea",
-              "select",
-              "toggle"
-            ]
+            "options": ["input", "textarea", "select", "toggle"]
           },
           {
             "name": "label",

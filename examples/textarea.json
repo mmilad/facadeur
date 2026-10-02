@@ -38,10 +38,7 @@
   "variants": [
     {
       "name": "resize",
-      "values": [
-        "vertical",
-        "none"
-      ],
+      "values": ["vertical", "none"],
       "default": "vertical"
     }
   ],

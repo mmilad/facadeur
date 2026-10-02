@@ -19,7 +19,7 @@ function rewriteLayer(layer: StyleLayer, oldPath: string, newPath: string): void
     }
   }
   if (layer.states) {
-    for (const [state, declarations] of Object.entries(layer.states)) {
+    for (const declarations of Object.values(layer.states)) {
       if (!declarations) continue;
       for (const [key, value] of Object.entries(declarations)) {
         declarations[key] = rewriteRefString(value, oldPath, newPath);
@@ -39,7 +39,8 @@ function rewriteStyleBlock(block: StyleBlock, oldPath: string, newPath: string):
     for (const layer of Object.values(child.variants ?? {})) {
       for (const variant of Object.values(layer)) rewriteLayer(variant, oldPath, newPath);
     }
-    for (const layer of Object.values(child.breakpoints ?? {})) rewriteLayer(layer, oldPath, newPath);
+    for (const layer of Object.values(child.breakpoints ?? {}))
+      rewriteLayer(layer, oldPath, newPath);
   }
 }
 
@@ -54,10 +55,9 @@ export function rewriteLocalComponentTokenPath(
     if (preset.overrides?.styles) rewriteStyleBlock(preset.overrides.styles, oldPath, newPath);
   }
   for (const node of Object.values(doc.nodes)) {
-    if (node.style) {
-      for (const [key, value] of Object.entries(node.style)) {
-        node.style[key] = rewriteRefString(value, oldPath, newPath);
-      }
+    if (node.type === 'instance' || !node.style) continue;
+    for (const [key, value] of Object.entries(node.style)) {
+      if (typeof value === 'string') node.style[key] = rewriteRefString(value, oldPath, newPath);
     }
   }
   const sets = doc.tokenInterface?.sets;

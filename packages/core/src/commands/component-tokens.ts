@@ -18,11 +18,7 @@ function assertTokenId(id: string): void {
   }
 }
 
-function assertPathAvailable(
-  doc: FlatDocument,
-  path: string,
-  exceptId: string | null,
-): void {
+function assertPathAvailable(doc: FlatDocument, path: string, exceptId: string | null): void {
   if (!TOKEN_PATH.test(path)) {
     throw new DocumentError('schema', `Invalid component token path "${path}"`);
   }

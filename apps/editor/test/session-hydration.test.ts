@@ -1,17 +1,10 @@
-import { readFileSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { validateCatalog } from '@facadeur/core';
 import { createDocumentStore } from '@facadeur/store-yjs';
 import * as Y from 'yjs';
 import { createEditorSession } from '../src/domain/session.js';
+import { allExampleDocuments } from './fixtures/example-catalog.js';
 
-const examples = new URL('../../../examples/', import.meta.url);
-const catalog = validateCatalog(
-  readdirSync(examples)
-    .filter((name) => name.endsWith('.json'))
-    .map((name) => JSON.parse(readFileSync(new URL(name, examples), 'utf8')))
-    .filter((file) => file.version === 1 && file.root && file.id),
-);
+const catalog = allExampleDocuments();
 
 describe('session shared-history hydration', () => {
   it.each(['project-template', 'form-controls'])(

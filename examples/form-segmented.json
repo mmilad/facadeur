@@ -18,11 +18,7 @@
   "variants": [
     {
       "name": "state",
-      "values": [
-        "start",
-        "center",
-        "end"
-      ],
+      "values": ["start", "center", "end"],
       "default": "start"
     }
   ],

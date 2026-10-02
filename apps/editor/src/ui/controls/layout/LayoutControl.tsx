@@ -5,6 +5,8 @@ import type { LayoutCapabilities, LayoutField } from '../../../domain/layout-cap
 import { Combobox, Field, Grid, NumberInput, Section, Stack, Toggle } from '../../form/index.js';
 import '../../form/form.css';
 import { useTokenOptions } from '../token-options.js';
+import { useTokenValueLabel } from '../fields/TokenPreviewContext.js';
+import { isTokenReference } from '../fields/TokenValueControl.js';
 import { AxisSizeEditor } from './axis-size-editor.js';
 import { LayoutChoiceIcon, LayoutIconChoice } from './icon-choice.js';
 import { SpacingControl } from '../spacing/index.js';
@@ -45,6 +47,7 @@ export function LayoutControl({
   onCommit,
   afterField,
   resetField,
+  renderValueLabelScope,
   section,
   sectionContent,
   displayMode,
@@ -62,6 +65,8 @@ export function LayoutControl({
   afterField?: (key: keyof LayoutOverride) => ReactNode;
   /** Reset cue used only when a retained value is inactive in this context. */
   resetField?: (key: keyof LayoutOverride) => ReactNode;
+  /** Scope displayed token labels for values inherited from a master document. */
+  renderValueLabelScope?: (field: LayoutField, content: ReactNode) => ReactNode;
   section?: LayoutControlSection;
   sectionContent?: LayoutControlSectionContent;
   displayMode?: 'flex' | 'grid' | 'flow';
@@ -76,6 +81,7 @@ export function LayoutControl({
   const mainAxisLabel = `Main axis (${horizontal ? 'Horizontal' : 'Vertical'})`;
   const crossAxisLabel = `Cross axis (${horizontal ? 'Vertical' : 'Horizontal'})`;
   const tokenOptions = useTokenOptions();
+  const valueLabelFor = useTokenValueLabel();
   const margin = value.margin;
   const has = (field: LayoutField): boolean => {
     switch (field) {
@@ -125,7 +131,7 @@ export function LayoutControl({
       reason={reason(field)}
       reset={!available(field) ? resetField?.(field) : afterField?.(field)}
     >
-      {children}
+      {renderValueLabelScope ? renderValueLabelScope(field, children) : children}
     </CapabilityField>
   );
   const showLayoutSection =
@@ -208,6 +214,11 @@ export function LayoutControl({
                   <Combobox
                     name="layout-gap"
                     value={value.gap ?? ''}
+                    currentLabel={
+                      value.gap && isTokenReference(value.gap)
+                        ? valueLabelFor(value.gap)
+                        : undefined
+                    }
                     options={tokenOptions(dimensionTokens, value.gap)}
                     onCommit={(gap) => onCommit({ gap: gap || null })}
                   />

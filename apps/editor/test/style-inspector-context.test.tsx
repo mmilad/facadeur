@@ -2,10 +2,11 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
-import { validateCatalog, type DocumentFile } from '@facadeur/core';
+import type { DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { createEditorSession, type EditorSession } from '../src/domain/session.js';
 import { App } from '../src/ui/shell/EditorShell.js';
+import { expandExampleCatalog } from './fixtures/example-catalog.js';
 
 const source: DocumentFile = {
   version: 1,
@@ -52,7 +53,7 @@ const source: DocumentFile = {
   },
 };
 
-const documents = validateCatalog([source]);
+const documents = expandExampleCatalog([source]);
 
 describe('style inspector context', () => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;

@@ -31,11 +31,20 @@ export function SchemaUseControl({
   documentId: string;
   onOpenSchemas: () => void;
 }) {
-  const library = useSyncExternalStore(subscribeSchemaLibrary, getSchemaLibrary, () => emptyLibrary);
+  const library = useSyncExternalStore(
+    subscribeSchemaLibrary,
+    getSchemaLibrary,
+    () => emptyLibrary,
+  );
   const use = getComponentSchemaUse(documentId);
   const typeOptions = useMemo(() => schemaTypeOptions(library.schemas), [library.schemas]);
   const namedSchemas = useMemo(
-    () => library.schemas.map((schema) => ({ id: schema.id, name: schema.name, schema: schema.schema })),
+    () =>
+      library.schemas.map((schema) => ({
+        id: schema.id,
+        name: schema.name,
+        schema: schema.schema,
+      })),
     [library.schemas],
   );
 
@@ -61,10 +70,11 @@ export function SchemaUseControl({
     setMode(nextMode);
     if (nextMode === 'direct') {
       setComponentSchemaUse(documentId, {
-        direct: use?.direct ?? use?.fields?.find((field) => field.name.trim())?.type ?? {
-          kind: 'type',
-          type: 'string',
-        },
+        direct: use?.direct ??
+          use?.fields?.find((field) => field.name.trim())?.type ?? {
+            kind: 'type',
+            type: 'string',
+          },
         defaults: use?.defaults,
       });
       return;
@@ -87,7 +97,11 @@ export function SchemaUseControl({
       .filter((row) => row.name.trim())
       .map((row) => ({ ...row, name: row.name.trim() }));
     if (!fields.length) {
-      if (use?.fields?.length) setComponentSchemaUse(documentId, use.defaults === undefined ? null : { defaults: use.defaults });
+      if (use?.fields?.length)
+        setComponentSchemaUse(
+          documentId,
+          use.defaults === undefined ? null : { defaults: use.defaults },
+        );
       return;
     }
     setComponentSchemaUse(documentId, {
@@ -97,7 +111,9 @@ export function SchemaUseControl({
   }
 
   function updateFieldRow(index: number, patch: Partial<SchemaFieldUse>) {
-    const next = fieldRows.map((row, rowIndex) => (rowIndex === index ? { ...row, ...patch } : row));
+    const next = fieldRows.map((row, rowIndex) =>
+      rowIndex === index ? { ...row, ...patch } : row,
+    );
     commitFieldRows(next);
   }
 
@@ -181,11 +197,7 @@ export function SchemaUseControl({
         </p>
       </div>
 
-      <SchemaPreviewForm
-        documentId={documentId}
-        use={previewUse}
-        schemas={namedSchemas}
-      />
+      <SchemaPreviewForm documentId={documentId} use={previewUse} schemas={namedSchemas} />
     </div>
   );
 }

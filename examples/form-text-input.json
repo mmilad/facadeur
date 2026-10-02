@@ -41,12 +41,7 @@
   "variants": [
     {
       "name": "state",
-      "values": [
-        "default",
-        "focused",
-        "disabled",
-        "invalid"
-      ],
+      "values": ["default", "focused", "disabled", "invalid"],
       "default": "default"
     }
   ],

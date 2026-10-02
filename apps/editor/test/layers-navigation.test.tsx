@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { act, cleanup, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, it } from 'vitest';
+import { validateCatalog } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
+import button from '../../../examples/button.json';
 import { createEditorSession } from '../src/domain/session.js';
 import { App } from '../src/ui/shell/EditorShell.js';
 
@@ -89,7 +91,10 @@ it('deletes a layer from the context menu', async () => {
   render(<App session={session} />);
   const layers = within(screen.getByRole('region', { name: 'Layers' }));
   const user = userEvent.setup();
-  await user.pointer({ keys: '[MouseRight>]', target: layers.getByRole('button', { name: 'text Drop' }) });
+  await user.pointer({
+    keys: '[MouseRight>]',
+    target: layers.getByRole('button', { name: 'text Drop' }),
+  });
   await user.click(screen.getByRole('menuitem', { name: 'Delete layer' }));
   expect(session.getSnapshot().document.nodes.drop).toBeUndefined();
   expect(session.getSnapshot().document.nodes.keep).toBeTruthy();
@@ -98,14 +103,8 @@ it('deletes a layer from the context menu', async () => {
 it('inserts an atom instance from the insert submenu', async () => {
   const session = createEditorSession({
     design: createProjectTemplateDocument(),
-    documents: [
-      {
-        version: 1,
-        id: 'button',
-        name: 'Button',
-        kind: 'atom',
-        root: { id: 'root', type: 'frame', tag: 'button' },
-      },
+    documents: validateCatalog([
+      button,
       {
         version: 1,
         id: 'demo',
@@ -117,7 +116,7 @@ it('inserts an atom instance from the insert submenu', async () => {
           children: [{ id: 'label', type: 'text', text: 'Label' }],
         },
       },
-    ],
+    ]),
   });
   session.openAsset('demo');
   render(<App session={session} />);
@@ -127,16 +126,16 @@ it('inserts an atom instance from the insert submenu', async () => {
     keys: '[MouseRight>]',
     target: layers.getByRole('button', { name: 'frame root' }),
   });
-  await user.click(screen.getByRole('menuitem', { name: 'Insert atom inside' }));
-  await user.click(screen.getByRole('menuitem', { name: 'Button' }));
+  const insertInside = screen.getByRole('menuitem', { name: 'Insert atom inside' });
+  await user.hover(insertInside);
+  await user.click(insertInside);
+  fireEvent.click(await screen.findByRole('menuitem', { name: 'Button' }));
   const nodes = session.getSnapshot().document.nodes.root;
   expect(nodes?.type).toBe('frame');
   if (nodes?.type === 'frame') {
     expect(nodes.children).toHaveLength(2);
     expect(
-      nodes.children.some(
-        (id) => session.getSnapshot().document.nodes[id]?.type === 'instance',
-      ),
+      nodes.children.some((id) => session.getSnapshot().document.nodes[id]?.type === 'instance'),
     ).toBe(true);
   }
 });

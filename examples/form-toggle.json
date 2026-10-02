@@ -23,11 +23,7 @@
   "variants": [
     {
       "name": "state",
-      "values": [
-        "on",
-        "off",
-        "disabled"
-      ],
+      "values": ["on", "off", "disabled"],
       "default": "on"
     }
   ],

@@ -12,10 +12,14 @@ import { ContentPanel } from './content/ContentPanel.js';
 import { InstanceContext } from './content/InstanceContext.js';
 import { StyleInspector } from './style/StyleInspector.js';
 import { ComponentTokensPanel } from './component/ComponentTokensPanel.js';
+import { TokenPreviewProvider } from '../../controls/fields/TokenPreviewContext.js';
+import { editorBreakpoints, viewportEditContext } from '../../../domain/viewport/viewport-edit.js';
 
 type PropertyPrimaryTab = 'style' | 'content' | 'tokens';
 
-function propertyPrimaryTabs(showTokens: boolean): readonly (readonly [PropertyPrimaryTab, string])[] {
+function propertyPrimaryTabs(
+  showTokens: boolean,
+): readonly (readonly [PropertyPrimaryTab, string])[] {
   const tabs: (readonly [PropertyPrimaryTab, string])[] = [
     ['style', 'Style'],
     ['content', 'Content'],
@@ -48,6 +52,11 @@ export function PropertiesPanel({
       snap.document.kind === 'component' ||
       snap.document.kind === 'section');
   const propertyTabs = propertyPrimaryTabs(showComponentTokens);
+  const tokenViewport = viewportEditContext({
+    breakpoints: editorBreakpoints(snap.document, snap.design),
+    focusId: snap.focusViewportId,
+    editTarget: snap.editTarget,
+  });
 
   useEffect(() => {
     if (primaryTab === 'tokens' && !showComponentTokens) setPrimaryTab('content');
@@ -143,7 +152,14 @@ export function PropertiesPanel({
       ) : null}
       {primaryTab === 'tokens' && showComponentTokens ? (
         <div role="tabpanel" className="property-panel">
-          <ComponentTokensPanel session={session} snap={snap} />
+          <TokenPreviewProvider
+            design={snap.design}
+            document={snap.document}
+            breakpointId={tokenViewport.writingBreakpointId}
+            breakpoints={tokenViewport.breakpoints.slice()}
+          >
+            <ComponentTokensPanel session={session} snap={snap} />
+          </TokenPreviewProvider>
         </div>
       ) : null}
     </div>

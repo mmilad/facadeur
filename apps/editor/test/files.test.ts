@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { toFlat, validateDocumentFile } from '@facadeur/core';
 import button from '../../../examples/button.json';
-import { documentToJson, parseDocumentText, suggestedFilename } from '../src/domain/assets/files.js';
+import {
+  documentToJson,
+  parseDocumentText,
+  suggestedFilename,
+} from '../src/domain/assets/files.js';
 
 describe('document files', () => {
   it('round-trips nested JSON', () => {

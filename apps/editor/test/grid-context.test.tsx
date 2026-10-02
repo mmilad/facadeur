@@ -3,12 +3,13 @@ import '@testing-library/jest-dom/vitest';
 import { act, useSyncExternalStore } from 'react';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { validateCatalog, type DocumentFile } from '@facadeur/core';
+import type { DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { afterEach, expect, it } from 'vitest';
 import { createEditorSession, type EditorSession } from '../src/domain/session.js';
 import { LayoutPanel } from '../src/ui/sidebar/properties/layout/LayoutPanel.js';
 import { gridDeclarations } from '../src/ui/sidebar/properties/layout/grid/edits.js';
+import { expandExampleCatalog } from './fixtures/example-catalog.js';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 afterEach(cleanup);
@@ -34,7 +35,7 @@ function Harness({ session, nodeId }: { session: EditorSession; nodeId: string }
 }
 function setup(variant = false, viewport = false, nodeId = 'root') {
   const session = createEditorSession({
-    documents: validateCatalog([fixture()]),
+    documents: expandExampleCatalog([fixture()]),
     design: createProjectTemplateDocument(),
   });
   session.openAsset('grid-test', 'root');
@@ -56,7 +57,7 @@ it.each([false, true])(
     if (child?.type !== 'text') throw new Error('Expected text child');
     child.style = { 'grid-area': 'action', 'grid-column-start': 'action', opacity: '0.5' };
     const session = createEditorSession({
-      documents: validateCatalog([file]),
+      documents: expandExampleCatalog([file]),
       design: createProjectTemplateDocument(),
     });
     session.openAsset('grid-test', 'root');
@@ -116,7 +117,7 @@ it('assigns an area to a child component instance without editing its master', a
     root: { id: 'root', type: 'text', text: 'Action' },
   };
   const session = createEditorSession({
-    documents: validateCatalog([file, master]),
+    documents: expandExampleCatalog([file, master]),
     design: createProjectTemplateDocument(),
   });
   session.openAsset('grid-test', 'root');
@@ -162,7 +163,7 @@ it.each([false, true])(
       },
     };
     const session = createEditorSession({
-      documents: validateCatalog([file, master]),
+      documents: expandExampleCatalog([file, master]),
       design: createProjectTemplateDocument(),
     });
     session.openAsset('grid-test', 'root');

@@ -179,10 +179,10 @@ describe('project template', () => {
     expect(design.properties.find((property) => property.name === '--space-gap-md')?.value).toBe(
       'var(--space-4)',
     );
-    expect(design.properties.find((property) => property.name === '--shadow-md')?.value).toBeTruthy();
-    expect(design.properties.some((property) => property.name.startsWith('--button-'))).toBe(
-      false,
-    );
+    expect(
+      design.properties.find((property) => property.name === '--shadow-md')?.value,
+    ).toBeTruthy();
+    expect(design.properties.some((property) => property.name.startsWith('--button-'))).toBe(false);
     expect(css).toContain('--type-body--font-size: 16px;');
     expect(css).toContain('--type-body--font-size: 17px;');
     expect(css).toContain('--type-body--font-size: 18px;');

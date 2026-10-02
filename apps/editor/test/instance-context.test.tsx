@@ -4,10 +4,11 @@
 import '@testing-library/jest-dom/vitest';
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { validateCatalog, type DocumentFile } from '@facadeur/core';
+import type { DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { createEditorSession } from '../src/domain/session.js';
 import { App } from '../src/ui/shell/EditorShell.js';
+import { expandExampleCatalog } from './fixtures/example-catalog.js';
 
 const target: DocumentFile = {
   version: 1,
@@ -45,7 +46,7 @@ const owner: DocumentFile = {
   },
 };
 
-const documents = validateCatalog([target, owner]);
+const documents = expandExampleCatalog([target, owner]);
 
 describe('instance inspector context', () => {
   afterEach(() => cleanup());

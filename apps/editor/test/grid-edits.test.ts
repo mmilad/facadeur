@@ -1,8 +1,9 @@
 import { expect, it } from 'vitest';
-import { validateCatalog, type DocumentFile } from '@facadeur/core';
+import type { DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { createEditorSession } from '../src/domain/session.js';
 import { commitGridChanges } from '../src/ui/sidebar/properties/layout/grid/edits.js';
+import { expandExampleCatalog } from './fixtures/example-catalog.js';
 
 const file: DocumentFile = {
   version: 1,
@@ -29,7 +30,7 @@ it.each([false, true])(
   'renames parent and inline child in one Undo without touching siblings (variant: %s)',
   (variant) => {
     const session = createEditorSession({
-      documents: validateCatalog([file]),
+      documents: expandExampleCatalog([file]),
       design: createProjectTemplateDocument(),
     });
     session.openAsset('grid-edits', 'root');
@@ -51,7 +52,7 @@ it.each([false, true])(
 );
 it('builds multiple sparse viewport style owners without overwriting earlier edits', () => {
   const session = createEditorSession({
-    documents: validateCatalog([file]),
+    documents: expandExampleCatalog([file]),
     design: createProjectTemplateDocument(),
   });
   session.openAsset('grid-edits', 'root');

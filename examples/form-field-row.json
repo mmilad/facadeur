@@ -28,10 +28,7 @@
   "variants": [
     {
       "name": "state",
-      "values": [
-        "default",
-        "selected"
-      ],
+      "values": ["default", "selected"],
       "default": "default"
     }
   ],

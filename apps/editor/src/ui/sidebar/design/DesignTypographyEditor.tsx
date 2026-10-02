@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { TokenValueControl } from '../../controls/fields/TokenValueControl.js';
-import { useTokenResolver } from '../../controls/fields/TokenPreviewContext.js';
+import { useTokenResolver, useTokenValueLabel } from '../../controls/fields/TokenPreviewContext.js';
 import {
   formatTypographyFieldValue,
   parseTypographyFieldValue,
@@ -174,6 +174,7 @@ function previewText(value: unknown): string {
 export function DesignTypographyEditor(props: DesignTypographyEditorProps) {
   const { catalogs } = props;
   const resolvePreview = useTokenResolver();
+  const labelFor = useTokenValueLabel();
   const [error, setError] = useState<string | null>(null);
   const breakpoint = isBreakpoint(props);
   const base = isTypographyObject(props.baseValue)
@@ -189,10 +190,10 @@ export function DesignTypographyEditor(props: DesignTypographyEditorProps) {
       : effective;
   const summary = useMemo(() => {
     if (typeof props.value === 'string') return props.value;
-    const size = previewText(effective.fontSize) || 'Inherited size';
-    const family = previewText(effective.fontFamily) || 'Inherited family';
+    const size = summaryValue(effective.fontSize, labelFor) || 'Inherited size';
+    const family = summaryValue(effective.fontFamily, labelFor) || 'Inherited family';
     return [size, family].join(' · ');
-  }, [effective.fontFamily, effective.fontSize, props.value]);
+  }, [effective.fontFamily, effective.fontSize, labelFor, props.value]);
 
   const previewValue = (value: unknown): string => {
     if (Array.isArray(value)) return value.map((item) => previewValue(item)).join(', ');
@@ -299,4 +300,12 @@ export function DesignTypographyEditor(props: DesignTypographyEditorProps) {
       </Stack>
     </details>
   );
+}
+
+function summaryValue(value: unknown, labelFor: (reference: string) => string): string {
+  const display = (item: unknown) => {
+    const text = previewText(item);
+    return /^\{[^{}]+\}$/.test(text) ? labelFor(text) : text;
+  };
+  return Array.isArray(value) ? value.map(display).join(', ') : display(value);
 }

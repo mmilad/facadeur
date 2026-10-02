@@ -13,6 +13,7 @@ import {
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
 import { IconButton } from '../../../form/components/shared/IconButton.js';
 import { TokenAddAction } from './TokenAddAction.js';
+import { useTokenLabel } from '../../../controls/fields/TokenPreviewContext.js';
 
 export function ShadowTokenAddRow({
   session,
@@ -69,6 +70,7 @@ export function RemoveShadowTokenButton({
   snap: EditorSnapshot;
   path: string;
 }) {
+  const labelFor = useTokenLabel();
   function removeShadow() {
     const refs = [
       ...tokenPathsReferencingShadow(snap.design.tokens, path),
@@ -87,7 +89,7 @@ export function RemoveShadowTokenButton({
   return (
     <IconButton
       className="token-action-remove"
-      label={`Remove shadow ${path}`}
+      label={`Remove shadow ${labelFor(path)}`}
       name={`remove-shadow-${path}`}
       onClick={() => removeShadow()}
     >

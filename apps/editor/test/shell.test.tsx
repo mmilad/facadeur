@@ -6,31 +6,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { validateCatalog } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { afterEach, describe, expect, it } from 'vitest';
-import button from '../../../examples/button.json';
-import card from '../../../examples/card.json';
-import input from '../../../examples/input.json';
-import link from '../../../examples/link.json';
-import signIn from '../../../examples/sign-in.json';
-import textarea from '../../../examples/textarea.json';
-import specimenPage from '../../../examples/specimen-page.json';
-import specimenSection from '../../../examples/specimen-section.json';
 import { createEditorSession, type EditorSession } from '../src/domain/session.js';
 import { App } from '../src/ui/shell/EditorShell.js';
+import { editorStandardCatalog } from './fixtures/example-catalog.js';
 import { openSettingsDomain } from './settings-navigation.js';
 
-const documents = validateCatalog([
-  button,
-  link,
-  input,
-  textarea,
-  card,
-  signIn,
-  specimenSection,
-  specimenPage,
-]);
+const documents = editorStandardCatalog();
 
 describe('editor shell', () => {
   const stylesDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '../src/ui/styles');
@@ -184,6 +167,7 @@ describe('editor shell', () => {
     expect(direction?.getAttribute('aria-pressed')).toBe('true');
 
     await act(async () => {
+      session.openAsset('card', 'root');
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'f', bubbles: true }));
     });
     expect(session.getSnapshot().tool).toBe('frame');
@@ -211,6 +195,7 @@ describe('editor shell', () => {
     expect(insertCue()).toBeNull();
 
     await act(async () => {
+      session.openAsset('button', 'root');
       host!
         .querySelector('button[name="property-tab-content"]')
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));

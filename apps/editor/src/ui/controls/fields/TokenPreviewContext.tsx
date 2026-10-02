@@ -13,6 +13,7 @@ const TokenPreviewContext = createContext<(reference: string) => string | undefi
   () => undefined,
 );
 const TokenLabelContext = createContext<(reference: string) => string>(tokenDisplayLabel);
+const TokenValueLabelContext = createContext<(reference: string) => string>(tokenDisplayLabel);
 const TokenSearchValueContext = createContext<(reference: string) => string | undefined>(
   () => undefined,
 );
@@ -37,10 +38,8 @@ export function TokenPreviewProvider({
 }) {
   const { searchValue, labelFor } = useMemo(() => {
     const values = new Map<string, string>();
-    const labels = new Map<string, string>();
     for (const source of [design.tokens, document.tokens]) {
       for (const token of readTokenTree(source).tokens.values()) {
-        if (token.label) labels.set(token.path, token.label);
         values.set(
           token.path,
           formatTokenValue(
@@ -50,13 +49,11 @@ export function TokenPreviewProvider({
       }
     }
     for (const token of listComponentTokens(document.componentTokens)) {
-      if (token.label) labels.set(token.path, token.label);
       values.set(token.path, formatTokenValue(token.value));
     }
     return {
       searchValue: (reference: string) => values.get(tokenPath(reference)),
-      labelFor: (reference: string) =>
-        tokenDisplayLabel(reference, labels.get(tokenPath(reference))),
+      labelFor: createTokenLabeler(design, document),
     };
   }, [design.tokens, document.tokens, document.componentTokens, breakpointId]);
   const resolve = useMemo(() => {
@@ -131,7 +128,9 @@ export function TokenPreviewProvider({
   return (
     <TokenSearchValueContext.Provider value={searchValue}>
       <TokenLabelContext.Provider value={labelFor}>
-        <TokenPreviewContext.Provider value={resolve}>{children}</TokenPreviewContext.Provider>
+        <TokenValueLabelContext.Provider value={labelFor}>
+          <TokenPreviewContext.Provider value={resolve}>{children}</TokenPreviewContext.Provider>
+        </TokenValueLabelContext.Provider>
       </TokenLabelContext.Provider>
     </TokenSearchValueContext.Provider>
   );
@@ -148,6 +147,56 @@ export function useTokenResolver() {
 
 export function useTokenLabel() {
   return useContext(TokenLabelContext);
+}
+
+/** Current value labels may follow the document that owns an inherited value. */
+export function TokenValueLabelProvider({
+  design,
+  document,
+  children,
+}: {
+  design: FlatDocument;
+  document: FlatDocument;
+  children: ReactNode;
+}) {
+  const labelFor = useMemo(
+    () => createTokenLabeler(design, document),
+    [design.tokens, document.tokens, document.componentTokens],
+  );
+  return (
+    <TokenValueLabelContext.Provider value={labelFor}>{children}</TokenValueLabelContext.Provider>
+  );
+}
+
+export function useTokenValueLabel() {
+  return useContext(TokenValueLabelContext);
+}
+
+function createTokenLabeler(
+  design: FlatDocument,
+  document: FlatDocument,
+): (reference: string) => string {
+  const designLabels = new Map<string, string>();
+  const documentLabels = new Map<string, string>();
+  for (const token of readTokenTree(design.tokens).tokens.values()) {
+    designLabels.set(token.path, token.label ?? '');
+  }
+  for (const token of readTokenTree(document.tokens).tokens.values()) {
+    documentLabels.set(token.path, token.label ?? '');
+  }
+  const componentLabels = new Map<string, string>();
+  for (const token of listComponentTokens(document.componentTokens)) {
+    componentLabels.set(token.path, token.label ?? '');
+  }
+  return (reference: string) => {
+    const path = tokenPath(reference);
+    if (componentLabels.has(path)) {
+      return tokenDisplayLabel(reference, componentLabels.get(path));
+    }
+    if (designLabels.has(path)) return tokenDisplayLabel(reference, designLabels.get(path));
+    if (documentLabels.has(path)) return tokenDisplayLabel(reference, documentLabels.get(path));
+    return tokenDisplayLabel(reference);
+  };
 }
 
 export function useTokenSearchValue() {

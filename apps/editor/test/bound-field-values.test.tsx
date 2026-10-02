@@ -5,12 +5,13 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
-import { validateCatalog, type Binding, type FieldDefinition } from '@facadeur/core';
+import type { Binding, FieldDefinition } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
-import input from '../../../examples/input.json';
+import formInput from '../../../examples/form-input.json';
 import { createEditorSession, type EditorSession } from '../src/domain/session.js';
 import { boundFields } from '../src/ui/sidebar/properties/content/bound-fields.js';
 import { App } from '../src/ui/shell/EditorShell.js';
+import { expandExampleCatalog } from './fixtures/example-catalog.js';
 
 const fields: FieldDefinition[] = [
   { name: 'value', type: 'text' },
@@ -49,7 +50,7 @@ describe('content example values', () => {
 
   it('edits a bound field example from the content tab', async () => {
     const session: EditorSession = createEditorSession({
-      documents: validateCatalog([input]),
+      documents: expandExampleCatalog([formInput]),
       design: createProjectTemplateDocument(),
     });
     host = document.createElement('div');
@@ -59,8 +60,8 @@ describe('content example values', () => {
       root?.render(<App session={session} />);
     });
     await act(async () => {
-      session.openAsset('input');
-      session.selectNode('control');
+      session.openAsset('form-input');
+      session.selectNode('root');
     });
 
     const placeholder = host.querySelector(

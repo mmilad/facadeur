@@ -68,6 +68,7 @@ export function renderInstance(
   }
   const boundFields = new Set<string>();
   for (const [fieldName, path] of Object.entries(node.fieldBindings ?? {})) {
+    if (forwardedFields.has(fieldName)) continue;
     const prop = target.fields.get(fieldName);
     if (!prop) {
       throw new CodegenError(

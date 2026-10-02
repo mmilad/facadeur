@@ -5,15 +5,41 @@ import { act } from 'react';
 import { fireEvent } from '@testing-library/react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
-import { validateCatalog } from '@facadeur/core';
+import type { DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import button from '../../../examples/button.json';
-import input from '../../../examples/input.json';
 import textarea from '../../../examples/textarea.json';
 import { createEditorSession, type EditorSession } from '../src/domain/session.js';
 import { App } from '../src/ui/shell/EditorShell.js';
+import { expandExampleCatalog } from './fixtures/example-catalog.js';
 
-const documents = validateCatalog([button, input, textarea]);
+/** Native control node — preview-options UI is tested apart from composed `input` → `form-input`. */
+const inputWithNativeControl: DocumentFile = {
+  version: 1,
+  id: 'input',
+  name: 'Input',
+  kind: 'component',
+  root: {
+    id: 'root',
+    type: 'frame',
+    children: [
+      { id: 'label', type: 'text', text: 'Label' },
+      {
+        id: 'control',
+        type: 'frame',
+        tag: 'input',
+        attributes: {
+          type: 'text',
+          autocomplete: 'off',
+          readonly: 'true',
+          tabindex: '-1',
+        },
+      },
+    ],
+  },
+};
+
+const documents = expandExampleCatalog([button, inputWithNativeControl, textarea]);
 
 describe('Content tab preview options disclosure', () => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;

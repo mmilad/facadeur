@@ -13,6 +13,7 @@ import {
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
 import { IconButton } from '../../../form/components/shared/IconButton.js';
 import { TokenAddAction } from './TokenAddAction.js';
+import { useTokenLabel } from '../../../controls/fields/TokenPreviewContext.js';
 
 export function ColorTokenAddRow({
   session,
@@ -69,6 +70,7 @@ export function RemoveColorTokenButton({
   snap: EditorSnapshot;
   path: string;
 }) {
+  const labelFor = useTokenLabel();
   function removeColor() {
     const refs = [
       ...tokenPathsReferencingColor(snap.design.tokens, path),
@@ -87,7 +89,7 @@ export function RemoveColorTokenButton({
   return (
     <IconButton
       className="token-action-remove"
-      label={`Remove color ${path}`}
+      label={`Remove color ${labelFor(path)}`}
       name={`remove-color-${path}`}
       onClick={() => removeColor()}
     >

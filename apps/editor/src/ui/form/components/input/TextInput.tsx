@@ -5,6 +5,7 @@ import { useBindable } from './bindable.js';
 export function TextInput({
   name,
   value: valueProp,
+  className,
   disabled,
   invalid,
   onChange,
@@ -33,7 +34,7 @@ export function TextInput({
       {...rest}
       id={rest.id ?? id}
       name={name}
-      className="eu-control"
+      className={className ? `eu-control ${className}` : 'eu-control'}
       type="text"
       value={draft}
       disabled={isDisabled}

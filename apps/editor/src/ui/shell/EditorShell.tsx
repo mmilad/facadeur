@@ -286,7 +286,10 @@ function useEditorKeys(session: EditorSession, canvasActive: boolean) {
           session.execute({ type: 'remove', nodeId });
           session.selectNode(parent?.id ?? null);
         } catch (error) {
-          session.setNotice(error instanceof Error ? error.message : 'Could not remove layer', 'error');
+          session.setNotice(
+            error instanceof Error ? error.message : 'Could not remove layer',
+            'error',
+          );
         }
         return;
       }

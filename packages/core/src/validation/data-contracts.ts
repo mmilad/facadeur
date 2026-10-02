@@ -12,6 +12,12 @@ interface DataScope {
 
 export function validateDataContracts(doc: FlatDocument, catalog: Map<string, DocumentFile>): void {
   const fields = new Map((doc.fields ?? []).map((field) => [field.name, field]));
+  const owner = catalog.get(doc.id);
+  if (owner) {
+    for (const [name, definition] of exposedFields(owner, catalog)) {
+      if (!fields.has(name)) fields.set(name, definition);
+    }
+  }
   const visit = (id: string, scope: DataScope): void => {
     const node = doc.nodes[id];
     if (!node) return;

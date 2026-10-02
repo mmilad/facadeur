@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { TokenValueControl } from '../../controls/fields/TokenValueControl.js';
-import { useTokenResolver } from '../../controls/fields/TokenPreviewContext.js';
+import { useTokenResolver, useTokenValueLabel } from '../../controls/fields/TokenPreviewContext.js';
 import { Checkbox, Field, Inline, Stack, TextArea } from '../../form/index.js';
 
 export interface DesignShadowValue {
@@ -92,11 +92,15 @@ export function editShadowField(
   return Array.isArray(current) ? list : list[0]!;
 }
 
-function valueSummary(value: DesignShadowInput): string {
+function valueSummary(value: DesignShadowInput, labelFor: (reference: string) => string): string {
   if (typeof value === 'string') return value;
   const first = Array.isArray(value) ? value[0] : value;
   if (!first) return 'Empty shadow';
-  return `${first.offsetX} ${first.offsetY} ${first.blur}${first.spread ? ` ${first.spread}` : ''} · ${first.color}`;
+  const display = (raw: unknown) => {
+    const text = displayField(raw);
+    return /^\{[^{}]+\}$/.test(text) ? labelFor(text) : text;
+  };
+  return `${display(first.offsetX)} ${display(first.offsetY)} ${display(first.blur)}${first.spread ? ` ${display(first.spread)}` : ''} · ${display(first.color)}`;
 }
 
 const CSS_LENGTH =
@@ -218,12 +222,13 @@ function ShadowObjectEditor({
 
 export function DesignShadowEditor(props: DesignShadowEditorProps) {
   const breakpoint = isBreakpoint(props);
+  const labelFor = useTokenValueLabel();
   const [advancedDraft, setAdvancedDraft] = useState(() =>
     typeof props.value === 'string' ? props.value : JSON.stringify(props.value, null, 2),
   );
   const [advancedError, setAdvancedError] = useState<string | null>(null);
   const supported = typeof props.value !== 'string' && isSupported(props.value);
-  const summary = useMemo(() => valueSummary(props.value), [props.value]);
+  const summary = useMemo(() => valueSummary(props.value, labelFor), [labelFor, props.value]);
   const editableValue =
     typeof props.storedValue !== 'string' && props.storedValue && isSupported(props.storedValue)
       ? props.storedValue

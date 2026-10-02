@@ -32,19 +32,19 @@ Examples live in `examples/`. The JSON Schema generated from `packages/core` is 
 | `tokens`               | no       | W3C DTCG tree. A token has `$value`; a group does not.                                                              |
 | `styles`               | no       | Style block for this document: base, states, variants, breakpoints, children.                                       |
 | `tokenInterface`       | no       | `reads` and `sets`: tokens this document uses and overrides for descendants.                                        |
-| `componentTokens`    | no       | Local tokens owned by this atom, component, or section (not pages).                                                   |
+| `componentTokens`      | no       | Local tokens owned by this atom, component, or section (not pages).                                                 |
 | `root`                 | yes      | The canvas node. Nesting rules apply to what is inside it.                                                          |
 
 Field types are `text`, `richText`, `image`, `link`, `boolean`, `enum`, `number`, and `token`. Enum fields also carry `options`. `richText` is reserved; nothing renders rich text yet.
 
 ## Kinds
 
-| Kind        | Root                  | What it may contain                                      |
-| ----------- | --------------------- | -------------------------------------------------------- |
+| Kind        | Root                  | What it may contain                                             |
+| ----------- | --------------------- | --------------------------------------------------------------- |
 | `atom`      | frame, text, or image | Single root node only — no children. Use a component for trees. |
-| `component` | frame, text, or image | Primitives, plus instances of atoms and components.      |
-| `section`   | frame, text, or image | Same as a component. Not sections or pages.              |
-| `page`      | frame (the canvas)    | Only instances of sections.                              |
+| `component` | frame, text, or image | Primitives, plus instances of atoms and components.             |
+| `section`   | frame, text, or image | Same as a component. Not sections or pages.                     |
+| `page`      | frame (the canvas)    | Only instances of sections.                                     |
 
 The page root is the canvas, not a section. Its children are the sections. A page does not store the section's inner nodes; those live in the section document.
 

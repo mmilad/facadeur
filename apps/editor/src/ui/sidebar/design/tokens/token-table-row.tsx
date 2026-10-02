@@ -25,6 +25,7 @@ import {
 import { tokenLeafLabel } from './token-labels.js';
 import { withTokenLabel } from '../../../../domain/edits/token-edit.js';
 import { previewDesignTokenCssVar } from '../../../../domain/component-tokens.js';
+import { TextInput } from '../../../form/components/input/TextInput.js';
 
 type ViewportContext = ReturnType<typeof viewportEditContext>;
 
@@ -69,6 +70,7 @@ export function TokenTableRow({
     commitToken(session, snap, token.path, shownValue, next ?? '', writingId);
   };
   const commitLabel = (next: string) => {
+    if (next.trim() === displayLabel) return;
     session.executeDesign({
       type: 'setToken',
       path: token.path,
@@ -79,11 +81,12 @@ export function TokenTableRow({
     <tr className="token-table-row" data-token-path={token.path}>
       <th scope="row">
         <div className="token-table-name">
-          <input
+          <TextInput
+            key={token.label ?? ''}
             className="token-table-label-input"
             aria-label={`Label for ${cssVar}`}
-            defaultValue={displayLabel}
-            onBlur={(event) => commitLabel(event.currentTarget.value)}
+            value={displayLabel}
+            onCommit={commitLabel}
           />
           <span className="token-path-id">{cssVar}</span>
           {showType ? <span>{token.type}</span> : null}
@@ -132,7 +135,7 @@ export function TokenTableRow({
           ) : token.type === 'typography' ? (
             <DesignTypographyEditor
               namePrefix={`token-${token.path}`}
-              label={tokenLeafLabel(token.path)}
+              label={displayLabel}
               value={shownValue as DesignTypographyValue}
               storedValue={
                 (writingId ? token.override : token.value) as DesignTypographyValue | undefined

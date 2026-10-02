@@ -4,6 +4,31 @@
 
 ## Refactoring bei der Aufgabenplanung
 
+### Token label presentation (2026-10-02)
+
+- [x] Prefer saved labels across pickers, token tables and inherited inspector values.
+- [x] Preserve references, IDs, CSS output and legacy documents; cover label updates and Undo.
+- [x] Run focused tests, editor checks and browser verification.
+
+Evidence: the shared label formatter prefixes saved labels with path segments; the component
+token tab lacks its provider, and table label inputs do not synchronize edited drafts with
+new snapshots. Inherited instance values require their master's label scope, separate from
+the containing document's picker options. Keep the existing presentation/provider boundary
+and reuse the form draft-commit behavior; no storage migration or generic helper package.
+For inherited values, separate current-value labels from owner-scoped picker option labels;
+use a presentation-only provider at the control boundary and retain the same stored reference.
+Reuse TextInput's draft commit and support its existing className input for table styling.
+The scoped candidate scan reports no size candidates. Preserve public token APIs, token paths,
+IDs, sparse overrides, Undo and generated CSS. Validate exact labels, scoped references,
+label persistence and unchanged codegen, then inspect the live editor.
+
+Completion: `tokenDisplayLabel` prefers saved labels; `TokenValueLabelProvider` scopes inherited
+instance values (manual CSS, border compounds, layout gap/padding/margin/size) while pickers stay
+owner-scoped. Component token tab and design tables use `TokenPreviewProvider` / controlled label
+inputs. Focused editor, core, store-yjs and codegen-react tests pass (24+). Schema already
+exports optional `componentTokens.label`; unrelated full-suite example failures remain outside
+this change.
+
 ### Inspector controls / manual CSS and explicit Auto sizing (2026-10-02)
 
 - [x] Separate guided controls from manual CSS properties; preserve bidirectional effective values.

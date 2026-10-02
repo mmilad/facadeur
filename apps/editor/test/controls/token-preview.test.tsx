@@ -56,7 +56,7 @@ describe('token previews', () => {
         ),
       );
     render(design);
-    expect(host.textContent).toBe('Red Warm');
+    expect(host.textContent).toBe('Warm');
     render(
       toFlat({
         ...source,
@@ -73,7 +73,50 @@ describe('token previews', () => {
         },
       }),
     );
-    expect(host.textContent).toBe('Red Bright');
+    expect(host.textContent).toBe('Bright');
+    act(() => root.unmount());
+  });
+  it('uses an alias token label instead of inheriting its target label', () => {
+    const source: DocumentFile = {
+      version: 1,
+      id: 'labels',
+      name: 'Labels',
+      kind: 'component',
+      root: { id: 'root', type: 'frame' },
+      tokens: {
+        color: {
+          red: {
+            '500': {
+              $type: 'color',
+              $value: '#ff0000',
+              $extensions: { facadeur: { label: 'Warm' } },
+            },
+            '600': {
+              $type: 'color',
+              $value: '{color.red.500}',
+              $extensions: { facadeur: { label: 'Crimson' } },
+            },
+          },
+        },
+      },
+    };
+    const design = toFlat(source);
+    const document = toFlat({ ...source, id: 'card', tokens: undefined });
+    const host = window.document.createElement('div');
+    const root = createRoot(host);
+    act(() =>
+      root.render(
+        <TokenPreviewProvider design={design} document={document} breakpointId={null}>
+          <Label reference="{color.red.500}" />
+          <Label reference="{color.red.600}" />
+        </TokenPreviewProvider>,
+      ),
+    );
+
+    expect([...host.querySelectorAll('output')].map((output) => output.textContent)).toEqual([
+      'Warm',
+      'Crimson',
+    ]);
     act(() => root.unmount());
   });
   it('resolves aliases and document token sets without mutating references', () => {

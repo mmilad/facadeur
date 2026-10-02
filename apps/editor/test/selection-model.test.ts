@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { toFlat, validateCatalog } from '@facadeur/core';
-import button from '../../../examples/button.json';
-import card from '../../../examples/card.json';
-import input from '../../../examples/input.json';
-import signIn from '../../../examples/sign-in.json';
-import specimenPage from '../../../examples/specimen-page.json';
-import specimenSection from '../../../examples/specimen-section.json';
+import { toFlat } from '@facadeur/core';
 import {
   documentChain,
   instanceOpenTarget,
@@ -13,8 +7,16 @@ import {
   renderIdForNode,
   resolveClick,
 } from '../src/domain/selection/selection-model.js';
+import { expandExampleCatalog } from './fixtures/example-catalog.js';
 
-const documents = validateCatalog([button, input, card, signIn, specimenSection, specimenPage]);
+const documents = expandExampleCatalog([
+  'button',
+  'input',
+  'card',
+  'sign-in',
+  'specimen-section',
+  'specimen',
+]);
 
 function flat(id: string) {
   const file = documents.find((document) => document.id === id);

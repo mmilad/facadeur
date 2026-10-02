@@ -30,7 +30,10 @@ export function layerInsertEntries(snap: EditorSnapshot): LayerInsertEntry[] {
     return [];
   }
   if (kind === 'page') {
-    return catalogInstances(snap, (asset) => asset.kind === 'section' || asset.kind === 'component');
+    return catalogInstances(
+      snap,
+      (asset) => asset.kind === 'section' || asset.kind === 'component',
+    );
   }
   return catalogInstances(snap, (asset) => asset.kind === 'atom');
 }
@@ -83,8 +86,6 @@ export function layerInsertEntriesForLayer(
       return placementAllowed(doc, target.parentId, entry.tool);
     }
     const assetKind = snap.catalog.find((asset) => asset.id === entry.assetId)?.kind;
-    return assetKind
-      ? placementAllowed(doc, target.parentId, 'instance', assetKind)
-      : false;
+    return assetKind ? placementAllowed(doc, target.parentId, 'instance', assetKind) : false;
   });
 }

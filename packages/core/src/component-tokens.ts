@@ -27,10 +27,7 @@ export function componentTokenPublicPath(documentId: string, localPath: string):
 }
 
 /** Validates a default before `setComponentToken`; `globalPaths` comes from the design token index. */
-export function assertComponentTokenDefault(
-  value: string,
-  globalPaths: ReadonlySet<string>,
-): void {
+export function assertComponentTokenDefault(value: string, globalPaths: ReadonlySet<string>): void {
   if (typeof value !== 'string' || value.length === 0) {
     throw new DocumentError('schema', 'Component token value must be a non-empty string');
   }
@@ -41,7 +38,10 @@ export function assertComponentTokenDefault(
       throw new DocumentError('schema', `Invalid token reference in component token default`);
     }
     if (!globalPaths.has(ref)) {
-      throw new DocumentError('schema', `Unknown global token "{${ref}}" in component token default`);
+      throw new DocumentError(
+        'schema',
+        `Unknown global token "{${ref}}" in component token default`,
+      );
     }
     return;
   }
@@ -58,9 +58,7 @@ export function globalRefInComponentTokenDefault(value: string): string | undefi
   return match?.[1];
 }
 
-export function listComponentTokens(
-  map: ComponentTokenMap | undefined,
-): ListedComponentToken[] {
+export function listComponentTokens(map: ComponentTokenMap | undefined): ListedComponentToken[] {
   if (!map) return [];
   return Object.entries(map)
     .map(([id, token]) => ({ id, ...token }))

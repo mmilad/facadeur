@@ -18,8 +18,8 @@ the user's task. For each candidate, state the evidence, chosen boundary/pattern
 contracts, and validation. A concise reason to retain a cohesive file is also a valid outcome.
 
 Preserve existing user changes and staging. Refactoring does not authorize feature, public API,
- data-model, dependency, or persistence changes. Current user instructions take precedence over
- historical planning documents.
+data-model, dependency, or persistence changes. Current user instructions take precedence over
+historical planning documents.
 
 For repeatable refactoring work, use `.agents/skills/refactor/SKILL.md`. It combines the
 candidate detector, this checklist, and `docs/refactoring-guidelines.md`; size-based splitting

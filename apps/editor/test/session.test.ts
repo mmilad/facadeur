@@ -1,21 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import * as files from '../src/domain/assets/files.js';
-import {
-  readTokenTree,
-  resolvePreviewData,
-  type DocumentFile,
-  validateCatalog,
-} from '@facadeur/core';
+import { readTokenTree, resolvePreviewData, type DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
-import button from '../../../examples/button.json';
-import card from '../../../examples/card.json';
-import input from '../../../examples/input.json';
-import link from '../../../examples/link.json';
-import signIn from '../../../examples/sign-in.json';
-import textarea from '../../../examples/textarea.json';
-import specimenPage from '../../../examples/specimen-page.json';
-import specimenSection from '../../../examples/specimen-section.json';
 import { createEditorSession } from '../src/domain/session.js';
+import { expandExampleCatalog } from './fixtures/example-catalog.js';
 
 const variantComponent: DocumentFile = {
   version: 1,
@@ -43,15 +31,15 @@ const inheritedVariantComponent: DocumentFile = {
   variants: [{ name: 'default' }, { name: 'compact' }],
 };
 
-const documents = validateCatalog([
-  button,
-  link,
-  input,
-  textarea,
-  card,
-  signIn,
-  specimenSection,
-  specimenPage,
+const documents = expandExampleCatalog([
+  'button',
+  'link',
+  'input',
+  'textarea',
+  'card',
+  'sign-in',
+  'specimen-section',
+  'specimen',
   variantComponent,
 ]);
 
@@ -89,7 +77,7 @@ describe('editor session', () => {
     expect(atoms.workspace).toBe('atom');
     expect(atoms.openId).toBe('button');
     expect(atoms.paintRoot).toBe(true);
-    expect(atoms.assets.map((asset) => asset.id)).toEqual(['button', 'link']);
+    expect(atoms.assets.map((asset) => asset.id)).toEqual(['button', 'form-input', 'link']);
     editor.openAsset('link', 'root');
     expect(editor.getSnapshot().selectedNodeId).toBe('root');
     expect(editor.getSnapshot().workspace).toBe('atom');
@@ -290,7 +278,7 @@ describe('editor session', () => {
     const snap = editor.getSnapshot();
     expect(snap.openId).toBe('badge');
     expect(snap.workspace).toBe('atom');
-    expect(snap.assets.map((asset) => asset.name)).toEqual(['Button', 'Link', 'Badge']);
+    expect(snap.assets.map((asset) => asset.name)).toEqual(['Button', 'Input', 'Link', 'Badge']);
     expect(editor.filenameFor('specimen')).toBe('specimen-page.json');
     expect(editor.filenameFor('badge')).toBe('badge.json');
   });
