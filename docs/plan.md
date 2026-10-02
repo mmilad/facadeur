@@ -4,6 +4,35 @@
 
 ## Refactoring bei der Aufgabenplanung
 
+### Item self-alignment (2026-10-02)
+
+- [x] Extract layout style-field ownership/write routing from LayoutPanel before reusing it for align-self.
+- [x] Add parent-axis-aware item alignment icons; preserve container and sibling styles, sparse variants/viewports, reset and Undo.
+- [ ] Validate context changes, inline style priority, inherited alignment and browser button positioning.
+
+Evidence: display and align-self need identical style-layer and node-override routing; keep this
+private to the layout inspector, reuse existing icon choice and domain style writers. No schema,
+renderer, dependency or persistence changes. Keep layout patch orchestration cohesive.
+All 713 tests in 139 files pass; editor typecheck, ESLint and scoped
+formatting pass. Candidate detector has no findings. Visual verification is pending because
+the browser-control process cannot start (local Windows sandbox setup error).
+
+### Layout inspector UX (2026-10-02)
+
+- [x] Extract private axis-aware icon choices beside LayoutControl before replacing selects.
+- [x] Add existing-style-backed None/Flex mode selection; Grid stays disabled until its next milestone.
+- [x] Validate inherited values, sparse variant/viewport writes, reset, Undo and browser interaction.
+
+Evidence: container choice presentation changes independently of size/position and persistence.
+Keep patches and LayoutPanel command ownership; use existing style edits for display, no schema
+or dependency change. Preserve raw/token spacing values and staging. Validate focused tests,
+typecheck/lint and repeat the candidate detector; retain cohesive files where extraction adds no value.
+Validation: 707 tests / 138 files pass, editor typecheck, ESLint and scoped formatting pass.
+Browser verifies direction/axis changes, None disabling retained controls, Grid disabled and Undo;
+test changes were undone. LayoutPanel remains a cohesive context/write orchestrator with no size
+candidate; icon presentation owns its private module. Layout spacing permits direct CSS values
+alongside tokens without changing other spacing-control consumers.
+
 ### Unified token presentation and search (2026-10-02)
 
 - [x] Consolidate group/leaf/selection names in one editor-owned token presentation module.

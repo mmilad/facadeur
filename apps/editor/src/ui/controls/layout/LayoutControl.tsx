@@ -2,19 +2,11 @@ import type { LayoutOverride } from '@facadeur/core';
 import type { ReactNode } from 'react';
 import type { LayoutPatch } from '../../../domain/editing.js';
 import type { LayoutCapabilities, LayoutField } from '../../../domain/layout-capabilities.js';
-import {
-  Combobox,
-  Field,
-  Grid,
-  NumberInput,
-  Section,
-  Select,
-  Stack,
-  Toggle,
-} from '../../form/index.js';
+import { Combobox, Field, Grid, NumberInput, Section, Stack, Toggle } from '../../form/index.js';
 import '../../form/form.css';
 import { useTokenOptions } from '../token-options.js';
 import { AxisSizeEditor } from './axis-size-editor.js';
+import { LayoutChoiceIcon, LayoutIconChoice } from './icon-choice.js';
 import { SpacingControl } from '../spacing/index.js';
 import type { LayoutControlValue } from './value.js';
 import {
@@ -27,19 +19,19 @@ import {
 
 const JUSTIFY_OPTIONS = [
   { value: '', label: 'Default' },
-  { value: 'start', label: 'start' },
-  { value: 'center', label: 'center' },
-  { value: 'end', label: 'end' },
-  { value: 'space-between', label: 'space-between' },
-];
+  { value: 'start', label: 'Start' },
+  { value: 'center', label: 'Center' },
+  { value: 'end', label: 'End' },
+  { value: 'space-between', label: 'Space between' },
+] as const;
 
 const ALIGN_OPTIONS = [
   { value: '', label: 'Default' },
-  { value: 'start', label: 'start' },
-  { value: 'center', label: 'center' },
-  { value: 'end', label: 'end' },
-  { value: 'stretch', label: 'stretch' },
-];
+  { value: 'start', label: 'Start' },
+  { value: 'center', label: 'Center' },
+  { value: 'end', label: 'End' },
+  { value: 'stretch', label: 'Stretch' },
+] as const;
 
 export type LayoutControlSection = 'layout' | 'size' | 'spacing';
 
@@ -55,6 +47,9 @@ export function LayoutControl({
   resetField,
   section,
   sectionContent,
+  displayMode,
+  onDisplayModeCommit,
+  displayModeReset,
 }: {
   value: LayoutControlValue;
   dimensionTokens: readonly string[];
@@ -66,8 +61,14 @@ export function LayoutControl({
   resetField?: (key: keyof LayoutOverride) => ReactNode;
   section?: LayoutControlSection;
   sectionContent?: LayoutControlSectionContent;
+  displayMode?: 'flex' | 'grid' | 'flow';
+  onDisplayModeCommit?: (mode: 'flex' | 'flow' | null) => void;
+  displayModeReset?: ReactNode;
 }) {
   const free = value.position === 'absolute';
+  const horizontal = value.direction === 'row';
+  const mainAxisLabel = `Main axis (${horizontal ? 'Horizontal' : 'Vertical'})`;
+  const crossAxisLabel = `Cross axis (${horizontal ? 'Vertical' : 'Horizontal'})`;
   const tokenOptions = useTokenOptions();
   const margin = value.margin;
   const has = (field: LayoutField): boolean => {
@@ -118,23 +119,70 @@ export function LayoutControl({
   );
   const showLayoutSection =
     (!section || section === 'layout') &&
-    (containerFields.length > 0 || Boolean(sectionContent?.layout));
+    (value.isFrame || containerFields.length > 0 || Boolean(sectionContent?.layout));
 
   return (
     <Stack gap={12}>
       {showLayoutSection ? (
         <Section title="Layout">
+          {value.isFrame ? (
+            <>
+              <Field label="Layout mode">
+                <LayoutIconChoice
+                  label="Layout mode"
+                  value={displayMode ?? capabilities?.selectedDisplay ?? 'flex'}
+                  disabled={!onDisplayModeCommit}
+                  options={[
+                    {
+                      value: 'flow',
+                      label: 'None',
+                      title: 'No layout (normal flow)',
+                      icon: <LayoutChoiceIcon kind="flow" />,
+                      showLabel: true,
+                    },
+                    {
+                      value: 'flex',
+                      label: 'Flex',
+                      icon: <LayoutChoiceIcon kind="flex" />,
+                      showLabel: true,
+                    },
+                    {
+                      value: 'grid',
+                      label: 'Grid',
+                      icon: <LayoutChoiceIcon kind="grid" />,
+                      showLabel: true,
+                      disabled: true,
+                      title: 'Grid (editing is not yet available)',
+                    },
+                  ]}
+                  onCommit={(mode) => {
+                    if (mode === 'flex' || mode === 'flow') onDisplayModeCommit?.(mode);
+                  }}
+                />
+              </Field>
+              {displayModeReset}
+            </>
+          ) : null}
           {show('direction')
             ? capability(
                 'direction',
                 <Field label="Direction">
-                  <Select
-                    name="layout-direction"
+                  <LayoutIconChoice
+                    label="Direction"
                     value={value.direction ?? ''}
                     options={[
-                      { value: '', label: 'Default (column)' },
-                      { value: 'column', label: 'Column' },
-                      { value: 'row', label: 'Row' },
+                      {
+                        value: '',
+                        label: 'Inherit direction',
+                        title: 'Use inherited direction (vertical by default)',
+                        icon: <LayoutChoiceIcon kind="default" />,
+                      },
+                      { value: 'row', label: 'Horizontal', icon: <LayoutChoiceIcon kind="row" /> },
+                      {
+                        value: 'column',
+                        label: 'Vertical',
+                        icon: <LayoutChoiceIcon kind="column" />,
+                      },
                     ]}
                     onCommit={(next) => onCommit(directionPatch(next))}
                   />
@@ -157,11 +205,18 @@ export function LayoutControl({
           {show('justify')
             ? capability(
                 'justify',
-                <Field label="Justify">
-                  <Select
-                    name="layout-justify"
+                <Field label={mainAxisLabel}>
+                  <LayoutIconChoice
+                    label={mainAxisLabel}
                     value={value.justify ?? ''}
-                    options={JUSTIFY_OPTIONS}
+                    options={JUSTIFY_OPTIONS.map((option) => ({
+                      ...option,
+                      label: `${mainAxisLabel}: ${option.label}`,
+                      title: option.value === '' ? 'Use inherited main-axis alignment' : undefined,
+                      icon: (
+                        <LayoutChoiceIcon kind={option.value || 'default'} vertical={!horizontal} />
+                      ),
+                    }))}
                     onCommit={(next) => onCommit(justifyLayoutPatch(next))}
                   />
                 </Field>,
@@ -170,11 +225,22 @@ export function LayoutControl({
           {show('align')
             ? capability(
                 'align',
-                <Field label="Align">
-                  <Select
-                    name="layout-align"
+                <Field label={crossAxisLabel}>
+                  <LayoutIconChoice
+                    label={crossAxisLabel}
                     value={value.align ?? ''}
-                    options={ALIGN_OPTIONS}
+                    options={ALIGN_OPTIONS.map((option) => ({
+                      ...option,
+                      label: `${crossAxisLabel}: ${option.label}`,
+                      title: option.value === '' ? 'Use inherited cross-axis alignment' : undefined,
+                      icon: (
+                        <LayoutChoiceIcon
+                          kind={option.value || 'default'}
+                          vertical={horizontal}
+                          cross
+                        />
+                      ),
+                    }))}
                     onCommit={(next) => onCommit(alignLayoutPatch(next))}
                   />
                 </Field>,
@@ -270,6 +336,7 @@ export function LayoutControl({
                 'padding',
                 <SpacingControl
                   legend="Padding"
+                  allowRaw
                   namePrefix="layout-padding"
                   spacing={value.padding}
                   dimensionTokens={dimensionTokens}
@@ -282,6 +349,7 @@ export function LayoutControl({
                 'margin',
                 <SpacingControl
                   legend="Margin"
+                  allowRaw
                   namePrefix="layout-margin"
                   spacing={margin}
                   dimensionTokens={dimensionTokens}

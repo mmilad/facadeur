@@ -179,9 +179,9 @@ describe('editor shell', () => {
         .querySelector('button[name="property-tab-style"]')
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
-    const direction = host.querySelector('select[name="layout-direction"]');
-    expect(direction).toBeInstanceOf(HTMLSelectElement);
-    expect((direction as HTMLSelectElement).value).toBe('row');
+    const direction = host.querySelector('button[aria-label="Horizontal"]');
+    expect(direction).toBeInstanceOf(HTMLButtonElement);
+    expect(direction?.getAttribute('aria-pressed')).toBe('true');
 
     await act(async () => {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'f', bubbles: true }));

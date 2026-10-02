@@ -84,7 +84,8 @@ describe('properties inspector tabs', () => {
         .querySelector('button[name="property-tab-style"]')
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
-    expect(host.querySelector('select[name="layout-direction"]')).toBeInstanceOf(HTMLSelectElement);
+    expect(host.querySelector('button[aria-label="Horizontal"]')).toBeInstanceOf(HTMLButtonElement);
+    expect(host.querySelector('button[aria-label="Vertical"]')).toBeInstanceOf(HTMLButtonElement);
     expect(host.querySelector('select[name="tag"]')).toBeNull();
   });
 
@@ -399,7 +400,7 @@ describe('properties inspector tabs', () => {
         .querySelector('button[name="property-tab-style"]')
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
-    expect(host.querySelector('button[name="layout-margin"]')).toBeInstanceOf(HTMLButtonElement);
+    expect(host.querySelector('input[name="layout-margin"]')).toBeInstanceOf(HTMLInputElement);
     expect(host.textContent).toContain('Inherited appearance from');
     expect(host.querySelector('button[name="open-component"]')).toBeInstanceOf(HTMLButtonElement);
   });

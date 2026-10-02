@@ -11,9 +11,18 @@ import {
   type LayoutPatch,
 } from '../../../../domain/editing.js';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
-import { effectiveStyleDeclarations } from '../../../../domain/edits/style-edit.js';
-import { layoutCapabilities } from '../../../../domain/layout-capabilities.js';
-import { editorBreakpoints, viewportEditContext } from '../../../../domain/viewport/viewport-edit.js';
+import {
+  canonicalStyleProperty,
+  effectiveStyleDeclarations,
+} from '../../../../domain/edits/style-edit.js';
+import {
+  effectiveLayout as resolveLayout,
+  layoutCapabilities,
+} from '../../../../domain/layout-capabilities.js';
+import {
+  editorBreakpoints,
+  viewportEditContext,
+} from '../../../../domain/viewport/viewport-edit.js';
 import {
   LayoutControl,
   layoutControlValue,
@@ -21,6 +30,8 @@ import {
   type LayoutControlSectionContent,
 } from '../../../controls/layout/index.js';
 import { OverrideCue } from '../ViewportEditBar.js';
+import { layoutStyleField } from './style-field.js';
+import { SelfAlignment } from './SelfAlignment.js';
 
 export function LayoutPanel({
   session,
@@ -92,6 +103,19 @@ export function LayoutPanel({
     breakpoints: ctx.breakpoints,
     styleDeclarations,
   });
+  const display = layoutStyleField(session, snap, node.id, breakpointId, 'display');
+  const selfAlignment = layoutStyleField(session, snap, node.id, breakpointId, 'align-self');
+  const parent = capabilities.parentId
+    ? snap.activeDocument.nodes[capabilities.parentId]
+    : undefined;
+  const declaration = (id: string, property: string) =>
+    Object.entries(styleDeclarations[id] ?? {}).find(
+      ([key]) => canonicalStyleProperty(key) === property,
+    )?.[1];
+  const parentDirection =
+    declaration(capabilities.parentId ?? '', 'flex-direction') ??
+    resolveLayout(parent?.layout, breakpointId, ctx.breakpoints).direction ??
+    'column';
 
   function cue(key: keyof LayoutOverride) {
     const own = breakpointId
@@ -228,11 +252,41 @@ export function LayoutPanel({
         dimensionTokens={tokens}
         writingBreakpointId={breakpointId}
         capabilities={capabilities}
+        displayMode={capabilities.selectedDisplay}
+        onDisplayModeCommit={(mode) => display.commit(mode === 'flow' ? 'block' : mode)}
+        displayModeReset={
+          display.overridden ? (
+            <button
+              type="button"
+              className="text-button"
+              aria-label="Reset layout mode"
+              onClick={() => display.commit(null)}
+            >
+              Reset
+            </button>
+          ) : undefined
+        }
         onCommit={commit}
         afterField={cue}
         resetField={inactiveReset}
         section={section}
-        sectionContent={sectionContent}
+        sectionContent={{
+          ...sectionContent,
+          size: (
+            <>
+              <SelfAlignment
+                value={declaration(node.id, 'align-self')}
+                horizontal={parentDirection.startsWith('row')}
+                active={capabilities.isDirectFlexItem}
+                retained={selfAlignment.overridden}
+                fill={controlValue.width?.mode === 'fill' && !parentDirection.startsWith('row')}
+                onCommit={selfAlignment.commit}
+                onReset={selfAlignment.overridden ? () => selfAlignment.commit(null) : undefined}
+              />
+              {sectionContent?.size}
+            </>
+          ),
+        }}
       />
     </div>
   );

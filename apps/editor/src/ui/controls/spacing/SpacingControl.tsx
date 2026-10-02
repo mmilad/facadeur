@@ -36,12 +36,14 @@ export function SpacingControl({
   spacing,
   dimensionTokens,
   onCommit,
+  allowRaw = false,
 }: {
   legend: string;
   namePrefix: string;
   spacing: Spacing | undefined;
   dimensionTokens: readonly string[];
   onCommit: (spacing: Spacing | null) => void;
+  allowRaw?: boolean;
 }) {
   const [showSides, setShowSides] = useState(() => Boolean(spacing && typeof spacing !== 'string'));
   useEffect(() => {
@@ -63,7 +65,7 @@ export function SpacingControl({
               label={side}
               value={box[side] ?? ''}
               tokens={dimensionTokens}
-              tokenOnly
+              tokenOnly={!allowRaw}
               placeholder="None"
               onCommit={(next) => onCommit(boxWith(box, side, next))}
             />
@@ -95,7 +97,7 @@ export function SpacingControl({
         label={legend}
         value={tokenValue}
         tokens={dimensionTokens}
-        tokenOnly
+        tokenOnly={!allowRaw}
         placeholder="None"
         onCommit={(next) => onCommit(next)}
       />

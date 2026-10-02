@@ -90,10 +90,8 @@ function chooseVariant(session: EditorSession) {
   session.setActiveVariant('compact');
 }
 
-function directionSelect(): HTMLSelectElement {
-  const select = document.querySelector('select[name="layout-direction"]');
-  if (!(select instanceof HTMLSelectElement)) throw new Error('missing layout direction select');
-  return select;
+function directionButton(direction: 'row' | 'column'): HTMLElement {
+  return screen.getByRole('button', { name: direction === 'row' ? 'Horizontal' : 'Vertical' });
 }
 
 describe('LayoutPanel variant and viewport context', () => {
@@ -101,18 +99,175 @@ describe('LayoutPanel variant and viewport context', () => {
 
   afterEach(() => cleanup());
 
+  it('writes None and Flex only as display declarations and retains existing layout fields', async () => {
+    const session = setup();
+    render(<LayoutHarness session={session} />);
+    const before = structuredClone(session.getSnapshot().document.nodes.root);
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: 'None' }));
+
+    expect(session.getSnapshot().document.styles).toEqual({ declarations: { display: 'block' } });
+    expect(session.getSnapshot().document.nodes.root).toEqual(before);
+    expect(screen.getByRole('button', { name: 'None' })).toHaveAttribute('aria-pressed', 'true');
+    expect(directionButton('column')).toBeDisabled();
+
+    await user.click(screen.getByRole('button', { name: 'Flex' }));
+
+    expect(session.getSnapshot().document.styles).toEqual({ declarations: { display: 'flex' } });
+    expect(session.getSnapshot().document.nodes.root).toEqual(before);
+    expect(directionButton('column')).toBeEnabled();
+  });
+
+  it('writes mode to variant styles while retaining base styles and variant layout', async () => {
+    const document = structuredClone(layoutDocument);
+    document.styles = { declarations: { color: 'red' } };
+    const session = setup(document);
+    chooseVariant(session);
+    render(<LayoutHarness session={session} />);
+    const before = structuredClone(session.getSnapshot().document);
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: 'None' }));
+
+    expect(compactPreset(session)?.overrides?.styles).toEqual({
+      declarations: { display: 'block' },
+    });
+    expect(compactPreset(session)?.overrides?.nodes).toEqual(
+      before.variantPresets?.find((preset) => preset.name === 'compact')?.overrides?.nodes,
+    );
+    expect(session.getSnapshot().document.styles).toEqual(before.styles);
+    expect(session.getSnapshot().document.nodes).toEqual(before.nodes);
+
+    await user.click(screen.getByRole('button', { name: 'Flex' }));
+    expect(compactPreset(session)?.overrides?.styles).toEqual({
+      declarations: { display: 'flex' },
+    });
+    expect(session.getSnapshot().document.styles).toEqual(before.styles);
+  });
+
+  it.each([false, true])('writes a sparse tablet mode override (variant: %s)', async (variant) => {
+    const session = setup();
+    if (variant) chooseVariant(session);
+    session.setFocusViewport('tablet');
+    session.setEditTarget('viewport');
+    render(<LayoutHarness session={session} />);
+    const before = structuredClone(session.getSnapshot().document);
+
+    await userEvent.setup().click(screen.getByRole('button', { name: 'None' }));
+
+    const styles = variant
+      ? compactPreset(session)?.overrides?.styles
+      : session.getSnapshot().document.styles;
+    expect(styles).toEqual({ breakpoints: { tablet: { declarations: { display: 'block' } } } });
+    expect(session.getSnapshot().document.nodes).toEqual(before.nodes);
+    if (variant) {
+      expect(session.getSnapshot().document.styles).toEqual(before.styles);
+      expect(compactPreset(session)?.overrides?.nodes).toEqual(
+        before.variantPresets?.find((preset) => preset.name === 'compact')?.overrides?.nodes,
+      );
+    }
+  });
+
+  it.each([false, true])(
+    'resets only the mode declaration and undoes the reset atomically (variant: %s)',
+    async (variant) => {
+      const document = structuredClone(layoutDocument);
+      const styles = {
+        declarations: { display: 'block', color: 'red' },
+        breakpoints: { tablet: { declarations: { display: 'flex', opacity: '0.5' } } },
+      };
+      if (variant) {
+        const preset = document.variants![1]!;
+        if (!('overrides' in preset)) throw new Error('Missing compact overrides');
+        preset.overrides!.styles = styles;
+      } else document.styles = styles;
+      const session = setup(document);
+      if (variant) chooseVariant(session);
+      render(<LayoutHarness session={session} />);
+      const before = structuredClone(session.getSnapshot().document);
+
+      await userEvent.setup().click(screen.getByRole('button', { name: 'Reset layout mode' }));
+
+      expect(
+        variant ? compactPreset(session)?.overrides?.styles : session.getSnapshot().document.styles,
+      ).toEqual({
+        declarations: { color: 'red' },
+        breakpoints: styles.breakpoints,
+      });
+      expect(session.getSnapshot().document.nodes).toEqual(before.nodes);
+      await act(async () => session.undo());
+      expect(session.getSnapshot().document).toEqual(before);
+      expect(screen.getByRole('button', { name: 'None' })).toHaveAttribute('aria-pressed', 'true');
+    },
+  );
+
+  it('undoes a variant tablet mode edit in one step', async () => {
+    const session = setup();
+    chooseVariant(session);
+    session.setFocusViewport('tablet');
+    session.setEditTarget('viewport');
+    render(<LayoutHarness session={session} />);
+    const before = structuredClone(session.getSnapshot().document);
+
+    await userEvent.setup().click(screen.getByRole('button', { name: 'None' }));
+    expect(compactPreset(session)?.overrides?.styles?.breakpoints?.tablet).toEqual({
+      declarations: { display: 'block' },
+    });
+    await act(async () => session.undo());
+    expect(session.getSnapshot().document).toEqual(before);
+    expect(screen.getByRole('button', { name: 'Flex' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('overrides an existing node display in a variant and preserves sibling styles and layout through Undo and reset', async () => {
+    const document = structuredClone(layoutDocument);
+    if (document.root.type !== 'frame') throw new Error('Expected frame root');
+    document.root.style = { display: 'block', color: 'red' };
+    const preset = document.variants![1]!;
+    if (!('overrides' in preset)) throw new Error('Missing compact overrides');
+    preset.overrides!.nodes!.root = {
+      ...preset.overrides!.nodes!.root!,
+      style: { opacity: '0.5' },
+    };
+    const session = setup(document);
+    chooseVariant(session);
+    render(<LayoutHarness session={session} />);
+    const before = structuredClone(session.getSnapshot().document);
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: 'Flex' }));
+    expect(compactPreset(session)?.overrides?.nodes?.root?.style).toEqual({
+      opacity: '0.5',
+      display: 'flex',
+    });
+    expect(compactPreset(session)?.overrides?.nodes?.root?.layout).toEqual(
+      before.variantPresets?.find((preset) => preset.name === 'compact')?.overrides?.nodes?.root
+        ?.layout,
+    );
+    expect(session.getSnapshot().document.nodes).toEqual(before.nodes);
+    expect(session.getSnapshot().document.styles).toEqual(before.styles);
+    expect(screen.getByRole('button', { name: 'Flex' })).toHaveAttribute('aria-pressed', 'true');
+
+    await act(async () => session.undo());
+    expect(session.getSnapshot().document).toEqual(before);
+    expect(screen.getByRole('button', { name: 'None' })).toHaveAttribute('aria-pressed', 'true');
+
+    await user.click(screen.getByRole('button', { name: 'Flex' }));
+    await user.click(screen.getByRole('button', { name: 'Reset layout mode' }));
+    expect(session.getSnapshot().document).toEqual(before);
+    expect(screen.getByRole('button', { name: 'None' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
   it('shows named variant values while leaving the base document untouched', async () => {
     const session = setup();
     chooseVariant(session);
     render(<LayoutHarness session={session} />);
 
-    expect(directionSelect()).toHaveValue('row');
+    expect(directionButton('row')).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: 'Gap Sm' })).toBeInTheDocument();
 
     await act(async () => {
-      fireEvent.change(directionSelect(), {
-        target: { value: 'column' },
-      });
+      fireEvent.click(directionButton('column'));
     });
 
     expect(session.getSnapshot().document.nodes.root?.layout?.direction).toBe('column');
@@ -175,7 +330,7 @@ describe('LayoutPanel variant and viewport context', () => {
     session.setEditTarget('viewport');
     render(<LayoutHarness session={session} />);
 
-    expect(directionSelect()).toHaveValue('column');
+    expect(directionButton('column')).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: 'Gap Lg' })).toBeInTheDocument();
   });
 
@@ -186,9 +341,7 @@ describe('LayoutPanel variant and viewport context', () => {
     render(<LayoutHarness session={session} />);
 
     await act(async () => {
-      fireEvent.change(directionSelect(), {
-        target: { value: 'row' },
-      });
+      fireEvent.click(directionButton('row'));
     });
 
     expect(session.getSnapshot().document.nodes.root?.layout?.breakpoints?.tablet).toEqual({
@@ -210,7 +363,7 @@ describe('LayoutPanel variant and viewport context', () => {
         desktop: { gap: '{space.gap.lg}' },
       },
     });
-    expect(directionSelect()).toHaveValue('column');
+    expect(directionButton('column')).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('resets one breakpoint field while retaining other breakpoint overrides', async () => {
@@ -235,9 +388,7 @@ describe('LayoutPanel variant and viewport context', () => {
     const before = structuredClone(compactPreset(session));
 
     await act(async () => {
-      fireEvent.change(directionSelect(), {
-        target: { value: 'column' },
-      });
+      fireEvent.click(directionButton('column'));
     });
     expect(compactPreset(session)?.overrides?.nodes?.root?.layout?.direction).toBe('column');
 
@@ -246,6 +397,6 @@ describe('LayoutPanel variant and viewport context', () => {
     });
 
     expect(compactPreset(session)).toEqual(before);
-    expect(directionSelect()).toHaveValue('row');
+    expect(directionButton('row')).toHaveAttribute('aria-pressed', 'true');
   });
 });

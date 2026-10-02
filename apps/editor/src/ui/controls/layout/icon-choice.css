@@ -1,0 +1,46 @@
+.layout-icon-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.layout-icon-choice button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 4px 6px;
+  border: 1px solid var(--eu-border, #b7aa9a);
+  border-radius: var(--eu-radius, 6px);
+  background: var(--eu-bg-elevated, #fffdf9);
+  color: var(--eu-fg, #2a241c);
+  font: inherit;
+  cursor: pointer;
+}
+
+.layout-icon-choice button:hover:not(:disabled),
+.layout-icon-choice button[aria-pressed='true'] {
+  border-color: var(--eu-accent, #3d5a80);
+  color: var(--eu-accent, #3d5a80);
+  background: var(--eu-bg, #f6f1ea);
+}
+
+.layout-icon-choice button[aria-pressed='true'] {
+  box-shadow: inset 0 0 0 1px var(--eu-accent, #3d5a80);
+}
+
+.layout-icon-choice button:focus-visible {
+  outline: 2px solid var(--eu-accent, #3d5a80);
+  outline-offset: 2px;
+}
+
+.layout-icon-choice button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.layout-icon-choice svg {
+  flex-shrink: 0;
+}
