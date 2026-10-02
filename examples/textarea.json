@@ -38,7 +38,10 @@
   "variants": [
     {
       "name": "resize",
-      "values": ["vertical", "none"],
+      "values": [
+        "vertical",
+        "none"
+      ],
       "default": "vertical"
     }
   ],
@@ -175,7 +178,8 @@
     ]
   },
   "componentTokens": {
-    "color.text": {
+    "n_b4jzs40ts0": {
+      "path": "color.text",
       "type": "color",
       "value": "{color.text.primary}"
     }

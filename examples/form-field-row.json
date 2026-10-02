@@ -28,7 +28,10 @@
   "variants": [
     {
       "name": "state",
-      "values": ["default", "selected"],
+      "values": [
+        "default",
+        "selected"
+      ],
       "default": "default"
     }
   ],
@@ -162,27 +165,33 @@
     ]
   },
   "componentTokens": {
-    "color.bordersubtle": {
+    "n_ppe3yfgimq": {
+      "path": "color.bordersubtle",
       "type": "color",
       "value": "{color.neutral.200}"
     },
-    "color.surface": {
+    "n_7m32i3t9i6": {
+      "path": "color.surface",
       "type": "color",
       "value": "{color.neutral.0}"
     },
-    "color.text": {
+    "n_d70crkjg7o": {
+      "path": "color.text",
       "type": "color",
       "value": "{color.text.primary}"
     },
-    "color.textmuted": {
+    "n_maj5cr2ld5": {
+      "path": "color.textmuted",
       "type": "color",
       "value": "{color.text.secondary}"
     },
-    "padding.x": {
+    "n_gnbyvvdqky": {
+      "path": "padding.x",
       "type": "dimension",
       "value": "{space.3}"
     },
-    "padding.y": {
+    "n_m9edvqwv8v": {
+      "path": "padding.y",
       "type": "dimension",
       "value": "{space.2}"
     }

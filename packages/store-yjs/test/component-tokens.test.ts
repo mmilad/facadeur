@@ -12,6 +12,7 @@ describe('component tokens', () => {
       root: { id: 'root', type: 'frame', tag: 'span' },
     };
     const token = { type: 'color' as const, value: '{color.bg.canvas}' };
+    const id = 'n_yjstoken1';
     const store = createDocumentStore(file, {
       globalTokenPaths: new Set(['color.accent.default', 'color.bg.canvas', 'color.neutral.600']),
     });
@@ -20,15 +21,24 @@ describe('component tokens', () => {
       expect(store.canUndo()).toBe(false);
       expect(store.canRedo()).toBe(false);
 
-      store.execute({ type: 'setComponentToken', path: 'color.bg', token });
-      expect(store.getDocument().componentTokens).toEqual({ 'color.bg': token });
+      store.execute({
+        type: 'setComponentToken',
+        id,
+        path: 'color.bg',
+        token,
+      });
+      expect(store.getDocument().componentTokens).toEqual({
+        [id]: { path: 'color.bg', ...token },
+      });
       expect(store.canUndo()).toBe(true);
 
-      store.execute({ type: 'removeComponentToken', path: 'color.bg' });
+      store.execute({ type: 'removeComponentToken', id });
       expect(store.getDocument().componentTokens).toBeUndefined();
 
       store.undo();
-      expect(store.getDocument().componentTokens).toEqual({ 'color.bg': token });
+      expect(store.getDocument().componentTokens).toEqual({
+        [id]: { path: 'color.bg', ...token },
+      });
       expect(store.canUndo()).toBe(true);
       expect(store.canRedo()).toBe(true);
 
@@ -38,7 +48,9 @@ describe('component tokens', () => {
       expect(store.canRedo()).toBe(true);
 
       store.redo();
-      expect(store.getDocument().componentTokens).toEqual({ 'color.bg': token });
+      expect(store.getDocument().componentTokens).toEqual({
+        [id]: { path: 'color.bg', ...token },
+      });
       expect(store.canUndo()).toBe(true);
       expect(store.canRedo()).toBe(true);
 

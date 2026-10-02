@@ -153,33 +153,40 @@
     ]
   },
   "componentTokens": {
-    "padding.x": {
-      "type": "dimension",
-      "value": "{space.3}"
-    },
-    "padding.y": {
-      "type": "dimension",
-      "value": "{space.2}"
-    },
-    "shape.radius": {
-      "type": "dimension",
-      "value": "{radius.sm}"
-    },
-    "color.bg": {
+    "n_nr3k93psfd": {
+      "path": "color.bg",
       "type": "color",
       "value": "{color.bg.canvas}"
     },
-    "color.border": {
+    "n_a8iqwlmu0q": {
+      "path": "color.border",
       "type": "color",
       "value": "{color.neutral.600}"
     },
-    "color.text": {
+    "n_dvpj32yugo": {
+      "path": "color.text",
       "type": "color",
       "value": "{color.text.primary}"
     },
-    "elevation.shadow": {
+    "n_nv20pt2j2y": {
+      "path": "elevation.shadow",
       "type": "shadow",
       "value": "{shadow.sm}"
+    },
+    "n_3nc6msbirs": {
+      "path": "padding.x",
+      "type": "dimension",
+      "value": "{space.3}"
+    },
+    "n_topb0g14ow": {
+      "path": "padding.y",
+      "type": "dimension",
+      "value": "{space.2}"
+    },
+    "n_m01sol92lg": {
+      "path": "shape.radius",
+      "type": "dimension",
+      "value": "{radius.sm}"
     }
   }
 }

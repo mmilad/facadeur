@@ -116,5 +116,11 @@ export type Command =
   | { type: 'setBreakpoints'; breakpoints: Breakpoint[] }
   | { type: 'setStyleBlock'; style: StyleBlock | null }
   | { type: 'setTokenInterface'; tokenInterface: TokenInterface | null }
-  | { type: 'setComponentToken'; path: string; token: ComponentToken }
-  | { type: 'removeComponentToken'; path: string };
+  | {
+      type: 'setComponentToken';
+      id: string;
+      path: string;
+      token: Omit<ComponentToken, 'path'>;
+    }
+  | { type: 'removeComponentToken'; id: string }
+  | { type: 'renameComponentTokenPath'; id: string; path: string };

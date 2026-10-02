@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { validateCatalog } from '@facadeur/core';
+import { createId, listComponentTokens, validateCatalog } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -12,6 +12,10 @@ import { createEditorSession, type EditorSession } from '../src/domain/session.j
 import { App } from '../src/ui/shell/EditorShell.js';
 
 const documents = validateCatalog([button]);
+
+function tokenValueByPath(doc: ReturnType<EditorSession['getSnapshot']>['document'], path: string) {
+  return listComponentTokens(readComponentTokens(doc)).find((entry) => entry.path === path)?.value;
+}
 
 function setInput(input: HTMLInputElement, value: string) {
   const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
@@ -38,44 +42,51 @@ describe('component tokens inspector', () => {
       design: createProjectTemplateDocument(),
     });
     session.openAsset('button', 'root');
+    const id = createId();
     await act(async () => {
       session.execute({
         type: 'setComponentToken',
+        id,
         path: 'color.bg',
         token: { type: 'color', value: '{color.accent.default}' },
       });
     });
-    const seeded = readComponentTokens(session.getSnapshot().document)?.['color.bg']?.value;
-    if (seeded !== '{color.accent.default}') {
-      expect.fail('setComponentToken is not available in @facadeur/core yet');
-    }
+    expect(tokenValueByPath(session.getSnapshot().document, 'color.bg')).toBe(
+      '{color.accent.default}',
+    );
 
     host = document.createElement('div');
     document.body.append(host);
     root = createRoot(host);
     await act(async () => root?.render(<App session={session} />));
 
+    await act(async () => {
+      host!
+        .querySelector('button[name="property-tab-tokens"]')
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
     expect(host.querySelector('[data-component-token-path="color.bg"]')).toBeTruthy();
 
-    const pickerToggle = host.querySelector(
-      '[data-component-token-path="color.bg"] [aria-label^="Choose"]',
-    ) as HTMLButtonElement;
+    const tokenRow = host.querySelector('[data-component-token-path="color.bg"]')!;
+    const pickerToggle = tokenRow.querySelector('[aria-label^="Choose"]') as HTMLButtonElement;
     await act(async () => {
       pickerToggle.click();
     });
+    const tokenId = tokenRow.getAttribute('data-component-token-id');
     const custom = document.querySelector(
-      'input[name="component-token-color.bg-custom"]',
+      `input[name="component-token-${tokenId}-custom"]`,
     ) as HTMLInputElement;
     await act(async () => {
       setInput(custom, '#336699');
     });
     const useDirect = [...document.querySelectorAll('button')].find(
-      (button) => button.textContent === 'Use direct value',
+      (buttonEl) => buttonEl.textContent === 'Use direct value',
     ) as HTMLButtonElement;
     await act(async () => {
       useDirect.click();
     });
 
-    expect(readComponentTokens(session.getSnapshot().document)?.['color.bg']?.value).toBe('#336699');
+    expect(tokenValueByPath(session.getSnapshot().document, 'color.bg')).toBe('#336699');
   });
 });

@@ -49,6 +49,7 @@ export class ProjectRepository {
   private designId = '';
   private closed = false;
   private failed = false;
+  private rehydrateFromSource = new Set<string>();
 
   constructor(options: ProjectOptions) {
     this.directory = resolve(options.directory);
@@ -76,7 +77,8 @@ export class ProjectRepository {
       this.assertDurable();
       // A pending export is a committed save. Complete it only if the source still
       // matches either side of that save; never overwrite an unrelated external edit.
-      for (const entry of Object.values(this.durable.entries)) {
+      this.rehydrateFromSource.clear();
+      for (const [id, entry] of Object.entries(this.durable.entries)) {
         const path = join(this.directory, entry.source);
         const current = sourceHash(path);
         if (entry.pending) {
@@ -86,9 +88,13 @@ export class ProjectRepository {
           if (current !== entry.hash) atomicWrite(path, entry.pending.content);
           delete entry.pending;
         } else if (current !== entry.hash) {
-          throw new ProjectError(409, `Externally changed source: ${entry.source}`);
+          // Repo or tooling updated the exported JSON. Drop the stale Yjs overlay and
+          // trust the on-disk source on the next store creation pass.
+          this.rehydrateFromSource.add(id);
         }
       }
+    } else {
+      this.rehydrateFromSource.clear();
     }
     const filenames = readdirSync(this.directory)
       .filter((name) => name.endsWith('.json') && name !== 'schemas.json')
@@ -112,22 +118,31 @@ export class ProjectRepository {
         : undefined;
       if (existing && existing.source !== source)
         throw new ProjectError(409, `Source mapping changed for ${file.id}`);
+      const rehydrate = existing ? this.rehydrateFromSource.has(file.id) : false;
       const store = invalid(() =>
         createDocumentStore(
           file,
           {},
-          existing ? { update: decodeUpdate(existing.update) } : undefined,
+          existing && !rehydrate ? { update: decodeUpdate(existing.update) } : undefined,
         ),
       );
       this.stores.set(file.id, store);
       if (store.getDocument().id !== file.id)
         throw new ProjectError(400, 'Durable document id changed');
-      if (!existing)
+      const sourcePath = join(this.directory, source);
+      if (!existing) {
         this.durable.entries[file.id] = {
           ...this.encode(store, 0, 0),
           source,
-          hash: sourceHash(join(this.directory, source)),
+          hash: sourceHash(sourcePath),
         };
+      } else if (rehydrate) {
+        this.durable.entries[file.id] = {
+          ...this.encode(store, existing.revision, existing.savedRevision),
+          source,
+          hash: sourceHash(sourcePath),
+        };
+      }
     }
     for (const [id, entry] of Object.entries(this.durable.entries)) {
       if (this.stores.has(id)) continue;

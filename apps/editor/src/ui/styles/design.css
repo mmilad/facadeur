@@ -55,48 +55,70 @@
   margin-bottom: 4px;
 }
 
-.component-tokens-panel .side-note {
+.component-tokens-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
   margin: 0 0 10px;
-  font-size: 12px;
+}
+
+.component-tokens-note {
+  margin: 0;
+  flex: 1;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.4;
 }
 
 .component-token-list {
   list-style: none;
-  margin: 0 0 12px;
+  margin: 0;
   padding: 0;
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .component-token-row {
   border: 1px solid var(--line);
   border-radius: 6px;
-  padding: 10px;
+  padding: 8px;
 }
 
 .component-token-row-head {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-  font-size: 12px;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: 11px;
 }
 
-.component-token-row-head strong {
-  font-size: 13px;
+.component-token-row-head.token-table-name {
+  flex-wrap: wrap;
 }
 
-.component-token-row-head .token-path-id {
+.component-token-type {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.token-table-path-input {
   flex: 1;
+  min-width: 6rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 2px 4px;
   font-family: var(--mono);
   font-size: 10px;
   color: var(--muted);
+  background: transparent;
 }
 
-.component-token-add {
-  display: grid;
-  gap: 8px;
-  margin-top: 8px;
+.token-table-path-input:focus {
+  border-color: var(--line);
+  background: var(--white);
+  color: var(--ink);
+  outline: none;
 }
 
 .design-domain-breadcrumb {

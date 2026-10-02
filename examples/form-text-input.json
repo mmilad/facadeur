@@ -41,7 +41,12 @@
   "variants": [
     {
       "name": "state",
-      "values": ["default", "focused", "disabled", "invalid"],
+      "values": [
+        "default",
+        "focused",
+        "disabled",
+        "invalid"
+      ],
       "default": "default"
     }
   ],
@@ -238,39 +243,48 @@
     ]
   },
   "componentTokens": {
-    "color.border": {
+    "n_khyhc1d8av": {
+      "path": "color.border",
       "type": "color",
       "value": "{color.neutral.400}"
     },
-    "color.canvas": {
+    "n_sof49m9r3l": {
+      "path": "color.canvas",
       "type": "color",
       "value": "{color.neutral.50}"
     },
-    "color.danger": {
+    "n_trw0eg2l2g": {
+      "path": "color.danger",
       "type": "color",
       "value": "{color.danger.default}"
     },
-    "color.focus": {
+    "n_xkbee1291r": {
+      "path": "color.focus",
       "type": "color",
       "value": "{color.accent.default}"
     },
-    "color.surface": {
+    "n_0e6zh2mn52": {
+      "path": "color.surface",
       "type": "color",
       "value": "{color.neutral.0}"
     },
-    "color.text": {
+    "n_ilg8n8g572": {
+      "path": "color.text",
       "type": "color",
       "value": "{color.text.primary}"
     },
-    "color.textmuted": {
+    "n_95tx2jhkkv": {
+      "path": "color.textmuted",
       "type": "color",
       "value": "{color.text.secondary}"
     },
-    "layout.gap": {
+    "n_hkbgcmsnvr": {
+      "path": "layout.gap",
       "type": "dimension",
       "value": "{space.gap.xs}"
     },
-    "shape.radius": {
+    "n_qd9lbqn7xc": {
+      "path": "shape.radius",
       "type": "dimension",
       "value": "{radius.sm}"
     }

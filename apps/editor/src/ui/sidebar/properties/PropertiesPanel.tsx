@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { findParent, type FlatDocument, type FlatNode } from '@facadeur/core';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
 import { ownsVariantContract, variantSummaries } from '../../../domain/edits/variant-edit.js';
@@ -13,12 +13,16 @@ import { InstanceContext } from './content/InstanceContext.js';
 import { StyleInspector } from './style/StyleInspector.js';
 import { ComponentTokensPanel } from './component/ComponentTokensPanel.js';
 
-type PropertyPrimaryTab = 'content' | 'style';
+type PropertyPrimaryTab = 'style' | 'content' | 'tokens';
 
-const PROPERTY_PRIMARY_TABS = [
-  ['content', 'Content'],
-  ['style', 'Style'],
-] as const;
+function propertyPrimaryTabs(showTokens: boolean): readonly (readonly [PropertyPrimaryTab, string])[] {
+  const tabs: (readonly [PropertyPrimaryTab, string])[] = [
+    ['style', 'Style'],
+    ['content', 'Content'],
+  ];
+  if (showTokens) tabs.push(['tokens', 'Tokens']);
+  return tabs;
+}
 
 export function PropertiesPanel({
   session,
@@ -43,6 +47,11 @@ export function PropertiesPanel({
     (snap.document.kind === 'atom' ||
       snap.document.kind === 'component' ||
       snap.document.kind === 'section');
+  const propertyTabs = propertyPrimaryTabs(showComponentTokens);
+
+  useEffect(() => {
+    if (primaryTab === 'tokens' && !showComponentTokens) setPrimaryTab('content');
+  }, [primaryTab, showComponentTokens]);
 
   if (snap.nestedSelection) return <NestedFieldsPanel session={session} snap={snap} />;
 
@@ -95,10 +104,9 @@ export function PropertiesPanel({
           ) : null}
         </div>
       )}
-      {showComponentTokens ? <ComponentTokensPanel session={session} snap={snap} /> : null}
       <VariantTabs session={session} snap={snap} />
       <div className="tabs property-tabs" role="tablist" aria-label="Properties sections">
-        {PROPERTY_PRIMARY_TABS.map(([id, label]) => (
+        {propertyTabs.map(([id, label]) => (
           <button
             key={id}
             type="button"
@@ -131,6 +139,11 @@ export function PropertiesPanel({
           ) : (
             <p className="inspector-empty">Select a layer to edit style.</p>
           )}
+        </div>
+      ) : null}
+      {primaryTab === 'tokens' && showComponentTokens ? (
+        <div role="tabpanel" className="property-panel">
+          <ComponentTokensPanel session={session} snap={snap} />
         </div>
       ) : null}
     </div>

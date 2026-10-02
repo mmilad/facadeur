@@ -1,10 +1,15 @@
 export {
   assertComponentTokenDefault,
+  componentTokenPaths,
   componentTokenPublicPath,
+  componentTokensByPath,
+  findComponentTokenByPath,
   globalRefInComponentTokenDefault,
   isLocalComponentTokenPath,
+  listComponentTokens,
   type ComponentToken,
   type ComponentTokenMap,
+  type ListedComponentToken,
 } from './component-tokens.js';
 export {
   applyCommand,

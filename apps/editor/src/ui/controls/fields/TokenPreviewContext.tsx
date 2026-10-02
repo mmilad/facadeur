@@ -1,5 +1,10 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import { readTokenTree, type Breakpoint, type FlatDocument } from '@facadeur/core';
+import {
+  listComponentTokens,
+  readTokenTree,
+  type Breakpoint,
+  type FlatDocument,
+} from '@facadeur/core';
 import { loadTokens, tokenCustomProperty, fontCustomProperty } from '@facadeur/tokens';
 import { tokenDisplayLabel, tokenPath } from '../token-presentation.js';
 import { formatTokenValue } from '../../../domain/edits/token-edit.js';
@@ -44,12 +49,16 @@ export function TokenPreviewProvider({
         );
       }
     }
+    for (const token of listComponentTokens(document.componentTokens)) {
+      if (token.label) labels.set(token.path, token.label);
+      values.set(token.path, formatTokenValue(token.value));
+    }
     return {
       searchValue: (reference: string) => values.get(tokenPath(reference)),
       labelFor: (reference: string) =>
         tokenDisplayLabel(reference, labels.get(tokenPath(reference))),
     };
-  }, [design.tokens, document.tokens, breakpointId]);
+  }, [design.tokens, document.tokens, document.componentTokens, breakpointId]);
   const resolve = useMemo(() => {
     try {
       const compiled = loadTokens({

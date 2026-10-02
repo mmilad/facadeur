@@ -23,7 +23,11 @@
   "variants": [
     {
       "name": "state",
-      "values": ["on", "off", "disabled"],
+      "values": [
+        "on",
+        "off",
+        "disabled"
+      ],
       "default": "on"
     }
   ],
@@ -213,11 +217,13 @@
     ]
   },
   "componentTokens": {
-    "color.text": {
+    "n_60vd4vyh9s": {
+      "path": "color.text",
       "type": "color",
       "value": "{color.text.primary}"
     },
-    "color.textmuted": {
+    "n_ar7cw944fz": {
+      "path": "color.textmuted",
       "type": "color",
       "value": "{color.text.secondary}"
     }

@@ -968,11 +968,13 @@
     ]
   },
   "componentTokens": {
-    "color.bordersubtle": {
+    "n_hv0324pu6r": {
+      "path": "color.bordersubtle",
       "type": "color",
       "value": "{color.neutral.200}"
     },
-    "shape.radius": {
+    "n_0djlhsid8c": {
+      "path": "shape.radius",
       "type": "dimension",
       "value": "{radius.sm}"
     }

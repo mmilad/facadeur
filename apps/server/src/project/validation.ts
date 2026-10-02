@@ -46,7 +46,7 @@ export function context(files: DocumentFile[], designId: string): CommandContext
     globalTokenPaths: new Set(readTokenTree(design?.tokens ?? {}).tokens.keys()),
     resolveComponentTokenPaths: (id) => {
       const tokens = catalog.get(id)?.componentTokens;
-      return tokens ? new Set(Object.keys(tokens)) : undefined;
+      return tokens ? new Set(Object.values(tokens).map((token) => token.path)) : undefined;
     },
   };
 }
@@ -86,8 +86,9 @@ const required: Record<Command['type'], readonly string[]> = {
   setBreakpoints: ['breakpoints'],
   setStyleBlock: ['style'],
   setTokenInterface: ['tokenInterface'],
-  setComponentToken: ['path', 'token'],
-  removeComponentToken: ['path'],
+  setComponentToken: ['id', 'path', 'token'],
+  removeComponentToken: ['id'],
+  renameComponentTokenPath: ['id', 'path'],
 };
 
 export function assertCommand(command: Command): void {

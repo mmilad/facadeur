@@ -119,9 +119,9 @@ function componentTokenRefsByType(
   type: string,
 ): string[] {
   if (!tokens) return [];
-  return Object.entries(tokens)
-    .filter(([, token]) => token.type === type)
-    .map(([path]) => `{${path}}`)
+  return Object.values(tokens)
+    .filter((token) => token.type === type)
+    .map((token) => `{${token.path}}`)
     .sort((left, right) => left.localeCompare(right));
 }
 

@@ -25,7 +25,11 @@ import {
   setVariantPreset,
   setVariantStyleBlock,
 } from './definitions.js';
-import { removeComponentToken, setComponentToken } from './component-tokens.js';
+import {
+  removeComponentToken,
+  renameComponentTokenPath,
+  setComponentToken,
+} from './component-tokens.js';
 import { removeFont, setBreakpoints, setFont } from './design.js';
 
 export type { Command, CommandContext, InsertNode, NodeProp } from './types.js';
@@ -171,12 +175,23 @@ export function applyCommand(
           'setComponentToken requires globalTokenPaths in the command context',
         );
       }
-      setComponentToken(next, command.path, command.token, globalPaths);
+      setComponentToken(next, command.id, command.path, command.token, globalPaths);
       break;
     }
     case 'removeComponentToken':
-      removeComponentToken(next, command.path);
+      removeComponentToken(next, command.id);
       break;
+    case 'renameComponentTokenPath': {
+      const globalPaths = ctx.globalTokenPaths;
+      if (!globalPaths) {
+        throw new DocumentError(
+          'schema',
+          'renameComponentTokenPath requires globalTokenPaths in the command context',
+        );
+      }
+      renameComponentTokenPath(next, command.id, command.path, globalPaths);
+      break;
+    }
     default: {
       const unreachable: never = command;
       throw new DocumentError('schema', `Unknown command ${JSON.stringify(unreachable)}`);

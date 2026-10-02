@@ -18,7 +18,11 @@
   "variants": [
     {
       "name": "state",
-      "values": ["start", "center", "end"],
+      "values": [
+        "start",
+        "center",
+        "end"
+      ],
       "default": "start"
     }
   ],
@@ -216,35 +220,43 @@
     ]
   },
   "componentTokens": {
-    "color.border": {
+    "n_n6kmswk2mr": {
+      "path": "color.border",
       "type": "color",
       "value": "{color.neutral.400}"
     },
-    "color.surface": {
+    "n_fweqn81blz": {
+      "path": "color.surface",
       "type": "color",
       "value": "{color.neutral.0}"
     },
-    "color.text": {
+    "n_30nu6fq3cr": {
+      "path": "color.text",
       "type": "color",
       "value": "{color.text.primary}"
     },
-    "color.textmuted": {
+    "n_zv5jh8sdox": {
+      "path": "color.textmuted",
       "type": "color",
       "value": "{color.text.secondary}"
     },
-    "layout.gap": {
+    "n_jufis204cd": {
+      "path": "layout.gap",
       "type": "dimension",
       "value": "{space.gap.xs}"
     },
-    "padding.x": {
+    "n_0y4l8bgmkw": {
+      "path": "padding.x",
       "type": "dimension",
       "value": "{space.3}"
     },
-    "padding.y": {
+    "n_80nwpgyx21": {
+      "path": "padding.y",
       "type": "dimension",
       "value": "{space.2}"
     },
-    "shape.radius": {
+    "n_oqi2u4oywk": {
+      "path": "shape.radius",
       "type": "dimension",
       "value": "{radius.sm}"
     }

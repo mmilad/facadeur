@@ -208,7 +208,7 @@ describe('durable project repository', () => {
     status(() => project.create(document), 400);
   });
 
-  it('refuses an external file change at Save and restart', () => {
+  it('refuses an external file change at Save and rehydrates from disk on restart', () => {
     const directory = fixture();
     const project = open(directory);
     const path = join(directory, 'button.json');
@@ -218,7 +218,11 @@ describe('durable project repository', () => {
     status(() => project.save('button', 0), 409);
     expect(JSON.parse(readFileSync(path, 'utf8')).name).toBe('External name');
     project.destroy();
-    status(() => open(directory), 409);
+    const restored = open(directory);
+    expect(restored.snapshot().documents.find((file) => file.id === 'button')!.name).toBe(
+      'External name',
+    );
+    restored.destroy();
   });
 
   it('creates durable unsaved documents and preserves their Yjs history through restart and Save', () => {

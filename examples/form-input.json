@@ -119,19 +119,23 @@
     ]
   },
   "componentTokens": {
-    "color.border": {
+    "n_4eopchjeve": {
+      "path": "color.border",
       "type": "color",
       "value": "{color.neutral.400}"
     },
-    "color.surface": {
+    "n_dwafwrelsc": {
+      "path": "color.surface",
       "type": "color",
       "value": "{color.neutral.0}"
     },
-    "color.text": {
+    "n_snilkgkaph": {
+      "path": "color.text",
       "type": "color",
       "value": "{color.text.primary}"
     },
-    "shape.radius": {
+    "n_so7hlqkqdl": {
+      "path": "shape.radius",
       "type": "dimension",
       "value": "{radius.sm}"
     }

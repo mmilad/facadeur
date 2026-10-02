@@ -1,4 +1,5 @@
 import {
+  componentTokensByPath,
   defaultBreakpoints,
   resolveVariantDocument,
   variantPresets,
@@ -88,7 +89,9 @@ function compileSingleDocument(
     options.paintRoot === true || !(address === 'canvas' && document.root.type === 'frame');
   const substituteContext: SubstituteContext = {
     documentId: document.id,
-    ...(document.componentTokens ? { componentTokens: document.componentTokens } : {}),
+    ...(document.componentTokens
+      ? { componentTokens: componentTokensByPath(document.componentTokens) }
+      : {}),
   };
   walk(document, document.root, {
     address,

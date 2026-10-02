@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Field, Popover, TextInput } from '../../../form/index.js';
 
 /**
@@ -13,6 +13,7 @@ export function TokenAddAction({
   initialPath,
   placeholder,
   onAdd,
+  fields,
 }: {
   label: string;
   actionName: string;
@@ -20,6 +21,7 @@ export function TokenAddAction({
   initialPath: string;
   placeholder: string;
   onAdd: (path: string) => string | true | false;
+  fields?: ReactNode;
 }) {
   const [path, setPath] = useState(initialPath);
   const [open, setOpen] = useState(false);
@@ -50,6 +52,7 @@ export function TokenAddAction({
         }
       >
         <div className="token-add-popover">
+          {fields}
           <Field label="Path">
             <TextInput
               name={inputName}

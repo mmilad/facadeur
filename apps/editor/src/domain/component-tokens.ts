@@ -60,9 +60,9 @@ export function documentsReferencingToken(
 ): string[] {
   const hits: string[] = [];
   for (const doc of documents) {
-    const locals = Object.entries(doc.componentTokens ?? {})
-      .filter(([, token]) => globalRefInComponentTokenDefault(token.value) === tokenPath)
-      .map(([localPath]) => componentTokenPublicPath(doc.id, localPath));
+    const locals = Object.values(doc.componentTokens ?? {})
+      .filter((token) => globalRefInComponentTokenDefault(token.value) === tokenPath)
+      .map((token) => componentTokenPublicPath(doc.id, token.path));
     if (locals.length) {
       hits.push(...locals);
       continue;

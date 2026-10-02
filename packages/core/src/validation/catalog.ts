@@ -30,7 +30,7 @@ function catalogValidateOptions(byId: Map<string, DocumentFile>): ValidateOption
     resolveComponentTokenPaths: (documentId) => {
       const tokens = byId.get(documentId)?.componentTokens;
       if (!tokens) return undefined;
-      return new Set(Object.keys(tokens));
+      return new Set(Object.values(tokens).map((token) => token.path));
     },
   };
 }

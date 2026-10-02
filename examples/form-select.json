@@ -23,7 +23,11 @@
   "variants": [
     {
       "name": "state",
-      "values": ["default", "focused", "disabled"],
+      "values": [
+        "default",
+        "focused",
+        "disabled"
+      ],
       "default": "default"
     }
   ],
@@ -191,39 +195,48 @@
     ]
   },
   "componentTokens": {
-    "color.border": {
+    "n_map7qr4c47": {
+      "path": "color.border",
       "type": "color",
       "value": "{color.neutral.400}"
     },
-    "color.canvas": {
+    "n_oqh7dg08d5": {
+      "path": "color.canvas",
       "type": "color",
       "value": "{color.neutral.50}"
     },
-    "color.focus": {
+    "n_4507pkqrmr": {
+      "path": "color.focus",
       "type": "color",
       "value": "{color.accent.default}"
     },
-    "color.surface": {
+    "n_9rs2p2gwic": {
+      "path": "color.surface",
       "type": "color",
       "value": "{color.neutral.0}"
     },
-    "color.text": {
+    "n_84rnhvjdai": {
+      "path": "color.text",
       "type": "color",
       "value": "{color.text.primary}"
     },
-    "color.textmuted": {
+    "n_pl0vzryf38": {
+      "path": "color.textmuted",
       "type": "color",
       "value": "{color.text.secondary}"
     },
-    "layout.gap": {
+    "n_2yr26qshxc": {
+      "path": "layout.gap",
       "type": "dimension",
       "value": "{space.gap.xs}"
     },
-    "padding.x": {
+    "n_usve7sb6f8": {
+      "path": "padding.x",
       "type": "dimension",
       "value": "{space.3}"
     },
-    "shape.radius": {
+    "n_9sboc0d0nc": {
+      "path": "shape.radius",
       "type": "dimension",
       "value": "{radius.sm}"
     }

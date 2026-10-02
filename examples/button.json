@@ -17,12 +17,19 @@
   "variants": [
     {
       "name": "tone",
-      "values": ["primary", "secondary", "ghost"],
+      "values": [
+        "primary",
+        "secondary",
+        "ghost"
+      ],
       "default": "primary"
     },
     {
       "name": "size",
-      "values": ["sm", "md"],
+      "values": [
+        "sm",
+        "md"
+      ],
       "default": "md"
     }
   ],
@@ -145,25 +152,30 @@
     ]
   },
   "componentTokens": {
-    "padding.x": {
-      "type": "dimension",
-      "value": "{space.4}"
-    },
-    "padding.y": {
-      "type": "dimension",
-      "value": "{space.2}"
-    },
-    "layout.gap": {
-      "type": "dimension",
-      "value": "{space.gap.sm}"
-    },
-    "color.bg": {
+    "n_aurs56cz4t": {
+      "path": "color.bg",
       "type": "color",
       "value": "{color.accent.default}"
     },
-    "color.text": {
+    "n_qfy1k2ot7v": {
+      "path": "color.text",
       "type": "color",
       "value": "{color.text.inverse}"
+    },
+    "n_pompztcz3a": {
+      "path": "layout.gap",
+      "type": "dimension",
+      "value": "{space.gap.sm}"
+    },
+    "n_mzdgvs8jkc": {
+      "path": "padding.x",
+      "type": "dimension",
+      "value": "{space.4}"
+    },
+    "n_3kf1t5jqfr": {
+      "path": "padding.y",
+      "type": "dimension",
+      "value": "{space.2}"
     }
   }
 }

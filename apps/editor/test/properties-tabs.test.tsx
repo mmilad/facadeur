@@ -58,6 +58,35 @@ describe('properties inspector tabs', () => {
     host = null;
   });
 
+  it('shows component tokens only on the Tokens tab', async () => {
+    const session: EditorSession = createEditorSession({
+      documents,
+      design: createProjectTemplateDocument(),
+    });
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => {
+      root?.render(<App session={session} />);
+    });
+    await act(async () => {
+      session.openAsset('form-toggle', 'root');
+      session.selectNode('root');
+    });
+
+    expect(host.querySelector('button[name="property-tab-tokens"]')).toBeInstanceOf(
+      HTMLButtonElement,
+    );
+    expect(host.querySelector('.component-tokens-panel')).toBeNull();
+
+    await act(async () => {
+      host!
+        .querySelector('button[name="property-tab-tokens"]')
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(host.querySelector('.component-tokens-panel')).toBeTruthy();
+  });
+
   it('keeps layout controls in the Style tab', async () => {
     const session: EditorSession = createEditorSession({
       documents,

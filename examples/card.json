@@ -127,29 +127,35 @@
     ]
   },
   "componentTokens": {
-    "layout.padding": {
-      "type": "dimension",
-      "value": "{space.inset.lg}"
-    },
-    "layout.gap": {
-      "type": "dimension",
-      "value": "{space.gap.md}"
-    },
-    "shape.radius": {
-      "type": "dimension",
-      "value": "{radius.lg}"
-    },
-    "elevation.shadow": {
-      "type": "shadow",
-      "value": "{shadow.md}"
-    },
-    "color.bg": {
+    "n_cxk129ojb7": {
+      "path": "color.bg",
       "type": "color",
       "value": "{color.bg.canvas}"
     },
-    "color.border": {
+    "n_a9bxke3jfn": {
+      "path": "color.border",
       "type": "color",
       "value": "{color.border.default}"
+    },
+    "n_5bylwuvdwg": {
+      "path": "elevation.shadow",
+      "type": "shadow",
+      "value": "{shadow.md}"
+    },
+    "n_cokmpbalx6": {
+      "path": "layout.gap",
+      "type": "dimension",
+      "value": "{space.gap.md}"
+    },
+    "n_or9dvlury0": {
+      "path": "layout.padding",
+      "type": "dimension",
+      "value": "{space.inset.lg}"
+    },
+    "n_w9zbe8l2d7": {
+      "path": "shape.radius",
+      "type": "dimension",
+      "value": "{radius.lg}"
     }
   }
 }

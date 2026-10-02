@@ -3,7 +3,9 @@ import {
   applyCommand,
   assertComponentTokenDefault,
   componentTokenPublicPath,
+  createId,
   DocumentError,
+  listComponentTokens,
   toFlat,
   toNested,
   validateCatalog,
@@ -20,12 +22,33 @@ describe('component tokens', () => {
       name: 'Input',
       kind: 'component',
       componentTokens: {
-        'color.border': { type: 'color', value: '{color.neutral.600}' },
+        n_border1: {
+          path: 'color.border',
+          type: 'color',
+          value: '{color.neutral.600}',
+        },
       },
       tokenInterface: { reads: ['color.neutral.600'] },
       root: { id: 'root', type: 'frame', tag: 'div' },
     };
     expect(toNested(toFlat(file))).toEqual(file);
+  });
+
+  it('migrates legacy path-keyed componentTokens on canonicalize', () => {
+    const flat = toFlat({
+      version: 1,
+      id: 'input',
+      name: 'Input',
+      kind: 'component',
+      componentTokens: {
+        'color.border': { type: 'color', value: '{color.neutral.600}' },
+      },
+      root: { id: 'root', type: 'frame', tag: 'div' },
+    });
+    const tokens = listComponentTokens(flat.componentTokens);
+    expect(tokens).toHaveLength(1);
+    expect(tokens[0]?.path).toBe('color.border');
+    expect(tokens[0]?.id).toMatch(/^n_/);
   });
 
   it('adopts global refs from defaults but not local style refs', () => {
@@ -37,10 +60,12 @@ describe('component tokens', () => {
       styles: { declarations: { borderColor: '{color.border}' } },
       root: { id: 'root', type: 'frame', tag: 'div' },
     });
+    const id = createId();
     const next = applyCommand(
       base,
       {
         type: 'setComponentToken',
+        id,
         path: 'color.border',
         token: { type: 'color', value: '{color.neutral.600}' },
       },
@@ -48,6 +73,37 @@ describe('component tokens', () => {
     );
     expect(next.tokenInterface?.reads).toEqual(['color.neutral.600']);
     expect(next.tokenInterface?.reads).not.toContain('color.border');
+  });
+
+  it('renames a local token path and rewrites style references', () => {
+    const id = createId();
+    const base = toFlat({
+      version: 1,
+      id: 'input',
+      name: 'Input',
+      kind: 'component',
+      componentTokens: {
+        [id]: {
+          path: 'color.border',
+          type: 'color',
+          value: '{color.neutral.600}',
+        },
+      },
+      styles: { declarations: { borderColor: '{color.border}' } },
+      tokenInterface: { reads: ['color.neutral.600'] },
+      root: { id: 'root', type: 'frame', tag: 'div' },
+    });
+    const next = applyCommand(
+      base,
+      {
+        type: 'renameComponentTokenPath',
+        id,
+        path: 'color.outline',
+      },
+      { globalTokenPaths: globals },
+    );
+    expect(next.componentTokens?.[id]?.path).toBe('color.outline');
+    expect(next.styles?.declarations?.borderColor).toBe('{color.outline}');
   });
 
   it('rejects local-to-local defaults and page documents', () => {
@@ -63,6 +119,7 @@ describe('component tokens', () => {
         }),
         {
           type: 'setComponentToken',
+          id: createId(),
           path: 'color.bg',
           token: { type: 'color', value: '{color.bg.canvas}' },
         },
@@ -87,7 +144,11 @@ describe('component tokens', () => {
         name: 'Input',
         kind: 'component',
         componentTokens: {
-          'color.border': { type: 'color', value: '{color.accent.default}' },
+          n_border: {
+            path: 'color.border',
+            type: 'color',
+            value: '{color.accent.default}',
+          },
         },
         tokenInterface: { reads: ['color.accent.default'] },
         root: { id: 'root', type: 'frame', tag: 'div' },
