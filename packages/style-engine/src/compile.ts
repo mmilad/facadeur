@@ -13,7 +13,12 @@ import {
   type StyleBlock,
   type StyleChild,
 } from '@facadeur/core';
-import { expandDeclarations, mergeDeclarations, substituteRefs, type SubstituteContext } from './values.js';
+import {
+  expandDeclarations,
+  mergeDeclarations,
+  substituteRefs,
+  type SubstituteContext,
+} from './values.js';
 
 export interface CompiledRule {
   key: string;
@@ -96,7 +101,10 @@ function compileSingleDocument(
     substituteContext,
     rules,
   });
-  return rules.filter((rule) => rule.declarations.length > 0);
+  // Wider responsive layers win; stable sorting retains precedence within each width.
+  return rules
+    .filter((rule) => rule.declarations.length > 0)
+    .sort((left, right) => (left.minWidth ?? -Infinity) - (right.minWidth ?? -Infinity));
 }
 
 function resolveBreakpoints(
@@ -417,9 +425,7 @@ function spacingDeclarations(
   if (typeof value === 'string') return [[property, substituteRefs(value, context)]];
   return (['top', 'right', 'bottom', 'left'] as const).flatMap((side) => {
     const item = value[side];
-    return item
-      ? [[`${property}-${side}`, substituteRefs(item, context)] as [string, string]]
-      : [];
+    return item ? [[`${property}-${side}`, substituteRefs(item, context)] as [string, string]] : [];
   });
 }
 
@@ -434,7 +440,8 @@ function axisDeclarations(
   const main =
     (parentDirection === 'row' && axis === 'width') ||
     (parentDirection === 'column' && axis === 'height');
-  if (size.mode === 'hug') decls.push([axis, 'fit-content']);
+  if (size.mode === 'auto') decls.push([axis, 'auto']);
+  else if (size.mode === 'hug') decls.push([axis, 'fit-content']);
   else if (size.mode === 'fill') {
     if (parentDirection && main) {
       decls.push(['flex', '1 1 auto'], [axis === 'width' ? 'min-width' : 'min-height', '0']);
@@ -445,16 +452,10 @@ function axisDeclarations(
     decls.push([axis, formatSize(size.size, context)], ['flex', '0 0 auto']);
   }
   if (size.min !== undefined) {
-    decls.push([
-      axis === 'width' ? 'min-width' : 'min-height',
-      formatSize(size.min, context),
-    ]);
+    decls.push([axis === 'width' ? 'min-width' : 'min-height', formatSize(size.min, context)]);
   }
   if (size.max !== undefined) {
-    decls.push([
-      axis === 'width' ? 'max-width' : 'max-height',
-      formatSize(size.max, context),
-    ]);
+    decls.push([axis === 'width' ? 'max-width' : 'max-height', formatSize(size.max, context)]);
   }
   return decls;
 }

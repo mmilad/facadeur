@@ -192,7 +192,7 @@ describe('properties inspector tabs', () => {
     );
   });
 
-  it('groups style declarations by purpose', async () => {
+  it('separates guided controls from manual declarations grouped by purpose', async () => {
     const session: EditorSession = createEditorSession({
       documents,
       design: createProjectTemplateDocument(),
@@ -217,17 +217,25 @@ describe('properties inspector tabs', () => {
       host.querySelector('button[name="property-tab-style"]')?.getAttribute('aria-selected'),
     ).toBe('true');
     expect(host.querySelector('.eu-section__title')?.textContent).toBe('Layout');
-    expect(host.textContent).toContain('Typography');
-    expect(host.textContent).toContain('Surface');
+    expect(host.textContent).toContain('Border & Radius');
     expect(host.textContent).toContain('Advanced CSS');
+    const manualToggle = [...host.querySelectorAll('button.eu-section__title')].find(
+      (title) => title.textContent === 'Manual CSS properties',
+    ) as HTMLButtonElement;
+    expect(manualToggle.getAttribute('aria-expanded')).toBe('false');
+    await act(async () => manualToggle.click());
+    const manual = manualToggle.closest('section')!;
+    expect(manual.textContent).toContain('Typography');
+    expect(manual.textContent).toContain('Surface');
+    expect(manual.querySelector('.declaration-compound')).toBeNull();
     expect(
-      [...host.querySelectorAll('.eu-section__title--collapsible')].find(
+      [...manual.querySelectorAll('.eu-section__title--collapsible')].find(
         (title) => title.textContent === 'Add property',
       ),
     ).toBeTruthy();
   });
 
-  it('puts layout declarations in the Layout group', async () => {
+  it('puts manual CSS rows in their own section outside guided Layout', async () => {
     const session: EditorSession = createEditorSession({
       documents,
       design: createProjectTemplateDocument(),
@@ -250,11 +258,21 @@ describe('properties inspector tabs', () => {
 
     expect(host.textContent).toContain('Advanced CSS');
     expect(host.textContent).not.toContain('Other');
+    const manualToggle = [...host.querySelectorAll('button.eu-section__title')].find(
+      (title) => title.textContent === 'Manual CSS properties',
+    ) as HTMLButtonElement;
+    await act(async () => manualToggle.click());
+    const manual = manualToggle.closest('section')!;
     expect(
-      [...host.querySelectorAll('.eu-section__title')].some(
+      [...manual.querySelectorAll('.eu-section__title')].some(
         (title) => title.textContent === 'CSS rules',
       ),
     ).toBe(true);
+    expect(manual.querySelector('.declaration-row')).toBeTruthy();
+    const guidedLayout = [...host.querySelectorAll('.eu-section__title')]
+      .find((title) => title.textContent === 'Layout')
+      ?.closest('section');
+    expect(guidedLayout?.querySelector('.declaration-row')).toBeNull();
   });
 
   it('keeps the selected properties tab when selection changes', async () => {

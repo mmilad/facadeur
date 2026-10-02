@@ -3,26 +3,392 @@
   "id": "specimen-section",
   "name": "Specimen section",
   "kind": "section",
-  "tokenInterface": {
-    "reads": [
-      "color.accent.default",
-      "color.text.primary",
-      "color.text.secondary",
-      "space.0",
-      "space.gap.lg",
-      "space.gap.md",
-      "space.gap.sm",
-      "space.inset.lg",
-      "space.stack.lg",
-      "space.stack.md",
-      "space.stack.sm",
-      "type.body",
-      "type.caption",
-      "type.display"
+  "root": {
+    "id": "root",
+    "tag": "div",
+    "layout": {
+      "direction": "column",
+      "gap": "{space.stack.lg}",
+      "padding": "{space.inset.lg}",
+      "align": "stretch",
+      "width": {
+        "mode": "fill"
+      },
+      "height": {
+        "mode": "hug"
+      }
+    },
+    "type": "frame",
+    "children": [
+      {
+        "id": "intro",
+        "tag": "div",
+        "layout": {
+          "direction": "column",
+          "gap": "{space.stack.md}",
+          "align": "stretch",
+          "width": {
+            "mode": "fill"
+          },
+          "height": {
+            "mode": "hug"
+          }
+        },
+        "type": "frame",
+        "children": [
+          {
+            "id": "kicker",
+            "tag": "p",
+            "layout": {
+              "width": {
+                "mode": "hug"
+              },
+              "height": {
+                "mode": "hug"
+              }
+            },
+            "type": "text",
+            "text": "facadeur"
+          },
+          {
+            "id": "heading",
+            "tag": "h1",
+            "layout": {
+              "width": {
+                "mode": "hug"
+              },
+              "height": {
+                "mode": "hug"
+              }
+            },
+            "type": "text",
+            "text": "Specimen"
+          },
+          {
+            "id": "lede",
+            "tag": "p",
+            "layout": {
+              "width": {
+                "mode": "fill",
+                "max": 640
+              },
+              "height": {
+                "mode": "hug"
+              }
+            },
+            "type": "text",
+            "text": "Auto layout, token styles, and a sign-in card that overrides the input border for its children."
+          }
+        ]
+      },
+      {
+        "id": "buttons",
+        "tag": "div",
+        "layout": {
+          "direction": "column",
+          "gap": "{space.stack.sm}",
+          "align": "stretch",
+          "width": {
+            "mode": "fill"
+          },
+          "height": {
+            "mode": "hug"
+          }
+        },
+        "type": "frame",
+        "children": [
+          {
+            "id": "label-button",
+            "tag": "p",
+            "layout": {
+              "width": {
+                "mode": "hug"
+              },
+              "height": {
+                "mode": "hug"
+              }
+            },
+            "type": "text",
+            "text": "Button"
+          },
+          {
+            "id": "button-row",
+            "tag": "div",
+            "layout": {
+              "direction": "row",
+              "gap": "{space.gap.sm}",
+              "align": "center",
+              "wrap": true,
+              "width": {
+                "mode": "fill"
+              },
+              "height": {
+                "mode": "hug"
+              },
+              "breakpoints": {
+                "xl": {
+                  "gap": "{space.gap.md}"
+                }
+              }
+            },
+            "type": "frame",
+            "children": [
+              {
+                "id": "btn-primary",
+                "type": "instance",
+                "component": "button",
+                "fields": {
+                  "label": "Primary"
+                },
+                "variants": {
+                  "size": "md",
+                  "tone": "primary"
+                }
+              },
+              {
+                "id": "btn-secondary",
+                "type": "instance",
+                "component": "button",
+                "fields": {
+                  "label": "Secondary"
+                },
+                "variants": {
+                  "size": "md",
+                  "tone": "secondary"
+                }
+              },
+              {
+                "id": "btn-ghost",
+                "type": "instance",
+                "component": "button",
+                "fields": {
+                  "label": "Ghost"
+                },
+                "variants": {
+                  "size": "md",
+                  "tone": "ghost"
+                }
+              },
+              {
+                "id": "btn-small",
+                "type": "instance",
+                "component": "button",
+                "fields": {
+                  "label": "Small"
+                },
+                "variants": {
+                  "size": "sm",
+                  "tone": "primary"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "fields",
+        "tag": "div",
+        "layout": {
+          "direction": "column",
+          "gap": "{space.stack.sm}",
+          "align": "stretch",
+          "width": {
+            "mode": "fill"
+          },
+          "height": {
+            "mode": "hug"
+          }
+        },
+        "type": "frame",
+        "children": [
+          {
+            "id": "label-input",
+            "tag": "p",
+            "layout": {
+              "width": {
+                "mode": "hug"
+              },
+              "height": {
+                "mode": "hug"
+              }
+            },
+            "type": "text",
+            "text": "Input"
+          },
+          {
+            "id": "input-row",
+            "tag": "div",
+            "layout": {
+              "direction": "row",
+              "gap": "{space.gap.md}",
+              "align": "start",
+              "wrap": true,
+              "width": {
+                "mode": "fill"
+              },
+              "height": {
+                "mode": "hug"
+              }
+            },
+            "type": "frame",
+            "children": [
+              {
+                "id": "input-email",
+                "type": "instance",
+                "layout": {
+                  "width": {
+                    "mode": "fixed",
+                    "size": 300
+                  },
+                  "height": {
+                    "mode": "hug"
+                  }
+                },
+                "component": "input",
+                "fields": {
+                  "label": "Email",
+                  "name": "email",
+                  "value": "ada@atelier.test"
+                }
+              },
+              {
+                "id": "input-search",
+                "type": "instance",
+                "layout": {
+                  "width": {
+                    "mode": "fixed",
+                    "size": 300
+                  },
+                  "height": {
+                    "mode": "hug"
+                  }
+                },
+                "component": "input",
+                "fields": {
+                  "label": "Search",
+                  "name": "q",
+                  "placeholder": "Search components"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "cards",
+        "tag": "div",
+        "layout": {
+          "direction": "column",
+          "gap": "{space.stack.sm}",
+          "align": "stretch",
+          "width": {
+            "mode": "fill"
+          },
+          "height": {
+            "mode": "hug"
+          }
+        },
+        "type": "frame",
+        "children": [
+          {
+            "id": "label-card",
+            "tag": "p",
+            "layout": {
+              "width": {
+                "mode": "hug"
+              },
+              "height": {
+                "mode": "hug"
+              }
+            },
+            "type": "text",
+            "text": "Card"
+          },
+          {
+            "id": "card-row",
+            "tag": "div",
+            "layout": {
+              "direction": "column",
+              "gap": "{space.gap.lg}",
+              "justify": "start",
+              "align": "stretch",
+              "height": {
+                "mode": "hug"
+              }
+            },
+            "type": "frame",
+            "children": [
+              {
+                "id": "card-notes",
+                "type": "instance",
+                "layout": {
+                  "width": {
+                    "mode": "fill"
+                  }
+                },
+                "component": "card",
+                "fields": {
+                  "body": "Props fill the template. Click the title, or click the card padding to select the card itself.",
+                  "eyebrow": "Layout",
+                  "title": "Field notes"
+                }
+              },
+              {
+                "id": "card-signin",
+                "type": "instance",
+                "component": "sign-in"
+              }
+            ]
+          }
+        ]
+      }
     ]
   },
   "styles": {
     "children": {
+      "card-notes": {
+        "declarations": {
+          "height": "auto"
+        },
+        "breakpoints": {
+          "lg": {
+            "declarations": {
+              "justify-self": "auto"
+            }
+          },
+          "md": {
+            "declarations": {
+              "align-self": "stretch",
+              "justify-self": "stretch"
+            }
+          }
+        }
+      },
+      "card-row": {
+        "declarations": {
+          "align-content": "stretch",
+          "align-items": "end",
+          "display": "grid",
+          "grid-template-columns": "repeat(1, minmax(0, 1fr))",
+          "justify-content": "stretch",
+          "justify-items": "stretch",
+          "row-gap": "{radius.lg}"
+        },
+        "breakpoints": {
+          "lg": {
+            "declarations": {
+              "align-items": "end",
+              "grid-template-columns": "repeat(2, minmax(0, 1fr))"
+            }
+          }
+        }
+      },
+      "card-signin": {
+        "declarations": {
+          "height": "auto",
+          "width": "auto"
+        }
+      },
       "heading": {
         "declarations": {
           "color": "{color.text.primary}",
@@ -75,380 +441,24 @@
       }
     }
   },
-  "root": {
-    "id": "root",
-    "type": "frame",
-    "tag": "div",
-    "layout": {
-      "direction": "column",
-      "align": "stretch",
-      "gap": "{space.stack.lg}",
-      "padding": "{space.inset.lg}",
-      "width": {
-        "mode": "fill"
-      },
-      "height": {
-        "mode": "hug"
-      }
-    },
-    "children": [
-      {
-        "id": "intro",
-        "type": "frame",
-        "tag": "div",
-        "layout": {
-          "direction": "column",
-          "align": "stretch",
-          "gap": "{space.stack.md}",
-          "width": {
-            "mode": "fill"
-          },
-          "height": {
-            "mode": "hug"
-          }
-        },
-        "children": [
-          {
-            "id": "kicker",
-            "type": "text",
-            "tag": "p",
-            "text": "facadeur",
-            "layout": {
-              "width": {
-                "mode": "hug"
-              },
-              "height": {
-                "mode": "hug"
-              }
-            }
-          },
-          {
-            "id": "heading",
-            "type": "text",
-            "tag": "h1",
-            "text": "Specimen",
-            "layout": {
-              "width": {
-                "mode": "hug"
-              },
-              "height": {
-                "mode": "hug"
-              }
-            }
-          },
-          {
-            "id": "lede",
-            "type": "text",
-            "tag": "p",
-            "text": "Auto layout, token styles, and a sign-in card that overrides the input border for its children.",
-            "layout": {
-              "width": {
-                "mode": "fill",
-                "max": 640
-              },
-              "height": {
-                "mode": "hug"
-              }
-            }
-          }
-        ]
-      },
-      {
-        "id": "buttons",
-        "type": "frame",
-        "tag": "div",
-        "layout": {
-          "direction": "column",
-          "align": "stretch",
-          "gap": "{space.stack.sm}",
-          "width": {
-            "mode": "fill"
-          },
-          "height": {
-            "mode": "hug"
-          }
-        },
-        "children": [
-          {
-            "id": "label-button",
-            "type": "text",
-            "tag": "p",
-            "text": "Button",
-            "layout": {
-              "width": {
-                "mode": "hug"
-              },
-              "height": {
-                "mode": "hug"
-              }
-            }
-          },
-          {
-            "id": "button-row",
-            "type": "frame",
-            "tag": "div",
-            "layout": {
-              "direction": "row",
-              "align": "center",
-              "wrap": true,
-              "gap": "{space.gap.sm}",
-              "width": {
-                "mode": "fill"
-              },
-              "height": {
-                "mode": "hug"
-              },
-              "breakpoints": {
-                "xl": {
-                  "gap": "{space.gap.md}"
-                }
-              }
-            },
-            "children": [
-              {
-                "id": "btn-primary",
-                "type": "instance",
-                "component": "button",
-                "fields": {
-                  "label": "Primary"
-                },
-                "variants": {
-                  "tone": "primary",
-                  "size": "md"
-                }
-              },
-              {
-                "id": "btn-secondary",
-                "type": "instance",
-                "component": "button",
-                "fields": {
-                  "label": "Secondary"
-                },
-                "variants": {
-                  "tone": "secondary",
-                  "size": "md"
-                }
-              },
-              {
-                "id": "btn-ghost",
-                "type": "instance",
-                "component": "button",
-                "fields": {
-                  "label": "Ghost"
-                },
-                "variants": {
-                  "tone": "ghost",
-                  "size": "md"
-                }
-              },
-              {
-                "id": "btn-small",
-                "type": "instance",
-                "component": "button",
-                "fields": {
-                  "label": "Small"
-                },
-                "variants": {
-                  "tone": "primary",
-                  "size": "sm"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "fields",
-        "type": "frame",
-        "tag": "div",
-        "layout": {
-          "direction": "column",
-          "align": "stretch",
-          "gap": "{space.stack.sm}",
-          "width": {
-            "mode": "fill"
-          },
-          "height": {
-            "mode": "hug"
-          }
-        },
-        "children": [
-          {
-            "id": "label-input",
-            "type": "text",
-            "tag": "p",
-            "text": "Input",
-            "layout": {
-              "width": {
-                "mode": "hug"
-              },
-              "height": {
-                "mode": "hug"
-              }
-            }
-          },
-          {
-            "id": "input-row",
-            "type": "frame",
-            "tag": "div",
-            "layout": {
-              "direction": "row",
-              "align": "start",
-              "wrap": true,
-              "gap": "{space.gap.md}",
-              "width": {
-                "mode": "fill"
-              },
-              "height": {
-                "mode": "hug"
-              }
-            },
-            "children": [
-              {
-                "id": "input-email",
-                "type": "instance",
-                "component": "input",
-                "layout": {
-                  "width": {
-                    "mode": "fixed",
-                    "size": 300
-                  },
-                  "height": {
-                    "mode": "hug"
-                  }
-                },
-                "fields": {
-                  "label": "Email",
-                  "value": "ada@atelier.test",
-                  "name": "email"
-                }
-              },
-              {
-                "id": "input-search",
-                "type": "instance",
-                "component": "input",
-                "layout": {
-                  "width": {
-                    "mode": "fixed",
-                    "size": 300
-                  },
-                  "height": {
-                    "mode": "hug"
-                  }
-                },
-                "fields": {
-                  "label": "Search",
-                  "placeholder": "Search components",
-                  "name": "q"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "cards",
-        "type": "frame",
-        "tag": "div",
-        "layout": {
-          "direction": "column",
-          "align": "stretch",
-          "gap": "{space.stack.sm}",
-          "width": {
-            "mode": "fill"
-          },
-          "height": {
-            "mode": "hug"
-          }
-        },
-        "children": [
-          {
-            "id": "label-card",
-            "type": "text",
-            "tag": "p",
-            "text": "Card",
-            "layout": {
-              "width": {
-                "mode": "hug"
-              },
-              "height": {
-                "mode": "hug"
-              }
-            }
-          },
-          {
-            "id": "card-row",
-            "type": "frame",
-            "tag": "div",
-            "layout": {
-              "direction": "column",
-              "align": "stretch",
-              "gap": "{space.gap.lg}",
-              "width": {
-                "mode": "fill"
-              },
-              "height": {
-                "mode": "hug"
-              },
-              "breakpoints": {
-                "xl": {
-                  "direction": "row",
-                  "align": "start"
-                }
-              }
-            },
-            "children": [
-              {
-                "id": "card-notes",
-                "type": "instance",
-                "component": "card",
-                "layout": {
-                  "width": {
-                    "mode": "fill"
-                  },
-                  "height": {
-                    "mode": "hug"
-                  },
-                  "breakpoints": {
-                    "xl": {
-                      "width": {
-                        "mode": "fixed",
-                        "size": 420
-                      }
-                    }
-                  }
-                },
-                "fields": {
-                  "eyebrow": "Layout",
-                  "title": "Field notes",
-                  "body": "Props fill the template. Click the title, or click the card padding to select the card itself."
-                }
-              },
-              {
-                "id": "card-signin",
-                "type": "instance",
-                "component": "sign-in",
-                "layout": {
-                  "width": {
-                    "mode": "fill"
-                  },
-                  "height": {
-                    "mode": "hug"
-                  },
-                  "breakpoints": {
-                    "xl": {
-                      "width": {
-                        "mode": "fixed",
-                        "size": 460
-                      }
-                    }
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
+  "tokenInterface": {
+    "reads": [
+      "color.accent.default",
+      "color.text.primary",
+      "color.text.secondary",
+      "radius.full",
+      "radius.lg",
+      "space.0",
+      "space.gap.lg",
+      "space.gap.md",
+      "space.gap.sm",
+      "space.inset.lg",
+      "space.stack.lg",
+      "space.stack.md",
+      "space.stack.sm",
+      "type.body",
+      "type.caption",
+      "type.display"
     ]
   }
 }

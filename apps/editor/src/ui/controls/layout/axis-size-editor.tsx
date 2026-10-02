@@ -3,7 +3,8 @@ import { Field, Grid, NumberInput, Section, Select, Stack } from '../../form/ind
 import { TokenValueControl } from '../fields/TokenValueControl.js';
 
 const SIZE_MODES = [
-  { value: '', label: 'Default' },
+  { value: '', label: 'Inherit' },
+  { value: 'auto', label: 'Auto' },
   { value: 'hug', label: 'Hug' },
   { value: 'fill', label: 'Fill' },
   { value: 'fixed', label: 'Fixed' },
@@ -17,7 +18,7 @@ const SIZE_KINDS = [
 ] as const;
 
 export function axisModePatch(mode: string, axis: AxisSize | undefined): AxisSize | null {
-  if (mode !== 'hug' && mode !== 'fill' && mode !== 'fixed') return null;
+  if (mode !== 'auto' && mode !== 'hug' && mode !== 'fill' && mode !== 'fixed') return null;
   if (mode === 'fixed') {
     return {
       mode: 'fixed',
@@ -124,14 +125,21 @@ export function AxisSizeEditor({
   axis,
   dimensionTokens,
   onCommit,
+  modeValue,
+  customValue,
 }: {
   label: string;
   name: 'width' | 'height';
   axis: AxisSize | undefined;
   dimensionTokens: readonly string[];
   onCommit: (axis: AxisSize | null) => void;
+  modeValue?: AxisSize['mode'] | '' | 'custom';
+  customValue?: string;
 }) {
-  const mode = axis?.mode ?? '';
+  const mode =
+    modeValue === '' ? '' : customValue !== undefined ? 'custom' : (modeValue ?? axis?.mode ?? '');
+  const inherited = modeValue === '';
+  const effectiveMode = SIZE_MODES.find((option) => option.value === axis?.mode)?.label;
 
   function rebuild(next: AxisSize | null) {
     onCommit(next);
@@ -142,10 +150,26 @@ export function AxisSizeEditor({
       <Field label={label}>
         <Select
           name={`layout-${name}`}
+          aria-label={label}
           value={mode}
-          options={SIZE_MODES.map((option) => ({ ...option }))}
+          options={[
+            ...SIZE_MODES.map((option) => ({ ...option })),
+            ...(customValue !== undefined || mode === 'custom'
+              ? [{ value: 'custom', label: 'Custom CSS', disabled: true }]
+              : []),
+          ]}
           onCommit={(value) => rebuild(axisModePatch(value, axis))}
         />
+        {inherited && (customValue !== undefined || axis) ? (
+          <span className="eu-field__hint">
+            Inherited {name}: {customValue ?? effectiveMode}
+          </span>
+        ) : null}
+        {customValue !== undefined ? (
+          <span className="eu-field__hint">
+            {inherited ? 'Inherited custom CSS' : 'Custom CSS'}: {customValue}. Edit in Manual CSS.
+          </span>
+        ) : null}
       </Field>
       {mode === 'fixed' ? (
         <SizeValueEditor

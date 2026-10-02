@@ -132,8 +132,13 @@ function parseOverride(value: Record<string, unknown>, label: string): Layout {
 
 function parseAxis(value: unknown, label: string): AxisSize {
   if (!isRecord(value)) throw new DocumentError('schema', `${label} must be an object`);
-  if (value.mode !== 'hug' && value.mode !== 'fill' && value.mode !== 'fixed') {
-    throw new DocumentError('schema', `${label} mode must be hug, fill, or fixed`);
+  if (
+    value.mode !== 'auto' &&
+    value.mode !== 'hug' &&
+    value.mode !== 'fill' &&
+    value.mode !== 'fixed'
+  ) {
+    throw new DocumentError('schema', `${label} mode must be auto, hug, fill, or fixed`);
   }
   const axis: AxisSize = { mode: value.mode };
   if (value.size !== undefined) axis.size = parseSize(value.size, `${label} size`);

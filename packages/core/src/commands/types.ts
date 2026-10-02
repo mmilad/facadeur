@@ -78,6 +78,7 @@ export type NodeProp =
 
 // Instance selection rules are evaluated against the owning component's data.
 export type Command =
+  | { type: 'batch'; commands: Command[] }
   | { type: 'insert'; parentId: string; index?: number; node: InsertNode }
   | { type: 'remove'; nodeId: string }
   | { type: 'move'; nodeId: string; parentId: string; index: number }

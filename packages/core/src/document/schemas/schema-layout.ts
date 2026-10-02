@@ -37,7 +37,12 @@ export const sizeValueSchema = Type.Union([
 
 export const axisSizeSchema = Type.Object(
   {
-    mode: Type.Union([Type.Literal('hug'), Type.Literal('fill'), Type.Literal('fixed')]),
+    mode: Type.Union([
+      Type.Literal('auto'),
+      Type.Literal('hug'),
+      Type.Literal('fill'),
+      Type.Literal('fixed'),
+    ]),
     size: Type.Optional(sizeValueSchema),
     min: Type.Optional(sizeValueSchema),
     max: Type.Optional(sizeValueSchema),

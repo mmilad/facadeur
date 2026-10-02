@@ -1,0 +1,35 @@
+.grid-areas-raster {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-x: auto;
+}
+
+.grid-areas-raster__row {
+  display: flex;
+  gap: 4px;
+}
+
+.grid-areas-raster__row > input {
+  flex: 1 0 64px;
+  min-width: 64px;
+  width: 0;
+}
+
+.grid-areas-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.grid-areas-actions > input {
+  flex: 1;
+  min-width: 64px;
+}
+
+.grid-areas-raw {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

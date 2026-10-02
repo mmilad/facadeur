@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import type { ShownDeclaration } from '../../../domain/edits/style-edit.js';
 import type { LayoutCapabilities } from '../../../domain/layout-capabilities.js';
 import {
@@ -55,7 +55,7 @@ export function CssDeclarationsControl({
   /** Apply a compound edit as one sparse declaration patch when available. */
   onPatchDeclarations?: (patch: Record<string, string | null>) => void;
   onAddDeclaration: (property: string, value: string) => void;
-  /** Let the structured layout editor host these CSS rows in its own section. */
+  /** Render guided controls independently of the manual declaration rows. */
   renderStructuredSection?: (group: StructuredDeclarationGroup, content: ReactNode) => ReactNode;
   renderAfterRow?: (property: string, overridden: boolean) => ReactNode;
   /** Context used to keep existing but inactive layout declarations visible and disabled. */
@@ -72,14 +72,9 @@ export function CssDeclarationsControl({
     return map;
   }, [entries]);
 
-  const borderKeys = new Set(borderDeclarationKeys());
-  const radiusKeys = new Set(borderRadiusDeclarationKeys());
   const border = readBorder(declarationMap);
   const borderRadius = readBorderRadius(declarationMap);
 
-  const visibleEntries = entries.filter(
-    (item) => !borderKeys.has(item.property) && !radiusKeys.has(item.property),
-  );
   function replaceKeys(remove: readonly string[], set: Record<string, string>) {
     const nextValues = new Map(Object.entries(set));
     const patch: Record<string, string | null> = {};
@@ -122,17 +117,7 @@ export function CssDeclarationsControl({
     ) : null;
   }
 
-  const groups = groupDeclarations(visibleEntries);
-  if (renderStructuredSection) {
-    for (const id of ['layout', 'size', 'spacing'] as const) {
-      if (!groups.some((group) => group.id === id)) {
-        groups.push({ id, label: DECLARATION_GROUP_LABELS[id], items: [] });
-      }
-    }
-  }
-  if ((border || borderRadius) && !groups.some((group) => group.id === 'surface')) {
-    groups.push({ id: 'surface', label: DECLARATION_GROUP_LABELS.surface, items: [] });
-  }
+  const groups = groupDeclarations(entries);
   groups.sort((left, right) => GROUP_ORDER.indexOf(left.id) - GROUP_ORDER.indexOf(right.id));
 
   return (
@@ -142,32 +127,26 @@ export function CssDeclarationsControl({
           Variant styles stay on Base. Breakpoints are not nested under variants.
         </p>
       ) : null}
-      {visibleEntries.length === 0 && !border && !borderRadius && !renderStructuredSection ? (
-        <p className="meta">{emptyMessage}</p>
-      ) : null}
-      {groups.map((group) => (
-        <DeclarationGroupSection
-          key={group.id}
-          group={group}
-          renderStructuredSection={renderStructuredSection}
-        >
-          {group.conflictsStructured ? (
-            <p className="meta css-structure-conflict">
-              CSS values here override the structured layout value.
-            </p>
-          ) : null}
-          {group.id === 'surface' && border ? (
+      {renderStructuredSection
+        ? (['layout', 'size', 'spacing'] as const).map((group) => (
+            <Fragment key={group}>{renderStructuredSection(group, undefined)}</Fragment>
+          ))
+        : null}
+      {border || borderRadius ? (
+        <Section title="Border & Radius">
+          {border ? (
             <div className="declaration-compound" key="border-control">
               <BorderControl
                 namePrefix={declarationName('border')}
                 value={border}
                 colorTokens={catalogs.colorTokens}
+                dimensionTokens={catalogs.dimensionTokens}
                 onCommit={(next) => replaceKeys(borderDeclarationKeys(), serializeBorder(next))}
               />
               {compoundAfter(borderDeclarationKeys())}
             </div>
           ) : null}
-          {group.id === 'surface' && borderRadius ? (
+          {borderRadius ? (
             <div className="declaration-compound" key="radius-control">
               <BorderRadiusControl
                 namePrefix={declarationName('radius')}
@@ -180,62 +159,69 @@ export function CssDeclarationsControl({
               {compoundAfter(borderRadiusDeclarationKeys())}
             </div>
           ) : null}
-          {group.items.map((item) => (
-            <DeclarationRow
-              key={item.property}
-              item={item}
-              declarationName={declarationName}
-              catalogs={catalogs}
-              layoutCapabilities={layoutCapabilities}
-              onCommitDeclaration={onCommitDeclaration}
-              renderAfterRow={renderAfterRow}
-            />
-          ))}
-        </DeclarationGroupSection>
-      ))}
-      <Section title="Add property" collapsible defaultOpen={false}>
-        <Stack gap={8}>
-          <Field label="Property">
-            <TextInput
-              name={declarationName('property')}
-              value={property}
-              placeholder="property"
-              onChange={setProperty}
-            />
-          </Field>
-          {propertyError ? <p className="meta">{propertyError}</p> : null}
-          <Field label="Value">
-            <Inline gap={8}>
-              <TextInput
-                name={declarationName('value')}
-                value={value}
-                placeholder="value"
-                onChange={setValue}
+        </Section>
+      ) : null}
+      <Section title="Manual CSS properties" collapsible defaultOpen={!renderStructuredSection}>
+        {entries.length === 0 ? <p className="meta">{emptyMessage}</p> : null}
+        {groups.map((group) => (
+          <Section key={group.id} title={group.label}>
+            {group.items.map((item) => (
+              <DeclarationRow
+                key={item.property}
+                item={item}
+                declarationName={declarationName}
+                catalogs={catalogs}
+                layoutCapabilities={layoutCapabilities}
+                onCommitDeclaration={onCommitDeclaration}
+                renderAfterRow={renderAfterRow}
               />
-            </Inline>
-          </Field>
-          <button
-            type="button"
-            className="text-button"
-            onClick={() => {
-              const name = property.trim();
-              if (!name || !value.trim()) return;
-              const capability = layoutCapabilities?.property(name);
-              if (capability && !capability.supported) {
-                setPropertyError(
-                  capability.reason ?? 'This property is inactive in the current layout context.',
-                );
-                return;
-              }
-              onAddDeclaration(name, value.trim());
-              setProperty('');
-              setValue('');
-              setPropertyError(null);
-            }}
-          >
-            Add style
-          </button>
-        </Stack>
+            ))}
+          </Section>
+        ))}
+        <Section title="Add property" collapsible defaultOpen={false}>
+          <Stack gap={8}>
+            <Field label="Property">
+              <TextInput
+                name={declarationName('property')}
+                value={property}
+                placeholder="property"
+                onChange={setProperty}
+              />
+            </Field>
+            {propertyError ? <p className="meta">{propertyError}</p> : null}
+            <Field label="Value">
+              <Inline gap={8}>
+                <TextInput
+                  name={declarationName('value')}
+                  value={value}
+                  placeholder="value"
+                  onChange={setValue}
+                />
+              </Inline>
+            </Field>
+            <button
+              type="button"
+              className="text-button"
+              onClick={() => {
+                const name = property.trim();
+                if (!name || !value.trim()) return;
+                const capability = layoutCapabilities?.property(name);
+                if (capability && !capability.supported) {
+                  setPropertyError(
+                    capability.reason ?? 'This property is inactive in the current layout context.',
+                  );
+                  return;
+                }
+                onAddDeclaration(name, value.trim());
+                setProperty('');
+                setValue('');
+                setPropertyError(null);
+              }}
+            >
+              Add style
+            </button>
+          </Stack>
+        </Section>
       </Section>
     </Stack>
   );
@@ -291,36 +277,7 @@ type DeclarationGroup = {
   id: StyleDeclarationGroup;
   label: string;
   items: CssDeclarationEntry[];
-  conflictsStructured?: boolean;
 };
-
-function DeclarationGroupSection({
-  group,
-  renderStructuredSection,
-  children,
-}: {
-  group: DeclarationGroup;
-  renderStructuredSection?: (group: StructuredDeclarationGroup, content: ReactNode) => ReactNode;
-  children: ReactNode;
-}) {
-  if (isStructuredGroup(group.id) && renderStructuredSection) {
-    const content = group.items.length || group.conflictsStructured ? children : undefined;
-    return renderStructuredSection(group.id, content);
-  }
-  return (
-    <Section
-      title={group.label}
-      collapsible
-      defaultOpen={group.id !== 'layout' && group.id !== 'advanced'}
-    >
-      {children}
-    </Section>
-  );
-}
-
-function isStructuredGroup(group: StyleDeclarationGroup): group is StructuredDeclarationGroup {
-  return group === 'layout' || group === 'size' || group === 'spacing';
-}
 
 const DECLARATION_GROUP_LABELS: Record<StyleDeclarationGroup, string> = {
   layout: 'CSS layout',
@@ -347,24 +304,17 @@ const GROUP_ORDER: StyleDeclarationGroup[] = [
 function groupDeclarations(entries: CssDeclarationEntry[]): DeclarationGroup[] {
   const groups: DeclarationGroup[] = [];
   for (const entry of entries) {
-    const sourceGroup = styleDeclarationGroup(entry.property);
-    const id = declarationGroupId(entry.property);
+    const id = styleDeclarationGroup(entry.property);
     let group = groups.find((candidate) => candidate.id === id);
     if (!group) {
       group = {
         id,
         label: DECLARATION_GROUP_LABELS[id],
         items: [],
-        conflictsStructured: false,
       };
       groups.push(group);
     }
-    if (isStructuredGroup(sourceGroup)) group.conflictsStructured = true;
     group.items.push(entry);
   }
   return groups;
-}
-
-function declarationGroupId(property: string): StyleDeclarationGroup {
-  return styleDeclarationGroup(property);
 }

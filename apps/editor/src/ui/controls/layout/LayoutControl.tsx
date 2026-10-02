@@ -1,4 +1,4 @@
-import type { LayoutOverride } from '@facadeur/core';
+import type { AxisSize, LayoutOverride } from '@facadeur/core';
 import type { ReactNode } from 'react';
 import type { LayoutPatch } from '../../../domain/editing.js';
 import type { LayoutCapabilities, LayoutField } from '../../../domain/layout-capabilities.js';
@@ -50,6 +50,9 @@ export function LayoutControl({
   displayMode,
   onDisplayModeCommit,
   displayModeReset,
+  gridEnabled = false,
+  axisModes,
+  customSizes,
 }: {
   value: LayoutControlValue;
   dimensionTokens: readonly string[];
@@ -62,8 +65,11 @@ export function LayoutControl({
   section?: LayoutControlSection;
   sectionContent?: LayoutControlSectionContent;
   displayMode?: 'flex' | 'grid' | 'flow';
-  onDisplayModeCommit?: (mode: 'flex' | 'flow' | null) => void;
+  onDisplayModeCommit?: (mode: 'flex' | 'grid' | 'flow' | null) => void;
   displayModeReset?: ReactNode;
+  gridEnabled?: boolean;
+  axisModes?: Partial<Record<'width' | 'height', AxisSize['mode'] | '' | 'custom'>>;
+  customSizes?: Partial<Record<'width' | 'height', string>>;
 }) {
   const free = value.position === 'absolute';
   const horizontal = value.direction === 'row';
@@ -101,7 +107,12 @@ export function LayoutControl({
   };
   const available = (field: LayoutField): boolean =>
     !capabilities || capabilities.availableFields.includes(field);
-  const show = (field: LayoutField): boolean => available(field) || has(field);
+  const show = (field: LayoutField): boolean =>
+    !(
+      (displayMode ?? capabilities?.selectedDisplay) === 'grid' &&
+      ['direction', 'gap', 'justify', 'align', 'wrap'].includes(field)
+    ) &&
+    (available(field) || has(field));
   const reason = (field: LayoutField): string | undefined =>
     capabilities?.disabledReasons[field] ??
     (field === 'x' || field === 'y'
@@ -151,12 +162,13 @@ export function LayoutControl({
                       label: 'Grid',
                       icon: <LayoutChoiceIcon kind="grid" />,
                       showLabel: true,
-                      disabled: true,
-                      title: 'Grid (editing is not yet available)',
+                      disabled: !gridEnabled,
+                      title: gridEnabled ? 'Grid layout' : 'Grid (editing is not yet available)',
                     },
                   ]}
                   onCommit={(mode) => {
-                    if (mode === 'flex' || mode === 'flow') onDisplayModeCommit?.(mode);
+                    if (mode === 'flex' || mode === 'flow' || (gridEnabled && mode === 'grid'))
+                      onDisplayModeCommit?.(mode);
                   }}
                 />
               </Field>
@@ -308,6 +320,8 @@ export function LayoutControl({
                   label="Width"
                   name="width"
                   axis={value.width}
+                  modeValue={axisModes?.width}
+                  customValue={customSizes?.width}
                   dimensionTokens={dimensionTokens}
                   onCommit={(width) => onCommit({ width })}
                 />,
@@ -320,6 +334,8 @@ export function LayoutControl({
                   label="Height"
                   name="height"
                   axis={value.height}
+                  modeValue={axisModes?.height}
+                  customValue={customSizes?.height}
                   dimensionTokens={dimensionTokens}
                   onCommit={(height) => onCommit({ height })}
                 />,

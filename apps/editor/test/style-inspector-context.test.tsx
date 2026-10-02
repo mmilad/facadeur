@@ -90,6 +90,10 @@ describe('style inspector context', () => {
         ?.querySelector('button[name="property-tab-style"]')
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
+    const manual = [...host!.querySelectorAll('button.eu-section__title')].find(
+      (button) => button.textContent === 'Manual CSS properties',
+    ) as HTMLButtonElement;
+    act(() => manual.click());
     expect(
       (
         host?.querySelector(
@@ -131,6 +135,12 @@ describe('style inspector context', () => {
       state.dispatchEvent(new Event('change', { bubbles: true }));
       session.selectNode('label');
     });
+    const childManual = [...host!.querySelectorAll('button.eu-section__title')].find(
+      (button) => button.textContent === 'Manual CSS properties',
+    ) as HTMLButtonElement;
+    if (childManual.getAttribute('aria-expanded') === 'false') {
+      act(() => childManual.click());
+    }
     expect(
       (
         host?.querySelector(
@@ -147,6 +157,10 @@ describe('style inspector context', () => {
         ?.querySelector('button[name="property-tab-style"]')
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
+    const manual = [...host!.querySelectorAll('button.eu-section__title')].find(
+      (button) => button.textContent === 'Manual CSS properties',
+    ) as HTMLButtonElement;
+    act(() => manual.click());
     const opacity = host?.querySelector('input[name="style-root-variant-compact-base-opacity"]');
     const reset = opacity?.closest('.declaration-row')?.querySelector('button');
     expect(reset).toBeTruthy();

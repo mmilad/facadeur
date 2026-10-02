@@ -54,6 +54,7 @@ export function context(files: DocumentFile[], designId: string): CommandContext
 // Required fields are checked before pure core command validation, including commands
 // whose absent payload would otherwise be interpreted as a reset/no-op.
 const required: Record<Command['type'], readonly string[]> = {
+  batch: ['commands'],
   insert: ['parentId', 'node'],
   remove: ['nodeId'],
   move: ['nodeId', 'parentId', 'index'],
@@ -90,16 +91,30 @@ const required: Record<Command['type'], readonly string[]> = {
 };
 
 export function assertCommand(command: Command): void {
+  assertNestedCommand(command, 0);
+}
+
+function assertNestedCommand(value: unknown, depth: number): void {
   if (
-    !isPlainObject(command) ||
-    !isJsonValue(command) ||
-    typeof command.type !== 'string' ||
-    !Object.hasOwn(required, command.type)
+    !isPlainObject(value) ||
+    !isJsonValue(value) ||
+    typeof value.type !== 'string' ||
+    !Object.hasOwn(required, value.type)
   ) {
     throw new ProjectError(400, 'Invalid command');
   }
+  const command = value as Command;
   for (const key of required[command.type]) {
     if (!Object.hasOwn(command, key)) throw new ProjectError(400, `Command requires ${key}`);
+  }
+  if (command.type === 'batch') {
+    if (depth >= 8 || !Array.isArray(command.commands) || command.commands.length > 100) {
+      throw new ProjectError(
+        400,
+        'Batch commands must be an array of at most 100 commands, nested at most 8 levels',
+      );
+    }
+    for (const item of command.commands) assertNestedCommand(item, depth + 1);
   }
   for (const key of ['nodeId', 'parentId', 'name', 'path', 'prop', 'property', 'id', 'label']) {
     if (

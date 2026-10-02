@@ -413,11 +413,11 @@ describe('editor shell', () => {
     await act(async () => {
       styleTab?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
-    const cssRules = [...host.querySelectorAll('.eu-section__title--collapsible')].find(
-      (title) => title.textContent === 'CSS rules',
+    const manualCss = [...host.querySelectorAll('.eu-section__title--collapsible')].find(
+      (title) => title.textContent === 'Manual CSS properties',
     );
     await act(async () => {
-      cssRules?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      manualCss?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
     const padding = host.querySelector(
       'button[name="style-root-base-base-paddingInline"]',
@@ -431,9 +431,9 @@ describe('editor shell', () => {
     expect(padding.textContent).toBe('5');
     expect(host.textContent).toContain('Override at 768');
 
-    const reset = [...host.querySelectorAll('.override-cue button')].find((button) =>
-      button.textContent?.includes('Reset'),
-    );
+    const reset = [
+      ...padding.closest('.declaration-row')!.querySelectorAll('.override-cue button'),
+    ].find((button) => button.textContent?.includes('Reset'));
     await act(async () => {
       reset?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });

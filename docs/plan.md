@@ -4,6 +4,67 @@
 
 ## Refactoring bei der Aufgabenplanung
 
+### Inspector controls / manual CSS and explicit Auto sizing (2026-10-02)
+
+- [x] Separate guided controls from manual CSS properties; preserve bidirectional effective values.
+- [x] Distinguish inherited size reset from explicit auto, including instance/master and viewport/variant overrides.
+- [x] Verify synchronization, sparse writes and Reset/Undo with tests/typecheck/lint.
+- [ ] Visual browser verification (local browser runtime fails during startup).
+
+Evidence: CssDeclarationsControl currently injects CSS rows into the structured layout sections;
+Grid controls additionally mix track CSS and placement CSS with guided inputs. Separate presentation
+surfaces while retaining existing declaration writers and effective values. Keep grouped declaration
+orchestration cohesive; no new generic inspector framework. Explicit auto is an additive core size
+mode compiled by style-engine, not another editor-only competing persisted source. Review compile.ts
+(470 lines): its cohesive stylesheet algorithm stays together for the small axis branch; no split
+solely for size. Preserve old modes, instance masters, sparse variants/viewports and Undo.
+Validation: focused UI/compile/integration tests, full suite, typecheck, scoped lint/format, scan.
+Inline CSS must be read and written through the same priority rules in both manual and guided
+surfaces. Promote the existing layout style-field writer to the properties owner, retaining its
+old layout import as a compatibility entry; reuse it for normal manual declaration edits.
+Final checks: 866 tests pass; the one generated-UI snapshot comparison fails because the
+pre-existing user edit of examples/specimen-section.json differs from packages/ui output.
+Do not overwrite that edit or regenerate unrelated example output in this task. Workspace
+typecheck, scoped ESLint and formatting pass. Added regression coverage for all four
+instance/variant/viewport sizing contexts, inline CSS synchronization, native Hug cleanup,
+duplicate own-source Inherit, retained min/max, guided-only Grid fields and media-rule order.
+Browser runtime still cannot start after reset; no visual verification claimed. LayoutPanel
+(481 lines) stays a cohesive selection/context/write orchestrator; pure sizing is colocated
+separately. compile.ts (471 lines) keeps its stylesheet algorithm cohesive; a stable media
+sort aligns canvas behavior with existing codegen ordering. No staging or commits changed.
+
+### Grid two-pass implementation (2026-10-02)
+
+- [x] Pass 1: tracks, separate gaps, container/item alignment and child placement; integrate and verify.
+- [x] Pass 2: rectangular named area editor, parent-scoped child assignments and atomic rename; integrate and verify automatically.
+- [ ] Visual browser verification of both passes (blocked by local Windows sandbox startup).
+
+Evidence: LayoutPanel already coordinates context and writes; adding grid UI there would mix
+independent container/item interactions. Colocate private GridContainer/GridItem controls in
+layout/grid and pure CSS parsing/validation beside them. Reuse icon choices and style-layer
+writers. CSS declarations stay the sole persisted source; preserve imported CSS, sparse
+viewport/variant overrides, tokens, siblings, public contracts and Undo. No core schema migration.
+Validation: focused UI/domain tests after each pass, full suite/typecheck/lint, candidate rerun,
+browser checks when local computer-use works. Advanced track CSS stays editable, not auto-rewritten.
+Atomic area rename may touch inline node styles and style-block owners together: add an additive
+batch command using the existing pure command validator and one Yjs transaction, rather than
+exposing CRDT transactions to the inspector. Validate rejection and one-step Undo separately.
+Pass 1: 28 focused tests pass; editor typecheck, scoped lint and formatting pass. Browser runtime
+failed to start; continue automated validation without claiming visual verification.
+Final integration: 828 tests / 147 files pass, workspace-wide typecheck, scoped ESLint and
+Prettier pass; final candidate scan has no findings. Review loops covered shorthand gap
+inheritance, explicit placement longhands, compound Reset, master-inherited instance styles,
+longhand-only rename, sparse variants/viewports and one-step Undo. Grid-instance resolution
+is a private module reusing the existing instance-variant resolver; masters remain unchanged.
+Raster editing validates rectangles and names, supports up to 20x20 cells, and preserves
+unsupported CSS for Advanced CSS. Rename affects direct children in the current edit context.
+Browser-control startup repeatedly fails with Windows sandbox setup errors; no screenshot or
+visual verification is claimed. Existing staging is preserved; nothing committed.
+
+Unrelated backlog: earlier LayoutControl raw padding/margin inputs should be reviewed against
+the existing token-only spacing parser. Grid gaps explicitly retain token-only controls here;
+changing the wider spacing contract is outside this task.
+
 ### Item self-alignment (2026-10-02)
 
 - [x] Extract layout style-field ownership/write routing from LayoutPanel before reusing it for align-self.
@@ -355,24 +416,24 @@ Erster Größen-Scan vom 2026-10-01. Offene Einträge sind **Prüfaufträge**, k
 Refactors. Vor Umsetzung konkrete Verantwortlichkeiten, Grenzen und Verhaltenstests festlegen.
 Bei zusammenhängendem Code darf die Entscheidung ausdrücklich „beibehalten“ lauten.
 
-| Status                    | Kandidat                                                  | Ergebnis / nächste Prüfung                                                                          |
-| ------------------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Erledigt                  | `packages/core/src/validate.ts`                           | Schema, lokale Regeln und Catalog-Contracts extrahiert; Exports und Invarianten erhalten.           |
-| Erledigt                  | `packages/core/src/commands/commands.ts`                  | Kleiner Dispatcher und Mutation-Familien; atomare Validierung und Undo-Vertrag erhalten.            |
-| Erledigt                  | `packages/store-yjs/src/codec.ts`                         | Encode, Decode und gemeinsame Yjs-Helfer extrahiert; öffentliche Funktionen bleiben in `codec.ts`.   |
-| Erledigt                  | `packages/core/src/variants/variants.ts`                  | Resolver, Preset-Ableitung und Node-Deltas getrennt; Sparse-Override-Verhalten erhalten.            |
-| Erledigt                  | `packages/core/src/document/schema.ts`                    | Schemafamilien unter `document/schemas/`; `schema.ts` behält die öffentlichen Exports.              |
-| Erledigt                  | `apps/editor/src/ui/stage/StageCanvas.tsx`                | Zeigerinteraktion und Board-Mount liegen in `stage/canvas/`; `StageCanvas` bleibt die Komponente. |
-| Erledigt                  | `packages/core/src/token-tree.ts`                         | Werteprüfungen, Lesen und Baummutation getrennt; öffentliche Funktionen bleiben in `token-tree.ts`. |
-| Erledigt                  | `packages/codegen-react/src/component/render.ts`          | Ereignisse, Datenausdrücke, Bindings und Instanzen extrahiert; `renderNode` bleibt öffentlich.       |
-| Erledigt                  | `packages/core/src/document/flat.ts`                      | Klonen und Baumabfragen unter `document/flat/`; Umwandlung bleibt in `flat.ts`.                     |
-| Erledigt                  | `packages/core/src/styles/style-block.ts`                 | Parser nach `style-block-parse.ts`; Canonicalize, Prune und Contract bleiben zusammen.             |
-| Erledigt                  | `packages/tokens/src/resolve.ts`                          | CSS-Ausgabe nach `css-properties.ts`; `loadTokens` und die öffentlichen Exports bleiben in `resolve.ts`. |
-| Erledigt                  | `apps/editor/src/ui/sidebar/layers/ProjectTree.tsx`       | Zeilen und Kontextmenü in `AssetRows.tsx`; Suche und Anlegen bleiben im Baum.                       |
-| Erledigt                  | `apps/editor/src/domain/session/create-editor-session.ts` | Katalog, Snapshot und Befehle liegen daneben; `createEditorSession` bleibt der Koordinator.        |
-| Erledigt                  | `packages/codegen-react/src/component/catalog.ts`         | Feldtypen und Defaults nach `catalog-fields.ts`; `assignCatalog` bleibt der Katalogdurchlauf.        |
-| Erledigt                  | `apps/editor/src/ui/sidebar/design/tokens/TokensDomainPanel.tsx` | Zeile, Vorschau und Breakpoint-Helfer extrahiert; Token-Cluster liegt unter `design/tokens/`. |
-| Beibehalten nach Refactor | `packages/renderer-dom/src/render.ts`                     | Rendering/Reconciliation bleibt zusammen; Resolution, Presentation und Contracts wurden extrahiert. |
+| Status                    | Kandidat                                                         | Ergebnis / nächste Prüfung                                                                               |
+| ------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Erledigt                  | `packages/core/src/validate.ts`                                  | Schema, lokale Regeln und Catalog-Contracts extrahiert; Exports und Invarianten erhalten.                |
+| Erledigt                  | `packages/core/src/commands/commands.ts`                         | Kleiner Dispatcher und Mutation-Familien; atomare Validierung und Undo-Vertrag erhalten.                 |
+| Erledigt                  | `packages/store-yjs/src/codec.ts`                                | Encode, Decode und gemeinsame Yjs-Helfer extrahiert; öffentliche Funktionen bleiben in `codec.ts`.       |
+| Erledigt                  | `packages/core/src/variants/variants.ts`                         | Resolver, Preset-Ableitung und Node-Deltas getrennt; Sparse-Override-Verhalten erhalten.                 |
+| Erledigt                  | `packages/core/src/document/schema.ts`                           | Schemafamilien unter `document/schemas/`; `schema.ts` behält die öffentlichen Exports.                   |
+| Erledigt                  | `apps/editor/src/ui/stage/StageCanvas.tsx`                       | Zeigerinteraktion und Board-Mount liegen in `stage/canvas/`; `StageCanvas` bleibt die Komponente.        |
+| Erledigt                  | `packages/core/src/token-tree.ts`                                | Werteprüfungen, Lesen und Baummutation getrennt; öffentliche Funktionen bleiben in `token-tree.ts`.      |
+| Erledigt                  | `packages/codegen-react/src/component/render.ts`                 | Ereignisse, Datenausdrücke, Bindings und Instanzen extrahiert; `renderNode` bleibt öffentlich.           |
+| Erledigt                  | `packages/core/src/document/flat.ts`                             | Klonen und Baumabfragen unter `document/flat/`; Umwandlung bleibt in `flat.ts`.                          |
+| Erledigt                  | `packages/core/src/styles/style-block.ts`                        | Parser nach `style-block-parse.ts`; Canonicalize, Prune und Contract bleiben zusammen.                   |
+| Erledigt                  | `packages/tokens/src/resolve.ts`                                 | CSS-Ausgabe nach `css-properties.ts`; `loadTokens` und die öffentlichen Exports bleiben in `resolve.ts`. |
+| Erledigt                  | `apps/editor/src/ui/sidebar/layers/ProjectTree.tsx`              | Zeilen und Kontextmenü in `AssetRows.tsx`; Suche und Anlegen bleiben im Baum.                            |
+| Erledigt                  | `apps/editor/src/domain/session/create-editor-session.ts`        | Katalog, Snapshot und Befehle liegen daneben; `createEditorSession` bleibt der Koordinator.              |
+| Erledigt                  | `packages/codegen-react/src/component/catalog.ts`                | Feldtypen und Defaults nach `catalog-fields.ts`; `assignCatalog` bleibt der Katalogdurchlauf.            |
+| Erledigt                  | `apps/editor/src/ui/sidebar/design/tokens/TokensDomainPanel.tsx` | Zeile, Vorschau und Breakpoint-Helfer extrahiert; Token-Cluster liegt unter `design/tokens/`.            |
+| Beibehalten nach Refactor | `packages/renderer-dom/src/render.ts`                            | Rendering/Reconciliation bleibt zusammen; Resolution, Presentation und Contracts wurden extrahiert.      |
 
 `apps/editor/src/domain` ist nach `schema/`, `edits/`, `viewport/`, `selection/`, `navigation/`
 und `assets/` gruppiert. Token-Panels liegen unter `sidebar/design/tokens/`. Komponenten-Editoren

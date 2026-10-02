@@ -40,6 +40,12 @@ export function applyCommand(
   command: Command,
   ctx: CommandContext = {},
 ): FlatDocument {
+  if (command.type === 'batch') {
+    return command.commands.reduce(
+      (current, item) => applyCommand(current, item, ctx),
+      structuredClone(canonicalizeFlat(doc)),
+    );
+  }
   const next = structuredClone(canonicalizeFlat(doc));
   switch (command.type) {
     case 'insert':
@@ -101,6 +107,7 @@ export function applyCommand(
       break;
     case 'setVariantPreset':
       setVariantPreset(next, command.preset);
+      adoptTokenReads(next);
       break;
     case 'createVariantPreset': {
       const label = command.label.trim();
@@ -121,6 +128,7 @@ export function applyCommand(
     }
     case 'setVariantStyleBlock':
       setVariantStyleBlock(next, command);
+      adoptTokenReads(next);
       break;
     case 'removeVariantPreset':
       removeVariantPreset(next, command.name);

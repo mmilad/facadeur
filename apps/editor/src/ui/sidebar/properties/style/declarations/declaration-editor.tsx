@@ -22,7 +22,10 @@ import {
   writeStyleDeclaration,
   type StyleEditTarget,
 } from '../../../../../domain/edits/style-edit.js';
-import { editorBreakpoints, viewportEditContext } from '../../../../../domain/viewport/viewport-edit.js';
+import {
+  editorBreakpoints,
+  viewportEditContext,
+} from '../../../../../domain/viewport/viewport-edit.js';
 import { CssDeclarationsControl } from '../../../../controls/generic/index.js';
 import type { StructuredDeclarationGroup } from '../../../../controls/generic/CssDeclarationsControl.js';
 import {
@@ -31,6 +34,7 @@ import {
   type TypographyCatalogs,
 } from '../../../../controls/typography/index.js';
 import { OverrideCue } from '../../ViewportEditBar.js';
+import { layoutStyleField, commitStyleFields } from '../../style-field.js';
 
 export function DeclarationEditor({
   session,
@@ -76,15 +80,28 @@ export function DeclarationEditor({
   // The canonical document is the provenance source for base edits. The
   // active document is the effective value source when a named preset is
   // selected, since it includes inherited base and breakpoint values.
+  const canonicalBlock = structuredClone(snap.document.styles ?? {});
+  const effectiveBlock = structuredClone(snap.activeDocument.styles ?? {});
+  for (const [document, block] of [
+    [snap.document, canonicalBlock],
+    [snap.activeDocument, effectiveBlock],
+  ] as const) {
+    const candidate = document.nodes[target.nodeId];
+    if (candidate?.type !== 'instance' && candidate?.style) {
+      const owner =
+        candidate.id === document.rootId ? block : ((block.children ??= {})[candidate.id] ??= {});
+      owner.declarations = { ...owner.declarations, ...candidate.style };
+    }
+  }
   const canonicalEntries = effectiveStyleDeclarations(
-    snap.document.styles,
+    canonicalBlock,
     snap.document.rootId,
     effectiveTarget,
     ctx.breakpoints,
   );
   const effectiveEntries = namedVariant
     ? effectiveStyleDeclarations(
-        snap.activeDocument.styles,
+        effectiveBlock,
         snap.activeDocument.rootId,
         baseTarget,
         ctx.breakpoints,
@@ -329,6 +346,16 @@ function commitDeclaration(
   property: string,
   value: string | null,
 ) {
+  if (!target.axis && !target.state) {
+    layoutStyleField(
+      session,
+      { ...snap, activeVariantName: target.variantName ?? null },
+      target.nodeId,
+      target.breakpointId ?? null,
+      canonicalStyleProperty(property),
+    ).commit(value);
+    return;
+  }
   if (target.variantName) {
     const current = variantStyleBlock(snap.document, target.variantName);
     const style = writeStyleDeclaration(
@@ -361,6 +388,16 @@ function commitDeclarations(
   target: StyleEditTarget,
   patch: Record<string, string | null>,
 ) {
+  if (!target.axis && !target.state) {
+    commitStyleFields(
+      session,
+      { ...snap, activeVariantName: target.variantName ?? null },
+      target.nodeId,
+      target.breakpointId ?? null,
+      patch,
+    );
+    return;
+  }
   if (target.variantName) {
     const current = variantStyleBlock(snap.document, target.variantName);
     const style = writeStyleDeclarations(

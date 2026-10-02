@@ -1,5 +1,6 @@
 import {
   type FlatNode,
+  type Command,
   type LayoutOverride,
   type VariantNodeOverride,
   type VariantPreset,
@@ -11,10 +12,7 @@ import {
   type LayoutPatch,
 } from '../../../../domain/editing.js';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
-import {
-  canonicalStyleProperty,
-  effectiveStyleDeclarations,
-} from '../../../../domain/edits/style-edit.js';
+import { canonicalStyleProperty } from '../../../../domain/edits/style-edit.js';
 import {
   effectiveLayout as resolveLayout,
   layoutCapabilities,
@@ -32,6 +30,13 @@ import {
 import { OverrideCue } from '../ViewportEditBar.js';
 import { layoutStyleField } from './style-field.js';
 import { SelfAlignment } from './SelfAlignment.js';
+import { GridContainer } from './grid/GridContainer.js';
+import { GridItem } from './grid/GridItem.js';
+import { GridAreas } from './grid/GridAreas.js';
+import { parseGridAreas, renameGridArea } from './grid/areas.js';
+import { commitGridChanges, gridDeclarations } from './grid/edits.js';
+import { gridInstance } from './grid/instance.js';
+import { shownAxis, commitAxisCss } from './sizing.js';
 
 export function LayoutPanel({
   session,
@@ -74,30 +79,24 @@ export function LayoutPanel({
     writingBreakpointId: null,
   });
   const styleDeclarations: Record<string, Record<string, string>> = {};
+  const selectedInstance = gridInstance(session, snap, effectiveNode.id, breakpointId);
+  const masterLayout = resolveLayout(selectedInstance?.root?.layout, breakpointId, ctx.breakpoints);
+  const declarationsFor = (id: string) =>
+    gridDeclarations(
+      snap,
+      id,
+      breakpointId,
+      ctx.breakpoints,
+      gridInstance(session, snap, id, breakpointId)?.declarations,
+    );
   for (const candidate of [effectiveNode.id, ctxParentId(snap.activeDocument, effectiveNode.id)]) {
     if (!candidate) continue;
-    const block = structuredClone(snap.activeDocument.styles ?? {});
-    const owner =
-      candidate === snap.activeDocument.rootId
-        ? block
-        : ((block.children ??= {})[candidate] ??= {});
-    const candidateNode = snap.activeDocument.nodes[candidate];
-    if (candidateNode?.type !== 'instance' && candidateNode?.style) {
-      owner.declarations = { ...owner.declarations, ...candidateNode.style };
-    }
-    styleDeclarations[candidate] = effectiveStyleDeclarations(
-      block,
-      snap.activeDocument.rootId,
-      {
-        nodeId: candidate,
-        ...(breakpointId ? { breakpointId } : {}),
-      },
-      ctx.breakpoints,
-    );
+    styleDeclarations[candidate] = declarationsFor(candidate);
   }
   const capabilities = layoutCapabilities({
     document: snap.activeDocument,
     nodeId: effectiveNode.id,
+    instanceRoot: selectedInstance?.root,
     breakpointId,
     variantName: snap.activeVariantName,
     breakpoints: ctx.breakpoints,
@@ -116,6 +115,67 @@ export function LayoutPanel({
     declaration(capabilities.parentId ?? '', 'flex-direction') ??
     resolveLayout(parent?.layout, breakpointId, ctx.breakpoints).direction ??
     'column';
+  const gridValues = Object.fromEntries(
+    Object.entries(styleDeclarations[node.id] ?? {}).map(([key, value]) => [
+      canonicalStyleProperty(key),
+      value,
+    ]),
+  );
+  const gridField = (property: string) =>
+    layoutStyleField(session, snap, node.id, breakpointId, property);
+  const axes = {
+    width: shownAxis('width', effectiveLayout?.width ?? masterLayout.width, gridValues),
+    height: shownAxis('height', effectiveLayout?.height ?? masterLayout.height, gridValues),
+  };
+  controlValue.width = axes.width.value;
+  controlValue.height = axes.height.value;
+  const ownLayer = breakpointId
+    ? (variantEntry ? ownLayout : node.layout)?.breakpoints?.[breakpointId]
+    : variantEntry
+      ? ownLayout
+      : node.layout;
+  const axisModes = Object.fromEntries(
+    (['width', 'height'] as const).map((axis) => [
+      axis,
+      ownLayer?.[axis] || gridField(axis).overridden
+        ? axes[axis].customValue
+          ? 'custom'
+          : (axes[axis].value?.mode ?? '')
+        : '',
+    ]),
+  ) as Partial<
+    Record<'width' | 'height', NonNullable<typeof controlValue.width>['mode'] | '' | 'custom'>
+  >;
+  if (gridValues.gap === undefined && controlValue.gap) gridValues.gap = controlValue.gap;
+  const parentAreas = parseGridAreas(
+    declaration(capabilities.parentId ?? '', 'grid-template-areas') ?? '',
+  );
+  const gridPatch = (patch: Record<string, string | null>) =>
+    commitGridChanges(session, snap, breakpointId, [{ nodeId: node.id, patch }]);
+  function renameArea(oldName: string, newName: string) {
+    const value = renameGridArea(gridValues['grid-template-areas'] ?? '', oldName, newName);
+    const children = effectiveNode.type === 'frame' ? effectiveNode.children : [];
+    const changes = [
+      { nodeId: node.id, patch: { 'grid-template-areas': value } as Record<string, string | null> },
+    ];
+    for (const childId of children) {
+      const declarations = declarationsFor(childId);
+      {
+        const patch: Record<string, string | null> = {};
+        if (declarations['grid-area'] === oldName) patch['grid-area'] = newName;
+        for (const key of [
+          'grid-column-start',
+          'grid-column-end',
+          'grid-row-start',
+          'grid-row-end',
+        ]) {
+          if (declarations[key] === oldName) patch[key] = newName;
+        }
+        if (Object.keys(patch).length) changes.push({ nodeId: childId, patch });
+      }
+    }
+    commitGridChanges(session, snap, breakpointId, changes);
+  }
 
   function cue(key: keyof LayoutOverride) {
     const own = breakpointId
@@ -154,6 +214,33 @@ export function LayoutPanel({
   }
 
   function commit(patch: LayoutPatch, targetBreakpointId = breakpointId) {
+    for (const axis of ['width', 'height'] as const) {
+      if (Object.keys(patch).length !== 1 || !Object.prototype.hasOwnProperty.call(patch, axis))
+        continue;
+      const value = patch[axis] ?? null;
+      if (value === null || value.mode === 'auto' || gridValues[axis] !== undefined) {
+        const latest = session.getSnapshot();
+        const entry = snap.activeVariantName
+          ? variantNodeEntry(latest.document, snap.activeVariantName, node.id)
+          : null;
+        const source =
+          entry?.override.layout ?? (!entry ? latest.document.nodes[node.id]?.layout : undefined);
+        const layer = targetBreakpointId ? source?.breakpoints?.[targetBreakpointId] : source;
+        const cleanup: Command | undefined =
+          layer?.[axis] === undefined
+            ? undefined
+            : entry
+              ? variantLayoutCommand(entry, targetBreakpointId, { [axis]: null })
+              : {
+                  type: 'setProp',
+                  nodeId: node.id,
+                  prop: 'layout',
+                  value: writeLayoutFields(source, targetBreakpointId, { [axis]: null }),
+                };
+        commitAxisCss(session, snap, node.id, targetBreakpointId, axis, value, cleanup);
+        return;
+      }
+    }
     if (variantEntry) {
       const latest = variantNodeEntry(
         session.getSnapshot().document,
@@ -253,6 +340,9 @@ export function LayoutPanel({
         writingBreakpointId={breakpointId}
         capabilities={capabilities}
         displayMode={capabilities.selectedDisplay}
+        gridEnabled
+        axisModes={axisModes}
+        customSizes={{ width: axes.width.customValue, height: axes.height.customValue }}
         onDisplayModeCommit={(mode) => display.commit(mode === 'flow' ? 'block' : mode)}
         displayModeReset={
           display.overridden ? (
@@ -272,17 +362,58 @@ export function LayoutPanel({
         section={section}
         sectionContent={{
           ...sectionContent,
+          layout: (
+            <>
+              {capabilities.selectedDisplay === 'grid' ? (
+                <GridContainer
+                  guidedOnly
+                  values={gridValues}
+                  dimensionTokens={tokens}
+                  onCommit={(property, value) => gridField(property).commit(value)}
+                  onPatch={gridPatch}
+                  overridden={(property) => gridField(property).overridden}
+                />
+              ) : null}
+              {capabilities.selectedDisplay === 'grid' ? (
+                <GridAreas
+                  key={`${node.id}:${snap.activeVariantName}:${breakpointId}`}
+                  value={gridValues['grid-template-areas'] ?? ''}
+                  onCommit={(value) => gridField('grid-template-areas').commit(value)}
+                  onRename={renameArea}
+                  overridden={gridField('grid-template-areas').overridden}
+                />
+              ) : null}
+              {sectionContent?.layout}
+            </>
+          ),
           size: (
             <>
-              <SelfAlignment
-                value={declaration(node.id, 'align-self')}
-                horizontal={parentDirection.startsWith('row')}
-                active={capabilities.isDirectFlexItem}
-                retained={selfAlignment.overridden}
-                fill={controlValue.width?.mode === 'fill' && !parentDirection.startsWith('row')}
-                onCommit={selfAlignment.commit}
-                onReset={selfAlignment.overridden ? () => selfAlignment.commit(null) : undefined}
-              />
+              {capabilities.isDirectGridItem ||
+              Object.keys(gridValues).some((key) =>
+                /^grid-(area|column(?:-start|-end)?|row(?:-start|-end)?)$/.test(key),
+              ) ? (
+                <GridItem
+                  guidedOnly
+                  values={gridValues}
+                  active={capabilities.isDirectGridItem}
+                  areaNames={parentAreas.names}
+                  areaTemplateError={parentAreas.error}
+                  onCommit={(property, value) => gridField(property).commit(value)}
+                  onPatch={gridPatch}
+                  overridden={(property) => gridField(property).overridden}
+                />
+              ) : null}
+              {capabilities.parentDisplay !== 'grid' ? (
+                <SelfAlignment
+                  value={declaration(node.id, 'align-self')}
+                  horizontal={parentDirection.startsWith('row')}
+                  active={capabilities.isDirectFlexItem}
+                  retained={selfAlignment.overridden}
+                  fill={controlValue.width?.mode === 'fill' && !parentDirection.startsWith('row')}
+                  onCommit={selfAlignment.commit}
+                  onReset={selfAlignment.overridden ? () => selfAlignment.commit(null) : undefined}
+                />
+              ) : null}
               {sectionContent?.size}
             </>
           ),
@@ -325,6 +456,14 @@ function commitVariantLayout(
   breakpointId: string | null,
   patch: LayoutPatch,
 ): void {
+  session.execute(variantLayoutCommand(entry, breakpointId, patch));
+}
+
+function variantLayoutCommand(
+  entry: VariantNodeEntry,
+  breakpointId: string | null,
+  patch: LayoutPatch,
+): Command {
   const preset = structuredClone(entry.preset);
   const overrides = { ...(preset.overrides ?? {}) };
   const nodes = { ...(overrides.nodes ?? {}) };
@@ -338,5 +477,5 @@ function commitVariantLayout(
   else delete overrides.nodes;
   if (Object.keys(overrides).length) preset.overrides = overrides;
   else delete preset.overrides;
-  session.execute({ type: 'setVariantPreset', preset });
+  return { type: 'setVariantPreset', preset };
 }
