@@ -62,15 +62,15 @@ describe('shadow domain panel', () => {
     await openSettingsDomain(host!, 'shadow');
   }
 
-  async function submitNewToken(path: string) {
-    if (!document.querySelector('input[name="new-shadow-path"]')) {
+  async function submitNewToken(label: string) {
+    if (!document.querySelector('input[name="new-shadow-label"]')) {
       await act(async () => {
         (host!.querySelector('button[name="add-shadow"]') as HTMLButtonElement).click();
       });
     }
-    const pathInput = document.querySelector('input[name="new-shadow-path"]') as HTMLInputElement;
+    const pathInput = document.querySelector('input[name="new-shadow-label"]') as HTMLInputElement;
     expect(pathInput).toBeInstanceOf(HTMLInputElement);
-    await act(async () => setInput(pathInput, path));
+    await act(async () => setInput(pathInput, label));
     await act(async () => {
       (document.querySelector('button[name="add-shadow-submit"]') as HTMLButtonElement).click();
     });
@@ -83,7 +83,7 @@ describe('shadow domain panel', () => {
     });
     await openShadow(session);
 
-    await submitNewToken('shadow.elevated.xl');
+    await submitNewToken('Elevated xl');
 
     const indexed = readTokenTree(session.getSnapshot().design.tokens);
     expect(indexed.tokens.get('shadow.elevated.xl')).toMatchObject({
@@ -96,7 +96,7 @@ describe('shadow domain panel', () => {
         color: '#0f172a14',
       },
     });
-    expect(host!.textContent).toContain('shadow.elevated.xl');
+    expect(host!.textContent).toContain('--fcdr-shadow-elevated-xl');
   });
 
   it('blocks removing a shadow token that other tokens still reference', async () => {
@@ -115,20 +115,20 @@ describe('shadow domain panel', () => {
     expect(session.getSnapshot().notice?.text).toMatch(/\{shadow\.md\}/);
   });
 
-  it('rejects an invalid shadow path on add', async () => {
+  it('rejects an empty label on add', async () => {
     const session = createEditorSession({
       documents,
       design: createProjectTemplateDocument(),
     });
     await openShadow(session);
 
-    await submitNewToken('elevated.only');
+    await submitNewToken('   ');
 
-    expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has('elevated.only')).toBe(
-      false,
-    );
+    expect(
+      readTokenTree(session.getSnapshot().design.tokens).tokens.has('shadow.elevated.xl'),
+    ).toBe(false);
     expect(session.getSnapshot().notice?.tone).toBe('error');
-    expect(session.getSnapshot().notice?.text).toMatch(/shadow\./i);
+    expect(session.getSnapshot().notice?.text).toMatch(/label is required/i);
   });
 
   it('rejects duplicate shadow paths on add', async () => {
@@ -138,7 +138,7 @@ describe('shadow domain panel', () => {
     });
     await openShadow(session);
 
-    await submitNewToken('shadow.md');
+    await submitNewToken('Md');
 
     expect(session.getSnapshot().notice?.tone).toBe('error');
     expect(session.getSnapshot().notice?.text).toMatch(/already exists/i);

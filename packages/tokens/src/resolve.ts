@@ -72,15 +72,32 @@ export function loadTokens(input: DesignInput = {}): ResolvedDesign {
   };
 }
 
-export function activeBreakpoints(breakpoints: readonly Breakpoint[] | undefined): Breakpoint[] {
+export function isBreakpointEnabled(breakpoint: Pick<Breakpoint, 'enabled'>): boolean {
+  return breakpoint.enabled !== false;
+}
+
+/** All configured viewports, including disabled ones, sorted by min-width. */
+export function configuredBreakpoints(
+  breakpoints: readonly Breakpoint[] | undefined,
+): Breakpoint[] {
   const source = breakpoints?.length ? breakpoints : defaultBreakpoints;
   return source
-    .map((item) => ({
-      id: item.id,
-      minWidth: item.minWidth,
-      ...(item.label ? { label: item.label } : {}),
-    }))
+    .map(normalizeBreakpoint)
     .sort((left, right) => left.minWidth - right.minWidth || left.id.localeCompare(right.id));
+}
+
+/** Viewports shown in the editor, on the stage, and in compiled design CSS. */
+export function activeBreakpoints(breakpoints: readonly Breakpoint[] | undefined): Breakpoint[] {
+  return configuredBreakpoints(breakpoints).filter(isBreakpointEnabled);
+}
+
+function normalizeBreakpoint(item: Breakpoint): Breakpoint {
+  return {
+    id: item.id,
+    minWidth: item.minWidth,
+    ...(item.label ? { label: item.label } : {}),
+    ...(item.enabled === false ? { enabled: false } : {}),
+  };
 }
 
 function assertFontPaths(index: TokenIndex, fonts: readonly FontFamily[]): void {

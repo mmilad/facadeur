@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DocumentError } from '@facadeur/core';
-import { loadTokens } from '@facadeur/tokens';
+import { activeBreakpoints, configuredBreakpoints, loadTokens } from '@facadeur/tokens';
 
 const colorGroup = {
   color: {
@@ -182,5 +182,17 @@ describe('DTCG parser', () => {
     expect(() =>
       loadTokens({ tokens: { Color: { $type: 'color', ink: { $value: '#fff' } } } }),
     ).toThrow(/invalid segment/);
+  });
+});
+
+describe('breakpoints', () => {
+  it('keeps disabled viewports in settings but omits them from active lists', () => {
+    const configured = configuredBreakpoints([
+      { id: 'xs', minWidth: 375 },
+      { id: 'sm', minWidth: 768, enabled: false },
+      { id: 'md', minWidth: 1024 },
+    ]);
+    expect(configured.map((item) => item.id)).toEqual(['xs', 'sm', 'md']);
+    expect(activeBreakpoints(configured).map((item) => item.id)).toEqual(['xs', 'md']);
   });
 });

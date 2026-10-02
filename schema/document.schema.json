@@ -1987,6 +1987,9 @@
               "minWidth": {
                 "minimum": 1,
                 "type": "integer"
+              },
+              "enabled": {
+                "type": "boolean"
               }
             }
           }

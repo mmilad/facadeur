@@ -12,8 +12,9 @@ import {
   assertComponentTokenPathAvailable,
   defaultComponentToken,
   globalTokenPaths,
+  pathFromComponentTokenLabel,
+  previewComponentTokenCssVar,
   readComponentTokens,
-  suggestComponentTokenPath,
 } from '../../../../domain/component-tokens.js';
 import {
   colorTokenRefs,
@@ -33,7 +34,7 @@ import {
   projectFontWeightOptions,
   type TypographyCatalogs,
 } from '../../../controls/typography/index.js';
-import { tokenLeafLabel, tokenTitle } from '../../design/tokens/token-labels.js';
+import { tokenLeafLabel } from '../../design/tokens/token-labels.js';
 import { DesignShadowEditor, type DesignShadowInput } from '../../design/DesignShadowEditor.js';
 import {
   DesignTypographyEditor,
@@ -101,39 +102,31 @@ export function ComponentTokensPanel({
     session.execute({ type: 'removeComponentToken', id });
   }
 
-  function renamePath(entry: ListedComponentToken, nextPath: string) {
-    const trimmed = nextPath.trim();
-    if (!trimmed || trimmed === entry.path) return;
-    try {
-      assertComponentTokenPath(trimmed);
-      const pathsExceptCurrent = new Set(
-        [...localPaths].filter((localPath) => localPath !== entry.path),
-      );
-      assertComponentTokenPathAvailable(trimmed, globalPaths, pathsExceptCurrent);
-      session.execute({ type: 'renameComponentTokenPath', id: entry.id, path: trimmed });
-    } catch (error) {
-      session.setNotice(error instanceof Error ? error.message : 'Invalid token path', 'error');
-    }
-  }
-
   return (
     <section className="component-tokens-panel" aria-label="Component tokens">
       <div className="component-tokens-head">
         <p className="component-tokens-note">
-          Local defaults for this {doc.kind}. Style fields reference {'{path}'} (for example{' '}
-          {'{color.bg}'}).
+          Local defaults for this {doc.kind}. Pick theme values; each token maps to a CSS variable
+          (for example {previewComponentTokenCssVar(doc.id, 'color.bg')}).
         </p>
         <ComponentTokenAddRow
           existingPaths={localPaths}
           globalPaths={globalPaths}
-          onAdd={(path, token) => {
+          onAdd={(label, type) => {
             try {
+              const path = pathFromComponentTokenLabel(label, type, localPaths);
               assertComponentTokenPath(path);
               assertComponentTokenPathAvailable(path, globalPaths, localPaths);
+              const token = defaultComponentToken(type);
               assertComponentTokenDefault(token.value, globalPaths);
-              const id = createId();
-              session.execute({ type: 'setComponentToken', id, path, token });
-              return suggestComponentTokenPath('color.custom', new Set([...localPaths, path]));
+              const trimmedLabel = label.trim();
+              session.execute({
+                type: 'setComponentToken',
+                id: createId(),
+                path,
+                token: { ...token, label: trimmedLabel },
+              });
+              return true;
             } catch (error) {
               session.setNotice(error instanceof Error ? error.message : 'Invalid token', 'error');
               return false;
@@ -146,6 +139,7 @@ export function ComponentTokensPanel({
           {entries.map((entry) => (
             <ComponentTokenRow
               key={entry.id}
+              documentId={doc.id}
               entry={entry}
               globalColorTokens={globalColorTokens}
               globalShadowTokens={globalShadowTokens}
@@ -153,7 +147,6 @@ export function ComponentTokensPanel({
               globalTypographyTokens={typographyTokenRefs(snap.design.tokens)}
               globalDimensionTokens={dimensionTokenRefs(snap.design.tokens)}
               onCommit={(next) => commitToken(entry, next)}
-              onRenamePath={(path) => renamePath(entry, path)}
               onRemove={() => removeToken(entry.id)}
             />
           ))}
@@ -166,6 +159,7 @@ export function ComponentTokensPanel({
 }
 
 function ComponentTokenRow({
+  documentId,
   entry,
   globalColorTokens,
   globalShadowTokens,
@@ -173,9 +167,9 @@ function ComponentTokenRow({
   globalTypographyTokens,
   globalDimensionTokens,
   onCommit,
-  onRenamePath,
   onRemove,
 }: {
+  documentId: string;
   entry: ListedComponentToken;
   globalColorTokens: readonly string[];
   globalShadowTokens: readonly string[];
@@ -183,13 +177,12 @@ function ComponentTokenRow({
   globalTypographyTokens: readonly string[];
   globalDimensionTokens: readonly string[];
   onCommit: (token: Omit<ComponentToken, 'path'>) => void;
-  onRenamePath: (path: string) => void;
   onRemove: () => void;
 }) {
   const { id, path, type, value, label } = entry;
   const displayLabel = label ?? tokenLeafLabel(path);
-  const controlLabel = `${tokenTitle(path)} · ${type}`;
-  const commitValue = (nextValue: string) => onCommit({ type, value: nextValue, ...(label ? { label } : {}) });
+  const commitValue = (nextValue: string) =>
+    onCommit({ type, value: nextValue, ...(label ? { label } : {}) });
   const commitLabel = (nextLabel: string) => {
     const trimmed = nextLabel.trim();
     onCommit({
@@ -201,42 +194,38 @@ function ComponentTokenRow({
 
   return (
     <li className="component-token-row" data-component-token-id={id} data-component-token-path={path}>
-      <div className="component-token-row-head token-table-name">
-        <input
-          className="token-table-label-input"
-          aria-label={`Label for ${path}`}
-          defaultValue={displayLabel}
-          onBlur={(event) => commitLabel(event.currentTarget.value)}
-        />
-        <input
-          className="token-table-path-input"
-          aria-label={`Path for ${displayLabel}`}
-          defaultValue={path}
-          onBlur={(event) => onRenamePath(event.currentTarget.value)}
-        />
-        <span className="component-token-type">{type}</span>
-        <IconButton
-          className="token-action-remove"
-          label={`Remove local token ${path}`}
-          name={`remove-component-token-${id}`}
-          onClick={onRemove}
-        >
-          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-            <path
-              d="M3 5h10m-8 0v8h6V5m-5-2h4l1 2H5l1-2Z"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </IconButton>
-      </div>
-      <div className="component-token-row-value">
+      <IconButton
+        className="component-token-row-remove token-action-remove"
+        label={`Remove ${displayLabel}`}
+        name={`remove-component-token-${id}`}
+        onClick={onRemove}
+      >
+        <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+          <path
+            d="M4 4l8 8m0-8-8 8"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+          />
+        </svg>
+      </IconButton>
+      <div className="component-token-row-main">
+        <div className="component-token-row-ident">
+          <input
+            className="token-table-label-input component-token-row-label"
+            aria-label={`Label for ${previewComponentTokenCssVar(documentId, path)}`}
+            defaultValue={displayLabel}
+            onBlur={(event) => commitLabel(event.currentTarget.value)}
+          />
+          <span className="component-token-row-var">
+            {previewComponentTokenCssVar(documentId, path)}
+          </span>
+        </div>
+        <div className="component-token-row-value">
         {type === 'color' ? (
           <ColorControl
             name={`component-token-${id}`}
-            label={controlLabel}
+            label=""
             value={value}
             colorTokens={globalColorTokens}
             onCommit={(next) => commitValue(next ?? '')}
@@ -244,7 +233,6 @@ function ComponentTokenRow({
         ) : type === 'shadow' ? (
           <DesignShadowEditor
             namePrefix={`component-token-${id}`}
-            label={controlLabel}
             value={value as DesignShadowInput}
             shadowTokens={globalShadowTokens}
             dimensionTokens={typographyCatalogs.dimensionTokens}
@@ -257,7 +245,6 @@ function ComponentTokenRow({
         ) : type === 'typography' ? (
           <DesignTypographyEditor
             namePrefix={`component-token-${id}`}
-            label={controlLabel}
             value={value as DesignTypographyValue}
             catalogs={typographyCatalogs}
             typographyTokens={globalTypographyTokens}
@@ -272,7 +259,6 @@ function ComponentTokenRow({
           type === 'fontWeight' ? (
           <TokenValueControl
             name={`component-token-${id}`}
-            label={controlLabel}
             value={value}
             tokens={scalarGlobalRefs(type, {
               dimension: globalDimensionTokens,
@@ -285,11 +271,12 @@ function ComponentTokenRow({
         ) : (
           <TextControl
             name={`component-token-${id}`}
-            label={controlLabel}
+            label=""
             value={value}
             onCommit={commitValue}
           />
         )}
+        </div>
       </div>
     </li>
   );
@@ -325,23 +312,22 @@ function ComponentTokenAddRow({
 }: {
   existingPaths: ReadonlySet<string>;
   globalPaths: ReadonlySet<string>;
-  onAdd: (path: string, token: Omit<ComponentToken, 'path'>) => string | false;
+  onAdd: (label: string, type: TokenType) => true | false;
 }) {
   const [type, setType] = useState<TokenType>('color');
-  const initialPath = suggestComponentTokenPath('color.custom', existingPaths);
 
-  function add(pathValue: string): string | false {
-    const path = pathValue.trim();
-    return onAdd(path, defaultComponentToken(type));
+  function add(labelValue: string): true | false {
+    return onAdd(labelValue.trim(), type);
   }
 
   return (
     <TokenAddAction
       label="Add local token"
       actionName="add-component-token"
-      inputName="new-component-token-path"
-      initialPath={initialPath}
-      placeholder="color.bg"
+      inputName="new-component-token-label"
+      inputLabel="Label"
+      initialPath=""
+      placeholder="Font color"
       onAdd={add}
       fields={
         <Field label="Type">

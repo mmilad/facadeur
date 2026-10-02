@@ -58,7 +58,7 @@ describe('design domain stage', () => {
     await openSettingsDomain(host!, 'colors');
     expect(host!.textContent).toContain('Settings');
     expect(host!.textContent).toContain('Colors');
-    expect(host!.textContent).toContain('color.accent.default');
+    expect(host!.textContent).toContain('--fcdr-color-accent-default');
     expect(host!.textContent).not.toContain('space.4');
 
     await act(async () => {

@@ -190,12 +190,14 @@ export function readSettings(settings: Y.Map<unknown>): DocumentSettings {
       const id = item.get('id');
       const minWidth = item.get('minWidth');
       const label = item.get('label');
+      const enabled = item.get('enabled');
       if (typeof id !== 'string' || typeof minWidth !== 'number') return [];
       return [
         {
           id,
           minWidth,
           ...(typeof label === 'string' && label ? { label } : {}),
+          ...(enabled === false ? { enabled: false as const } : {}),
         },
       ];
     });

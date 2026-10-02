@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { previewDesignTokenCssVar } from '../../../../domain/component-tokens.js';
 import { matchesSearch } from '../../../form/types/options.js';
 
 export interface TokenTableItem {
@@ -12,7 +13,13 @@ export function naturalTokenCompare(left: string, right: string): number {
 }
 
 export function tokenMatchesQuery(item: TokenTableItem, query: string): boolean {
-  return matchesSearch(query, item.path, item.label, item.valueText);
+  return matchesSearch(
+    query,
+    item.path,
+    item.label,
+    item.valueText,
+    previewDesignTokenCssVar(item.path),
+  );
 }
 
 export function TokenTableToolbar({

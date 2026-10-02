@@ -144,6 +144,8 @@ export const breakpointSchema = Type.Object(
     id: Type.String({ pattern: '^[a-z][a-z0-9]*$' }),
     label: Type.Optional(Type.String({ minLength: 1, maxLength: 48 })),
     minWidth: Type.Integer({ minimum: 1 }),
+    /** When false, the viewport stays configured but is hidden from tabs and the stage. */
+    enabled: Type.Optional(Type.Boolean()),
   },
   { additionalProperties: false },
 );

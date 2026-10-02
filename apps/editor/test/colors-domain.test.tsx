@@ -61,15 +61,15 @@ describe('colors domain panel', () => {
     await openSettingsDomain(host!, 'colors');
   }
 
-  async function submitNewToken(path: string) {
-    if (!document.querySelector('input[name="new-color-path"]')) {
+  async function submitNewToken(label: string) {
+    if (!document.querySelector('input[name="new-color-label"]')) {
       await act(async () => {
         (host!.querySelector('button[name="add-color"]') as HTMLButtonElement).click();
       });
     }
-    const pathInput = document.querySelector('input[name="new-color-path"]') as HTMLInputElement;
+    const pathInput = document.querySelector('input[name="new-color-label"]') as HTMLInputElement;
     expect(pathInput).toBeInstanceOf(HTMLInputElement);
-    await act(async () => setInput(pathInput, path));
+    await act(async () => setInput(pathInput, label));
     await act(async () => {
       (document.querySelector('button[name="add-color-submit"]') as HTMLButtonElement).click();
     });
@@ -82,14 +82,14 @@ describe('colors domain panel', () => {
     });
     await openColors(session);
 
-    await submitNewToken('color.brand.highlight');
+    await submitNewToken('Brand highlight');
 
     const indexed = readTokenTree(session.getSnapshot().design.tokens);
     expect(indexed.tokens.get('color.brand.highlight')).toMatchObject({
       type: 'color',
       value: '#000000',
     });
-    expect(host!.textContent).toContain('color.brand.highlight');
+    expect(host!.textContent).toContain('--fcdr-color-brand-highlight');
   });
 
   it('blocks removing a color that other tokens still reference', async () => {
@@ -112,20 +112,20 @@ describe('colors domain panel', () => {
     expect(session.getSnapshot().notice?.text).toMatch(/\{color\.blue\.500\}/);
   });
 
-  it('rejects an invalid color path on add', async () => {
+  it('rejects an empty label on add', async () => {
     const session = createEditorSession({
       documents,
       design: createProjectTemplateDocument(),
     });
     await openColors(session);
 
-    await submitNewToken('accent.only');
+    await submitNewToken('   ');
 
-    expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has('accent.only')).toBe(
+    expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has('color.brand.highlight')).toBe(
       false,
     );
     expect(session.getSnapshot().notice?.tone).toBe('error');
-    expect(session.getSnapshot().notice?.text).toMatch(/color\./i);
+    expect(session.getSnapshot().notice?.text).toMatch(/label is required/i);
   });
 
   it('rejects duplicate color paths on add', async () => {
@@ -135,7 +135,7 @@ describe('colors domain panel', () => {
     });
     await openColors(session);
 
-    await submitNewToken('color.accent.default');
+    await submitNewToken('Accent default');
 
     expect(session.getSnapshot().notice?.tone).toBe('error');
     expect(session.getSnapshot().notice?.text).toMatch(/already exists/i);

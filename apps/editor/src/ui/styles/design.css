@@ -80,45 +80,91 @@
 }
 
 .component-token-row {
+  position: relative;
   border: 1px solid var(--line);
   border-radius: 6px;
-  padding: 8px;
+  padding: 6px 28px 6px 8px;
 }
 
-.component-token-row-head {
+.component-token-row-remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+}
+
+.component-token-row-main {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 6px;
-  font-size: 11px;
+  gap: 10px;
+  min-width: 0;
 }
 
-.component-token-row-head.token-table-name {
-  flex-wrap: wrap;
+.component-token-row-ident {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 46%;
 }
 
-.component-token-type {
-  color: var(--muted);
-  font-size: 10px;
+.component-token-row-label {
+  display: block;
+  width: 100%;
+  margin: 0;
+  font-size: 13px;
 }
 
-.token-table-path-input {
-  flex: 1;
-  min-width: 6rem;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  padding: 2px 4px;
+.component-token-row-var {
+  display: block;
+  margin-top: 1px;
   font-family: var(--mono);
   font-size: 10px;
   color: var(--muted);
-  background: transparent;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.token-table-path-input:focus {
-  border-color: var(--line);
-  background: var(--white);
-  color: var(--ink);
-  outline: none;
+.component-token-row-value {
+  flex: 1 1 0;
+  min-width: 0;
+  margin-left: auto;
+}
+
+.component-token-row-value .eu-field {
+  margin-bottom: 0;
+  width: 100%;
+  align-items: center;
+}
+
+.component-token-row-value .eu-field > .eu-inline {
+  display: none;
+}
+
+.component-token-row-value .field {
+  margin-bottom: 0;
+}
+
+.component-token-row-value .field > span:empty {
+  display: none;
+}
+
+.component-token-row-value .token-value {
+  min-height: 0;
+  width: 100%;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.component-token-row-value .token-value > .eu-control {
+  flex: 1 1 auto;
+  max-width: 100%;
+}
+
+.component-token-row-value .token-value-reference {
+  text-align: right;
 }
 
 .design-domain-breadcrumb {
@@ -219,6 +265,25 @@
   justify-content: space-between;
   gap: 8px;
   min-height: 32px;
+}
+
+.viewport-settings-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.viewport-settings-row.is-viewport-inactive {
+  opacity: 0.72;
+}
+
+.viewport-settings-row.is-viewport-inactive .meta {
+  font-style: italic;
+}
+
+.viewport-toggle-inactive {
+  color: var(--muted);
 }
 
 .design-resource-scope {

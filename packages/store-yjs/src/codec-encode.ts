@@ -65,6 +65,7 @@ function syncBreakpoints(
       map.set('id', breakpoint.id);
       map.set('minWidth', breakpoint.minWidth);
       if (breakpoint.label) map.set('label', breakpoint.label);
+      if (breakpoint.enabled === false) map.set('enabled', false);
       return map;
     }),
   );
@@ -84,7 +85,8 @@ function sameBreakpoints(
       breakpoint !== undefined &&
       item.get('id') === breakpoint.id &&
       item.get('minWidth') === breakpoint.minWidth &&
-      (item.get('label') ?? undefined) === breakpoint.label
+      (item.get('label') ?? undefined) === breakpoint.label &&
+      (item.get('enabled') ?? undefined) === breakpoint.enabled
     );
   });
 }

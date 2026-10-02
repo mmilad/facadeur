@@ -72,6 +72,69 @@ export function documentsReferencingToken(
   return hits.sort((left, right) => left.localeCompare(right));
 }
 
+/** Temporary CSS namespace for component token previews until project settings own this. */
+export const PROJECT_TOKEN_CSS_PREFIX = 'fcdr';
+
+export function previewComponentTokenCssVar(documentId: string, localPath: string): string {
+  return `--${PROJECT_TOKEN_CSS_PREFIX}-${documentId}-${localPath.split('.').join('-')}`;
+}
+
+/** CSS variable preview for global design tokens on the Settings page. */
+export function previewDesignTokenCssVar(path: string): string {
+  return `--${PROJECT_TOKEN_CSS_PREFIX}-${path.split('.').join('-')}`;
+}
+
+function componentTokenTypeNamespace(type: TokenType): string {
+  switch (type) {
+    case 'color':
+      return 'color';
+    case 'dimension':
+      return 'padding';
+    case 'number':
+      return 'number';
+    case 'fontFamily':
+    case 'fontWeight':
+      return 'font';
+    case 'shadow':
+      return 'elevation';
+    case 'typography':
+      return 'type';
+    default:
+      return 'token';
+  }
+}
+
+/** Derive a stable design-token path from a human label and namespace (`color`, `space`, …). */
+export function pathFromDesignTokenLabel(
+  label: string,
+  namespace: string,
+  existing: ReadonlySet<string>,
+): string {
+  const trimmed = label.trim();
+  if (!trimmed) {
+    throw new Error('Label is required');
+  }
+  const segments = trimmed.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+  if (!segments.length) {
+    throw new Error('Label is required');
+  }
+  let tail = segments.join('.');
+  if (segments.length > 1 && segments[segments.length - 1] === namespace) {
+    tail = segments.slice(0, -1).join('.');
+  }
+  if (!tail) tail = 'custom';
+  return suggestComponentTokenPath(`${namespace}.${tail}`, existing);
+}
+
+/** Derive a stable local token path from a human label and token type. */
+export function pathFromComponentTokenLabel(
+  label: string,
+  type: TokenType,
+  existing: ReadonlySet<string>,
+): string {
+  return pathFromDesignTokenLabel(label, componentTokenTypeNamespace(type), existing);
+}
+
 export function suggestComponentTokenPath(
   prefix: string,
   existing: ReadonlySet<string>,

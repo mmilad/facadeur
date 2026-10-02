@@ -73,9 +73,9 @@ describe('design token tables', () => {
     await act(async () => {
       (host!.querySelector('button[name="add-color"]') as HTMLButtonElement).click();
     });
-    const input = document.querySelector('input[name="new-color-path"]') as HTMLInputElement;
+    const input = document.querySelector('input[name="new-color-label"]') as HTMLInputElement;
     expect(input).toBeTruthy();
-    await act(async () => setInput(input, 'color.brand.highlight'));
+    await act(async () => setInput(input, 'Brand highlight'));
     await act(async () => {
       (document.querySelector('button[name="add-color-submit"]') as HTMLButtonElement).click();
     });

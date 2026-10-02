@@ -3,10 +3,13 @@ import { useMemo } from 'react';
 import {
   assertColorTokenPath,
   createDefaultColorToken,
-  suggestColorPath,
   tokenPathsReferencingColor,
 } from '../../../../domain/edits/color-edit.js';
-import { documentsReferencingToken } from '../../../../domain/component-tokens.js';
+import { designTokenWithLabel } from '../../../../domain/edits/token-label.js';
+import {
+  documentsReferencingToken,
+  pathFromDesignTokenLabel,
+} from '../../../../domain/component-tokens.js';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
 import { IconButton } from '../../../form/components/shared/IconButton.js';
 import { TokenAddAction } from './TokenAddAction.js';
@@ -20,20 +23,24 @@ export function ColorTokenAddRow({
 }) {
   const existingPaths = useMemo(() => {
     const indexed = readTokenTree(snap.design.tokens);
-    return [...indexed.tokens.keys()];
+    return new Set(indexed.tokens.keys());
   }, [snap.design.tokens]);
-  const newPath = suggestColorPath(existingPaths);
 
-  function addColor(pathValue: string): string | false {
+  function addColor(labelValue: string): true | false {
     try {
-      const path = pathValue.trim();
+      const label = labelValue.trim();
+      const path = pathFromDesignTokenLabel(label, 'color', existingPaths);
       assertColorTokenPath(path);
       const indexed = readTokenTree(snap.design.tokens);
       if (indexed.tokens.has(path)) {
         throw new Error(`Color "${path}" already exists`);
       }
-      session.executeDesign({ type: 'setToken', path, token: createDefaultColorToken() });
-      return suggestColorPath([...existingPaths, path]);
+      session.executeDesign({
+        type: 'setToken',
+        path,
+        token: designTokenWithLabel(createDefaultColorToken(), label),
+      });
+      return true;
     } catch (error) {
       session.setNotice(error instanceof Error ? error.message : 'Invalid color', 'error');
       return false;
@@ -44,9 +51,10 @@ export function ColorTokenAddRow({
     <TokenAddAction
       label="Add color token"
       actionName="add-color"
-      inputName="new-color-path"
-      initialPath={newPath}
-      placeholder="color.accent.default"
+      inputName="new-color-label"
+      inputLabel="Label"
+      initialPath=""
+      placeholder="Accent default"
       onAdd={addColor}
     />
   );

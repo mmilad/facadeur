@@ -3,10 +3,13 @@ import { useMemo } from 'react';
 import {
   assertRadiusTokenPath,
   createDefaultRadiusToken,
-  suggestRadiusPath,
   tokenPathsReferencingRadius,
 } from '../../../../domain/edits/radius-edit.js';
-import { documentsReferencingToken } from '../../../../domain/component-tokens.js';
+import { designTokenWithLabel } from '../../../../domain/edits/token-label.js';
+import {
+  documentsReferencingToken,
+  pathFromDesignTokenLabel,
+} from '../../../../domain/component-tokens.js';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
 import { IconButton } from '../../../form/components/shared/IconButton.js';
 import { TokenAddAction } from './TokenAddAction.js';
@@ -20,20 +23,24 @@ export function RadiusTokenAddRow({
 }) {
   const existingPaths = useMemo(() => {
     const indexed = readTokenTree(snap.design.tokens);
-    return [...indexed.tokens.keys()];
+    return new Set(indexed.tokens.keys());
   }, [snap.design.tokens]);
-  const newPath = suggestRadiusPath(existingPaths);
 
-  function addRadius(pathValue: string): string | false {
+  function addRadius(labelValue: string): true | false {
     try {
-      const path = pathValue.trim();
+      const label = labelValue.trim();
+      const path = pathFromDesignTokenLabel(label, 'radius', existingPaths);
       assertRadiusTokenPath(path);
       const indexed = readTokenTree(snap.design.tokens);
       if (indexed.tokens.has(path)) {
         throw new Error(`Radius "${path}" already exists`);
       }
-      session.executeDesign({ type: 'setToken', path, token: createDefaultRadiusToken() });
-      return suggestRadiusPath([...existingPaths, path]);
+      session.executeDesign({
+        type: 'setToken',
+        path,
+        token: designTokenWithLabel(createDefaultRadiusToken(), label),
+      });
+      return true;
     } catch (error) {
       session.setNotice(error instanceof Error ? error.message : 'Invalid radius', 'error');
       return false;
@@ -44,9 +51,10 @@ export function RadiusTokenAddRow({
     <TokenAddAction
       label="Add radius token"
       actionName="add-radius"
-      inputName="new-radius-path"
-      initialPath={newPath}
-      placeholder="radius.corner.lg"
+      inputName="new-radius-label"
+      inputLabel="Label"
+      initialPath=""
+      placeholder="Corner lg"
       onAdd={addRadius}
     />
   );

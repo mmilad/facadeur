@@ -62,15 +62,15 @@ describe('spacing domain panel', () => {
     await openSettingsDomain(host!, 'spacing');
   }
 
-  async function submitNewToken(path: string) {
-    if (!document.querySelector('input[name="new-spacing-path"]')) {
+  async function submitNewToken(label: string) {
+    if (!document.querySelector('input[name="new-spacing-label"]')) {
       await act(async () => {
         (host!.querySelector('button[name="add-spacing"]') as HTMLButtonElement).click();
       });
     }
-    const pathInput = document.querySelector('input[name="new-spacing-path"]') as HTMLInputElement;
+    const pathInput = document.querySelector('input[name="new-spacing-label"]') as HTMLInputElement;
     expect(pathInput).toBeInstanceOf(HTMLInputElement);
-    await act(async () => setInput(pathInput, path));
+    await act(async () => setInput(pathInput, label));
     await act(async () => {
       (document.querySelector('button[name="add-spacing-submit"]') as HTMLButtonElement).click();
     });
@@ -83,14 +83,14 @@ describe('spacing domain panel', () => {
     });
     await openSpacing(session);
 
-    await submitNewToken('space.gap.xl');
+    await submitNewToken('Gap xl');
 
     const indexed = readTokenTree(session.getSnapshot().design.tokens);
     expect(indexed.tokens.get('space.gap.xl')).toMatchObject({
       type: 'dimension',
       value: '16px',
     });
-    expect(host!.textContent).toContain('space.gap.xl');
+    expect(host!.textContent).toContain('--fcdr-space-gap-xl');
   });
 
   it('blocks removing a spacing token that other tokens still reference', async () => {
@@ -116,11 +116,11 @@ describe('spacing domain panel', () => {
     });
     await openSpacing(session);
 
-    await submitNewToken('gap.only');
+    await submitNewToken('   ');
 
-    expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has('gap.only')).toBe(false);
+    expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has('space.gap.xl')).toBe(false);
     expect(session.getSnapshot().notice?.tone).toBe('error');
-    expect(session.getSnapshot().notice?.text).toMatch(/space\./i);
+    expect(session.getSnapshot().notice?.text).toMatch(/label is required/i);
   });
 
   it('rejects duplicate spacing paths on add', async () => {
@@ -130,7 +130,7 @@ describe('spacing domain panel', () => {
     });
     await openSpacing(session);
 
-    await submitNewToken('space.gap.md');
+    await submitNewToken('Gap md');
 
     expect(session.getSnapshot().notice?.tone).toBe('error');
     expect(session.getSnapshot().notice?.text).toMatch(/already exists/i);

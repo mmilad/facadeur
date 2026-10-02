@@ -11,17 +11,22 @@ export function TokenAddAction({
   actionName,
   inputName,
   initialPath,
+  inputLabel = 'Path',
   placeholder,
   onAdd,
   fields,
+  resetOnAdd = true,
 }: {
   label: string;
   actionName: string;
   inputName: string;
   initialPath: string;
+  inputLabel?: string;
   placeholder: string;
   onAdd: (path: string) => string | true | false;
   fields?: ReactNode;
+  /** When false, keep the input value after a successful add (design-token path suggestion). */
+  resetOnAdd?: boolean;
 }) {
   const [path, setPath] = useState(initialPath);
   const [open, setOpen] = useState(false);
@@ -29,7 +34,8 @@ export function TokenAddAction({
   function submit() {
     const result = onAdd(path);
     if (result !== false) {
-      setPath(result === true ? path : result);
+      if (resetOnAdd) setPath(result === true ? '' : typeof result === 'string' ? result : '');
+      else setPath(result === true ? path : typeof result === 'string' ? result : path);
       setOpen(false);
     }
   }
@@ -53,10 +59,10 @@ export function TokenAddAction({
       >
         <div className="token-add-popover">
           {fields}
-          <Field label="Path">
+          <Field label={inputLabel}>
             <TextInput
               name={inputName}
-              aria-label="Path"
+              aria-label={inputLabel}
               value={path}
               placeholder={placeholder}
               onChange={setPath}

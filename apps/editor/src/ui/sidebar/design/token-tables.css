@@ -172,6 +172,34 @@
   color: var(--muted);
 }
 
+.token-table-value .eu-field {
+  margin-bottom: 0;
+  align-items: center;
+}
+
+.token-table-value .eu-field > .eu-inline {
+  display: none;
+}
+
+.token-table-value .field {
+  margin-bottom: 0;
+}
+
+.token-table-value .field > span:empty {
+  display: none;
+}
+
+.token-table-value .token-value {
+  width: 100%;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.token-table-value .token-value > .eu-control {
+  flex: 1 1 auto;
+  max-width: 100%;
+}
+
 .token-table-name span,
 .token-table-preview,
 .token-table-status {

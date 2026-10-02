@@ -12,7 +12,9 @@ export {
 export { fontCustomProperty, tokenCustomProperty, typographyCustomProperty } from './names.js';
 export {
   activeBreakpoints,
+  configuredBreakpoints,
   fontStack,
+  isBreakpointEnabled,
   loadTokens,
   quoteFamily,
   type CssProperty,

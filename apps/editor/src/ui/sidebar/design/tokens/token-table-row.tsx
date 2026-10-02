@@ -24,6 +24,7 @@ import {
 } from './token-breakpoint-helpers.js';
 import { tokenLeafLabel } from './token-labels.js';
 import { withTokenLabel } from '../../../../domain/edits/token-edit.js';
+import { previewDesignTokenCssVar } from '../../../../domain/component-tokens.js';
 
 type ViewportContext = ReturnType<typeof viewportEditContext>;
 
@@ -55,7 +56,7 @@ export function TokenTableRow({
   const colorString = token.type === 'color' && typeof shownValue === 'string' ? shownValue : null;
   const shadowString =
     token.type === 'shadow' && typeof shownValue === 'string' ? shownValue : null;
-  const tokenLabel = `${token.path} · ${token.type}`;
+  const cssVar = previewDesignTokenCssVar(token.path);
   const scalarTokens = scalarTokenRefs(token.type, colorTokens, typographyCatalogs).filter(
     (ref) => ref !== `{${token.path}}`,
   );
@@ -80,11 +81,11 @@ export function TokenTableRow({
         <div className="token-table-name">
           <input
             className="token-table-label-input"
-            aria-label={`Label for ${token.path}`}
+            aria-label={`Label for ${cssVar}`}
             defaultValue={displayLabel}
             onBlur={(event) => commitLabel(event.currentTarget.value)}
           />
-          <span className="token-path-id">{token.path}</span>
+          <span className="token-path-id">{cssVar}</span>
           {showType ? <span>{token.type}</span> : null}
         </div>
       </th>
@@ -103,7 +104,7 @@ export function TokenTableRow({
           {colorString !== null ? (
             <ColorControl
               name={`token-${token.path}`}
-              label={tokenLabel}
+              label=""
               value={text}
               colorTokens={colorTokens.filter((ref) => ref !== `{${token.path}}`)}
               onCommit={commitTokenValue}
@@ -111,7 +112,6 @@ export function TokenTableRow({
           ) : token.type === 'shadow' ? (
             <DesignShadowEditor
               namePrefix={`token-${token.path}`}
-              label={tokenLabel}
               value={shownValue as DesignShadowInput}
               storedValue={
                 (writingId ? (token.override ?? token.baseValue) : token.value) as DesignShadowInput
@@ -154,7 +154,6 @@ export function TokenTableRow({
           ) : scalarTokens.length && typeof shownValue === 'string' ? (
             <TokenValueControl
               name={`token-${token.path}`}
-              label={tokenLabel}
               value={shownValue}
               tokens={scalarTokens}
               placeholder={
@@ -166,7 +165,7 @@ export function TokenTableRow({
             />
           ) : (
             <TextControl
-              label={tokenLabel}
+              label=""
               name={`token-${token.path}`}
               value={text}
               placeholder={

@@ -48,6 +48,7 @@ export function cloneBreakpoints(breakpoints: readonly Breakpoint[]): Breakpoint
     id: breakpoint.id,
     minWidth: breakpoint.minWidth,
     ...(breakpoint.label ? { label: breakpoint.label } : {}),
+    ...(breakpoint.enabled === false ? { enabled: false } : {}),
   }));
 }
 
@@ -150,6 +151,10 @@ export function assertBreakpoints(breakpoints: readonly Breakpoint[] | undefined
       );
     }
     labels.set(label, breakpoint.id);
+  }
+  const active = breakpoints.filter((item) => item.enabled !== false);
+  if (!active.length) {
+    throw new DocumentError('schema', 'At least one viewport must stay active');
   }
 }
 

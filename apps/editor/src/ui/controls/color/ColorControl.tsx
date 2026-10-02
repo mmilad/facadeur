@@ -16,7 +16,7 @@ export function ColorControl({
   return (
     <TokenValueControl
       name={name}
-      label={label ?? 'Color'}
+      label={label === undefined ? 'Color' : label}
       value={value}
       tokens={colorTokens}
       color

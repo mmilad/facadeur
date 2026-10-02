@@ -3,10 +3,13 @@ import { useMemo } from 'react';
 import {
   assertShadowTokenPath,
   createDefaultShadowToken,
-  suggestShadowPath,
   tokenPathsReferencingShadow,
 } from '../../../../domain/edits/shadow-edit.js';
-import { documentsReferencingToken } from '../../../../domain/component-tokens.js';
+import { designTokenWithLabel } from '../../../../domain/edits/token-label.js';
+import {
+  documentsReferencingToken,
+  pathFromDesignTokenLabel,
+} from '../../../../domain/component-tokens.js';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
 import { IconButton } from '../../../form/components/shared/IconButton.js';
 import { TokenAddAction } from './TokenAddAction.js';
@@ -20,20 +23,24 @@ export function ShadowTokenAddRow({
 }) {
   const existingPaths = useMemo(() => {
     const indexed = readTokenTree(snap.design.tokens);
-    return [...indexed.tokens.keys()];
+    return new Set(indexed.tokens.keys());
   }, [snap.design.tokens]);
-  const newPath = suggestShadowPath(existingPaths);
 
-  function addShadow(pathValue: string): string | false {
+  function addShadow(labelValue: string): true | false {
     try {
-      const path = pathValue.trim();
+      const label = labelValue.trim();
+      const path = pathFromDesignTokenLabel(label, 'shadow', existingPaths);
       assertShadowTokenPath(path);
       const indexed = readTokenTree(snap.design.tokens);
       if (indexed.tokens.has(path)) {
         throw new Error(`Shadow "${path}" already exists`);
       }
-      session.executeDesign({ type: 'setToken', path, token: createDefaultShadowToken() });
-      return suggestShadowPath([...existingPaths, path]);
+      session.executeDesign({
+        type: 'setToken',
+        path,
+        token: designTokenWithLabel(createDefaultShadowToken(), label),
+      });
+      return true;
     } catch (error) {
       session.setNotice(error instanceof Error ? error.message : 'Invalid shadow', 'error');
       return false;
@@ -44,9 +51,10 @@ export function ShadowTokenAddRow({
     <TokenAddAction
       label="Add shadow token"
       actionName="add-shadow"
-      inputName="new-shadow-path"
-      initialPath={newPath}
-      placeholder="shadow.elevated.md"
+      inputName="new-shadow-label"
+      inputLabel="Label"
+      initialPath=""
+      placeholder="Elevated md"
       onAdd={addShadow}
     />
   );

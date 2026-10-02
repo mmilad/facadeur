@@ -62,15 +62,15 @@ describe('radius domain panel', () => {
     await openSettingsDomain(host!, 'radius');
   }
 
-  async function submitNewToken(path: string) {
-    if (!document.querySelector('input[name="new-radius-path"]')) {
+  async function submitNewToken(label: string) {
+    if (!document.querySelector('input[name="new-radius-label"]')) {
       await act(async () => {
         (host!.querySelector('button[name="add-radius"]') as HTMLButtonElement).click();
       });
     }
-    const pathInput = document.querySelector('input[name="new-radius-path"]') as HTMLInputElement;
+    const pathInput = document.querySelector('input[name="new-radius-label"]') as HTMLInputElement;
     expect(pathInput).toBeInstanceOf(HTMLInputElement);
-    await act(async () => setInput(pathInput, path));
+    await act(async () => setInput(pathInput, label));
     await act(async () => {
       (document.querySelector('button[name="add-radius-submit"]') as HTMLButtonElement).click();
     });
@@ -83,14 +83,14 @@ describe('radius domain panel', () => {
     });
     await openRadius(session);
 
-    await submitNewToken('radius.corner.xl');
+    await submitNewToken('Corner xl');
 
     const indexed = readTokenTree(session.getSnapshot().design.tokens);
     expect(indexed.tokens.get('radius.corner.xl')).toMatchObject({
       type: 'dimension',
       value: '8px',
     });
-    expect(host!.textContent).toContain('radius.corner.xl');
+    expect(host!.textContent).toContain('--fcdr-radius-corner-xl');
   });
 
   it('blocks removing a radius token that other tokens still reference', async () => {
@@ -109,20 +109,20 @@ describe('radius domain panel', () => {
     expect(session.getSnapshot().notice?.text).toMatch(/\{radius\.sm\}/);
   });
 
-  it('rejects an invalid radius path on add', async () => {
+  it('rejects an empty label on add', async () => {
     const session = createEditorSession({
       documents,
       design: createProjectTemplateDocument(),
     });
     await openRadius(session);
 
-    await submitNewToken('corner.only');
+    await submitNewToken('   ');
 
-    expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has('corner.only')).toBe(
+    expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has('radius.corner.xl')).toBe(
       false,
     );
     expect(session.getSnapshot().notice?.tone).toBe('error');
-    expect(session.getSnapshot().notice?.text).toMatch(/radius\./i);
+    expect(session.getSnapshot().notice?.text).toMatch(/label is required/i);
   });
 
   it('rejects duplicate radius paths on add', async () => {
@@ -132,7 +132,7 @@ describe('radius domain panel', () => {
     });
     await openRadius(session);
 
-    await submitNewToken('radius.md');
+    await submitNewToken('Md');
 
     expect(session.getSnapshot().notice?.tone).toBe('error');
     expect(session.getSnapshot().notice?.text).toMatch(/already exists/i);

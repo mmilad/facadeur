@@ -3,10 +3,13 @@ import { useMemo } from 'react';
 import {
   assertTypographyTokenPath,
   createDefaultTypographyToken,
-  suggestTypographyPath,
   tokenPathsReferencingTypography,
 } from '../../../../domain/edits/typography-edit.js';
-import { documentsReferencingToken } from '../../../../domain/component-tokens.js';
+import { designTokenWithLabel } from '../../../../domain/edits/token-label.js';
+import {
+  documentsReferencingToken,
+  pathFromDesignTokenLabel,
+} from '../../../../domain/component-tokens.js';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
 import { IconButton } from '../../../form/components/shared/IconButton.js';
 import { TokenAddAction } from './TokenAddAction.js';
@@ -20,20 +23,24 @@ export function TypographyTokenAddRow({
 }) {
   const existingPaths = useMemo(() => {
     const indexed = readTokenTree(snap.design.tokens);
-    return [...indexed.tokens.keys()];
+    return new Set(indexed.tokens.keys());
   }, [snap.design.tokens]);
-  const newPath = suggestTypographyPath(existingPaths);
 
-  function addTypography(pathValue: string): string | false {
+  function addTypography(labelValue: string): true | false {
     try {
-      const path = pathValue.trim();
+      const label = labelValue.trim();
+      const path = pathFromDesignTokenLabel(label, 'type', existingPaths);
       assertTypographyTokenPath(path);
       const indexed = readTokenTree(snap.design.tokens);
       if (indexed.tokens.has(path)) {
         throw new Error(`Typography "${path}" already exists`);
       }
-      session.executeDesign({ type: 'setToken', path, token: createDefaultTypographyToken() });
-      return suggestTypographyPath([...existingPaths, path]);
+      session.executeDesign({
+        type: 'setToken',
+        path,
+        token: designTokenWithLabel(createDefaultTypographyToken(), label),
+      });
+      return true;
     } catch (error) {
       session.setNotice(error instanceof Error ? error.message : 'Invalid typography', 'error');
       return false;
@@ -44,9 +51,10 @@ export function TypographyTokenAddRow({
     <TokenAddAction
       label="Add typography token"
       actionName="add-typography"
-      inputName="new-typography-path"
-      initialPath={newPath}
-      placeholder="type.hero"
+      inputName="new-typography-label"
+      inputLabel="Label"
+      initialPath=""
+      placeholder="Hero"
       onAdd={addTypography}
     />
   );

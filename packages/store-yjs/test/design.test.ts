@@ -73,6 +73,24 @@ describe('tokens and fonts in the Yjs document', () => {
     store.destroy();
   });
 
+  it('persists disabled viewports on breakpoints', () => {
+    const store = createDocumentStore(file);
+    const breakpoints = store.getDocument().settings.breakpoints!;
+    store.execute({
+      type: 'setBreakpoints',
+      breakpoints: breakpoints.map((item) =>
+        item.id === 'xxl' ? { ...item, enabled: false } : item,
+      ),
+    });
+    expect(store.getDocument().settings.breakpoints?.find((item) => item.id === 'xxl')).toEqual({
+      id: 'xxl',
+      label: 'Ultra',
+      minWidth: 1760,
+      enabled: false,
+    });
+    store.destroy();
+  });
+
   it('refuses a cycle or a missing reference and leaves the document unchanged', () => {
     const store = createDocumentStore(file);
     const before = store.getDocument();

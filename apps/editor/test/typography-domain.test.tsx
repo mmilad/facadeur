@@ -64,17 +64,17 @@ describe('typography domain panel', () => {
     await openSettingsDomain(host!, 'typography');
   }
 
-  async function submitNewToken(path: string) {
-    if (!document.querySelector('input[name="new-typography-path"]')) {
+  async function submitNewToken(label: string) {
+    if (!document.querySelector('input[name="new-typography-label"]')) {
       await act(async () => {
         (host!.querySelector('button[name="add-typography"]') as HTMLButtonElement).click();
       });
     }
     const pathInput = document.querySelector(
-      'input[name="new-typography-path"]',
+      'input[name="new-typography-label"]',
     ) as HTMLInputElement;
     expect(pathInput).toBeInstanceOf(HTMLInputElement);
-    await act(async () => setInput(pathInput, path));
+    await act(async () => setInput(pathInput, label));
     await act(async () => {
       (document.querySelector('button[name="add-typography-submit"]') as HTMLButtonElement).click();
     });
@@ -87,7 +87,7 @@ describe('typography domain panel', () => {
     });
     await openTypography(session);
 
-    await submitNewToken('type.hero');
+    await submitNewToken('Hero');
 
     const indexed = readTokenTree(session.getSnapshot().design.tokens);
     expect(indexed.tokens.get('type.hero')).toMatchObject({
@@ -100,7 +100,7 @@ describe('typography domain panel', () => {
         lineHeight: 1.5,
       },
     });
-    expect(host!.textContent).toContain('type.hero');
+    expect(host!.textContent).toContain('--fcdr-type-hero');
     expect(host!.textContent).toContain('Hero');
   });
 
@@ -128,22 +128,18 @@ describe('typography domain panel', () => {
     expect(session.getSnapshot().notice?.text).toMatch(/\{type\.body\}/);
   });
 
-  it('rejects typography.* and other paths that do not start with type. on add', async () => {
+  it('rejects an empty label on add', async () => {
     const session = createEditorSession({
       documents,
       design: createProjectTemplateDocument(),
     });
     await openTypography(session);
 
-    for (const invalidPath of ['typography.hero', 'font.custom']) {
-      await submitNewToken(invalidPath);
+    await submitNewToken('   ');
 
-      expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has(invalidPath)).toBe(
-        false,
-      );
-      expect(session.getSnapshot().notice?.tone).toBe('error');
-      expect(session.getSnapshot().notice?.text).toMatch(/type\./i);
-    }
+    expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has('type.hero')).toBe(false);
+    expect(session.getSnapshot().notice?.tone).toBe('error');
+    expect(session.getSnapshot().notice?.text).toMatch(/label is required/i);
   });
 
   it('rejects duplicate typography paths on add', async () => {
@@ -153,7 +149,7 @@ describe('typography domain panel', () => {
     });
     await openTypography(session);
 
-    await submitNewToken('type.body');
+    await submitNewToken('Body');
 
     expect(session.getSnapshot().notice?.tone).toBe('error');
     expect(session.getSnapshot().notice?.text).toMatch(/already exists/i);
