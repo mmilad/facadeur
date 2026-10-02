@@ -49,6 +49,14 @@ export function renderComponentCss(
   return `${COMPONENT_BANNER}${body}${body ? '\n' : ''}`;
 }
 
+/** Render only the rules belonging to one document for component-local imports. */
+export function renderDocumentCss(
+  document: DocumentFile,
+  breakpoints?: readonly Breakpoint[],
+): string {
+  return renderComponentCss([document], breakpoints);
+}
+
 function printRules(rules: readonly CompiledRule[], indent: number): string {
   const pad = '  '.repeat(indent);
   return rules

@@ -176,6 +176,26 @@ describe('generateReact', () => {
     expect(reversed.ui.map((file) => file.contents)).toEqual(files.map((file) => file.contents));
   });
 
+  it('can emit component-local CSS and imports it from the generated index', () => {
+    const generated = generateReact({ documents: [documents[0]!] , styles: 'component-local' });
+    expect(generated.ui.some((file) => file.path === 'styles/components.css')).toBe(false);
+    expect(source(generated.ui, 'components/Button.css')).toContain('[data-component="button"]');
+    expect(source(generated.ui, 'index.ts')).toContain("import './components/Button.css';");
+  });
+
+  it('prunes unreachable documents from components, styles, and stories', () => {
+    const generated = generateReact({ documents, entries: ['button'] });
+    expect(generated.ui.map((file) => file.path)).toEqual([
+      'styles/tokens.css',
+      'styles/components.css',
+      'components/Button.tsx',
+      'index.ts',
+    ]);
+    expect(generated.stories.map((file) => file.path)).toEqual([
+      'src/stories/generated/Button.stories.tsx',
+    ]);
+  });
+
   it('matches the committed UI package', async () => {
     for (const file of files) {
       const formatted = await formatGenerated(file.path, file.contents);

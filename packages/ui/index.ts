@@ -3,6 +3,8 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
+import './styles/components.css';
+
 export { Button } from './components/Button';
 export type { ButtonProps, ButtonTone, ButtonSize } from './components/Button';
 export { Card } from './components/Card';

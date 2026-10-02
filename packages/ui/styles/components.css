@@ -972,38 +972,6 @@
   margin: var(--space-0);
 }
 
-[data-component='input'] [data-node='control'] {
-  align-self: stretch;
-  width: auto;
-  height: fit-content;
-  appearance: none;
-  background: var(--input-color-bg, var(--color-bg-canvas));
-  border: 1px solid var(--input-color-border, var(--color-neutral-600));
-  border-radius: var(--input-shape-radius, var(--radius-sm));
-  box-shadow: var(--input-elevation-shadow, var(--shadow-sm));
-  box-sizing: border-box;
-  color: var(--input-color-text, var(--color-text-primary));
-  display: block;
-  font-family: var(--type-body--font-family);
-  font-size: var(--type-body--font-size);
-  font-weight: var(--type-body--font-weight);
-  line-height: var(--type-body--line-height);
-  letter-spacing: 0;
-  padding-block: var(--input-padding-y, var(--space-2));
-  padding-inline: var(--input-padding-x, var(--space-3));
-  text-transform: none;
-}
-
-[data-component='input'] [data-node='control']:focus-visible {
-  border-color: var(--color-accent-default);
-  outline: 2px solid var(--color-accent-default);
-  outline-offset: 1px;
-}
-
-[data-component='input'] [data-node='control']:disabled {
-  opacity: 0.5;
-}
-
 [data-component='media'] {
   display: flex;
   flex-direction: column;
@@ -1407,29 +1375,36 @@
 }
 
 [data-component='specimen-section'] [data-node='card-row'] {
-  display: flex;
+  display: grid;
   flex-direction: column;
   flex-wrap: nowrap;
   box-sizing: border-box;
   position: relative;
-  justify-content: flex-start;
-  align-items: stretch;
+  justify-content: stretch;
+  align-items: end;
   gap: var(--space-gap-lg);
-  align-self: stretch;
-  width: auto;
   height: fit-content;
+  align-content: stretch;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  justify-items: stretch;
+  row-gap: var(--radius-lg);
 }
 
-[data-component='specimen-section'] [data-node='card-notes'] {
+[data-component='specimen-section']
+  > [data-node='cards']
+  > [data-node='card-row']
+  > [data-node='card-notes'][data-component='card'][data-component='card'] {
   align-self: stretch;
   width: auto;
-  height: fit-content;
+  height: auto;
 }
 
-[data-component='specimen-section'] [data-node='card-signin'] {
-  align-self: stretch;
+[data-component='specimen-section']
+  > [data-node='cards']
+  > [data-node='card-row']
+  > [data-node='card-signin'][data-component='sign-in'][data-component='sign-in'] {
+  height: auto;
   width: auto;
-  height: fit-content;
 }
 
 [data-component='textarea'] {
@@ -1497,23 +1472,32 @@
   }
 }
 
+@media (min-width: 1024px) {
+  [data-component='specimen-section']
+    > [data-node='cards']
+    > [data-node='card-row']
+    > [data-node='card-notes'][data-component='card'][data-component='card'] {
+    align-self: stretch;
+    justify-self: stretch;
+  }
+}
+
+@media (min-width: 1200px) {
+  [data-component='specimen-section'] [data-node='card-row'] {
+    align-items: end;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  [data-component='specimen-section']
+    > [data-node='cards']
+    > [data-node='card-row']
+    > [data-node='card-notes'][data-component='card'][data-component='card'] {
+    justify-self: auto;
+  }
+}
+
 @media (min-width: 1440px) {
   [data-component='specimen-section'] [data-node='button-row'] {
     gap: var(--space-gap-md);
-  }
-
-  [data-component='specimen-section'] [data-node='card-row'] {
-    flex-direction: row;
-    align-items: flex-start;
-  }
-
-  [data-component='specimen-section'] [data-node='card-notes'] {
-    width: 420px;
-    flex: 0 0 auto;
-  }
-
-  [data-component='specimen-section'] [data-node='card-signin'] {
-    width: 460px;
-    flex: 0 0 auto;
   }
 }

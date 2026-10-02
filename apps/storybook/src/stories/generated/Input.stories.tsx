@@ -12,9 +12,6 @@ const meta = {
   tags: ['autodocs'],
   args: {
     label: 'Work email',
-    value: '',
-    placeholder: 'ada@atelier.test',
-    name: 'work-email',
   },
 } satisfies Meta<typeof Input>;
 

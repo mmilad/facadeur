@@ -3,29 +3,37 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
+import { FormInput } from './FormInput';
+
 export interface InputProps {
   label?: string;
   value?: string;
   placeholder?: string;
   name?: string;
+  onCommit?: (payload: { value: string }) => void;
   /** Instance id. Sets `data-node` so a parent style rule can address this element. */
   nodeId?: string;
   className?: string;
 }
 
-export function Input({ label, value, placeholder, name, nodeId, className }: InputProps) {
+export function Input({
+  label,
+  value,
+  placeholder,
+  name,
+  onCommit,
+  nodeId,
+  className,
+}: InputProps) {
   return (
     <label data-component="input" data-node={nodeId} className={className}>
       <span data-node="label">{label}</span>
-      <input
-        data-node="control"
-        type="text"
-        readOnly
-        tabIndex={-1}
-        autoComplete="off"
+      <FormInput
+        nodeId="control"
         value={value}
         placeholder={placeholder}
         name={name}
+        onCommit={onCommit}
       />
     </label>
   );

@@ -3,10 +3,7 @@
   "id": "input",
   "previewData": {
     "fields": {
-      "label": "Work email",
-      "value": "",
-      "placeholder": "ada@atelier.test",
-      "name": "work-email"
+      "label": "Work email"
     }
   },
   "name": "Input",
@@ -15,18 +12,6 @@
   "fields": [
     {
       "name": "label",
-      "type": "text"
-    },
-    {
-      "name": "value",
-      "type": "text"
-    },
-    {
-      "name": "placeholder",
-      "type": "text"
-    },
-    {
-      "name": "name",
       "type": "text"
     }
   ],
@@ -43,6 +28,7 @@
   "tokenInterface": {
     "reads": [
       "color.text.secondary",
+      "color.border.default",
       "space.0",
       "space.gap.xs",
       "type.label"
@@ -96,6 +82,11 @@
     ]
   },
   "componentTokens": {
+    "n_input_border": {
+      "path": "color.border",
+      "type": "color",
+      "value": "{color.border.default}"
+    },
     "n_dvpj32yugo": {
       "path": "color.text",
       "type": "color",

@@ -81,15 +81,15 @@ export function SpecimenSection({ nodeId, className, childFields }: SpecimenSect
                 ? (childFields?.['input-email']?.label as string)
                 : 'Email'
             }
-            value={
-              childFields?.['input-email']?.value !== undefined
-                ? (childFields?.['input-email']?.value as string)
-                : 'ada@atelier.test'
-            }
             name={
               childFields?.['input-email']?.name !== undefined
                 ? (childFields?.['input-email']?.name as string)
                 : 'email'
+            }
+            value={
+              childFields?.['input-email']?.value !== undefined
+                ? (childFields?.['input-email']?.value as string)
+                : 'ada@atelier.test'
             }
             placeholder={
               childFields?.['input-email']?.placeholder !== undefined
@@ -104,15 +104,15 @@ export function SpecimenSection({ nodeId, className, childFields }: SpecimenSect
                 ? (childFields?.['input-search']?.label as string)
                 : 'Search'
             }
-            placeholder={
-              childFields?.['input-search']?.placeholder !== undefined
-                ? (childFields?.['input-search']?.placeholder as string)
-                : 'Search components'
-            }
             name={
               childFields?.['input-search']?.name !== undefined
                 ? (childFields?.['input-search']?.name as string)
                 : 'q'
+            }
+            placeholder={
+              childFields?.['input-search']?.placeholder !== undefined
+                ? (childFields?.['input-search']?.placeholder as string)
+                : 'Search components'
             }
             value={
               childFields?.['input-search']?.value !== undefined
@@ -127,6 +127,11 @@ export function SpecimenSection({ nodeId, className, childFields }: SpecimenSect
         <div data-node="card-row">
           <Card
             nodeId="card-notes"
+            body={
+              childFields?.['card-notes']?.body !== undefined
+                ? (childFields?.['card-notes']?.body as string)
+                : 'Props fill the template. Click the title, or click the card padding to select the card itself.'
+            }
             eyebrow={
               childFields?.['card-notes']?.eyebrow !== undefined
                 ? (childFields?.['card-notes']?.eyebrow as string)
@@ -136,11 +141,6 @@ export function SpecimenSection({ nodeId, className, childFields }: SpecimenSect
               childFields?.['card-notes']?.title !== undefined
                 ? (childFields?.['card-notes']?.title as string)
                 : 'Field notes'
-            }
-            body={
-              childFields?.['card-notes']?.body !== undefined
-                ? (childFields?.['card-notes']?.body as string)
-                : 'Props fill the template. Click the title, or click the card padding to select the card itself.'
             }
           />
           <SignIn

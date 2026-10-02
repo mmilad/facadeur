@@ -9,12 +9,22 @@ async function main(): Promise<void> {
   let designPath: string | undefined;
   let out: string | undefined;
   let storybook: string | undefined;
+  let styles: 'bundle' | 'component-local' = 'bundle';
+  let entries: string[] | undefined;
   const files: string[] = [];
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
     if (arg === '--design') designPath = args[(index += 1)];
     else if (arg === '--out') out = args[(index += 1)];
     else if (arg === '--storybook') storybook = args[(index += 1)];
+    else if (arg === '--styles') {
+      const value = args[(index += 1)];
+      if (value !== 'bundle' && value !== 'component-local') {
+        throw new Error(`Invalid --styles value "${value}"`);
+      }
+      styles = value;
+    }
+    else if (arg === '--entries') entries = args[(index += 1)]?.split(',');
     else if (arg?.startsWith('--')) throw new Error(`Unknown option ${arg}`);
     else if (arg) files.push(arg);
   }
@@ -27,7 +37,7 @@ async function main(): Promise<void> {
   const design = designPath
     ? designFromDocument(validateDocumentFile(JSON.parse(readFileSync(designPath, 'utf8'))))
     : undefined;
-  const { ui, stories } = generateReact({ documents, ...(design ? { design } : {}) });
+  const { ui, stories } = generateReact({ documents, ...(design ? { design } : {}), styles, entries });
   await writeFiles(resolve(out), ui);
   if (storybook) {
     await writeFiles(resolve(storybook), stories);

@@ -1,4 +1,4 @@
-export { renderComponentCss, renderTokenCss } from './css.js';
+export { renderComponentCss, renderDocumentCss, renderTokenCss } from './css.js';
 export {
   designFromDocument,
   generateReact,
