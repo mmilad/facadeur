@@ -33,18 +33,32 @@ export function canonicalizeStyleBlock(style: StyleBlock | undefined): StyleBloc
   return parseStyleBlock(style);
 }
 
-/** Drop style rules keyed by removed node ids. */
+/** Drop style rules targeting removed local node ids and their nested paths. */
 export function pruneStyleBlockNodes(
   style: StyleBlock | undefined,
   removedIds: ReadonlySet<string>,
+  localInstanceIds?: ReadonlySet<string>,
 ): StyleBlock | undefined {
   if (!style?.children) return style;
   let changed = false;
   const children = { ...style.children };
   for (const id of removedIds) {
-    if (id in children) {
-      delete children[id];
-      changed = true;
+    for (const target of Object.keys(children)) {
+      if (target === id || target.startsWith(`${id}/`)) {
+        delete children[target];
+        changed = true;
+      }
+    }
+  }
+  if (localInstanceIds) {
+    for (const target of Object.keys(children)) {
+      const localPath = target.split('/');
+      const boundary = localPath.findIndex((segment) => localInstanceIds.has(segment));
+      const ownerPath = boundary < 0 ? localPath : localPath.slice(0, boundary + 1);
+      if (ownerPath.some((segment) => removedIds.has(segment))) {
+        delete children[target];
+        changed = true;
+      }
     }
   }
   if (!changed) return style;
@@ -53,6 +67,42 @@ export function pruneStyleBlockNodes(
     return Object.keys(rest).length ? (rest as StyleBlock) : undefined;
   }
   return { ...style, children };
+}
+
+/** Rebase nested rendered-path keys after an owner-local subtree moves. */
+export function rebaseStyleBlockChildPaths(
+  style: StyleBlock | undefined,
+  fromPath: string,
+  toPath: string,
+): StyleBlock | undefined {
+  if (!style?.children || fromPath === toPath) return style;
+  const children = { ...style.children };
+  const moved: [string, StyleChild][] = [];
+  for (const [target, rule] of Object.entries(children)) {
+    if (!target.includes('/') || (target !== fromPath && !target.startsWith(`${fromPath}/`))) {
+      continue;
+    }
+    delete children[target];
+    moved.push([`${toPath}${target.slice(fromPath.length)}`, rule]);
+  }
+  if (!moved.length) return style;
+  for (const [target, rule] of moved) {
+    children[target] = children[target] ? mergeSparseRecord(children[target], rule) : rule;
+  }
+  return { ...style, children };
+}
+
+function mergeSparseRecord<T extends object>(target: T, source: T): T {
+  const next = structuredClone(target) as Record<string, unknown>;
+  for (const [key, value] of Object.entries(source)) {
+    const previous = next[key];
+    next[key] = isRecord(previous) && isRecord(value) ? mergeSparseRecord(previous, value) : value;
+  }
+  return next as T;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**
@@ -113,7 +163,7 @@ export function assertStyleContract(doc: FlatDocument, options: ValidateOptions 
       }
     }
   }
-  if (doc.styles) assertStyleBlock(doc, doc.styles, breakpoints);
+  if (doc.styles) assertStyleBlock(doc, doc.styles, breakpoints, options);
   for (const node of Object.values(doc.nodes)) {
     for (const id of Object.keys(node.layout?.breakpoints ?? {})) {
       assertBreakpoint(id, breakpoints, `Node "${node.id}" layout`);
@@ -160,6 +210,7 @@ function assertStyleBlock(
   doc: FlatDocument,
   block: StyleBlock,
   breakpoints: readonly Breakpoint[],
+  options: ValidateOptions,
 ): void {
   const axes = new Map(
     doc.variants
@@ -173,13 +224,32 @@ function assertStyleBlock(
   const nodeIds = new Set(Object.keys(doc.nodes));
   assertLayerVariants(block, axes, 'Style block');
   for (const id of Object.keys(block.breakpoints ?? {})) assertBreakpoint(id, breakpoints, 'Style');
-  for (const [id, child] of Object.entries(block.children ?? {})) {
-    if (!nodeIds.has(id)) {
-      throw new DocumentError('schema', `Style child "${id}" is not a node`);
+  for (const [target, child] of Object.entries(block.children ?? {})) {
+    const path = target.split('/');
+    const first = path[0];
+    const node = first ? doc.nodes[first] : undefined;
+    if (path.length === 1) {
+      if (!nodeIds.has(target)) {
+        throw new DocumentError('schema', `Style child "${target}" is not a node`);
+      }
+    } else {
+      if (!node) {
+        throw new DocumentError(
+          'schema',
+          `Style child path "${target}" must start at a local node`,
+        );
+      }
+      const valid = options.resolveNestedStyleTarget?.(doc.id, path);
+      if (valid === false || (valid === undefined && !hasLocalInstanceBoundary(doc, path))) {
+        throw new DocumentError(
+          'schema',
+          `Style child path "${target}" does not target a local instance root`,
+        );
+      }
     }
-    assertLayerVariants(child, axes, `Style child "${id}"`);
+    assertLayerVariants(child, axes, `Style child "${target}"`);
     for (const breakpointId of Object.keys(child.breakpoints ?? {})) {
-      assertBreakpoint(breakpointId, breakpoints, `Style child "${id}"`);
+      assertBreakpoint(breakpointId, breakpoints, `Style child "${target}"`);
     }
   }
   assertLayerSpacing(block);
@@ -188,6 +258,22 @@ function assertStyleBlock(
     assertLayerSpacing(child);
     for (const layer of Object.values(child.breakpoints ?? {})) assertLayerSpacing(layer);
   }
+}
+
+function hasLocalInstanceBoundary(doc: FlatDocument, path: readonly string[]): boolean {
+  let current = doc.nodes[path[0] ?? ''];
+  if (!current) return false;
+  for (const segment of path.slice(1)) {
+    if (current.type === 'instance') return true;
+    if (current.type !== 'frame') return false;
+    const childId: string | undefined = current.children.find(
+      (id) => doc.nodes[id]?.id === segment,
+    );
+    if (!childId) return false;
+    current = doc.nodes[childId];
+    if (!current) return false;
+  }
+  return false;
 }
 
 function assertLayerSpacing(layer: StyleLayer): void {

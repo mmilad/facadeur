@@ -41,10 +41,10 @@ export function printTypesFile(file: PrintedComponent): string {
   return lines.join('\n');
 }
 
-export function printComponentFile(file: PrintedComponent, importStyle: boolean): string {
+export function printComponentFile(file: PrintedComponent): string {
   const lines = generatedBanner(file.id);
   if (file.props.some((prop) => prop.fieldType === 'event')) lines.push("'use client';", '');
-  if (importStyle) lines.push("import './style.css';");
+  lines.push("import styles from './style.module.css';");
   if (file.usesCssProperties) lines.push(`import type { CSSProperties } from 'react';`);
   lines.push(`import type { ${file.component}Props } from './types';`);
   for (const spec of file.imports) {

@@ -18,6 +18,7 @@ export function renderInstance(
   usedProps: Set<string>,
   dataScope: ReadonlyMap<string, string>,
   childFieldsProp: string | undefined,
+  localClass: string | undefined,
 ): ElementNode {
   const target = catalog.get(node.component);
   if (!target) {
@@ -27,7 +28,12 @@ export function renderInstance(
       attrs: [
         { name: 'data-node', value: { kind: 'literal', value: node.id } },
         { name: 'data-component', value: { kind: 'literal', value: node.component } },
-        { name: 'className', value: { kind: 'literal', value: 'ds-unknown' } },
+        {
+          name: 'className',
+          value: localClass
+            ? { kind: 'expr', code: `[styles.${localClass}, 'ds-unknown'].join(' ')` }
+            : { kind: 'literal', value: 'ds-unknown' },
+        },
       ],
       children: [{ text: `Unknown component: ${jsxText(node.component)}` }],
     };
@@ -37,6 +43,11 @@ export function renderInstance(
   }
   imports.set(target.component, { name: target.component, from: `../${target.component}` });
   const attrs: Attr[] = [{ name: 'nodeId', value: { kind: 'literal', value: node.id } }];
+  if (localClass)
+    attrs.push({
+      name: 'className',
+      value: { kind: 'expr', code: `styles.${localClass}` },
+    });
   const forwardedFields = new Set<string>();
   for (const [publicName, path] of Object.entries(owner.document.expose?.fields ?? {})) {
     const prefix = `${node.id}.`;

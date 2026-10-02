@@ -5,7 +5,9 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { type DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { createEditorSession } from '../src/domain/session.js';
+import { editorBreakpoints, viewportEditContext } from '../src/domain/viewport/viewport-edit.js';
 import { PropertiesPanel } from '../src/ui/sidebar/properties/PropertiesPanel.js';
+import { RightRail } from '../src/ui/sidebar/properties/RightRail.js';
 
 const documents: DocumentFile[] = [
   {
@@ -13,6 +15,7 @@ const documents: DocumentFile[] = [
     id: 'input',
     name: 'Input',
     kind: 'atom',
+    styles: { declarations: { opacity: '0.8' } },
     fields: [
       { name: 'label', type: 'text', default: 'Base label' },
       { name: 'disabled', type: 'boolean', default: false },
@@ -29,6 +32,7 @@ const documents: DocumentFile[] = [
     id: 'form',
     name: 'Form',
     kind: 'component',
+    styles: { children: { email: { declarations: { opacity: '0.65' } } } },
     root: {
       id: 'root',
       type: 'frame',
@@ -42,6 +46,12 @@ const documents: DocumentFile[] = [
     id: 'section',
     name: 'Section',
     kind: 'section',
+    settings: {
+      breakpoints: [
+        { id: 'mobile', minWidth: 375 },
+        { id: 'tablet', minWidth: 768 },
+      ],
+    },
     root: {
       id: 'root',
       type: 'frame',
@@ -54,13 +64,34 @@ const documents: DocumentFile[] = [
 ];
 
 afterEach(cleanup);
-function setup(address = 'root/first/email') {
-  const session = createEditorSession({ documents, design: createProjectTemplateDocument() });
+function setup(
+  address = 'root/first/email',
+  options: { variants?: boolean; viewportBar?: boolean } = {},
+) {
+  const testDocuments = structuredClone(documents);
+  if (options.variants) {
+    testDocuments[2]!.kind = 'component';
+    testDocuments[2]!.variants = [{ name: 'compact' }];
+  }
+  const session = createEditorSession({
+    documents: testDocuments,
+    design: createProjectTemplateDocument(),
+  });
   session.openAsset('section');
   session.selectRendered(address);
-  const view = render(<PropertiesPanel session={session} snap={session.getSnapshot()} />);
-  const update = () =>
-    view.rerender(<PropertiesPanel session={session} snap={session.getSnapshot()} />);
+  const view = options.viewportBar
+    ? render(<RightRail session={session} snap={session.getSnapshot()} surface="editor" />)
+    : render(<PropertiesPanel session={session} snap={session.getSnapshot()} />);
+  const update = () => {
+    const snap = session.getSnapshot();
+    view.rerender(
+      options.viewportBar ? (
+        <RightRail session={session} snap={snap} surface="editor" />
+      ) : (
+        <PropertiesPanel session={session} snap={snap} />
+      ),
+    );
+  };
   return { session, update };
 }
 
@@ -69,7 +100,7 @@ describe('nested field inspector', () => {
     const { session, update } = setup();
     const masterBefore = session.boardDocuments().find((doc) => doc.id === 'form');
     expect(screen.getByTestId('nested-fields-panel')).toBeVisible();
-    expect(screen.queryByRole('tab', { name: 'Style' })).not.toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Style' })).toBeVisible();
     expect(screen.queryByRole('tablist', { name: 'Component variants' })).not.toBeInTheDocument();
     const label = screen.getByRole('textbox', { name: 'Label' });
     expect(label).toHaveValue('Work email');
@@ -88,10 +119,91 @@ describe('nested field inspector', () => {
     expect(screen.getByRole('textbox', { name: 'Label' })).toHaveValue('Work email');
     act(() => session.undo());
     update();
+    expect(session.getSnapshot().nestedSelection).not.toBeNull();
     expect(screen.getByRole('textbox', { name: 'Label' })).toHaveValue('Personal email');
     act(() => session.redo());
     update();
     expect(screen.getByRole('textbox', { name: 'Label' })).toHaveValue('Work email');
+  });
+
+  it('edits only the nested instance style path with reset, owner variants, breakpoints, and undo', () => {
+    const { session, update } = setup('root/first/email', { variants: true, viewportBar: true });
+    act(() => session.setActiveVariant(null));
+    update();
+    const masterBefore = session.boardDocuments().find((doc) => doc.id === 'input');
+    expect(screen.getByRole('group', { name: 'Style edit target' })).toBeVisible();
+    fireEvent.click(screen.getByRole('tab', { name: 'Style' }));
+    const opacity = screen.getByRole('textbox', { name: 'Opacity' });
+    expect(opacity).toHaveValue('0.65');
+    fireEvent.change(opacity, { target: { value: '0.5' } });
+    fireEvent.blur(opacity);
+    update();
+    expect(
+      session.getSnapshot().document.styles?.children?.['first/email']?.declarations?.opacity,
+    ).toBe('0.5');
+    expect(session.getSnapshot().document.styles?.children?.second).toBeUndefined();
+    expect(session.boardDocuments().find((doc) => doc.id === 'input')).toEqual(masterBefore);
+
+    act(() => session.undo());
+    update();
+    expect(session.getSnapshot().document.styles?.children?.['first/email']).toBeUndefined();
+    expect(session.getSnapshot().nestedSelection).not.toBeNull();
+    expect(screen.getByRole('textbox', { name: 'Opacity' })).toHaveValue('0.65');
+    act(() => session.redo());
+    update();
+    expect(screen.getByRole('textbox', { name: 'Opacity' })).toHaveValue('0.5');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    update();
+    expect(session.getSnapshot().document.styles?.children?.['first/email']).toBeUndefined();
+
+    act(() => session.setActiveVariant('compact'));
+    update();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Opacity' }), {
+      target: { value: '0.4' },
+    });
+    fireEvent.blur(screen.getByRole('textbox', { name: 'Opacity' }));
+    update();
+    expect(
+      session.getSnapshot().document.variantPresets?.find((preset) => preset.name === 'compact')
+        ?.overrides?.styles?.children?.['first/email']?.declarations?.opacity,
+    ).toBe('0.4');
+    expect(session.getSnapshot().document.styles?.children?.['first/email']).toBeUndefined();
+
+    fireEvent.change(screen.getByRole('combobox', { name: 'State' }), {
+      target: { value: 'hover' },
+    });
+    const tablet = editorBreakpoints(
+      session.getSnapshot().document,
+      session.getSnapshot().design,
+    ).find((breakpoint) => breakpoint.minWidth === 768);
+    if (!tablet) throw new Error('Expected a tablet breakpoint');
+    act(() => {
+      session.setFocusViewport(tablet.id);
+    });
+    update();
+    fireEvent.click(screen.getByRole('button', { name: /768/ }));
+    update();
+    expect(
+      viewportEditContext({
+        breakpoints: editorBreakpoints(
+          session.getSnapshot().document,
+          session.getSnapshot().design,
+        ),
+        focusId: session.getSnapshot().focusViewportId,
+        editTarget: session.getSnapshot().editTarget,
+      }).writingBreakpointId,
+    ).toBe(tablet.id);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Opacity' }), {
+      target: { value: '0.2' },
+    });
+    fireEvent.blur(screen.getByRole('textbox', { name: 'Opacity' }));
+    update();
+    expect(
+      session.getSnapshot().document.variantPresets?.find((preset) => preset.name === 'compact')
+        ?.overrides?.styles?.children?.['first/email']?.breakpoints?.[tablet.id]?.states?.hover
+        ?.opacity,
+    ).toBe('0.2');
   });
 
   it('routes a bound leaf to its instance field and can store an explicit empty string', () => {

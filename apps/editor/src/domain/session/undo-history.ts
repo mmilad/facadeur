@@ -15,6 +15,7 @@ import {
 import { applyWorkspaceChange, kindOf, normalizeBreakpointId } from './kinds.js';
 import { resolveRenderedSelection } from './snapshot.js';
 import type { NestedSelection } from '../nested-selection.js';
+import { nestedInstanceStyleTarget } from '../nested-selection/style-target.js';
 import type {
   EditorDrag,
   EditorNotice,
@@ -387,10 +388,21 @@ export function createEditorSessionSurface(
       deps.publish();
     },
     execute: (command) => {
-      if (deps.getNestedSelection() && command.type !== 'setChildField') {
-        deps.setNotice({ tone: 'info', text: 'Nested layers only allow field overrides.' });
-        deps.publish();
-        return;
+      const nested = deps.getNestedSelection();
+      if (nested) {
+        const styleTarget = nestedInstanceStyleTarget(nested, deps.openFlat().rootId);
+        const allowedNestedCommand =
+          command.type === 'setChildField' ||
+          (styleTarget !== null &&
+            (command.type === 'setStyleBlock' || command.type === 'setVariantStyleBlock'));
+        if (!allowedNestedCommand) {
+          deps.setNotice({
+            tone: 'info',
+            text: 'Nested layers allow field overrides and instance style overrides.',
+          });
+          deps.publish();
+          return;
+        }
       }
       deps.run(deps.openStore(), command);
     },

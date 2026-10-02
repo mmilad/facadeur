@@ -3,7 +3,7 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
-import './style.css';
+import styles from './style.module.css';
 import type { FormFieldRowProps } from './types';
 
 export function FormFieldRow({
@@ -19,11 +19,17 @@ export function FormFieldRow({
       data-component="form-field-row"
       data-node={nodeId}
       data-variant-state={state}
-      className={className}
+      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
     >
-      <span data-node="name">{name}</span>
-      <span data-node="type">{type}</span>
-      <span data-node="value">{value}</span>
+      <span data-node="name" className={styles.f_name_136nuue}>
+        {name}
+      </span>
+      <span data-node="type" className={styles.f_type_min7t9}>
+        {type}
+      </span>
+      <span data-node="value" className={styles.f_value_ieyeh6}>
+        {value}
+      </span>
     </div>
   );
 }

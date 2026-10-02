@@ -1,7 +1,8 @@
 import type { DocumentFile } from '@facadeur/core';
 import type { DesignInput } from '@facadeur/tokens';
 import { assignCatalog, renderComponent, type ComponentFile } from './component.js';
-import { renderComponentCss, renderDocumentCss, renderTokenCss } from './css.js';
+import { renderDocumentCss, renderTokenCss } from './css.js';
+import { localClassNames } from './component/class-names.js';
 import { CodegenError } from './names.js';
 import { generateStories } from './stories.js';
 import type { GenerateReactOptions as PublicGenerateReactOptions } from '@facadeur/codegen-types';
@@ -37,29 +38,25 @@ export function generateReact(options: GenerateReactOptions): GenerateReactOutpu
   }
   const selected = selectDocuments(documents, options.entries);
   const catalog = assignCatalog(selected);
-  const styles = options.styles ?? 'component-local';
+  const classNames = new Map(selected.map((document) => [document.id, localClassNames(document)]));
   const components = selected.map((document) =>
-    renderComponent(document, catalog, { importStyle: styles === 'component-local' }),
+    renderComponent(document, catalog, { classNames: classNames.get(document.id)! }),
   );
   const breakpoints = options.design?.breakpoints;
   const ui: GeneratedFile[] = [
     { path: 'styles/tokens.css', contents: renderTokenCss(options.design) },
-    ...(styles === 'bundle'
-      ? [
-          {
-            path: 'styles/components.css',
-            contents: renderComponentCss(selected, breakpoints ? [...breakpoints] : undefined),
-          },
-        ]
-      : []),
     ...components.flatMap((component, index) =>
       componentFiles(
         component,
-        styles === 'component-local'
-          ? renderDocumentCss(selected[index]!, breakpoints ? [...breakpoints] : undefined)
-          : undefined,
+        renderDocumentCss(
+          selected[index]!,
+          classNames.get(selected[index]!.id)!,
+          breakpoints ? [...breakpoints] : undefined,
+          selected,
+        ),
       ),
     ),
+    { path: 'css-modules.d.ts', contents: cssModulesDeclaration() },
     { path: 'index.ts', contents: renderIndex(components) },
   ];
   return { ui, stories: generateStories(selected, components) };
@@ -96,10 +93,7 @@ export function designFromDocument(document: DocumentFile): DesignInput {
   };
 }
 
-function componentFiles(
-  component: ComponentFile,
-  styleContents: string | undefined,
-): GeneratedFile[] {
+function componentFiles(component: ComponentFile, styleContents: string): GeneratedFile[] {
   const files: GeneratedFile[] = [
     {
       path: `${component.directory}/component.tsx`,
@@ -107,11 +101,13 @@ function componentFiles(
     },
     { path: `${component.directory}/types.ts`, contents: component.typesContents },
   ];
-  if (styleContents !== undefined) {
-    files.push({ path: `${component.directory}/style.css`, contents: styleContents });
-  }
+  files.push({ path: `${component.directory}/style.module.css`, contents: styleContents });
   files.push({ path: `${component.directory}/index.ts`, contents: component.indexContents });
   return files;
+}
+
+function cssModulesDeclaration(): string {
+  return `declare module '*.module.css' {\n  const classes: Readonly<Record<string, string>>;\n  export default classes;\n}\n`;
 }
 
 function renderIndex(components: readonly ComponentFile[]): string {

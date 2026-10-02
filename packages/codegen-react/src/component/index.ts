@@ -1,6 +1,7 @@
 import { resolveVariantDocument, variantPresets, type DocumentFile } from '@facadeur/core';
 import { CodegenError } from '../names.js';
 import { variantTypeSpecs } from './catalog.js';
+import type { LocalClassNames } from './types.js';
 import { printComponentFile, printComponentIndex, printElement, printTypesFile } from './print.js';
 import { renderNode } from './render.js';
 import type { CatalogEntry, ComponentFile, ComponentImport } from './types.js';
@@ -11,7 +12,7 @@ export { assignCatalog } from './catalog.js';
 export function renderComponent(
   document: DocumentFile,
   catalog: Map<string, CatalogEntry>,
-  options: { importStyle: boolean } = { importStyle: true },
+  options: { classNames: LocalClassNames },
 ): ComponentFile {
   const entry = catalog.get(document.id);
   if (!entry) throw new CodegenError(`Missing catalog entry for "${document.id}"`);
@@ -43,6 +44,7 @@ export function renderComponent(
       },
       new Map(),
       acceptsChildFields ? entry.childFieldsProp : undefined,
+      options.classNames,
     );
   });
   const body = entry.namedVariant
@@ -75,7 +77,7 @@ export function renderComponent(
     imports: [...imports.values()],
     usesCssProperties,
     acceptsChildFields,
-    componentContents: printComponentFile(printed, options.importStyle),
+    componentContents: printComponentFile(printed),
     typesContents: printTypesFile(printed),
     indexContents: printComponentIndex(printed),
   };

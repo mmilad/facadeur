@@ -20,6 +20,7 @@ import {
   substituteRefs,
   type SubstituteContext,
 } from './values.js';
+import { nestedStyleTargetSelector, resolveNestedStyleTarget } from './nested-target.js';
 
 export interface CompiledRule {
   key: string;
@@ -43,6 +44,20 @@ export interface CompileOptions {
   paintRoot?: boolean;
   /** Used when the document does not list breakpoints. Defaults to mobile, tablet, desktop. */
   breakpoints?: readonly Breakpoint[];
+  /** Catalog used to resolve nested style target paths. */
+  catalog?: readonly DocumentFile[];
+  /** Allows output adapters to replace attribute selectors with local selectors. */
+  selectorForNode?: (context: {
+    documentId: string;
+    node: NestedNode;
+    nodeId: string;
+    path: string | null;
+    isRoot: boolean;
+    address: 'instance' | 'canvas';
+    defaultSelector: string;
+    targetPath?: string;
+    variantScope?: string;
+  }) => string;
 }
 
 const JUSTIFY: Record<NonNullable<Layout['justify']>, string> = {
@@ -103,7 +118,48 @@ function compileSingleDocument(
     variantScope: options.variantScope,
     substituteContext,
     rules,
+    selectorForNode: options.selectorForNode,
   });
+  {
+    for (const [targetPath, layer] of Object.entries(document.styles?.children ?? {})) {
+      if (!targetPath.includes('/')) continue;
+      const target = resolveNestedStyleTarget(document, targetPath, options.catalog ?? [document]);
+      if (!target) continue;
+      const selector = nestedStyleTargetSelector(
+        document,
+        targetPath,
+        target,
+        address,
+        rootRendered,
+      );
+      const selected =
+        options.selectorForNode?.({
+          documentId: document.id,
+          node: document.root,
+          nodeId: document.root.id,
+          path: null,
+          isRoot: true,
+          address,
+          defaultSelector: selector,
+          targetPath,
+          variantScope: options.variantScope,
+        }) ?? selector;
+      const scoped = options.variantScope
+        ? withVariant(selected, 'variant', options.variantScope)
+        : selected;
+      push(
+        { rules },
+        `${document.id}:${targetPath}:base`,
+        scoped,
+        expandDeclarations(layer.declarations, substituteContext),
+      );
+      emitSparseStyleLayers(document.id, targetPath, layer, scoped, {
+        breakpoints,
+        substituteContext,
+        rules,
+      });
+    }
+  }
   // Wider responsive layers win; stable sorting retains precedence within each width.
   return rules
     .filter((rule) => rule.declarations.length > 0)
@@ -132,6 +188,7 @@ interface WalkState {
   variantScope?: string;
   substituteContext: SubstituteContext;
   rules: CompiledRule[];
+  selectorForNode?: CompileOptions['selectorForNode'];
 }
 
 function walk(document: DocumentFile, node: NestedNode, state: WalkState): void {
@@ -151,7 +208,18 @@ function walk(document: DocumentFile, node: NestedNode, state: WalkState): void 
 }
 
 function emitNode(document: DocumentFile, node: NestedNode, state: WalkState): void {
-  const selector = selectorFor(document, node, state);
+  const defaultSelector = selectorFor(document, node, state);
+  const selector =
+    state.selectorForNode?.({
+      documentId: document.id,
+      node,
+      nodeId: node.id,
+      path: state.path,
+      isRoot: state.isRoot,
+      address: state.address,
+      defaultSelector,
+      variantScope: state.variantScope,
+    }) ?? defaultSelector;
   const layer = styleLayerFor(document.styles, node, state.isRoot);
   const context = state.substituteContext;
   const base = mergeDeclarations([
@@ -162,60 +230,8 @@ function emitNode(document: DocumentFile, node: NestedNode, state: WalkState): v
   ]);
   push(state, `${document.id}:${node.id}:base`, selector, base);
 
-  for (const [name, declarations] of Object.entries(layer?.states ?? {})) {
-    if (!declarations) continue;
-    push(
-      state,
-      `${document.id}:${node.id}:state:${name}`,
-      `${selector}:${name}`,
-      expandDeclarations(declarations, context),
-    );
-  }
-
-  for (const [axis, values] of Object.entries(layer?.variants ?? {})) {
-    for (const [value, variant] of Object.entries(values)) {
-      const variantSelector = withVariant(selector, axis, value);
-      push(
-        state,
-        `${document.id}:${node.id}:variant:${axis}:${value}`,
-        variantSelector,
-        expandDeclarations(variant.declarations, context),
-      );
-      for (const [name, declarations] of Object.entries(variant.states ?? {})) {
-        if (!declarations) continue;
-        push(
-          state,
-          `${document.id}:${node.id}:variant:${axis}:${value}:state:${name}`,
-          `${variantSelector}:${name}`,
-          expandDeclarations(declarations, context),
-        );
-      }
-    }
-  }
-
   const baseId = state.breakpoints[0]?.id;
-  for (const [id, breakpointLayer] of Object.entries(layer?.breakpoints ?? {})) {
-    if (id === baseId) continue;
-    const minWidth = state.breakpoints.find((breakpoint) => breakpoint.id === id)?.minWidth;
-    if (minWidth === undefined) continue;
-    push(
-      state,
-      `${document.id}:${node.id}:style:${id}`,
-      selector,
-      expandDeclarations(breakpointLayer.declarations, context),
-      minWidth,
-    );
-    for (const [name, declarations] of Object.entries(breakpointLayer.states ?? {})) {
-      if (!declarations) continue;
-      push(
-        state,
-        `${document.id}:${node.id}:style:${id}:state:${name}`,
-        `${selector}:${name}`,
-        expandDeclarations(declarations, context),
-        minWidth,
-      );
-    }
-  }
+  emitSparseStyleLayers(document.id, node.id, layer, selector, state);
 
   if (node.type === 'instance' || node.layout?.breakpoints) {
     for (const [id, override] of Object.entries(node.layout?.breakpoints ?? {})) {
@@ -233,8 +249,68 @@ function emitNode(document: DocumentFile, node: NestedNode, state: WalkState): v
   }
 }
 
+function emitSparseStyleLayers(
+  documentId: string,
+  targetKey: string,
+  layer: StyleChild | undefined,
+  selector: string,
+  state: Pick<WalkState, 'breakpoints' | 'substituteContext' | 'rules'>,
+): void {
+  if (!layer) return;
+  const context = state.substituteContext;
+  for (const [name, declarations] of Object.entries(layer.states ?? {})) {
+    push(
+      state,
+      `${documentId}:${targetKey}:state:${name}`,
+      `${selector}:${name}`,
+      expandDeclarations(declarations, context),
+    );
+  }
+  for (const [axis, values] of Object.entries(layer.variants ?? {})) {
+    for (const [value, variant] of Object.entries(values)) {
+      const current = withVariant(selector, axis, value);
+      push(
+        state,
+        `${documentId}:${targetKey}:variant:${axis}:${value}`,
+        current,
+        expandDeclarations(variant.declarations, context),
+      );
+      for (const [name, declarations] of Object.entries(variant.states ?? {})) {
+        push(
+          state,
+          `${documentId}:${targetKey}:variant:${axis}:${value}:state:${name}`,
+          `${current}:${name}`,
+          expandDeclarations(declarations, context),
+        );
+      }
+    }
+  }
+  const baseId = state.breakpoints[0]?.id;
+  for (const [id, breakpoint] of Object.entries(layer.breakpoints ?? {})) {
+    if (id === baseId) continue;
+    const minWidth = state.breakpoints.find((item) => item.id === id)?.minWidth;
+    if (minWidth === undefined) continue;
+    push(
+      state,
+      `${documentId}:${targetKey}:style:${id}`,
+      selector,
+      expandDeclarations(breakpoint.declarations, context),
+      minWidth,
+    );
+    for (const [name, declarations] of Object.entries(breakpoint.states ?? {})) {
+      push(
+        state,
+        `${documentId}:${targetKey}:style:${id}:state:${name}`,
+        `${selector}:${name}`,
+        expandDeclarations(declarations, context),
+        minWidth,
+      );
+    }
+  }
+}
+
 function push(
-  state: WalkState,
+  state: Pick<WalkState, 'rules'>,
   key: string,
   selector: string,
   declarations: [string, string][],

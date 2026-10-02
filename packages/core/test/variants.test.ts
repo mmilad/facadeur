@@ -647,4 +647,66 @@ describe('variant overlays', () => {
     } satisfies DocumentFile;
     expect(() => validateCatalog([invalid])).toThrow(/Unknown component "missing-component"/);
   });
+
+  it('validates nested style paths against local instance roots in the catalog', () => {
+    const button: DocumentFile = {
+      version: 1,
+      id: 'style-button',
+      name: 'Button',
+      kind: 'atom',
+      root: { id: 'button-root', type: 'frame' },
+    };
+    const template: DocumentFile = {
+      version: 1,
+      id: 'style-template',
+      name: 'Template',
+      kind: 'component',
+      root: {
+        id: 'template-root',
+        type: 'frame',
+        children: [{ id: 'continue', type: 'instance', component: button.id }],
+      },
+    };
+    const owner: DocumentFile = {
+      version: 1,
+      id: 'style-owner',
+      name: 'Owner',
+      kind: 'section',
+      styles: { children: { 'group/sign-in/continue': { declarations: { color: 'red' } } } },
+      root: {
+        id: 'owner-root',
+        type: 'frame',
+        children: [
+          {
+            id: 'group',
+            type: 'frame',
+            children: [{ id: 'sign-in', type: 'instance', component: template.id }],
+          },
+        ],
+      },
+    };
+    expect(() => validateCatalog([button, template, owner])).not.toThrow();
+    expect(() =>
+      validateCatalog([
+        button,
+        template,
+        {
+          ...owner,
+          styles: { children: { 'group/sign-in/missing': { declarations: { color: 'red' } } } },
+        },
+      ]),
+    ).toThrow(/does not target a local instance root/);
+    expect(() =>
+      validateCatalog([
+        button,
+        template,
+        {
+          ...owner,
+          styles: {
+            children: { 'group/sign-in/template-root': { declarations: { color: 'red' } } },
+          },
+        },
+      ]),
+    ).toThrow(/does not target a local instance root/);
+  });
 });

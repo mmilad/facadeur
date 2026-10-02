@@ -36,6 +36,8 @@ export interface ComponentFile {
   indexContents: string;
 }
 
+export type LocalClassNames = ReadonlyMap<string, string>;
+
 export interface CatalogEntry {
   document: DocumentFile;
   component: string;

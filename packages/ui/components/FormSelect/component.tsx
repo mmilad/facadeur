@@ -3,7 +3,7 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
-import './style.css';
+import styles from './style.module.css';
 import type { FormSelectProps } from './types';
 
 export function FormSelect({
@@ -18,16 +18,21 @@ export function FormSelect({
       data-component="form-select"
       data-node={nodeId}
       data-variant-state={state}
-      className={className}
+      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
     >
-      <span data-node="label">{label}</span>
-      <div data-node="control">
-        <span data-node="value">{value}</span>
+      <span data-node="label" className={styles.f_label_1wf4cn1}>
+        {label}
+      </span>
+      <div data-node="control" className={styles.f_control_mx9w2m}>
+        <span data-node="value" className={styles.f_value_ieyeh6}>
+          {value}
+        </span>
         <img
           data-node="chevron"
           aria-hidden="true"
           src="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Cpath d=%22m4 6 4 4 4-4%22 fill=%22none%22 stroke=%22%236f675e%22 stroke-width=%221.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E"
           alt=""
+          className={styles.f_chevron_rhj3c0}
         />
       </div>
     </label>

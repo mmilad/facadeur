@@ -120,19 +120,32 @@ function pruneStyleChildren(
   root: NestedNode,
 ): StyleBlock | undefined {
   if (!styles?.children) return styles;
-  const nodeIds = new Set<string>();
-  const visit = (node: NestedNode): void => {
-    nodeIds.add(node.id);
-    if (node.type === 'frame') {
-      for (const child of node.children ?? []) visit(child);
-    }
-  };
-  visit(root);
-  for (const id of Object.keys(styles.children)) {
-    if (!nodeIds.has(id)) delete styles.children[id];
+  for (const target of Object.keys(styles.children)) {
+    if (!hasLocalStylePath(root, target.split('/'))) delete styles.children[target];
   }
   if (!Object.keys(styles.children).length) delete styles.children;
   return styles;
+}
+
+function hasLocalStylePath(root: NestedNode, path: readonly string[]): boolean {
+  if (path.length === 1) {
+    return hasNodeId(root, path[0] ?? '');
+  }
+  let current: NestedNode = root;
+  for (const [index, segment] of path.entries()) {
+    if (current.type === 'instance') return true;
+    if (current.type !== 'frame') return false;
+    const child = (current.children ?? []).find((node) => node.id === segment);
+    if (!child) return false;
+    current = child;
+    if (index < path.length - 1 && current.type === 'instance') return true;
+  }
+  return current.type === 'instance';
+}
+
+function hasNodeId(node: NestedNode, id: string): boolean {
+  if (node.id === id) return true;
+  return node.type === 'frame' && (node.children ?? []).some((child) => hasNodeId(child, id));
 }
 
 /**

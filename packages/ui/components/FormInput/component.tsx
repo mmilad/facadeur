@@ -5,7 +5,7 @@
 
 'use client';
 
-import './style.css';
+import styles from './style.module.css';
 import type { FormInputProps } from './types';
 
 export function FormInput({
@@ -28,7 +28,7 @@ export function FormInput({
       name={name}
       disabled={disabled}
       onChange={(event) => onCommit?.({ value: event.currentTarget.value })}
-      className={className}
+      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
     />
   );
 }

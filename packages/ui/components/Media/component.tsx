@@ -3,17 +3,33 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
-import './style.css';
+import styles from './style.module.css';
 import type { MediaProps } from './types';
 
 export function Media({ kind = 'image', src, alt, ratio, nodeId, className }: MediaProps) {
   return (
-    <div data-component="media" data-node={nodeId} className={className}>
+    <div
+      data-component="media"
+      data-node={nodeId}
+      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
+    >
       {kind === 'image' && (
-        <img data-node="image" src={src} alt={alt} style={{ aspectRatio: ratio }} />
+        <img
+          data-node="image"
+          src={src}
+          alt={alt}
+          className={styles.f_image_1dr5e62}
+          style={{ aspectRatio: ratio }}
+        />
       )}
       {kind === 'video' && (
-        <video data-node="video" controls src={src} style={{ aspectRatio: ratio }} />
+        <video
+          data-node="video"
+          controls
+          src={src}
+          className={styles.f_video_1lfe6i4}
+          style={{ aspectRatio: ratio }}
+        />
       )}
     </div>
   );

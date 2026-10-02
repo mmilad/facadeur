@@ -20,7 +20,11 @@ import {
   assertLayout,
   assertRepeat,
 } from '../validation/assertions.js';
-import { assertStyleMap, pruneStyleBlockNodes } from '../styles/style-block.js';
+import {
+  assertStyleMap,
+  pruneStyleBlockNodes,
+  rebaseStyleBlockChildPaths,
+} from '../styles/style-block.js';
 import type { InsertNode, Command, CommandContext } from './types.js';
 import { adoptTokenReads } from './token-reads.js';
 import {
@@ -59,11 +63,16 @@ export function removeNode(doc: FlatDocument, nodeId: string): void {
     throw new DocumentError('missing-node', `Node "${nodeId}" is not in the document`);
   }
   const removed = new Set(collectSubtree(doc, nodeId));
+  const localInstanceIds = new Set(
+    Object.values(doc.nodes)
+      .filter((node) => node.type === 'instance')
+      .map((node) => node.id),
+  );
   for (const id of removed) {
     delete doc.nodes[id];
   }
   parent.children = parent.children.filter((id) => id !== nodeId);
-  doc.styles = pruneStyleBlockNodes(doc.styles, removed);
+  doc.styles = pruneStyleBlockNodes(doc.styles, removed, localInstanceIds);
   pruneExposeForRemovedNodes(doc, removed);
   pruneVariantPresetNodes(doc, removed);
 }
@@ -125,11 +134,13 @@ export function moveNode(doc: FlatDocument, command: Extract<Command, { type: 'm
   if (!from) {
     throw new DocumentError('missing-node', `Node "${command.nodeId}" has no parent`);
   }
+  const previousPath = renderedNodePath(doc, command.nodeId);
   const to = requireFrame(doc, command.parentId);
   from.children = from.children.filter((id) => id !== command.nodeId);
   const target = from.id === to.id ? from : to;
   assertIndex(command.index, target.children.length);
   target.children.splice(command.index, 0, command.nodeId);
+  rebaseDocumentStylePaths(doc, previousPath, renderedNodePath(doc, command.nodeId));
 }
 
 export function wrapNode(
@@ -145,6 +156,7 @@ export function wrapNode(
   if (!node || !parent) {
     throw new DocumentError('missing-node', `Node "${command.nodeId}" is not in the document`);
   }
+  const previousPath = renderedNodePath(doc, command.nodeId);
   const frameId = command.frameId ?? (ctx.createId ?? createId)();
   if (!ID_PATTERN.test(frameId)) {
     throw new DocumentError('invalid-id', `Invalid id "${frameId}"`);
@@ -161,6 +173,28 @@ export function wrapNode(
   };
   doc.nodes[frameId] = frame;
   parent.children.splice(index, 1, frameId);
+  rebaseDocumentStylePaths(doc, previousPath, renderedNodePath(doc, command.nodeId));
+}
+
+function renderedNodePath(doc: FlatDocument, nodeId: string): string {
+  const path: string[] = [];
+  let current = nodeId;
+  while (current !== doc.rootId) {
+    path.unshift(current);
+    const parent = findParent(doc, current);
+    if (!parent) throw new DocumentError('missing-node', `Node "${current}" has no parent`);
+    current = parent.id;
+  }
+  return path.join('/');
+}
+
+function rebaseDocumentStylePaths(doc: FlatDocument, fromPath: string, toPath: string): void {
+  doc.styles = rebaseStyleBlockChildPaths(doc.styles, fromPath, toPath);
+  for (const preset of doc.variantPresets ?? []) {
+    const overrides = preset.overrides;
+    if (!overrides?.styles) continue;
+    overrides.styles = rebaseStyleBlockChildPaths(overrides.styles, fromPath, toPath);
+  }
 }
 
 function materialize(draft: InsertNode, seen: Set<string>, nextId: () => string): NestedNode {

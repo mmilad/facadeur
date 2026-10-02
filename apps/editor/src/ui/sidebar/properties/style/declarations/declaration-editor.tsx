@@ -45,6 +45,7 @@ export function DeclarationEditor({
   inheritedDeclarations,
   instanceRoot,
   inheritedTokenDocument,
+  instanceTarget,
 }: {
   session: EditorSession;
   snap: EditorSnapshot;
@@ -55,6 +56,8 @@ export function DeclarationEditor({
   /** Token label owner for values inherited from a selected component master. */
   inheritedTokenDocument?: EditorSnapshot['activeDocument'];
   instanceRoot?: FlatNode;
+  /** True when nodeId is a nested local instance path rather than a document node id. */
+  instanceTarget?: boolean;
 }) {
   const ctx = viewportEditContext({
     breakpoints: editorBreakpoints(snap.document, snap.design),
@@ -62,7 +65,7 @@ export function DeclarationEditor({
     editTarget: snap.editTarget,
   });
   const namedVariant = Boolean(target.variantName);
-  const instance = snap.activeDocument.nodes[target.nodeId]?.type === 'instance';
+  const instance = instanceTarget || snap.activeDocument.nodes[target.nodeId]?.type === 'instance';
   // Named preset styles have the same breakpoint layers as the base style
   // block. Axis layers are the legacy variant form and intentionally stay
   // base-only because their schema has no breakpoint nesting.

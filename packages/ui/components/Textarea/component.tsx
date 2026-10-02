@@ -3,7 +3,7 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
-import './style.css';
+import styles from './style.module.css';
 import type { TextareaProps } from './types';
 
 export function Textarea({
@@ -21,9 +21,11 @@ export function Textarea({
       data-component="textarea"
       data-node={nodeId}
       data-variant-resize={resize}
-      className={className}
+      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
     >
-      <span data-node="label">{label}</span>
+      <span data-node="label" className={styles.f_label_1wf4cn1}>
+        {label}
+      </span>
       <textarea
         data-node="control"
         readOnly
@@ -31,6 +33,7 @@ export function Textarea({
         placeholder={placeholder}
         name={name}
         rows={rows}
+        className={styles.f_control_mx9w2m}
       >
         {value}
       </textarea>

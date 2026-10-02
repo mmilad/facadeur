@@ -4,6 +4,61 @@
 
 ## Refactoring bei der Aufgabenplanung
 
+### CSS Modules und verschachtelte Instanz-Styles (2026-10-02)
+
+- [x] Refactor prerequisite: isolate nested target addressing in the style-engine and
+      nested style editing in the editor under their existing domain owners.
+      Evidence: compile.ts (474 lines) combines declaration/layout compilation with
+      selector addressing; nested selection currently bypasses the style inspector.
+      Pattern: private nested-target module and focused nested inspector/target resolver;
+      keep declaration compilation and the existing ordinary inspector cohesive.
+      Reuse owner VariantTabs in the normal and nested inspector. Keep the declaration
+      editor cohesive: it owns one sparse declaration workflow; only target identity
+      is projected separately, rather than duplicating controls and write semantics.
+      Integration review: node rules and nested rules share identical state, axis and
+      breakpoint emission. Reuse one private style-layer emitter rather than copying
+      that behavior. Preserve declaration order, rule keys and layout compilation.
+- [x] Generate one fixed React format: component.tsx + style.module.css, imported
+      as local classes; remove bundle/component-local options and merge caller classes.
+- [x] Support sparse nested instance-root overrides in Components and Sections,
+      using owner-root-relative paths in styles.children and scoped attribute
+      selectors across component boundaries. Preserve legacy direct child keys.
+      Store complete owner-root-relative rendered paths (local frames included).
+      Rebase these paths atomically on Move/Wrap and prune them on Remove; preserve
+      external path suffixes, sparse presets and Undo.
+- [x] Preserve root component tokens, public token variables and inline fallbacks;
+      do not introduce internal alias variables or another token model.
+      Add a focused root control for reachable components' exposed tokens, writing
+      existing tokenInterface.sets. Keep this distinct from defining local defaults.
+      Evidence: the existing Tokens tab defines local defaults but does not expose
+      descendant sets. Reuse TokenValueControl and the existing undoable command;
+      isolate reachability and sparse token-interface updates in a domain helper.
+- [x] Validate isolated nested usages, variants, states, breakpoints, Reset and
+      Undo; regenerate example UI, check type/lint/tests/build and inspect the browser.
+
+Contracts: edits belong to the containing document, never to the referenced
+master; fields and structure retain their existing behavior. Nested appearance
+targets are instance roots, not arbitrary private master nodes. This explicitly
+extends the style-child path contract and replaces the codegen style-mode API;
+existing document/token formats otherwise remain compatible. The 464-line DOM
+renderer and core command directory remain cohesive unless implementation shows
+an independent responsibility needing extraction. Validation includes detector
+reruns and preview/export parity for the new addressing strategy.
+
+Completion: 918/918 repository tests pass. Editor, core, style-engine,
+renderer-dom, codegen-react and generated UI typechecks pass; source ESLint and
+Prettier checks pass. Next editor and Storybook production builds pass. Isolated
+Chromium checks cover Section nested edits, JSON export, Reset/Undo, root token
+inheritance across six viewports, and bundled React modules with named/axis
+variants, hover, breakpoints and duplicate-instance isolation. Chromium also
+confirms parent overrides win child variants in both preview addressing modes.
+Generated CSS uses ownership layers (component, instance, nested instance) and
+keeps empty module class exports for otherwise unstyled instance nodes.
+The final detector reports compile.ts (550), renderer render.ts (467),
+DeclarationEditor (478) and existing LayoutPanel (510) as review signals. Retain
+these cohesive compilation, rendering and declaration/layout workflows; extracted
+target addressing and shared layer emission remove the actual duplicated responsibility.
+
 ### Token label presentation (2026-10-02)
 
 - [x] Prefer saved labels across pickers, token tables and inherited inspector values.

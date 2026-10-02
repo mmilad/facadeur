@@ -28,8 +28,11 @@ const variantStyleSchema = Type.Record(
 );
 
 const breakpointStyleSchema = Type.Record(breakpointIdSchema, styleLayerSchema);
+const styleTargetSchema = Type.String({
+  pattern: '^[A-Za-z][A-Za-z0-9_-]*(?:/[A-Za-z][A-Za-z0-9_-]*)*$',
+});
 
-/** A descendant rule. One level deep: instance roots may be styled by their containing document. */
+/** Sparse appearance for one local node or a rendered path to a nested instance root. */
 export const styleChildSchema = Type.Object(
   {
     declarations: Type.Optional(styleDeclarationsSchema),
@@ -46,7 +49,7 @@ export const styleBlockSchema = Type.Object(
     states: Type.Optional(styleStatesSchema),
     variants: Type.Optional(variantStyleSchema),
     breakpoints: Type.Optional(breakpointStyleSchema),
-    children: Type.Optional(Type.Record(idSchema, styleChildSchema)),
+    children: Type.Optional(Type.Record(styleTargetSchema, styleChildSchema)),
   },
   { additionalProperties: false },
 );

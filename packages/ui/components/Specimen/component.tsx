@@ -3,15 +3,20 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
-import './style.css';
+import styles from './style.module.css';
 import type { SpecimenProps } from './types';
 import { SpecimenSection } from '../SpecimenSection';
 
 export function Specimen({ nodeId, className }: SpecimenProps) {
   return (
-    <div data-component="specimen" data-node={nodeId} className={className}>
+    <div
+      data-component="specimen"
+      data-node={nodeId}
+      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
+    >
       <SpecimenSection
         nodeId="specimen-section"
+        className={styles.f_specimen_section_qb0b31}
         childFields={{ 'input-email': { value: 'ada@atelier.testyy' } }}
       />
     </div>

@@ -39,8 +39,8 @@ export function parseStyleBlock(value: unknown): StyleBlock {
     }
     const children: Record<string, StyleChild> = {};
     for (const id of Object.keys(record.children).sort()) {
-      if (!/^[A-Za-z][A-Za-z0-9_-]*$/.test(id)) {
-        throw new DocumentError('schema', `Invalid style child id "${id}"`);
+      if (!/^[A-Za-z][A-Za-z0-9_-]*(?:\/[A-Za-z][A-Za-z0-9_-]*)*$/.test(id)) {
+        throw new DocumentError('schema', `Invalid style child path "${id}"`);
       }
       const child = record.children[id];
       if (!isRecord(child)) {

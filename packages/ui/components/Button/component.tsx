@@ -3,7 +3,7 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
-import './style.css';
+import styles from './style.module.css';
 import type { ButtonProps } from './types';
 
 export function Button({ label, tone = 'primary', size = 'md', nodeId, className }: ButtonProps) {
@@ -14,7 +14,7 @@ export function Button({ label, tone = 'primary', size = 'md', nodeId, className
       data-variant-tone={tone}
       data-variant-size={size}
       type="button"
-      className={className}
+      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
     >
       {label}
     </button>

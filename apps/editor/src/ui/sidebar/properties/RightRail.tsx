@@ -1,4 +1,5 @@
 import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
+import { nestedInstanceStyleTarget } from '../../../domain/nested-selection/style-target.js';
 import type { EditorSurface } from '../design/design-domain.js';
 import { ViewportOptionsPanel } from '../layers/ViewportPanel.js';
 import { PropertiesPanel } from './PropertiesPanel.js';
@@ -13,7 +14,11 @@ export function RightRail({
   snap: EditorSnapshot;
   surface: EditorSurface;
 }) {
-  const showViewportBar = !snap.selectedViewportId && !snap.nestedSelection && surface === 'editor';
+  const showViewportBar =
+    !snap.selectedViewportId &&
+    (!snap.nestedSelection ||
+      nestedInstanceStyleTarget(snap.nestedSelection, snap.document.rootId) !== null) &&
+    surface === 'editor';
   return (
     <section className="side-block side-block-grow inspector eu-form" aria-label="Inspector">
       {showViewportBar ? <ViewportEditBar session={session} snap={snap} /> : null}

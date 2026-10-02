@@ -63,6 +63,8 @@ export function createStyleEngine(
     setDocument(document, options = {}) {
       const stored = addresses.get(document.id);
       const compileOptions: CompileOptions = {
+        ...stored,
+        ...options,
         address: options.address ?? stored?.address ?? 'instance',
         breakpoints: options.breakpoints ?? stored?.breakpoints ?? breakpoints,
         paintRoot: options.paintRoot ?? stored?.paintRoot,

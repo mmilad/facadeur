@@ -24,6 +24,8 @@ export interface ValidateOptions {
   globalTokenPaths?: ReadonlySet<string>;
   /** Local component token paths for a catalog document id; validates tokenInterface.sets keys. */
   resolveComponentTokenPaths?: (documentId: string) => ReadonlySet<string> | undefined;
+  /** When available, verifies nested style paths against rendered local instance roots. */
+  resolveNestedStyleTarget?: (documentId: string, path: readonly string[]) => boolean | undefined;
 }
 
 /** Tree shape: reachable nodes, no cycles, and the kind's nesting rule. */

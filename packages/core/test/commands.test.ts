@@ -113,6 +113,160 @@ describe('applyCommand', () => {
     expect(doc.expose).toBeUndefined();
   });
 
+  it('prunes only nested style paths that cross a removed local subtree', () => {
+    const doc = toFlat({
+      version: 1,
+      id: 'path-owner',
+      name: 'Path owner',
+      kind: 'component',
+      styles: {
+        children: {
+          'group/sign-in/continue': { declarations: { color: 'red' } },
+          'other/sign-in/continue': { declarations: { color: 'blue' } },
+        },
+      },
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'group',
+            type: 'frame',
+            children: [{ id: 'sign-in', type: 'instance', component: 'form' }],
+          },
+          { id: 'other', type: 'instance', component: 'form' },
+        ],
+      },
+    });
+    const next = applyCommand(doc, { type: 'remove', nodeId: 'group' });
+    expect(next.styles?.children).toEqual({
+      'other/sign-in/continue': { declarations: { color: 'blue' } },
+    });
+  });
+
+  it('rebases nested style paths on move and preserves sibling and variant paths', () => {
+    const path = 'cards/card-row/sign-in/continue';
+    const siblingPath = 'cards/keep-row/stay/continue';
+    const doc = toFlat({
+      version: 1,
+      id: 'move-style-owner',
+      name: 'Move style owner',
+      kind: 'component',
+      styles: {
+        children: {
+          [path]: { declarations: { color: 'red' } },
+          [siblingPath]: { declarations: { color: 'blue' } },
+          'sign-in': { declarations: { opacity: '0.8' } },
+        },
+      },
+      variants: [
+        { name: 'default' },
+        {
+          name: 'compact',
+          overrides: {
+            styles: {
+              children: {
+                [path]: { states: { hover: { color: 'green' } } },
+                [siblingPath]: { states: { hover: { color: 'purple' } } },
+              },
+            },
+          },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'cards',
+            type: 'frame',
+            children: [
+              {
+                id: 'card-row',
+                type: 'frame',
+                children: [{ id: 'sign-in', type: 'instance', component: 'form' }],
+              },
+              {
+                id: 'keep-row',
+                type: 'frame',
+                children: [{ id: 'stay', type: 'instance', component: 'form' }],
+              },
+            ],
+          },
+          { id: 'archive', type: 'frame', children: [] },
+        ],
+      },
+    });
+    const next = applyCommand(doc, {
+      type: 'move',
+      nodeId: 'card-row',
+      parentId: 'archive',
+      index: 0,
+    });
+    const nextPath = 'archive/card-row/sign-in/continue';
+    expect(next.styles?.children).toMatchObject({
+      [nextPath]: { declarations: { color: 'red' } },
+      [siblingPath]: { declarations: { color: 'blue' } },
+      'sign-in': { declarations: { opacity: '0.8' } },
+    });
+    expect(next.styles?.children).not.toHaveProperty(path);
+    expect(
+      next.variantPresets?.find((preset) => preset.name === 'compact')?.overrides?.styles?.children,
+    ).toEqual({
+      [nextPath]: { states: { hover: { color: 'green' } } },
+      [siblingPath]: { states: { hover: { color: 'purple' } } },
+    });
+  });
+
+  it('rebases nested style paths when wrapping a local frame descendant', () => {
+    const path = 'cards/card-row/sign-in/continue';
+    const doc = toFlat({
+      version: 1,
+      id: 'wrap-style-owner',
+      name: 'Wrap style owner',
+      kind: 'component',
+      styles: { children: { [path]: { declarations: { color: 'red' } } } },
+      variants: [
+        { name: 'default' },
+        {
+          name: 'compact',
+          overrides: {
+            styles: { children: { [path]: { declarations: { color: 'blue' } } } },
+          },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'cards',
+            type: 'frame',
+            children: [
+              {
+                id: 'card-row',
+                type: 'frame',
+                children: [{ id: 'sign-in', type: 'instance', component: 'form' }],
+              },
+            ],
+          },
+        ],
+      },
+    });
+    const next = applyCommand(doc, {
+      type: 'wrap',
+      nodeId: 'sign-in',
+      frameId: 'sign-in-wrap',
+    });
+    const nextPath = 'cards/card-row/sign-in-wrap/sign-in/continue';
+    expect(next.styles?.children).toEqual({
+      [nextPath]: { declarations: { color: 'red' } },
+    });
+    expect(
+      next.variantPresets?.find((preset) => preset.name === 'compact')?.overrides?.styles?.children,
+    ).toEqual({ [nextPath]: { declarations: { color: 'blue' } } });
+  });
+
   it('wraps a node in a frame as one command and refuses the root', () => {
     let doc = component();
     doc = applyCommand(doc, { type: 'wrap', nodeId: 'title', frameId: 'around' });

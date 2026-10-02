@@ -41,7 +41,11 @@ export interface RenderContext {
 export interface DocumentStyles {
   setDocument(
     document: DocumentFile,
-    options?: { address?: 'instance' | 'canvas'; paintRoot?: boolean },
+    options?: {
+      address?: 'instance' | 'canvas';
+      paintRoot?: boolean;
+      catalog?: readonly DocumentFile[];
+    },
   ): void;
   removeDocument?(id: string): void;
 }

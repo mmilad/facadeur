@@ -3,7 +3,7 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
-import './style.css';
+import styles from './style.module.css';
 import type { ProductCardProps } from './types';
 import { Button } from '../Button';
 
@@ -22,13 +22,17 @@ export function ProductCard({
       data-component="product-card"
       data-node={nodeId}
       data-variant={variant}
-      className={className}
+      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
     >
-      <img data-node="image" src={imageSrc} alt={imageAlt} />
-      <div data-node="content">
-        <h2 data-node="title">{title}</h2>
-        <p data-node="price">{price}</p>
-        <Button nodeId="button" label={buttonLabel} />
+      <img data-node="image" src={imageSrc} alt={imageAlt} className={styles.f_image_1dr5e62} />
+      <div data-node="content" className={styles.f_content_145thoi}>
+        <h2 data-node="title" className={styles.f_title_16a95ah}>
+          {title}
+        </h2>
+        <p data-node="price" className={styles.f_price_34jfhm}>
+          {price}
+        </p>
+        <Button nodeId="button" className={styles.f_button_is7gq9} label={buttonLabel} />
       </div>
     </article>
   ) : (
@@ -36,13 +40,17 @@ export function ProductCard({
       data-component="product-card"
       data-node={nodeId}
       data-variant={variant}
-      className={className}
+      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
     >
-      <img data-node="image" src={imageSrc} alt={imageAlt} />
-      <div data-node="content">
-        <h2 data-node="title">{title}</h2>
-        <p data-node="price">{price}</p>
-        <Button nodeId="button" label={buttonLabel} />
+      <img data-node="image" src={imageSrc} alt={imageAlt} className={styles.f_image_1dr5e62} />
+      <div data-node="content" className={styles.f_content_145thoi}>
+        <h2 data-node="title" className={styles.f_title_16a95ah}>
+          {title}
+        </h2>
+        <p data-node="price" className={styles.f_price_34jfhm}>
+          {price}
+        </p>
+        <Button nodeId="button" className={styles.f_button_is7gq9} label={buttonLabel} />
       </div>
     </article>
   );

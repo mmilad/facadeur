@@ -3,14 +3,21 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
-import './style.css';
+import styles from './style.module.css';
 import type { FormControlsProps } from './types';
 import { FormControlsSection } from '../FormControlsSection';
 
 export function FormControls({ nodeId, className }: FormControlsProps) {
   return (
-    <div data-component="form-controls" data-node={nodeId} className={className}>
-      <FormControlsSection nodeId="form-controls-section" />
+    <div
+      data-component="form-controls"
+      data-node={nodeId}
+      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
+    >
+      <FormControlsSection
+        nodeId="form-controls-section"
+        className={styles.f_form_controls_section_qic7ea}
+      />
     </div>
   );
 }

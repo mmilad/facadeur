@@ -3,7 +3,7 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
-import './style.css';
+import styles from './style.module.css';
 import type { FormSegmentedProps } from './types';
 
 export function FormSegmented({ label, state = 'start', nodeId, className }: FormSegmentedProps) {
@@ -12,13 +12,21 @@ export function FormSegmented({ label, state = 'start', nodeId, className }: For
       data-component="form-segmented"
       data-node={nodeId}
       data-variant-state={state}
-      className={className}
+      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
     >
-      <span data-node="label">{label}</span>
-      <div data-node="options">
-        <span data-node="start">Start</span>
-        <span data-node="center">Center</span>
-        <span data-node="end">End</span>
+      <span data-node="label" className={styles.f_label_1wf4cn1}>
+        {label}
+      </span>
+      <div data-node="options" className={styles.f_options_1ucvqn9}>
+        <span data-node="start" className={styles.f_start_s2jf1b}>
+          Start
+        </span>
+        <span data-node="center" className={styles.f_center_1jezyc}>
+          Center
+        </span>
+        <span data-node="end" className={styles.f_end_tkd2ga}>
+          End
+        </span>
       </div>
     </div>
   );

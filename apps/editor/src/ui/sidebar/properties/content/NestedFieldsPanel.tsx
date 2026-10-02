@@ -1,6 +1,10 @@
+import { useState } from 'react';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
+import { nestedInstanceStyleTarget } from '../../../../domain/nested-selection/style-target.js';
 import { InstanceFieldOverride } from '../../../controls/instance/InstanceFieldOverride.js';
 import { fieldDisplayLabel } from '../../../controls/data/field-label.js';
+import { VariantTabs } from '../VariantTabs.js';
+import { NestedStyleInspector } from '../style/NestedStyleInspector.js';
 import './instance-context.css';
 export function NestedFieldsPanel({
   session,
@@ -9,8 +13,10 @@ export function NestedFieldsPanel({
   session: EditorSession;
   snap: EditorSnapshot;
 }) {
+  const [tab, setTab] = useState<'fields' | 'style'>('fields');
   const selection = snap.nestedSelection;
   if (!selection) return null;
+  const hasStyleTarget = nestedInstanceStyleTarget(selection, snap.document.rootId) !== null;
   const context = selection.fieldContext;
   const node = selection.node;
   const title =
@@ -19,7 +25,9 @@ export function NestedFieldsPanel({
     <div className="properties nested-fields-panel" data-testid="nested-fields-panel">
       <div className="inspector-context instance-context" data-testid="inspector-context">
         <div className="instance-context-head">
-          <span className="inspector-context-kicker">Nested instance fields</span>
+          <span className="inspector-context-kicker">
+            {hasStyleTarget ? 'Nested instance' : 'Nested instance fields'}
+          </span>
           <span className="instance-context-badge">
             {context ? `${context.target.kind} instance` : node.type}
           </span>
@@ -34,9 +42,7 @@ export function NestedFieldsPanel({
         <span className="inspector-context-path" title={selection.renderId}>
           {selection.renderId.split('/').join(' / ')}
         </span>
-        <span className="inspector-context-meta">
-          Only field values can be changed here. Shared structure and styles belong to the master.
-        </span>
+        <span className="inspector-context-meta">Structure belongs to the master.</span>
         <button
           type="button"
           className="text-button instance-context-master-button"
@@ -53,7 +59,36 @@ export function NestedFieldsPanel({
             : selection.document.name}
         </button>
       </div>
-      {context?.fields.length ? (
+      <VariantTabs session={session} snap={snap} />
+      {hasStyleTarget ? (
+        <div className="tabs property-tabs" role="tablist" aria-label="Nested instance properties">
+          <button
+            type="button"
+            role="tab"
+            name="nested-property-tab-fields"
+            className={tab === 'fields' ? 'tab is-active' : 'tab'}
+            aria-selected={tab === 'fields'}
+            onClick={() => setTab('fields')}
+          >
+            Fields
+          </button>
+          <button
+            type="button"
+            role="tab"
+            name="nested-property-tab-style"
+            className={tab === 'style' ? 'tab is-active' : 'tab'}
+            aria-selected={tab === 'style'}
+            onClick={() => setTab('style')}
+          >
+            Style
+          </button>
+        </div>
+      ) : null}
+      {hasStyleTarget && tab === 'style' ? (
+        <div role="tabpanel" className="property-panel">
+          <NestedStyleInspector session={session} snap={snap} />
+        </div>
+      ) : tab === 'fields' && context?.fields.length ? (
         <div className="stack property-panel">
           <h3>Fields</h3>
           {context.fields.map((field) => {
@@ -95,11 +130,11 @@ export function NestedFieldsPanel({
             );
           })}
         </div>
-      ) : (
+      ) : tab === 'fields' ? (
         <p className="inspector-empty">
           This layer has no editable fields. Select a nested instance or a layer bound to a field.
         </p>
-      )}
+      ) : null}
     </div>
   );
 }

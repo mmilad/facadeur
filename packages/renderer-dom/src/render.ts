@@ -107,6 +107,7 @@ export function createDomRenderer(options: {
     const address = mountedAsCanvas ? 'canvas' : 'instance';
     options.styles?.setDocument(document, {
       address,
+      catalog: [...catalog.values()],
       ...(document.id === mountedId && paintRoot ? { paintRoot: true } : {}),
     });
   }
@@ -135,7 +136,9 @@ export function createDomRenderer(options: {
       const unsubscribe = store.subscribe((change) => {
         const next = toNested(store.getDocument());
         catalog.set(next.id, next);
-        syncStyles(next.id === mountedId ? mountedDocument(next) : next);
+        for (const entry of catalog.values()) {
+          syncStyles(entry.id === mountedId ? mountedDocument(entry) : entry);
+        }
         if (isStyleOnly(change)) return;
         if (next.id === mountedId) {
           paintMounted();

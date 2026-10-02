@@ -5,7 +5,7 @@
 
 'use client';
 
-import './style.css';
+import styles from './style.module.css';
 import type { InputProps } from './types';
 import { FormInput } from '../FormInput';
 
@@ -19,10 +19,17 @@ export function Input({
   className,
 }: InputProps) {
   return (
-    <label data-component="input" data-node={nodeId} className={className}>
-      <span data-node="label">{label}</span>
+    <label
+      data-component="input"
+      data-node={nodeId}
+      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
+    >
+      <span data-node="label" className={styles.f_label_1wf4cn1}>
+        {label}
+      </span>
       <FormInput
         nodeId="control"
+        className={styles.f_control_mx9w2m}
         value={value}
         placeholder={placeholder}
         name={name}

@@ -3,7 +3,7 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
-import './style.css';
+import styles from './style.module.css';
 import type { FormToggleProps } from './types';
 
 export function FormToggle({ label, value, state = 'on', nodeId, className }: FormToggleProps) {
@@ -12,14 +12,18 @@ export function FormToggle({ label, value, state = 'on', nodeId, className }: Fo
       data-component="form-toggle"
       data-node={nodeId}
       data-variant-state={state}
-      className={className}
+      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
     >
-      <span data-node="label">{label}</span>
-      <div data-node="control">
-        <div data-node="switch">
-          <span data-node="thumb" />
+      <span data-node="label" className={styles.f_label_1wf4cn1}>
+        {label}
+      </span>
+      <div data-node="control" className={styles.f_control_mx9w2m}>
+        <div data-node="switch" className={styles.f_switch_1513hbl}>
+          <span data-node="thumb" className={styles.f_thumb_1vlzs9v} />
         </div>
-        <span data-node="state">{value}</span>
+        <span data-node="state" className={styles.f_state_xckdti}>
+          {value}
+        </span>
       </div>
     </label>
   );

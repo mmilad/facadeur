@@ -45,6 +45,7 @@ import { Field, Select } from '../../../form/index.js';
 import { TextInput } from '../../../form/components/input/TextInput.js';
 import { TokenAddAction } from '../../design/tokens/TokenAddAction.js';
 import '../../design/token-tables.css';
+import { RootTokenOverridesPanel } from './RootTokenOverridesPanel.js';
 
 const COMPONENT_TOKEN_TYPES: TokenType[] = [
   'color',
@@ -153,6 +154,7 @@ export function ComponentTokensPanel({
       ) : (
         <p className="inspector-empty">No local tokens yet.</p>
       )}
+      <RootTokenOverridesPanel session={session} snap={snap} />
     </section>
   );
 }

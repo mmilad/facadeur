@@ -3,10 +3,6 @@
 import { useEffect, useState } from 'react';
 import { findParent, type FlatDocument, type FlatNode } from '@facadeur/core';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
-import { ownsVariantContract, variantSummaries } from '../../../domain/edits/variant-edit.js';
-import { createNamedVariant, renameNamedVariant } from '../../../domain/variant-actions.js';
-import { VariantActionButton } from '../../controls/variants/VariantActionButton.js';
-import { AddPopover, Field, TextInput } from '../../form/index.js';
 import { NestedFieldsPanel } from './content/NestedFieldsPanel.js';
 import { ContentPanel } from './content/ContentPanel.js';
 import { InstanceContext } from './content/InstanceContext.js';
@@ -14,6 +10,7 @@ import { StyleInspector } from './style/StyleInspector.js';
 import { ComponentTokensPanel } from './component/ComponentTokensPanel.js';
 import { TokenPreviewProvider } from '../../controls/fields/TokenPreviewContext.js';
 import { editorBreakpoints, viewportEditContext } from '../../../domain/viewport/viewport-edit.js';
+import { VariantTabs } from './VariantTabs.js';
 
 type PropertyPrimaryTab = 'style' | 'content' | 'tokens';
 
@@ -162,54 +159,6 @@ export function PropertiesPanel({
           </TokenPreviewProvider>
         </div>
       ) : null}
-    </div>
-  );
-}
-
-function VariantTabs({ session, snap }: { session: EditorSession; snap: EditorSnapshot }) {
-  const [newName, setNewName] = useState('');
-  if (!ownsVariantContract(snap.document.kind)) return null;
-
-  const variants = variantSummaries(snap.document);
-  function addVariant() {
-    if (createNamedVariant(session, newName)) setNewName('');
-  }
-
-  return (
-    <div className="variant-tabs" role="tablist" aria-label="Component variants">
-      <div className="variant-tabs-head">
-        <span className="variant-tabs-label">Variant</span>
-        <AddPopover label="Add variant" onConfirm={addVariant}>
-          <Field label="Name">
-            <TextInput
-              name="new-variant-name"
-              value={newName}
-              placeholder="compact"
-              onChange={setNewName}
-            />
-          </Field>
-        </AddPopover>
-      </div>
-      <div className="variant-tabs-list">
-        {variants.map((variant) => {
-          const active = (snap.activeVariantName ?? 'default') === variant.name;
-          return (
-            <div key={variant.name} className="variant-tab-entry">
-              <VariantActionButton
-                role="tab"
-                name={`variant-tab-${variant.name}`}
-                label={variant.label}
-                onRename={(label) => renameNamedVariant(session, variant.name, label)}
-                className={active ? 'variant-tab is-active' : 'variant-tab'}
-                aria-selected={active}
-                onClick={() => session.setActiveVariant(variant.isDefault ? null : variant.name)}
-              >
-                {variant.label}
-              </VariantActionButton>
-            </div>
-          );
-        })}
-      </div>
     </div>
   );
 }

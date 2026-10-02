@@ -209,6 +209,255 @@ describe('component style block', () => {
   });
 });
 
+describe('nested instance root appearance overrides', () => {
+  it('resolves deep targets that exist only in one named child variant', () => {
+    const button: DocumentFile = {
+      version: 1,
+      id: 'variant-button',
+      name: 'Variant button',
+      kind: 'atom',
+      root: { id: 'root', type: 'frame', tag: 'button' },
+    };
+    const card: DocumentFile = {
+      version: 1,
+      id: 'variant-card',
+      name: 'Variant card',
+      kind: 'component',
+      variants: [
+        { name: 'default' },
+        {
+          name: 'compact',
+          overrides: {
+            insertions: [
+              {
+                parent: 'shell',
+                node: { id: 'continue', type: 'instance', component: 'variant-button' },
+              },
+            ],
+          },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [{ id: 'shell', type: 'frame', children: [] }],
+      },
+    };
+    const host: DocumentFile = {
+      version: 1,
+      id: 'variant-host',
+      name: 'Variant host',
+      kind: 'component',
+      styles: {
+        children: { 'card/shell/continue': { declarations: { backgroundColor: 'red' } } },
+      },
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [{ id: 'card', type: 'instance', component: 'variant-card' }],
+      },
+    };
+
+    const rules = compileDocument(host, { catalog: [host, card, button] });
+    const rule = rules.find((entry) => entry.key === 'variant-host:card/shell/continue:base');
+    expect(rule?.selector).toBe(
+      '[data-component="variant-host"] > [data-node="card"] > [data-node="shell"] > [data-node="continue"][data-component="variant-button"][data-component="variant-button"]',
+    );
+  });
+
+  it('emits separate exact-path rules with states, breakpoints, and variants', () => {
+    const button: DocumentFile = {
+      version: 1,
+      id: 'button',
+      name: 'Button',
+      kind: 'atom',
+      root: { id: 'root', type: 'frame', tag: 'button', children: [] },
+    };
+    const template: DocumentFile = {
+      version: 1,
+      id: 'template',
+      name: 'Template',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [{ id: 'continue', type: 'instance', component: 'button' }],
+      },
+    };
+    const owner: DocumentFile = {
+      version: 1,
+      id: 'owner',
+      name: 'Owner',
+      kind: 'section',
+      variants: [{ name: 'tone', values: ['quiet', 'loud'], default: 'quiet' }],
+      styles: {
+        children: {
+          'group/sign-in/continue': {
+            declarations: { color: 'red' },
+            states: { hover: { color: 'blue' } },
+            variants: { tone: { loud: { declarations: { color: 'purple' } } } },
+            breakpoints: { sm: { declarations: { color: 'green' } } },
+          },
+          'group/checkout/continue': { declarations: { color: 'black' } },
+        },
+      },
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'group',
+            type: 'frame',
+            children: [
+              { id: 'sign-in', type: 'instance', component: 'template' },
+              { id: 'checkout', type: 'instance', component: 'template' },
+            ],
+          },
+        ],
+      },
+    };
+    const rules = compileDocument(owner, { catalog: [owner, template, button] });
+    const signIn = rules.find((rule) => rule.key === 'owner:group/sign-in/continue:base');
+    const checkout = rules.find((rule) => rule.key === 'owner:group/checkout/continue:base');
+    expect(signIn?.selector).toContain(
+      '[data-node="group"] > [data-node="sign-in"] > [data-node="continue"]',
+    );
+    expect(signIn?.selector).toContain('[data-component="button"]');
+    expect(checkout?.selector).toContain(
+      '[data-node="group"] > [data-node="checkout"] > [data-node="continue"]',
+    );
+    expect(signIn?.selector).not.toBe(checkout?.selector);
+    expect(
+      rules.find((rule) => rule.key === 'owner:group/sign-in/continue:state:hover')?.selector,
+    ).toContain(':hover');
+    expect(
+      rules.find((rule) => rule.key === 'owner:group/sign-in/continue:variant:tone:loud')?.selector,
+    ).toContain('[data-variant-tone="loud"]');
+    expect(
+      rules.find((rule) => rule.key === 'owner:group/sign-in/continue:style:sm')?.minWidth,
+    ).toBe(768);
+    const canvas = compileDocument(owner, {
+      address: 'canvas',
+      paintRoot: true,
+      catalog: [owner, template, button],
+    });
+    expect(
+      canvas.find((rule) => rule.key === 'owner:group/sign-in/continue:base')?.selector,
+    ).toContain('[data-id="root/group/sign-in/continue"]');
+  });
+
+  it('paints canvas overrides only on the selected rendered path', () => {
+    const button: DocumentFile = {
+      version: 1,
+      id: 'canvas-button',
+      name: 'Button',
+      kind: 'atom',
+      variants: [
+        { name: 'default' },
+        { name: 'compact' },
+        { name: 'tone', values: ['quiet', 'loud'], default: 'quiet' },
+      ],
+      styles: {
+        declarations: { backgroundColor: 'yellow' },
+        variants: {
+          variant: { compact: { declarations: { backgroundColor: 'purple' } } },
+          tone: { loud: { declarations: { backgroundColor: 'blue' } } },
+        },
+      },
+      root: { id: 'button-root', type: 'frame', tag: 'button' },
+    };
+    const template: DocumentFile = {
+      version: 1,
+      id: 'canvas-template',
+      name: 'Template',
+      kind: 'component',
+      root: {
+        id: 'template-root',
+        type: 'frame',
+        children: [
+          {
+            id: 'continue',
+            type: 'instance',
+            component: button.id,
+            variants: { variant: 'compact', tone: 'loud' },
+          },
+        ],
+      },
+    };
+    const owner: DocumentFile = {
+      version: 1,
+      id: 'canvas-owner',
+      name: 'Owner',
+      kind: 'section',
+      styles: {
+        children: {
+          'group/sign-in/continue': {
+            declarations: { color: 'red', backgroundColor: 'red' },
+          },
+          'group/checkout/continue': {
+            declarations: { color: 'black', backgroundColor: 'black' },
+          },
+        },
+      },
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'group',
+            type: 'frame',
+            children: [
+              { id: 'sign-in', type: 'instance', component: template.id },
+              { id: 'checkout', type: 'instance', component: template.id },
+            ],
+          },
+        ],
+      },
+    };
+    const host = document.createElement('div');
+    const styles = createStyleEngine();
+    const renderer = createDomRenderer({
+      parent: host,
+      catalog: [owner, template, button],
+      styles,
+      paintRoot: true,
+    });
+    renderer.mount(owner);
+    expect(
+      host.querySelector('[data-id="root/group/sign-in/continue"]')?.getAttribute('data-component'),
+    ).toBe(button.id);
+    expect(
+      host
+        .querySelector('[data-id="root/group/checkout/continue"]')
+        ?.getAttribute('data-component'),
+    ).toBe(button.id);
+    expect(
+      getComputedStyle(host.querySelector('[data-id="root/group/sign-in/continue"]')!).color,
+    ).toBe('rgb(255, 0, 0)');
+    expect(
+      getComputedStyle(host.querySelector('[data-id="root/group/checkout/continue"]')!).color,
+    ).toBe('rgb(0, 0, 0)');
+    const nestedSelector = compileDocument(owner, {
+      address: 'canvas',
+      paintRoot: true,
+      catalog: [owner, template, button],
+    }).find((rule) => rule.key === 'canvas-owner:group/sign-in/continue:base')?.selector;
+    const namedVariantSelector = compileDocument(button).find((rule) =>
+      rule.key.includes(':variant:variant:compact'),
+    )?.selector;
+    const axisVariantSelector = compileDocument(button).find((rule) =>
+      rule.key.includes(':variant:tone:loud'),
+    )?.selector;
+    const attributeCount = (selector: string | undefined) =>
+      selector?.match(/\[[^\]]+\]/g)?.length ?? 0;
+    expect(nestedSelector).toContain('[data-id="root/group/sign-in/continue"]');
+    expect(attributeCount(nestedSelector)).toBeGreaterThan(attributeCount(namedVariantSelector));
+    expect(attributeCount(nestedSelector)).toBeGreaterThan(attributeCount(axisVariantSelector));
+    renderer.destroy();
+    styles.destroy();
+  });
+});
+
 describe('style engine and renderer', () => {
   it('keeps instance-root overrides isolated and dominant when child rules are inserted later', () => {
     const control: DocumentFile = {

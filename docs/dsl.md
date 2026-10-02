@@ -179,7 +179,17 @@ Frames render as flexbox. The default direction is `column`, alignment is stretc
 
 ## Style block
 
-`styles` on an atom, component, or section paints that document. `declarations` are the base. `states` are `hover`, `focus-visible`, and `disabled`. `variants` map an axis to a value to a layer of declarations and states. `breakpoints` do the same inside a media query. `children` keys are node ids in this document (not instances) and use the same shape one level deep.
+`styles` on an atom, component, or section paints that document. `declarations` are the base. `states` are `hover`, `focus-visible`, and `disabled`. `variants` map an axis to a value to a layer of declarations and states. `breakpoints` do the same inside a media query. `children` accepts local node ids, including instance roots, and uses the same layer shape.
+
+For a nested instance root, a child key is its complete rendered path relative to
+the containing document root, including local frames but omitting the root itself:
+`cards/card-row/card-signin/continue`. The path must cross an instance boundary and
+end at an instance root. Private primitive nodes of a referenced master remain
+editable through that master. The editor offers Fields and Style tabs for nested
+instance roots in Components and Sections; style writes belong to the containing
+document. Move and Wrap rebase local path prefixes, Remove prunes affected paths,
+and Reset removes the sparse override. States, breakpoints and named owner variants
+use the same target path.
 
 Values may contain token references. `font: "{type.body}"` expands to the typography longhands (`font-family`, `font-size`, `font-weight`, `line-height`, `letter-spacing`). Spacing properties in the block are token references only.
 
@@ -187,7 +197,7 @@ Values may contain token references. `font: "{type.body}"` expands to the typogr
 
 `style` on a primitive node is still the `setStyle` map. It overrides the style block's base declaration for the same property. States, variants, and breakpoints stay above that.
 
-Selectors:
+DOM preview selectors (React codegen uses local CSS Module classes):
 
 | Target         | Selector                                               |
 | -------------- | ------------------------------------------------------ |
@@ -246,6 +256,14 @@ Segments are joined with a single hyphen, so each path has one name. A typograph
 Component files do not store local tokens in the design `tokens` tree. They use `componentTokens`: a flat map from a token path (`color.border`, `padding.x`, …) to `{ type, value }`. The default `value` is a literal with no `{…}`, or exactly one `{global.path}` reference. Local-to-local references in defaults are rejected.
 
 The public path is `<documentId>.<localPath>` (for example `input.color.border`). CSS uses the same hyphenation as global tokens (`--input-color-border`). In the owning document's compiled styles, `{color.border}` becomes `var(--input-color-border, <fallback>)` where the fallback is `var(--global-path)` when the default is a single global reference, otherwise the literal. The owning root rule does **not** assign `--input-color-border`; a parent's `tokenInterface.sets` entry emits that variable so inheritance wins and the fallback applies only when the variable is unset.
+
+At an atom, component, or section root, the editor's Tokens tab also lists exposed
+tokens from reachable descendant components. Editing them writes
+`tokenInterface.sets` on the containing root, affecting matching descendants;
+Reset removes that set and restores the component fallback. Local token defaults
+and descendant overrides remain separate controls. No internal alias variable is
+needed. Root sets are base-document values; scoped state/breakpoint/instance
+overrides belong to the style block.
 
 Allowed kinds: atom, component, and section. Pages cannot define `componentTokens`. Commands: `setComponentToken`, `removeComponentToken`. Before `setComponentToken`, the editor should call `assertComponentTokenDefault(value, globalPaths)` with paths from the design document.
 
@@ -324,15 +342,20 @@ The editor shows one same-origin iframe per breakpoint. The iframe's width is th
 ## Codegen
 
 `@facadeur/codegen-react` reads these documents and emits one directory per React component.
-Each directory separates `component.tsx`, `types.ts`, `style.css`, and its public `index.ts`.
+Each directory separates `component.tsx`, `types.ts`, `style.module.css`, and its public `index.ts`.
 Props are the fields and variant axes. The component root sets `data-component` and
 `data-variant-*`. Children set `data-node`. An instance becomes a call to the generated component,
 with that instance's field and variant overrides. `nodeId` is the instance id and is written to
-`data-node`, so the style-engine selectors apply to the same element the renderer paints.
+`data-node`, so the style-engine selectors apply to the same element the renderer paints. Each
+element gets a local CSS Module class; instance classes are passed to the child component root,
+which merges them with its own generated class and any caller or document classes.
 
 Tokens and fonts become the global design stylesheet (`styles/tokens.css`). Style blocks and layout
-are compiled per component with `address: 'instance'`; their `style.css` remains based on Facadeur's
-globally interpreted, component-scoped data selectors rather than CSS Module class names.
+are compiled per component with `address: 'instance'` and use the same local class mapping as the
+generated JSX. Nested instance overrides keep their `data-node` path selectors anchored to the
+owning component's local root class. Generated component rules are ordered in cascade layers:
+component styles, direct instance overrides, then nested instance overrides. `css-modules.d.ts`
+declares the generated stylesheet import.
 `pnpm codegen` writes these files to `packages/ui`. Generated CSF3 stories land under
 `apps/storybook/src/stories/generated`. Run `pnpm storybook` to preview them. The Next.js example
 in `examples/next` imports `@facadeur/ui`.

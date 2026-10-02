@@ -62,7 +62,7 @@ function componentTypes(files: { path: string; contents: string }[], name: strin
 }
 
 function componentStyle(files: { path: string; contents: string }[], name: string): string {
-  return source(files, `components/${name}/style.css`);
+  return source(files, `components/${name}/style.module.css`);
 }
 
 function expectGeneratedTypecheck(files: { path: string; contents: string }[]): void {
@@ -168,22 +168,20 @@ describe('generateReact', () => {
     expect(tokens).toContain('--font-sans:');
     expect(tokens).toContain('@import url("https://fonts.googleapis.com');
     const css = componentStyle(files, 'Button');
-    expect(css).toContain('[data-component="button"]');
+    expect(css).toMatch(/\.f_root_[a-z0-9]+ \{/);
     expect(css).toContain('background: var(--button-color-bg, var(--color-accent-default))');
     expect(css).toContain('font-family: var(--type-label--font-family)');
-    expect(css).toContain('[data-component="button"][data-variant-tone="ghost"]');
-    expect(css).toContain('[data-component="button"]:hover');
-    expect(css).toContain('[data-component="button"]:focus-visible');
-    expect(css).toContain('[data-component="button"]:disabled');
+    expect(css).toMatch(/\.f_root_[a-z0-9]+\[data-variant-tone="ghost"\]/);
+    expect(css).toMatch(/\.f_root_[a-z0-9]+:hover/);
+    expect(css).toMatch(/\.f_root_[a-z0-9]+:focus-visible/);
+    expect(css).toMatch(/\.f_root_[a-z0-9]+:disabled/);
     expect(css).toContain('@media (min-width: 768px)');
     expect(css).not.toContain('min-width: 375px');
     const formInputCss = componentStyle(files, 'FormInput');
-    expect(formInputCss).toContain('[data-component="form-input"]');
+    expect(formInputCss).toMatch(/\.f_root_[a-z0-9]+ \{/);
     const signInCss = componentStyle(files, 'SignIn');
     expect(signInCss).toContain('--input-color-border: var(--color-accent-default)');
-    expect(css.indexOf('[data-component="button"]')).toBeLessThan(
-      css.indexOf('@media (min-width: 768px)'),
-    );
+    expect(css.indexOf('.f_root_')).toBeLessThan(css.indexOf('@media (min-width: 768px)'));
   });
 
   it('sorts documents by id so the same catalog always matches', () => {
@@ -192,15 +190,17 @@ describe('generateReact', () => {
     expect(reversed.ui.map((file) => file.contents)).toEqual(files.map((file) => file.contents));
   });
 
-  it('emits component-local CSS and imports it from the implementation', () => {
-    const generated = generateReact({ documents: [documents[0]!], styles: 'component-local' });
+  it('emits CSS Modules per component and imports them from the implementation', () => {
+    const generated = generateReact({ documents: [documents[0]!] });
     expect(generated.ui.some((file) => file.path === 'styles/components.css')).toBe(false);
-    expect(componentStyle(generated.ui, 'Button')).toContain('[data-component="button"]');
-    expect(componentSource(generated.ui, 'Button')).toContain("import './style.css'");
+    expect(componentStyle(generated.ui, 'Button')).toMatch(/\.f_root_[a-z0-9]+ \{/);
+    expect(componentSource(generated.ui, 'Button')).toContain(
+      "import styles from './style.module.css'",
+    );
     expect(source(generated.ui, 'components/Button/index.ts')).toContain(
       "export { Button } from './component'",
     );
-    expect(componentStyle(generated.ui, 'Button')).not.toContain('[data-component="card"]');
+    expect(componentStyle(generated.ui, 'Button')).not.toContain('data-component="card"');
     const rootIndex = source(generated.ui, 'index.ts');
     expect(rootIndex).toContain("export * from './components/Button';");
     expect(rootIndex).not.toContain('import ');
@@ -212,8 +212,9 @@ describe('generateReact', () => {
       'styles/tokens.css',
       'components/Button/component.tsx',
       'components/Button/types.ts',
-      'components/Button/style.css',
+      'components/Button/style.module.css',
       'components/Button/index.ts',
+      'css-modules.d.ts',
       'index.ts',
     ]);
     expect(generated.stories.map((file) => file.path)).toEqual([
@@ -235,12 +236,15 @@ describe('generateReact', () => {
     ]);
   });
 
-  it('keeps bundle CSS as an explicit compatibility mode', () => {
-    const generated = generateReact({ documents: [documents[0]!], styles: 'bundle' });
-    expect(source(generated.ui, 'styles/components.css')).toContain('[data-component="button"]');
-    expect(generated.ui.some((file) => file.path.endsWith('/style.css'))).toBe(false);
-    expect(componentSource(generated.ui, 'Button')).not.toContain("import './style.css'");
-    expect(source(generated.ui, 'index.ts')).not.toContain('components.css');
+  it('gives elements and nested component roots classes from the owning module', () => {
+    const generated = generateReact({ documents, entries: ['sign-in'] });
+    const sourceText = generated.ui
+      .filter((file) => file.path.endsWith('.tsx'))
+      .map((file) => file.contents)
+      .join('\n');
+    expect(sourceText).toContain('className={styles.');
+    expect(sourceText).toMatch(/<Input[\s\S]*?className=\{styles\./);
+    expect(generated.ui.some((file) => file.path === 'css-modules.d.ts')).toBe(true);
   });
 
   it('typechecks the complete split component graph', () => {
@@ -434,7 +438,9 @@ describe('bindings outside the examples', () => {
     expect(types).toContain("import type { CSSProperties } from 'react';");
     expect(component).toContain("'--tint': href");
     expect(component).toContain('as CSSProperties');
-    expect(component).toContain("['card', className].filter(Boolean).join(' ')");
+    expect(component).toMatch(
+      /\[styles\.f_root_[a-z0-9]+, 'card', className\]\.filter\(Boolean\)\.join\(' '\)/,
+    );
 
     const wrapper = componentSource(files, 'Host');
     expect(wrapper).toContain("nodeId='note'");
@@ -442,7 +448,8 @@ describe('bindings outside the examples', () => {
     expect(wrapper).toContain('open={false}');
     expect(wrapper).toContain("density='compact'");
     expect(wrapper).toContain("data-component='missing'");
-    expect(wrapper).toContain("className='ds-unknown'");
+    expect(wrapper).toContain("'ds-unknown'].join(' ')");
+    expect(wrapper).toContain('className={styles.');
     expect(wrapper).toContain('Unknown component: missing');
     expect(files.map((file) => file.path)[1]).toBe('components/Host/component.tsx');
   });

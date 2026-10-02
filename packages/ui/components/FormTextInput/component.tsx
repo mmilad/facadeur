@@ -5,7 +5,7 @@
 
 'use client';
 
-import './style.css';
+import styles from './style.module.css';
 import type { FormTextInputProps } from './types';
 import { FormInput } from '../FormInput';
 
@@ -26,20 +26,31 @@ export function FormTextInput({
       data-component="form-text-input"
       data-node={nodeId}
       data-variant-state={state}
-      className={className}
+      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
     >
-      <span data-node="label">{label}</span>
-      <div data-node="controlShell">
+      <span data-node="label" className={styles.f_label_1wf4cn1}>
+        {label}
+      </span>
+      <div data-node="controlShell" className={styles.f_controlShell_1jj1t9s}>
         <img
           data-node="leadingIcon"
           aria-hidden="true"
           src={icon}
           alt=""
+          className={styles.f_leadingIcon_64t8uc}
           hidden={hasIcon === false}
         />
-        <FormInput nodeId="control" value={value} placeholder={placeholder} onCommit={onCommit} />
+        <FormInput
+          nodeId="control"
+          className={styles.f_control_mx9w2m}
+          value={value}
+          placeholder={placeholder}
+          onCommit={onCommit}
+        />
       </div>
-      <span data-node="hint">{hint}</span>
+      <span data-node="hint" className={styles.f_hint_l0yj7c}>
+        {hint}
+      </span>
     </label>
   );
 }

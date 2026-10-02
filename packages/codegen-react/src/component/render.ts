@@ -21,6 +21,7 @@ import type {
   ElementNode,
   Expr,
   TextChild,
+  LocalClassNames,
 } from './types.js';
 
 export function renderNode(
@@ -34,9 +35,19 @@ export function renderNode(
   markStyle: () => void,
   dataScope: ReadonlyMap<string, string> = new Map(),
   childFieldsProp?: string,
+  classNames: LocalClassNames = new Map(),
 ): ElementNode {
   if (node.type === 'instance') {
-    return renderInstance(node, catalog, imports, owner, usedProps, dataScope, childFieldsProp);
+    return renderInstance(
+      node,
+      catalog,
+      imports,
+      owner,
+      usedProps,
+      dataScope,
+      childFieldsProp,
+      classNames.get(node.id),
+    );
   }
   const tag = node.tag ?? (node.type === 'text' ? 'span' : node.type === 'image' ? 'img' : 'div');
   const children = node.type === 'frame' ? (node.children ?? []) : [];
@@ -91,7 +102,7 @@ export function renderNode(
     pushMedia(attrs, 'alt', bound.alt, node.alt);
   }
 
-  const className = classAttribute(node, bound, isRoot);
+  const className = classAttribute(node, bound, isRoot, classNames.get(node.id));
   if (className) attrs.push(className);
   const style = styleAttribute(node, bound, markStyle);
   if (style) attrs.push(style);
@@ -130,6 +141,7 @@ export function renderNode(
           markStyle,
           childScope,
           childFieldsProp,
+          classNames,
         ),
       );
     }
@@ -184,9 +196,11 @@ function classAttribute(
   node: Exclude<NestedNode, { type: 'instance' }>,
   bound: Bound,
   isRoot: boolean,
+  localClass: string | undefined,
 ): Attr | undefined {
   const staticClass = classFromAttributes(node.attributes);
   const parts: string[] = [];
+  if (localClass) parts.push(`styles.${localClass}`);
   if (staticClass) parts.push(quote(staticClass));
   if (bound.classExpr) parts.push(bound.classExpr);
   if (isRoot) parts.push('className');

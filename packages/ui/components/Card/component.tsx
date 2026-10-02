@@ -3,15 +3,25 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
-import './style.css';
+import styles from './style.module.css';
 import type { CardProps } from './types';
 
 export function Card({ eyebrow, title, body, nodeId, className }: CardProps) {
   return (
-    <article data-component="card" data-node={nodeId} className={className}>
-      <p data-node="eyebrow">{eyebrow}</p>
-      <h2 data-node="title">{title}</h2>
-      <p data-node="body">{body}</p>
+    <article
+      data-component="card"
+      data-node={nodeId}
+      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
+    >
+      <p data-node="eyebrow" className={styles.f_eyebrow_95073g}>
+        {eyebrow}
+      </p>
+      <h2 data-node="title" className={styles.f_title_16a95ah}>
+        {title}
+      </h2>
+      <p data-node="body" className={styles.f_body_1oy6jcl}>
+        {body}
+      </p>
     </article>
   );
 }

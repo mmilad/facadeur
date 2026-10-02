@@ -32,6 +32,11 @@ function catalogValidateOptions(byId: Map<string, DocumentFile>): ValidateOption
       if (!tokens) return undefined;
       return new Set(Object.values(tokens).map((token) => token.path));
     },
+    resolveNestedStyleTarget: (documentId, path) => {
+      const owner = byId.get(documentId);
+      if (!owner) return false;
+      return Boolean(resolveRenderedStyleTarget(owner, path, byId));
+    },
   };
 }
 
@@ -260,4 +265,38 @@ function findNestedInstance(
     if (found) return found;
   }
   return undefined;
+}
+
+function resolveRenderedStyleTarget(
+  owner: DocumentFile,
+  path: readonly string[],
+  catalog: Map<string, DocumentFile>,
+): Extract<NestedNode, { type: 'instance' }> | undefined {
+  return visit(owner.root, 0, false);
+
+  function visit(
+    current: NestedNode,
+    index: number,
+    crossedInstance: boolean,
+  ): Extract<NestedNode, { type: 'instance' }> | undefined {
+    if (index === path.length) {
+      return crossedInstance && current.type === 'instance' ? current : undefined;
+    }
+    const segment = path[index];
+    if (!segment) return undefined;
+    if (current.type === 'frame') {
+      const child = (current.children ?? []).find((node) => node.id === segment);
+      return child ? visit(child, index + 1, crossedInstance) : undefined;
+    }
+    if (current.type !== 'instance') return undefined;
+    const target = catalog.get(current.component);
+    if (!target) return undefined;
+    for (const candidate of activeVariantDocuments(target, current.variants?.variant)) {
+      const children = candidate.root.type === 'frame' ? (candidate.root.children ?? []) : [];
+      const child = children.find((node) => node.id === segment);
+      const found = child ? visit(child, index + 1, true) : undefined;
+      if (found) return found;
+    }
+    return undefined;
+  }
 }
