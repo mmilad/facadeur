@@ -107,7 +107,7 @@ describe('LayoutPanel variant and viewport context', () => {
     render(<LayoutHarness session={session} />);
 
     expect(directionSelect()).toHaveValue('row');
-    expect(screen.getByRole('button', { name: 'space.gap.sm' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Gap Sm' })).toBeInTheDocument();
 
     await act(async () => {
       fireEvent.change(directionSelect(), {
@@ -176,7 +176,7 @@ describe('LayoutPanel variant and viewport context', () => {
     render(<LayoutHarness session={session} />);
 
     expect(directionSelect()).toHaveValue('column');
-    expect(screen.getByRole('button', { name: 'space.gap.lg' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Gap Lg' })).toBeInTheDocument();
   });
 
   it('writes a sparse base breakpoint override with only the changed field', async () => {

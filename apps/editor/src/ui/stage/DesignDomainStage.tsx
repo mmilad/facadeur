@@ -9,10 +9,11 @@ import {
 import {
   designDomainLabel,
   isSettingsTokenDomain,
-  SETTINGS_TOKEN_DOMAIN_ITEMS,
+  type EditorSurface,
   type DesignDomain,
 } from '../sidebar/design/design-domain.js';
 import { ViewportsSettingsPanel } from '../sidebar/design/ViewportsSettingsPanel.js';
+import { SettingsSections } from '../sidebar/design/SettingsSections.js';
 import { TokenPreviewProvider } from '../controls/fields/TokenPreviewContext.js';
 import { viewportEditContext } from '../../domain/viewport/viewport-edit.js';
 import '../form/form.css';
@@ -26,7 +27,7 @@ export function DesignDomainStage({
   session: EditorSession;
   snap: EditorSnapshot;
   domain: DesignDomain;
-  onSelectDomain: (domain: DesignDomain) => void;
+  onSelectDomain: (domain: EditorSurface) => void;
 }) {
   const settingsView = isSettingsTokenDomain(domain);
   const title = settingsView ? 'Settings' : designDomainLabel(domain);
@@ -58,24 +59,7 @@ export function DesignDomainStage({
           <h1 className="design-domain-breadcrumb">
             {settingsView ? `${title} · ${designDomainLabel(domain)}` : `${title} · ${designTitle}`}
           </h1>
-          {settingsView ? (
-            <nav className="design-settings-tabs" aria-label="Settings sections">
-              {SETTINGS_TOKEN_DOMAIN_ITEMS.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={
-                    domain === item.id ? 'design-settings-tab is-active' : 'design-settings-tab'
-                  }
-                  data-settings-tab={item.id}
-                  aria-current={domain === item.id ? 'page' : undefined}
-                  onClick={() => onSelectDomain(item.id)}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </nav>
-          ) : null}
+          {settingsView ? <SettingsSections surface={domain} onSelect={onSelectDomain} /> : null}
         </div>
         {sharedResources ? (
           <span className="design-resource-scope">Shared project resources</span>

@@ -1,12 +1,5 @@
 export type DesignDomain =
-  | 'colors'
-  | 'fonts'
-  | 'icons'
-  | 'spacing'
-  | 'radius'
-  | 'shadow'
-  | 'typography'
-  | 'viewports';
+  'colors' | 'fonts' | 'icons' | 'spacing' | 'radius' | 'shadow' | 'typography' | 'viewports';
 
 export type EditorView = 'editor' | 'schemas' | 'schema' | 'code' | 'preview';
 
@@ -14,7 +7,6 @@ export type EditorSurface = EditorView | DesignDomain;
 
 export const EDITOR_VIEW_ITEMS: { id: EditorView; label: string }[] = [
   { id: 'editor', label: 'Editor' },
-  { id: 'schemas', label: 'Schemas' },
   { id: 'schema', label: 'Schema' },
   { id: 'code', label: 'Code' },
   { id: 'preview', label: 'Preview data' },
@@ -36,11 +28,13 @@ export const DESIGN_DOMAIN_ITEMS: {
 ];
 
 /** Token domains edited under the Settings subnav (not the project sidebar). */
-export const SETTINGS_TOKEN_DOMAIN_ITEMS = DESIGN_DOMAIN_ITEMS.filter((item) => item.id !== 'icons');
+export const SETTINGS_TOKEN_DOMAIN_ITEMS = DESIGN_DOMAIN_ITEMS.filter(
+  (item) => item.id !== 'icons',
+);
 
 export type SettingsTokenDomain = (typeof SETTINGS_TOKEN_DOMAIN_ITEMS)[number]['id'];
 
-export const SIDEBAR_DESIGN_ITEMS = DESIGN_DOMAIN_ITEMS.filter((item) => item.id === 'icons');
+export const SIDEBAR_DESIGN_ITEMS: typeof DESIGN_DOMAIN_ITEMS = [];
 
 export function isDesignDomain(surface: EditorSurface): surface is DesignDomain {
   return DESIGN_DOMAIN_ITEMS.some((item) => item.id === surface);
@@ -51,7 +45,7 @@ export function isSettingsTokenDomain(surface: EditorSurface): surface is Settin
 }
 
 export function isEditorView(surface: EditorSurface): surface is EditorView {
-  return EDITOR_VIEW_ITEMS.some((item) => item.id === surface);
+  return surface === 'schemas' || EDITOR_VIEW_ITEMS.some((item) => item.id === surface);
 }
 
 export function designDomainLabel(domain: DesignDomain): string {

@@ -42,13 +42,7 @@ describe('viewport layers UX', () => {
     host = null;
   });
 
-  function viewportLayerButton(breakpointId: string): HTMLButtonElement | undefined {
-    return [...(host?.querySelectorAll<HTMLButtonElement>('button.viewport-layer') ?? [])].find(
-      (button) => button.dataset.breakpoint === breakpointId,
-    );
-  }
-
-  it('shows resolved viewport chrome title in Layers rows', async () => {
+  it('keeps viewports out of Layers while updating stage titles', async () => {
     const session: EditorSession = createEditorSession({
       documents,
       design: createProjectTemplateDocument(),
@@ -60,16 +54,19 @@ describe('viewport layers UX', () => {
       root?.render(<App session={session} />);
     });
 
-    const tabletRow = viewportLayerButton('sm');
-    expect(tabletRow?.querySelector('.layer-name')?.textContent).toBe('Tablet · 768');
+    expect(host.querySelector('.layers-viewports')).toBeNull();
+    expect(host.querySelector('button.viewport-layer')).toBeNull();
 
     await act(async () => {
       session.setViewportChrome('sm', { title: 'Tablet preview' });
     });
-    expect(tabletRow?.querySelector('.layer-name')?.textContent).toBe('Tablet preview');
+    expect(
+      host.querySelector('.viewport-frame[data-breakpoint="sm"] .viewport-chrome-title')
+        ?.textContent,
+    ).toBe('Tablet preview');
   });
 
-  it('selects a viewport from Layers and shows chrome options in the inspector', async () => {
+  it('selects a viewport on stage and shows chrome options in the inspector', async () => {
     const session: EditorSession = createEditorSession({
       documents,
       design: createProjectTemplateDocument(),
@@ -81,13 +78,8 @@ describe('viewport layers UX', () => {
       root?.render(<App session={session} />);
     });
 
-    const viewportRow = [...host.querySelectorAll<HTMLButtonElement>('button.viewport-layer')].find(
-      (button) => button.dataset.breakpoint === 'sm',
-    );
-    expect(viewportRow).toBeInstanceOf(HTMLButtonElement);
-
     await act(async () => {
-      viewportRow?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      session.selectViewport('sm');
     });
 
     const snap = session.getSnapshot();

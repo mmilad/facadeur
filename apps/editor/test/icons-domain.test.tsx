@@ -34,7 +34,7 @@ describe('icons domain panel', () => {
       root?.render(<App session={session} />);
     });
     await act(async () => {
-      (host!.querySelector('[data-design-domain="icons"]') as HTMLButtonElement).click();
+      (host!.querySelector('[data-surface="icons"]') as HTMLButtonElement).click();
     });
   }
 

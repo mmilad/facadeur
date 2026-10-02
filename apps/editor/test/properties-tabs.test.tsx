@@ -454,11 +454,8 @@ describe('properties inspector tabs', () => {
       root?.render(<App session={session} />);
     });
 
-    const viewportRow = [...host.querySelectorAll<HTMLButtonElement>('button.viewport-layer')].find(
-      (button) => button.dataset.breakpoint === 'xs',
-    );
     await act(async () => {
-      viewportRow?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      session.selectViewport('xs');
     });
 
     expect(host.querySelector('button[name="property-tab-content"]')).toBeNull();
@@ -480,9 +477,7 @@ describe('properties inspector tabs', () => {
     });
 
     await act(async () => {
-      host!
-        .querySelector('button[data-breakpoint="sm"]')
-        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      session.selectViewport('sm');
     });
 
     const context = host.querySelector('[data-testid="viewport-context"]');

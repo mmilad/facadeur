@@ -103,7 +103,8 @@ describe('editor shell', () => {
     expect(host.querySelector('[data-asset-id="button"]')).toBeInstanceOf(HTMLButtonElement);
     expect(host.querySelector('[data-asset-id="card"]')).toBeInstanceOf(HTMLButtonElement);
     expect(host.querySelector('[data-asset-id="specimen"]')).toBeInstanceOf(HTMLButtonElement);
-    expect(host.querySelector('[data-design-domain="icons"]')?.textContent).toContain('Icons');
+    expect(host.querySelector('[data-surface="icons"]')?.textContent).toContain('Icons');
+    expect(host.querySelector('.side-left [data-design-domain="icons"]')).toBeNull();
     expect(host.querySelector('[data-design-domain="colors"]')).toBeNull();
     expect(host.querySelector('[data-subnav="settings"]')?.textContent).toContain('Settings');
     const sectionRow = host.querySelector('[data-asset-id="specimen-section"]');
@@ -421,13 +422,13 @@ describe('editor shell', () => {
     const padding = host.querySelector(
       'button[name="style-root-base-base-paddingInline"]',
     ) as HTMLButtonElement;
-    expect(padding.textContent).toContain('padding.x');
+    expect(padding.textContent).toContain('Padding X');
 
     await act(async () => {
       viewportButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
     expect(session.getSnapshot().editTarget).toBe('viewport');
-    expect(padding.textContent).toContain('space.5');
+    expect(padding.textContent).toBe('5');
     expect(host.textContent).toContain('Override at 768');
 
     const reset = [...host.querySelectorAll('.override-cue button')].find((button) =>

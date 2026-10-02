@@ -8,14 +8,9 @@ import {
   type DropZone,
 } from '../../../domain/editing.js';
 import type { EditorDrag, EditorSession, EditorSnapshot } from '../../../domain/session.js';
-import { ViewportLayersList } from './ViewportPanel.js';
 
 export function LayersPanel({ session, snap }: { session: EditorSession; snap: EditorSnapshot }) {
   const [over, setOver] = useState<{ id: string; zone: DropZone } | null>(null);
-  const [viewportsOpen, setViewportsOpen] = useState(false);
-  useEffect(() => {
-    if (snap.selectedViewportId) setViewportsOpen(true);
-  }, [snap.selectedViewportId]);
   return (
     <section className="side-block side-block-grow" aria-label="Layers">
       <h2>Layers</h2>
@@ -128,14 +123,6 @@ export function LayersPanel({ session, snap }: { session: EditorSession; snap: E
           <p className="inspector-empty">This document has no nodes.</p>
         )}
       </div>
-      <details
-        className="layers-viewports fold"
-        open={viewportsOpen}
-        onToggle={(event) => setViewportsOpen(event.currentTarget.open)}
-      >
-        <summary>Viewports</summary>
-        <ViewportLayersList session={session} snap={snap} showHeading={false} />
-      </details>
     </section>
   );
 }

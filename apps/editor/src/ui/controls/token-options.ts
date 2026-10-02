@@ -1,14 +1,26 @@
 import type { SelectOption } from '../form/types/options.js';
-
-function tokenPath(ref: string): string {
-  const trimmed = ref.trim();
-  if (trimmed.startsWith('{') && trimmed.endsWith('}')) return trimmed.slice(1, -1);
-  return trimmed;
-}
+import { tokenPath, tokenDisplayLabel, tokenTitle } from './token-presentation.js';
+import {
+  useTokenLabel,
+  useTokenResolver,
+  useTokenSearchValue,
+} from './fields/TokenPreviewContext.js';
 
 function tokenGroup(path: string): string | undefined {
-  const segment = path.split('.')[0];
-  return segment && segment !== path ? segment : undefined;
+  const segments = path.split('.');
+  return segments.length > 2 ? tokenTitle(segments.slice(0, -1).join('.')) : undefined;
+}
+
+/** All token comboboxes use the same live labels and resolved-value search as the picker. */
+export function useTokenOptions() {
+  const labelFor = useTokenLabel();
+  const resolve = useTokenResolver();
+  const searchValue = useTokenSearchValue();
+  return (tokens: readonly string[], current?: string, emptyLabel = 'None'): SelectOption[] =>
+    catalogTokenOptions(tokens, current, emptyLabel, labelFor).map((option) => ({
+      ...option,
+      keywords: `${option.keywords ?? ''} ${searchValue(option.value) ?? ''} ${resolve(option.value) ?? ''}`,
+    }));
 }
 
 /** Build select options from token refs with readable path labels and optional grouping. */
@@ -16,13 +28,16 @@ export function catalogTokenOptions(
   tokens: readonly string[],
   current?: string,
   emptyLabel = 'None',
+  resolveLabel: (ref: string) => string = tokenDisplayLabel,
 ): SelectOption[] {
   const list = current && !tokens.includes(current) ? [current, ...tokens] : [...tokens];
   const options = list.map((ref) => {
     const path = tokenPath(ref);
     return {
       value: ref,
-      label: path,
+      label: resolveLabel(ref),
+      description: path,
+      keywords: `${path} ${tokenTitle(path)}`,
       group: tokenGroup(path),
     };
   });
@@ -34,8 +49,9 @@ export function dimensionTokenOptions(
   tokens: readonly string[],
   current?: string,
   emptyLabel = 'None',
+  resolveLabel?: (ref: string) => string,
 ): SelectOption[] {
-  return catalogTokenOptions(tokens, current, emptyLabel);
+  return catalogTokenOptions(tokens, current, emptyLabel, resolveLabel);
 }
 
 export function colorTokenOptions(

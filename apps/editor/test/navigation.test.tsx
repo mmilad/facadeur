@@ -40,6 +40,37 @@ describe('editor subnavigation', () => {
     host = null;
   });
 
+  it('places schema library in Settings and Icons in the subnav', async () => {
+    const session = createEditorSession({ documents, design: createProjectTemplateDocument() });
+    session.openAsset('card', 'root');
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => root?.render(<App session={session} />));
+    expect(host.querySelector('.editor-subnav [data-surface="schemas"]')).toBeNull();
+    expect(host.querySelector('.editor-subnav [data-surface="icons"]')).not.toBeNull();
+    expect(host.querySelector('.side-left [data-design-domain="icons"]')).toBeNull();
+    await act(async () =>
+      (host!.querySelector('[data-subnav="settings"]') as HTMLButtonElement).click(),
+    );
+    await act(async () =>
+      (host!.querySelector('[data-settings-tab="schemas"]') as HTMLButtonElement).click(),
+    );
+    expect(host.querySelector('[data-subnav="settings"]')?.getAttribute('aria-current')).toBe(
+      'page',
+    );
+    expect(host.querySelector('[data-settings-tab="schemas"]')?.getAttribute('aria-current')).toBe(
+      'page',
+    );
+    expect(host.textContent).toContain('Settings · Schemas');
+    await act(async () =>
+      (host!.querySelector('[data-settings-tab="colors"]') as HTMLButtonElement).click(),
+    );
+    expect(host.querySelector('[data-design-domain="colors"]')).not.toBeNull();
+    expect(session.getSnapshot().selectedNodeId).toBe('root');
+    session.destroy();
+  });
+
   it('switches Editor, Schema, and Preview data without resetting selection or variant', async () => {
     const session: EditorSession = createEditorSession({
       documents,

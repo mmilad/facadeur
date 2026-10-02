@@ -21,6 +21,7 @@ import { CodeStage } from '../stage/CodeStage.js';
 import { DesignDomainStage } from '../stage/DesignDomainStage.js';
 import { PreviewDataStage } from '../stage/PreviewDataStage.js';
 import { SchemaStage } from '../stage/SchemaStage.js';
+import { SettingsSections } from '../sidebar/design/SettingsSections.js';
 
 const SchemaLibraryStage = dynamic(
   () => import('../stage/SchemaLibraryStage.js').then((mod) => mod.SchemaLibraryStage),
@@ -50,6 +51,7 @@ export function EditorShell({
   const snap = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
   const { surface, setSurface } = useEditorNavigation(session, snap);
   const designSurface = isDesignDomain(surface);
+  const settingsSurface = isSettingsTokenDomain(surface) || surface === 'schemas';
   useEditorKeys(session, surface === 'editor');
 
   return (
@@ -58,7 +60,7 @@ export function EditorShell({
         <div className="brand">facadeur</div>
         <DocumentBreadcrumb session={session} snap={snap} />
         <KindBadge kind={snap.document.kind} />
-        {!designSurface ? (
+        {!designSurface && surface !== 'schemas' ? (
           <ToolBar
             session={session}
             tool={snap.tool}
@@ -73,8 +75,10 @@ export function EditorShell({
           </span>
         ) : null}
         <HistoryButtons session={session} canUndo={snap.canUndo} canRedo={snap.canRedo} />
-        {!designSurface ? <ZoomControls session={session} label={snap.zoomLabel} /> : null}
-        {!designSurface ? (
+        {!designSurface && surface !== 'schemas' ? (
+          <ZoomControls session={session} label={snap.zoomLabel} />
+        ) : null}
+        {!designSurface && surface !== 'schemas' ? (
           <button type="button" className="text-button" onClick={() => session.fit()}>
             Reset view
           </button>
@@ -118,14 +122,21 @@ export function EditorShell({
       <nav className="editor-subnav" aria-label="Editor views" data-testid="editor-subnav">
         <button
           type="button"
-          className={
-            isSettingsTokenDomain(surface) ? 'editor-subnav-item is-active' : 'editor-subnav-item'
-          }
-          aria-current={isSettingsTokenDomain(surface) ? 'page' : undefined}
+          className={settingsSurface ? 'editor-subnav-item is-active' : 'editor-subnav-item'}
+          aria-current={settingsSurface ? 'page' : undefined}
           data-subnav="settings"
-          onClick={() => setSurface(isSettingsTokenDomain(surface) ? surface : 'colors')}
+          onClick={() => setSurface(settingsSurface ? surface : 'colors')}
         >
           Settings
+        </button>
+        <button
+          type="button"
+          data-surface="icons"
+          className={surface === 'icons' ? 'editor-subnav-item is-active' : 'editor-subnav-item'}
+          aria-current={surface === 'icons' ? 'page' : undefined}
+          onClick={() => setSurface('icons')}
+        >
+          Icons
         </button>
         {EDITOR_VIEW_ITEMS.map((item) => (
           <button
@@ -142,7 +153,7 @@ export function EditorShell({
       </nav>
       <div className="workspace">
         <aside className="side side-left">
-          {designSurface ? (
+          {designSurface || surface === 'schemas' ? (
             <div className="design-project-navigation">
               <ProjectTree
                 session={session}
@@ -181,7 +192,15 @@ export function EditorShell({
             onSelectDomain={setSurface}
           />
         ) : surface === 'schemas' ? (
-          <SchemaLibraryStage snap={snap} />
+          <section className="design-domain-stage" aria-label="Settings">
+            <header className="design-domain-head">
+              <div className="design-domain-head-main">
+                <h1 className="design-domain-breadcrumb">Settings · Schemas</h1>
+                <SettingsSections surface={surface} onSelect={setSurface} />
+              </div>
+            </header>
+            <SchemaLibraryStage snap={snap} />
+          </section>
         ) : surface === 'schema' ? (
           <SchemaStage session={session} snap={snap} onOpenSchemas={() => setSurface('schemas')} />
         ) : surface === 'code' ? (

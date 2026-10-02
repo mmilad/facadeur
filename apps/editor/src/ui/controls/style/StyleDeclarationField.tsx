@@ -4,7 +4,7 @@ import { ColorControl } from '../color/index.js';
 import { ShadowControl } from '../shadow/index.js';
 import { TextControl } from '../fields/index.js';
 import { TypographyStyleControl, type TypographyCatalogs } from '../typography/index.js';
-import { catalogTokenOptions, dimensionTokenOptions } from '../token-options.js';
+import { useTokenOptions } from '../token-options.js';
 import {
   enumOptionLabel,
   enumOptionsForProperty,
@@ -38,6 +38,7 @@ export function StyleDeclarationField({
   after?: ReactNode;
 }) {
   const kind = styleDeclarationKind(property);
+  const tokenOptions = useTokenOptions();
   const label = stylePropertyLabel(property);
   const enumOptions = enumOptionsForProperty(property);
 
@@ -83,7 +84,7 @@ export function StyleDeclarationField({
           <Combobox
             name={name}
             value={value}
-            options={catalogTokenOptions(typographyTokens, value, 'None')}
+            options={tokenOptions(typographyTokens, value)}
             onCommit={onCommit}
           />
         </Field>
@@ -96,7 +97,7 @@ export function StyleDeclarationField({
             name={name}
             value={value}
             placeholder={placeholder}
-            options={dimensionTokenOptions(dimensionTokens, value, 'None')}
+            options={tokenOptions(dimensionTokens, value)}
             onCommit={onCommit}
           />
         </Field>

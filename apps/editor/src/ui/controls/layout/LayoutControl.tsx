@@ -13,7 +13,7 @@ import {
   Toggle,
 } from '../../form/index.js';
 import '../../form/form.css';
-import { dimensionTokenOptions } from '../token-options.js';
+import { useTokenOptions } from '../token-options.js';
 import { AxisSizeEditor } from './axis-size-editor.js';
 import { SpacingControl } from '../spacing/index.js';
 import type { LayoutControlValue } from './value.js';
@@ -68,6 +68,7 @@ export function LayoutControl({
   sectionContent?: LayoutControlSectionContent;
 }) {
   const free = value.position === 'absolute';
+  const tokenOptions = useTokenOptions();
   const margin = value.margin;
   const has = (field: LayoutField): boolean => {
     switch (field) {
@@ -147,7 +148,7 @@ export function LayoutControl({
                   <Combobox
                     name="layout-gap"
                     value={value.gap ?? ''}
-                    options={dimensionTokenOptions(dimensionTokens, value.gap)}
+                    options={tokenOptions(dimensionTokens, value.gap)}
                     onCommit={(gap) => onCommit({ gap: gap || null })}
                   />
                 </Field>,

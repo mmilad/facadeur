@@ -4,6 +4,41 @@
 
 ## Refactoring bei der Aufgabenplanung
 
+### Unified token presentation and search (2026-10-02)
+
+- [x] Consolidate group/leaf/selection names in one editor-owned token presentation module.
+- [x] Supply saved labels through existing token context; use shared search in pickers and tables.
+- [x] Remove redundant namespace/count from group headings; preserve technical refs and unknown values.
+- [x] Validate labels, rename/search, duplicate names, dropdown commits and existing editor tests.
+
+Evidence: sidebar token-labels, token-options and TokenValueControl independently build names;
+picker, combobox and table search use inconsistent fields. Share presentation in controls and a
+generic option search helper in the form layer; retain CSS-value resolution in its current owner.
+Preserve refs, values, Undo, token data and staging. Controls/data remains a cohesive domain despite
+12 direct files; no unrelated reorganization. No new package or persistence change.
+Validation: complete suite passes (692 tests), editor typecheck and ESLint pass; focused tests cover
+saved-label updates, group composition, duplicate labels with distinct ids, unknown refs and search.
+Browser verifies short group names and reverse-order multiword searches in table/picker. Aliases
+and resolved values are included in both searches; technical ids remain visible as secondary text.
+
+### Schema and icon navigation (2026-10-02)
+
+- [x] Extract shared Settings section navigation before adding Schemas to Settings.
+- [x] Move Icons from project sidebar to subnav; retain document Schema and legacy surface URLs.
+- [x] Validate navigation, schemas and icons with focused tests and editor typecheck.
+
+Boundary: settings tabs have two real consumers (design domains and schema library); colocate their
+shared navigation in the existing design UI domain. Preserve schema state, document selection,
+design save semantics and staged edits; no persistence or data-model changes.
+
+### Settings-owned viewport management (2026-10-02)
+
+- [x] Remove the redundant viewport disclosure from Layers; retain Settings and stage selection.
+- [x] Validate sidebar absence and existing viewport inspector/settings behavior.
+
+Keep LayersPanel cohesive; remove only its viewport-specific mounting/state. Preserve document
+layers, settings commands, stage selection and user staging. No data-model or persistence changes.
+
 ### Stable chrome during zoom (2026-10-02)
 
 - [x] Exclude header intrinsic width and keep header geometry independent of stage scale.

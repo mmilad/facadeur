@@ -25,7 +25,9 @@ describe('token value control', () => {
     await user.click(screen.getByRole('button', { name: 'Choose Color or token' }));
 
     expect(screen.getByRole('button', { name: /future\.color\.surface/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '◇ future.color.surface' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /◇ Future Color Surface.*future.color.surface/ }),
+    ).toBeInTheDocument();
     expect(onCommit).not.toHaveBeenCalled();
   });
 
@@ -63,7 +65,7 @@ describe('token value control', () => {
     );
 
     await user.click(screen.getByRole('button', { name: 'Choose Size or token' }));
-    await user.click(screen.getByRole('button', { name: '◇ space.md' }));
+    await user.click(screen.getByRole('button', { name: /◇ Md.*space.md/ }));
 
     expect(onCommit).toHaveBeenCalledWith('{space.md}');
   });

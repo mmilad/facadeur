@@ -37,7 +37,7 @@ describe('structured control display modes', () => {
         onCommit={onCommit}
       />,
     );
-    expect(document.querySelector('button[name="padding-right"]')).toHaveTextContent('space.4');
+    expect(document.querySelector('button[name="padding-right"]')).toHaveTextContent('◇ 4');
   });
 
   it('does not persist when switching radius to per-corner mode', async () => {
@@ -56,7 +56,7 @@ describe('structured control display modes', () => {
 
     expect(onCommit).not.toHaveBeenCalled();
     expect(document.querySelector('button[name="radius-radius-topLeft"]')).toHaveTextContent(
-      'radius.md',
+      '◇ Md',
     );
   });
 });

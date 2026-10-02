@@ -1,7 +1,14 @@
 import { useId, useState } from 'react';
 import { ColorInput, Field, Popover, TextInput } from '../../form/index.js';
 import '../../form/form.css';
-import { useTokenPreview } from './TokenPreviewContext.js';
+import {
+  useTokenPreview,
+  useTokenLabel,
+  useTokenResolver,
+  useTokenSearchValue,
+} from './TokenPreviewContext.js';
+import { tokenPath, tokenTitle } from '../token-presentation.js';
+import { matchesSearch } from '../../form/types/options.js';
 
 /** Token references are kept verbatim, including references not in the current catalog. */
 export function isTokenReference(value: string): boolean {
@@ -43,9 +50,19 @@ export function TokenValueControl({
   const [custom, setCustom] = useState('');
   const reference = isTokenReference(value);
   const resolved = useTokenPreview(value);
+  const labelFor = useTokenLabel();
+  const resolve = useTokenResolver();
+  const searchValue = useTokenSearchValue();
   const path = reference ? value.trim().slice(1, -1) : value;
   const options = [...new Set(reference ? [value, ...tokens] : tokens)].filter((token) =>
-    token.toLowerCase().includes(query.toLowerCase()),
+    matchesSearch(
+      query,
+      labelFor(token),
+      token,
+      tokenTitle(token),
+      searchValue(token),
+      resolve(token),
+    ),
   );
   function pick(next: string | null) {
     onCommit(next);
@@ -80,7 +97,7 @@ export function TokenValueControl({
             }}
           >
             {reference ? <span aria-label="Token reference">◇ </span> : null}
-            {path || placeholder || 'Inherited'}
+            {(reference ? labelFor(value) : path) || placeholder || 'Inherited'}
           </button>
         ) : (
           <TextInput
@@ -159,7 +176,10 @@ export function TokenValueControl({
                   aria-pressed={value === token}
                   onClick={() => pick(token)}
                 >
-                  {isTokenReference(token) ? `◇ ${token.slice(1, -1)}` : token}
+                  {isTokenReference(token) ? `◇ ${labelFor(token)}` : token}
+                  {isTokenReference(token) ? (
+                    <small style={{ display: 'block' }}>{tokenPath(token)}</small>
+                  ) : null}
                 </button>
               ))}
               {!options.length ? <span className="eu-field__hint">No matching tokens.</span> : null}

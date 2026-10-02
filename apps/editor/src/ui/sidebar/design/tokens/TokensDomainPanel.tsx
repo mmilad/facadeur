@@ -32,6 +32,8 @@ import {
 } from './token-breakpoint-helpers.js';
 import { TokenTableRow } from './token-table-row.js';
 import { tokenLeafLabel, tokenTitle } from './token-labels.js';
+import { tokenDisplayLabel } from '../../../controls/token-presentation.js';
+import { useTokenResolver } from '../../../controls/fields/TokenPreviewContext.js';
 import {
   naturalTokenCompare,
   tokenMatchesQuery,
@@ -52,6 +54,7 @@ export function TokensDomainPanel({
   snap: EditorSnapshot;
   domain: TokenDomain;
 }) {
+  const resolve = useTokenResolver();
   const [query, setQuery] = useState('');
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => new Set());
   const tokens = useMemo(() => {
@@ -122,7 +125,8 @@ export function TokensDomainPanel({
     tokenMatchesQuery(
       {
         path: `${tokenLeafLabel(token.path)} ${tokenTitle(token.path)} ${token.path}`,
-        valueText: formatTokenValue(token.effectiveValue),
+        label: tokenDisplayLabel(token.path, token.label),
+        valueText: `${formatTokenValue(token.effectiveValue)} ${resolve(`{${token.path}}`) ?? ''}`,
       },
       query,
     ),

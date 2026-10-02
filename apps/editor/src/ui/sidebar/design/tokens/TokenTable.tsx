@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react';
+import { matchesSearch } from '../../../form/types/options.js';
 
 export interface TokenTableItem {
   path: string;
   valueText: string;
+  label?: string;
 }
 
 export function naturalTokenCompare(left: string, right: string): number {
@@ -10,9 +12,7 @@ export function naturalTokenCompare(left: string, right: string): number {
 }
 
 export function tokenMatchesQuery(item: TokenTableItem, query: string): boolean {
-  const needle = query.trim().toLocaleLowerCase();
-  if (!needle) return true;
-  return `${item.path}\n${item.valueText}`.toLocaleLowerCase().includes(needle);
+  return matchesSearch(query, item.path, item.label, item.valueText);
 }
 
 export function TokenTableToolbar({
@@ -73,7 +73,6 @@ export function TokenTable({ children }: { children: ReactNode }) {
 export function TokenTableGroup({
   path,
   label,
-  count,
   open,
   onToggle,
   children,
@@ -97,7 +96,6 @@ export function TokenTableGroup({
           >
             <span aria-hidden="true">{open ? '▾' : '▸'}</span>
             <span>{label ?? path}</span>
-            <small>{count}</small>
           </button>
         </th>
       </tr>

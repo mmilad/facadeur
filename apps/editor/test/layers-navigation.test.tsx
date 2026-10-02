@@ -72,11 +72,7 @@ it('folds layer branches and reveals a descendant selected on the stage', async 
   expect(layers.queryByRole('button', { name: 'instance child' })).not.toBeInTheDocument();
   act(() => session.selectNode('child'));
   expect(layers.getByRole('button', { name: 'instance child' })).toBeVisible();
-  expect(
-    screen.getByText('Viewports', { selector: 'summary' }).closest('details'),
-  ).not.toHaveAttribute('open');
+  expect(layers.queryByText('Viewports')).not.toBeInTheDocument();
   act(() => session.selectViewport('tablet'));
-  expect(screen.getByText('Viewports', { selector: 'summary' }).closest('details')).toHaveAttribute(
-    'open',
-  );
+  expect(layers.queryByText('Viewports')).not.toBeInTheDocument();
 });

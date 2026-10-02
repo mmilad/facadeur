@@ -1,6 +1,7 @@
 import * as Popover from '@radix-ui/react-popover';
 import { useMemo, useState, type ReactNode } from 'react';
 import type { SelectOption } from '../../types/options.js';
+import { matchesSearch } from '../../types/options.js';
 import { useBindable } from '../input/bindable.js';
 
 export function Combobox({
@@ -36,7 +37,9 @@ export function Combobox({
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return options;
-    return options.filter((option) => option.label.toLowerCase().includes(q));
+    return options.filter((option) =>
+      matchesSearch(q, option.label, option.value, option.description, option.keywords),
+    );
   }, [options, query]);
 
   const selectedLabel = options.find((option) => option.value === value)?.label ?? '';
@@ -128,6 +131,7 @@ function OptionRow({
       onClick={onPick}
     >
       {option.label as ReactNode}
+      {option.description ? <small style={{ display: 'block' }}>{option.description}</small> : null}
     </button>
   );
 }

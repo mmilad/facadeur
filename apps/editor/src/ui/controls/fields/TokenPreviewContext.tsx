@@ -1,8 +1,14 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import type { Breakpoint, FlatDocument } from '@facadeur/core';
+import { readTokenTree, type Breakpoint, type FlatDocument } from '@facadeur/core';
 import { loadTokens, tokenCustomProperty, fontCustomProperty } from '@facadeur/tokens';
+import { tokenDisplayLabel, tokenPath } from '../token-presentation.js';
+import { formatTokenValue } from '../../../domain/edits/token-edit.js';
 
 const TokenPreviewContext = createContext<(reference: string) => string | undefined>(
+  () => undefined,
+);
+const TokenLabelContext = createContext<(reference: string) => string>(tokenDisplayLabel);
+const TokenSearchValueContext = createContext<(reference: string) => string | undefined>(
   () => undefined,
 );
 
@@ -24,6 +30,26 @@ export function TokenPreviewProvider({
   /** Optional editor preview breakpoints; storage remains owned by the design. */
   breakpoints?: Breakpoint[];
 }) {
+  const { searchValue, labelFor } = useMemo(() => {
+    const values = new Map<string, string>();
+    const labels = new Map<string, string>();
+    for (const source of [design.tokens, document.tokens]) {
+      for (const token of readTokenTree(source).tokens.values()) {
+        if (token.label) labels.set(token.path, token.label);
+        values.set(
+          token.path,
+          formatTokenValue(
+            (breakpointId ? token.breakpoints[breakpointId] : undefined) ?? token.value,
+          ),
+        );
+      }
+    }
+    return {
+      searchValue: (reference: string) => values.get(tokenPath(reference)),
+      labelFor: (reference: string) =>
+        tokenDisplayLabel(reference, labels.get(tokenPath(reference))),
+    };
+  }, [design.tokens, document.tokens, breakpointId]);
   const resolve = useMemo(() => {
     try {
       const compiled = loadTokens({
@@ -93,7 +119,13 @@ export function TokenPreviewProvider({
     declarations,
     breakpoints,
   ]);
-  return <TokenPreviewContext.Provider value={resolve}>{children}</TokenPreviewContext.Provider>;
+  return (
+    <TokenSearchValueContext.Provider value={searchValue}>
+      <TokenLabelContext.Provider value={labelFor}>
+        <TokenPreviewContext.Provider value={resolve}>{children}</TokenPreviewContext.Provider>
+      </TokenLabelContext.Provider>
+    </TokenSearchValueContext.Provider>
+  );
 }
 
 export function useTokenPreview(reference: string) {
@@ -103,4 +135,12 @@ export function useTokenPreview(reference: string) {
 /** Resolve several preview fields without calling hooks inside loops or callbacks. */
 export function useTokenResolver() {
   return useContext(TokenPreviewContext);
+}
+
+export function useTokenLabel() {
+  return useContext(TokenLabelContext);
+}
+
+export function useTokenSearchValue() {
+  return useContext(TokenSearchValueContext);
 }

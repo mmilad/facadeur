@@ -67,6 +67,8 @@ describe('design token tables', () => {
   it('adds a token through the compact popover action', async () => {
     const session = createEditorSession({ documents, design: createProjectTemplateDocument() });
     await openDomain(session, 'colors');
+    expect(host!.querySelector('.token-table-group-toggle')?.textContent).not.toContain('Color ');
+    expect(host!.querySelector('.token-table-group-toggle small')).toBeNull();
 
     await act(async () => {
       (host!.querySelector('button[name="add-color"]') as HTMLButtonElement).click();
