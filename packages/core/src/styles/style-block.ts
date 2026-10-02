@@ -33,6 +33,28 @@ export function canonicalizeStyleBlock(style: StyleBlock | undefined): StyleBloc
   return parseStyleBlock(style);
 }
 
+/** Drop style rules keyed by removed node ids. */
+export function pruneStyleBlockNodes(
+  style: StyleBlock | undefined,
+  removedIds: ReadonlySet<string>,
+): StyleBlock | undefined {
+  if (!style?.children) return style;
+  let changed = false;
+  const children = { ...style.children };
+  for (const id of removedIds) {
+    if (id in children) {
+      delete children[id];
+      changed = true;
+    }
+  }
+  if (!changed) return style;
+  if (!Object.keys(children).length) {
+    const { children: _children, ...rest } = style;
+    return Object.keys(rest).length ? (rest as StyleBlock) : undefined;
+  }
+  return { ...style, children };
+}
+
 /**
  * Drop one variant axis from the style block, including child rules.
  * Returns undefined when nothing paintable remains.

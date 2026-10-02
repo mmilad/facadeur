@@ -20,7 +20,7 @@ import {
   assertLayout,
   assertRepeat,
 } from '../validation/assertions.js';
-import { assertStyleMap } from '../styles/style-block.js';
+import { assertStyleMap, pruneStyleBlockNodes } from '../styles/style-block.js';
 import type { InsertNode, Command, CommandContext } from './types.js';
 import { adoptTokenReads } from './token-reads.js';
 import {
@@ -58,10 +58,54 @@ export function removeNode(doc: FlatDocument, nodeId: string): void {
   if (!parent || !doc.nodes[nodeId]) {
     throw new DocumentError('missing-node', `Node "${nodeId}" is not in the document`);
   }
-  for (const id of collectSubtree(doc, nodeId)) {
+  const removed = new Set(collectSubtree(doc, nodeId));
+  for (const id of removed) {
     delete doc.nodes[id];
   }
   parent.children = parent.children.filter((id) => id !== nodeId);
+  doc.styles = pruneStyleBlockNodes(doc.styles, removed);
+  pruneExposeForRemovedNodes(doc, removed);
+  pruneVariantPresetNodes(doc, removed);
+}
+
+function pruneExposeForRemovedNodes(doc: FlatDocument, removed: ReadonlySet<string>): void {
+  if (!doc.expose) return;
+  const fields = pruneExposeMap(doc.expose.fields, removed);
+  const events = pruneExposeMap(doc.expose.events, removed);
+  if (fields || events) {
+    doc.expose = {
+      ...(fields ? { fields } : {}),
+      ...(events ? { events } : {}),
+    };
+  } else {
+    delete doc.expose;
+  }
+}
+
+function pruneExposeMap(
+  map: Record<string, string> | undefined,
+  removed: ReadonlySet<string>,
+): Record<string, string> | undefined {
+  if (!map) return undefined;
+  const next: Record<string, string> = {};
+  for (const [name, path] of Object.entries(map)) {
+    const root = path.split('.')[0];
+    if (!removed.has(root)) next[name] = path;
+  }
+  return Object.keys(next).length ? next : undefined;
+}
+
+function pruneVariantPresetNodes(doc: FlatDocument, removed: ReadonlySet<string>): void {
+  if (!doc.variantPresets?.length) return;
+  for (const preset of doc.variantPresets) {
+    const nodes = preset.overrides?.nodes;
+    if (!nodes) continue;
+    for (const id of removed) {
+      delete nodes[id];
+    }
+    if (!Object.keys(nodes).length) delete preset.overrides!.nodes;
+    if (preset.overrides && !Object.keys(preset.overrides).length) delete preset.overrides;
+  }
 }
 
 export function moveNode(doc: FlatDocument, command: Extract<Command, { type: 'move' }>): void {

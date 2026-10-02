@@ -30,20 +30,21 @@
       "type": "text"
     }
   ],
+  "expose": {
+    "fields": {
+      "value": "control.value",
+      "placeholder": "control.placeholder",
+      "name": "control.name"
+    },
+    "events": {
+      "commit": "control.commit"
+    }
+  },
   "tokenInterface": {
     "reads": [
-      "color.accent.default",
-      "color.bg.canvas",
-      "color.neutral.600",
-      "color.text.primary",
       "color.text.secondary",
-      "radius.sm",
-      "shadow.sm",
       "space.0",
-      "space.2",
-      "space.3",
       "space.gap.xs",
-      "type.body",
       "type.label"
     ]
   },
@@ -53,33 +54,6 @@
       "font": "{type.label}"
     },
     "children": {
-      "control": {
-        "declarations": {
-          "appearance": "none",
-          "background": "{color.bg}",
-          "border": "1px solid {color.border}",
-          "borderRadius": "{shape.radius}",
-          "boxShadow": "{elevation.shadow}",
-          "boxSizing": "border-box",
-          "color": "{color.text}",
-          "display": "block",
-          "font": "{type.body}",
-          "letterSpacing": "0",
-          "paddingBlock": "{padding.y}",
-          "paddingInline": "{padding.x}",
-          "textTransform": "none"
-        },
-        "states": {
-          "focus-visible": {
-            "borderColor": "{color.accent.default}",
-            "outline": "2px solid {color.accent.default}",
-            "outlineOffset": "1px"
-          },
-          "disabled": {
-            "opacity": "0.5"
-          }
-        }
-      },
       "label": {
         "declarations": {
           "margin": "{space.0}"
@@ -116,77 +90,16 @@
       },
       {
         "id": "control",
-        "type": "frame",
-        "tag": "input",
-        "layout": {
-          "width": {
-            "mode": "fill"
-          },
-          "height": {
-            "mode": "hug"
-          }
-        },
-        "attributes": {
-          "type": "text",
-          "readonly": "readonly",
-          "tabindex": "-1",
-          "autocomplete": "off"
-        },
-        "bindings": [
-          {
-            "field": "value",
-            "target": "attribute",
-            "name": "value"
-          },
-          {
-            "field": "placeholder",
-            "target": "attribute",
-            "name": "placeholder"
-          },
-          {
-            "field": "name",
-            "target": "attribute",
-            "name": "name"
-          }
-        ]
+        "type": "instance",
+        "component": "form-input"
       }
     ]
   },
   "componentTokens": {
-    "n_nr3k93psfd": {
-      "path": "color.bg",
-      "type": "color",
-      "value": "{color.bg.canvas}"
-    },
-    "n_a8iqwlmu0q": {
-      "path": "color.border",
-      "type": "color",
-      "value": "{color.neutral.600}"
-    },
     "n_dvpj32yugo": {
       "path": "color.text",
       "type": "color",
-      "value": "{color.text.primary}"
-    },
-    "n_nv20pt2j2y": {
-      "path": "elevation.shadow",
-      "type": "shadow",
-      "value": "{shadow.sm}"
-    },
-    "n_3nc6msbirs": {
-      "path": "padding.x",
-      "type": "dimension",
-      "value": "{space.3}"
-    },
-    "n_topb0g14ow": {
-      "path": "padding.y",
-      "type": "dimension",
-      "value": "{space.2}"
-    },
-    "n_m01sol92lg": {
-      "path": "shape.radius",
-      "type": "dimension",
-      "value": "{radius.sm}"
+      "value": "{color.text.secondary}"
     }
   }
 }

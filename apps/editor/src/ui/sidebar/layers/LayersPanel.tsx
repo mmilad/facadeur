@@ -1,5 +1,9 @@
 import { createId } from '@facadeur/core';
-import { useEffect, useState, type DragEvent } from 'react';
+import { useEffect, useRef, useState, type DragEvent } from 'react';
+import { createPortal } from 'react-dom';
+import { LayerContextMenu } from './LayerContextMenu.js';
+import { findLayerByAddress } from './layer-tree.js';
+import type { LayerItem } from '../../../domain/selection/selection-model.js';
 import {
   layerDropTarget,
   layerInsertAt,
@@ -11,23 +15,61 @@ import type { EditorDrag, EditorSession, EditorSnapshot } from '../../../domain/
 
 export function LayersPanel({ session, snap }: { session: EditorSession; snap: EditorSnapshot }) {
   const [over, setOver] = useState<{ id: string; zone: DropZone } | null>(null);
+  const [contextLayer, setContextLayer] = useState<{
+    address: string;
+    anchor: DOMRect;
+  } | null>(null);
+  const contextMenuRef = useRef<HTMLDivElement | null>(null);
+  const contextItem = findLayerByAddress(snap.layers, contextLayer?.address ?? '');
+
+  useEffect(() => {
+    if (!contextLayer) return;
+    const close = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      event.stopPropagation();
+      setContextLayer(null);
+    };
+    window.addEventListener('keydown', close, true);
+    return () => window.removeEventListener('keydown', close, true);
+  }, [contextLayer]);
+
+  useEffect(() => {
+    if (!contextLayer) return;
+    const close = (event: PointerEvent) => {
+      if (!contextMenuRef.current?.contains(event.target as Node)) setContextLayer(null);
+    };
+    document.addEventListener('pointerdown', close, true);
+    return () => document.removeEventListener('pointerdown', close, true);
+  }, [contextLayer]);
+
+  function openLayerContext(item: LayerItem, anchor: HTMLElement) {
+    setContextLayer({ address: item.address, anchor: anchor.getBoundingClientRect() });
+  }
+
   return (
     <section className="side-block side-block-grow" aria-label="Layers">
       <h2>Layers</h2>
       <strong className="layers-document-title">{snap.document.name}</strong>
       <p className="side-note">
-        Expand an instance to select nested fields. Edit a master from its inspector.
+        Expand an instance to select nested fields. Edit a master from its inspector. With a layer
+        selected, press Delete or Backspace to remove it (not the root), or right-click a layer
+        for insert and delete actions.
       </p>
       <div className="side-scroll">
         {snap.layers ? (
           <LayerRows
             key={snap.openId}
+            session={session}
+            snap={snap}
             item={snap.layers}
             depth={0}
             selectedId={snap.selectedNodeId}
             selectedRenderId={snap.selectedRenderId}
             nestedSelection={snap.nestedSelection}
             over={over}
+            contextLayerAddress={contextLayer?.address ?? null}
+            onOpenLayerContext={openLayerContext}
             onSelect={(item) => {
               if (item.virtual) session.selectRendered(item.address);
               else session.selectNode(item.id);
@@ -123,6 +165,19 @@ export function LayersPanel({ session, snap }: { session: EditorSession; snap: E
           <p className="inspector-empty">This document has no nodes.</p>
         )}
       </div>
+      {contextLayer && contextItem
+        ? createPortal(
+            <LayerContextMenu
+              session={session}
+              snap={snap}
+              item={contextItem}
+              anchor={contextLayer.anchor}
+              menuRef={contextMenuRef}
+              onClose={() => setContextLayer(null)}
+            />,
+            document.body,
+          )
+        : null}
     </section>
   );
 }
@@ -158,12 +213,16 @@ function dragKind(snap: EditorSnapshot, assetId: string): string | undefined {
 }
 
 function LayerRows({
+  session,
+  snap,
   item,
   depth,
   selectedId,
   selectedRenderId,
   nestedSelection,
   over,
+  contextLayerAddress,
+  onOpenLayerContext,
   onSelect,
   onOpenInstance,
   onDragStart,
@@ -171,12 +230,16 @@ function LayerRows({
   onDragOver,
   onDrop,
 }: {
+  session: EditorSession;
+  snap: EditorSnapshot;
   item: NonNullable<EditorSnapshot['layers']>;
   depth: number;
   selectedId: string | null;
   over: { id: string; zone: DropZone } | null;
   selectedRenderId: string | null;
   nestedSelection: EditorSnapshot['nestedSelection'];
+  contextLayerAddress: string | null;
+  onOpenLayerContext: (item: NonNullable<EditorSnapshot['layers']>, anchor: HTMLElement) => void;
   onSelect: (item: NonNullable<EditorSnapshot['layers']>) => void;
   onOpenInstance: (item: NonNullable<EditorSnapshot['layers']>) => void;
   onDragStart: (item: NonNullable<EditorSnapshot['layers']>, event: DragEvent) => void;
@@ -202,6 +265,8 @@ function LayerRows({
   ]
     .filter(Boolean)
     .join(' ');
+  const menuOpen = contextLayerAddress === item.address;
+
   return (
     <>
       <div className="layer-row" style={{ paddingLeft: depth * 14 }}>
@@ -221,6 +286,8 @@ function LayerRows({
         <button
           type="button"
           className={className}
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
           title={
             item.type === 'instance'
               ? item.virtual
@@ -235,6 +302,16 @@ function LayerRows({
           onDrop={(event) => onDrop(item, event)}
           onClick={() => onSelect(item)}
           onDoubleClick={() => onOpenInstance(item)}
+          onKeyDown={(event) => {
+            if ((event.shiftKey && event.key === 'F10') || event.key === 'ContextMenu') {
+              event.preventDefault();
+              onOpenLayerContext(item, event.currentTarget);
+            }
+          }}
+          onContextMenu={(event) => {
+            event.preventDefault();
+            onOpenLayerContext(item, event.currentTarget);
+          }}
         >
           <span className="layer-type">{item.type}</span>
           <span className="layer-name">{item.name}</span>
@@ -243,13 +320,17 @@ function LayerRows({
       {expanded &&
         item.children.map((child) => (
           <LayerRows
-            key={child.id}
+            key={child.address}
+            session={session}
+            snap={snap}
             item={child}
             depth={depth + 1}
             selectedId={selectedId}
             selectedRenderId={selectedRenderId}
             nestedSelection={nestedSelection}
             over={over}
+            contextLayerAddress={contextLayerAddress}
+            onOpenLayerContext={onOpenLayerContext}
             onSelect={onSelect}
             onOpenInstance={onOpenInstance}
             onDragStart={onDragStart}

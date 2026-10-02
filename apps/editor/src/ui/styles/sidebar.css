@@ -509,6 +509,85 @@ body.is-resizing-inspector {
   background: rgba(28, 25, 21, 0.06);
 }
 
+.layer-context-menu-floating {
+  position: fixed;
+  z-index: 1200;
+  margin: 0;
+}
+
+.layer-context-menu-danger {
+  color: #9f1239;
+}
+
+.context-menu-sub {
+  position: relative;
+}
+
+.context-menu-sub-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  padding: 5px 7px;
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.context-menu-sub-trigger:hover,
+.context-menu-sub-trigger:focus-visible {
+  background: rgba(28, 25, 21, 0.06);
+}
+
+.context-menu-sub-chevron {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.context-menu-flyout {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  min-width: 108px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--white);
+  box-shadow: 0 4px 14px rgba(28, 25, 21, 0.12);
+}
+
+.context-menu-flyout button {
+  width: 100%;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  padding: 5px 7px;
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.context-menu-flyout button:hover,
+.context-menu-flyout button:focus-visible {
+  background: rgba(28, 25, 21, 0.06);
+}
+
+.context-menu-flyout.is-right {
+  left: calc(100% + 2px);
+}
+
+.context-menu-flyout.is-left {
+  right: calc(100% + 2px);
+  left: auto;
+}
+
 .asset-variants {
   display: flex;
   flex-direction: column;

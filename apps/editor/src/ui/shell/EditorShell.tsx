@@ -276,6 +276,20 @@ function useEditorKeys(session: EditorSession, canvasActive: boolean) {
         session.selectNode(findParent(snap.document, snap.selectedNodeId)?.id ?? null);
         return;
       }
+      if (key === 'delete' || key === 'backspace') {
+        const snap = session.getSnapshot();
+        const nodeId = snap.selectedNodeId;
+        if (!nodeId || nodeId === snap.document.rootId || snap.nestedSelection) return;
+        const parent = findParent(snap.document, nodeId);
+        event.preventDefault();
+        try {
+          session.execute({ type: 'remove', nodeId });
+          session.selectNode(parent?.id ?? null);
+        } catch (error) {
+          session.setNotice(error instanceof Error ? error.message : 'Could not remove layer', 'error');
+        }
+        return;
+      }
       if (key === 'f' || key === 't' || key === 'i') {
         const tool = key === 'f' ? 'frame' : key === 't' ? 'text' : 'image';
         const snap = session.getSnapshot();

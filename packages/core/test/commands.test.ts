@@ -81,6 +81,37 @@ describe('applyCommand', () => {
     expect(doc.nodes.label).toBeUndefined();
   });
 
+  it('removes style children and expose paths when a styled node is deleted', () => {
+    let doc = toFlat({
+      version: 1,
+      id: 'input',
+      name: 'Input',
+      kind: 'component',
+      expose: {
+        fields: { value: 'control.value', placeholder: 'control.placeholder' },
+        events: { commit: 'control.commit' },
+      },
+      styles: {
+        children: {
+          control: { declarations: { color: 'red' } },
+          label: { declarations: { margin: '0' } },
+        },
+      },
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          { id: 'label', type: 'text', text: 'Label' },
+          { id: 'control', type: 'frame', tag: 'input' },
+        ],
+      },
+    });
+    doc = applyCommand(doc, { type: 'remove', nodeId: 'control' });
+    expect(doc.nodes.control).toBeUndefined();
+    expect(doc.styles?.children).toEqual({ label: { declarations: { margin: '0' } } });
+    expect(doc.expose).toBeUndefined();
+  });
+
   it('wraps a node in a frame as one command and refuses the root', () => {
     let doc = component();
     doc = applyCommand(doc, { type: 'wrap', nodeId: 'title', frameId: 'around' });
