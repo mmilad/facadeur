@@ -3,39 +3,20 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
-import './styles/components.css';
-
-export { Button } from './components/Button';
-export type { ButtonProps, ButtonTone, ButtonSize } from './components/Button';
-export { Card } from './components/Card';
-export type { CardProps } from './components/Card';
-export { FormControls } from './components/FormControls';
-export type { FormControlsProps } from './components/FormControls';
-export { FormControlsSection } from './components/FormControlsSection';
-export type { FormControlsSectionProps } from './components/FormControlsSection';
-export { FormFieldRow } from './components/FormFieldRow';
-export type { FormFieldRowProps, FormFieldRowState } from './components/FormFieldRow';
-export { FormInput } from './components/FormInput';
-export type { FormInputProps } from './components/FormInput';
-export { FormSegmented } from './components/FormSegmented';
-export type { FormSegmentedProps, FormSegmentedState } from './components/FormSegmented';
-export { FormSelect } from './components/FormSelect';
-export type { FormSelectProps, FormSelectState } from './components/FormSelect';
-export { FormTextInput } from './components/FormTextInput';
-export type { FormTextInputProps, FormTextInputState } from './components/FormTextInput';
-export { FormToggle } from './components/FormToggle';
-export type { FormToggleProps, FormToggleState } from './components/FormToggle';
-export { Input } from './components/Input';
-export type { InputProps } from './components/Input';
-export { Media } from './components/Media';
-export type { MediaProps } from './components/Media';
-export { ProductCard } from './components/ProductCard';
-export type { ProductCardProps, ProductCardVariant } from './components/ProductCard';
-export { SignIn } from './components/SignIn';
-export type { SignInProps } from './components/SignIn';
-export { Specimen } from './components/Specimen';
-export type { SpecimenProps } from './components/Specimen';
-export { SpecimenSection } from './components/SpecimenSection';
-export type { SpecimenSectionProps } from './components/SpecimenSection';
-export { Textarea } from './components/Textarea';
-export type { TextareaProps, TextareaResize } from './components/Textarea';
+export * from './components/Button';
+export * from './components/Card';
+export * from './components/FormControls';
+export * from './components/FormControlsSection';
+export * from './components/FormFieldRow';
+export * from './components/FormInput';
+export * from './components/FormSegmented';
+export * from './components/FormSelect';
+export * from './components/FormTextInput';
+export * from './components/FormToggle';
+export * from './components/Input';
+export * from './components/Media';
+export * from './components/ProductCard';
+export * from './components/SignIn';
+export * from './components/Specimen';
+export * from './components/SpecimenSection';
+export * from './components/Textarea';

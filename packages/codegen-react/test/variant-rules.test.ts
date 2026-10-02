@@ -46,7 +46,7 @@ describe('React variant rules', () => {
 
     const output = source(
       generateReact({ documents: [host, child] }).ui,
-      'components/RuleHost.tsx',
+      'components/RuleHost/component.tsx',
     );
     expect(output).toContain(
       "variant={enabled ? 'compact' : mode === 'dense' ? 'dense' : 'default'}",
@@ -78,7 +78,7 @@ describe('React variant rules', () => {
 
     const output = source(
       generateReact({ documents: [host, child] }).ui,
-      'components/ExplicitRuleHost.tsx',
+      'components/ExplicitRuleHost/component.tsx',
     );
     expect(output).toContain("variant='dense'");
     expect(output).not.toContain("variant={enabled ? 'compact'");

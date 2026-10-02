@@ -42,8 +42,8 @@ describe('token label metadata', () => {
 
     expect(generateReact({ documents: [renamed], design: renamedDesign })).toEqual(before);
     expect(toNested(toFlat(renamed)).styles).toEqual(document.styles);
-    expect(before.ui.find((file) => file.path === 'styles/components.css')?.contents).toContain(
-      'var(--badge-color-surface, var(--color-brand-primary))',
-    );
+    expect(
+      before.ui.find((file) => file.path === 'components/Badge/style.css')?.contents,
+    ).toContain('var(--badge-color-surface, var(--color-brand-primary))');
   });
 });

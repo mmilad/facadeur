@@ -35,7 +35,7 @@ export function renderInstance(
   if (target.document.id !== node.component) {
     throw new CodegenError(`Catalog entry "${node.component}" does not match its document`);
   }
-  imports.set(target.component, { name: target.component, from: `./${target.component}` });
+  imports.set(target.component, { name: target.component, from: `../${target.component}` });
   const attrs: Attr[] = [{ name: 'nodeId', value: { kind: 'literal', value: node.id } }];
   const forwardedFields = new Set<string>();
   for (const [publicName, path] of Object.entries(owner.document.expose?.fields ?? {})) {

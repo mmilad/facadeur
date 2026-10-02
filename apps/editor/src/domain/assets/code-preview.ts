@@ -18,13 +18,17 @@ export function codePreview({
 }: CodePreviewInput): CodePreviewResult {
   try {
     const files = generateReact({ documents, design }).ui;
-    const source = files.find(
+    const component = files.find(
       (file: GeneratedFile) =>
-        file.path.startsWith('components/') &&
+        file.path.endsWith('/component.tsx') &&
         file.contents.includes(`data-component='${documentId}'`),
-    )?.contents;
-    if (!source) return { error: `No generated component was found for "${documentId}".` };
-    return { source };
+    );
+    if (!component) return { error: `No generated component was found for "${documentId}".` };
+    const directory = component.path.slice(0, -'/component.tsx'.length);
+    const types = files.find((file) => file.path === `${directory}/types.ts`);
+    return {
+      source: types ? `${types.contents}\n${component.contents}` : component.contents,
+    };
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'Could not generate React preview.' };
   }

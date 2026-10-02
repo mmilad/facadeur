@@ -323,9 +323,19 @@ The editor shows one same-origin iframe per breakpoint. The iframe's width is th
 
 ## Codegen
 
-`@facadeur/codegen-react` reads these documents and emits one React component per document, plus CSS. Props are the fields and variant axes. The component root sets `data-component` and `data-variant-*`. Children set `data-node`. An instance becomes a call to the generated component, with that instance's field and variant overrides. `nodeId` is the instance id and is written to `data-node`, so the style-engine selectors apply to the same element the renderer paints.
+`@facadeur/codegen-react` reads these documents and emits one directory per React component.
+Each directory separates `component.tsx`, `types.ts`, `style.css`, and its public `index.ts`.
+Props are the fields and variant axes. The component root sets `data-component` and
+`data-variant-*`. Children set `data-node`. An instance becomes a call to the generated component,
+with that instance's field and variant overrides. `nodeId` is the instance id and is written to
+`data-node`, so the style-engine selectors apply to the same element the renderer paints.
 
-Tokens and fonts become the design stylesheet (`renderDesignCss`). Style blocks and layout become a second stylesheet from `compileDocument` with `address: 'instance'`. `pnpm codegen` writes both, and the components, to `packages/ui`. Generated CSF3 stories land under `apps/storybook/src/stories/generated`. Run `pnpm storybook` to preview them. The Next.js example in `examples/next` imports `@facadeur/ui`.
+Tokens and fonts become the global design stylesheet (`styles/tokens.css`). Style blocks and layout
+are compiled per component with `address: 'instance'`; their `style.css` remains based on Facadeur's
+globally interpreted, component-scoped data selectors rather than CSS Module class names.
+`pnpm codegen` writes these files to `packages/ui`. Generated CSF3 stories land under
+`apps/storybook/src/stories/generated`. Run `pnpm storybook` to preview them. The Next.js example
+in `examples/next` imports `@facadeur/ui`.
 
 ## Out of scope here
 

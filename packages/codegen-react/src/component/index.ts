@@ -1,7 +1,7 @@
 import { resolveVariantDocument, variantPresets, type DocumentFile } from '@facadeur/core';
 import { CodegenError } from '../names.js';
 import { variantTypeSpecs } from './catalog.js';
-import { printElement, printFile } from './print.js';
+import { printComponentFile, printComponentIndex, printElement, printTypesFile } from './print.js';
 import { renderNode } from './render.js';
 import type { CatalogEntry, ComponentFile, ComponentImport } from './types.js';
 
@@ -11,6 +11,7 @@ export { assignCatalog } from './catalog.js';
 export function renderComponent(
   document: DocumentFile,
   catalog: Map<string, CatalogEntry>,
+  options: { importStyle: boolean } = { importStyle: true },
 ): ComponentFile {
   const entry = catalog.get(document.id);
   if (!entry) throw new CodegenError(`Missing catalog entry for "${document.id}"`);
@@ -53,7 +54,7 @@ export function renderComponent(
     ...entry.variants.values(),
     ...entry.events.values(),
   ];
-  const contents = printFile({
+  const printed = {
     id: document.id,
     component: entry.component,
     props,
@@ -64,17 +65,19 @@ export function renderComponent(
     childFieldsPropName: entry.childFieldsProp ?? 'childFields',
     usedProps,
     body,
-  });
+  };
   return {
     id: document.id,
     component: entry.component,
-    path: `components/${entry.component}.tsx`,
+    directory: `components/${entry.component}`,
     props,
     variantTypes,
     imports: [...imports.values()],
     usesCssProperties,
     acceptsChildFields,
-    contents,
+    componentContents: printComponentFile(printed, options.importStyle),
+    typesContents: printTypesFile(printed),
+    indexContents: printComponentIndex(printed),
   };
 }
 

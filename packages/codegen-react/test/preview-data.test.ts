@@ -18,10 +18,15 @@ describe('preview values stay outside runtime code', () => {
       root: { id: 'root', type: 'text', bindings: [{ field: 'value', target: 'text' }] },
     };
     const output = generateReact({ documents: [document] });
-    const code = output.ui.find((file) => file.path === 'components/Sample.tsx')?.contents ?? '';
-    expect(code).toContain('value: string;');
-    expect(code).not.toContain('PREVIEW_BASE');
-    expect(code).not.toContain('PREVIEW_COMPACT');
+    const code =
+      output.ui.find((file) => file.path === 'components/Sample/component.tsx')?.contents ?? '';
+    const types =
+      output.ui.find((file) => file.path === 'components/Sample/types.ts')?.contents ?? '';
+    expect(types).toContain('value: string;');
+    for (const generated of [code, types]) {
+      expect(generated).not.toContain('PREVIEW_BASE');
+      expect(generated).not.toContain('PREVIEW_COMPACT');
+    }
     expect(output.stories[0]?.contents).toContain('PREVIEW_BASE');
     expect(output.stories[0]?.contents).toContain('PREVIEW_COMPACT');
     expect(output.stories[0]?.contents).toContain('export const Compact: Story');

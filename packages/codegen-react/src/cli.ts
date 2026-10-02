@@ -1,15 +1,16 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { validateCatalog, validateDocumentFile } from '@facadeur/core';
 import { designFromDocument, generateReact } from './generate.js';
 import { formatGenerated } from './format.js';
+import { writeGeneratedFiles } from './generated-output.js';
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
   let designPath: string | undefined;
   let out: string | undefined;
   let storybook: string | undefined;
-  let styles: 'bundle' | 'component-local' = 'bundle';
+  let styles: 'bundle' | 'component-local' = 'component-local';
   let entries: string[] | undefined;
   const files: string[] = [];
   for (let index = 0; index < args.length; index += 1) {
@@ -42,18 +43,24 @@ async function main(): Promise<void> {
     styles,
     entries,
   });
-  await writeFiles(resolve(out), ui);
+  await writeFiles(resolve(out), ui, ['components', 'styles/components.css']);
   if (storybook) {
-    await writeFiles(resolve(storybook), stories);
+    await writeFiles(resolve(storybook), stories, ['src/stories/generated']);
   }
 }
 
-async function writeFiles(directory: string, files: { path: string; contents: string }[]) {
-  for (const file of files) {
-    const target = resolve(directory, file.path);
-    mkdirSync(dirname(target), { recursive: true });
-    writeFileSync(target, await formatGenerated(file.path, file.contents));
-  }
+async function writeFiles(
+  directory: string,
+  files: { path: string; contents: string }[],
+  legacyRoots: readonly string[],
+) {
+  const formatted = await Promise.all(
+    files.map(async (file) => ({
+      ...file,
+      contents: await formatGenerated(file.path, file.contents),
+    })),
+  );
+  writeGeneratedFiles(directory, formatted, legacyRoots);
 }
 
 main().catch((error: unknown) => {

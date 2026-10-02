@@ -3,10 +3,12 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
   "exports": {
     ".": "./index.ts",
-    "./styles/tokens.css": "./styles/tokens.css",
-    "./styles/components.css": "./styles/components.css"
+    "./styles/tokens.css": "./styles/tokens.css"
   },
   "peerDependencies": {
     "react": "^19.0.0"

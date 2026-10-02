@@ -25,13 +25,15 @@ export interface ComponentImport {
 export interface ComponentFile {
   id: string;
   component: string;
-  path: string;
+  directory: string;
   props: PropSpec[];
   variantTypes: VariantTypeSpec[];
   imports: ComponentImport[];
   usesCssProperties: boolean;
   acceptsChildFields: boolean;
-  contents: string;
+  componentContents: string;
+  typesContents: string;
+  indexContents: string;
 }
 
 export interface CatalogEntry {

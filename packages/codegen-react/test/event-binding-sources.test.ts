@@ -33,13 +33,13 @@ describe('React event binding payload sources', () => {
   it('keeps type-based defaults and supports explicit value sources', () => {
     const output = generateReact({
       documents: [eventDocument({ value: 'number', valid: 'boolean' })],
-    }).ui.find((file) => file.path === 'components/EventSource.tsx')?.contents;
+    }).ui.find((file) => file.path === 'components/EventSource/component.tsx')?.contents;
     expect(output).toContain('value: Number(event.currentTarget.value)');
     expect(output).toContain('valid: event.currentTarget.checked');
 
     const explicit = generateReact({
       documents: [eventDocument({ value: 'number' }, 'valueAsNumber')],
-    }).ui.find((file) => file.path === 'components/EventSource.tsx')?.contents;
+    }).ui.find((file) => file.path === 'components/EventSource/component.tsx')?.contents;
     expect(explicit).toContain('value: event.currentTarget.valueAsNumber');
   });
 

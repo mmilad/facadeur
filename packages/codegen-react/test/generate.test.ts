@@ -53,11 +53,25 @@ function source(files: { path: string; contents: string }[], path: string): stri
   return file?.contents ?? '';
 }
 
+function componentSource(files: { path: string; contents: string }[], name: string): string {
+  return source(files, `components/${name}/component.tsx`);
+}
+
+function componentTypes(files: { path: string; contents: string }[], name: string): string {
+  return source(files, `components/${name}/types.ts`);
+}
+
+function componentStyle(files: { path: string; contents: string }[], name: string): string {
+  return source(files, `components/${name}/style.css`);
+}
+
 function expectGeneratedTypecheck(files: { path: string; contents: string }[]): void {
   const root = mkdtempSync(join(tmpdir(), 'facadeur-codegen-'));
   try {
     const roots: string[] = [];
-    for (const file of files.filter((entry) => entry.path.endsWith('.tsx'))) {
+    for (const file of files.filter(
+      (entry) => entry.path.endsWith('.tsx') || entry.path.endsWith('.ts'),
+    )) {
       const path = join(root, file.path);
       mkdirSync(join(path, '..'), { recursive: true });
       writeFileSync(path, file.contents, 'utf8');
@@ -65,7 +79,7 @@ function expectGeneratedTypecheck(files: { path: string; contents: string }[]): 
     }
     writeFileSync(
       join(root, 'react.d.ts'),
-      "declare module 'react' { export type CSSProperties = Record<string, string | number>; }\ndeclare module 'react/jsx-runtime' { export const Fragment: unknown; export function jsx(...args: unknown[]): unknown; export function jsxs(...args: unknown[]): unknown; }\ndeclare namespace JSX { interface IntrinsicElements { [element: string]: any; } }\n",
+      "declare module 'react' { export type CSSProperties = Record<string, string | number>; }\ndeclare module 'react/jsx-runtime' { export const Fragment: unknown; export function jsx(...args: unknown[]): unknown; export function jsxs(...args: unknown[]): unknown; }\ntype TestChangeEvent = { currentTarget: { value: string } };\ndeclare namespace JSX { interface IntrinsicElements { [element: string]: any; input: { [key: string]: any; onChange?: (event: TestChangeEvent) => void }; textarea: { [key: string]: any; onChange?: (event: TestChangeEvent) => void }; } }\n",
       'utf8',
     );
     roots.push(join(root, 'react.d.ts'));
@@ -94,10 +108,11 @@ describe('generateReact', () => {
   const { ui: files } = generateReact({ documents, design });
 
   it('types button fields and variants and paints the instance selectors', () => {
-    const button = source(files, 'components/Button.tsx');
-    expect(button).toContain("export type ButtonTone = 'primary' | 'secondary' | 'ghost';");
-    expect(button).toContain("export type ButtonSize = 'sm' | 'md';");
-    expect(button).toContain('label?: string;');
+    const button = componentSource(files, 'Button');
+    const types = componentTypes(files, 'Button');
+    expect(types).toContain("export type ButtonTone = 'primary' | 'secondary' | 'ghost';");
+    expect(types).toContain("export type ButtonSize = 'sm' | 'md';");
+    expect(types).toContain('label?: string;');
     expect(button).not.toContain("label = 'Button'");
     expect(button).toContain("tone = 'primary'");
     expect(button).toContain("size = 'md'");
@@ -109,10 +124,11 @@ describe('generateReact', () => {
   });
 
   it('binds input fields onto the control', () => {
-    const input = source(files, 'components/Input.tsx');
+    const input = componentSource(files, 'Input');
+    expect(input).toContain("'use client';");
     expect(input).toContain("data-component='input'");
     expect(input).toContain("data-node='label'");
-    expect(input).toContain("from './FormInput'");
+    expect(input).toContain("from '../FormInput'");
     expect(input).toContain("nodeId='control'");
     expect(input).toContain('value={value}');
     expect(input).toContain('placeholder={placeholder}');
@@ -121,9 +137,9 @@ describe('generateReact', () => {
   });
 
   it('composes sign-in from input and button overrides', () => {
-    const signIn = source(files, 'components/SignIn.tsx');
-    expect(signIn).toContain("from './Input'");
-    expect(signIn).toContain("from './Button'");
+    const signIn = componentSource(files, 'SignIn');
+    expect(signIn).toContain("from '../Input'");
+    expect(signIn).toContain("from '../Button'");
     expect(signIn).toContain("nodeId='email'");
     expect(signIn).toContain("label='Work email'");
     expect(signIn).toContain("value='ada@atelier.test'");
@@ -136,11 +152,11 @@ describe('generateReact', () => {
   });
 
   it('renders a page as its section instance', () => {
-    const page = source(files, 'components/Specimen.tsx');
+    const page = componentSource(files, 'Specimen');
     expect(page).toContain("data-component='specimen'");
     expect(page).toContain('<SpecimenSection');
     expect(page).toContain("nodeId='specimen-section'");
-    const section = source(files, 'components/SpecimenSection.tsx');
+    const section = componentSource(files, 'SpecimenSection');
     expect(section).toContain("tone='ghost'");
     expect(section).toContain('>Specimen<');
     expect(section).toContain("nodeId='card-signin'");
@@ -151,7 +167,7 @@ describe('generateReact', () => {
     expect(tokens).toContain('--color-blue-500:');
     expect(tokens).toContain('--font-sans:');
     expect(tokens).toContain('@import url("https://fonts.googleapis.com');
-    const css = source(files, 'styles/components.css');
+    const css = componentStyle(files, 'Button');
     expect(css).toContain('[data-component="button"]');
     expect(css).toContain('background: var(--button-color-bg, var(--color-accent-default))');
     expect(css).toContain('font-family: var(--type-label--font-family)');
@@ -161,8 +177,10 @@ describe('generateReact', () => {
     expect(css).toContain('[data-component="button"]:disabled');
     expect(css).toContain('@media (min-width: 768px)');
     expect(css).not.toContain('min-width: 375px');
-    expect(css).toContain('[data-component="form-input"]');
-    expect(css).toContain('--input-color-border: var(--color-accent-default)');
+    const formInputCss = componentStyle(files, 'FormInput');
+    expect(formInputCss).toContain('[data-component="form-input"]');
+    const signInCss = componentStyle(files, 'SignIn');
+    expect(signInCss).toContain('--input-color-border: var(--color-accent-default)');
     expect(css.indexOf('[data-component="button"]')).toBeLessThan(
       css.indexOf('@media (min-width: 768px)'),
     );
@@ -174,24 +192,59 @@ describe('generateReact', () => {
     expect(reversed.ui.map((file) => file.contents)).toEqual(files.map((file) => file.contents));
   });
 
-  it('can emit component-local CSS and imports it from the generated index', () => {
+  it('emits component-local CSS and imports it from the implementation', () => {
     const generated = generateReact({ documents: [documents[0]!], styles: 'component-local' });
     expect(generated.ui.some((file) => file.path === 'styles/components.css')).toBe(false);
-    expect(source(generated.ui, 'components/Button.css')).toContain('[data-component="button"]');
-    expect(source(generated.ui, 'components/Button.tsx')).toContain("import './Button.css'");
+    expect(componentStyle(generated.ui, 'Button')).toContain('[data-component="button"]');
+    expect(componentSource(generated.ui, 'Button')).toContain("import './style.css'");
+    expect(source(generated.ui, 'components/Button/index.ts')).toContain(
+      "export { Button } from './component'",
+    );
+    expect(componentStyle(generated.ui, 'Button')).not.toContain('[data-component="card"]');
+    const rootIndex = source(generated.ui, 'index.ts');
+    expect(rootIndex).toContain("export * from './components/Button';");
+    expect(rootIndex).not.toContain('import ');
   });
 
   it('prunes unreachable documents from components, styles, and stories', () => {
     const generated = generateReact({ documents, entries: ['button'] });
     expect(generated.ui.map((file) => file.path)).toEqual([
       'styles/tokens.css',
-      'styles/components.css',
-      'components/Button.tsx',
+      'components/Button/component.tsx',
+      'components/Button/types.ts',
+      'components/Button/style.css',
+      'components/Button/index.ts',
       'index.ts',
     ]);
     expect(generated.stories.map((file) => file.path)).toEqual([
       'src/stories/generated/Button.stories.tsx',
     ]);
+  });
+
+  it('includes recursive instance dependencies for an entry', () => {
+    const generated = generateReact({ documents, entries: ['sign-in'] });
+    const componentDirectories = generated.ui
+      .filter((file) => file.path.endsWith('/component.tsx'))
+      .map((file) => file.path.split('/')[1]);
+    expect(componentDirectories).toEqual(['Button', 'FormInput', 'Input', 'SignIn']);
+    expect(generated.stories.map((file) => file.path)).toEqual([
+      'src/stories/generated/Button.stories.tsx',
+      'src/stories/generated/FormInput.stories.tsx',
+      'src/stories/generated/Input.stories.tsx',
+      'src/stories/generated/SignIn.stories.tsx',
+    ]);
+  });
+
+  it('keeps bundle CSS as an explicit compatibility mode', () => {
+    const generated = generateReact({ documents: [documents[0]!], styles: 'bundle' });
+    expect(source(generated.ui, 'styles/components.css')).toContain('[data-component="button"]');
+    expect(generated.ui.some((file) => file.path.endsWith('/style.css'))).toBe(false);
+    expect(componentSource(generated.ui, 'Button')).not.toContain("import './style.css'");
+    expect(source(generated.ui, 'index.ts')).not.toContain('components.css');
+  });
+
+  it('typechecks the complete split component graph', () => {
+    expectGeneratedTypecheck(files);
   });
 
   it('matches the committed UI package', async () => {
@@ -236,11 +289,12 @@ describe('generateReact', () => {
   });
 
   it('generates a data-driven media switch with optional metadata', () => {
-    const media = source(files, 'components/Media.tsx');
-    expect(media).toContain("kind?: 'image' | 'video';");
-    expect(media).toContain('src: string;');
-    expect(media).toContain('alt?: string;');
-    expect(media).toContain('ratio?: string;');
+    const media = componentSource(files, 'Media');
+    const types = componentTypes(files, 'Media');
+    expect(types).toContain("kind?: 'image' | 'video';");
+    expect(types).toContain('src: string;');
+    expect(types).toContain('alt?: string;');
+    expect(types).toContain('ratio?: string;');
     expect(media).toContain("kind === 'video'");
     expect(media).toContain('<img');
     expect(media).toContain('<video');
@@ -248,15 +302,16 @@ describe('generateReact', () => {
   });
 
   it('keeps form control state data connected to the rendered control', () => {
-    const formToggle = source(generateReact({ documents, design }).ui, 'components/FormToggle.tsx');
-    expect(formToggle).toContain('value?: string;');
+    const generated = generateReact({ documents, design }).ui;
+    const formToggle = componentSource(generated, 'FormToggle');
+    expect(componentTypes(generated, 'FormToggle')).toContain('value?: string;');
     expect(formToggle).toContain("data-node='state'");
     expect(formToggle).toContain('{value}');
   });
 
   it('generates the example form as a data-driven type switch', () => {
-    const form = source(files, 'components/FormControlsSection.tsx');
-    expect(form).toContain('formFields?:');
+    const form = componentSource(files, 'FormControlsSection');
+    expect(componentTypes(files, 'FormControlsSection')).toContain('formFields?:');
     expect(form).toContain('{(formFields ?? []).map((field, fieldIndex) => (');
     expect(form).toContain("field?.kind === 'input'");
     expect(form).toContain("field?.kind === 'textarea'");
@@ -357,15 +412,16 @@ describe('bindings outside the examples', () => {
   const { ui: files } = generateReact({ documents: [host, note] });
 
   it('emits typed props, style bindings, and instance overrides', () => {
-    const component = source(files, 'components/Note.tsx');
-    expect(component).toContain("export type NoteDensity = 'compact' | 'comfy';");
-    expect(component).toContain('workEmail?: string;');
+    const component = componentSource(files, 'Note');
+    const types = componentTypes(files, 'Note');
+    expect(types).toContain("export type NoteDensity = 'compact' | 'comfy';");
+    expect(types).toContain('workEmail?: string;');
     expect(component).toContain("workEmail = 'ada@example.com'");
-    expect(component).toContain('count?: number;');
+    expect(types).toContain('count?: number;');
     expect(component).toContain('count = 2');
-    expect(component).toContain('open?: boolean;');
-    expect(component).toContain("tone?: 'info' | 'warn';");
-    expect(component).toContain('classField?: string;');
+    expect(types).toContain('open?: boolean;');
+    expect(types).toContain("tone?: 'info' | 'warn';");
+    expect(types).toContain('classField?: string;');
     expect(component).toContain('data-variant-density={density}');
     expect(component).toContain('{workEmail}');
     expect(component).toContain('{count}');
@@ -375,11 +431,12 @@ describe('bindings outside the examples', () => {
     expect(component).toContain('href={href}');
     expect(component).toContain('hidden={open}');
     expect(component).toContain("import type { CSSProperties } from 'react';");
+    expect(types).toContain("import type { CSSProperties } from 'react';");
     expect(component).toContain("'--tint': href");
     expect(component).toContain('as CSSProperties');
     expect(component).toContain("['card', className].filter(Boolean).join(' ')");
 
-    const wrapper = source(files, 'components/Host.tsx');
+    const wrapper = componentSource(files, 'Host');
     expect(wrapper).toContain("nodeId='note'");
     expect(wrapper).toContain("workEmail='bea@example.com'");
     expect(wrapper).toContain('open={false}');
@@ -387,7 +444,7 @@ describe('bindings outside the examples', () => {
     expect(wrapper).toContain("data-component='missing'");
     expect(wrapper).toContain("className='ds-unknown'");
     expect(wrapper).toContain('Unknown component: missing');
-    expect(files.map((file) => file.path)[2]).toBe('components/Host.tsx');
+    expect(files.map((file) => file.path)[1]).toBe('components/Host/component.tsx');
   });
 
   it('rejects a default whose type does not match the field', () => {
@@ -575,19 +632,21 @@ describe('nested child field codegen', () => {
     };
 
     const { ui: files } = generateReact({ documents: [host, field, section, input] });
-    const hostSource = source(files, 'components/NestedHost.tsx');
-    const fieldSource = source(files, 'components/NestedField.tsx');
-    const sectionSource = source(files, 'components/NestedSection.tsx');
+    const hostSource = componentSource(files, 'NestedHost');
+    const fieldSource = componentSource(files, 'NestedField');
+    const fieldTypes = componentTypes(files, 'NestedField');
+    const sectionSource = componentSource(files, 'NestedSection');
+    const sectionTypes = componentTypes(files, 'NestedSection');
 
     expect(hostSource).toContain(
       "childFields={{ 'section-part': { 'title': 'Local title' }, 'section-part/control': { 'value': 'Deep value' } }}",
     );
-    expect(fieldSource).toContain('childFields?: Record<string, Record<string, unknown>>;');
+    expect(fieldTypes).toContain('childFields?: Record<string, Record<string, unknown>>;');
     expect(fieldSource).toContain("childFields?.['section-part']?.title");
     expect(fieldSource).toContain('childFields2={{ ...');
     expect(sectionSource).toContain('childFields2?.control?.value');
-    expect(sectionSource).toContain('childFields?: string;');
-    expect(sectionSource).toContain('childFields2?: Record<string, Record<string, unknown>>;');
+    expect(sectionTypes).toContain('childFields?: string;');
+    expect(sectionTypes).toContain('childFields2?: Record<string, Record<string, unknown>>;');
     expectGeneratedTypecheck(files);
   });
 });
@@ -615,10 +674,11 @@ describe('atom contracts', () => {
     };
 
     const generated = generateReact({ documents: [field] });
-    const sourceText = source(generated.ui, 'components/FormInputAtom.tsx');
-    expect(sourceText).toContain('value: string;');
-    expect(sourceText).toContain('disabled?: boolean;');
-    expect(sourceText).toContain('onCommit?: (payload: { value: string }) => void;');
+    const sourceText = componentSource(generated.ui, 'FormInputAtom');
+    const types = componentTypes(generated.ui, 'FormInputAtom');
+    expect(types).toContain('value: string;');
+    expect(types).toContain('disabled?: boolean;');
+    expect(types).toContain('onCommit?: (payload: { value: string }) => void;');
     expect(sourceText).toContain(
       'onChange={(event) => onCommit?.({ value: event.currentTarget.value })}',
     );
@@ -675,9 +735,10 @@ describe('atom contracts', () => {
       },
     };
     const generated = generateReact({ documents: [wrapper, atom] });
-    const sourceText = source(generated.ui, 'components/ControlWrapper.tsx');
-    expect(sourceText).toContain('value?: string;');
-    expect(sourceText).toContain('onCommit?: (payload: { value: string }) => void;');
+    const sourceText = componentSource(generated.ui, 'ControlWrapper');
+    const types = componentTypes(generated.ui, 'ControlWrapper');
+    expect(types).toContain('value?: string;');
+    expect(types).toContain('onCommit?: (payload: { value: string }) => void;');
     expect(sourceText).toContain('<ControlAtom');
     expect(sourceText).toContain('value={value}');
     expect(sourceText).toContain('onCommit={onCommit}');
@@ -718,9 +779,10 @@ describe('atom contracts', () => {
     };
 
     const generated = generateReact({ documents: [component] });
-    const sourceText = source(generated.ui, 'components/VariantDemo.tsx');
-    expect(sourceText).toContain("export type VariantDemoVariant = 'default' | 'compact';");
-    expect(sourceText).toContain('variant?: VariantDemoVariant;');
+    const sourceText = componentSource(generated.ui, 'VariantDemo');
+    const types = componentTypes(generated.ui, 'VariantDemo');
+    expect(types).toContain("export type VariantDemoVariant = 'default' | 'compact';");
+    expect(types).toContain('variant?: VariantDemoVariant;');
     expect(sourceText).toContain("variant === 'compact'");
     expect(sourceText).toContain('data-variant={variant}');
     expect(sourceText).toContain('Compact');
@@ -747,9 +809,9 @@ describe('atom contracts', () => {
         ],
       },
     };
-    const hostSource = source(
+    const hostSource = componentSource(
       generateReact({ documents: [host, component] }).ui,
-      'components/VariantHost.tsx',
+      'VariantHost',
     );
     expect(hostSource).toContain("variant='compact'");
   });
@@ -769,12 +831,11 @@ describe('atom contracts', () => {
       },
     };
 
-    const sourceText = source(
-      generateReact({ documents: [component] }).ui,
-      'components/OptionalVariantDefault.tsx',
-    );
+    const generated = generateReact({ documents: [component] }).ui;
+    const sourceText = componentSource(generated, 'OptionalVariantDefault');
+    const types = componentTypes(generated, 'OptionalVariantDefault');
     expect(sourceText).toContain("title = variant === 'empty' ? undefined : 'Title'");
-    expect(sourceText).toContain('title?: string;');
+    expect(types).toContain('title?: string;');
   });
 
   it('generates repeat maps and item display conditions', () => {
@@ -821,11 +882,11 @@ describe('atom contracts', () => {
       root: { id: 'root', type: 'text', tag: 'li', bindings: [{ field: 'label', target: 'text' }] },
     };
     const generated = generateReact({ documents: [component, row] });
-    const sourceText = source(generated.ui, 'components/RepeatDemo.tsx');
+    const sourceText = componentSource(generated.ui, 'RepeatDemo');
     expect(sourceText).toContain('{(items ?? []).map((item, itemIndex) => (');
     expect(sourceText).toContain('key={item?.id ?? itemIndex}');
     expect(sourceText).toContain("item?.kind === 'input'");
-    expect(sourceText).toContain("import { RepeatRow } from './RepeatRow';");
+    expect(sourceText).toContain("import { RepeatRow } from '../RepeatRow';");
     expect(sourceText).toContain('label={item?.label}');
   });
 
@@ -845,9 +906,9 @@ describe('atom contracts', () => {
       root: { id: 'root', type: 'text', text: 'Kinds' },
     };
 
-    const sourceText = source(
+    const sourceText = componentTypes(
       generateReact({ documents: [component] }).ui,
-      'components/EnumArrayProps.tsx',
+      'EnumArrayProps',
     );
     expect(sourceText).toContain("kinds?: ('input' | 'textarea')[];");
   });
@@ -874,9 +935,9 @@ describe('atom contracts', () => {
       root: { id: 'root', type: 'text', text: 'Settings' },
     };
 
-    const sourceText = source(
+    const sourceText = componentTypes(
       generateReact({ documents: [component] }).ui,
-      'components/NestedDefaultProps.tsx',
+      'NestedDefaultProps',
     );
     expect(sourceText).toContain("settings?: { 'mode'?: string; 'label': string };");
   });
@@ -937,9 +998,9 @@ describe('atom contracts', () => {
       fields: [{ name: 'label', type: 'text', required: true }],
       root: { id: 'root', type: 'text', tag: 'li', bindings: [{ field: 'label', target: 'text' }] },
     };
-    const sourceText = source(
+    const sourceText = componentSource(
       generateReact({ documents: [component, row] }).ui,
-      'components/NestedRepeatDemo.tsx',
+      'NestedRepeatDemo',
     );
     expect(sourceText).toContain('{(sections ?? []).map((section, sectionIndex) => (');
     expect(sourceText).toContain('{(section?.rows ?? []).map((row, rowIndex) => (');
@@ -991,9 +1052,9 @@ describe('atom contracts', () => {
       root: { id: 'root', type: 'text', tag: 'li', bindings: [{ field: 'label', target: 'text' }] },
     };
 
-    const sourceText = source(
+    const sourceText = componentSource(
       generateReact({ documents: [component, row] }).ui,
-      'components/HyphenatedRepeatDemo.tsx',
+      'HyphenatedRepeatDemo',
     );
     expect(sourceText).toContain('{(formFields ?? []).map((formField, formFieldIndex) => (');
     expect(sourceText).toContain("key={formField?.['field-id'] ?? formFieldIndex}");
