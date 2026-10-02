@@ -41,7 +41,7 @@ Field types are `text`, `richText`, `image`, `link`, `boolean`, `enum`, `number`
 
 | Kind        | Root                  | What it may contain                                      |
 | ----------- | --------------------- | -------------------------------------------------------- |
-| `atom`      | frame, text, or image | Only primitives: `frame`, `text`, `image`. No instances. |
+| `atom`      | frame, text, or image | Single root node only — no children. Use a component for trees. |
 | `component` | frame, text, or image | Primitives, plus instances of atoms and components.      |
 | `section`   | frame, text, or image | Same as a component. Not sections or pages.              |
 | `page`      | frame (the canvas)    | Only instances of sections.                              |

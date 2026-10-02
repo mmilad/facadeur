@@ -17,14 +17,14 @@ export interface NestingRule {
 }
 
 /**
- * Atoms contain only primitives (frame, text, image). Frames are layout containers
- * for atom authoring, not catalog instances. Components and sections instance atoms
- * from the library. A page canvas holds instances of sections or composed components.
+ * Atoms are single-element documents (one root node, no children). Anything with
+ * more than one node belongs in a component or section. Components and sections
+ * instance atoms from the library. A page canvas holds sections or components.
  */
 export const defaultNestingRules: Record<DefaultKind, NestingRule> = {
   atom: {
     rootNodeTypes: ['frame', 'text', 'image'],
-    nodeTypes: ['frame', 'text', 'image'],
+    nodeTypes: [],
     instanceKinds: [],
   },
   component: {

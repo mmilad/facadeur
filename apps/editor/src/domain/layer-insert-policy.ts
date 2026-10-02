@@ -1,9 +1,4 @@
-import {
-  layerInsertAt,
-  placementAllowed,
-  toolAllowed,
-  type InsertTool,
-} from './editing.js';
+import { layerInsertAt, placementAllowed, type InsertTool } from './editing.js';
 import type { LayerItem } from './selection/selection-model.js';
 import type { AssetSummary, EditorSnapshot } from './session/types.js';
 
@@ -21,26 +16,18 @@ export const STANDARD_ATOM_IDS = [
   'textarea',
 ] as const;
 
-const PRIMITIVE_LABELS: Record<InsertTool, string> = {
-  frame: 'Frame',
-  text: 'Text',
-  image: 'Image',
-};
-
 export type LayerInsertEntry =
   | { kind: 'primitive'; tool: InsertTool; label: string }
   | { kind: 'instance'; assetId: string; label: string };
 
 /**
- * Atom documents are built from layout primitives (frames group children).
- * Composed documents insert catalog atoms; pages insert sections or components.
+ * Atoms are single-element documents — no layer insert. Composed documents insert
+ * catalog atoms; pages insert sections or components.
  */
 export function layerInsertEntries(snap: EditorSnapshot): LayerInsertEntry[] {
   const kind = snap.document.kind;
   if (kind === 'atom') {
-    return (['frame', 'text', 'image'] as const)
-      .filter((tool) => toolAllowed('atom', tool))
-      .map((tool) => ({ kind: 'primitive' as const, tool, label: PRIMITIVE_LABELS[tool] }));
+    return [];
   }
   if (kind === 'page') {
     return catalogInstances(snap, (asset) => asset.kind === 'section' || asset.kind === 'component');

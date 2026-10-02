@@ -19,7 +19,7 @@ function snap(partial: {
 }
 
 describe('layer insert policy', () => {
-  it('offers primitives when editing an atom', () => {
+  it('offers no insert entries when editing an atom', () => {
     const document = toFlat({
       version: 1,
       id: 'button',
@@ -33,7 +33,7 @@ describe('layer insert policy', () => {
         catalog: [{ id: 'button', name: 'Button', kind: 'atom' }],
       }),
     );
-    expect(entries.map((entry) => entry.label)).toEqual(['Frame', 'Text', 'Image']);
+    expect(entries).toEqual([]);
   });
 
   it('offers atom instances when editing a component', () => {

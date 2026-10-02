@@ -27,7 +27,7 @@ function setup() {
         version: 1,
         id: 'child',
         name: 'Child',
-        kind: 'atom',
+        kind: 'component',
         root: {
           id: 'root',
           type: 'frame',

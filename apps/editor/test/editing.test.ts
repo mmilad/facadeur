@@ -149,7 +149,7 @@ describe('editing', () => {
     expect(toolAllowed('page', 'frame')).toBe(false);
     expect(toolAllowed('page', 'text')).toBe(false);
     expect(toolAllowed('page', 'image')).toBe(false);
-    expect(toolAllowed('atom', 'frame')).toBe(true);
+    expect(toolAllowed('atom', 'frame')).toBe(false);
     expect(toolAllowed('section', 'text')).toBe(true);
     expect(placementAllowed(page, 'root', 'frame')).toBe(false);
     expect(placementAllowed(page, 'root', 'instance', 'atom')).toBe(false);

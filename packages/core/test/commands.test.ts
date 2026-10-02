@@ -498,6 +498,13 @@ describe('applyCommand', () => {
         node: { id: 'btn', type: 'instance', component: 'button' },
       }),
     ).toThrow(DocumentError);
+    expect(() =>
+      applyCommand(atom, {
+        type: 'insert',
+        parentId: 'root',
+        node: { id: 'label', type: 'text', text: 'No' },
+      }),
+    ).toThrow(/cannot contain a text node/);
 
     const page = toFlat(file('page'));
     expect(() =>

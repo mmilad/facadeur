@@ -1,5 +1,7 @@
 import { defaultKinds, type DefaultKind } from '@facadeur/core';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
+import { AssetContextMenu } from './AssetContextMenu.js';
 import { blankAsset } from '../../../domain/assets/new-asset.js';
 import { ownsVariantContract } from '../../../domain/edits/variant-edit.js';
 import { createNamedVariant, renameNamedVariant } from '../../../domain/variant-actions.js';
@@ -34,7 +36,11 @@ export function ProjectTree({
   const [query, setQuery] = useState('');
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [expandedVariants, setExpandedVariants] = useState<Record<string, boolean>>({});
-  const [contextAssetId, setContextAssetId] = useState<string | null>(null);
+  const [assetContextMenu, setAssetContextMenu] = useState<{
+    assetId: string;
+    anchor: DOMRect;
+  } | null>(null);
+  const contextAssetId = assetContextMenu?.assetId ?? null;
   const activeRef = useRef<HTMLButtonElement | null>(null);
   const contextMenuRef = useRef<HTMLDivElement | null>(null);
   const needle = query.trim().toLowerCase();
@@ -56,40 +62,42 @@ export function ProjectTree({
   }, [snap.openId, expanded, needle]);
 
   useEffect(() => {
-    if (!contextAssetId) return;
+    if (!assetContextMenu) return;
     const close = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       event.preventDefault();
       event.stopPropagation();
-      setContextAssetId(null);
+      setAssetContextMenu(null);
     };
     window.addEventListener('keydown', close, true);
     return () => window.removeEventListener('keydown', close, true);
-  }, [contextAssetId]);
+  }, [assetContextMenu]);
 
   useEffect(() => {
-    if (contextAssetId && !snap.catalog.some((asset) => asset.id === contextAssetId)) {
-      setContextAssetId(null);
+    if (assetContextMenu && !snap.catalog.some((asset) => asset.id === assetContextMenu.assetId)) {
+      setAssetContextMenu(null);
     }
-  }, [contextAssetId, snap.catalog]);
+  }, [assetContextMenu, snap.catalog]);
 
   useEffect(() => {
-    setContextAssetId((current) => (current && current !== snap.openId ? null : current));
+    setAssetContextMenu((current) =>
+      current && current.assetId !== snap.openId ? null : current,
+    );
   }, [snap.openId]);
 
   useEffect(() => {
-    if (!contextAssetId) return;
+    if (!assetContextMenu) return;
     const close = (event: PointerEvent) => {
-      if (!contextMenuRef.current?.contains(event.target as Node)) setContextAssetId(null);
+      if (!contextMenuRef.current?.contains(event.target as Node)) setAssetContextMenu(null);
     };
-    const closeOnBlur = () => setContextAssetId(null);
+    const closeOnBlur = () => setAssetContextMenu(null);
     document.addEventListener('pointerdown', close, true);
     window.addEventListener('blur', closeOnBlur);
     return () => {
       document.removeEventListener('pointerdown', close, true);
       window.removeEventListener('blur', closeOnBlur);
     };
-  }, [contextAssetId]);
+  }, [assetContextMenu]);
 
   const sidebarDesignItems = useMemo(
     () =>
@@ -165,7 +173,11 @@ export function ProjectTree({
     if (current.openId !== assetId) onOpenAsset(assetId);
     if (!createNamedVariant(session)) return;
     setExpandedVariants((prev) => ({ ...prev, [assetId]: true }));
-    setContextAssetId(null);
+    setAssetContextMenu(null);
+  }
+
+  function openAssetContext(assetId: string, anchorEl: HTMLElement) {
+    setAssetContextMenu({ assetId, anchor: anchorEl.getBoundingClientRect() });
   }
 
   function renameVariant(assetId: string, name: string, label: string) {
@@ -174,6 +186,10 @@ export function ProjectTree({
     if (session.getSnapshot().openId !== assetId) onOpenAsset(assetId);
     renameNamedVariant(session, name, label);
   }
+
+  const contextAsset = assetContextMenu
+    ? snap.catalog.find((candidate) => candidate.id === assetContextMenu.assetId)
+    : undefined;
 
   return (
     <section className="side-block side-block-tree" aria-label="Project">
@@ -222,9 +238,7 @@ export function ProjectTree({
                   setExpandedVariants((prev) => ({ ...prev, [assetId]: prev[assetId] !== true }))
                 }
                 contextAssetId={contextAssetId}
-                contextMenuRef={contextMenuRef}
-                onContextAsset={(assetId) => setContextAssetId(assetId)}
-                onCreateVariant={createVariant}
+                onContextAsset={openAssetContext}
                 onRenameVariant={renameVariant}
               />
               {group.subgroups.map((subgroup) =>
@@ -250,9 +264,7 @@ export function ProjectTree({
                         }))
                       }
                       contextAssetId={contextAssetId}
-                      contextMenuRef={contextMenuRef}
-                      onContextAsset={(assetId) => setContextAssetId(assetId)}
-                      onCreateVariant={createVariant}
+                      onContextAsset={openAssetContext}
                       onRenameVariant={renameVariant}
                     />
                   </TreeGroup>
@@ -263,6 +275,18 @@ export function ProjectTree({
         )}
         {empty ? <p className="inspector-empty tree-empty">No assets match.</p> : null}
       </div>
+      {contextAsset && assetContextMenu
+        ? createPortal(
+            <AssetContextMenu
+              asset={contextAsset}
+              anchor={assetContextMenu.anchor}
+              menuRef={contextMenuRef}
+              onCreateVariant={createVariant}
+              onClose={() => setAssetContextMenu(null)}
+            />,
+            document.body,
+          )
+        : null}
     </section>
   );
 }

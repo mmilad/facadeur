@@ -13,9 +13,7 @@ export function AssetRows({
   expandedVariants,
   onToggleVariants,
   contextAssetId,
-  contextMenuRef,
   onContextAsset,
-  onCreateVariant,
   onRenameVariant,
 }: {
   assets: AssetSummary[];
@@ -26,9 +24,7 @@ export function AssetRows({
   expandedVariants: Readonly<Record<string, boolean>>;
   onToggleVariants: (assetId: string) => void;
   contextAssetId: string | null;
-  contextMenuRef: MutableRefObject<HTMLDivElement | null>;
-  onContextAsset: (assetId: string) => void;
-  onCreateVariant: (assetId: string) => void;
+  onContextAsset: (assetId: string, anchorEl: HTMLElement) => void;
   onRenameVariant: (assetId: string, name: string, label: string) => void;
 }) {
   return assets.map((asset) => {
@@ -55,12 +51,12 @@ export function AssetRows({
             onKeyDown={(event) => {
               if ((event.shiftKey && event.key === 'F10') || event.key === 'ContextMenu') {
                 event.preventDefault();
-                onContextAsset(asset.id);
+                onContextAsset(asset.id, event.currentTarget);
               }
             }}
             onContextMenu={(event) => {
               event.preventDefault();
-              onContextAsset(asset.id);
+              onContextAsset(asset.id, event.currentTarget);
             }}
           >
             <span className="asset-name">{asset.name}</span>
@@ -79,20 +75,6 @@ export function AssetRows({
             </button>
           ) : null}
         </div>
-        {contextAssetId === asset.id ? (
-          <div
-            ref={contextMenuRef}
-            className="asset-context-menu"
-            role="menu"
-            aria-label={`${asset.name} actions`}
-          >
-            {canHaveVariants ? (
-              <button type="button" role="menuitem" onClick={() => onCreateVariant(asset.id)}>
-                Create variant
-              </button>
-            ) : null}
-          </div>
-        ) : null}
         {canHaveVariants && hasVariants && variantsOpen ? (
           <div className="asset-variants" role="list" aria-label={`${asset.name} variants`}>
             {variants.map((variant) => {
