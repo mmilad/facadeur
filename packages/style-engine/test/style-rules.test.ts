@@ -72,6 +72,7 @@ describe('authored style selector compilation', () => {
 
   it('scopes each selector group and binding to owner-local preview markers', () => {
     const checked = compiled.find((rule) => rule.key === 'preview-host:rule:checked-label:base');
+    expect(checked?.target).toEqual({ kind: 'authored-selector' });
     expect(checked?.selector).toContain(
       '[data-style-node~="preview-host:label"]:where([data-component="preview-host"], [data-component="preview-host"] *)',
     );

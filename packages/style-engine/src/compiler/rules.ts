@@ -1,5 +1,5 @@
 import type { StyleChild } from '@facadeur/core';
-import type { CompiledRule, StyleLayerOutputState } from './types';
+import type { CompiledRule, CompiledTarget, StyleLayerOutputState } from './types';
 import { appendStyleSelectorSuffix } from '../selectors/scope';
 import { withVariant } from '../selectors/variants';
 import { expandDeclarations } from '../css/values';
@@ -8,12 +8,14 @@ export function appendCompiledRule(
   key: string,
   selector: string,
   declarations: [string, string][],
+  target: CompiledTarget,
   minWidth?: number,
   extra?: Pick<CompiledRule, 'styleRuleId' | 'styleRuleBindings'>,
 ): void {
   if (!declarations.length) return;
   state.rules.push({
     key,
+    target,
     selector,
     declarations,
     ...(minWidth !== undefined ? { minWidth } : {}),
@@ -28,6 +30,7 @@ export function emitSparseStyleLayers(
   targetKey: string,
   layer: StyleChild | undefined,
   selector: string,
+  target: CompiledTarget,
   state: StyleLayerOutputState,
   styleRule?: Pick<CompiledRule, 'styleRuleId' | 'styleRuleBindings'>,
   selectorHooks?: {
@@ -46,6 +49,7 @@ export function emitSparseStyleLayers(
       `${documentId}:${targetKey}:state:${name}`,
       forState(selector, name),
       expandDeclarations(declarations, context),
+      target,
       undefined,
       styleRule,
     );
@@ -58,6 +62,7 @@ export function emitSparseStyleLayers(
         `${documentId}:${targetKey}:variant:${axis}:${value}`,
         current,
         expandDeclarations(variant.declarations, context),
+        target,
         undefined,
         styleRule,
       );
@@ -67,6 +72,7 @@ export function emitSparseStyleLayers(
           `${documentId}:${targetKey}:variant:${axis}:${value}:state:${name}`,
           forState(current, name),
           expandDeclarations(declarations, context),
+          target,
           undefined,
           styleRule,
         );
@@ -83,6 +89,7 @@ export function emitSparseStyleLayers(
       `${documentId}:${targetKey}:style:${id}`,
       selector,
       expandDeclarations(breakpoint.declarations, context),
+      target,
       minWidth,
       styleRule,
     );
@@ -92,6 +99,7 @@ export function emitSparseStyleLayers(
         `${documentId}:${targetKey}:style:${id}:state:${name}`,
         forState(selector, name),
         expandDeclarations(declarations, context),
+        target,
         minWidth,
         styleRule,
       );

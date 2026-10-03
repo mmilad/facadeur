@@ -1,10 +1,6 @@
-import {
-  generateReact,
-  type GenerateReactOptions,
-  type GeneratedFile,
-} from '@facadeur/codegen-react';
+import { generate, type GenerateOptions, type GeneratedFile } from '@facadeur/codegen';
 
-export type CodePreviewInput = GenerateReactOptions & {
+export type CodePreviewInput = GenerateOptions & {
   documentId: string;
 };
 
@@ -17,7 +13,7 @@ export function codePreview({
   design,
 }: CodePreviewInput): CodePreviewResult {
   try {
-    const files = generateReact({ documents, design }).ui;
+    const files = generate({ documents, design }).ui;
     const component = files.find(
       (file: GeneratedFile) =>
         file.path.endsWith('/component.tsx') &&

@@ -54,6 +54,7 @@ function compileSingleDocument(
     isRoot: true,
     rendered: rootRendered,
     variantScope: options.variantScope,
+    selectorForVariant: options.selectorForVariant,
     substituteContext,
     rules,
     selectorForNode: options.selectorForNode,
@@ -78,7 +79,7 @@ function compileSingleDocument(
           path: null,
           isRoot: true,
           address,
-          defaultSelector: selector,
+          targetComponentId: target.component,
           targetPath,
           variantScope: options.variantScope,
         }) ?? selector;
@@ -90,12 +91,22 @@ function compileSingleDocument(
         `${document.id}:${targetPath}:base`,
         scoped,
         expandDeclarations(layer.declarations, substituteContext),
+        { kind: 'nested-instance', targetPath, componentId: target.component },
       );
-      emitSparseStyleLayers(document.id, targetPath, layer, scoped, {
-        breakpoints,
-        substituteContext,
-        rules,
-      });
+      emitSparseStyleLayers(
+        document.id,
+        targetPath,
+        layer,
+        scoped,
+        { kind: 'nested-instance', targetPath, componentId: target.component },
+        {
+          breakpoints,
+          substituteContext,
+          rules,
+        },
+        undefined,
+        { forVariant: options.selectorForVariant },
+      );
     }
   }
   compileAuthoredRules(

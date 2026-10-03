@@ -162,24 +162,28 @@ describe('component style block', () => {
     };
     const compiled = compileDocument(document);
     const base = compiled.find((rule) => rule.key === 'host:button:base');
+    expect(base?.target).toEqual({ kind: 'node', nodeId: 'button', isInstance: true });
     expect(base?.selector).toBe(
       '[data-component="host"] > [data-node="button"][data-component="control"][data-component="control"]',
     );
     expect(base?.declarations).toContainEqual(['color', 'var(--color-accent)']);
     expect(compiled).toContainEqual({
       key: 'host:button:state:hover',
+      target: { kind: 'node', nodeId: 'button', isInstance: true },
       selector:
         '[data-component="host"] > [data-node="button"][data-component="control"][data-component="control"]:hover',
       declarations: [['color', 'white']],
     });
     expect(compiled).toContainEqual({
       key: 'host:button:variant:variant:compact',
+      target: { kind: 'node', nodeId: 'button', isInstance: true },
       selector:
         '[data-component="host"][data-variant="compact"] > [data-node="button"][data-component="control"][data-component="control"]',
       declarations: [['color', 'purple']],
     });
     expect(compiled).toContainEqual({
       key: 'host:button:style:wide',
+      target: { kind: 'node', nodeId: 'button', isInstance: true },
       selector:
         '[data-component="host"] > [data-node="button"][data-component="control"][data-component="control"]',
       declarations: [['color', 'green']],
@@ -319,6 +323,11 @@ describe('nested instance root appearance overrides', () => {
     const rules = compileDocument(owner, { catalog: [owner, template, button] });
     const signIn = rules.find((rule) => rule.key === 'owner:group/sign-in/continue:base');
     const checkout = rules.find((rule) => rule.key === 'owner:group/checkout/continue:base');
+    expect(signIn?.target).toEqual({
+      kind: 'nested-instance',
+      targetPath: 'group/sign-in/continue',
+      componentId: 'button',
+    });
     expect(signIn?.selector).toContain(
       '[data-node="group"] > [data-node="sign-in"] > [data-node="continue"]',
     );

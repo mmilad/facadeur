@@ -376,12 +376,12 @@ The editor shows one same-origin iframe per breakpoint. The iframe's width is th
 
 ## Codegen
 
-`@facadeur/codegen-react` reads these documents and emits one directory per React component.
+`@facadeur/codegen` reads these documents and emits one directory per React component through its default React engine.
 Each directory separates `component.tsx`, `types.ts`, `style.module.css`, and its public `index.ts`.
 Props are the fields and variant axes. The component root sets `data-component` and
 `data-variant-*`. Children set `data-node`. An instance becomes a call to the generated component,
 with that instance's field and variant overrides. `nodeId` is the instance id and is written to
-`data-node`, so the style-engine selectors apply to the same element the renderer paints. Each
+`data-node`, so the style rules address the same element the renderer paints. Each
 element gets a local CSS Module class; instance classes are passed to the child component root,
 which merges them with its own generated class and any caller or document classes.
 

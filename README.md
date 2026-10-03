@@ -73,7 +73,7 @@ packages/tokens         DTCG parser, reference resolution, CSS custom properties
 packages/style-engine   live CSSStyleRules, component style blocks, auto layout
 packages/renderer-dom   document JSON to DOM, targeted updates from the store
 packages/ui             generated React design system (from pnpm codegen)
-packages/codegen-react  React components, CSS, and Storybook stories from documents
+packages/codegen       Shared code-generation entry point; React output engine
 examples/               specimen page, section, atoms, and examples/project-template.json
 examples/next           Next.js app that imports @facadeur/ui
 schema/                 generated JSON Schema

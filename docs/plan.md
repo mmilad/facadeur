@@ -639,7 +639,7 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 - `apps/editor` – Vite + React App (Bühne, Panels, Werkzeuge).
 - `packages/ui` – generiertes React-Designsystem (Komponenten + CSS) aus `pnpm codegen`.
 - `apps/storybook` – Storybook-App; listet alle generierten CSF3-Stories aus `@facadeur/ui`.
-- `packages/codegen-react` – React-Komponenten, CSS und Storybook-Stories aus den Dokumenten.
+- `packages/codegen` – gemeinsamer `generate()`-Einstieg; React-Komponenten, CSS und Storybook-Stories zunächst unter `engines/react`.
 
 ### Arten (kinds) und Hierarchie
 
@@ -882,3 +882,4 @@ facadeur ist ein visueller Design-System-Editor. Atome, Komponenten, Sektionen u
 - 2026-09-30: Benannte Variant-Style-Edits verwenden jetzt den kanonischen sparsamen Block `overrides.styles`. Der Editor migriert die Legacy-Layer `styles.variants.variant.<preset>` atomar für das bearbeitete Preset und lässt andere Style-Achsen unangetastet.
 - 2026-09-30: `deriveVariantPreset` leitet nun auch sparse Style-Overrides aus einem aufgelösten Variant-Dokument ab — inklusive States, Style-Achsen, Breakpoints und Child-Regeln. Direkte Styles migrieren dabei ebenfalls die alte Named-Layer-Struktur.
 - 2026-09-30: Data-Directive-Controls bieten Gleichheitsbedingungen nur für skalare Felder an und erlauben als Repeater-Key nur skalare Item-Pfade. Objekt-/Array-Felder bleiben für Truthy-Bedingungen und den Repeater-Scope verfügbar.
+- 2026-10-03: Codegen wird zu einem Paket mit gemeinsamem `generate()`-Einstieg und austauschbaren Engines (`engines/react` zunächst als Default) konsolidiert. Die React-Ausgabe erhält ihre eigene Markup-/CSS-Übersetzung; die Style-Engine soll keine React- oder DOM-Marker als gemeinsames Modell voraussetzen. Zuerst wird geprüft, ob ein symbolisches Zielmodell für Knoten, gebundene authored selectors, Zustände, Varianten und Breakpoints die bestehenden Konsumenten trägt. Editor-DOM-Vorschau und Codegen übersetzen dieses Modell jeweils in ihre eigenen Selektoren/Marker. Verträge: Ausgabeformat und CLI-Verhalten, CSS-Kaskade/Overrides, Token- und Layout-Semantik, CSS-Module-Klassenzuordnung, DOM-Preview-Adressierung; TypeScript-Imports bleiben extensionlos. Validierung: bestehende Codegen-Snapshots/Fixtures und Style-Engine-Tests, Paket-Typechecks, `pnpm codegen`-Diff sowie Codegen-Ausgabe-Integration.

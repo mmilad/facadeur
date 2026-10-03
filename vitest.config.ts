@@ -14,13 +14,16 @@ export default defineConfig({
       '@facadeur/renderer-dom': `${root}packages/renderer-dom/src/index.ts`,
       '@facadeur/tokens': `${root}packages/tokens/src/index.ts`,
       '@facadeur/style-engine': `${root}packages/style-engine/src/index.ts`,
-      '@facadeur/codegen-react': `${root}packages/codegen-react/src/index.ts`,
+      '@facadeur/codegen': `${root}packages/codegen/src/index.ts`,
+      '@facadeur/codegen/engines/react': `${root}packages/codegen/engines/react/src/index.ts`,
     },
   },
   test: {
     include: [
       'packages/*/test/**/*.test.ts',
       'packages/*/test/**/*.test.tsx',
+      'packages/codegen/engines/**/test/**/*.test.ts',
+      'packages/codegen/engines/**/test/**/*.test.tsx',
       'apps/*/test/**/*.test.ts',
       'apps/*/test/**/*.test.tsx',
     ],

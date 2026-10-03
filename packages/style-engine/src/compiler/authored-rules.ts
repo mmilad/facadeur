@@ -16,6 +16,7 @@ export function compileAuthoredRules(
   for (const rule of document.styles?.rules ?? []) {
     const authored = renderStyleRuleSelector(rule, names);
     const extra = { styleRuleId: rule.id, styleRuleBindings: rule.bindings };
+    const target = { kind: 'authored-selector' as const };
     const select = (axisVariant?: { axis: string; value: string }): string =>
       (options.selectorForStyleRule ?? previewStyleRuleSelector)({
         documentId: document.id,
@@ -32,10 +33,11 @@ export function compileAuthoredRules(
       `${document.id}:rule:${rule.id}:base`,
       selector,
       expandDeclarations(rule.declarations, state.substituteContext),
+      target,
       undefined,
       extra,
     );
-    emitSparseStyleLayers(document.id, `rule:${rule.id}`, rule, selector, state, extra, {
+    emitSparseStyleLayers(document.id, `rule:${rule.id}`, rule, selector, target, state, extra, {
       forVariant: (_selector, axis, value) => select({ axis, value }),
     });
   }

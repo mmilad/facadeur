@@ -31,9 +31,10 @@ function emitNode(document: DocumentFile, node: NestedNode, state: WalkState): v
       path: state.path,
       isRoot: state.isRoot,
       address: state.address,
-      defaultSelector,
+      ...(node.type === 'instance' ? { targetComponentId: node.component } : {}),
       variantScope: state.variantScope,
     }) ?? defaultSelector;
+  const target = { kind: 'node' as const, nodeId: node.id, isInstance: node.type === 'instance' };
   const layer = styleLayerFor(document.styles, node, state.isRoot);
   const context = state.substituteContext;
   const base = mergeDeclarations([
@@ -42,10 +43,12 @@ function emitNode(document: DocumentFile, node: NestedNode, state: WalkState): v
     expandDeclarations(layer?.declarations, context),
     node.type === 'instance' ? [] : expandDeclarations(node.style, context),
   ]);
-  appendCompiledRule(state, `${document.id}:${node.id}:base`, selector, base);
+  appendCompiledRule(state, `${document.id}:${node.id}:base`, selector, base, target);
 
   const baseId = state.breakpoints[0]?.id;
-  emitSparseStyleLayers(document.id, node.id, layer, selector, state);
+  emitSparseStyleLayers(document.id, node.id, layer, selector, target, state, undefined, {
+    forVariant: state.selectorForVariant,
+  });
 
   if (node.type === 'instance' || node.layout?.breakpoints) {
     for (const [id, override] of Object.entries(node.layout?.breakpoints ?? {})) {
@@ -57,6 +60,7 @@ function emitNode(document: DocumentFile, node: NestedNode, state: WalkState): v
         `${document.id}:${node.id}:layout:${id}`,
         selector,
         layoutOverrideDeclarations(node, override, state.parentDirection, context),
+        target,
         minWidth,
       );
     }

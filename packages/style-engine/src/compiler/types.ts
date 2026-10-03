@@ -2,6 +2,7 @@ import type { Breakpoint, DocumentFile, NestedNode, StyleRule } from '@facadeur/
 import type { SubstituteContext } from '../css/types';
 export interface CompiledRule {
   key: string;
+  target: CompiledTarget;
   selector: string;
   declarations: [string, string][];
   /** Set for a breakpoint override. The base layer has no min-width. */
@@ -10,6 +11,12 @@ export interface CompiledRule {
   styleRuleId?: string;
   styleRuleBindings?: Record<string, string>;
 }
+
+/** Backend-independent ownership of a compiled style rule. */
+export type CompiledTarget =
+  | { kind: 'node'; nodeId: string; isInstance: boolean }
+  | { kind: 'nested-instance'; targetPath: string; componentId: string }
+  | { kind: 'authored-selector' };
 
 export interface CompileOptions {
   /**
@@ -27,7 +34,7 @@ export interface CompileOptions {
   breakpoints?: readonly Breakpoint[];
   /** Catalog used to resolve nested style target paths. */
   catalog?: readonly DocumentFile[];
-  /** Allows output adapters to replace attribute selectors with local selectors. */
+  /** Render a node target in the consumer's own selector language. */
   selectorForNode?: (context: {
     documentId: string;
     node: NestedNode;
@@ -35,10 +42,12 @@ export interface CompileOptions {
     path: string | null;
     isRoot: boolean;
     address: 'instance' | 'canvas';
-    defaultSelector: string;
+    targetComponentId?: string;
     targetPath?: string;
     variantScope?: string;
   }) => string;
+  /** Render a variant condition in the consumer's own selector language. */
+  selectorForVariant?: (selector: string, axis: string, value: string) => string;
   /** Allows output adapters to scope authored selectors for their rendering target. */
   selectorForStyleRule?: (context: {
     documentId: string;
@@ -65,6 +74,7 @@ export interface WalkState {
   isRoot: boolean;
   rendered: boolean;
   variantScope?: string;
+  selectorForVariant?: CompileOptions['selectorForVariant'];
   substituteContext: SubstituteContext;
   rules: CompiledRule[];
   selectorForNode?: CompileOptions['selectorForNode'];

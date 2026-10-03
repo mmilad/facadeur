@@ -47,9 +47,9 @@ importers:
 
   apps/editor:
     dependencies:
-      '@facadeur/codegen-react':
+      '@facadeur/codegen':
         specifier: workspace:*
-        version: link:../../packages/codegen-react
+        version: link:../../packages/codegen
       '@facadeur/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -199,11 +199,8 @@ importers:
         specifier: ^5.9.2
         version: 5.9.3
 
-  packages/codegen-react:
+  packages/codegen:
     dependencies:
-      '@facadeur/codegen-types':
-        specifier: workspace:*
-        version: link:../codegen-types
       '@facadeur/core':
         specifier: workspace:*
         version: link:../core
@@ -223,15 +220,6 @@ importers:
       typescript:
         specifier: ^5.9.2
         version: 5.9.3
-
-  packages/codegen-types:
-    dependencies:
-      '@facadeur/core':
-        specifier: workspace:*
-        version: link:../core
-      '@facadeur/tokens':
-        specifier: workspace:*
-        version: link:../tokens
 
   packages/core:
     dependencies:

@@ -1,5 +1,5 @@
 export { compileDocument } from './compiler/compile';
-export type { CompiledRule, CompileOptions } from './compiler/types';
+export type { CompiledRule, CompiledTarget, CompileOptions } from './compiler/types';
 export { Rule, StyleController } from './runtime/controller';
 export type { RuleChild, RuleInput, StyleControllerTarget, StyleEngine } from './runtime/types';
 export { createStyleEngine } from './runtime/engine';
