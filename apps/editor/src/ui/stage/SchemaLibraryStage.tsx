@@ -19,6 +19,7 @@ import {
   type SchemaValidationIssue,
 } from '../../domain/schema/schema-library.js';
 import { Field, InlineError, TextInput } from '../form/index.js';
+import styles from './SchemaLibraryStage.module.css';
 
 const EDITOR_LABELS = {
   schemaTypeString: 'String',
@@ -50,7 +51,7 @@ export function SchemaLibraryStage({ snap }: { snap: EditorSnapshot }) {
 
   return (
     <section
-      className="schema-stage schema-library eu-form"
+      className="schema-stage eu-form"
       aria-label="Schemas"
       data-testid="schema-library-stage"
       data-schema-catalog="examples/schemas.json"
@@ -66,8 +67,8 @@ export function SchemaLibraryStage({ snap }: { snap: EditorSnapshot }) {
           reload.
         </p>
       </header>
-      <div className="schema-library-body">
-        <aside className="schema-library-list" aria-label="Schema list">
+      <div className={styles.body}>
+        <aside className={styles.list} aria-label="Schema list">
           <button
             type="button"
             className="text-button"
@@ -84,9 +85,7 @@ export function SchemaLibraryStage({ snap }: { snap: EditorSnapshot }) {
                 key={schema.id}
                 type="button"
                 className={
-                  schema.id === selected?.id
-                    ? 'schema-library-item is-active'
-                    : 'schema-library-item'
+                  schema.id === selected?.id ? `${styles.item} ${styles.itemActive}` : styles.item
                 }
                 aria-pressed={schema.id === selected?.id}
                 onClick={() => setPickedId(schema.id)}
@@ -151,8 +150,8 @@ function SchemaEditorPanel({
   }
 
   return (
-    <div className="schema-library-editor">
-      <div className="schema-library-editor-head">
+    <div>
+      <div className={styles.editorHead}>
         <Field label="Name">
           <TextInput
             name="library-schema-name"
@@ -200,6 +199,7 @@ function SchemaEditorPanel({
       <Field label="Kind">
         <select
           name="schema-kind"
+          className={styles.kindSelect}
           value={rootKind(editorSchema)}
           onChange={(event) =>
             commit(
@@ -219,7 +219,7 @@ function SchemaEditorPanel({
         </select>
       </Field>
       <SchemaBuilderProvider messages={EDITOR_LABELS}>
-        <div className="jsonjoy schema-library-joy">
+        <div className={`jsonjoy ${styles.joy}`}>
           <TypeEditor
             schema={editorSchema as JoySchema}
             onChange={(next: JoySchema) => {
@@ -229,7 +229,7 @@ function SchemaEditorPanel({
           />
         </div>
       </SchemaBuilderProvider>
-      <details className="schema-library-source">
+      <details className={styles.source}>
         <summary>JSON Schema</summary>
         <pre data-testid="schema-json">{JSON.stringify(schema.schema, null, 2)}</pre>
       </details>
@@ -260,17 +260,17 @@ function CompositionEditor({
 
   return (
     <Field label={label} hint={hint}>
-      <div className="schema-library-composition-list">
+      <div className={styles.compositionList}>
         {selectedIds.map((id, index) => {
           const options = available.filter(
             (entry) => entry.id === id || !selectedIds.includes(entry.id),
           );
           const selectedName = schemas.find((entry) => entry.id === id)?.name ?? id;
           return (
-            <div className="schema-library-composition-row" key={`${kind}:${index}`}>
+            <div className={styles.compositionRow} key={`${kind}:${index}`}>
               <select
                 name={`schema-${kind}-${index}`}
-                className="eu-control schema-library-composition-select"
+                className={`eu-control ${styles.compositionSelect}`}
                 aria-label={`${label} schema ${index + 1}`}
                 value={id}
                 onChange={(event) =>
@@ -289,7 +289,7 @@ function CompositionEditor({
               </select>
               <button
                 type="button"
-                className="schema-library-composition-remove"
+                className={styles.compositionRemove}
                 aria-label={`Remove ${selectedName} from ${label}`}
                 onClick={() =>
                   onChange(selectedIds.filter((_, selectedIndex) => selectedIndex !== index))
@@ -301,10 +301,10 @@ function CompositionEditor({
           );
         })}
         {adding ? (
-          <div className="schema-library-composition-row">
+          <div className={styles.compositionRow}>
             <select
               name={`schema-${kind}-new`}
-              className="eu-control schema-library-composition-select"
+              className={`eu-control ${styles.compositionSelect}`}
               aria-label={`Choose schema to ${label}`}
               value=""
               onChange={(event) => {
@@ -322,7 +322,7 @@ function CompositionEditor({
             </select>
             <button
               type="button"
-              className="schema-library-composition-cancel"
+              className={styles.compositionCancel}
               onClick={() => setAdding(false)}
             >
               Cancel
@@ -331,7 +331,7 @@ function CompositionEditor({
         ) : (
           <button
             type="button"
-            className="schema-library-composition-add"
+            className={styles.compositionAdd}
             name={`add-schema-${kind}`}
             disabled={addable.length === 0}
             onClick={() => setAdding(true)}

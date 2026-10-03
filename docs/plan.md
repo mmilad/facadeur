@@ -4,6 +4,12 @@
 
 ## Open implementation and verification items
 
+### Editor CSS Modules pilot
+
+- [ ] Move Schema Library-specific presentation rules from `ui/styles/design.css` to a colocated CSS Module. Keep shared schema-stage scaffolding, form controls, and app-wide layout global; preserve rendered behavior and accessibility semantics. Focused tests, lint, formatting, and the Next.js production build pass; browser verification is pending because the Windows CUA setup fails (tracked in `docs/friction.md`).
+
+Evidence: `design.css` mixes design-domain, schema, preview, and library styles; the schema library rules are exclusive to `SchemaLibraryStage`. A colocated module makes this UI's styles discoverable and locally scoped without changing the shared stylesheet contract.
+
 ### Shared schema composition
 
 - [ ] Add `Extend by` (`allOf`, one or more schema references) and `Extend by one of` (`oneOf`, one or more references) as repeatable rows with an add button and schema picker in the Shared Schemas editor.
