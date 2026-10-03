@@ -4,6 +4,23 @@
 
 ## Refactoring bei der Aufgabenplanung
 
+### DOM-Renderer-Lifecycle von der DOM-Malerei trennen (2026-10-03)
+
+- [x] Evidence: `renderer-dom/src/render.ts` combined the stateful `mount`/`connect`/
+      `destroy` and stylesheet synchronization lifecycle with the recursive paint and
+      reconciliation algorithm. The latter remains intentionally cohesive because
+      paint and child reconciliation call into each other.
+- [x] Action: moved lifecycle coordination to `renderer.ts` and kept recursive DOM
+      painting/reconciliation together in `paint.ts`. Retain `render.ts` as a compatibility
+      facade for existing direct imports; keep the package entry point and exports stable.
+      Use extensionless relative TypeScript imports throughout this package.
+- [x] Scope: renderer-dom package refactor only.
+- [x] Contracts: preserved DOM identity/reconciliation, stable data/class/style-owner markers,
+      event ordering, subscription cleanup, stylesheet ownership, instance/variant/repeat
+      behavior and public imports.
+- [x] Validation: renderer-dom tests (23), package typecheck, ESLint/Prettier, candidate
+      detector rerun and diff review.
+
 ### Style-engine-Paket nach Verantwortlichkeiten ordnen (2026-10-03)
 
 - [x] Evidence: compile.ts (510 lines) mixes document traversal, layout sizing,

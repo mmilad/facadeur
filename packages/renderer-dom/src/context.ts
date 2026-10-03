@@ -1,5 +1,5 @@
 import type { DocumentFile } from '@facadeur/core';
-import type { RenderContext, RenderedNode } from './types.js';
+import type { RenderContext, RenderedNode } from './types';
 
 export function createRenderContext(documents: readonly DocumentFile[]): RenderContext {
   const catalog = new Map<string, DocumentFile>();

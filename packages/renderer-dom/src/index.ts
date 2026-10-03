@@ -7,4 +7,4 @@ export {
   type DomRenderer,
   type RenderContext,
   type RenderedNode,
-} from './render.js';
+} from './render';

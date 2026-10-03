@@ -14,7 +14,7 @@ import {
   resolveVariantDocument,
   variantPresets,
 } from '@facadeur/core';
-import type { RenderContext } from './types.js';
+import type { RenderContext } from './types';
 
 export const MAX_DEPTH = 32;
 
