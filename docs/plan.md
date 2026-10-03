@@ -111,123 +111,123 @@ facadeur is a visual design-system editor. Atoms, components, sections, and page
 
 ### Technology stack
 
-- TypeScript, pnpm-Workspaces als Monorepo.
-- Editor-UI: Next.js App Router + React. Der Inhalt der Bühne wird **nicht** mit React gerendert, sondern mit unserem DOM-Renderer in viewport-iframes.
-- Codegen erzeugt React-Komponenten und CSS Modules; `examples/next` zeigt die Ausgabe in einer Next.js-App.
-- Validierung: TypeBox-Schema in `core`, JSON-Schema-Export und Ajv-Prüfung.
-- Lokaler Betrieb: `apps/server` hält den autoritativen Yjs-Projektzustand und synchronisiert offene Editoren. JSON-Dateien unter `examples/` bleiben die explizite Quell-/Exportform; Save schreibt bestätigte Änderungen dorthin.
-- Dokumentzustand: **Yjs** (CRDT), Commands und `Y.UndoManager`; der lokale Projektserver persistiert die gemeinsame Historie.
+- TypeScript and pnpm workspaces in a monorepo.
+- Editor UI: Next.js App Router + React. The canvas content is rendered by our DOM renderer in viewport iframes, not by React.
+- Code generation produces React components and CSS Modules; `examples/next` demonstrates the output in a Next.js app.
+- Validation: TypeBox schema in `core`, JSON Schema export, and Ajv validation.
+- Local operation: `apps/server` holds the authoritative Yjs project state and synchronizes open editors. JSON files under `examples/` remain the explicit source/export format; Save writes confirmed changes there.
+- Document state: **Yjs** (CRDT), commands, and `Y.UndoManager`; the local project server persists shared history.
 
 ### Packages
 
-- `packages/core` – Typen, Schema, Validierung, Befehle (Commands), `DocumentStore`-Schnittstelle.
-- `packages/store-yjs` – `DocumentStore`-Implementierung auf Yjs, Umwandlung zwischen Dateiformat und Y-Dokument.
-- `packages/tokens` – DTCG-Parser, Referenzauflösung, Ausgabe als CSS Custom Properties.
-- `packages/style-engine` – gemeinsame Stilkompilierung und Live-Anwendung über `CSSStyleRule`/`insertRule`; der Controller ist an `style-controller` angelehnt, aber kein Laufzeitpaket-Import.
-- `packages/renderer-dom` – JSON zu DOM, stabile `data-id` pro Knoten, gezielte Updates.
-- `apps/editor` – Next.js + React App (Bühne, Panels, Werkzeuge).
-- `packages/ui` – generiertes React-Designsystem (Komponenten + CSS) aus `pnpm codegen`.
-- `apps/storybook` – Storybook-App; listet alle generierten CSF3-Stories aus `@facadeur/ui`.
-- `packages/codegen` – gemeinsamer `generate()`-Einstieg; `engines/react` ist zunächst die Standard-Engine für React, CSS Modules und Storybook-Stories.
+- `packages/core` – types, schema, validation, commands, and the `DocumentStore` interface.
+- `packages/store-yjs` – Yjs implementation of `DocumentStore` and conversion between the file format and Y document.
+- `packages/tokens` – DTCG parser, reference resolution, and CSS custom property output.
+- `packages/style-engine` – shared style compilation and live application through `CSSStyleRule`/`insertRule`; its controller is inspired by `style-controller` without importing it at runtime.
+- `packages/renderer-dom` – JSON-to-DOM rendering, stable `data-id` per node, and targeted updates.
+- `apps/editor` – Next.js + React app (canvas, panels, tools).
+- `packages/ui` – generated React design system (components + CSS) from `pnpm codegen`.
+- `apps/storybook` – Storybook app that lists all generated CSF3 stories from `@facadeur/ui`.
+- `packages/codegen` – shared `generate()` entry point; `engines/react` is initially the default engine for React, CSS Modules, and Storybook stories.
 
 ### Kinds and hierarchy
 
-- Jedes Dokument hat ein `kind`: `atom`, `component`, `section`, `page`. Die Liste ist konfigurierbar (zusammenlegen oder weiter aufteilen), mit Verschachtelungsregeln pro Art.
-- Standardregeln: Atome enthalten nur Grundbausteine. Komponenten enthalten Grundbausteine, Atome und Komponenten. Sektionen enthalten alles außer Sektionen und Pages. **Pages enthalten nur Sektionen.**
-- Im Editor teilen sich alle Arten einen Projektbaum in der linken Spalte (Design mit Tokens und Schriften, darunter Atoms, Components, Sections, Pages). Die Ebenenliste des offenen Dokuments sitzt darunter. Es gibt keinen Arbeitsbereich-Umschalter, der den Baum ersetzt.
+- Each document has a `kind`: `atom`, `component`, `section`, or `page`. The list is configurable (kinds can be merged or split further), with nesting rules for each kind.
+- Default rules: atoms contain only primitive nodes; components contain primitive nodes, atoms, and components; sections contain everything except sections and pages. **Pages contain only sections.**
+- In the editor, all kinds share a project tree in the left sidebar (Design with tokens and fonts, followed by Atoms, Components, Sections, and Pages). The open document's layer list sits below it. No workspace switcher replaces this tree.
 
 ### Primitive nodes
 
-- `frame` (Container mit Auto Layout), `text`, `image`, `instance` (eingesetzte Komponente). Später `slot`.
-- Das HTML-Tag ist eine Eigenschaft (`tag`), z. B. `section`, `nav`, `a`, `button`, `input`.
+- `frame` (container with Auto Layout), `text`, `image`, and `instance` (a placed component). `slot` may come later.
+- The HTML tag is a property (`tag`), such as `section`, `nav`, `a`, `button`, or `input`.
 
 ### Instances
 
-- Eine Instanz verweist auf eine Komponente. Am Instanzknoten werden Feldwerte, Varianten und Layout gesetzt; die Struktur bleibt im Master.
-- **Kein Detach.** Stilregeln des besitzenden Dokuments dürfen gezielt lokale Nachfahren und verschachtelte Instanz-Roots adressieren; diese Regeln bleiben Teil des Masters, keine freien Inline-Styles auf der Instanz.
-- Eine Komponente wird **nur in ihrer eigenen Ansicht** bearbeitet, nicht an der Stelle, wo sie eingesetzt ist. Doppelklick auf eine Instanz kann höchstens zur Komponente springen.
+- An instance references a component. Field values, variants, and layout are set on the instance node; its structure remains in the master.
+- **No detach.** Style rules in the owning document may target local descendants and nested instance roots. These rules remain part of the master; instances do not receive arbitrary inline styles.
+- A component is edited **only in its own view**, not where it is placed. Double-clicking an instance may navigate to the component.
 
 ### Component properties
 
-- Eine Komponente definiert Felder: `name`, `type` (`text`, `richText` später, `image`, `link`, `boolean`, `enum`, `number`, `token`), `default`.
-- Felder werden an Text, Attribute, Stile oder Sichtbarkeit von Kind-Knoten gebunden.
-- Instanzen überschreiben Werte. Codegen macht daraus typisierte Props/Inputs.
+- A component defines fields: `name`, `type` (`text`, `richText` later, `image`, `link`, `boolean`, `enum`, `number`, `token`), and `default`.
+- Fields can bind to text, attributes, styles, or child-node visibility.
+- Instances override values. Code generation turns them into typed props/inputs.
 
 ### Variants
 
-- Eine Komponente definiert Varianten-Achsen (z. B. `size: sm|md|lg`, `intent: primary|secondary`). Varianten überschreiben Stile des Stil-Blocks. Auch Zustände wie `:hover`, `:focus-visible`, `:disabled` gehören in den Stil-Block.
+- A component defines variant axes (for example, `size: sm|md|lg`, `intent: primary|secondary`). Variants override the style block. States such as `:hover`, `:focus-visible`, and `:disabled` also belong in the style block.
 
 ### Code generation output (monorepo)
 
-- `pnpm codegen` schreibt **`packages/ui`** (Komponenten, Barrel, Token- und Komponenten-CSS) und **`apps/storybook/src/stories/generated`** (CSF3-Stories mit Args aus Feld- und Varianten-Defaults).
-- Die Ausgabe ist eingecheckt und folgt dem Monorepo-Muster wie facadeur selbst (`apps/*`, `packages/*`). Storybook ist die primäre Vorschau; `examples/next` importiert `@facadeur/ui`.
-- Sortierung nach Dokument-Id bleibt, damit dieselbe Katalogmenge immer dieselbe Ausgabe liefert.
+- `pnpm codegen` writes **`packages/ui`** (components, barrel, token and component CSS) and **`apps/storybook/src/stories/generated`** (CSF3 stories with args from field and variant defaults).
+- Generated output is checked in and follows the monorepo structure (`apps/*`, `packages/*`). Storybook is the primary preview; `examples/next` imports `@facadeur/ui`.
+- Documents remain sorted by ID so the same catalog always produces the same output.
 
 ### Tokens
 
-- Format: W3C DTCG (`$value`, `$type`). Ein Eintrag ist ein Token oder eine Token-Gruppe. Referenzen wie `{color.blue.500}`.
-- Drei Ebenen: primitive, semantische und Komponenten-Tokens.
-- Im Editor werden Tokens zu CSS Custom Properties auf einer Root-Regel.
-- Komponenten dürfen Tokens lesen und für verschachtelte Kinder überschreiben (CSS-Variablen-Kaskade). Das Schema deklariert, welche Tokens eine Komponente liest und setzt.
-- Themes/Modi (Dark Mode, Marken): **nicht jetzt**, als spätere Verbesserung vorgesehen.
+- Format: W3C DTCG (`$value`, `$type`). An entry is either a token or a token group. References look like `{color.blue.500}`.
+- Three levels: primitive, semantic, and component tokens.
+- In the editor, tokens become CSS custom properties on a root rule.
+- Components can read tokens and override them for nested children through CSS variable cascading. The schema declares which tokens a component reads and sets.
+- Themes/modes (dark mode, brands): **not now**; planned as a later improvement.
 
 ### Fonts
 
-- Eigener Bereich: Familien, Gewichte, Quelle (Datei oder Google Fonts), Fallbacks.
-- Typo-Skala als Tokens, Werte pro Breakpoint. Daraus entstehen echte `@media`-Regeln.
+- Dedicated area for font families, weights, sources (file or Google Fonts), and fallbacks.
+- The typography scale uses tokens with per-breakpoint values, producing real `@media` rules.
 
 ### Viewports
 
-- Breakpoints sind konfigurierbar (Standard: mobile 375, tablet 768, desktop 1440).
-- **Ein iframe pro Viewport-Frame**, damit echte Media Queries greifen. Die iframes sind same-origin; der Editor greift direkt über `contentDocument` zu (kein `postMessage`), aber immer über eine dünne Schnittstelle (`FrameHost`), damit später Isolation möglich bleibt.
-- Die Style-Engine läuft pro iframe. Auswahl- und Hover-Rahmen zeichnet der Editor **über** den iframes, nie in ihnen.
+- Breakpoints are configurable (defaults: mobile 375, tablet 768, desktop 1440).
+- **One iframe per viewport frame** so real media queries apply. The iframes are same-origin; the editor accesses them through `contentDocument` (no `postMessage`), behind a thin `FrameHost` interface so isolation remains possible later.
+- The style engine runs once per iframe. The editor draws selection and hover outlines **over** the iframes, never inside them.
 
 ### Styles
 
-- Jede Komponente hat einen eigenen Stil-Block, der Tokens referenziert. Varianten und Breakpoints überschreiben ihn.
-- The editor renders preview styles through `style-engine`; die React-Engine erzeugt CSS Modules. Both translate the same document/style contracts into their own DOM and React selectors.
+- Each component has its own style block, which references tokens. Variants and breakpoints override it.
+- The editor renders preview styles through `style-engine`; the React engine generates CSS Modules. Both translate the same document/style contracts into their own DOM and React selectors.
 - No Tailwind in core.
 
 ### Data model and local synchronization
 
-- **Flaches Modell im Speicher:** Knoten liegen in einer Map nach stabiler ID, Kinder sind geordnete ID-Listen (`Y.Map` pro Knoten, `Y.Array` für Kinder). Tokens, Schriften und Einstellungen liegen ebenfalls als Maps im Y-Dokument.
-- **Dateiformat bleibt lesbar:** Auf der Platte wird verschachteltes, gut lesbares JSON gespeichert (für Git und Agenten). Beim Laden wird es in das flache Modell umgewandelt, beim Speichern zurück. Die Umwandlung ist verlustfrei und getestet.
-- **Nur Befehle ändern das Dokument.** Jeder Befehl läuft als eine Yjs-Transaktion. Keine direkten Zugriffe auf das Y-Dokument aus UI-Komponenten.
-- **Editor spricht nur mit `DocumentStore`** (lesen, Befehl ausführen, Änderungen abonnieren). Renderer und Style-Engine reagieren auf Änderungsereignisse und aktualisieren gezielt.
-- `apps/server` stellt die lokale HTTP-API und den Yjs-WebSocket bereit. The server currently runs alongside Next.js on port 3002; a shared browser port is planned for later.
-- Das aktuelle Setup unterstützt einen lokalen Projektzustand und offene synchronisierte Editoren.
-- Präsenz (Cursor und Auswahl) über Yjs Awareness ist noch nicht implementiert.
+- **Flat in-memory model:** nodes are stored in a map by stable ID; children are ordered ID lists (`Y.Map` per node, `Y.Array` for children). Tokens, fonts, and settings are also maps in the Y document.
+- **Readable file format:** nested, readable JSON is stored on disk (for Git and agents). It is converted to the flat model on load and back on save. The conversion is lossless and tested.
+- **Commands are the only way to change the document.** Each command runs as a Yjs transaction. UI components do not access the Y document directly.
+- **The editor communicates only with `DocumentStore`** to read, execute commands, and subscribe to changes. The renderer and style engine react to change events and update only affected content.
+- `apps/server` provides the local HTTP API and Yjs WebSocket. It currently runs alongside Next.js on port 3002; a shared browser port is planned for later.
+- The current setup supports one local project state and open synchronized editors.
+- Presence (cursors and selections) through Yjs Awareness is not implemented yet.
 
 ### Editor behavior
 
-- **Layout:** Jeder Frame ist standardmäßig Auto Layout (Richtung, gap, padding, Ausrichtung, wrap). Freie Positionierung (`position: absolute` relativ zum Eltern-Frame) ist eine explizite Option pro Element.
-- **Größen:** pro Achse `hug` (fit-content), `fill` (flex: 1 bzw. stretch) oder `fixed` (px oder Token), plus min/max. Prozent nur als erweiterter Wert. Jeder Wert kann pro Breakpoint überschrieben werden.
-- **Abstände:** nur Tokens (Spacing-Skala). Freie Werte sind vorerst nicht erlaubt.
-- **Einfügen:** Werkzeuge mit Tastenkürzeln (F Frame, T Text, I Bild), Drag aus der Komponenten-/Atomliste, Klick in ausgewählten Container hängt ans Ende an, beim Ziehen zeigt eine Einfügelinie die Position zwischen Geschwistern. „In Frame einpacken“ mit Strg+Alt+G.
-- **Auswahl:** Ebenenliste (immer, auch für Knoten ohne Größe). Leere Frames haben im Editor eine Mindestgröße mit gestricheltem Rahmen (wird nicht exportiert). Klick wählt das oberste Element im aktuellen Kontext, Doppelklick geht eine Ebene tiefer, Strg+Klick wählt das tiefste Element, Esc geht zum Eltern-Element. Hover-Umriss zeigt das Klickziel.
-- **Verschieben:** Umsortieren per Drag in der Bühne oder in der Ebenenliste. **Pfeiltasten verschieben nur frei positionierte Elemente.**
-- **Befehle:** Jede Änderung ist ein Befehl (insert, remove, move, setProp, setStyle, setField …), ausgeführt als Yjs-Transaktion. Undo/Redo über `Y.UndoManager` (nur eigene Änderungen, auch später im Mehrbenutzerbetrieb).
+- **Layout:** every frame uses Auto Layout by default (direction, gap, padding, alignment, wrap). Free positioning (`position: absolute` relative to the parent frame) is an explicit per-element option.
+- **Sizing:** each axis supports `hug` (fit-content), `fill` (flex: 1 or stretch), or `fixed` (px or token), plus min/max. Percentages are an advanced value. Every value can be overridden per breakpoint.
+- **Spacing:** tokens only (spacing scale). Free-form values are not allowed for now.
+- **Insertion:** keyboard tools (F Frame, T Text, I Image), drag from the component/atom list, click in the selected container to append, or drag to show an insertion line between siblings. “Wrap in Frame” uses Ctrl+Alt+G.
+- **Selection:** layer list (always visible, including for nodes without dimensions). Empty frames have a minimum editor size and dashed outline (not exported). Click selects the topmost element in the current context; double-click goes one level deeper; Ctrl+click selects the deepest element; Esc selects the parent. Hover outline shows the click target.
+- **Moving:** reorder by dragging on the canvas or in the layer list. **Arrow keys move only freely positioned elements.**
+- **Commands:** every change is a command (insert, remove, move, setProp, setStyle, setField, etc.) executed as a Yjs transaction. Undo/Redo uses `Y.UndoManager` (only the current user's changes, including in future multi-user editing).
 
 ### Project template
 
-- Beim Anlegen eines Projekts optional mitinitialisieren: Standard-Tokens (Farben, Spacing-Skala, Radius, Schatten), Standard-Schrift mit Typo-Skala und vordefinierte Atome: `button`, `link`, `input`, `textarea` (weitere später, z. B. `checkbox`, `select`).
+- Project creation can optionally initialize default tokens (colors, spacing scale, radius, shadows), a default font with typography scale, and built-in atoms: `button`, `link`, `input`, and `textarea` (more later, such as `checkbox` and `select`).
 
 ### Not yet decided / outside the current local scope
 
-- Cloud-/Produktionsbetrieb, Authentifizierung und Rechte.
-- Themes/Modi, Slots, weitere Generatoren und freie Abstandswerte.
-- Präsenz und browserlokaler dauerhafter Offline-Outbox.
-- Später: Playwright Visual Regression, Accessibility-Prüfungen in Atomen.
+- Cloud/production operation, authentication, and permissions.
+- Themes/modes, slots, additional generators, and free-form spacing values.
+- Presence and a persistent browser-local offline outbox.
+- Later: Playwright visual regression and accessibility checks for atoms.
 
 ## Open roadmap
 
 ### Collaboration
 
-- [ ] Präsenz: Cursor und Auswahl anderer Nutzer über Yjs Awareness
-- [ ] Accounts, Projekte, Rechte (Next.js)
+- [ ] Presence: other users' cursors and selections through Yjs Awareness
+- [ ] Accounts, projects, and permissions (Next.js)
 
 ### Later
 
 - [ ] MCP integration (planned for later; scope to be defined)
-- [ ] Themes/Modi, Slots, weitere Generatoren (Web Components, Angular)
-- [ ] Visual Regression (Playwright), Accessibility-Checks
+- [ ] Themes/modes, slots, additional generators (Web Components, Angular)
+- [ ] Visual regression (Playwright), accessibility checks
