@@ -270,6 +270,7 @@ function CompositionEditor({
             <div className="schema-library-composition-row" key={`${kind}:${index}`}>
               <select
                 name={`schema-${kind}-${index}`}
+                className="eu-control schema-library-composition-select"
                 aria-label={`${label} schema ${index + 1}`}
                 value={id}
                 onChange={(event) =>
@@ -288,13 +289,13 @@ function CompositionEditor({
               </select>
               <button
                 type="button"
-                className="text-button"
+                className="schema-library-composition-remove"
                 aria-label={`Remove ${selectedName} from ${label}`}
                 onClick={() =>
                   onChange(selectedIds.filter((_, selectedIndex) => selectedIndex !== index))
                 }
               >
-                Remove
+                ×
               </button>
             </div>
           );
@@ -303,6 +304,7 @@ function CompositionEditor({
           <div className="schema-library-composition-row">
             <select
               name={`schema-${kind}-new`}
+              className="eu-control schema-library-composition-select"
               aria-label={`Choose schema to ${label}`}
               value=""
               onChange={(event) => {
@@ -318,14 +320,18 @@ function CompositionEditor({
                 </option>
               ))}
             </select>
-            <button type="button" className="text-button" onClick={() => setAdding(false)}>
+            <button
+              type="button"
+              className="schema-library-composition-cancel"
+              onClick={() => setAdding(false)}
+            >
               Cancel
             </button>
           </div>
         ) : (
           <button
             type="button"
-            className="text-button"
+            className="schema-library-composition-add"
             name={`add-schema-${kind}`}
             disabled={addable.length === 0}
             onClick={() => setAdding(true)}

@@ -522,6 +522,95 @@
   margin-top: 8px;
 }
 
+.schema-library-composition-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.schema-library-composition-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  width: min(100%, 460px);
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--white) 72%, var(--sidebar));
+}
+
+.schema-library-composition-select {
+  min-width: 0;
+  padding-right: 28px;
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--eu-fg-muted) 50%),
+    linear-gradient(135deg, var(--eu-fg-muted) 50%, transparent 50%);
+  background-repeat: no-repeat;
+  background-position:
+    calc(100% - 13px) 50%,
+    calc(100% - 9px) 50%;
+  background-size: 4px 4px;
+}
+
+.schema-library-composition-remove,
+.schema-library-composition-cancel {
+  display: inline-grid;
+  place-items: center;
+  min-width: 28px;
+  min-height: 28px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--eu-fg-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.schema-library-composition-remove {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.schema-library-composition-remove:hover {
+  border-color: color-mix(in srgb, var(--eu-danger) 28%, transparent);
+  background: color-mix(in srgb, var(--eu-danger) 8%, transparent);
+  color: var(--eu-danger);
+}
+
+.schema-library-composition-cancel {
+  padding: 0 6px;
+  font-size: 11px;
+}
+
+.schema-library-composition-cancel:hover {
+  color: var(--eu-fg);
+}
+
+.schema-library-composition-add {
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+  padding: 6px 10px;
+  background: transparent;
+  color: var(--eu-fg-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.schema-library-composition-add:hover:not(:disabled) {
+  border-color: var(--eu-accent);
+  background: color-mix(in srgb, var(--eu-accent) 6%, transparent);
+  color: var(--eu-accent);
+}
+
+.schema-library-composition-add:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .schema-library select[name='schema-kind'] {
   border: 1px solid var(--line);
   border-radius: 4px;
