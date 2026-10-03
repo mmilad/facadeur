@@ -1,4 +1,5 @@
 import type { StorybookConfig } from '@storybook/react-vite';
+import type { InlineConfig } from 'vite';
 
 const config: StorybookConfig = {
   stories: ['../src/stories/**/*.stories.@(tsx|mdx)'],
@@ -7,7 +8,7 @@ const config: StorybookConfig = {
     name: '@storybook/react-vite',
     options: {},
   },
-  viteFinal: async (config) => {
+  viteFinal: async (config: InlineConfig) => {
     config.resolve ??= {};
     config.resolve.dedupe = ['react', 'react-dom'];
     return config;

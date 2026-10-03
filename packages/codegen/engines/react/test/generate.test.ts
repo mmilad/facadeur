@@ -202,6 +202,7 @@ describe('generateReact', () => {
     );
     expect(componentStyle(generated.ui, 'Button')).not.toContain('data-component="card"');
     const rootIndex = source(generated.ui, 'index.ts');
+    expect(rootIndex).toContain('/// <reference path="./css-modules.d.ts" />');
     expect(rootIndex).toContain("export * from './components/Button';");
     expect(rootIndex).not.toContain('import ');
   });
