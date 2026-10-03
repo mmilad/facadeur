@@ -29,6 +29,16 @@ Open http://localhost:3001 (Next.js). `pnpm dev` also starts the local project s
 The [project API](docs/project-api.md) supports live command edits, revision-checked saves,
 and restart recovery. This initial server is local-only, without user authentication.
 
+## Documentation
+
+- [Document DSL and styling contracts](docs/dsl.md)
+- [Schema, preview data, variants and events](docs/editor-data.md)
+- [Editor form primitives](docs/editor-form.md)
+- [Local project API and recovery](docs/project-api.md)
+- [Editor package boundaries](apps/editor/ARCHITECTURE.md)
+- [Current plan and recorded decisions](docs/plan.md)
+- [Archived implementation history and dated decisions](docs/plan-history.md)
+
 ## Generate React and Storybook
 
 ```bash

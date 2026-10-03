@@ -82,8 +82,8 @@ Built-in **+** (append `defaultItem`) and **×** (remove row). Paths look like `
 
 `form.css` defines editor-ui tokens (`--eu-bg`, `--eu-border`, `--eu-accent`, density gaps, focus ring). These are **chrome-only** and separate from design tokens rendered in document iframes.
 
-## Future `ui/controls/*`
+## Domain controls
 
-Domain controls (layout, font, shadow, tokens) should compose these primitives and `Form` / `SchemaForm`, not reimplement inputs. Keep document commands in panel code; pass `onCommit` from the panel when a change should create an undo step.
+Domain controls under `apps/editor/src/ui/controls/` compose these primitives and `Form` / `SchemaForm` rather than reimplementing inputs. Keep document commands in panel code; pass `onCommit` from the panel when a change should create an undo step.
 
-See [`docs/editor-controls.yaml`](./editor-controls.yaml) for the control matrix and data-flow contract (read `EditorSnapshot`, write via `session.execute` / `executeDesign`, catalogs as props — no store inside controls).
+Domain controls read from `EditorSnapshot` and write through `session.execute` or `executeDesign`; catalogs are passed as props, and controls do not access the store directly.
