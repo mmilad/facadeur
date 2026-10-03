@@ -1,15 +1,9 @@
-import { replaceSelectorClasses, type StyleRule } from '@facadeur/core';
-import { scopeStyleSelector } from './selector-scope.js';
+import { replaceSelectorClasses } from '@facadeur/core';
+import type { CompileOptions } from '../compiler/types';
+import { cssString } from '../css/strings';
+import { scopeStyleSelector } from './scope';
 
-interface PreviewSelectorContext {
-  documentId: string;
-  rule: StyleRule;
-  selector: string;
-  nodeClassNames: ReadonlyMap<string, string>;
-  address: 'instance' | 'canvas';
-  variantScope?: string;
-  axisVariant?: { axis: string; value: string };
-}
+type PreviewSelectorContext = Parameters<NonNullable<CompileOptions['selectorForStyleRule']>>[0];
 
 /** Bind preview rules to owner-local data markers without changing selector relationships. */
 export function previewStyleRuleSelector(context: PreviewSelectorContext): string {
@@ -52,8 +46,4 @@ function variantAttribute(axis: string, value: string): string {
   return axis === 'variant'
     ? `[data-variant="${cssString(value)}"]`
     : `[data-variant-${cssString(axis)}="${cssString(value)}"]`;
-}
-
-function cssString(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 }

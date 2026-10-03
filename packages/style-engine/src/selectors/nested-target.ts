@@ -4,6 +4,7 @@ import {
   type DocumentFile,
   type NestedNode,
 } from '@facadeur/core';
+import { instanceTargetSelector } from './instance-target';
 
 /** Resolve an owner-relative rendered path through local frames and instance roots. */
 export function resolveNestedStyleTarget(
@@ -60,24 +61,6 @@ export function nestedStyleTargetSelector(
   address: 'instance' | 'canvas',
   rootRendered = false,
 ): string {
-  if (address === 'canvas') {
-    const path = rootRendered ? `${document.root.id}/${targetPath}` : targetPath;
-    const terminal = targetPath.split('/').at(-1) ?? '';
-    return `[data-id="${cssString(path)}"][data-node="${cssString(terminal)}"][data-component="${cssString(node.component)}"][data-component="${cssString(node.component)}"]`;
-  }
-  const chain = targetPath
-    .split('/')
-    .map((id, index, parts) => {
-      const base = `[data-node="${cssString(id)}"]`;
-      return index === parts.length - 1
-        ? `${base}[data-component="${cssString(node.component)}"][data-component="${cssString(node.component)}"]`
-        : base;
-    })
-    .join(' > ');
-  const scope = `[data-component="${cssString(document.id)}"] > `;
-  return `${scope}${chain}`;
-}
-
-function cssString(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  const canvasPath = rootRendered ? `${document.root.id}/${targetPath}` : targetPath;
+  return instanceTargetSelector(document.id, targetPath, node.component, address, canvasPath);
 }

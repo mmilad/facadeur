@@ -2,22 +2,14 @@ import {
   componentTokenPublicPath,
   globalRefInComponentTokenDefault,
   isFontFamilyRef,
-  type ComponentToken,
 } from '@facadeur/core';
 import {
   fontCustomProperty,
   tokenCustomProperty,
   typographyCustomProperty,
 } from '@facadeur/tokens';
-import { toKebab } from './controller.js';
-
-export type ComponentTokenSubstitute = Pick<ComponentToken, 'type' | 'value'>;
-
-export interface SubstituteContext {
-  documentId: string;
-  /** Local defaults keyed by token path (path is not repeated on each entry). */
-  componentTokens?: Record<string, ComponentTokenSubstitute>;
-}
+import { toKebab } from './declarations';
+import type { SubstituteContext } from './types';
 
 const TYPOGRAPHY_FIELDS = [
   'fontFamily',
@@ -73,21 +65,4 @@ export function expandDeclarations(
     out.push([toKebab(property), substituteRefs(value, context)]);
   }
   return out;
-}
-
-export function mergeDeclarations(
-  groups: readonly (readonly [string, string][])[],
-): [string, string][] {
-  const values = new Map<string, string>();
-  const order: string[] = [];
-  for (const group of groups) {
-    for (const [name, value] of group) {
-      if (!values.has(name)) order.push(name);
-      values.set(name, value);
-    }
-  }
-  return order.flatMap((name) => {
-    const value = values.get(name);
-    return value === undefined ? [] : [[name, value] as [string, string]];
-  });
 }

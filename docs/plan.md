@@ -4,6 +4,41 @@
 
 ## Refactoring bei der Aufgabenplanung
 
+### Style-engine-Paket nach Verantwortlichkeiten ordnen (2026-10-03)
+
+- [x] Evidence: compile.ts (510 lines) mixes document traversal, layout sizing,
+      selector addressing and rule output. The flat src directory mixes pure
+      compilation with CSSOM lifecycle; values.ts imports DOM controller utilities.
+      CSS escaping, rule insertion/deletion and compiled-rule emission are duplicated.
+- [x] Separate compiler orchestration/types/layer emission, layout conversion,
+      selectors, pure CSS values and runtime controller/stylesheet/design ownership.
+      Colocate private helpers by domain; preserve the package public entry point.
+- [x] Consolidate identical escaping, CSSOM rule lookup/insertion and compiled
+      rule output. Remove redundant declaration order bookkeeping, filtering and
+      runtime metadata. Keep different selector/layout contracts explicit.
+- [x] Review remaining duplication and record concrete next architecture choices
+      without changing persistence, public API, cascade or token semantics.
+- [x] Validate existing compiler/controller/runtime/codegen behavior, generated
+      output parity, relevant typechecks/lint and final candidate scan.
+- [x] Keep relative TypeScript imports extensionless under the workspace's
+      `Bundler` module resolution; no import-specific compiler option is needed.
+
+Scope: packages/style-engine and its focused tests/documentation. Contracts:
+unchanged public exports, rule keys/order, CSS selectors, layout defaults, sparse
+states/variants/breakpoints, nested overrides, CSSOM cleanup and document ownership.
+Pure compiler/CSS modules must not depend on runtime modules; no new dependencies.
+
+Result: 1,516 to 1,411 source lines; compile orchestration is 128 lines and
+controller is 170. Modules now live in compiler/layout/selectors/css/runtime
+domains. The final detector reports no size or directory-concentration signals.
+All 951 tests pass, including borrowed-sheet/media cleanup and selector string
+regressions. Exact compiled-rule output matches the previous implementation in
+80 configurations across 20 example documents. Style-engine/codegen/editor
+typechecks, source ESLint, package formatting and the editor production build
+pass. Repository-wide Prettier still flags 15 unchanged files outside this scope.
+Remaining design serialization/core selector/cascade decisions are documented in
+[the package README](../packages/style-engine/README.md).
+
 ### Lesbare Klassen und selektorbasierter Styles-Tab (2026-10-03)
 
 - [x] Prerequisite: keep selector parsing/binding and readable class identity in
@@ -26,7 +61,7 @@
       editing, add/delete/reorder and inline errors. Existing style controls and the
       rule editor use the same declarations. Selected elements highlight matching
       rules; private nested nodes still belong to their master.
-- [ ] Validate editor edits/rename/invalid drafts/Undo, real checked interaction,
+- [x] Validate editor edits/rename/invalid drafts/Undo, real checked interaction,
       selector isolation and React CSS Modules output; regenerate schema/UI and run
       tests, type/lint/build/browser checks and the final candidate detector.
 
@@ -42,9 +77,10 @@ instance/outside isolation checks. Core/store/style-engine/renderer/codegen/UI
 typechecks and Storybook build pass. Focused editor checks pass 15 tests. The
 first full run passed 946/948; both remaining UI tests were corrected and passed
 the focused run. Three subsequent test-only typing errors were corrected.
-Final full tests, editor typecheck/build and lint remain pending: automatic
-approval review could not run the requested commands because of an account usage
-limit. Do not treat the feature as fully verified until these checks are rerun.
+The initial final checks were blocked by an account usage limit. Full tests,
+editor typecheck/build and source ESLint were rerun successfully during the
+style-engine refactor above. Repository-wide formatting findings concern other
+unchanged files and remain outside that task.
 
 Final detector review: style-block.ts (544 lines) retains document style
 validation/pruning; render.ts (523) retains painting/reconciliation; compile.ts

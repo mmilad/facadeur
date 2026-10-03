@@ -8,26 +8,11 @@
  * iframes). The relationship lives on the `Rule` objects instead.
  */
 
-export interface RuleChild {
-  selector: string;
-  rules: RuleInput;
-}
-
-/** CSS declarations plus optional child rules. `children` is not a declaration. */
-export interface RuleInput {
-  children?: RuleChild[];
-  [property: string]: string | number | RuleChild[] | undefined;
-}
-
-export interface StyleControllerTarget {
-  /** Document that owns the stylesheet. Defaults to the global document. */
-  document?: Document;
-  /** Existing style element. Created in `document.head` when omitted. */
-  styleElement?: HTMLStyleElement;
-}
-
-type StyleOwner = CSSStyleSheet | CSSGroupingRule;
-
+import type { RuleInput, StyleControllerTarget, StyleOwner } from './types';
+import { toKebab } from '../css/declarations';
+import { appendStyleRule, isStyleRule, indexOfRule } from './stylesheet';
+import { splitRuleInput } from './rule-input';
+import { resolveTarget } from './target';
 export class Rule {
   /** The live CSS rule. Declarations are changed through `style` or `update`. */
   readonly cssRule: CSSStyleRule;
@@ -182,108 +167,4 @@ export class StyleController {
     for (const child of [...this.children]) this.delete(child);
     if (this.ownsElement) this.styleElement.remove();
   }
-}
-
-export function toKebab(property: string): string {
-  if (property.startsWith('--')) return property;
-  return property.replace(/[A-Z]+(?![a-z])|[A-Z]/g, (letters, offset) => {
-    return (offset ? '-' : '') + letters.toLowerCase();
-  });
-}
-
-function appendStyleRule(
-  owner: StyleOwner,
-  selector: string,
-  declarations: Record<string, string | number>,
-): CSSStyleRule {
-  const body = Object.entries(declarations)
-    .map(([property, value]) => `${toKebab(property)}: ${value};`)
-    .join('');
-  const index = owner.cssRules.length;
-  owner.insertRule(`${selector} {${body}}`, index);
-  const rule = owner.cssRules[index];
-  if (!rule || !isStyleRule(rule)) {
-    throw new Error(`Insert did not produce a style rule for ${selector}`);
-  }
-  return rule;
-}
-
-function isStyleRule(rule: CSSRule): rule is CSSStyleRule {
-  return rule.type === CSSRule.STYLE_RULE;
-}
-
-function splitRuleInput(input: RuleInput): {
-  declarations: Record<string, string | number>;
-  children: RuleChild[];
-} {
-  const declarations: Record<string, string | number> = {};
-  const children = input.children ?? [];
-  for (const [key, value] of Object.entries(input)) {
-    if (key === 'children' || value === undefined) continue;
-    if (typeof value === 'string' || typeof value === 'number') declarations[key] = value;
-  }
-  return { declarations, children };
-}
-
-function indexOfRule(owner: StyleOwner, rule: CSSRule): number {
-  for (let index = 0; index < owner.cssRules.length; index += 1) {
-    if (owner.cssRules[index] === rule) return index;
-  }
-  return -1;
-}
-
-function resolveTarget(target?: Document | HTMLStyleElement | StyleControllerTarget | null): {
-  document: Document;
-  styleElement: HTMLStyleElement;
-  created: boolean;
-} {
-  if (isStyleElement(target)) {
-    const owner = target.ownerDocument ?? globalDocument();
-    if (!target.sheet) connectStyleElement(owner, target);
-    return { document: owner, styleElement: target, created: false };
-  }
-  if (isDocument(target)) {
-    return { document: target, styleElement: createStyleElement(target), created: true };
-  }
-  const owner = target?.document ?? globalDocument();
-  if (target?.styleElement) {
-    if (target.styleElement.ownerDocument !== owner) {
-      throw new Error('styleElement belongs to a different document');
-    }
-    if (!target.styleElement.sheet) connectStyleElement(owner, target.styleElement);
-    return { document: owner, styleElement: target.styleElement, created: false };
-  }
-  return { document: owner, styleElement: createStyleElement(owner), created: true };
-}
-
-function createStyleElement(owner: Document): HTMLStyleElement {
-  const element = owner.createElement('style');
-  element.dataset.facadeurStyles = 'true';
-  connectStyleElement(owner, element);
-  return element;
-}
-
-function connectStyleElement(owner: Document, element: HTMLStyleElement): void {
-  if (element.isConnected) return;
-  const parent = owner.head ?? owner.documentElement;
-  if (!parent) throw new Error('Document has nowhere to attach a style element');
-  parent.append(element);
-}
-
-function globalDocument(): Document {
-  const owner = globalThis.document;
-  if (!owner) throw new Error('No document to attach the style engine to');
-  return owner;
-}
-
-function isDocument(value: unknown): value is Document {
-  return isNode(value) && value.nodeType === 9;
-}
-
-function isStyleElement(value: unknown): value is HTMLStyleElement {
-  return isNode(value) && value.nodeType === 1 && 'tagName' in value && value.tagName === 'STYLE';
-}
-
-function isNode(value: unknown): value is Node {
-  return typeof value === 'object' && value !== null && 'nodeType' in value;
 }

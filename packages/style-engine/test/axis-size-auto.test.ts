@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
-import { compileDocument } from '../src/index.js';
+import { compileDocument } from '../src/index';
 
 it.each(['instance', 'canvas'] as const)(
   'lets desktop CSS auto override inherited tablet layout Hug (%s)',

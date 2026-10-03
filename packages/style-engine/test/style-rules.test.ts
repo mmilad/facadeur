@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { compileDocument } from '../src/compile.js';
-import { appendStyleSelectorSuffix, scopeStyleSelector } from '../src/selector-scope.js';
+import { compileDocument } from '@facadeur/style-engine';
+import { appendStyleSelectorSuffix, scopeStyleSelector } from '../src/selectors/scope';
+
+it('keeps quoted commas, escaped quotes and functional arguments intact when adding states', () => {
+  const selector = String.raw`[data-label="a,\"b"]:is(.first, .second)::before, .third:has(> .fourth)`;
+  expect(appendStyleSelectorSuffix(selector, ':hover')).toBe(
+    String.raw`[data-label="a,\"b"]:is(.first, .second):hover::before, .third:has(> .fourth):hover`,
+  );
+});
 import type { DocumentFile } from '@facadeur/core';
 
 const document: DocumentFile = {

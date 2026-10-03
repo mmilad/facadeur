@@ -1,12 +1,8 @@
-export { compileDocument, type CompiledRule, type CompileOptions } from './compile.js';
-export {
-  Rule,
-  StyleController,
-  toKebab,
-  type RuleChild,
-  type RuleInput,
-  type StyleControllerTarget,
-} from './controller.js';
-export { createStyleEngine, type StyleEngine } from './engine.js';
-export { expandDeclarations, mergeDeclarations, substituteRefs } from './values.js';
-export { scopeStyleSelector } from './selector-scope.js';
+export { compileDocument } from './compiler/compile';
+export type { CompiledRule, CompileOptions } from './compiler/types';
+export { Rule, StyleController } from './runtime/controller';
+export type { RuleChild, RuleInput, StyleControllerTarget, StyleEngine } from './runtime/types';
+export { createStyleEngine } from './runtime/engine';
+export { toKebab, mergeDeclarations } from './css/declarations';
+export { expandDeclarations, substituteRefs } from './css/values';
+export { scopeStyleSelector } from './selectors/scope';
