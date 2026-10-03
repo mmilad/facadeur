@@ -13,6 +13,7 @@ import {
 } from '@facadeur/tokens';
 import { compileDocument, type CompileOptions, type CompiledRule } from './compile.js';
 import { StyleController, type StyleControllerTarget } from './controller.js';
+import { previewStyleRuleSelector } from './preview-selector.js';
 
 interface LiveRule {
   rule: CSSRule;
@@ -68,6 +69,8 @@ export function createStyleEngine(
         address: options.address ?? stored?.address ?? 'instance',
         breakpoints: options.breakpoints ?? stored?.breakpoints ?? breakpoints,
         paintRoot: options.paintRoot ?? stored?.paintRoot,
+        selectorForStyleRule:
+          options.selectorForStyleRule ?? stored?.selectorForStyleRule ?? previewStyleRuleSelector,
       };
       addresses.set(document.id, compileOptions);
       replaceDocument(sheet(), byDocument, document.id, compileDocument(document, compileOptions));

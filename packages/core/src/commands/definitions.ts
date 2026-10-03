@@ -11,6 +11,7 @@ import {
   type StyleBlock,
 } from '../document/schema.js';
 import { omitVariantAxis, omitVariantValues, parseStyleBlock } from '../styles/style-block.js';
+import { removeNamedVariantLayer } from '../variants/style-layers.js';
 import {
   assertEventDefinition,
   assertExpose,
@@ -131,12 +132,15 @@ export function defineVariant(doc: FlatDocument, axis: VariantAxis): void {
   const index = previous ? doc.variants.indexOf(previous) : -1;
   if (index === -1) doc.variants.push(axis);
   else doc.variants[index] = axis;
-  if (!previous || !doc.styles) return;
+  if (!previous) return;
   const removed = previous.values.some((value) => !axis.values.includes(value));
   if (!removed) return;
-  const pruned = omitVariantValues(doc.styles, axis.name, new Set(axis.values));
-  if (pruned) doc.styles = pruned;
-  else delete doc.styles;
+  if (doc.styles) {
+    const pruned = omitVariantValues(doc.styles, axis.name, new Set(axis.values));
+    if (pruned) doc.styles = pruned;
+    else delete doc.styles;
+  }
+  prunePresetStyles(doc, (styles) => omitVariantValues(styles, axis.name, new Set(axis.values)));
 }
 
 export function removeVariant(doc: FlatDocument, name: string): void {
@@ -145,10 +149,12 @@ export function removeVariant(doc: FlatDocument, name: string): void {
     throw new DocumentError('unknown-variant', `Variant "${name}" is not defined`);
   }
   doc.variants.splice(index, 1);
-  if (!doc.styles) return;
-  const pruned = omitVariantAxis(doc.styles, name);
-  if (pruned) doc.styles = pruned;
-  else delete doc.styles;
+  if (doc.styles) {
+    const pruned = omitVariantAxis(doc.styles, name);
+    if (pruned) doc.styles = pruned;
+    else delete doc.styles;
+  }
+  prunePresetStyles(doc, (styles) => omitVariantAxis(styles, name));
 }
 
 export function setVariantPreset(doc: FlatDocument, preset: VariantPreset): void {
@@ -194,30 +200,6 @@ export function setVariantStyleBlock(
   }
 }
 
-function removeNamedVariantLayer(styles: StyleBlock, name: string): void {
-  removeNamedVariantLayerFromOwner(styles, name);
-  for (const child of Object.values(styles.children ?? {})) {
-    removeNamedVariantLayerFromOwner(child, name);
-  }
-  if (styles.children) {
-    for (const [id, child] of Object.entries(styles.children)) {
-      if (!Object.keys(child).length) delete styles.children[id];
-    }
-    if (!Object.keys(styles.children).length) delete styles.children;
-  }
-}
-
-function removeNamedVariantLayerFromOwner(
-  owner: { variants?: NonNullable<StyleBlock['variants']> },
-  name: string,
-): void {
-  const values = owner.variants?.variant;
-  if (!values) return;
-  delete values[name];
-  if (!Object.keys(values).length) delete owner.variants!.variant;
-  if (!Object.keys(owner.variants!).length) delete owner.variants;
-}
-
 export function removeVariantPreset(doc: FlatDocument, name: string): void {
   const presets = doc.variantPresets ?? [];
   const index = presets.findIndex((item) => item.name === name);
@@ -227,6 +209,26 @@ export function removeVariantPreset(doc: FlatDocument, name: string): void {
   presets.splice(index, 1);
   if (doc.variantLabels) delete doc.variantLabels[name];
   if (doc.previewData?.variants) delete doc.previewData.variants[name];
+  if (doc.styles) removeNamedVariantLayer(doc.styles, name);
+  prunePresetStyles(doc, (styles) => {
+    const next = structuredClone(styles);
+    removeNamedVariantLayer(next, name);
+    return Object.keys(next).length ? next : undefined;
+  });
   if (presets.length) doc.variantPresets = presets;
   else delete doc.variantPresets;
+}
+
+function prunePresetStyles(
+  doc: FlatDocument,
+  prune: (styles: StyleBlock) => StyleBlock | undefined,
+): void {
+  for (const preset of doc.variantPresets ?? []) {
+    const overrides = preset.overrides;
+    if (!overrides?.styles) continue;
+    const styles = prune(overrides.styles);
+    if (styles) overrides.styles = styles;
+    else delete overrides.styles;
+    if (!Object.keys(overrides).length) delete preset.overrides;
+  }
 }

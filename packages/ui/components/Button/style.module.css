@@ -5,7 +5,7 @@
 @layer facadeur.components, facadeur.instances, facadeur.nested-instances;
 
 @layer facadeur.components {
-  .f_root_95igqt {
+  .root {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
@@ -32,20 +32,20 @@
     white-space: nowrap;
   }
 
-  .f_root_95igqt:hover {
+  .root:hover {
     background: var(--color-accent-hover);
   }
 
-  .f_root_95igqt:focus-visible {
+  .root:focus-visible {
     outline: 2px solid var(--color-accent-default);
     outline-offset: 2px;
   }
 
-  .f_root_95igqt:disabled {
+  .root:disabled {
     opacity: 0.5;
   }
 
-  .f_root_95igqt[data-variant-size='sm'] {
+  .root[data-variant-size='sm'] {
     font-family: var(--type-caption--font-family);
     font-size: var(--type-caption--font-size);
     font-weight: var(--type-caption--font-weight);
@@ -55,30 +55,30 @@
     padding-inline: var(--space-3);
   }
 
-  .f_root_95igqt[data-variant-tone='ghost'] {
+  .root[data-variant-tone='ghost'] {
     background: transparent;
     color: var(--color-text-secondary);
   }
 
-  .f_root_95igqt[data-variant-tone='ghost']:hover {
+  .root[data-variant-tone='ghost']:hover {
     background: var(--color-bg-muted);
     color: var(--color-text-primary);
   }
 
-  .f_root_95igqt[data-variant-tone='secondary'] {
+  .root[data-variant-tone='secondary'] {
     background: transparent;
     border-color: var(--color-border-default);
     color: var(--color-text-primary);
   }
 
-  .f_root_95igqt[data-variant-tone='secondary']:hover {
+  .root[data-variant-tone='secondary']:hover {
     background: var(--color-bg-muted);
   }
 }
 
 @media (min-width: 768px) {
   @layer facadeur.components {
-    .f_root_95igqt {
+    .root {
       padding-inline: var(--space-5);
     }
   }

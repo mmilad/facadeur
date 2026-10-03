@@ -45,6 +45,14 @@ export {
 export { createId, ID_PATTERN, TAG_PATTERN } from './document/ids.js';
 export { canonicalizeLayout, layoutTokenRefs, parseLayout } from './styles/layout.js';
 export {
+  assertStyleSelector,
+  bindStyleRuleSelector,
+  renderStyleRuleSelector,
+  replaceSelectorClasses,
+  selectorClassNames,
+} from './styles/selectors.js';
+export { documentClassNames } from './styles/class-names.js';
+export {
   defaultKinds,
   defaultNestingRules,
   nodeTypes,
@@ -108,6 +116,7 @@ export {
   type StyleChild,
   type StyleDeclarations,
   type StyleLayer,
+  type StyleRule,
   type StyleStates,
   type TokenInterface,
   type TokenType,
@@ -144,6 +153,7 @@ export { resolvePreviewData, withPreviewData } from './variants/preview-data.js'
 export {
   assertStyleContract,
   assertStyleMap,
+  assertStyleNameAvailable,
   canonicalizeStyleBlock,
   canonicalizeTokenInterface,
   collectTokenRefs,

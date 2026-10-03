@@ -179,6 +179,41 @@ Frames render as flexbox. The default direction is `column`, alignment is stretc
 
 ## Style block
 
+### Local classes and authored selector rules
+
+Every node may declare a `styleName`, a local CSS class identifier (for example
+`checkbox` or `pseudo-checkbox`). Explicit names must be unique within a document.
+The root defaults to `root`; other legacy nodes use readable names derived from
+their layer name or node id, with deterministic suffixes for collisions. React
+codegen imports these local names from CSS Modules; the consuming bundler may
+rename their DOM classes. Preview selectors resolve the same element identities.
+
+`styles.rules` is an ordered list of additional selector rules. A rule stores an
+id, a selector, class-to-node-id `bindings`, and the same declaration/state/variant/
+breakpoint layers as an ordinary style child. Bindings preserve the target when a
+class is renamed. Removing a bound node removes affected rules. For example:
+
+```json
+{
+  "id": "checked-indicator",
+  "selector": ".checkbox:checked + .pseudo-checkbox",
+  "bindings": { "checkbox": "control", "pseudo-checkbox": "indicator" },
+  "declarations": { "background-color": "var(--color-accent)" }
+}
+```
+
+The editor's **Styles** tab shows expandable selector rows with CSS declaration
+drafts and controls to add, remove and reorder rules. Ordinary element rows edit
+the same declaration sources as the guided **Style** tab. Invalid drafts remain
+visible without changing the saved document. Class names and rule identity/order
+are authored in Base; named variants edit sparse declaration layers by rule id.
+Preset rule lists merge onto the base list by id rather than replacing its order.
+Authored selectors are restricted to
+the owning component; every selector group is scoped independently. Local class
+references must resolve to nodes in that document. Attribute selectors, combinators,
+functional pseudo-classes and pseudo-elements can express additional relationships;
+CSS Modules `:global`/`:local` escapes and embedded CSS blocks are not allowed.
+
 `styles` on an atom, component, or section paints that document. `declarations` are the base. `states` are `hover`, `focus-visible`, and `disabled`. `variants` map an axis to a value to a layer of declarations and states. `breakpoints` do the same inside a media query. `children` accepts local node ids, including instance roots, and uses the same layer shape.
 
 For a nested instance root, a child key is its complete rendered path relative to
@@ -354,7 +389,8 @@ Tokens and fonts become the global design stylesheet (`styles/tokens.css`). Styl
 are compiled per component with `address: 'instance'` and use the same local class mapping as the
 generated JSX. Nested instance overrides keep their `data-node` path selectors anchored to the
 owning component's local root class. Generated component rules are ordered in cascade layers:
-component styles, direct instance overrides, then nested instance overrides. `css-modules.d.ts`
+component styles, direct instance overrides, then nested instance overrides. Authored selector
+rules share the direct instance layer and preserve their list order there. `css-modules.d.ts`
 declares the generated stylesheet import.
 `pnpm codegen` writes these files to `packages/ui`. Generated CSF3 stories land under
 `apps/storybook/src/stories/generated`. Run `pnpm storybook` to preview them. The Next.js example

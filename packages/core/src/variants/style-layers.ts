@@ -1,11 +1,28 @@
 import type { StyleBlock } from '../document/schema.js';
 
-/** Remove the reserved named-variant layer after materializing a preset. */
-export function removeNamedVariantLayer(styles: StyleBlock): void {
-  if (styles.variants?.variant) delete styles.variants.variant;
-  if (styles.variants && !Object.keys(styles.variants).length) delete styles.variants;
-  for (const child of Object.values(styles.children ?? {})) {
-    if (child.variants?.variant) delete child.variants.variant;
-    if (child.variants && !Object.keys(child.variants).length) delete child.variants;
+/** Remove one named preset value, or the entire reserved axis after materializing a preset. */
+export function removeNamedVariantLayer(styles: StyleBlock, name?: string): void {
+  removeFromOwner(styles, name);
+  for (const child of Object.values(styles.children ?? {})) removeFromOwner(child, name);
+  for (const rule of styles.rules ?? []) removeFromOwner(rule, name);
+  if (styles.children) {
+    for (const [id, child] of Object.entries(styles.children)) {
+      if (!Object.keys(child).length) delete styles.children[id];
+    }
+    if (!Object.keys(styles.children).length) delete styles.children;
   }
+}
+
+function removeFromOwner(
+  owner: { variants?: NonNullable<StyleBlock['variants']> },
+  name?: string,
+): void {
+  const values = owner.variants?.variant;
+  if (!values) return;
+  if (name === undefined) delete owner.variants!.variant;
+  else delete values[name];
+  if (owner.variants?.variant && !Object.keys(owner.variants.variant).length) {
+    delete owner.variants.variant;
+  }
+  if (owner.variants && !Object.keys(owner.variants).length) delete owner.variants;
 }

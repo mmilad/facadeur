@@ -5,7 +5,7 @@
 @layer facadeur.components, facadeur.instances, facadeur.nested-instances;
 
 @layer facadeur.components {
-  .f_root_95igqt {
+  .root {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
@@ -24,7 +24,7 @@
     letter-spacing: var(--type-body--letter-spacing);
   }
 
-  .f_root_95igqt .f_label_1wf4cn1 {
+  .root .label {
     width: fit-content;
     height: fit-content;
     color: var(--form-text-input-color-textmuted, var(--color-text-secondary));
@@ -36,7 +36,7 @@
     margin: var(--space-0);
   }
 
-  .f_root_95igqt .f_controlShell_1jj1t9s {
+  .root .controlShell {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
@@ -54,23 +54,23 @@
     padding-inline: var(--input-padding-x);
   }
 
-  .f_root_95igqt[data-variant-state='focused'] .f_controlShell_1jj1t9s {
+  .root[data-variant-state='focused'] .controlShell {
     border-color: var(--form-text-input-color-focus, var(--color-accent-default));
     box-shadow: 0 0 0 2px var(--form-text-input-color-focus, var(--color-accent-default));
   }
 
-  .f_root_95igqt[data-variant-state='disabled'] .f_controlShell_1jj1t9s {
+  .root[data-variant-state='disabled'] .controlShell {
     background: var(--form-text-input-color-canvas, var(--color-neutral-50));
     cursor: not-allowed;
     opacity: 0.65;
   }
 
-  .f_root_95igqt[data-variant-state='invalid'] .f_controlShell_1jj1t9s {
+  .root[data-variant-state='invalid'] .controlShell {
     border-color: var(--form-text-input-color-danger, var(--color-danger-default));
     box-shadow: 0 0 0 2px var(--form-text-input-color-danger, var(--color-danger-default));
   }
 
-  .f_root_95igqt .f_leadingIcon_64t8uc {
+  .root .leadingIcon {
     width: 16px;
     flex: 0 0 16px;
     height: 16px;
@@ -78,7 +78,7 @@
     opacity: 0.72;
   }
 
-  .f_root_95igqt .f_hint_l0yj7c {
+  .root .hint {
     width: fit-content;
     height: fit-content;
     color: var(--form-text-input-color-textmuted, var(--color-text-secondary));
@@ -91,5 +91,5 @@
   }
 }
 
-.f_control_mx9w2m {
+.control {
 }

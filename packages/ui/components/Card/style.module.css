@@ -5,7 +5,7 @@
 @layer facadeur.components, facadeur.instances, facadeur.nested-instances;
 
 @layer facadeur.components {
-  .f_root_95igqt {
+  .root {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
@@ -23,7 +23,7 @@
     box-shadow: var(--card-elevation-shadow, var(--shadow-md));
   }
 
-  .f_root_95igqt .f_eyebrow_95073g {
+  .root .eyebrow {
     color: var(--color-accent-default);
     font-family: var(--type-caption--font-family);
     font-size: var(--type-caption--font-size);
@@ -34,7 +34,7 @@
     text-transform: uppercase;
   }
 
-  .f_root_95igqt .f_title_16a95ah {
+  .root .title {
     color: var(--color-text-primary);
     font-family: var(--type-title--font-family);
     font-size: var(--type-title--font-size);
@@ -44,7 +44,7 @@
     margin: var(--space-0);
   }
 
-  .f_root_95igqt .f_body_1oy6jcl {
+  .root .body {
     color: var(--color-text-secondary);
     font-family: var(--type-body--font-family);
     font-size: var(--type-body--font-size);

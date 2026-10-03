@@ -13,6 +13,7 @@ import {
   type Spacing,
   type StyleBlock,
   type StyleChild,
+  type StyleRule,
 } from '@facadeur/core';
 import {
   expandDeclarations,
@@ -21,6 +22,7 @@ import {
   type SubstituteContext,
 } from './values.js';
 import { nestedStyleTargetSelector, resolveNestedStyleTarget } from './nested-target.js';
+import { compileAuthoredRules, emitSparseStyleLayers, withVariant } from './authored-rules.js';
 
 export interface CompiledRule {
   key: string;
@@ -28,6 +30,9 @@ export interface CompiledRule {
   declarations: [string, string][];
   /** Set for a breakpoint override. The base layer has no min-width. */
   minWidth?: number;
+  /** The authored rule and its stable node bindings, when this is a selector rule. */
+  styleRuleId?: string;
+  styleRuleBindings?: Record<string, string>;
 }
 
 export interface CompileOptions {
@@ -57,6 +62,16 @@ export interface CompileOptions {
     defaultSelector: string;
     targetPath?: string;
     variantScope?: string;
+  }) => string;
+  /** Allows output adapters to scope authored selectors for their rendering target. */
+  selectorForStyleRule?: (context: {
+    documentId: string;
+    rule: StyleRule;
+    selector: string;
+    nodeClassNames: ReadonlyMap<string, string>;
+    address: 'instance' | 'canvas';
+    variantScope?: string;
+    axisVariant?: { axis: string; value: string };
   }) => string;
 }
 
@@ -160,6 +175,21 @@ function compileSingleDocument(
       });
     }
   }
+  compileAuthoredRules(
+    document,
+    {
+      address,
+      selectorForStyleRule: options.selectorForStyleRule,
+      ...(options.variantScope ? { variantScope: options.variantScope } : {}),
+    },
+    {
+      address,
+      ...(options.variantScope ? { variantScope: options.variantScope } : {}),
+      substituteContext,
+      rules,
+      breakpoints,
+    },
+  );
   // Wider responsive layers win; stable sorting retains precedence within each width.
   return rules
     .filter((rule) => rule.declarations.length > 0)
@@ -249,66 +279,6 @@ function emitNode(document: DocumentFile, node: NestedNode, state: WalkState): v
   }
 }
 
-function emitSparseStyleLayers(
-  documentId: string,
-  targetKey: string,
-  layer: StyleChild | undefined,
-  selector: string,
-  state: Pick<WalkState, 'breakpoints' | 'substituteContext' | 'rules'>,
-): void {
-  if (!layer) return;
-  const context = state.substituteContext;
-  for (const [name, declarations] of Object.entries(layer.states ?? {})) {
-    push(
-      state,
-      `${documentId}:${targetKey}:state:${name}`,
-      `${selector}:${name}`,
-      expandDeclarations(declarations, context),
-    );
-  }
-  for (const [axis, values] of Object.entries(layer.variants ?? {})) {
-    for (const [value, variant] of Object.entries(values)) {
-      const current = withVariant(selector, axis, value);
-      push(
-        state,
-        `${documentId}:${targetKey}:variant:${axis}:${value}`,
-        current,
-        expandDeclarations(variant.declarations, context),
-      );
-      for (const [name, declarations] of Object.entries(variant.states ?? {})) {
-        push(
-          state,
-          `${documentId}:${targetKey}:variant:${axis}:${value}:state:${name}`,
-          `${current}:${name}`,
-          expandDeclarations(declarations, context),
-        );
-      }
-    }
-  }
-  const baseId = state.breakpoints[0]?.id;
-  for (const [id, breakpoint] of Object.entries(layer.breakpoints ?? {})) {
-    if (id === baseId) continue;
-    const minWidth = state.breakpoints.find((item) => item.id === id)?.minWidth;
-    if (minWidth === undefined) continue;
-    push(
-      state,
-      `${documentId}:${targetKey}:style:${id}`,
-      selector,
-      expandDeclarations(breakpoint.declarations, context),
-      minWidth,
-    );
-    for (const [name, declarations] of Object.entries(breakpoint.states ?? {})) {
-      push(
-        state,
-        `${documentId}:${targetKey}:style:${id}:state:${name}`,
-        `${selector}:${name}`,
-        expandDeclarations(declarations, context),
-        minWidth,
-      );
-    }
-  }
-}
-
 function push(
   state: Pick<WalkState, 'rules'>,
   key: string,
@@ -364,16 +334,6 @@ function styleLayerFor(
   if (!block) return undefined;
   if (isRoot) return block;
   return block.children?.[node.id];
-}
-
-function withVariant(selector: string, axis: string, value: string): string {
-  const attribute =
-    axis === 'variant'
-      ? `[data-variant="${cssString(value)}"]`
-      : `[data-variant-${axis}="${cssString(value)}"]`;
-  const space = selector.indexOf(' ');
-  if (space === -1) return `${selector}${attribute}`;
-  return `${selector.slice(0, space)}${attribute}${selector.slice(space)}`;
 }
 
 function tokenSetDeclarations(document: DocumentFile): [string, string][] {

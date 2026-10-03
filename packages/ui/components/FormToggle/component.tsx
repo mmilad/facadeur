@@ -12,16 +12,16 @@ export function FormToggle({ label, value, state = 'on', nodeId, className }: Fo
       data-component="form-toggle"
       data-node={nodeId}
       data-variant-state={state}
-      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
+      className={[styles['root'], className].filter(Boolean).join(' ')}
     >
-      <span data-node="label" className={styles.f_label_1wf4cn1}>
+      <span data-node="label" className={styles['label']}>
         {label}
       </span>
-      <div data-node="control" className={styles.f_control_mx9w2m}>
-        <div data-node="switch" className={styles.f_switch_1513hbl}>
-          <span data-node="thumb" className={styles.f_thumb_1vlzs9v} />
+      <div data-node="control" className={styles['control']}>
+        <div data-node="switch" className={styles['switch']}>
+          <span data-node="thumb" className={styles['thumb']} />
         </div>
-        <span data-node="state" className={styles.f_state_xckdti}>
+        <span data-node="state" className={styles['state']}>
           {value}
         </span>
       </div>

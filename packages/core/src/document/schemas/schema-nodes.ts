@@ -19,6 +19,7 @@ import { layoutSchema } from './schema-layout.js';
 const sharedNodeProps = {
   id: idSchema,
   name: Type.Optional(Type.String({ minLength: 1 })),
+  styleName: Type.Optional(Type.String({ pattern: '^[A-Za-z_][A-Za-z0-9_-]*$' })),
   tag: Type.Optional(Type.String({ pattern: '^[A-Za-z][A-Za-z0-9-]*$' })),
   attributes: Type.Optional(stringMapSchema),
   displayOn: Type.Optional(displayOnSchema),
@@ -61,6 +62,7 @@ export const nestedNodeSchema = Type.Recursive(
         {
           id: idSchema,
           name: Type.Optional(Type.String({ minLength: 1 })),
+          styleName: Type.Optional(Type.String({ pattern: '^[A-Za-z_][A-Za-z0-9_-]*$' })),
           layout: Type.Optional(layoutSchema),
           displayOn: Type.Optional(displayOnSchema),
           type: Type.Literal('instance'),

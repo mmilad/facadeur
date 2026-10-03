@@ -2,7 +2,7 @@ import { DocumentError } from '../document/errors.js';
 import { makeFlatNode, type FlatDocument, type FlatNode } from '../document/flat.js';
 import { ID_PATTERN } from '../document/ids.js';
 import type { VariantRule } from '../document/schema.js';
-import { assertStyleMap } from '../styles/style-block.js';
+import { assertStyleMap, assertStyleNameAvailable } from '../styles/style-block.js';
 import {
   assertAttributes,
   assertBindings,
@@ -31,6 +31,7 @@ import type { NodeType } from '../document/kinds.js';
 const PROPS: Record<NodeType, readonly NodeProp[]> = {
   frame: [
     'name',
+    'styleName',
     'tag',
     'attributes',
     'displayOn',
@@ -39,9 +40,20 @@ const PROPS: Record<NodeType, readonly NodeProp[]> = {
     'eventBindings',
     'repeat',
   ],
-  text: ['name', 'tag', 'text', 'attributes', 'displayOn', 'layout', 'bindings', 'eventBindings'],
+  text: [
+    'name',
+    'styleName',
+    'tag',
+    'text',
+    'attributes',
+    'displayOn',
+    'layout',
+    'bindings',
+    'eventBindings',
+  ],
   image: [
     'name',
+    'styleName',
     'tag',
     'src',
     'alt',
@@ -51,7 +63,15 @@ const PROPS: Record<NodeType, readonly NodeProp[]> = {
     'bindings',
     'eventBindings',
   ],
-  instance: ['name', 'displayOn', 'layout', 'component', 'fieldBindings', 'variantRules'],
+  instance: [
+    'name',
+    'styleName',
+    'displayOn',
+    'layout',
+    'component',
+    'fieldBindings',
+    'variantRules',
+  ],
 };
 
 const STYLE_PROPERTY = /^(--)?[A-Za-z_][\w-]*$/;
@@ -59,6 +79,9 @@ const CHILD_FIELD_PATH = /^[A-Za-z][A-Za-z0-9_-]*(\/[A-Za-z][A-Za-z0-9_-]*)*$/;
 
 export function setProp(doc: FlatDocument, command: Extract<Command, { type: 'setProp' }>): void {
   const node = requireNode(doc, command.nodeId);
+  if (command.prop === 'styleName' && typeof command.value === 'string') {
+    assertStyleNameAvailable(doc, command.value, node.id);
+  }
   if (!PROPS[node.type].includes(command.prop)) {
     throw new DocumentError('schema', `${node.type} nodes have no "${command.prop}" property`);
   }
@@ -182,6 +205,13 @@ function applyElementProp(
     case 'name':
       assignName(node, value);
       return;
+    case 'styleName':
+      if (value === null) delete node.styleName;
+      else if (typeof value === 'string' && /^[A-Za-z_][A-Za-z0-9_-]*$/.test(value))
+        node.styleName = value;
+      else
+        throw new DocumentError('schema', 'CSS class names must start with a letter or underscore');
+      return;
     case 'tag':
       if (value === null) delete node.tag;
       else node.tag = requireTag(value);
@@ -262,6 +292,13 @@ function applyInstanceProp(
   value: unknown,
 ): void {
   switch (prop) {
+    case 'styleName':
+      if (value === null) delete node.styleName;
+      else if (typeof value === 'string' && /^[A-Za-z_][A-Za-z0-9_-]*$/.test(value))
+        node.styleName = value;
+      else
+        throw new DocumentError('schema', 'CSS class names must start with a letter or underscore');
+      return;
     case 'variantRules':
       if (value === null) delete node.variantRules;
       else {

@@ -14,7 +14,7 @@ export function Button({ label, tone = 'primary', size = 'md', nodeId, className
       data-variant-tone={tone}
       data-variant-size={size}
       type="button"
-      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
+      className={[styles['root'], className].filter(Boolean).join(' ')}
     >
       {label}
     </button>

@@ -26,29 +26,29 @@ export function FormTextInput({
       data-component="form-text-input"
       data-node={nodeId}
       data-variant-state={state}
-      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
+      className={[styles['root'], className].filter(Boolean).join(' ')}
     >
-      <span data-node="label" className={styles.f_label_1wf4cn1}>
+      <span data-node="label" className={styles['label']}>
         {label}
       </span>
-      <div data-node="controlShell" className={styles.f_controlShell_1jj1t9s}>
+      <div data-node="controlShell" className={styles['controlShell']}>
         <img
           data-node="leadingIcon"
           aria-hidden="true"
           src={icon}
           alt=""
-          className={styles.f_leadingIcon_64t8uc}
+          className={styles['leadingIcon']}
           hidden={hasIcon === false}
         />
         <FormInput
           nodeId="control"
-          className={styles.f_control_mx9w2m}
+          className={styles['control']}
           value={value}
           placeholder={placeholder}
           onCommit={onCommit}
         />
       </div>
-      <span data-node="hint" className={styles.f_hint_l0yj7c}>
+      <span data-node="hint" className={styles['hint']}>
         {hint}
       </span>
     </label>

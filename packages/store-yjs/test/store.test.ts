@@ -31,6 +31,40 @@ function run(store: ReturnType<typeof createDocumentStore>, command: Command): F
 }
 
 describe('Yjs document store', () => {
+  it('preserves readable classes and ordered selector rules through load and undo', () => {
+    const file: DocumentFile = {
+      ...initial,
+      styles: {
+        rules: [
+          {
+            id: 'checked-title',
+            selector: '.card:checked + .title',
+            bindings: { card: 'root', title: 'title' },
+            declarations: { color: 'red' },
+          },
+        ],
+      },
+      root: {
+        id: 'root',
+        type: 'frame',
+        styleName: 'card',
+        children: [{ id: 'title', type: 'text', styleName: 'title', text: 'Title' }],
+      },
+    };
+    const store = createDocumentStore(file);
+    expect(store.getDocument()).toEqual(toFlat(file));
+    store.execute({ type: 'setProp', nodeId: 'title', prop: 'styleName', value: 'heading' });
+    expect(store.getNode('title')?.styleName).toBe('heading');
+    expect(store.getDocument().styles?.rules?.[0]?.selector).toBe('.card:checked + .title');
+    store.undo();
+    expect(store.getNode('title')?.styleName).toBe('title');
+    expect(store.getDocument().styles?.rules?.[0]?.bindings).toEqual({
+      card: 'root',
+      title: 'title',
+    });
+    store.destroy();
+  });
+
   it('preserves instance expose contracts through the Yjs codec', () => {
     if (initial.root.type !== 'frame') throw new Error('expected frame root');
     const file: DocumentFile = {

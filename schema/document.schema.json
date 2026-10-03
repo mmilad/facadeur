@@ -725,6 +725,176 @@
                             }
                           }
                         }
+                      },
+                      "rules": {
+                        "type": "array",
+                        "items": {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["id", "selector", "bindings"],
+                          "properties": {
+                            "id": {
+                              "minLength": 1,
+                              "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+                              "type": "string"
+                            },
+                            "selector": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "bindings": {
+                              "type": "object",
+                              "patternProperties": {
+                                "^[A-Za-z_][A-Za-z0-9_-]*$": {
+                                  "minLength": 1,
+                                  "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "declarations": {
+                              "type": "object",
+                              "patternProperties": {
+                                "^(--)?[A-Za-z_][\\w-]*$": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "states": {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "properties": {
+                                "hover": {
+                                  "type": "object",
+                                  "patternProperties": {
+                                    "^(--)?[A-Za-z_][\\w-]*$": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "focus-visible": {
+                                  "type": "object",
+                                  "patternProperties": {
+                                    "^(--)?[A-Za-z_][\\w-]*$": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "disabled": {
+                                  "type": "object",
+                                  "patternProperties": {
+                                    "^(--)?[A-Za-z_][\\w-]*$": {
+                                      "type": "string"
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "variants": {
+                              "type": "object",
+                              "patternProperties": {
+                                "^[A-Za-z][A-Za-z0-9_-]*$": {
+                                  "type": "object",
+                                  "patternProperties": {
+                                    "^(.*)$": {
+                                      "additionalProperties": false,
+                                      "type": "object",
+                                      "properties": {
+                                        "declarations": {
+                                          "type": "object",
+                                          "patternProperties": {
+                                            "^(--)?[A-Za-z_][\\w-]*$": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        },
+                                        "states": {
+                                          "additionalProperties": false,
+                                          "type": "object",
+                                          "properties": {
+                                            "hover": {
+                                              "type": "object",
+                                              "patternProperties": {
+                                                "^(--)?[A-Za-z_][\\w-]*$": {
+                                                  "type": "string"
+                                                }
+                                              }
+                                            },
+                                            "focus-visible": {
+                                              "type": "object",
+                                              "patternProperties": {
+                                                "^(--)?[A-Za-z_][\\w-]*$": {
+                                                  "type": "string"
+                                                }
+                                              }
+                                            },
+                                            "disabled": {
+                                              "type": "object",
+                                              "patternProperties": {
+                                                "^(--)?[A-Za-z_][\\w-]*$": {
+                                                  "type": "string"
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "breakpoints": {
+                              "type": "object",
+                              "patternProperties": {
+                                "^[a-z][a-z0-9]*$": {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "properties": {
+                                    "declarations": {
+                                      "type": "object",
+                                      "patternProperties": {
+                                        "^(--)?[A-Za-z_][\\w-]*$": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    },
+                                    "states": {
+                                      "additionalProperties": false,
+                                      "type": "object",
+                                      "properties": {
+                                        "hover": {
+                                          "type": "object",
+                                          "patternProperties": {
+                                            "^(--)?[A-Za-z_][\\w-]*$": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        },
+                                        "focus-visible": {
+                                          "type": "object",
+                                          "patternProperties": {
+                                            "^(--)?[A-Za-z_][\\w-]*$": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        },
+                                        "disabled": {
+                                          "type": "object",
+                                          "patternProperties": {
+                                            "^(--)?[A-Za-z_][\\w-]*$": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
                       }
                     }
                   },
@@ -2348,6 +2518,176 @@
               }
             }
           }
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": ["id", "selector", "bindings"],
+            "properties": {
+              "id": {
+                "minLength": 1,
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+                "type": "string"
+              },
+              "selector": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "bindings": {
+                "type": "object",
+                "patternProperties": {
+                  "^[A-Za-z_][A-Za-z0-9_-]*$": {
+                    "minLength": 1,
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+                    "type": "string"
+                  }
+                }
+              },
+              "declarations": {
+                "type": "object",
+                "patternProperties": {
+                  "^(--)?[A-Za-z_][\\w-]*$": {
+                    "type": "string"
+                  }
+                }
+              },
+              "states": {
+                "additionalProperties": false,
+                "type": "object",
+                "properties": {
+                  "hover": {
+                    "type": "object",
+                    "patternProperties": {
+                      "^(--)?[A-Za-z_][\\w-]*$": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "focus-visible": {
+                    "type": "object",
+                    "patternProperties": {
+                      "^(--)?[A-Za-z_][\\w-]*$": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "disabled": {
+                    "type": "object",
+                    "patternProperties": {
+                      "^(--)?[A-Za-z_][\\w-]*$": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "variants": {
+                "type": "object",
+                "patternProperties": {
+                  "^[A-Za-z][A-Za-z0-9_-]*$": {
+                    "type": "object",
+                    "patternProperties": {
+                      "^(.*)$": {
+                        "additionalProperties": false,
+                        "type": "object",
+                        "properties": {
+                          "declarations": {
+                            "type": "object",
+                            "patternProperties": {
+                              "^(--)?[A-Za-z_][\\w-]*$": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "states": {
+                            "additionalProperties": false,
+                            "type": "object",
+                            "properties": {
+                              "hover": {
+                                "type": "object",
+                                "patternProperties": {
+                                  "^(--)?[A-Za-z_][\\w-]*$": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              "focus-visible": {
+                                "type": "object",
+                                "patternProperties": {
+                                  "^(--)?[A-Za-z_][\\w-]*$": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              "disabled": {
+                                "type": "object",
+                                "patternProperties": {
+                                  "^(--)?[A-Za-z_][\\w-]*$": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "breakpoints": {
+                "type": "object",
+                "patternProperties": {
+                  "^[a-z][a-z0-9]*$": {
+                    "additionalProperties": false,
+                    "type": "object",
+                    "properties": {
+                      "declarations": {
+                        "type": "object",
+                        "patternProperties": {
+                          "^(--)?[A-Za-z_][\\w-]*$": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "states": {
+                        "additionalProperties": false,
+                        "type": "object",
+                        "properties": {
+                          "hover": {
+                            "type": "object",
+                            "patternProperties": {
+                              "^(--)?[A-Za-z_][\\w-]*$": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "focus-visible": {
+                            "type": "object",
+                            "patternProperties": {
+                              "^(--)?[A-Za-z_][\\w-]*$": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "disabled": {
+                            "type": "object",
+                            "patternProperties": {
+                              "^(--)?[A-Za-z_][\\w-]*$": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -2446,6 +2786,10 @@
             },
             "name": {
               "minLength": 1,
+              "type": "string"
+            },
+            "styleName": {
+              "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$",
               "type": "string"
             },
             "tag": {
@@ -3389,6 +3733,10 @@
               "minLength": 1,
               "type": "string"
             },
+            "styleName": {
+              "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$",
+              "type": "string"
+            },
             "tag": {
               "pattern": "^[A-Za-z][A-Za-z0-9-]*$",
               "type": "string"
@@ -4303,6 +4651,10 @@
             },
             "name": {
               "minLength": 1,
+              "type": "string"
+            },
+            "styleName": {
+              "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$",
               "type": "string"
             },
             "tag": {
@@ -5222,6 +5574,10 @@
             },
             "name": {
               "minLength": 1,
+              "type": "string"
+            },
+            "styleName": {
+              "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$",
               "type": "string"
             },
             "layout": {

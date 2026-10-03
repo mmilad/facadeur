@@ -5,7 +5,7 @@
 @layer facadeur.components, facadeur.instances, facadeur.nested-instances;
 
 @layer facadeur.components {
-  .f_root_95igqt {
+  .root {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
@@ -18,7 +18,7 @@
     height: fit-content;
   }
 
-  .f_root_95igqt .f_label_1wf4cn1 {
+  .root .label {
     width: fit-content;
     height: fit-content;
     color: var(--form-select-color-textmuted, var(--color-text-secondary));
@@ -30,7 +30,7 @@
     margin: var(--space-0);
   }
 
-  .f_root_95igqt .f_control_mx9w2m {
+  .root .control {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
@@ -54,24 +54,24 @@
     padding-inline: var(--form-select-padding-x, var(--space-3));
   }
 
-  .f_root_95igqt[data-variant-state='focused'] .f_control_mx9w2m {
+  .root[data-variant-state='focused'] .control {
     border-color: var(--form-select-color-focus, var(--color-accent-default));
     box-shadow: 0 0 0 2px var(--form-select-color-focus, var(--color-accent-default));
   }
 
-  .f_root_95igqt[data-variant-state='disabled'] .f_control_mx9w2m {
+  .root[data-variant-state='disabled'] .control {
     background: var(--form-select-color-canvas, var(--color-neutral-50));
     color: var(--form-select-color-textmuted, var(--color-text-secondary));
     cursor: not-allowed;
     opacity: 0.65;
   }
 
-  .f_root_95igqt .f_value_ieyeh6 {
+  .root .value {
     width: fit-content;
     height: fit-content;
   }
 
-  .f_root_95igqt .f_chevron_rhj3c0 {
+  .root .chevron {
     width: 16px;
     flex: 0 0 16px;
     height: 16px;

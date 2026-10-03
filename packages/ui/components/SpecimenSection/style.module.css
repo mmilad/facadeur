@@ -5,7 +5,7 @@
 @layer facadeur.components, facadeur.instances, facadeur.nested-instances;
 
 @layer facadeur.components {
-  .f_root_95igqt {
+  .root {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
@@ -19,7 +19,7 @@
     height: fit-content;
   }
 
-  .f_root_95igqt .f_intro_ctvstt {
+  .root .intro {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
@@ -33,7 +33,7 @@
     height: fit-content;
   }
 
-  .f_root_95igqt .f_kicker_n8l4j8 {
+  .root .kicker {
     width: fit-content;
     height: fit-content;
     color: var(--color-accent-default);
@@ -46,7 +46,7 @@
     text-transform: uppercase;
   }
 
-  .f_root_95igqt .f_heading_1870pat {
+  .root .heading {
     width: fit-content;
     height: fit-content;
     color: var(--color-text-primary);
@@ -58,7 +58,7 @@
     margin: var(--space-0);
   }
 
-  .f_root_95igqt .f_lede_6gu931 {
+  .root .lede {
     align-self: stretch;
     width: auto;
     max-width: 640px;
@@ -72,7 +72,7 @@
     margin: var(--space-0);
   }
 
-  .f_root_95igqt .f_buttons_151kopy {
+  .root .buttons {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
@@ -86,7 +86,7 @@
     height: fit-content;
   }
 
-  .f_root_95igqt .f_label_button_1djee4k {
+  .root .label-button {
     width: fit-content;
     height: fit-content;
     color: var(--color-text-secondary);
@@ -99,7 +99,7 @@
     text-transform: uppercase;
   }
 
-  .f_root_95igqt .f_button_row_apzzv4 {
+  .root .button-row {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
@@ -113,7 +113,7 @@
     height: fit-content;
   }
 
-  .f_root_95igqt .f_fields_1qg0os {
+  .root .fields {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
@@ -127,7 +127,7 @@
     height: fit-content;
   }
 
-  .f_root_95igqt .f_label_input_1kyjsk4 {
+  .root .label-input {
     width: fit-content;
     height: fit-content;
     color: var(--color-text-secondary);
@@ -140,7 +140,7 @@
     text-transform: uppercase;
   }
 
-  .f_root_95igqt .f_input_row_8msj2m {
+  .root .input-row {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
@@ -154,7 +154,7 @@
     height: fit-content;
   }
 
-  .f_root_95igqt .f_cards_101yo90 {
+  .root .cards {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
@@ -168,7 +168,7 @@
     height: fit-content;
   }
 
-  .f_root_95igqt .f_label_card_fq8fri {
+  .root .label-card {
     width: fit-content;
     height: fit-content;
     color: var(--color-text-secondary);
@@ -181,7 +181,7 @@
     text-transform: uppercase;
   }
 
-  .f_root_95igqt .f_card_row_1w04xey {
+  .root .card-row {
     display: grid;
     flex-direction: column;
     flex-wrap: nowrap;
@@ -199,19 +199,19 @@
 }
 
 @layer facadeur.instances {
-  .f_root_95igqt .f_input_email_1b58xa {
+  .root .input-email {
     width: 300px;
     flex: 0 0 auto;
     height: fit-content;
   }
 
-  .f_root_95igqt .f_input_search_h4lpai {
+  .root .input-search {
     width: 300px;
     flex: 0 0 auto;
     height: fit-content;
   }
 
-  .f_root_95igqt
+  .root
     > [data-node='cards']
     > [data-node='card-row']
     > [data-node='card-notes'][data-component='card'][data-component='card'] {
@@ -220,7 +220,7 @@
     height: auto;
   }
 
-  .f_root_95igqt
+  .root
     > [data-node='cards']
     > [data-node='card-row']
     > [data-node='card-signin'][data-component='sign-in'][data-component='sign-in'] {
@@ -231,7 +231,7 @@
 
 @media (min-width: 1024px) {
   @layer facadeur.instances {
-    .f_root_95igqt
+    .root
       > [data-node='cards']
       > [data-node='card-row']
       > [data-node='card-notes'][data-component='card'][data-component='card'] {
@@ -243,14 +243,14 @@
 
 @media (min-width: 1200px) {
   @layer facadeur.components {
-    .f_root_95igqt .f_card_row_1w04xey {
+    .root .card-row {
       align-items: end;
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
   @layer facadeur.instances {
-    .f_root_95igqt
+    .root
       > [data-node='cards']
       > [data-node='card-row']
       > [data-node='card-notes'][data-component='card'][data-component='card'] {
@@ -261,26 +261,26 @@
 
 @media (min-width: 1440px) {
   @layer facadeur.components {
-    .f_root_95igqt .f_button_row_apzzv4 {
+    .root .button-row {
       gap: var(--space-gap-md);
     }
   }
 }
 
-.f_btn_ghost_ptaa5x {
+.btn-primary {
 }
 
-.f_btn_primary_clrl40 {
+.btn-secondary {
 }
 
-.f_btn_secondary_1jfsi8 {
+.btn-ghost {
 }
 
-.f_btn_small_1b8dm5 {
+.btn-small {
 }
 
-.f_card_notes_1rwl3zn {
+.card-notes {
 }
 
-.f_card_signin_qspryo {
+.card-signin {
 }

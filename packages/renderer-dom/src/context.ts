@@ -14,5 +14,6 @@ export function createRenderContext(documents: readonly DocumentFile[]): RenderC
     depth: 0,
     canvasId: null,
     canvasDocument: null,
+    styleDocumentId: null,
   };
 }

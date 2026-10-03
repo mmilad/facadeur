@@ -31,7 +31,7 @@ export function renderInstance(
         {
           name: 'className',
           value: localClass
-            ? { kind: 'expr', code: `[styles.${localClass}, 'ds-unknown'].join(' ')` }
+            ? { kind: 'expr', code: `[${localClass}, 'ds-unknown'].join(' ')` }
             : { kind: 'literal', value: 'ds-unknown' },
         },
       ],
@@ -46,7 +46,7 @@ export function renderInstance(
   if (localClass)
     attrs.push({
       name: 'className',
-      value: { kind: 'expr', code: `styles.${localClass}` },
+      value: { kind: 'expr', code: localClass },
     });
   const forwardedFields = new Set<string>();
   for (const [publicName, path] of Object.entries(owner.document.expose?.fields ?? {})) {

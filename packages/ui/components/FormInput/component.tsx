@@ -28,7 +28,7 @@ export function FormInput({
       name={name}
       disabled={disabled}
       onChange={(event) => onCommit?.({ value: event.currentTarget.value })}
-      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
+      className={[styles['root'], className].filter(Boolean).join(' ')}
     />
   );
 }

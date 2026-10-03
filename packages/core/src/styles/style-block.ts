@@ -22,6 +22,8 @@ import {
   parseStyleBlock,
   parseTokenInterface,
 } from './style-block-parse.js';
+import { assertStyleSelector, selectorClassNames } from './selectors.js';
+import { flatDocumentClassNames } from './class-names.js';
 
 const TOKEN_REF = /\{([a-z][a-z0-9]*(?:\.[a-z0-9]+)*)\}/g;
 const TOKEN_PATH = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+)+$/;
@@ -39,9 +41,9 @@ export function pruneStyleBlockNodes(
   removedIds: ReadonlySet<string>,
   localInstanceIds?: ReadonlySet<string>,
 ): StyleBlock | undefined {
-  if (!style?.children) return style;
+  if (!style) return style;
   let changed = false;
-  const children = { ...style.children };
+  const children = { ...(style.children ?? {}) };
   for (const id of removedIds) {
     for (const target of Object.keys(children)) {
       if (target === id || target.startsWith(`${id}/`)) {
@@ -61,12 +63,18 @@ export function pruneStyleBlockNodes(
       }
     }
   }
+  const rules = style.rules?.filter((rule) =>
+    Object.values(rule.bindings).every((nodeId) => !removedIds.has(nodeId)),
+  );
+  if (rules?.length !== style.rules?.length) changed = true;
   if (!changed) return style;
-  if (!Object.keys(children).length) {
-    const { children: _children, ...rest } = style;
-    return Object.keys(rest).length ? (rest as StyleBlock) : undefined;
-  }
-  return { ...style, children };
+  const result: StyleBlock = { ...style };
+  if (Object.keys(children).length) result.children = children;
+  else delete result.children;
+  if (rules?.length) result.rules = rules;
+  else delete result.rules;
+  if (!styleHasContent(result)) return undefined;
+  return result;
 }
 
 /** Rebase nested rendered-path keys after an owner-local subtree moves. */
@@ -163,7 +171,12 @@ export function assertStyleContract(doc: FlatDocument, options: ValidateOptions 
       }
     }
   }
+  flatDocumentClassNames(doc);
   if (doc.styles) assertStyleBlock(doc, doc.styles, breakpoints, options);
+  for (const preset of doc.variantPresets ?? []) {
+    if (preset.overrides?.styles)
+      assertStyleBlock(doc, preset.overrides.styles, breakpoints, options);
+  }
   for (const node of Object.values(doc.nodes)) {
     for (const id of Object.keys(node.layout?.breakpoints ?? {})) {
       assertBreakpoint(id, breakpoints, `Node "${node.id}" layout`);
@@ -206,6 +219,40 @@ export function assertStyleMap(style: Record<string, string>): void {
   }
 }
 
+export function assertStyleNameAvailable(
+  doc: Pick<FlatDocument, 'nodes' | 'variantPresets'>,
+  styleName: string,
+  exceptId?: string,
+): void {
+  if (!/^[A-Za-z_][A-Za-z0-9_-]*$/.test(styleName)) {
+    throw new DocumentError('schema', 'CSS class names must start with a letter or underscore');
+  }
+  const matches = (id: string, candidate: string | undefined) =>
+    id !== exceptId && candidate === styleName;
+  if (Object.values(doc.nodes).some((node) => matches(node.id, node.styleName))) {
+    throw new DocumentError('schema', `CSS class name "${styleName}" is already in use`);
+  }
+  for (const preset of doc.variantPresets ?? []) {
+    for (const insertion of preset.overrides?.insertions ?? []) {
+      if (nestedHasStyleName(insertion.node, styleName, exceptId)) {
+        throw new DocumentError('schema', `CSS class name "${styleName}" is already in use`);
+      }
+    }
+  }
+}
+
+function nestedHasStyleName(
+  node: import('../document/schema.js').NestedNode,
+  styleName: string,
+  exceptId?: string,
+): boolean {
+  if (node.id !== exceptId && node.styleName === styleName) return true;
+  return (
+    node.type === 'frame' &&
+    (node.children ?? []).some((child) => nestedHasStyleName(child, styleName, exceptId))
+  );
+}
+
 function assertStyleBlock(
   doc: FlatDocument,
   block: StyleBlock,
@@ -222,6 +269,10 @@ function assertStyleBlock(
     .map((variant) => variant.name);
   if (namedVariants.length) axes.set('variant', new Set(['default', ...namedVariants]));
   const nodeIds = new Set(Object.keys(doc.nodes));
+  for (const preset of doc.variantPresets ?? []) {
+    for (const insertion of preset.overrides?.insertions ?? [])
+      collectNestedNodeIds(insertion.node, nodeIds);
+  }
   assertLayerVariants(block, axes, 'Style block');
   for (const id of Object.keys(block.breakpoints ?? {})) assertBreakpoint(id, breakpoints, 'Style');
   for (const [target, child] of Object.entries(block.children ?? {})) {
@@ -258,6 +309,45 @@ function assertStyleBlock(
     assertLayerSpacing(child);
     for (const layer of Object.values(child.breakpoints ?? {})) assertLayerSpacing(layer);
   }
+  for (const rule of block.rules ?? []) {
+    assertStyleSelector(rule.selector);
+    const classes = selectorClassNames(rule.selector);
+    for (const name of classes) {
+      const nodeId = Object.hasOwn(rule.bindings, name) ? rule.bindings[name] : undefined;
+      if (!nodeId) {
+        throw new DocumentError('schema', `Style rule "${rule.id}" does not bind ".${name}"`);
+      }
+      if (!nodeIds.has(nodeId)) {
+        throw new DocumentError(
+          'schema',
+          `Style rule "${rule.id}" targets missing node "${nodeId}"`,
+        );
+      }
+    }
+    for (const name of Object.keys(rule.bindings)) {
+      if (!classes.includes(name)) {
+        throw new DocumentError(
+          'schema',
+          `Style rule "${rule.id}" has an unused binding ".${name}"`,
+        );
+      }
+    }
+    assertLayerVariants(rule, axes, `Style rule "${rule.id}"`);
+    for (const id of Object.keys(rule.breakpoints ?? {})) {
+      assertBreakpoint(id, breakpoints, `Style rule "${rule.id}"`);
+    }
+    assertLayerSpacing(rule);
+    for (const layer of Object.values(rule.breakpoints ?? {})) assertLayerSpacing(layer);
+  }
+}
+
+function collectNestedNodeIds(
+  node: import('../document/schema.js').NestedNode,
+  ids: Set<string>,
+): void {
+  ids.add(node.id);
+  if (node.type === 'frame')
+    for (const child of node.children ?? []) collectNestedNodeIds(child, ids);
 }
 
 function hasLocalInstanceBoundary(doc: FlatDocument, path: readonly string[]): boolean {
@@ -351,6 +441,11 @@ function pruneStyle(
   keepValues: ReadonlySet<string> | null,
 ): StyleBlock {
   const next = structuredClone(style);
+  for (const rule of next.rules ?? []) {
+    const ruleVariants = pruneVariantMap(rule.variants, axis, keepValues);
+    if (ruleVariants) rule.variants = ruleVariants;
+    else delete rule.variants;
+  }
   const variants = pruneVariantMap(next.variants, axis, keepValues);
   if (variants) next.variants = variants;
   else delete next.variants;
@@ -390,7 +485,12 @@ function pruneVariantMap(
 function styleHasContent(style: StyleBlock | StyleChild): boolean {
   const children = 'children' in style ? style.children : undefined;
   return Boolean(
-    style.declarations || style.states || style.variants || style.breakpoints || children,
+    style.declarations ||
+    style.states ||
+    style.variants ||
+    style.breakpoints ||
+    children ||
+    ('rules' in style && style.rules?.length),
   );
 }
 
@@ -400,6 +500,13 @@ function collectBlockRefs(block: StyleBlock, refs: Set<string>): void {
     for (const variant of Object.values(layer)) collectLayerRefs(variant, refs);
   }
   for (const layer of Object.values(block.breakpoints ?? {})) collectLayerRefs(layer, refs);
+  for (const rule of block.rules ?? []) {
+    collectLayerRefs(rule, refs);
+    for (const layer of Object.values(rule.variants ?? {})) {
+      for (const variant of Object.values(layer)) collectLayerRefs(variant, refs);
+    }
+    for (const layer of Object.values(rule.breakpoints ?? {})) collectLayerRefs(layer, refs);
+  }
   for (const child of Object.values(block.children ?? {})) {
     collectLayerRefs(child, refs);
     for (const layer of Object.values(child.variants ?? {})) {

@@ -4,6 +4,55 @@
 
 ## Refactoring bei der Aufgabenplanung
 
+### Lesbare Klassen und selektorbasierter Styles-Tab (2026-10-03)
+
+- [x] Prerequisite: keep selector parsing/binding and readable class identity in
+      core's styles domain, separate from existing declaration/layer parsing. Extract
+      explicit-selector compilation beside the compiler and CSS draft parsing beside
+      the editor panel. Evidence: compile.ts already orchestrates layout and sparse
+      layer emission; free selectors add independent addressing and syntax concerns.
+      Reuse existing declaration writers and setStyleBlock/variant commands rather
+      than introducing a second persisted CSS source. Keep layout, renderer painting
+      and declaration controls cohesive despite existing detector size signals.
+- [x] Add optional local styleName to every node, unique per document; derive
+      readable fallback classes for legacy nodes and show the name in the inspector.
+      Bind rule class references to node IDs so renaming preserves meaning. Maintain
+      flat/nested conversion, JSON/Yjs round trips, sparse variants and Undo.
+- [x] Add ordered selector rules to styles, scoped to the owning component.
+      Support checked/adjacent siblings, functional pseudo-classes and pseudo-elements,
+      preserve token substitution and breakpoint/variant layers, and prune dangling
+      bound rules on removal. Validate syntax, references and declaration commits.
+- [x] Add a Styles tab with expandable selector rows and plain CSS declaration
+      editing, add/delete/reorder and inline errors. Existing style controls and the
+      rule editor use the same declarations. Selected elements highlight matching
+      rules; private nested nodes still belong to their master.
+- [ ] Validate editor edits/rename/invalid drafts/Undo, real checked interaction,
+      selector isolation and React CSS Modules output; regenerate schema/UI and run
+      tests, type/lint/build/browser checks and the final candidate detector.
+
+Ownership: core owns node naming and portable selector bindings; style-engine
+owns emitted selectors/token expansion; renderer-dom and codegen-react project
+the same naming/selector contract; editor owns drafts and interaction. No generic
+utility package or new CSS persistence channel. Existing documents remain valid.
+
+Integration evidence: browser checks pass for selector/CSS edits, invalid drafts,
+class rename/Undo, ordered cascade/reorder, delete/Undo, ordinary CSS and JSON
+export. Generated React checked-sibling and :has rules pass native click and
+instance/outside isolation checks. Core/store/style-engine/renderer/codegen/UI
+typechecks and Storybook build pass. Focused editor checks pass 15 tests. The
+first full run passed 946/948; both remaining UI tests were corrected and passed
+the focused run. Three subsequent test-only typing errors were corrected.
+Final full tests, editor typecheck/build and lint remain pending: automatic
+approval review could not run the requested commands because of an account usage
+limit. Do not treat the feature as fully verified until these checks are rerun.
+
+Final detector review: style-block.ts (544 lines) retains document style
+validation/pruning; render.ts (523) retains painting/reconciliation; compile.ts
+(510) retains node/layout traversal. New class identity, selector scanning,
+authored-rule emission and shared selector scoping have separate domain owners.
+Existing unrelated editor size/directory signals remain in the refactoring
+backlog; no automatic size-based split was made.
+
 ### CSS Modules und verschachtelte Instanz-Styles (2026-10-02)
 
 - [x] Refactor prerequisite: isolate nested target addressing in the style-engine and

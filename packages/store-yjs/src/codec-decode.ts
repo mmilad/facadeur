@@ -43,6 +43,7 @@ export function readNode(map: Y.Map<unknown>): FlatNode {
   const type = map.get('type');
   const id = stringValue(map.get('id'));
   const name = optionalString(map.get('name'));
+  const styleName = optionalString(map.get('styleName'));
   const layout = readLayout(map.get('layout'));
   if (type === 'instance') {
     const fields = readValueMap(map.get('fields'));
@@ -55,6 +56,7 @@ export function readNode(map: Y.Map<unknown>): FlatNode {
       id,
       type: 'instance',
       ...(name !== undefined ? { name } : {}),
+      ...(styleName !== undefined ? { styleName } : {}),
       ...(displayOn ? { displayOn } : {}),
       ...(layout ? { layout } : {}),
       component: stringValue(map.get('component')),
@@ -77,6 +79,7 @@ export function readNode(map: Y.Map<unknown>): FlatNode {
   const shared = {
     id,
     ...(name !== undefined ? { name } : {}),
+    ...(styleName !== undefined ? { styleName } : {}),
     ...(tag !== undefined ? { tag } : {}),
     ...(attributes ? { attributes } : {}),
     ...(displayOn ? { displayOn } : {}),

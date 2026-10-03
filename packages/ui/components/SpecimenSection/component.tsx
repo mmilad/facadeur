@@ -15,28 +15,28 @@ export function SpecimenSection({ nodeId, className, childFields }: SpecimenSect
     <div
       data-component="specimen-section"
       data-node={nodeId}
-      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
+      className={[styles['root'], className].filter(Boolean).join(' ')}
     >
-      <div data-node="intro" className={styles.f_intro_ctvstt}>
-        <p data-node="kicker" className={styles.f_kicker_n8l4j8}>
+      <div data-node="intro" className={styles['intro']}>
+        <p data-node="kicker" className={styles['kicker']}>
           facadeur
         </p>
-        <h1 data-node="heading" className={styles.f_heading_1870pat}>
+        <h1 data-node="heading" className={styles['heading']}>
           Specimen
         </h1>
-        <p data-node="lede" className={styles.f_lede_6gu931}>
+        <p data-node="lede" className={styles['lede']}>
           Auto layout, token styles, and a sign-in card that overrides the input border for its
           children.
         </p>
       </div>
-      <div data-node="buttons" className={styles.f_buttons_151kopy}>
-        <p data-node="label-button" className={styles.f_label_button_1djee4k}>
+      <div data-node="buttons" className={styles['buttons']}>
+        <p data-node="label-button" className={styles['label-button']}>
           Button
         </p>
-        <div data-node="button-row" className={styles.f_button_row_apzzv4}>
+        <div data-node="button-row" className={styles['button-row']}>
           <Button
             nodeId="btn-primary"
-            className={styles.f_btn_primary_clrl40}
+            className={styles['btn-primary']}
             label={
               childFields?.['btn-primary']?.label !== undefined
                 ? (childFields?.['btn-primary']?.label as string)
@@ -47,7 +47,7 @@ export function SpecimenSection({ nodeId, className, childFields }: SpecimenSect
           />
           <Button
             nodeId="btn-secondary"
-            className={styles.f_btn_secondary_1jfsi8}
+            className={styles['btn-secondary']}
             label={
               childFields?.['btn-secondary']?.label !== undefined
                 ? (childFields?.['btn-secondary']?.label as string)
@@ -58,7 +58,7 @@ export function SpecimenSection({ nodeId, className, childFields }: SpecimenSect
           />
           <Button
             nodeId="btn-ghost"
-            className={styles.f_btn_ghost_ptaa5x}
+            className={styles['btn-ghost']}
             label={
               childFields?.['btn-ghost']?.label !== undefined
                 ? (childFields?.['btn-ghost']?.label as string)
@@ -69,7 +69,7 @@ export function SpecimenSection({ nodeId, className, childFields }: SpecimenSect
           />
           <Button
             nodeId="btn-small"
-            className={styles.f_btn_small_1b8dm5}
+            className={styles['btn-small']}
             label={
               childFields?.['btn-small']?.label !== undefined
                 ? (childFields?.['btn-small']?.label as string)
@@ -80,14 +80,14 @@ export function SpecimenSection({ nodeId, className, childFields }: SpecimenSect
           />
         </div>
       </div>
-      <div data-node="fields" className={styles.f_fields_1qg0os}>
-        <p data-node="label-input" className={styles.f_label_input_1kyjsk4}>
+      <div data-node="fields" className={styles['fields']}>
+        <p data-node="label-input" className={styles['label-input']}>
           Input
         </p>
-        <div data-node="input-row" className={styles.f_input_row_8msj2m}>
+        <div data-node="input-row" className={styles['input-row']}>
           <Input
             nodeId="input-email"
-            className={styles.f_input_email_1b58xa}
+            className={styles['input-email']}
             label={
               childFields?.['input-email']?.label !== undefined
                 ? (childFields?.['input-email']?.label as string)
@@ -111,7 +111,7 @@ export function SpecimenSection({ nodeId, className, childFields }: SpecimenSect
           />
           <Input
             nodeId="input-search"
-            className={styles.f_input_search_h4lpai}
+            className={styles['input-search']}
             label={
               childFields?.['input-search']?.label !== undefined
                 ? (childFields?.['input-search']?.label as string)
@@ -135,14 +135,14 @@ export function SpecimenSection({ nodeId, className, childFields }: SpecimenSect
           />
         </div>
       </div>
-      <div data-node="cards" className={styles.f_cards_101yo90}>
-        <p data-node="label-card" className={styles.f_label_card_fq8fri}>
+      <div data-node="cards" className={styles['cards']}>
+        <p data-node="label-card" className={styles['label-card']}>
           Card
         </p>
-        <div data-node="card-row" className={styles.f_card_row_1w04xey}>
+        <div data-node="card-row" className={styles['card-row']}>
           <Card
             nodeId="card-notes"
-            className={styles.f_card_notes_1rwl3zn}
+            className={styles['card-notes']}
             body={
               childFields?.['card-notes']?.body !== undefined
                 ? (childFields?.['card-notes']?.body as string)
@@ -161,7 +161,7 @@ export function SpecimenSection({ nodeId, className, childFields }: SpecimenSect
           />
           <SignIn
             nodeId="card-signin"
-            className={styles.f_card_signin_qspryo}
+            className={styles['card-signin']}
             eyebrow={
               childFields?.['card-signin']?.eyebrow !== undefined
                 ? (childFields?.['card-signin']?.eyebrow as string)

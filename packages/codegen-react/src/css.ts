@@ -1,5 +1,5 @@
-import type { Breakpoint, DocumentFile } from '@facadeur/core';
-import { compileDocument, type CompiledRule } from '@facadeur/style-engine';
+import { type Breakpoint, type DocumentFile } from '@facadeur/core';
+import { compileDocument, scopeStyleSelector, type CompiledRule } from '@facadeur/style-engine';
 import { renderDesignCss, type DesignInput } from '@facadeur/tokens';
 import type { LocalClassNames } from './component/types.js';
 import { instanceNodeIds } from './component/class-names.js';
@@ -49,6 +49,8 @@ export function renderDocumentCss(
       }
       return `${moduleScope}${rootVariantAttributes(suffix)} .${className}`;
     },
+    selectorForStyleRule: ({ selector, variantScope, axisVariant }) =>
+      scopeModuleSelector(selector, rootClass, variantScope, axisVariant),
   });
   const base = compiled.filter((rule) => rule.minWidth === undefined);
   const widths = [
@@ -82,6 +84,21 @@ function rootVariantAttributes(suffix: string): string {
     .join('');
 }
 
+function scopeModuleSelector(
+  selector: string,
+  rootClass: string,
+  variant?: string,
+  axisVariant?: { axis: string; value: string },
+): string {
+  const axisAttribute = axisVariant
+    ? axisVariant.axis === 'variant'
+      ? `[data-variant="${cssString(axisVariant.value)}"]`
+      : `[data-variant-${cssString(axisVariant.axis)}="${cssString(axisVariant.value)}"]`
+    : '';
+  const root = `.${rootClass}${variant ? `[data-variant="${cssString(variant)}"]` : ''}${axisAttribute}`;
+  return scopeStyleSelector(selector, root);
+}
+
 function cssString(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 }
@@ -96,12 +113,13 @@ function printRules(
     {
       name: 'facadeur.components',
       matches: (rule: CompiledRule) =>
-        !rule.key.includes('/') && !isInstanceRule(rule, document, instances),
+        !rule.key.includes('/') && !rule.styleRuleId && !isInstanceRule(rule, document, instances),
     },
     {
       name: 'facadeur.instances',
       matches: (rule: CompiledRule) =>
-        !rule.key.includes('/') && isInstanceRule(rule, document, instances),
+        !rule.key.includes('/') &&
+        (rule.styleRuleId !== undefined || isInstanceRule(rule, document, instances)),
     },
     {
       name: 'facadeur.nested-instances',
@@ -127,6 +145,9 @@ function isInstanceRule(
   document: DocumentFile,
   instances: ReadonlySet<string>,
 ): boolean {
+  if (rule.styleRuleBindings) {
+    return Object.values(rule.styleRuleBindings).some((nodeId) => instances.has(nodeId));
+  }
   const nodeId = rule.key.slice(document.id.length + 1).split(':', 1)[0];
   return nodeId !== undefined && instances.has(nodeId);
 }

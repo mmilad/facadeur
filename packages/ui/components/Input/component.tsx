@@ -22,14 +22,14 @@ export function Input({
     <label
       data-component="input"
       data-node={nodeId}
-      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
+      className={[styles['root'], className].filter(Boolean).join(' ')}
     >
-      <span data-node="label" className={styles.f_label_1wf4cn1}>
+      <span data-node="label" className={styles['label']}>
         {label}
       </span>
       <FormInput
         nodeId="control"
-        className={styles.f_control_mx9w2m}
+        className={styles['control']}
         value={value}
         placeholder={placeholder}
         name={name}

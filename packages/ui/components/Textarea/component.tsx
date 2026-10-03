@@ -21,9 +21,9 @@ export function Textarea({
       data-component="textarea"
       data-node={nodeId}
       data-variant-resize={resize}
-      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
+      className={[styles['root'], className].filter(Boolean).join(' ')}
     >
-      <span data-node="label" className={styles.f_label_1wf4cn1}>
+      <span data-node="label" className={styles['label']}>
         {label}
       </span>
       <textarea
@@ -33,7 +33,7 @@ export function Textarea({
         placeholder={placeholder}
         name={name}
         rows={rows}
-        className={styles.f_control_mx9w2m}
+        className={styles['control']}
       >
         {value}
       </textarea>

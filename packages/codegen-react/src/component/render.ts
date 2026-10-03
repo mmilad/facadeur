@@ -13,6 +13,7 @@ import { eventAttributes } from './render/event-attributes.js';
 import { bindingsFor } from './render/field-bindings.js';
 import { isJsxName, jsxText } from './render/jsx-text.js';
 import { renderInstance } from './render/render-instance.js';
+import { moduleClassExpression } from './class-names.js';
 import type {
   Attr,
   Bound,
@@ -46,7 +47,7 @@ export function renderNode(
       usedProps,
       dataScope,
       childFieldsProp,
-      classNames.get(node.id),
+      nodeClassExpression(classNames.get(node.id)),
     );
   }
   const tag = node.tag ?? (node.type === 'text' ? 'span' : node.type === 'image' ? 'img' : 'div');
@@ -102,7 +103,12 @@ export function renderNode(
     pushMedia(attrs, 'alt', bound.alt, node.alt);
   }
 
-  const className = classAttribute(node, bound, isRoot, classNames.get(node.id));
+  const className = classAttribute(
+    node,
+    bound,
+    isRoot,
+    nodeClassExpression(classNames.get(node.id)),
+  );
   if (className) attrs.push(className);
   const style = styleAttribute(node, bound, markStyle);
   if (style) attrs.push(style);
@@ -159,6 +165,10 @@ export function renderNode(
   };
 }
 
+function nodeClassExpression(className: string | undefined): string | undefined {
+  return className ? moduleClassExpression(className) : undefined;
+}
+
 function textChild(
   node: Exclude<NestedNode, { type: 'instance' }>,
   bound: Bound,
@@ -200,7 +210,7 @@ function classAttribute(
 ): Attr | undefined {
   const staticClass = classFromAttributes(node.attributes);
   const parts: string[] = [];
-  if (localClass) parts.push(`styles.${localClass}`);
+  if (localClass) parts.push(localClass);
   if (staticClass) parts.push(quote(staticClass));
   if (bound.classExpr) parts.push(bound.classExpr);
   if (isRoot) parts.push('className');

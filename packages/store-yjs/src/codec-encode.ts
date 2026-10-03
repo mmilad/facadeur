@@ -178,6 +178,7 @@ function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
   syncScalar(map, 'type', node.type);
   if (node.type === 'instance') {
     syncScalar(map, 'name', node.name);
+    syncScalar(map, 'styleName', node.styleName);
     syncJsonMap(map, 'displayOn', node.displayOn as Record<string, JsonValue> | undefined);
     syncLayout(map, node.layout);
     syncScalar(map, 'component', node.component);
@@ -214,6 +215,7 @@ function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
   }
 
   syncScalar(map, 'name', node.name);
+  syncScalar(map, 'styleName', node.styleName);
   syncScalar(map, 'tag', node.tag);
   syncStringMap(map, 'attributes', node.attributes);
   syncJsonMap(map, 'displayOn', node.displayOn as Record<string, JsonValue> | undefined);

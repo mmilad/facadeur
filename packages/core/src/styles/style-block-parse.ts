@@ -4,9 +4,11 @@ import type {
   StyleChild,
   StyleDeclarations,
   StyleLayer,
+  StyleRule,
   StyleStates,
   TokenInterface,
 } from '../document/schema.js';
+import { assertStyleSelector, selectorClassNames } from './selectors.js';
 
 export const CSS_PROPERTY = /^(--)?[A-Za-z_][\w-]*$/;
 const TOKEN_PATH = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+)+$/;
@@ -33,6 +35,18 @@ export function assertSpacingValue(property: string, value: string): void {
 export function parseStyleBlock(value: unknown): StyleBlock {
   const record = requireRecord(value, 'Style block');
   const block: StyleBlock = parseChild(record, 'Style block');
+  if (record.rules !== undefined) {
+    if (!Array.isArray(record.rules)) {
+      throw new DocumentError('schema', 'Style block rules must be an array');
+    }
+    block.rules = record.rules.map((rule, index) => parseStyleRule(rule, index));
+    const ids = new Set<string>();
+    for (const rule of block.rules) {
+      if (ids.has(rule.id))
+        throw new DocumentError('schema', `Duplicate style rule id "${rule.id}"`);
+      ids.add(rule.id);
+    }
+  }
   if (record.children !== undefined) {
     if (!isRecord(record.children)) {
       throw new DocumentError('schema', 'Style block children must be an object');
@@ -55,10 +69,58 @@ export function parseStyleBlock(value: unknown): StyleBlock {
   }
   assertKnown(
     record,
-    ['declarations', 'states', 'variants', 'breakpoints', 'children'],
+    ['declarations', 'states', 'variants', 'breakpoints', 'children', 'rules'],
     'Style block',
   );
   return block;
+}
+
+function parseStyleRule(value: unknown, index: number): StyleRule {
+  const label = `Style rule ${index + 1}`;
+  if (!isRecord(value)) throw new DocumentError('schema', `${label} must be an object`);
+  if (typeof value.id !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]*$/.test(value.id)) {
+    throw new DocumentError('schema', `${label} has an invalid id`);
+  }
+  if (typeof value.selector !== 'string') {
+    throw new DocumentError('schema', `${label} needs a selector`);
+  }
+  assertStyleSelector(value.selector);
+  if (!isRecord(value.bindings)) {
+    throw new DocumentError('schema', `${label} bindings must be an object`);
+  }
+  const classes = selectorClassNames(value.selector);
+  const bindings = Object.create(null) as Record<string, string>;
+  for (const name of Object.keys(value.bindings).sort()) {
+    if (!/^[A-Za-z_][A-Za-z0-9_-]*$/.test(name) || !classes.includes(name)) {
+      throw new DocumentError('schema', `${label} has an unused or invalid binding ".${name}"`);
+    }
+    const nodeId = value.bindings[name];
+    if (typeof nodeId !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]*$/.test(nodeId)) {
+      throw new DocumentError('schema', `${label} binding ".${name}" must target a node id`);
+    }
+    Object.defineProperty(bindings, name, {
+      value: nodeId,
+      enumerable: true,
+      configurable: true,
+      writable: true,
+    });
+  }
+  for (const name of classes) {
+    if (!(name in bindings)) throw new DocumentError('schema', `${label} does not bind ".${name}"`);
+  }
+  const layer = parseChild(value, label);
+  const rule: StyleRule = {
+    id: value.id,
+    selector: value.selector,
+    bindings,
+    ...layer,
+  };
+  assertKnown(
+    value,
+    ['id', 'selector', 'bindings', 'declarations', 'states', 'variants', 'breakpoints'],
+    label,
+  );
+  return rule;
 }
 
 export function parseTokenInterface(value: unknown): TokenInterface {

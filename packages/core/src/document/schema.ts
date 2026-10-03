@@ -50,6 +50,7 @@ import {
   styleBlockSchema,
   styleChildSchema,
   styleLayerSchema,
+  styleRuleSchema,
   styleStatesSchema,
   tokenInterfaceSchema,
 } from './schemas/schema-style.js';
@@ -99,6 +100,7 @@ export {
   layoutSchema,
   styleStatesSchema,
   styleLayerSchema,
+  styleRuleSchema,
   styleChildSchema,
   styleBlockSchema,
   tokenInterfaceSchema,
@@ -197,6 +199,7 @@ export type SpacingBox = Static<typeof spacingBoxSchema>;
 export type StyleDeclarations = Record<string, string>;
 export type StyleStates = Static<typeof styleStatesSchema>;
 export type StyleLayer = Static<typeof styleLayerSchema>;
+export type StyleRule = Static<typeof styleRuleSchema>;
 export type StyleChild = Static<typeof styleChildSchema>;
 export type StyleBlock = Static<typeof styleBlockSchema>;
 export type TokenInterface = Static<typeof tokenInterfaceSchema>;

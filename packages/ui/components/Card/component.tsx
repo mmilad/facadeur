@@ -11,15 +11,15 @@ export function Card({ eyebrow, title, body, nodeId, className }: CardProps) {
     <article
       data-component="card"
       data-node={nodeId}
-      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
+      className={[styles['root'], className].filter(Boolean).join(' ')}
     >
-      <p data-node="eyebrow" className={styles.f_eyebrow_95073g}>
+      <p data-node="eyebrow" className={styles['eyebrow']}>
         {eyebrow}
       </p>
-      <h2 data-node="title" className={styles.f_title_16a95ah}>
+      <h2 data-node="title" className={styles['title']}>
         {title}
       </h2>
-      <p data-node="body" className={styles.f_body_1oy6jcl}>
+      <p data-node="body" className={styles['body']}>
         {body}
       </p>
     </article>

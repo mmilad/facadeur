@@ -5,7 +5,7 @@
 @layer facadeur.components, facadeur.instances, facadeur.nested-instances;
 
 @layer facadeur.components {
-  .f_root_95igqt {
+  .root {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
@@ -18,7 +18,7 @@
     height: fit-content;
   }
 
-  .f_root_95igqt .f_label_1wf4cn1 {
+  .root .label {
     width: fit-content;
     height: fit-content;
     color: var(--form-toggle-color-text, var(--color-text-primary));
@@ -30,7 +30,7 @@
     margin: var(--space-0);
   }
 
-  .f_root_95igqt .f_control_mx9w2m {
+  .root .control {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
@@ -43,7 +43,7 @@
     height: fit-content;
   }
 
-  .f_root_95igqt .f_switch_1513hbl {
+  .root .switch {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
@@ -59,17 +59,17 @@
     border-radius: var(--radius-full);
   }
 
-  .f_root_95igqt[data-variant-state='off'] .f_switch_1513hbl {
+  .root[data-variant-state='off'] .switch {
     background: var(--color-bg-muted);
     justify-content: flex-start;
   }
 
-  .f_root_95igqt[data-variant-state='disabled'] .f_switch_1513hbl {
+  .root[data-variant-state='disabled'] .switch {
     background: var(--color-bg-muted);
     opacity: 0.6;
   }
 
-  .f_root_95igqt .f_thumb_1vlzs9v {
+  .root .thumb {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
@@ -84,7 +84,7 @@
     border-radius: var(--radius-full);
   }
 
-  .f_root_95igqt .f_state_xckdti {
+  .root .state {
     width: fit-content;
     height: fit-content;
     color: var(--form-toggle-color-textmuted, var(--color-text-secondary));

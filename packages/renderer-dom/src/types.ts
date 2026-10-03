@@ -34,6 +34,8 @@ export interface RenderContext {
   canvasId: string | null;
   /** Resolved canvas document for preview-only mounted variants. */
   canvasDocument: DocumentFile | null;
+  /** Component whose node IDs are being painted; preview selectors use this owner. */
+  styleDocumentId: string | null;
   /** Optional editor-only preparation of instance documents after variant resolution. */
   prepareInstanceDocument?: (document: DocumentFile, variant: string | undefined) => DocumentFile;
 }

@@ -5,7 +5,7 @@
 @layer facadeur.components, facadeur.instances, facadeur.nested-instances;
 
 @layer facadeur.components {
-  .f_root_95igqt {
+  .root {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
@@ -24,10 +24,10 @@
     letter-spacing: var(--type-label--letter-spacing);
   }
 
-  .f_root_95igqt .f_label_1wf4cn1 {
+  .root .label {
     margin: var(--space-0);
   }
 }
 
-.f_control_mx9w2m {
+.control {
 }

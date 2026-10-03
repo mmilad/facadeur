@@ -144,6 +144,18 @@ function deriveStyleBlock(
     if (Object.keys(delta).length) children[id] = delta;
   }
   if (Object.keys(children).length) next.children = children;
+  const rules = (edited.rules ?? []).flatMap((rule) => {
+    const baseRule = base?.rules?.find((item) => item.id === rule.id);
+    const delta = deriveStyleOwner(baseRule, rule);
+    const selectorChanged = baseRule?.selector !== rule.selector;
+    const bindingsChanged =
+      JSON.stringify(baseRule?.bindings ?? {}) !== JSON.stringify(rule.bindings);
+    if (!baseRule || selectorChanged || bindingsChanged || Object.keys(delta).length) {
+      return [{ id: rule.id, selector: rule.selector, bindings: { ...rule.bindings }, ...delta }];
+    }
+    return [];
+  });
+  if (rules.length) next.rules = rules;
   return Object.keys(next).length ? next : undefined;
 }
 

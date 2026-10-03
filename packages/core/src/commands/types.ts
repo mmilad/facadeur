@@ -40,6 +40,7 @@ export interface InsertNode {
   id?: string;
   type: NodeType;
   name?: string;
+  styleName?: string;
   tag?: string;
   attributes?: Record<string, string>;
   displayOn?: DisplayOn;
@@ -62,6 +63,7 @@ export interface InsertNode {
 
 export type NodeProp =
   | 'name'
+  | 'styleName'
   | 'tag'
   | 'text'
   | 'src'

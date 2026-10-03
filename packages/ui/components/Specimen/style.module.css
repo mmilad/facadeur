@@ -5,7 +5,7 @@
 @layer facadeur.components, facadeur.instances, facadeur.nested-instances;
 
 @layer facadeur.components {
-  .f_root_95igqt {
+  .root {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
@@ -16,5 +16,5 @@
   }
 }
 
-.f_specimen_section_qb0b31 {
+.specimen-section {
 }

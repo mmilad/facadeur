@@ -12,11 +12,11 @@ export function Specimen({ nodeId, className }: SpecimenProps) {
     <div
       data-component="specimen"
       data-node={nodeId}
-      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
+      className={[styles['root'], className].filter(Boolean).join(' ')}
     >
       <SpecimenSection
         nodeId="specimen-section"
-        className={styles.f_specimen_section_qb0b31}
+        className={styles['specimen-section']}
         childFields={{ 'input-email': { value: 'ada@atelier.testyy' } }}
       />
     </div>

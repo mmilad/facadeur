@@ -5,7 +5,7 @@
 @layer facadeur.components, facadeur.instances, facadeur.nested-instances;
 
 @layer facadeur.components {
-  .f_root_95igqt {
+  .root {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
@@ -18,7 +18,7 @@
     height: fit-content;
   }
 
-  .f_root_95igqt .f_label_1wf4cn1 {
+  .root .label {
     width: fit-content;
     height: fit-content;
     color: var(--form-segmented-color-textmuted, var(--color-text-secondary));
@@ -30,7 +30,7 @@
     margin: var(--space-0);
   }
 
-  .f_root_95igqt .f_options_1ucvqn9 {
+  .root .options {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
@@ -53,7 +53,7 @@
     padding-inline: var(--form-segmented-padding-x, var(--space-3));
   }
 
-  .f_root_95igqt .f_start_s2jf1b {
+  .root .start {
     width: fit-content;
     height: fit-content;
     color: var(--form-segmented-color-textmuted, var(--color-text-secondary));
@@ -61,14 +61,14 @@
     padding-inline: var(--form-segmented-padding-x, var(--space-3));
   }
 
-  .f_root_95igqt[data-variant-state='start'] .f_start_s2jf1b {
+  .root[data-variant-state='start'] .start {
     background: var(--form-segmented-color-surface, var(--color-neutral-0));
     border-radius: var(--form-segmented-shape-radius, var(--radius-sm));
     color: var(--form-segmented-color-text, var(--color-text-primary));
     font-weight: 600;
   }
 
-  .f_root_95igqt .f_center_1jezyc {
+  .root .center {
     width: fit-content;
     height: fit-content;
     color: var(--form-segmented-color-textmuted, var(--color-text-secondary));
@@ -76,14 +76,14 @@
     padding-inline: var(--form-segmented-padding-x, var(--space-3));
   }
 
-  .f_root_95igqt[data-variant-state='center'] .f_center_1jezyc {
+  .root[data-variant-state='center'] .center {
     background: var(--form-segmented-color-surface, var(--color-neutral-0));
     border-radius: var(--form-segmented-shape-radius, var(--radius-sm));
     color: var(--form-segmented-color-text, var(--color-text-primary));
     font-weight: 600;
   }
 
-  .f_root_95igqt .f_end_tkd2ga {
+  .root .end {
     width: fit-content;
     height: fit-content;
     color: var(--form-segmented-color-textmuted, var(--color-text-secondary));
@@ -91,7 +91,7 @@
     padding-inline: var(--form-segmented-padding-x, var(--space-3));
   }
 
-  .f_root_95igqt[data-variant-state='end'] .f_end_tkd2ga {
+  .root[data-variant-state='end'] .end {
     background: var(--form-segmented-color-surface, var(--color-neutral-0));
     border-radius: var(--form-segmented-shape-radius, var(--radius-sm));
     color: var(--form-segmented-color-text, var(--color-text-primary));

@@ -12,11 +12,11 @@ export function FormControls({ nodeId, className }: FormControlsProps) {
     <div
       data-component="form-controls"
       data-node={nodeId}
-      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
+      className={[styles['root'], className].filter(Boolean).join(' ')}
     >
       <FormControlsSection
         nodeId="form-controls-section"
-        className={styles.f_form_controls_section_qic7ea}
+        className={styles['form-controls-section']}
       />
     </div>
   );

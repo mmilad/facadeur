@@ -25,6 +25,7 @@ import type { TokenTree } from '../../token-tree.js';
 export interface FlatNodeBase {
   id: string;
   name?: string;
+  styleName?: string;
   tag?: string;
   attributes?: Record<string, string>;
   displayOn?: DisplayOn;
@@ -56,6 +57,7 @@ export interface InstanceNode {
   id: string;
   type: 'instance';
   name?: string;
+  styleName?: string;
   displayOn?: DisplayOn;
   layout?: Layout;
   component: string;

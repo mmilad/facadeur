@@ -22,6 +22,7 @@ import {
 } from '../validation/assertions.js';
 import {
   assertStyleMap,
+  assertStyleNameAvailable,
   pruneStyleBlockNodes,
   rebaseStyleBlockChildPaths,
 } from '../styles/style-block.js';
@@ -47,6 +48,14 @@ export function insertNode(
   const nested = materialize(command.node, seen, ctx.createId ?? createId);
   const subtree: Record<string, FlatNode> = {};
   const rootId = flattenSubtree(nested, subtree, new Set(Object.keys(doc.nodes)));
+  for (const node of Object.values(subtree)) {
+    if (node.styleName)
+      assertStyleNameAvailable(
+        { nodes: { ...doc.nodes, ...subtree }, variantPresets: doc.variantPresets },
+        node.styleName,
+        node.id,
+      );
+  }
   const index = command.index ?? parent.children.length;
   assertIndex(index, parent.children.length);
   Object.assign(doc.nodes, subtree);
@@ -107,6 +116,10 @@ function pruneExposeMap(
 function pruneVariantPresetNodes(doc: FlatDocument, removed: ReadonlySet<string>): void {
   if (!doc.variantPresets?.length) return;
   for (const preset of doc.variantPresets) {
+    if (preset.overrides?.styles) {
+      preset.overrides.styles = pruneStyleBlockNodes(preset.overrides.styles, removed);
+      if (!preset.overrides.styles) delete preset.overrides.styles;
+    }
     const nodes = preset.overrides?.nodes;
     if (!nodes) continue;
     for (const id of removed) {
@@ -253,7 +266,7 @@ function materialize(draft: InsertNode, seen: Set<string>, nextId: () => string)
   ) {
     throw new DocumentError(
       'nesting',
-      'Instances can only set name, displayOn, layout, component, fields, childFields, fieldBindings, and variants',
+      'Instances can only set name, styleName, displayOn, layout, component, fields, childFields, fieldBindings, and variants',
     );
   }
   if (!draft.component || !ID_PATTERN.test(draft.component)) {
@@ -266,6 +279,7 @@ function materialize(draft: InsertNode, seen: Set<string>, nextId: () => string)
     id,
     type: 'instance',
     ...(draft.name !== undefined ? { name: requireName(draft.name) } : {}),
+    ...(draft.styleName !== undefined ? { styleName: requireStyleName(draft.styleName) } : {}),
     ...(draft.displayOn ? { displayOn: { ...draft.displayOn } } : {}),
     ...(draft.layout ? { layout: cleanCommandLayout(draft.layout) } : {}),
     component: draft.component,
@@ -296,6 +310,7 @@ function elementBase(
   bindings?: Binding[];
   eventBindings?: EventBinding[];
   style?: Record<string, string>;
+  styleName?: string;
 } {
   if (draft.attributes) assertAttributes(draft.attributes);
   if (draft.displayOn) assertDisplayOn(draft.displayOn);
@@ -307,6 +322,7 @@ function elementBase(
   return {
     id,
     ...(draft.name !== undefined ? { name: requireName(draft.name) } : {}),
+    ...(draft.styleName !== undefined ? { styleName: requireStyleName(draft.styleName) } : {}),
     ...(draft.tag !== undefined ? { tag: requireTag(draft.tag) } : {}),
     ...(draft.attributes ? { attributes: { ...draft.attributes } } : {}),
     ...(draft.displayOn ? { displayOn: { ...draft.displayOn } } : {}),
@@ -319,6 +335,13 @@ function elementBase(
       : {}),
     ...(draft.style && Object.keys(draft.style).length ? { style: { ...draft.style } } : {}),
   };
+}
+
+function requireStyleName(value: unknown): string {
+  if (typeof value !== 'string' || !/^[A-Za-z_][A-Za-z0-9_-]*$/.test(value)) {
+    throw new DocumentError('schema', 'CSS class names must start with a letter or underscore');
+  }
+  return value;
 }
 
 function cleanCommandLayout(layout: Layout): Layout {

@@ -1,4 +1,4 @@
-import type { DocumentFile, NestedNode } from '@facadeur/core';
+import { documentClassNames, type DocumentFile, type NestedNode } from '@facadeur/core';
 import { childOverridePath, mergeChildFieldContext, toNested } from '@facadeur/core';
 import { createRenderContext } from './context.js';
 import {
@@ -32,6 +32,8 @@ import {
 } from './presentation.js';
 import type { DocumentStyles, DomRenderer, RenderContext, RenderedNode } from './types.js';
 
+const classNameCache = new WeakMap<DocumentFile, Map<string, string>>();
+
 export type { DocumentStyles, DomRenderer, RenderContext, RenderedNode } from './types.js';
 export { createRenderContext } from './context.js';
 
@@ -50,6 +52,7 @@ export function renderDocument(
   ctx.catalog.set(document.id, document);
   ctx.scope = resolveFields(document.fields, undefined);
   ctx.canvasDocument = document;
+  ctx.styleDocumentId = document.id;
   paintCanvas(parent, document, ctx, options.paintRoot === true);
   return ctx.records;
 }
@@ -94,6 +97,7 @@ export function createDomRenderer(options: {
       depth: 0,
       canvasId: mountedId,
       canvasDocument: canvas ?? null,
+      styleDocumentId: mountedId,
       prepareInstanceDocument: options.prepareInstanceDocument,
     };
   }
@@ -119,6 +123,7 @@ export function createDomRenderer(options: {
     const document = mountedDocument(source);
     const ctx = context();
     ctx.scope = resolveFields(document.fields, undefined);
+    ctx.styleDocumentId = document.id;
     paintCanvas(parent, document, ctx, paintRoot);
   }
 
@@ -239,6 +244,7 @@ function paintInstance(
     ...(selected ? { variant: selected } : {}),
   });
   const root = definition.root;
+  const ownerDocumentId = ctx.styleDocumentId;
   el.dataset.id = id;
   el.dataset.type = 'instance';
   el.dataset.node = node.id;
@@ -247,6 +253,9 @@ function paintInstance(
   else applyAttributes(el, root.attributes);
   syncVariants(el, variants);
   const bound = applyBindings(el, root.type === 'instance' ? undefined : root.bindings, scope);
+  markStyleOwner(el, ownerDocumentId, node.id, definition.id, root.id);
+  addClass(el, localClassName(ctx, ownerDocumentId, node.id));
+  addClass(el, localClassName(ctx, definition.id, root.id));
   let text: string | null = null;
   if (root.type === 'text') text = bound.text ?? root.text ?? null;
   else if (root.type === 'frame' && bound.text) text = bound.text;
@@ -271,6 +280,7 @@ function paintInstance(
     const childContext = {
       ...ctx,
       path: id,
+      styleDocumentId: definition.id,
       scope,
       ownerId: id,
       depth: ctx.depth + 1,
@@ -300,6 +310,7 @@ function paintElement(
   ctx: RenderContext,
 ): void {
   const id = joinId(ctx.path, node.id);
+  const ownerDocumentId = ctx.styleDocumentId;
   el.dataset.id = id;
   el.dataset.type = node.type;
   el.dataset.node = node.id;
@@ -307,6 +318,8 @@ function paintElement(
   applyAttributes(el, node.attributes);
   syncVariants(el, {});
   const bound = applyBindings(el, node.bindings, ctx.scope);
+  markStyleOwner(el, ownerDocumentId, node.id);
+  addClass(el, localClassName(ctx, ownerDocumentId, node.id));
   let text: string | null = null;
   if (node.type === 'text') text = bound.text ?? node.text ?? null;
   else if (node.type === 'frame' && bound.text) text = bound.text;
@@ -353,11 +366,14 @@ function paintUnknown(
   node: Extract<NestedNode, { type: 'instance' }>,
   ctx: RenderContext,
 ): void {
+  const ownerDocumentId = ctx.styleDocumentId;
   el.dataset.id = id;
   el.dataset.type = 'instance';
   el.dataset.node = node.id;
   el.dataset.component = node.component;
+  markStyleOwner(el, ownerDocumentId, node.id);
   el.className = 'ds-unknown';
+  addClass(el, localClassName(ctx, ownerDocumentId, node.id));
   const text = `Unknown component: ${node.component}`;
   reconcileChildren(el, [], ctx);
   syncLeadText(el, text);
@@ -464,4 +480,44 @@ function dropRecords(records: Map<string, RenderedNode>, id: string): void {
   for (const key of [...records.keys()]) {
     if (key === id || key.startsWith(`${id}/`)) records.delete(key);
   }
+}
+
+function localClassName(
+  ctx: RenderContext,
+  documentId: string | null,
+  nodeId: string,
+): string | undefined {
+  if (!documentId) return undefined;
+  const document = ctx.catalog.get(documentId);
+  if (!document) return undefined;
+  let names = classNameCache.get(document);
+  if (!names) {
+    names = documentClassNames(document);
+    classNameCache.set(document, names);
+  }
+  return names.get(nodeId);
+}
+
+function markStyleOwner(
+  el: HTMLElement,
+  ownerDocumentId: string | null,
+  nodeId: string,
+  childDocumentId?: string,
+  childRootId?: string,
+): void {
+  const owners = new Set<string>();
+  if (ownerDocumentId) owners.add(styleNodeToken(ownerDocumentId, nodeId));
+  if (childDocumentId && childRootId) owners.add(styleNodeToken(childDocumentId, childRootId));
+  if (owners.size > 0) el.dataset.styleNode = [...owners].join(' ');
+  else delete el.dataset.styleNode;
+  if (ownerDocumentId) el.dataset.styleDocument = ownerDocumentId;
+  else delete el.dataset.styleDocument;
+}
+
+function styleNodeToken(documentId: string, nodeId: string): string {
+  return `${documentId}:${nodeId}`;
+}
+
+function addClass(el: HTMLElement, name: string | undefined): void {
+  if (name) el.classList.add(name);
 }

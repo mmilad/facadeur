@@ -197,6 +197,7 @@ export function flattenSubtree(
     id: node.id,
     type: 'instance',
     ...(node.name !== undefined ? { name: node.name } : {}),
+    ...(node.styleName !== undefined ? { styleName: node.styleName } : {}),
     ...(node.displayOn ? { displayOn: { ...node.displayOn } } : {}),
     ...(node.layout ? { layout: node.layout } : {}),
     component: node.component,
@@ -220,6 +221,7 @@ export function makeFlatNode(node: FlatNode): FlatNode {
       id: node.id,
       type: 'instance',
       ...(node.name ? { name: node.name } : {}),
+      ...(node.styleName ? { styleName: node.styleName } : {}),
       ...(node.displayOn ? { displayOn: { ...node.displayOn } } : {}),
       ...(layout ? { layout } : {}),
       component: node.component,
@@ -288,6 +290,7 @@ function expandNode(doc: FlatDocument, id: string, stack: Set<string>): NestedNo
       id: node.id,
       type: 'instance',
       ...(node.name !== undefined ? { name: node.name } : {}),
+      ...(node.styleName !== undefined ? { styleName: node.styleName } : {}),
       ...(node.displayOn ? { displayOn: { ...node.displayOn } } : {}),
       ...(node.layout ? { layout: { ...node.layout } } : {}),
       component: node.component,
@@ -307,6 +310,7 @@ function sharedFromNested(node: Exclude<NestedNode, { type: 'instance' }>): Flat
   return {
     id: node.id,
     ...(node.name !== undefined ? { name: node.name } : {}),
+    ...(node.styleName !== undefined ? { styleName: node.styleName } : {}),
     ...(node.tag !== undefined ? { tag: node.tag } : {}),
     ...(node.attributes ? { attributes: node.attributes } : {}),
     ...(node.displayOn ? { displayOn: { ...node.displayOn } } : {}),
@@ -320,6 +324,7 @@ function sharedFromNested(node: Exclude<NestedNode, { type: 'instance' }>): Flat
 function sharedFlat(node: Exclude<FlatNode, InstanceNode>): FlatNodeBase {
   const base: FlatNodeBase = { id: node.id };
   if (node.name) base.name = node.name;
+  if (node.styleName) base.styleName = node.styleName;
   if (node.tag) base.tag = node.tag;
   const attributes = sortStringRecord(node.attributes);
   if (attributes) base.attributes = attributes;
@@ -336,6 +341,7 @@ function sharedFlat(node: Exclude<FlatNode, InstanceNode>): FlatNodeBase {
 function sharedToNested(node: Exclude<FlatNode, InstanceNode>): {
   id: string;
   name?: string;
+  styleName?: string;
   tag?: string;
   attributes?: Record<string, string>;
   displayOn?: DisplayOn;
@@ -347,6 +353,7 @@ function sharedToNested(node: Exclude<FlatNode, InstanceNode>): {
   return {
     id: node.id,
     ...(node.name !== undefined ? { name: node.name } : {}),
+    ...(node.styleName !== undefined ? { styleName: node.styleName } : {}),
     ...(node.tag !== undefined ? { tag: node.tag } : {}),
     ...(node.attributes ? { attributes: { ...node.attributes } } : {}),
     ...(node.displayOn ? { displayOn: { ...node.displayOn } } : {}),

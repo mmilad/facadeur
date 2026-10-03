@@ -19,15 +19,15 @@ export function FormFieldRow({
       data-component="form-field-row"
       data-node={nodeId}
       data-variant-state={state}
-      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
+      className={[styles['root'], className].filter(Boolean).join(' ')}
     >
-      <span data-node="name" className={styles.f_name_136nuue}>
+      <span data-node="name" className={styles['name']}>
         {name}
       </span>
-      <span data-node="type" className={styles.f_type_min7t9}>
+      <span data-node="type" className={styles['type']}>
         {type}
       </span>
-      <span data-node="value" className={styles.f_value_ieyeh6}>
+      <span data-node="value" className={styles['value']}>
         {value}
       </span>
     </div>

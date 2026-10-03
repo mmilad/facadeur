@@ -5,7 +5,7 @@
 @layer facadeur.components, facadeur.instances, facadeur.nested-instances;
 
 @layer facadeur.components {
-  .f_root_95igqt {
+  .root {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
@@ -23,7 +23,7 @@
     overflow: hidden;
   }
 
-  .f_root_95igqt .f_image_1dr5e62 {
+  .root .image {
     align-self: stretch;
     width: auto;
     height: 240px;
@@ -32,7 +32,7 @@
     object-fit: cover;
   }
 
-  .f_root_95igqt .f_content_145thoi {
+  .root .content {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
@@ -45,7 +45,7 @@
     height: fit-content;
   }
 
-  .f_root_95igqt .f_title_16a95ah {
+  .root .title {
     color: var(--color-text-primary);
     font-family: var(--type-title--font-family);
     font-size: var(--type-title--font-size);
@@ -56,7 +56,7 @@
     overflow-wrap: anywhere;
   }
 
-  .f_root_95igqt .f_price_34jfhm {
+  .root .price {
     color: var(--color-text-secondary);
     font-family: var(--type-body--font-family);
     font-size: var(--type-body--font-size);
@@ -66,7 +66,7 @@
     margin: var(--space-0);
   }
 
-  .f_root_95igqt[data-variant='compact'] {
+  .root[data-variant='compact'] {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
@@ -84,7 +84,7 @@
     overflow: hidden;
   }
 
-  .f_root_95igqt[data-variant='compact'] .f_image_1dr5e62 {
+  .root[data-variant='compact'] .image {
     align-self: stretch;
     width: auto;
     height: 160px;
@@ -93,7 +93,7 @@
     object-fit: cover;
   }
 
-  .f_root_95igqt[data-variant='compact'] .f_content_145thoi {
+  .root[data-variant='compact'] .content {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
@@ -106,7 +106,7 @@
     height: fit-content;
   }
 
-  .f_root_95igqt[data-variant='compact'] .f_title_16a95ah {
+  .root[data-variant='compact'] .title {
     color: var(--color-text-primary);
     font-family: var(--type-title--font-family);
     font-size: var(--type-title--font-size);
@@ -117,7 +117,7 @@
     overflow-wrap: anywhere;
   }
 
-  .f_root_95igqt[data-variant='compact'] .f_price_34jfhm {
+  .root[data-variant='compact'] .price {
     color: var(--color-text-secondary);
     font-family: var(--type-body--font-family);
     font-size: var(--type-body--font-size);
@@ -129,13 +129,13 @@
 }
 
 @layer facadeur.instances {
-  .f_root_95igqt .f_button_is7gq9 {
+  .root .button {
     align-self: stretch;
     width: auto;
     height: fit-content;
   }
 
-  .f_root_95igqt[data-variant='compact'] .f_button_is7gq9 {
+  .root[data-variant='compact'] .button {
     align-self: stretch;
     width: auto;
     height: fit-content;

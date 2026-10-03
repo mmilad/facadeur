@@ -11,14 +11,14 @@ export function Media({ kind = 'image', src, alt, ratio, nodeId, className }: Me
     <div
       data-component="media"
       data-node={nodeId}
-      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
+      className={[styles['root'], className].filter(Boolean).join(' ')}
     >
       {kind === 'image' && (
         <img
           data-node="image"
           src={src}
           alt={alt}
-          className={styles.f_image_1dr5e62}
+          className={styles['image']}
           style={{ aspectRatio: ratio }}
         />
       )}
@@ -27,7 +27,7 @@ export function Media({ kind = 'image', src, alt, ratio, nodeId, className }: Me
           data-node="video"
           controls
           src={src}
-          className={styles.f_video_1lfe6i4}
+          className={styles['video']}
           style={{ aspectRatio: ratio }}
         />
       )}

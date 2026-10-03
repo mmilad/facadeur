@@ -11,14 +11,16 @@ import { ComponentTokensPanel } from './component/ComponentTokensPanel.js';
 import { TokenPreviewProvider } from '../../controls/fields/TokenPreviewContext.js';
 import { editorBreakpoints, viewportEditContext } from '../../../domain/viewport/viewport-edit.js';
 import { VariantTabs } from './VariantTabs.js';
+import { StylesPanel } from './style/StylesPanel.js';
 
-type PropertyPrimaryTab = 'style' | 'content' | 'tokens';
+type PropertyPrimaryTab = 'style' | 'styles' | 'content' | 'tokens';
 
 function propertyPrimaryTabs(
   showTokens: boolean,
 ): readonly (readonly [PropertyPrimaryTab, string])[] {
   const tabs: (readonly [PropertyPrimaryTab, string])[] = [
     ['style', 'Style'],
+    ['styles', 'Styles'],
     ['content', 'Content'],
   ];
   if (showTokens) tabs.push(['tokens', 'Tokens']);
@@ -145,6 +147,11 @@ export function PropertiesPanel({
           ) : (
             <p className="inspector-empty">Select a layer to edit style.</p>
           )}
+        </div>
+      ) : null}
+      {primaryTab === 'styles' ? (
+        <div role="tabpanel" className="property-panel">
+          <StylesPanel session={session} snap={snap} />
         </div>
       ) : null}
       {primaryTab === 'tokens' && showComponentTokens ? (

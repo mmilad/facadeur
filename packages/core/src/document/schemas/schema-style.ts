@@ -43,6 +43,20 @@ export const styleChildSchema = Type.Object(
   { additionalProperties: false },
 );
 
+/** Ordered local CSS rule authored in the Styles panel. Bindings keep class names attached to nodes. */
+export const styleRuleSchema = Type.Object(
+  {
+    id: idSchema,
+    selector: Type.String({ minLength: 1 }),
+    bindings: Type.Record(Type.String({ pattern: '^[A-Za-z_][A-Za-z0-9_-]*$' }), idSchema),
+    declarations: Type.Optional(styleDeclarationsSchema),
+    states: Type.Optional(styleStatesSchema),
+    variants: Type.Optional(variantStyleSchema),
+    breakpoints: Type.Optional(breakpointStyleSchema),
+  },
+  { additionalProperties: false },
+);
+
 export const styleBlockSchema = Type.Object(
   {
     declarations: Type.Optional(styleDeclarationsSchema),
@@ -50,6 +64,8 @@ export const styleBlockSchema = Type.Object(
     variants: Type.Optional(variantStyleSchema),
     breakpoints: Type.Optional(breakpointStyleSchema),
     children: Type.Optional(Type.Record(styleTargetSchema, styleChildSchema)),
+    /** Ordered base rules; named preset rule arrays sparsely merge by id and append new rules. */
+    rules: Type.Optional(Type.Array(styleRuleSchema)),
   },
   { additionalProperties: false },
 );

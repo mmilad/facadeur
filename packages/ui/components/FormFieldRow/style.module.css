@@ -5,7 +5,7 @@
 @layer facadeur.components, facadeur.instances, facadeur.nested-instances;
 
 @layer facadeur.components {
-  .f_root_95igqt {
+  .root {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
@@ -27,11 +27,11 @@
     padding-inline: var(--form-field-row-padding-x, var(--space-3));
   }
 
-  .f_root_95igqt[data-variant-state='selected'] {
+  .root[data-variant-state='selected'] {
     background: var(--color-bg-muted);
   }
 
-  .f_root_95igqt .f_name_136nuue {
+  .root .name {
     width: 150px;
     flex: 0 0 auto;
     height: fit-content;
@@ -39,7 +39,7 @@
     font-weight: 600;
   }
 
-  .f_root_95igqt .f_type_min7t9 {
+  .root .type {
     width: 100px;
     flex: 0 0 auto;
     height: fit-content;
@@ -51,7 +51,7 @@
     letter-spacing: var(--type-caption--letter-spacing);
   }
 
-  .f_root_95igqt .f_value_ieyeh6 {
+  .root .value {
     flex: 1 1 auto;
     min-width: 0;
     height: fit-content;

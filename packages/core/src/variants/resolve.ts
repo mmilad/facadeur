@@ -94,6 +94,30 @@ function mergeStyleBlock(
     const existing = (children[id] ??= {});
     mergeStyleChild(existing, child);
   }
+  if (source.rules?.length) {
+    const rules = (next.rules ??= []);
+    for (const rule of source.rules) {
+      const existing = rules.find((item) => item.id === rule.id);
+      if (existing) {
+        if (rule.selector !== existing.selector) existing.selector = rule.selector;
+        existing.bindings = { ...rule.bindings };
+        mergeStyleLayer(existing, rule);
+        for (const [axis, values] of Object.entries(rule.variants ?? {})) {
+          const axes = (existing.variants ??= {});
+          const targetValues = (axes[axis] ??= {});
+          for (const [value, layer] of Object.entries(values)) {
+            const target = (targetValues[value] ??= {});
+            mergeStyleLayer(target, layer);
+          }
+        }
+        for (const [id, layer] of Object.entries(rule.breakpoints ?? {})) {
+          const breakpoints = (existing.breakpoints ??= {});
+          const target = (breakpoints[id] ??= {});
+          mergeStyleLayer(target, layer);
+        }
+      } else rules.push(structuredClone(rule));
+    }
+  }
   return next;
 }
 
@@ -119,12 +143,27 @@ function pruneStyleChildren(
   styles: StyleBlock | undefined,
   root: NestedNode,
 ): StyleBlock | undefined {
-  if (!styles?.children) return styles;
-  for (const target of Object.keys(styles.children)) {
-    if (!hasLocalStylePath(root, target.split('/'))) delete styles.children[target];
+  if (!styles) return styles;
+  if (styles.children) {
+    for (const target of Object.keys(styles.children)) {
+      if (!hasLocalStylePath(root, target.split('/'))) delete styles.children[target];
+    }
+    if (!Object.keys(styles.children).length) delete styles.children;
   }
-  if (!Object.keys(styles.children).length) delete styles.children;
+  const ids = new Set<string>();
+  collectNodeIds(root, ids);
+  if (styles.rules) {
+    styles.rules = styles.rules.filter((rule) =>
+      Object.values(rule.bindings).every((id) => ids.has(id)),
+    );
+    if (!styles.rules.length) delete styles.rules;
+  }
   return styles;
+}
+
+function collectNodeIds(node: NestedNode, ids: Set<string>): void {
+  ids.add(node.id);
+  if (node.type === 'frame') for (const child of node.children ?? []) collectNodeIds(child, ids);
 }
 
 function hasLocalStylePath(root: NestedNode, path: readonly string[]): boolean {

@@ -28,53 +28,47 @@ export function FormControlsSection({
     <main
       data-component="form-controls-section"
       data-node={nodeId}
-      className={[styles.f_root_95igqt, className].filter(Boolean).join(' ')}
+      className={[styles['root'], className].filter(Boolean).join(' ')}
     >
-      <header data-node="intro" className={styles.f_intro_ctvstt}>
-        <p data-node="eyebrow" className={styles.f_eyebrow_95073g}>
+      <header data-node="intro" className={styles['intro']}>
+        <p data-node="eyebrow" className={styles['eyebrow']}>
           facadeur · editor kit
         </p>
-        <h1 data-node="title" className={styles.f_title_16a95ah}>
+        <h1 data-node="title" className={styles['title']}>
           Controls
         </h1>
-        <p data-node="intro-text" className={styles.f_intro_text_31bipv}>
+        <p data-node="intro-text" className={styles['intro-text']}>
           A small, token-driven control language for the editor inspector.
         </p>
       </header>
-      <section data-node="native-text-controls" className={styles.f_native_text_controls_1tlwkdf}>
-        <h2
-          data-node="native-text-controls-title"
-          className={styles.f_native_text_controls_title_1dsl75o}
-        >
+      <section data-node="native-text-controls" className={styles['native-text-controls']}>
+        <h2 data-node="native-text-controls-title" className={styles['native-text-controls-title']}>
           Native text controls
         </h2>
-        <div
-          data-node="native-text-controls-row"
-          className={styles.f_native_text_controls_row_mamdbq}
-        >
+        <div data-node="native-text-controls-row" className={styles['native-text-controls-row']}>
           <Input
             nodeId="native-input"
-            className={styles.f_native_input_1otcjh7}
+            className={styles['native-input']}
             label="Input"
             value="Value"
           />
           <Textarea
             nodeId="native-textarea"
-            className={styles.f_native_textarea_1jui8pn}
+            className={styles['native-textarea']}
             label="Textarea"
             value="Write a message"
             rows={3}
           />
         </div>
       </section>
-      <section data-node="text-inputs" className={styles.f_text_inputs_15hj5sk}>
-        <h2 data-node="text-input-title" className={styles.f_text_input_title_1bn3v2o}>
+      <section data-node="text-inputs" className={styles['text-inputs']}>
+        <h2 data-node="text-input-title" className={styles['text-input-title']}>
           Text field states
         </h2>
-        <div data-node="text-input-row" className={styles.f_text_input_row_wymrsq}>
+        <div data-node="text-input-row" className={styles['text-input-row']}>
           <FormTextInput
             nodeId="input-default"
-            className={styles.f_input_default_tjtuof}
+            className={styles['input-default']}
             label="Label"
             value="Button"
             hint="Default"
@@ -82,7 +76,7 @@ export function FormControlsSection({
           />
           <FormTextInput
             nodeId="input-focused"
-            className={styles.f_input_focused_xad8nr}
+            className={styles['input-focused']}
             label="Label"
             value="Button"
             hint="Focused"
@@ -92,7 +86,7 @@ export function FormControlsSection({
           />
           <FormTextInput
             nodeId="input-invalid"
-            className={styles.f_input_invalid_1nj5wmh}
+            className={styles['input-invalid']}
             label="Label"
             value="Button"
             hint="Invalid value"
@@ -100,7 +94,7 @@ export function FormControlsSection({
           />
           <FormTextInput
             nodeId="input-disabled"
-            className={styles.f_input_disabled_1n0ifa2}
+            className={styles['input-disabled']}
             label="Label"
             value="Disabled"
             hint="Disabled"
@@ -108,90 +102,90 @@ export function FormControlsSection({
           />
         </div>
       </section>
-      <section data-node="selection" className={styles.f_selection_ip6ivp}>
-        <h2 data-node="selection-title" className={styles.f_selection_title_tpkgz2}>
+      <section data-node="selection" className={styles['selection']}>
+        <h2 data-node="selection-title" className={styles['selection-title']}>
           Selection and options
         </h2>
-        <div data-node="selection-row" className={styles.f_selection_row_l5d1kc}>
+        <div data-node="selection-row" className={styles['selection-row']}>
           <FormSelect
             nodeId="select-default"
-            className={styles.f_select_default_jioiil}
+            className={styles['select-default']}
             label="Token"
             value="color.text.primary"
             state="default"
           />
           <FormSelect
             nodeId="select-focused"
-            className={styles.f_select_focused_1omm9bt}
+            className={styles['select-focused']}
             label="Property"
             value="border color"
             state="focused"
           />
           <FormSelect
             nodeId="select-disabled"
-            className={styles.f_select_disabled_k2h8vc}
+            className={styles['select-disabled']}
             label="Breakpoint"
             value="Base"
             state="disabled"
           />
           <FormSegmented
             nodeId="alignment"
-            className={styles.f_alignment_1dcn49q}
+            className={styles['alignment']}
             label="Alignment"
             state="start"
           />
           <FormToggle
             nodeId="toggle-on"
-            className={styles.f_toggle_on_p6jd8h}
+            className={styles['toggle-on']}
             label="Use token"
             value="On"
             state="on"
           />
           <FormToggle
             nodeId="toggle-off"
-            className={styles.f_toggle_off_15ivhp9}
+            className={styles['toggle-off']}
             label="Use token"
             value="Off"
             state="off"
           />
           <FormToggle
             nodeId="toggle-disabled"
-            className={styles.f_toggle_disabled_23eghs}
+            className={styles['toggle-disabled']}
             label="Use token"
             value="Disabled"
             state="disabled"
           />
         </div>
       </section>
-      <section data-node="field-definition" className={styles.f_field_definition_x5vv4n}>
-        <h2 data-node="field-title" className={styles.f_field_title_1spvvrs}>
+      <section data-node="field-definition" className={styles['field-definition']}>
+        <h2 data-node="field-title" className={styles['field-title']}>
           Field definition
         </h2>
-        <p data-node="field-note" className={styles.f_field_note_97z9ve}>
+        <p data-node="field-note" className={styles['field-note']}>
           Compact rows keep component definitions scannable; details can open on demand.
         </p>
-        <div data-node="field-list" className={styles.f_field_list_1gf56yy}>
-          <div data-node="field-header" className={styles.f_field_header_1c2ku5r}>
-            <span data-node="column-name" className={styles.f_column_name_1v1ajvh}>
+        <div data-node="field-list" className={styles['field-list']}>
+          <div data-node="field-header" className={styles['field-header']}>
+            <span data-node="column-name" className={styles['column-name']}>
               Name
             </span>
-            <span data-node="column-type" className={styles.f_column_type_qp6mm6}>
+            <span data-node="column-type" className={styles['column-type']}>
               Type
             </span>
-            <span data-node="column-default" className={styles.f_column_default_1crmxdv}>
+            <span data-node="column-default" className={styles['column-default']}>
               Default
             </span>
           </div>
           <FormFieldRow
             nodeId="field-label"
-            className={styles.f_field_label_vz86k4}
+            className={styles['field-label']}
             name="label"
             type="text"
             value="Button"
           />
           <FormFieldRow
             nodeId="field-tone"
-            className={styles.f_field_tone_1kb7tva}
+            className={styles['field-tone']}
             name="tone"
             type="enum"
             value="primary"
@@ -199,7 +193,7 @@ export function FormControlsSection({
           />
           <FormFieldRow
             nodeId="field-disabled"
-            className={styles.f_field_disabled_rlfchi}
+            className={styles['field-disabled']}
             name="disabled"
             type="boolean"
             value="false"
@@ -207,26 +201,22 @@ export function FormControlsSection({
         </div>
         <Button
           nodeId="add-field"
-          className={styles.f_add_field_o7v2it}
+          className={styles['add-field']}
           label="+ Add field"
           tone="secondary"
           size="sm"
         />
       </section>
-      <section data-node="data-driven-form" className={styles.f_data_driven_form_16qpk53}>
-        <h2 data-node="data-driven-title" className={styles.f_data_driven_title_r7es6x}>
+      <section data-node="data-driven-form" className={styles['data-driven-form']}>
+        <h2 data-node="data-driven-title" className={styles['data-driven-title']}>
           Data-driven form
         </h2>
         {(formFields ?? []).map((field, fieldIndex) => (
-          <div
-            data-node="data-form"
-            className={styles.f_data_form_10i05j2}
-            key={field?.id ?? fieldIndex}
-          >
+          <div data-node="data-form" className={styles['data-form']} key={field?.id ?? fieldIndex}>
             {field?.kind === 'input' && (
               <FormTextInput
                 nodeId="data-input"
-                className={styles.f_data_input_krs27g}
+                className={styles['data-input']}
                 label={field?.label}
                 hint={field?.hint}
                 value={field?.value}
@@ -236,7 +226,7 @@ export function FormControlsSection({
             {field?.kind === 'textarea' && (
               <Textarea
                 nodeId="data-textarea"
-                className={styles.f_data_textarea_1jer6vm}
+                className={styles['data-textarea']}
                 label={field?.label}
                 value={field?.value}
                 placeholder={field?.placeholder}
@@ -246,7 +236,7 @@ export function FormControlsSection({
             {field?.kind === 'select' && (
               <FormSelect
                 nodeId="data-select"
-                className={styles.f_data_select_yl2hhs}
+                className={styles['data-select']}
                 label={field?.label}
                 value={field?.value}
               />
@@ -254,7 +244,7 @@ export function FormControlsSection({
             {field?.kind === 'toggle' && (
               <FormToggle
                 nodeId="data-toggle"
-                className={styles.f_data_toggle_11txx50}
+                className={styles['data-toggle']}
                 label={field?.label}
                 value={field?.value}
               />

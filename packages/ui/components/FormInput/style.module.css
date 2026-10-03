@@ -5,7 +5,7 @@
 @layer facadeur.components, facadeur.instances, facadeur.nested-instances;
 
 @layer facadeur.components {
-  .f_root_95igqt {
+  .root {
     width: 100%;
     height: fit-content;
     appearance: none;
@@ -23,13 +23,13 @@
     padding-inline: var(--input-padding-x);
   }
 
-  .f_root_95igqt:focus-visible {
+  .root:focus-visible {
     border-color: var(--color-accent-default);
     outline: 2px solid var(--color-accent-default);
     outline-offset: 1px;
   }
 
-  .f_root_95igqt:disabled {
+  .root:disabled {
     opacity: 0.55;
   }
 }

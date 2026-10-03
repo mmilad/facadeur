@@ -38,14 +38,14 @@ describe('instance-root appearance codegen', () => {
         ?.contents ?? '';
     expect(css).toContain('@layer facadeur.instances');
     expect(css).toMatch(
-      /\.f_root_[a-z0-9]+ > \[data-node="button"\]\[data-component="control"\]\[data-component="control"\] \{/,
+      /\.root > \[data-node="button"\]\[data-component="control"\]\[data-component="control"\] \{/,
     );
     expect(css).toContain('color: var(--color-accent);');
     expect(css).toMatch(
-      /\.f_root_[a-z0-9]+ > \[data-node="button"\]\[data-component="control"\]\[data-component="control"]:hover/,
+      /\.root > \[data-node="button"\]\[data-component="control"\]\[data-component="control"]:hover/,
     );
     expect(css).toMatch(
-      /\.f_root_[a-z0-9]+\[data-variant="compact"\] > \[data-node="button"\]\[data-component="control"\]\[data-component="control"\]/,
+      /\.root\[data-variant="compact"\] > \[data-node="button"\]\[data-component="control"\]\[data-component="control"\]/,
     );
     expect(css).toContain('@media (min-width: 900px)');
     expect(css).toContain('color: green;');
@@ -108,10 +108,10 @@ describe('instance-root appearance codegen', () => {
         (file) => file.path === 'components/Host/style.module.css',
       )?.contents ?? '';
     expect(css).toMatch(
-      /\.f_root_[a-z0-9]+ > \[data-node="card"\] > \[data-node="button"\]\[data-component="button"\]/,
+      /\.root > \[data-node="card"\] > \[data-node="button"\]\[data-component="button"\]/,
     );
     expect(css).toContain('@layer facadeur.nested-instances');
-    expect(css).toMatch(/\.f_card_[a-z0-9]+ \{\}/);
+    expect(css).toContain('.card {}');
     expect(css).toContain('color: orange;');
   });
 });

@@ -9,3 +9,4 @@ export {
 } from './controller.js';
 export { createStyleEngine, type StyleEngine } from './engine.js';
 export { expandDeclarations, mergeDeclarations, substituteRefs } from './values.js';
+export { scopeStyleSelector } from './selector-scope.js';

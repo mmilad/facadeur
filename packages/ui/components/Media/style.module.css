@@ -5,7 +5,7 @@
 @layer facadeur.components, facadeur.instances, facadeur.nested-instances;
 
 @layer facadeur.components {
-  .f_root_95igqt {
+  .root {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
@@ -15,7 +15,7 @@
     align-items: stretch;
   }
 
-  .f_root_95igqt .f_video_1lfe6i4 {
+  .root .video {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
@@ -26,5 +26,5 @@
   }
 }
 
-.f_image_1dr5e62 {
+.image {
 }
