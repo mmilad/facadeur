@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useSyncExternalStore } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { SchemaBuilderProvider, type JsonSchema as JoySchema } from 'jsonjoy-builder';
 import 'jsonjoy-builder/styles.css';
 import TypeEditor from './jsonjoy-type-editor.js';
@@ -12,10 +12,13 @@ import {
   renameLibrarySchema,
   subscribeSchemaLibrary,
   updateLibrarySchema,
+  schemaRefUri,
+  validateLibrarySchemas,
   type JsonSchema,
   type LibrarySchema,
+  type SchemaValidationIssue,
 } from '../../domain/schema/schema-library.js';
-import { Field, TextInput } from '../form/index.js';
+import { Field, InlineError, TextInput } from '../form/index.js';
 
 const EDITOR_LABELS = {
   schemaTypeString: 'String',
@@ -97,6 +100,7 @@ export function SchemaLibraryStage({ snap }: { snap: EditorSnapshot }) {
           <SchemaEditorPanel
             key={selected.id}
             schema={selected}
+            schemas={library.schemas}
             onChange={(next) => updateLibrarySchema(selected.id, next)}
           />
         ) : (
@@ -111,11 +115,41 @@ export function SchemaLibraryStage({ snap }: { snap: EditorSnapshot }) {
 
 function SchemaEditorPanel({
   schema,
+  schemas,
   onChange,
 }: {
   schema: LibrarySchema;
-  onChange: (next: JsonSchema) => void;
+  schemas: LibrarySchema[];
+  onChange: (next: JsonSchema) => SchemaValidationIssue[];
 }) {
+  const [validationIssues, setValidationIssues] = useState<SchemaValidationIssue[]>(() =>
+    validateLibrarySchemas(schemas),
+  );
+  const composition = schemaComposition(schema.schema, schemas);
+  const editorSchema = withoutManagedComposition(schema.schema, schemas);
+
+  useEffect(() => {
+    setValidationIssues(validateLibrarySchemas(schemas));
+  }, [schemas]);
+
+  function commit(next: JsonSchema) {
+    setValidationIssues(onChange(next));
+  }
+
+  function setComposition(kind: 'allOf' | 'oneOf', schemaIds: string[]) {
+    const next = { ...schema.schema };
+    const branches = next[kind] ?? [];
+    const managedUris = new Set(schemas.map((entry) => schemaRefUri(entry.id)));
+    const otherBranches = branches.filter(
+      (branch) => typeof branch.$ref !== 'string' || !managedUris.has(branch.$ref),
+    );
+    const refs = schemaIds.map(($id) => ({ $ref: schemaRefUri($id) }));
+    const merged = [...otherBranches, ...refs];
+    if (merged.length) next[kind] = merged;
+    else delete next[kind];
+    commit(next);
+  }
+
   return (
     <div className="schema-library-editor">
       <div className="schema-library-editor-head">
@@ -129,18 +163,52 @@ function SchemaEditorPanel({
         <button
           type="button"
           className="text-button"
-          onClick={() => removeLibrarySchema(schema.id)}
+          onClick={() => {
+            const issues = removeLibrarySchema(schema.id);
+            if (issues.length > 0) setValidationIssues(issues);
+          }}
         >
           Delete schema
         </button>
       </div>
       {schema.description ? <p className="schema-stage-note">{schema.description}</p> : null}
+      <section className="schema-library-composition" aria-label="Schema composition">
+        <CompositionEditor
+          kind="allOf"
+          label="Extend by"
+          hint="Combine every selected schema with this one."
+          schemaId={schema.id}
+          schemas={schemas}
+          selectedIds={composition.allOf}
+          onChange={(ids) => setComposition('allOf', ids)}
+        />
+        <CompositionEditor
+          kind="oneOf"
+          label="Extend by one of"
+          hint="Choose one or more alternative schemas."
+          schemaId={schema.id}
+          schemas={schemas}
+          selectedIds={composition.oneOf}
+          onChange={(ids) => setComposition('oneOf', ids)}
+        />
+        {validationIssues.map((issue, index) => (
+          <InlineError key={`${issue.schemaId}-${index}`}>
+            {validationMessage(issue, schema.id, schemas)}
+          </InlineError>
+        ))}
+      </section>
       <Field label="Kind">
         <select
           name="schema-kind"
-          value={rootKind(schema.schema)}
+          value={rootKind(editorSchema)}
           onChange={(event) =>
-            onChange(withRootKind(schema.schema, event.target.value as RootKind))
+            commit(
+              preserveManagedComposition(
+                withRootKind(editorSchema, event.target.value as RootKind),
+                schema.schema,
+                schemas,
+              ),
+            )
           }
         >
           {ROOT_KINDS.map((kind) => (
@@ -153,10 +221,10 @@ function SchemaEditorPanel({
       <SchemaBuilderProvider messages={EDITOR_LABELS}>
         <div className="jsonjoy schema-library-joy">
           <TypeEditor
-            schema={schema.schema as JoySchema}
+            schema={editorSchema as JoySchema}
             onChange={(next: JoySchema) => {
               if (!next || typeof next !== 'object') return;
-              onChange(next as JsonSchema);
+              commit(preserveManagedComposition(next as JsonSchema, schema.schema, schemas));
             }}
           />
         </div>
@@ -166,6 +234,107 @@ function SchemaEditorPanel({
         <pre data-testid="schema-json">{JSON.stringify(schema.schema, null, 2)}</pre>
       </details>
     </div>
+  );
+}
+
+function CompositionEditor({
+  kind,
+  label,
+  hint,
+  schemaId,
+  schemas,
+  selectedIds,
+  onChange,
+}: {
+  kind: 'allOf' | 'oneOf';
+  label: string;
+  hint: string;
+  schemaId: string;
+  schemas: LibrarySchema[];
+  selectedIds: string[];
+  onChange: (ids: string[]) => void;
+}) {
+  const [adding, setAdding] = useState(false);
+  const available = schemas.filter((entry) => entry.id !== schemaId);
+  const addable = available.filter((entry) => !selectedIds.includes(entry.id));
+
+  return (
+    <Field label={label} hint={hint}>
+      <div className="schema-library-composition-list">
+        {selectedIds.map((id, index) => {
+          const options = available.filter(
+            (entry) => entry.id === id || !selectedIds.includes(entry.id),
+          );
+          const selectedName = schemas.find((entry) => entry.id === id)?.name ?? id;
+          return (
+            <div className="schema-library-composition-row" key={`${kind}:${index}`}>
+              <select
+                name={`schema-${kind}-${index}`}
+                aria-label={`${label} schema ${index + 1}`}
+                value={id}
+                onChange={(event) =>
+                  onChange(
+                    selectedIds.map((selected, selectedIndex) =>
+                      selectedIndex === index ? event.target.value : selected,
+                    ),
+                  )
+                }
+              >
+                {options.map((entry) => (
+                  <option key={entry.id} value={entry.id}>
+                    {entry.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                className="text-button"
+                aria-label={`Remove ${selectedName} from ${label}`}
+                onClick={() =>
+                  onChange(selectedIds.filter((_, selectedIndex) => selectedIndex !== index))
+                }
+              >
+                Remove
+              </button>
+            </div>
+          );
+        })}
+        {adding ? (
+          <div className="schema-library-composition-row">
+            <select
+              name={`schema-${kind}-new`}
+              aria-label={`Choose schema to ${label}`}
+              value=""
+              onChange={(event) => {
+                if (!event.target.value) return;
+                onChange([...selectedIds, event.target.value]);
+                setAdding(false);
+              }}
+            >
+              <option value="">Choose a schema</option>
+              {addable.map((entry) => (
+                <option key={entry.id} value={entry.id}>
+                  {entry.name}
+                </option>
+              ))}
+            </select>
+            <button type="button" className="text-button" onClick={() => setAdding(false)}>
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="text-button"
+            name={`add-schema-${kind}`}
+            disabled={addable.length === 0}
+            onClick={() => setAdding(true)}
+          >
+            + Add schema
+          </button>
+        )}
+      </div>
+    </Field>
   );
 }
 
@@ -218,9 +387,7 @@ function withRootKind(schema: JsonSchema, kind: RootKind): JsonSchema {
   if (rootKind(schema) === kind) return schema;
   const branches = schema.oneOf ?? schema.anyOf ?? schema.allOf;
   if (kind === 'oneOf' || kind === 'anyOf' || kind === 'allOf') {
-    if (branches) {
-      return { title: schema.title, description: schema.description, [kind]: branches };
-    }
+    if (branches) return { title: schema.title, description: schema.description, [kind]: branches };
     const { oneOf: _one, anyOf: _any, allOf: _all, ...rest } = schema;
     const first = Object.keys(rest).length > 0 ? rest : { type: 'object', properties: {} };
     return { [kind]: [first, { type: 'object', properties: {} }] };
@@ -236,5 +403,62 @@ function withRootKind(schema: JsonSchema, kind: RootKind): JsonSchema {
     delete next.required;
   }
   if (kind !== 'array') delete next.items;
+  return next;
+}
+
+function schemaComposition(schema: JsonSchema, schemas: LibrarySchema[]) {
+  const idsByUri = new Map(schemas.map((entry) => [schemaRefUri(entry.id), entry.id]));
+  const referencedIds = (kind: 'allOf' | 'oneOf') =>
+    (schema[kind] ?? []).flatMap((branch) => {
+      if (!branch.$ref) return [];
+      const id = idsByUri.get(branch.$ref);
+      return id ? [id] : [];
+    });
+  return { allOf: referencedIds('allOf'), oneOf: referencedIds('oneOf') };
+}
+
+function schemaName(schemas: LibrarySchema[], id: string): string {
+  return schemas.find((entry) => entry.id === id)?.name ?? id;
+}
+
+function validationMessage(
+  issue: SchemaValidationIssue,
+  selectedSchemaId: string,
+  schemas: LibrarySchema[],
+): string {
+  return issue.schemaId === selectedSchemaId
+    ? issue.message
+    : `${schemaName(schemas, issue.schemaId)}: ${issue.message}`;
+}
+
+function withoutManagedComposition(schema: JsonSchema, schemas: LibrarySchema[]): JsonSchema {
+  const managedUris = new Set(schemas.map((entry) => schemaRefUri(entry.id)));
+  const body = { ...schema };
+  for (const kind of ['allOf', 'oneOf'] as const) {
+    const branches = body[kind]?.filter(
+      (branch) => typeof branch.$ref !== 'string' || !managedUris.has(branch.$ref),
+    );
+    if (branches?.length) body[kind] = branches;
+    else delete body[kind];
+  }
+  return body;
+}
+
+function preserveManagedComposition(
+  body: JsonSchema,
+  original: JsonSchema,
+  schemas: LibrarySchema[],
+): JsonSchema {
+  const next = { ...body };
+  const managedUris = new Set(schemas.map((entry) => schemaRefUri(entry.id)));
+  for (const kind of ['allOf', 'oneOf'] as const) {
+    const managed = original[kind]?.filter(
+      (branch) => typeof branch.$ref === 'string' && managedUris.has(branch.$ref),
+    );
+    const authored = next[kind] ?? [];
+    const branches = [...authored, ...(managed ?? [])];
+    if (branches.length) next[kind] = branches;
+    else delete next[kind];
+  }
   return next;
 }

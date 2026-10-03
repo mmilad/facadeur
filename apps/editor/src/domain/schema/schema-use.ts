@@ -1,3 +1,5 @@
+import { resolveLibrarySchema } from './schema-validation.js';
+
 export const BASIC_SCHEMA_TYPES = [
   'string',
   'number',
@@ -31,6 +33,7 @@ export interface NamedSchema {
 }
 
 export interface PreviewSchema {
+  $ref?: string;
   type?: string | string[];
   title?: string;
   properties?: Record<string, PreviewSchema>;
@@ -41,6 +44,7 @@ export interface PreviewSchema {
   anyOf?: PreviewSchema[];
   allOf?: PreviewSchema[];
   default?: unknown;
+  additionalProperties?: boolean | PreviewSchema;
 }
 
 export type PreviewKind =
@@ -126,9 +130,13 @@ export function previewControlsForUse(
   use: ComponentSchemaUse,
   schemas: NamedSchema[],
 ): PreviewControl[] {
+  const resolvedSchemas = schemas.flatMap((entry) => {
+    const resolved = resolveLibrarySchema(entry.id, schemas);
+    return resolved ? [{ ...entry, schema: resolved }] : [];
+  });
   if (use.fields && use.fields.length > 0) {
     return use.fields.flatMap((field) =>
-      controlsForRef(field.type, field.name, field.name, schemas, false),
+      controlsForRef(field.type, field.name, field.name, resolvedSchemas, false),
     );
   }
   if (use.direct)
@@ -136,7 +144,7 @@ export function previewControlsForUse(
       use.direct,
       '',
       use.direct.kind === 'schema' ? '' : 'Value',
-      schemas,
+      resolvedSchemas,
       false,
     );
   return [];
@@ -182,15 +190,26 @@ function controlForSchema(
     };
   }
   if (Array.isArray(schema.allOf) && schema.allOf.length > 0) {
+    const requiredNames = new Set(schema.required ?? []);
     return {
       path,
       label,
       required,
       kind: 'object',
-      children: schema.allOf.flatMap((branch) => {
-        const control = controlForSchema(branch, path, label, required);
-        return control.children ?? [control];
-      }),
+      children: [
+        ...schema.allOf.flatMap((branch) => {
+          const control = controlForSchema(branch, path, label, required);
+          return control.children ?? [control];
+        }),
+        ...Object.entries(schema.properties ?? {}).map(([name, property]) =>
+          controlForSchema(
+            property,
+            joinPath(path, name),
+            property.title || name,
+            requiredNames.has(name),
+          ),
+        ),
+      ],
     };
   }
   if (Array.isArray(schema.enum) && schema.enum.length > 0) {

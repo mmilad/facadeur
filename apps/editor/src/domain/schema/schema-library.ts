@@ -7,6 +7,7 @@ import {
 } from './schema-use.js';
 
 export interface JsonSchema {
+  $ref?: string;
   type?: string | string[];
   title?: string;
   description?: string;
@@ -18,7 +19,12 @@ export interface JsonSchema {
   anyOf?: JsonSchema[];
   allOf?: JsonSchema[];
   default?: unknown;
+  additionalProperties?: boolean | JsonSchema;
 }
+
+export { resolveLibrarySchema, schemaRefUri, validateLibrarySchemas } from './schema-validation.js';
+export type { SchemaValidationIssue } from './schema-validation.js';
+import { validateLibrarySchemas } from './schema-validation.js';
 
 export interface LibrarySchema {
   id: string;
@@ -178,6 +184,9 @@ function withoutSchemaDefaults(schema: JsonSchema): JsonSchema {
     );
   }
   if (next.items) next.items = withoutSchemaDefaults(next.items);
+  if (next.additionalProperties && typeof next.additionalProperties === 'object') {
+    next.additionalProperties = withoutSchemaDefaults(next.additionalProperties);
+  }
   if (next.oneOf) next.oneOf = next.oneOf.map(withoutSchemaDefaults);
   if (next.anyOf) next.anyOf = next.anyOf.map(withoutSchemaDefaults);
   if (next.allOf) next.allOf = next.allOf.map(withoutSchemaDefaults);
@@ -299,24 +308,30 @@ export function renameLibrarySchema(id: string, name: string): void {
   });
 }
 
-export function updateLibrarySchema(id: string, schema: JsonSchema): void {
+export function updateLibrarySchema(id: string, schema: JsonSchema) {
   ensureLoaded();
-  commit({
-    ...state,
-    schemas: state.schemas.map((entry) => (entry.id === id ? { ...entry, schema } : entry)),
-  });
+  if (!state.schemas.some((entry) => entry.id === id)) return [];
+  const schemas = state.schemas.map((entry) => (entry.id === id ? { ...entry, schema } : entry));
+  const issues = validateLibrarySchemas(schemas);
+  if (issues.length > 0) return issues;
+  commit({ ...state, schemas });
+  return [];
 }
 
-export function removeLibrarySchema(id: string): void {
+export function removeLibrarySchema(id: string) {
   ensureLoaded();
+  const schemas = state.schemas.filter((schema) => schema.id !== id);
+  const issues = validateLibrarySchemas(schemas);
+  if (issues.length > 0) return issues;
   const assignments = { ...state.assignments };
   for (const [documentId, assignment] of Object.entries(assignments)) {
     if (assignmentReferencesSchema(assignment, id)) delete assignments[documentId];
   }
   commit({
-    schemas: state.schemas.filter((schema) => schema.id !== id),
+    schemas,
     assignments,
   });
+  return [];
 }
 
 export function getComponentSchemaUse(documentId: string): ComponentSchemaUse | null {

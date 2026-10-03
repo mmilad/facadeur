@@ -24,3 +24,10 @@ historical planning documents.
 For repeatable refactoring work, use `.agents/skills/refactor/SKILL.md`. It combines the
 candidate detector, this checklist, and `docs/refactoring-guidelines.md`; size-based splitting
 remains a review decision, not an automatic action.
+
+## Tooling friction
+
+When a development command is repeatedly blocked, unexpectedly slow, or needs a workaround,
+record the reproducible command, observed cause/evidence, impact, and a concrete fix in
+`docs/friction.md` under the tooling-friction backlog. Update or close the entry once resolved;
+omit one-off failures with no repeatable cause.
