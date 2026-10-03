@@ -2,7 +2,7 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
-import { GridItem } from '../src/ui/sidebar/properties/layout/grid/GridItem.js';
+import { GridItem } from '../src/ui/sidebar/properties/layout/grid/GridItem';
 
 afterEach(cleanup);
 

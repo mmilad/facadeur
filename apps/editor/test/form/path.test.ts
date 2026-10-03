@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatKey, getPath, parsePath, setPath } from '../../src/ui/form/schema/path.js';
+import { formatKey, getPath, parsePath, setPath } from '../../src/ui/form/schema/path';
 
 describe('form path helpers', () => {
   it('reads and writes nested paths with array indices', () => {

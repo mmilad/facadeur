@@ -6,11 +6,11 @@ import {
   type TokenTree,
 } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
-import { createEditorSession } from '../src/domain/session.js';
-import { writeStyleDeclaration } from '../src/domain/edits/style-edit.js';
-import { withTokenBreakpoint } from '../src/domain/edits/token-edit.js';
-import { viewportEditContext } from '../src/domain/viewport/viewport-edit.js';
-import { editorStandardCatalog } from './fixtures/example-catalog.js';
+import { createEditorSession } from '../src/domain/session';
+import { writeStyleDeclaration } from '../src/domain/edits/style-edit';
+import { withTokenBreakpoint } from '../src/domain/edits/token-edit';
+import { viewportEditContext } from '../src/domain/viewport/viewport-edit';
+import { editorStandardCatalog } from './fixtures/example-catalog';
 
 const documents = editorStandardCatalog();
 

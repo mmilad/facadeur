@@ -5,8 +5,8 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { BorderRadiusControl } from '../../src/ui/controls/border/index.js';
-import { SpacingControl } from '../../src/ui/controls/spacing/index.js';
+import { BorderRadiusControl } from '../../src/ui/controls/border/index';
+import { SpacingControl } from '../../src/ui/controls/spacing/index';
 
 describe('structured control display modes', () => {
   afterEach(() => cleanup());

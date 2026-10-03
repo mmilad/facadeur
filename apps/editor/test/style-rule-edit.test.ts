@@ -5,7 +5,7 @@ import {
   readStyleRuleFallback,
   replaceStyleRuleDeclarations,
   writeStyleRuleDeclarations,
-} from '../src/domain/style-rules/style-rule-edit.js';
+} from '../src/domain/style-rules/style-rule-edit';
 
 const rule: StyleRule = {
   id: 'selected',

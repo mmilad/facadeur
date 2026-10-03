@@ -4,17 +4,17 @@
 import { describe, expect, it } from 'vitest';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import button from '../../../examples/button.json';
-import { documentToJson } from '../src/domain/assets/files.js';
-import { createFrameHost } from '../src/domain/viewport/frame-host.js';
-import { createEditorSession } from '../src/domain/session.js';
+import { documentToJson } from '../src/domain/assets/files';
+import { createFrameHost } from '../src/domain/viewport/frame-host';
+import { createEditorSession } from '../src/domain/session';
 import {
   ASSET_PREVIEW_INNER_PADDING_PX,
   defaultViewportChrome,
   resolvedViewportChrome,
-} from '../src/domain/viewport/viewport-chrome.js';
-import { createViewportBoard } from '../src/domain/viewport/viewports.js';
+} from '../src/domain/viewport/viewport-chrome';
+import { createViewportBoard } from '../src/domain/viewport/viewports';
 import { createDocumentStore } from '@facadeur/store-yjs';
-import { editorStandardCatalog, expandExampleCatalog } from './fixtures/example-catalog.js';
+import { editorStandardCatalog, expandExampleCatalog } from './fixtures/example-catalog';
 
 const documents = editorStandardCatalog();
 

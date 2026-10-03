@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
-import * as files from '../src/domain/assets/files.js';
+import * as files from '../src/domain/assets/files';
 import { readTokenTree, resolvePreviewData, type DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
-import { createEditorSession } from '../src/domain/session.js';
-import { expandExampleCatalog } from './fixtures/example-catalog.js';
+import { createEditorSession } from '../src/domain/session';
+import { expandExampleCatalog } from './fixtures/example-catalog';
 
 const variantComponent: DocumentFile = {
   version: 1,

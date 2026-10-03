@@ -8,7 +8,7 @@ import {
   useTokenPreview,
   useTokenLabel,
   useTokenSearchValue,
-} from '../../src/ui/controls/fields/TokenPreviewContext.js';
+} from '../../src/ui/controls/fields/TokenPreviewContext';
 
 function Preview({ reference }: { reference: string }) {
   return (

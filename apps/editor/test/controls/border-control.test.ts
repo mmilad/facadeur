@@ -7,7 +7,7 @@ import {
   serializeBorder,
   serializeBorderRadius,
   uniformRadiusValue,
-} from '../../src/ui/controls/border/value.js';
+} from '../../src/ui/controls/border/value';
 
 describe('border control value', () => {
   it('parses border shorthand', () => {

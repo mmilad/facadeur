@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { editorStandardCatalog, expandExampleCatalog } from './example-catalog.js';
+import { editorStandardCatalog, expandExampleCatalog } from './example-catalog';
 
 describe('example catalog fixtures', () => {
   it('pulls transitive instance dependencies from examples/', () => {

@@ -6,10 +6,10 @@ import { createRoot, type Root } from 'react-dom/client';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { fireEvent } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { createEditorSession, type EditorSession } from '../src/domain/session.js';
-import { App } from '../src/ui/shell/EditorShell.js';
-import { editorStandardCatalog } from './fixtures/example-catalog.js';
-import { openSettingsDomain } from './settings-navigation.js';
+import { createEditorSession, type EditorSession } from '../src/domain/session';
+import { App } from '../src/ui/shell/EditorShell';
+import { editorStandardCatalog } from './fixtures/example-catalog';
+import { openSettingsDomain } from './settings-navigation';
 
 const documents = editorStandardCatalog();
 

@@ -10,7 +10,7 @@ import {
 } from '@facadeur/core';
 import productCardJson from '../../../examples/product-card.json';
 import buttonJson from '../../../examples/button.json';
-import { createDomRenderer } from '../src/render.js';
+import { createDomRenderer } from '../src/render';
 
 const [productCard, button] = validateCatalog([productCardJson, buttonJson]) as [
   DocumentFile,

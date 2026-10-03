@@ -9,9 +9,9 @@ import type { DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import button from '../../../examples/button.json';
 import textarea from '../../../examples/textarea.json';
-import { createEditorSession, type EditorSession } from '../src/domain/session.js';
-import { App } from '../src/ui/shell/EditorShell.js';
-import { expandExampleCatalog } from './fixtures/example-catalog.js';
+import { createEditorSession, type EditorSession } from '../src/domain/session';
+import { App } from '../src/ui/shell/EditorShell';
+import { expandExampleCatalog } from './fixtures/example-catalog';
 
 /** Native control node — preview-options UI is tested apart from composed `input` → `form-input`. */
 const inputWithNativeControl: DocumentFile = {

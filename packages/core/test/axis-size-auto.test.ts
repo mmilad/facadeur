@@ -7,7 +7,7 @@ import {
   validateCatalog,
   type AxisSize,
   type DocumentFile,
-} from '../src/index.js';
+} from '../src/index';
 
 it('validates and round-trips explicit auto dimensions and sparse breakpoint constraints', () => {
   const source: DocumentFile = {
@@ -45,7 +45,7 @@ it('preserves auto min/max tokens in the layout parser', () => {
 
 it.each<AxisSize>([{ mode: 'hug' }, { mode: 'fill' }, { mode: 'fixed', size: 100 }])(
   'retains legacy axis mode $mode',
-  (axis) => {
+  (axis: AxisSize) => {
     expect(parseLayout({ width: axis })).toEqual({ width: axis });
   },
 );

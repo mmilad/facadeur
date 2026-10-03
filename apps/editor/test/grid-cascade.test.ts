@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { toFlat, type StyleBlock } from '@facadeur/core';
-import type { EditorSnapshot } from '../src/domain/session.js';
-import { gridDeclarations } from '../src/ui/sidebar/properties/layout/grid/edits.js';
+import type { EditorSnapshot } from '../src/domain/session';
+import { gridDeclarations } from '../src/ui/sidebar/properties/layout/grid/edits';
 
 const breakpoints = [
   { id: 'desktop', minWidth: 1200 },

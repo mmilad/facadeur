@@ -6,7 +6,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { VariantRule } from '@facadeur/core';
-import { VariantRulesEditor } from '../../src/ui/sidebar/properties/content/VariantRulesEditor.js';
+import { VariantRulesEditor } from '../../src/ui/sidebar/properties/content/VariantRulesEditor';
 
 const fields = [{ name: 'kind', type: 'enum' as const, options: ['compact', 'wide'] }];
 const presets = [{ name: 'compact' }, { name: 'wide' }];

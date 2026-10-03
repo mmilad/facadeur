@@ -2,12 +2,12 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
-import { StyleDeclarationField } from '../src/ui/controls/style/StyleDeclarationField.js';
-import type { TypographyCatalogs } from '../src/ui/controls/typography/index.js';
+import { StyleDeclarationField } from '../src/ui/controls/style/StyleDeclarationField';
+import type { TypographyCatalogs } from '../src/ui/controls/typography/index';
 import {
   enumOptionsForProperty,
   stylePropertyLabel,
-} from '../src/ui/controls/style/declaration-kind.js';
+} from '../src/ui/controls/style/declaration-kind';
 
 const catalogs = {
   colorTokens: [],

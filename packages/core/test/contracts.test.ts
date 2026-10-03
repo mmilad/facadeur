@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { validateCatalog, type DocumentFile } from '../src/index.js';
+import { validateCatalog, type DocumentFile } from '../src/index';
 
 const atom: DocumentFile = {
   version: 1,

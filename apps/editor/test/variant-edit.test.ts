@@ -5,7 +5,7 @@ import {
   variantLabel,
   variantLabelMap,
   variantSummaries,
-} from '../src/domain/edits/variant-edit.js';
+} from '../src/domain/edits/variant-edit';
 
 const document = {
   variantPresets: [{ name: 'compact' }, { name: 'variant-1' }],

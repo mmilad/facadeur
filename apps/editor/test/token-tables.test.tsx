@@ -14,11 +14,11 @@ import {
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { afterEach, describe, expect, it } from 'vitest';
 import button from '../../../examples/button.json';
-import { withTokenLabel, withTokenValue } from '../src/domain/edits/token-edit.js';
-import { createEditorSession, type EditorSession } from '../src/domain/session.js';
-import { App } from '../src/ui/shell/EditorShell.js';
-import { expandExampleCatalog } from './fixtures/example-catalog.js';
-import { openSettingsDomain } from './settings-navigation.js';
+import { withTokenLabel, withTokenValue } from '../src/domain/edits/token-edit';
+import { createEditorSession, type EditorSession } from '../src/domain/session';
+import { App } from '../src/ui/shell/EditorShell';
+import { expandExampleCatalog } from './fixtures/example-catalog';
+import { openSettingsDomain } from './settings-navigation';
 
 const documents = expandExampleCatalog([button]);
 

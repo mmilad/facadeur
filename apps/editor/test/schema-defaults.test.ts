@@ -3,12 +3,12 @@
  */
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
-import { overlaySchemaDefaults } from '../src/domain/schema/schema-defaults.js';
+import { overlaySchemaDefaults } from '../src/domain/schema/schema-defaults';
 import {
   createLibrarySchema,
   resetSchemaLibrary,
   setComponentSchemaUse,
-} from '../src/domain/schema/schema-library.js';
+} from '../src/domain/schema/schema-library';
 
 const document: DocumentFile = {
   version: 1,

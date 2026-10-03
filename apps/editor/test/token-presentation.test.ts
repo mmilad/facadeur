@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { tokenDisplayLabel, tokenTitle } from '../src/ui/controls/token-presentation.js';
-import { catalogTokenOptions } from '../src/ui/controls/token-options.js';
-import { matchesSearch } from '../src/ui/form/types/options.js';
+import { tokenDisplayLabel, tokenTitle } from '../src/ui/controls/token-presentation';
+import { catalogTokenOptions } from '../src/ui/controls/token-options';
+import { matchesSearch } from '../src/ui/form/types/options';
 
 describe('unified token presentation', () => {
   it('prefers saved labels and keeps readable path labels only as a fallback', () => {

@@ -6,9 +6,9 @@ import { createRoot, type Root } from 'react-dom/client';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { afterEach, describe, expect, it } from 'vitest';
 import button from '../../../examples/button.json';
-import { createEditorSession, type EditorSession } from '../src/domain/session.js';
-import { App } from '../src/ui/shell/EditorShell.js';
-import { expandExampleCatalog } from './fixtures/example-catalog.js';
+import { createEditorSession, type EditorSession } from '../src/domain/session';
+import { App } from '../src/ui/shell/EditorShell';
+import { expandExampleCatalog } from './fixtures/example-catalog';
 
 const documents = expandExampleCatalog([button]);
 

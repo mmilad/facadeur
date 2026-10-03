@@ -7,11 +7,11 @@ import {
   isTokenRef,
   parseTypographyFieldValue,
   projectFontRefs,
-} from '../../src/ui/controls/typography/value.js';
+} from '../../src/ui/controls/typography/value';
 import {
   styleDeclarationKind,
   stylePropertyLabel,
-} from '../../src/ui/controls/style/declaration-kind.js';
+} from '../../src/ui/controls/style/declaration-kind';
 
 describe('typography control value', () => {
   it('detects token references', () => {

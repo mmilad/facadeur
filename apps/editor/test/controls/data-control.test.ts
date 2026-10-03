@@ -6,13 +6,13 @@ import {
   normalizeBindingTargetChange,
   parseInstanceFieldValue,
   patchBindingAt,
-} from '../../src/ui/controls/data/value.js';
-import { fieldDisplayLabel } from '../../src/ui/controls/data/field-label.js';
+} from '../../src/ui/controls/data/value';
+import { fieldDisplayLabel } from '../../src/ui/controls/data/field-label';
 import {
   variantAxisFromValuesText,
   variantAxisWithDefault,
   variantValuesText,
-} from '../../src/ui/controls/variants/value.js';
+} from '../../src/ui/controls/variants/value';
 
 describe('data control helpers', () => {
   it('merges missing binding field into options', () => {

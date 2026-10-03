@@ -4,7 +4,7 @@ import {
   componentVariantsFor,
   publicEventsFor,
   publicFieldsFor,
-} from '../src/domain/schema/component-contract.js';
+} from '../src/domain/schema/component-contract';
 
 function catalogOf(...files: DocumentFile[]) {
   return new Map(files.map((file) => [file.id, toFlat(file)]));

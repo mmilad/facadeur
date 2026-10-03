@@ -7,8 +7,8 @@ import {
   isValidTypographyTokenPath,
   suggestTypographyPath,
   tokenPathsReferencingTypography,
-} from '../src/domain/edits/typography-edit.js';
-import { tokenMatchesDomain } from '../src/ui/sidebar/design/design-domain.js';
+} from '../src/domain/edits/typography-edit';
+import { tokenMatchesDomain } from '../src/ui/sidebar/design/design-domain';
 
 describe('typography-edit', () => {
   it('creates a default typography token matching type.body at mobile', () => {

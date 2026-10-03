@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { pushDrillFrame, stackThroughParent } from '../src/domain/navigation/drill-navigation.js';
+import { pushDrillFrame, stackThroughParent } from '../src/domain/navigation/drill-navigation';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
-import { createEditorSession } from '../src/domain/session.js';
-import { editorStandardCatalog } from './fixtures/example-catalog.js';
+import { createEditorSession } from '../src/domain/session';
+import { editorStandardCatalog } from './fixtures/example-catalog';
 
 const documents = editorStandardCatalog();
 

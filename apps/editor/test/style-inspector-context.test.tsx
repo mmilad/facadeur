@@ -4,9 +4,9 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
-import { createEditorSession, type EditorSession } from '../src/domain/session.js';
-import { App } from '../src/ui/shell/EditorShell.js';
-import { expandExampleCatalog } from './fixtures/example-catalog.js';
+import { createEditorSession, type EditorSession } from '../src/domain/session';
+import { App } from '../src/ui/shell/EditorShell';
+import { expandExampleCatalog } from './fixtures/example-catalog';
 
 const source: DocumentFile = {
   version: 1,

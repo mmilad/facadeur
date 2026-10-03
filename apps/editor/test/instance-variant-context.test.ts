@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { toFlat, type DocumentFile } from '@facadeur/core';
-import { resolveInstanceVariantContext } from '../src/domain/instance-variant-context.js';
+import { resolveInstanceVariantContext } from '../src/domain/instance-variant-context';
 
 const target: DocumentFile = {
   version: 1,

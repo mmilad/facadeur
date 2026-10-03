@@ -4,8 +4,8 @@ import { act, cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, it } from 'vitest';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
-import { createEditorSession } from '../src/domain/session.js';
-import { App } from '../src/ui/shell/EditorShell.js';
+import { createEditorSession } from '../src/domain/session';
+import { App } from '../src/ui/shell/EditorShell';
 
 afterEach(cleanup);
 it('edits rendering and variant rules in the owning variant while showing nested selection read-only', async () => {

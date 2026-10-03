@@ -9,7 +9,7 @@ import {
   supportsEyeDropper,
   type EyeDropperConstructor,
   type WindowWithEyeDropper,
-} from '../../src/ui/form/components/input/color.js';
+} from '../../src/ui/form/components/input/color';
 
 describe('ColorInput color utils', () => {
   it('round-trips hex and rgba channels', () => {

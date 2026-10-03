@@ -6,9 +6,9 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { WebSocket } from 'ws';
 import { createDocumentStore } from '@facadeur/store-yjs';
 import { type DocumentFile } from '@facadeur/core';
-import { createProjectSync, type ProjectSyncSocket } from '../../editor/src/domain/project/sync.js';
-import { createProjectServer } from '../src/http.js';
-import { openProject } from '../src/project/index.js';
+import { createProjectSync, type ProjectSyncSocket } from '../../editor/src/domain/project/sync';
+import { createProjectServer } from '../src/http';
+import { openProject } from '../src/project/index';
 
 const temporary: string[] = [];
 afterEach(() => {

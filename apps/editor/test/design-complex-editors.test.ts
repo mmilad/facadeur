@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   editShadowField,
   type DesignShadowValue,
-} from '../src/ui/sidebar/design/DesignShadowEditor.js';
-import { editTypographyField } from '../src/ui/sidebar/design/DesignTypographyEditor.js';
+} from '../src/ui/sidebar/design/DesignShadowEditor';
+import { editTypographyField } from '../src/ui/sidebar/design/DesignTypographyEditor';
 
 describe('complex design token editor adapters', () => {
   it('keeps typography breakpoint edits sparse and preserves other overrides', () => {

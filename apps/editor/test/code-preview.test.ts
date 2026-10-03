@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
-import { codePreview } from '../src/domain/assets/code-preview.js';
+import { codePreview } from '../src/domain/assets/code-preview';
 
 describe('code preview adapter', () => {
   it('shows the shared contract while excluding preview-only samples', () => {

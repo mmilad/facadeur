@@ -8,8 +8,8 @@ import {
   createLibrarySchema,
   resetSchemaLibrary,
   setComponentSchemaUse,
-} from '../src/domain/schema/schema-library.js';
-import { createViewportBoard } from '../src/domain/viewport/viewports.js';
+} from '../src/domain/schema/schema-library';
+import { createViewportBoard } from '../src/domain/viewport/viewports';
 
 const section: DocumentFile = {
   version: 1,

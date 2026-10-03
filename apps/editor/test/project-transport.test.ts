@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createProjectTransport } from '../src/domain/project/transport.js';
-import type { ProjectSnapshot } from '../src/domain/project/types.js';
-import type { ProjectSyncSocket } from '../src/domain/project/sync.js';
+import { createProjectTransport } from '../src/domain/project/transport';
+import type { ProjectSnapshot } from '../src/domain/project/types';
+import type { ProjectSyncSocket } from '../src/domain/project/sync';
 
 type Event = { data?: unknown; code?: number; reason?: string };
 class Socket implements ProjectSyncSocket {

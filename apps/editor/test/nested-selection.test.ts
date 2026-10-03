@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { toFlat, type DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
-import { createEditorSession } from '../src/domain/session.js';
+import { createEditorSession } from '../src/domain/session';
 import {
   fieldContextForSelection,
   resolveNestedSelection,
   virtualLayerTree,
-} from '../src/domain/nested-selection.js';
+} from '../src/domain/nested-selection';
 
 const input: DocumentFile = {
   version: 1,

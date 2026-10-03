@@ -3,7 +3,7 @@ import {
   hasEditorNavigationSelection,
   parseEditorNavigation,
   writeEditorNavigation,
-} from '../src/domain/navigation/editor-navigation.js';
+} from '../src/domain/navigation/editor-navigation';
 
 const isSurface = (value: string) => ['editor', 'schema', 'preview', 'colors'].includes(value);
 

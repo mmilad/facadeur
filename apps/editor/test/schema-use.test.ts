@@ -5,7 +5,7 @@ import {
   retargetControl,
   type ComponentSchemaUse,
   type NamedSchema,
-} from '../src/domain/schema/schema-use.js';
+} from '../src/domain/schema/schema-use';
 
 const media: NamedSchema = {
   id: 'media',

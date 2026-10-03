@@ -5,7 +5,7 @@ import {
   parsePreviewFieldValue,
   patchPreviewData,
   previewValueSource,
-} from '../src/domain/preview-data.js';
+} from '../src/domain/preview-data';
 
 const legacyDocument = (): DocumentFile => ({
   version: 1,

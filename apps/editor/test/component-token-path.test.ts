@@ -4,7 +4,7 @@ import {
   pathFromDesignTokenLabel,
   previewComponentTokenCssVar,
   previewDesignTokenCssVar,
-} from '../src/domain/component-tokens.js';
+} from '../src/domain/component-tokens';
 
 describe('component token path generation', () => {
   it('derives color paths from labels', () => {

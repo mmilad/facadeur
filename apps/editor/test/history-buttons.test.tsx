@@ -7,10 +7,10 @@ import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createEditorSession } from '../src/domain/session.js';
-import { App } from '../src/ui/shell/EditorShell.js';
-import { HistoryButtons } from '../src/ui/shell/HistoryButtons.js';
-import { editorStandardCatalog } from './fixtures/example-catalog.js';
+import { createEditorSession } from '../src/domain/session';
+import { App } from '../src/ui/shell/EditorShell';
+import { HistoryButtons } from '../src/ui/shell/HistoryButtons';
+import { editorStandardCatalog } from './fixtures/example-catalog';
 
 const documents = editorStandardCatalog();
 

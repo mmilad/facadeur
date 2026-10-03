@@ -3,7 +3,7 @@ import type { FlatDocument } from '@facadeur/core';
 import {
   readNodeStyleDraft,
   readNodeStyleFallback,
-} from '../src/domain/style-rules/node-style-draft.js';
+} from '../src/domain/style-rules/node-style-draft';
 
 const document = {
   rootId: 'root',

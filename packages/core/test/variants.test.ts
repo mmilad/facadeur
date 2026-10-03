@@ -4,7 +4,7 @@ import {
   resolveVariantDocument,
   validateCatalog,
   type DocumentFile,
-} from '../src/index.js';
+} from '../src/index';
 
 const specimen: DocumentFile = {
   version: 1,

@@ -7,8 +7,8 @@ import {
   isValidShadowTokenPath,
   suggestShadowPath,
   tokenPathsReferencingShadow,
-} from '../src/domain/edits/shadow-edit.js';
-import { tokenMatchesDomain } from '../src/ui/sidebar/design/design-domain.js';
+} from '../src/domain/edits/shadow-edit';
+import { tokenMatchesDomain } from '../src/ui/sidebar/design/design-domain';
 
 describe('shadow-edit', () => {
   it('creates a default shadow token matching shadow.sm', () => {

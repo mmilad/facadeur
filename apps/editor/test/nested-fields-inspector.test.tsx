@@ -4,10 +4,10 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest';
 import { type DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
-import { createEditorSession } from '../src/domain/session.js';
-import { editorBreakpoints, viewportEditContext } from '../src/domain/viewport/viewport-edit.js';
-import { PropertiesPanel } from '../src/ui/sidebar/properties/PropertiesPanel.js';
-import { RightRail } from '../src/ui/sidebar/properties/RightRail.js';
+import { createEditorSession } from '../src/domain/session';
+import { editorBreakpoints, viewportEditContext } from '../src/domain/viewport/viewport-edit';
+import { PropertiesPanel } from '../src/ui/sidebar/properties/PropertiesPanel';
+import { RightRail } from '../src/ui/sidebar/properties/RightRail';
 
 const documents: DocumentFile[] = [
   {

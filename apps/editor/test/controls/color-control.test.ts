@@ -4,7 +4,7 @@ import {
   inferColorMode,
   isColorStyleProperty,
   isColorTokenRef,
-} from '../../src/ui/controls/color/value.js';
+} from '../../src/ui/controls/color/value';
 
 describe('color control value', () => {
   it('detects token references', () => {

@@ -5,7 +5,7 @@ import {
   toFlat,
   withPreviewData,
   type DocumentFile,
-} from '../src/index.js';
+} from '../src/index';
 
 const document: DocumentFile = {
   version: 1,

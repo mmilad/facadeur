@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { axisModePatch } from '../../src/ui/controls/layout/axis-size-editor.js';
-import { boxWith } from '../../src/ui/controls/layout/spacing-field.js';
+import { axisModePatch } from '../../src/ui/controls/layout/axis-size-editor';
+import { boxWith } from '../../src/ui/controls/layout/spacing-field';
 import {
   alignLayoutPatch,
   directionPatch,
@@ -8,7 +8,7 @@ import {
   justifyLayoutPatch,
   layoutControlValue,
   wrapLayoutPatch,
-} from '../../src/ui/controls/layout/value.js';
+} from '../../src/ui/controls/layout/value';
 
 describe('layout control value', () => {
   it('merges base layout when editing a breakpoint', () => {

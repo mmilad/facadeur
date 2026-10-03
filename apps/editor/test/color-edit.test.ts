@@ -7,8 +7,8 @@ import {
   isValidColorTokenPath,
   suggestColorPath,
   tokenPathsReferencingColor,
-} from '../src/domain/edits/color-edit.js';
-import { tokenMatchesDomain } from '../src/ui/sidebar/design/design-domain.js';
+} from '../src/domain/edits/color-edit';
+import { tokenMatchesDomain } from '../src/ui/sidebar/design/design-domain';
 
 describe('color-edit', () => {
   it('creates a default color token', () => {

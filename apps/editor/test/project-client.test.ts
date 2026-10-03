@@ -3,11 +3,11 @@ import { toFlat, type DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { createDocumentStore } from '@facadeur/store-yjs';
 import * as Y from 'yjs';
-import { connectProject, loadProject, type ProjectSnapshot } from '../src/domain/project/client.js';
-import { createProjectSync, type ProjectSyncState } from '../src/domain/project/sync.js';
-import { encodeBase64, decodeBase64 } from '../src/domain/project/encoding.js';
-import * as files from '../src/domain/assets/files.js';
-import { createProjectTransport } from '../src/domain/project/transport.js';
+import { connectProject, loadProject, type ProjectSnapshot } from '../src/domain/project/client';
+import { createProjectSync, type ProjectSyncState } from '../src/domain/project/sync';
+import { encodeBase64, decodeBase64 } from '../src/domain/project/encoding';
+import * as files from '../src/domain/assets/files';
+import { createProjectTransport } from '../src/domain/project/transport';
 
 vi.mock('../src/domain/project/sync.js', () => ({ createProjectSync: vi.fn() }));
 vi.mock('../src/domain/project/transport.js', () => ({ createProjectTransport: vi.fn() }));

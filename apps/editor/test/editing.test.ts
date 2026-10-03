@@ -22,7 +22,7 @@ import {
   isInsertTool,
   toolAllowed,
   writeLayoutFields,
-} from '../src/domain/editing.js';
+} from '../src/domain/editing';
 
 const section = toFlat(specimenSection as DocumentFile);
 const page = toFlat(specimenPage as DocumentFile);

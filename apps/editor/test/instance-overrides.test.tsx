@@ -5,7 +5,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { InstanceOverridesControl } from '../src/ui/controls/instance/InstanceOverridesControl.js';
+import { InstanceOverridesControl } from '../src/ui/controls/instance/InstanceOverridesControl';
 
 describe('instance override editor', () => {
   afterEach(() => cleanup());

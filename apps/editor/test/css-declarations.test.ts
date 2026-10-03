@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   formatCssDeclarations,
   parseCssDeclarations,
-} from '../src/domain/style-rules/css-declarations.js';
+} from '../src/domain/style-rules/css-declarations';
 
 describe('CSS declaration drafts', () => {
   it('splits only at top level and preserves values containing delimiters', () => {

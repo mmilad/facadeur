@@ -7,12 +7,12 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   DesignShadowEditor,
   type DesignShadowInput,
-} from '../src/ui/sidebar/design/DesignShadowEditor.js';
+} from '../src/ui/sidebar/design/DesignShadowEditor';
 import {
   DesignTypographyEditor,
   type DesignTypographyValue,
-} from '../src/ui/sidebar/design/DesignTypographyEditor.js';
-import type { TypographyCatalogs } from '../src/ui/controls/typography/index.js';
+} from '../src/ui/sidebar/design/DesignTypographyEditor';
+import type { TypographyCatalogs } from '../src/ui/controls/typography/index';
 
 const catalogs: TypographyCatalogs = {
   fontRefs: ['{font.sans}'],

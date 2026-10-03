@@ -2,8 +2,8 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen, fireEvent } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
-import { GridContainer } from '../src/ui/sidebar/properties/layout/grid/GridContainer.js';
-import { GridItem } from '../src/ui/sidebar/properties/layout/grid/GridItem.js';
+import { GridContainer } from '../src/ui/sidebar/properties/layout/grid/GridContainer';
+import { GridItem } from '../src/ui/sidebar/properties/layout/grid/GridItem';
 afterEach(cleanup);
 it('shows one guided column control and equal rows without duplicate CSS inputs', () => {
   const onCommit = vi.fn();

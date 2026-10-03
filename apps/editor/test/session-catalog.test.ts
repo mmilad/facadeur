@@ -3,7 +3,7 @@ import { type DocumentFile, validateCatalog } from '@facadeur/core';
 import { createDocumentStore } from '@facadeur/store-yjs';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import * as Y from 'yjs';
-import { createEditorSession } from '../src/domain/session.js';
+import { createEditorSession } from '../src/domain/session';
 
 const page: DocumentFile = {
   version: 1,

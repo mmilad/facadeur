@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
 import { COMMAND_ORIGIN, createDocumentStore } from '@facadeur/store-yjs';
-import { createProjectSync, type ProjectSyncSocket } from '../src/domain/project/sync.js';
-import { decodeBase64, encodeBase64 } from '../src/domain/project/encoding.js';
+import { createProjectSync, type ProjectSyncSocket } from '../src/domain/project/sync';
+import { decodeBase64, encodeBase64 } from '../src/domain/project/encoding';
 
 class Socket implements ProjectSyncSocket {
   readyState = 0;

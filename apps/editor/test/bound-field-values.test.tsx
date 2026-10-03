@@ -8,10 +8,10 @@ import { afterEach, describe, expect, it } from 'vitest';
 import type { Binding, FieldDefinition } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import formInput from '../../../examples/form-input.json';
-import { createEditorSession, type EditorSession } from '../src/domain/session.js';
-import { boundFields } from '../src/ui/sidebar/properties/content/bound-fields.js';
-import { App } from '../src/ui/shell/EditorShell.js';
-import { expandExampleCatalog } from './fixtures/example-catalog.js';
+import { createEditorSession, type EditorSession } from '../src/domain/session';
+import { boundFields } from '../src/ui/sidebar/properties/content/bound-fields';
+import { App } from '../src/ui/shell/EditorShell';
+import { expandExampleCatalog } from './fixtures/example-catalog';
 
 const fields: FieldDefinition[] = [
   { name: 'value', type: 'text' },

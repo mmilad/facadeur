@@ -5,8 +5,8 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { EditorSession, EditorSnapshot } from '../src/domain/session.js';
-import { PreviewDataStage } from '../src/ui/stage/PreviewDataStage.js';
+import type { EditorSession, EditorSnapshot } from '../src/domain/session';
+import { PreviewDataStage } from '../src/ui/stage/PreviewDataStage';
 
 function snapshot(overrides: Partial<EditorSnapshot> = {}): EditorSnapshot {
   return {

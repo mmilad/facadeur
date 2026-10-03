@@ -3,8 +3,8 @@ import '@testing-library/jest-dom/vitest';
 import type { ComponentProps } from 'react';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
-import { CssDeclarationsControl } from '../../src/ui/controls/generic/CssDeclarationsControl.js';
-import { layoutCapabilities } from '../../src/domain/layout-capabilities.js';
+import { CssDeclarationsControl } from '../../src/ui/controls/generic/CssDeclarationsControl';
+import { layoutCapabilities } from '../../src/domain/layout-capabilities';
 import { toFlat } from '@facadeur/core';
 
 afterEach(cleanup);

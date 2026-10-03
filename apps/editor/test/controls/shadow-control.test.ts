@@ -4,7 +4,7 @@ import {
   inferShadowMode,
   isShadowStyleProperty,
   isShadowTokenRef,
-} from '../../src/ui/controls/shadow/value.js';
+} from '../../src/ui/controls/shadow/value';
 
 describe('shadow control value', () => {
   it('detects token references', () => {

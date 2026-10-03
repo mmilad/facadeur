@@ -2,12 +2,12 @@
 import '@testing-library/jest-dom/vitest';
 import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { GridAreas } from '../src/ui/sidebar/properties/layout/grid/GridAreas.js';
+import { GridAreas } from '../src/ui/sidebar/properties/layout/grid/GridAreas';
 import {
   parseGridAreas,
   renameGridArea,
   serializeGridAreas,
-} from '../src/ui/sidebar/properties/layout/grid/areas.js';
+} from '../src/ui/sidebar/properties/layout/grid/areas';
 
 afterEach(cleanup);
 

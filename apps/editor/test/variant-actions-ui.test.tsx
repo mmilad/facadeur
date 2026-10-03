@@ -5,8 +5,8 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
-import { createEditorSession } from '../src/domain/session.js';
-import { App } from '../src/ui/shell/EditorShell.js';
+import { createEditorSession } from '../src/domain/session';
+import { App } from '../src/ui/shell/EditorShell';
 
 afterEach(cleanup);
 

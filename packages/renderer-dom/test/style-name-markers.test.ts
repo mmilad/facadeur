@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { describe, expect, it } from 'vitest';
-import { renderDocument } from '../src/render.js';
+import { renderDocument } from '../src/render';
 import type { DocumentFile } from '@facadeur/core';
 
 describe('preview style-name markers', () => {
@@ -38,6 +38,7 @@ describe('preview style-name markers', () => {
     const root = parent.querySelector('[data-component="host"]') as HTMLElement;
     const button = parent.querySelector('[data-component="action"]') as HTMLElement;
     const label = parent.querySelector('[data-node="label"]') as HTMLElement;
+    expect(root.dataset.id).toBe('root');
     expect(root.classList.contains('host-root')).toBe(true);
     expect(root.dataset.styleNode).toBe('host:root');
     expect(button.dataset.styleNode).toBe('host:submit action:root');

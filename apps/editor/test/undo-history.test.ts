@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createUndoHistory } from '../src/domain/session/undo-history.js';
+import { createUndoHistory } from '../src/domain/session/undo-history';
 
 function mockStore(label: string) {
   let undoAvailable = false;

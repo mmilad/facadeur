@@ -3,8 +3,8 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { DisplayConditionEditor } from '../../src/ui/controls/data/DisplayConditionEditor.js';
-import { fieldPathOptions } from '../../src/ui/controls/data/field-paths.js';
+import { DisplayConditionEditor } from '../../src/ui/controls/data/DisplayConditionEditor';
+import { fieldPathOptions } from '../../src/ui/controls/data/field-paths';
 
 afterEach(cleanup);
 describe('render conditions', () => {

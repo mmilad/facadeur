@@ -3,7 +3,7 @@ import {
   isPreviewAttributeKey,
   partitionNodeAttributes,
   PREVIEW_ATTRIBUTE_KEYS,
-} from '../src/ui/sidebar/properties/content/preview-attribute-keys.js';
+} from '../src/ui/sidebar/properties/content/preview-attribute-keys';
 
 describe('preview attribute keys', () => {
   it('matches the v1 allowlist exactly', () => {

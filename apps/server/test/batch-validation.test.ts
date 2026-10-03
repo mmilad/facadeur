@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import type { Command } from '@facadeur/core';
-import { assertCommand } from '../src/project/validation.js';
+import { assertCommand } from '../src/project/validation';
 it('validates each nested batch command before execution', () => {
   expect(() =>
     assertCommand({

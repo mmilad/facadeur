@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { createDocumentStore } from '@facadeur/store-yjs';
 import * as Y from 'yjs';
-import { createEditorSession } from '../src/domain/session.js';
-import { allExampleDocuments } from './fixtures/example-catalog.js';
+import { createEditorSession } from '../src/domain/session';
+import { allExampleDocuments } from './fixtures/example-catalog';
 
 const catalog = allExampleDocuments();
 

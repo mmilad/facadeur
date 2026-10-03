@@ -7,8 +7,8 @@ import {
   isValidSpacingTokenPath,
   suggestSpacingPath,
   tokenPathsReferencingSpacing,
-} from '../src/domain/edits/spacing-edit.js';
-import { tokenMatchesDomain } from '../src/ui/sidebar/design/design-domain.js';
+} from '../src/domain/edits/spacing-edit';
+import { tokenMatchesDomain } from '../src/ui/sidebar/design/design-domain';
 
 describe('spacing-edit', () => {
   it('creates a default spacing token', () => {

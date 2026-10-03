@@ -15,7 +15,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { toNested, type Command, type DocumentFile } from '@facadeur/core';
 import { createDocumentStore } from '@facadeur/store-yjs';
 import * as Y from 'yjs';
-import { openProject, ProjectError, type ProjectRepository } from '../src/project/index.js';
+import { openProject, ProjectError, type ProjectRepository } from '../src/project/index';
 
 const exampleDirectory = fileURLToPath(new URL('../../../examples/', import.meta.url));
 const temporary: string[] = [];

@@ -6,11 +6,11 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, expect, it } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
-import { createEditorSession, type EditorSession } from '../src/domain/session.js';
-import { StyleInspector } from '../src/ui/sidebar/properties/style/StyleInspector.js';
-import { gridDeclarations } from '../src/ui/sidebar/properties/layout/grid/edits.js';
-import { shownAxis } from '../src/ui/sidebar/properties/layout/sizing.js';
-import { expandExampleCatalog } from './fixtures/example-catalog.js';
+import { createEditorSession, type EditorSession } from '../src/domain/session';
+import { StyleInspector } from '../src/ui/sidebar/properties/style/StyleInspector';
+import { gridDeclarations } from '../src/ui/sidebar/properties/layout/grid/edits';
+import { shownAxis } from '../src/ui/sidebar/properties/layout/sizing';
+import { expandExampleCatalog } from './fixtures/example-catalog';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 afterEach(cleanup);

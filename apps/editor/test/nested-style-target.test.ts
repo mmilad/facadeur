@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { nestedInstanceStyleTarget } from '../src/domain/nested-selection/style-target.js';
+import { nestedInstanceStyleTarget } from '../src/domain/nested-selection/style-target';
 
 describe('nested instance style target', () => {
   it('projects the rendered path relative to the owner document root', () => {

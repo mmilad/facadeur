@@ -7,7 +7,7 @@ import {
   variantStyleBlock,
   writeStyleDeclaration,
   writeStyleDeclarations,
-} from '../src/domain/edits/style-edit.js';
+} from '../src/domain/edits/style-edit';
 
 const document = {
   rootId: 'root',

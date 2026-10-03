@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { toFlat, validateDocumentFile, withPreviewData, type DocumentFile } from '@facadeur/core';
 import { createDomRenderer } from '@facadeur/renderer-dom';
-import { migratePreviewData } from '../src/domain/preview-data.js';
+import { migratePreviewData } from '../src/domain/preview-data';
 
 const directory = resolve('examples');
 const examples = readdirSync(directory)

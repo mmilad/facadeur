@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { toFlat } from '@facadeur/core';
-import {
-  layerInsertEntries,
-  layerInsertEntriesForLayer,
-} from '../src/domain/layer-insert-policy.js';
-import type { EditorSnapshot } from '../src/domain/session.js';
+import { layerInsertEntries, layerInsertEntriesForLayer } from '../src/domain/layer-insert-policy';
+import type { EditorSnapshot } from '../src/domain/session';
 
 function snap(partial: {
   document: EditorSnapshot['document'];

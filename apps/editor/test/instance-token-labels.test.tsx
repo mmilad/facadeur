@@ -3,17 +3,17 @@ import { act, useSyncExternalStore } from 'react';
 import { createRoot } from 'react-dom/client';
 import { describe, expect, it } from 'vitest';
 import { toFlat, type DocumentFile } from '@facadeur/core';
-import { createEditorSession, type EditorSession } from '../src/domain/session.js';
-import { StyleInspector } from '../src/ui/sidebar/properties/style/StyleInspector.js';
-import { Combobox } from '../src/ui/form/index.js';
-import { TokenValueControl } from '../src/ui/controls/fields/TokenValueControl.js';
+import { createEditorSession, type EditorSession } from '../src/domain/session';
+import { StyleInspector } from '../src/ui/sidebar/properties/style/StyleInspector';
+import { Combobox } from '../src/ui/form/index';
+import { TokenValueControl } from '../src/ui/controls/fields/TokenValueControl';
 import {
   TokenPreviewProvider,
   TokenValueLabelProvider,
   useTokenLabel,
   useTokenValueLabel,
-} from '../src/ui/controls/fields/TokenPreviewContext.js';
-import { expandExampleCatalog } from './fixtures/example-catalog.js';
+} from '../src/ui/controls/fields/TokenPreviewContext';
+import { expandExampleCatalog } from './fixtures/example-catalog';
 
 function Labels({ reference }: { reference: string }) {
   return (

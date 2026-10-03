@@ -5,7 +5,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { FieldsEditorControl } from '../src/ui/controls/data/FieldsEditorControl.js';
+import { FieldsEditorControl } from '../src/ui/controls/data/FieldsEditorControl';
 
 describe('field definition editor', () => {
   afterEach(() => cleanup());

@@ -4,8 +4,8 @@ import { useSyncExternalStore } from 'react';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
-import { createEditorSession, type EditorSession } from '../src/domain/session.js';
-import { StyleInspector } from '../src/ui/sidebar/properties/style/StyleInspector.js';
+import { createEditorSession, type EditorSession } from '../src/domain/session';
+import { StyleInspector } from '../src/ui/sidebar/properties/style/StyleInspector';
 
 afterEach(cleanup);
 function setup() {

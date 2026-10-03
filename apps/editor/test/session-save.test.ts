@@ -1,8 +1,8 @@
 import { toFlat, validateDocumentFile } from '@facadeur/core';
 import { describe, expect, it, vi } from 'vitest';
 import button from '../../../examples/button.json';
-import * as files from '../src/domain/assets/files.js';
-import { persistEditorJsonSave } from '../src/domain/session/save.js';
+import * as files from '../src/domain/assets/files';
+import { persistEditorJsonSave } from '../src/domain/session/save';
 
 const flat = toFlat(validateDocumentFile(button));
 

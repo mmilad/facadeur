@@ -7,9 +7,9 @@ import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { toFlat } from '@facadeur/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { layoutCapabilities } from '../../src/domain/layout-capabilities.js';
-import { LayoutControl } from '../../src/ui/controls/layout/LayoutControl.js';
-import { expandExampleCatalog } from '../fixtures/example-catalog.js';
+import { layoutCapabilities } from '../../src/domain/layout-capabilities';
+import { LayoutControl } from '../../src/ui/controls/layout/LayoutControl';
+import { expandExampleCatalog } from '../fixtures/example-catalog';
 
 type Props = ComponentProps<typeof LayoutControl>;
 function setup(overrides: Partial<Props> = {}) {

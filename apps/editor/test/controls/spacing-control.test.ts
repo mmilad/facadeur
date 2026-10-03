@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { boxWith } from '../../src/ui/controls/spacing/index.js';
-import { isTokenReference } from '../../src/ui/controls/fields/TokenValueControl.js';
+import { boxWith } from '../../src/ui/controls/spacing/index';
+import { isTokenReference } from '../../src/ui/controls/fields/TokenValueControl';
 
 describe('spacing control boxWith', () => {
   it('drops empty sides to null', () => {

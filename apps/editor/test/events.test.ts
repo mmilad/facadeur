@@ -3,7 +3,7 @@ import {
   eventDefinitionFromDraft,
   eventPayloadText,
   parseEventPayload,
-} from '../src/domain/events.js';
+} from '../src/domain/events';
 
 describe('event editor helpers', () => {
   it('parses compact semantic payloads and serializes them again', () => {

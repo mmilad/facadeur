@@ -6,8 +6,8 @@ import { WebSocket } from 'ws';
 import * as Y from 'yjs';
 import { type DocumentFile } from '@facadeur/core';
 import { createDocumentStore } from '@facadeur/store-yjs';
-import { createProjectServer } from '../src/http.js';
-import { openProject } from '../src/project/index.js';
+import { createProjectServer } from '../src/http';
+import { openProject } from '../src/project/index';
 
 const cleanups: Array<() => void | Promise<void>> = [];
 afterEach(async () => {

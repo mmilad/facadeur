@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { defaultBreakpoints } from '@facadeur/core';
-import { resolvedViewportChrome } from '../src/domain/viewport/viewport-chrome.js';
+import { resolvedViewportChrome } from '../src/domain/viewport/viewport-chrome';
 
 describe('viewport chrome settings', () => {
   it('ignores legacy padding while preserving title and alignment', () => {

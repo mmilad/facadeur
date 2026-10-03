@@ -4,7 +4,7 @@ import {
   displayMode,
   effectiveLayout,
   layoutCapabilities,
-} from '../src/domain/layout-capabilities.js';
+} from '../src/domain/layout-capabilities';
 
 function documentFixture(): FlatDocument {
   return {

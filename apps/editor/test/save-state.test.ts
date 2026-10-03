@@ -5,9 +5,9 @@ import {
   isDocumentDirty,
   markDocumentSaved,
   type SavedJsonBaselines,
-} from '../src/domain/assets/save-state.js';
-import { createEditorSession } from '../src/domain/session.js';
-import { editorStandardCatalog } from './fixtures/example-catalog.js';
+} from '../src/domain/assets/save-state';
+import { createEditorSession } from '../src/domain/session';
+import { editorStandardCatalog } from './fixtures/example-catalog';
 
 const documents = editorStandardCatalog();
 

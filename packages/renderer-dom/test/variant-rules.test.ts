@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 import { withPreviewData, type DocumentFile } from '@facadeur/core';
-import { createDomRenderer, renderDocument } from '../src/render.js';
+import { createDomRenderer, renderDocument } from '../src/render';
 
 const child: DocumentFile = {
   version: 1,

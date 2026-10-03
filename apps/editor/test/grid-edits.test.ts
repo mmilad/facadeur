@@ -1,9 +1,9 @@
 import { expect, it } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
-import { createEditorSession } from '../src/domain/session.js';
-import { commitGridChanges } from '../src/ui/sidebar/properties/layout/grid/edits.js';
-import { expandExampleCatalog } from './fixtures/example-catalog.js';
+import { createEditorSession } from '../src/domain/session';
+import { commitGridChanges } from '../src/ui/sidebar/properties/layout/grid/edits';
+import { expandExampleCatalog } from './fixtures/example-catalog';
 
 const file: DocumentFile = {
   version: 1,

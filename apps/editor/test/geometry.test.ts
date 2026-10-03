@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { overlayBox, pointInFrame } from '../src/domain/viewport/geometry.js';
+import { overlayBox, pointInFrame } from '../src/domain/viewport/geometry';
 
 describe('overlay geometry', () => {
   it('maps an iframe-local box into stage coordinates at scale 1', () => {

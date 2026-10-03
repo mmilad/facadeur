@@ -13,6 +13,7 @@ import {
   type DocumentStore,
 } from '@facadeur/core';
 import { createDomRenderer, renderDocument } from '@facadeur/renderer-dom';
+import { renderedNode, renderedNodes } from './rendered-node';
 
 const examplesDir = resolve(process.cwd(), 'examples');
 
@@ -46,7 +47,7 @@ describe('renderer', () => {
 
     renderer.mount(component);
 
-    expect(host.querySelector('[data-id="root"]')?.textContent).toBe('Compact');
+    expect(renderedNode(host, 'root')?.textContent).toBe('Compact');
     expect(component.root).toMatchObject({ text: 'Base' });
     renderer.destroy();
   });
@@ -82,7 +83,7 @@ describe('renderer', () => {
       },
     };
     const records = renderDocument(page, [page, button], host);
-    const buttonEl = host.querySelector('[data-id="go"]');
+    const buttonEl = renderedNode(host, 'go');
     expect(buttonEl).toBeInstanceOf(HTMLButtonElement);
     expect(buttonEl?.textContent).toBe('Continue');
     expect(buttonEl?.getAttribute('data-variant-tone')).toBe('ghost');
@@ -109,10 +110,8 @@ describe('renderer', () => {
       hostEmpty,
       { paintRoot: true },
     );
-    expect(hostEmpty.querySelector('[data-id="root"]')?.getAttribute('data-empty')).toBeNull();
-    expect(hostEmpty.querySelector('[data-id="root/box"]')?.getAttribute('data-empty')).toBe(
-      'true',
-    );
+    expect(renderedNode(hostEmpty, 'root')?.getAttribute('data-empty')).toBeNull();
+    expect(renderedNode(hostEmpty, 'root/box')?.getAttribute('data-empty')).toBe('true');
 
     const nativeControls = document.createElement('div');
     renderDocument(
@@ -136,9 +135,7 @@ describe('renderer', () => {
       { paintRoot: true },
     );
     for (const id of ['input', 'select', 'textarea']) {
-      expect(
-        nativeControls.querySelector(`[data-id="root/${id}"]`)?.getAttribute('data-empty'),
-      ).toBeNull();
+      expect(renderedNode(nativeControls, `root/${id}`)?.getAttribute('data-empty')).toBeNull();
     }
 
     const fixedEmpty = document.createElement('div');
@@ -167,9 +164,7 @@ describe('renderer', () => {
       fixedEmpty,
       { paintRoot: true },
     );
-    expect(fixedEmpty.querySelector('[data-id="root/thumb"]')?.getAttribute('data-empty')).toBe(
-      null,
-    );
+    expect(renderedNode(fixedEmpty, 'root/thumb')?.getAttribute('data-empty')).toBe(null);
   });
 
   it('applies sparse child field overrides at the owning instance only', () => {
@@ -226,10 +221,8 @@ describe('renderer', () => {
     };
     const host = document.createElement('div');
     renderDocument(use, [use, owner, control], host);
-    expect(host.querySelector('[data-id="form/email/label"]')?.textContent).toBe('Work email');
-    expect(host.querySelector('[data-id="form/email"]')?.getAttribute('data-component')).toBe(
-      control.id,
-    );
+    expect(renderedNode(host, 'form/email/label')?.textContent).toBe('Work email');
+    expect(renderedNode(host, 'form/email')?.getAttribute('data-component')).toBe(control.id);
     expect(use.root).toMatchObject({
       children: [{ childFields: { email: { label: 'Work email' } } }],
     });
@@ -245,26 +238,22 @@ describe('renderer', () => {
     if (!page) throw new Error('missing page');
     const host = document.createElement('div');
     const records = renderDocument(page, documents, host);
-    expect(host.querySelector('[data-id="specimen-section/intro/heading"]')?.textContent).toBe(
-      'Specimen',
+    expect(renderedNode(host, 'specimen-section/intro/heading')?.textContent).toBe('Specimen');
+    expect(renderedNode(host, 'specimen-section/buttons/button-row/btn-primary')?.textContent).toBe(
+      'Primary',
     );
     expect(
-      host.querySelector('[data-id="specimen-section/buttons/button-row/btn-primary"]')
-        ?.textContent,
-    ).toBe('Primary');
-    expect(
-      host.querySelector('[data-id="specimen-section/cards/card-row/card-notes/title"]')
-        ?.textContent,
+      renderedNode(host, 'specimen-section/cards/card-row/card-notes/title')?.textContent,
     ).toBe('Field notes');
     expect(
-      host
-        .querySelector('[data-id="specimen-section/cards/card-row/card-signin/email/control"]')
-        ?.getAttribute('value'),
+      renderedNode(host, 'specimen-section/cards/card-row/card-signin/email/control')?.getAttribute(
+        'value',
+      ),
     ).toBe('ada@atelier.test');
     expect(records.get('specimen-section/cards/card-row/card-signin/continue')?.component).toBe(
       'button',
     );
-    expect(host.querySelector('[data-id="specimen-section"]')?.getAttribute('style')).toBeNull();
+    expect(renderedNode(host, 'specimen-section')?.getAttribute('style')).toBeNull();
   });
 
   it('skips event-handler attributes and shows an unknown component', () => {
@@ -290,10 +279,10 @@ describe('renderer', () => {
     };
     const host = document.createElement('div');
     renderDocument(page, [page], host);
-    const label = host.querySelector('[data-id="label"]');
+    const label = renderedNode(host, 'label');
     expect(label?.getAttribute('onclick')).toBeNull();
     expect(label?.getAttribute('class')).toBe('label');
-    expect(host.querySelector('[data-id="missing"]')?.textContent).toBe('Unknown component: nope');
+    expect(renderedNode(host, 'missing')?.textContent).toBe('Unknown component: nope');
   });
 
   it('builds nodes in the document that hosts the parent', () => {
@@ -305,7 +294,7 @@ describe('renderer', () => {
     const page = documents.find((entry) => entry.id === 'specimen');
     if (!page) throw new Error('missing page');
     renderDocument(page, documents, frameDocument.body);
-    const heading = frameDocument.querySelector('[data-id="specimen-section/intro/heading"]');
+    const heading = renderedNode(frameDocument, 'specimen-section/intro/heading');
     expect(heading?.ownerDocument).toBe(frameDocument);
     expect(heading?.textContent).toBe('Specimen');
     expect(document.body.contains(heading)).toBe(false);
@@ -338,8 +327,8 @@ describe('renderer', () => {
     };
     renderDocument(before, [before], body);
     renderDocument(after, [after], body);
-    expect(body.querySelectorAll('[data-id="title"]')).toHaveLength(1);
-    expect(body.querySelector('[data-id="title"]')?.textContent).toBe('After');
+    expect(renderedNodes(body, 'title')).toHaveLength(1);
+    expect(renderedNode(body, 'title')?.textContent).toBe('After');
     iframe.remove();
   });
 
@@ -349,11 +338,11 @@ describe('renderer', () => {
     if (!button) throw new Error('missing button');
     const hidden = document.createElement('div');
     renderDocument(button, documents, hidden);
-    expect(hidden.querySelector('[data-id="root"]')).toBeNull();
+    expect(renderedNode(hidden, 'root')).toBeNull();
 
     const shown = document.createElement('div');
     renderDocument(button, documents, shown, { paintRoot: true });
-    const root = shown.querySelector('[data-id="root"]');
+    const root = renderedNode(shown, 'root');
     expect(root?.tagName).toBe('BUTTON');
     expect(root?.textContent).toBe('');
     expect(root?.getAttribute('data-component')).toBe('button');
@@ -425,8 +414,8 @@ describe('renderer', () => {
     const records = renderDocument(form, [form, row], host, { paintRoot: true });
     expect(host.querySelectorAll('[data-node="input"]')).toHaveLength(1);
     expect(host.querySelectorAll('[data-node="textarea"]')).toHaveLength(1);
-    expect(host.querySelector('[data-id="root/email/input"]')?.textContent).toBe('Email');
-    expect(host.querySelector('[data-id="root/message/textarea"]')?.textContent).toBe('Message');
+    expect(renderedNode(host, 'root/email/input')?.textContent).toBe('Email');
+    expect(renderedNode(host, 'root/message/textarea')?.textContent).toBe('Message');
     expect(records.has('root/email/input')).toBe(true);
     expect(records.has('root/email/textarea')).toBe(false);
   });
@@ -496,9 +485,7 @@ describe('renderer', () => {
       paintRoot: true,
     });
     renderer.mount(host);
-    expect(parent.querySelector('[data-id="root/billing%2Femail/row"]')?.textContent).toBe(
-      'Before',
-    );
+    expect(renderedNode(parent, 'root/billing%2Femail/row')?.textContent).toBe('Before');
 
     let notify: ((change: DocumentChange) => void) | undefined;
     const store: DocumentStore = {
@@ -517,8 +504,8 @@ describe('renderer', () => {
     renderer.connect(store);
     notify?.({ reason: 'undo' });
 
-    expect(parent.querySelectorAll('[data-id="root/billing%2Femail/row"]')).toHaveLength(1);
-    expect(parent.querySelector('[data-id="root/billing%2Femail/row"]')?.textContent).toBe('After');
+    expect(renderedNodes(parent, 'root/billing%2Femail/row')).toHaveLength(1);
+    expect(renderedNode(parent, 'root/billing%2Femail/row')?.textContent).toBe('After');
     renderer.destroy();
   });
 
@@ -640,14 +627,10 @@ describe('renderer', () => {
     expect(() => validateCatalog([host, media])).not.toThrow();
     const element = document.createElement('div');
     renderDocument(host, [host, media], element, { paintRoot: true });
-    expect(element.querySelector('[data-id="root/image/image"]')?.getAttribute('src')).toBe(
-      '/cover.png',
-    );
-    expect(element.querySelector('[data-id="root/image/video"]')).toBeNull();
-    expect(element.querySelector('[data-id="root/video/video"]')?.getAttribute('src')).toBe(
-      '/intro.mp4',
-    );
-    expect(element.querySelector('[data-id="root/video/image"]')).toBeNull();
+    expect(renderedNode(element, 'root/image/image')?.getAttribute('src')).toBe('/cover.png');
+    expect(renderedNode(element, 'root/image/video')).toBeNull();
+    expect(renderedNode(element, 'root/video/video')?.getAttribute('src')).toBe('/intro.mp4');
+    expect(renderedNode(element, 'root/video/image')).toBeNull();
   });
 
   it('keeps nested repeat scopes available to descendant rows', () => {

@@ -9,7 +9,7 @@ import { toFlat } from '@facadeur/core';
 import {
   DataDirectivesEditorControl,
   dataFieldsForNode,
-} from '../../src/ui/controls/data/DataDirectivesEditorControl.js';
+} from '../../src/ui/controls/data/DataDirectivesEditorControl';
 
 describe('data directives editor', () => {
   afterEach(() => cleanup());

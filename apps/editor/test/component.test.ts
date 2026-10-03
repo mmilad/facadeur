@@ -5,13 +5,13 @@ import {
   replaceFieldItems,
   retargetField,
   variantAxisFromDraft,
-} from '../src/domain/definitions.js';
+} from '../src/domain/definitions';
 import {
   readStyleDeclarations,
   shownDeclarations,
   variantStyleBlock,
   writeStyleDeclaration,
-} from '../src/domain/edits/style-edit.js';
+} from '../src/domain/edits/style-edit';
 
 describe('component definitions', () => {
   it('builds a field and a variant axis from editor drafts', () => {

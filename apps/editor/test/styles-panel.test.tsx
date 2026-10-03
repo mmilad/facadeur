@@ -4,8 +4,8 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
-import { createEditorSession } from '../src/domain/session.js';
-import { PropertiesPanel } from '../src/ui/sidebar/properties/PropertiesPanel.js';
+import { createEditorSession } from '../src/domain/session';
+import { PropertiesPanel } from '../src/ui/sidebar/properties/PropertiesPanel';
 
 const document: DocumentFile = {
   version: 1,

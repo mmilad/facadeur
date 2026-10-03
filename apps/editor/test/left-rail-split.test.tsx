@@ -5,14 +5,14 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { createEditorSession } from '../src/domain/session.js';
-import { App } from '../src/ui/shell/EditorShell.js';
-import { editorStandardCatalog } from './fixtures/example-catalog.js';
+import { createEditorSession } from '../src/domain/session';
+import { App } from '../src/ui/shell/EditorShell';
+import { editorStandardCatalog } from './fixtures/example-catalog';
 import {
   LEFT_RAIL_PROJECT_COLLAPSED_HEIGHT,
   LEFT_RAIL_PROJECT_RATIO_DEFAULT,
   projectRatioFromPointer,
-} from '../src/ui/shell/useLeftRailSplit.js';
+} from '../src/ui/shell/useLeftRailSplit';
 
 const documents = editorStandardCatalog();
 

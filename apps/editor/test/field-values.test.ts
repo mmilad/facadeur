@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { fieldDefinitionFromDraft, replaceFieldDefault } from '../src/domain/definitions.js';
-import { parseFieldValue } from '../src/domain/field-values.js';
-import { parsePreviewFieldValue } from '../src/domain/preview-data.js';
+import { fieldDefinitionFromDraft, replaceFieldDefault } from '../src/domain/definitions';
+import { parseFieldValue } from '../src/domain/field-values';
+import { parsePreviewFieldValue } from '../src/domain/preview-data';
 
 describe('editor field values', () => {
   it('keeps legacy default normalization while preserving preview strings', () => {

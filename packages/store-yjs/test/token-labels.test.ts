@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readTokenTree, toNested, type DocumentFile } from '@facadeur/core';
 import * as Y from 'yjs';
-import { createDocumentStore } from '../src/index.js';
+import { createDocumentStore } from '../src/index';
 
 describe('saved token labels', () => {
   it('preserves global and local labels through JSON, Yjs hydration and label Undo/Redo', () => {

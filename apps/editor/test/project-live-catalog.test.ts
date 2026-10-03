@@ -3,9 +3,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
-import { connectProject } from '../src/domain/project/client.js';
-import { createProjectServer } from '../../server/src/http.js';
-import { openProject } from '../../server/src/project/index.js';
+import { connectProject } from '../src/domain/project/client';
+import { createProjectServer } from '../../server/src/http';
+import { openProject } from '../../server/src/project/index';
 
 afterEach(() => {
   vi.unstubAllGlobals();

@@ -5,7 +5,7 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { Modal, Popover } from '../../src/ui/form/index.js';
+import { Modal, Popover } from '../../src/ui/form/index';
 
 describe('form overlays', () => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;

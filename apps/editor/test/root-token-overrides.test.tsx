@@ -4,9 +4,9 @@ import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { describe, expect, it } from 'vitest';
-import { rootTokenOverrideCommand, rootTokenTargets } from '../src/domain/root-token-overrides.js';
-import { createEditorSession } from '../src/domain/session.js';
-import { RootTokenOverridesPanel } from '../src/ui/sidebar/properties/component/RootTokenOverridesPanel.js';
+import { rootTokenOverrideCommand, rootTokenTargets } from '../src/domain/root-token-overrides';
+import { createEditorSession } from '../src/domain/session';
+import { RootTokenOverridesPanel } from '../src/ui/sidebar/properties/component/RootTokenOverridesPanel';
 
 const button: DocumentFile = {
   version: 1,

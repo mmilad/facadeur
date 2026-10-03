@@ -6,8 +6,8 @@ import {
   nodeIdForHit,
   renderIdForNode,
   resolveClick,
-} from '../src/domain/selection/selection-model.js';
-import { expandExampleCatalog } from './fixtures/example-catalog.js';
+} from '../src/domain/selection/selection-model';
+import { expandExampleCatalog } from './fixtures/example-catalog';
 
 const documents = expandExampleCatalog([
   'button',
