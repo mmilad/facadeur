@@ -12,7 +12,7 @@ const meta = {
   tags: ['autodocs'],
   args: {
     value: '',
-    placeholder: 'Enter a value',
+    placeholder: 'Enter a valueasdasdasd',
     name: 'example-input',
     disabled: false,
   },

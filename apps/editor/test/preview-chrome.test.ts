@@ -13,7 +13,7 @@ import {
   resolvedViewportChrome,
 } from '../src/domain/viewport/viewport-chrome';
 import { createViewportBoard } from '../src/domain/viewport/viewports';
-import { createDocumentStore } from '@facadeur/store-yjs';
+import { createTestDocumentStore } from './controller-store.js';
 import { editorStandardCatalog, expandExampleCatalog } from './fixtures/example-catalog';
 
 const documents = editorStandardCatalog();
@@ -28,7 +28,7 @@ describe('asset preview chrome', () => {
 
   it('ignores legacy preview inset without touching the document DSL or sizing', () => {
     const buttonDoc = expandExampleCatalog([button])[0]!;
-    const store = createDocumentStore(buttonDoc);
+    const store = createTestDocumentStore(buttonDoc);
     const parent = document.createElement('div');
     document.body.append(parent);
     const designDoc = createProjectTemplateDocument();

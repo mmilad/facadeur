@@ -7,7 +7,26 @@ import styles from './style.module.css';
 import type { FormControlsProps } from './types';
 import { FormControlsSection } from '../FormControlsSection';
 
-export function FormControls({ nodeId, className }: FormControlsProps) {
+export function FormControls({
+  formFields = [
+    { id: 'name', kind: 'input', label: 'Name', placeholder: 'Your name' },
+    { id: 'message', kind: 'textarea', label: 'Message', rows: 3 },
+    { id: 'property', kind: 'select', label: 'Property' },
+    { id: 'enabled', kind: 'toggle', label: 'Use token' },
+  ],
+  type,
+  hint,
+  icon,
+  hasIcon,
+  disabled,
+  placeholder,
+  name,
+  rows,
+  label,
+  value,
+  nodeId,
+  className,
+}: FormControlsProps) {
   return (
     <div
       data-component="form-controls"
@@ -17,6 +36,17 @@ export function FormControls({ nodeId, className }: FormControlsProps) {
       <FormControlsSection
         nodeId="form-controls-section"
         className={styles['form-controls-section']}
+        formFields={formFields}
+        type={type}
+        hint={hint}
+        icon={icon}
+        hasIcon={hasIcon}
+        disabled={disabled}
+        placeholder={placeholder}
+        name={name}
+        rows={rows}
+        label={label}
+        value={value}
       />
     </div>
   );

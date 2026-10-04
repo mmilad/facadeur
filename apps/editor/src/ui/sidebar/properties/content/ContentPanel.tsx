@@ -62,7 +62,12 @@ export function ContentPanel({
         />
       ) : null}
       {node.type !== 'instance' && ownsComponentFeatures(snap.document.kind) ? (
-        <BoundFieldValues session={session} snap={snap} node={node} />
+        <BoundFieldValues
+          session={session}
+          snap={snap}
+          node={node}
+          fields={node.id === snap.activeDocument.rootId ? snap.documentScopeFields : undefined}
+        />
       ) : null}
       {node.type === 'text' ? (
         <TextControl
@@ -113,7 +118,9 @@ export function ContentPanel({
       ) : null}
       <DisplayConditionEditor
         condition={node.displayOn}
-        paths={fieldPathOptions(dataFieldsForNode(snap.document, node.id))}
+        paths={fieldPathOptions(
+          dataFieldsForNode(snap.document, node.id, snap.documentScopeFields),
+        )}
         title="Render condition"
         onChange={(value) =>
           session.execute({ type: 'setProp', nodeId: node.id, prop: 'displayOn', value })
@@ -124,7 +131,7 @@ export function ContentPanel({
         <>
           <VariantRulesEditor
             node={node}
-            fields={dataFieldsForNode(snap.document, node.id)}
+            fields={dataFieldsForNode(snap.document, node.id, snap.documentScopeFields)}
             presets={snap.componentTarget?.variantPresets}
             variantLabels={snap.componentTarget?.variantLabels}
             onClearSelection={() =>
@@ -208,7 +215,8 @@ function InstanceFields({
       variants={[]}
       fieldOverrides={node.fields}
       fieldBindings={node.fieldBindings}
-      dataFields={dataFieldsForNode(snap.document, node.id)}
+      forwardFields={node.forwardFields !== false}
+      dataFields={dataFieldsForNode(snap.document, node.id, snap.documentScopeFields)}
       variantOverrides={node.variants}
       onOpenMaster={() => session.openAsset(node.component, 'root')}
       showMasterAction={false}
@@ -217,6 +225,9 @@ function InstanceFields({
       }
       onSetFieldBindings={(value) =>
         session.execute({ type: 'setProp', nodeId: node.id, prop: 'fieldBindings', value })
+      }
+      onSetForwardFields={(value) =>
+        session.execute({ type: 'setProp', nodeId: node.id, prop: 'forwardFields', value })
       }
       onSetVariant={() => undefined}
       onInvalid={(message) => session.setNotice(message, 'error')}

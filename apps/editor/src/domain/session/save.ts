@@ -5,10 +5,8 @@ import {
   type DefaultKind,
   type DocumentFile,
   type FlatDocument,
-  type CommandContext,
 } from '@facadeur/core';
-import { createDocumentStore, type YjsDocumentStore } from '@facadeur/store-yjs';
-import type { DesignInput } from '@facadeur/tokens';
+import type { ControllerDocumentStore } from '@facadeur/core';
 import { renderIdForNode } from '../selection/selection-model.js';
 import {
   clearDocumentSaved,
@@ -19,6 +17,7 @@ import { documentToJson, saveJsonFile, type JsonFileHandle } from '../assets/fil
 import { errorText, kindOf } from './kinds.js';
 import type { EditorNotice } from './types.js';
 import { migratePreviewData } from '../preview-data.js';
+import { logProjectFailure } from '../project/diagnostics.js';
 
 export function bindPersistDocumentSave(options: {
   build: () => { filename: string; document: FlatDocument; id: string };
@@ -28,7 +27,7 @@ export function bindPersistDocumentSave(options: {
   markSaved: (id: string, document: FlatDocument) => void;
   setNotice: (notice: EditorNotice) => void;
   publish: () => void;
-  saveDocument?: (id: string) => Promise<FlatDocument>;
+  saveDocument?: (id: string, document: FlatDocument) => Promise<FlatDocument>;
 }): () => Promise<boolean> {
   return async () => {
     const target = options.build();
@@ -37,12 +36,13 @@ export function bindPersistDocumentSave(options: {
         options.validate?.();
         options.setNotice({ tone: 'info', text: 'Saving…' });
         options.publish();
-        const persisted = await options.saveDocument(target.id);
+        const persisted = await options.saveDocument(target.id, target.document);
         options.markSaved(target.id, persisted);
         options.setNotice({ tone: 'info', text: `Saved ${target.filename}` });
         options.publish();
         return true;
       } catch (error) {
+        logProjectFailure(error, { phase: 'save', document: target.document, source: 'json' });
         options.setNotice({
           tone: 'error',
           text: error instanceof Error ? error.message : 'Could not save',
@@ -64,33 +64,14 @@ export function bindPersistDocumentSave(options: {
   };
 }
 
-export function boardDocumentsForOrder(
-  order: readonly string[],
-  assetStores: ReadonlyMap<string, YjsDocumentStore>,
-) {
-  return order.flatMap((id) => {
-    const store = assetStores.get(id);
-    return store ? [toNested(store.getDocument())] : [];
-  });
-}
-
 export function boardStoresForOrder(
   order: readonly string[],
-  assetStores: ReadonlyMap<string, YjsDocumentStore>,
+  assetStores: ReadonlyMap<string, ControllerDocumentStore>,
 ) {
   return order.flatMap((id) => {
     const store = assetStores.get(id);
     return store ? [store] : [];
   });
-}
-
-export function designInputFromStore(store: YjsDocumentStore): DesignInput {
-  const doc = store.getDocument();
-  return {
-    tokens: doc.tokens,
-    fonts: doc.fonts,
-    breakpoints: doc.settings.breakpoints,
-  };
 }
 
 export async function persistEditorJsonSave(options: {
@@ -130,19 +111,16 @@ export async function persistEditorJsonSave(options: {
 export function registerSessionAssetDocuments(options: {
   documents: readonly DocumentFile[];
   designId: string;
-  commandContext: CommandContext;
-  assetStores: Map<string, YjsDocumentStore>;
+  getStore: (id: string) => ControllerDocumentStore;
+  assetStores: Map<string, ControllerDocumentStore>;
   order: string[];
-  updates?: Readonly<Record<string, Uint8Array>>;
 }): void {
   for (const file of options.documents) {
     if (options.assetStores.has(file.id)) {
       throw new DocumentError('duplicate-id', `Duplicate document id "${file.id}"`);
     }
     if (file.id === options.designId) continue;
-    const update = options.updates?.[file.id];
-    const migrated = update ? file : migratePreviewData(file);
-    const store = createDocumentStore(migrated, options.commandContext, { update });
+    const store = options.getStore(file.id);
     options.assetStores.set(file.id, store);
     options.order.push(file.id);
   }
@@ -156,7 +134,7 @@ export function applyOpenAssetChange(options: {
   focus?: 'root';
   keepDrillStack: boolean;
   resetDrillStack: () => void;
-  assetStores: ReadonlyMap<string, YjsDocumentStore>;
+  assetStores: ReadonlyMap<string, ControllerDocumentStore>;
   onMissing: () => void;
   onOpened: (change: {
     openId: string;
@@ -209,15 +187,15 @@ export function loadEditorDocument(options: {
   file: DocumentFile;
   handle?: JsonFileHandle;
   designId: string;
-  getDesignStore: () => YjsDocumentStore;
-  setDesignStore: (store: YjsDocumentStore) => void;
+  getDesignStore: () => ControllerDocumentStore;
+  setDesignStore: (store: ControllerDocumentStore) => void;
   order: string[];
-  assetStores: Map<string, YjsDocumentStore>;
+  assetStores: Map<string, ControllerDocumentStore>;
   handles: Map<string, JsonFileHandle>;
   savedJson: SavedJsonBaselines;
-  commandContext: CommandContext;
-  forget: (store: YjsDocumentStore | undefined) => void;
-  watch: (store: YjsDocumentStore, source: 'asset' | 'design') => void;
+  createStore: (document: DocumentFile) => ControllerDocumentStore;
+  forget: (store: ControllerDocumentStore | undefined) => void;
+  watch: (store: ControllerDocumentStore, source: 'asset' | 'design') => void;
   syncKinds: () => void;
   resetDrillStack: () => void;
   onDesignLoaded: () => void;
@@ -229,7 +207,7 @@ export function loadEditorDocument(options: {
   try {
     const file = migratePreviewData(options.file);
     if (file.id === options.designId) {
-      const created = createDocumentStore(file, options.commandContext);
+      const created = options.createStore(file);
       const previous = options.getDesignStore();
       options.setDesignStore(created);
       options.forget(previous);
@@ -250,8 +228,10 @@ export function loadEditorDocument(options: {
       return toNested(store.getDocument());
     });
     if (!options.assetStores.has(file.id)) nextFiles.push(file);
-    validateCatalog(nextFiles);
-    const created = createDocumentStore(file, options.commandContext);
+    validateCatalog(nextFiles, {
+      schemaCatalog: options.getDesignStore().getDocument().schemaCatalog,
+    });
+    const created = options.createStore(file);
     const previous = options.assetStores.get(file.id);
     options.assetStores.set(file.id, created);
     if (!options.order.includes(file.id)) options.order.push(file.id);

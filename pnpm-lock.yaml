@@ -56,9 +56,6 @@ importers:
       '@facadeur/renderer-dom':
         specifier: workspace:*
         version: link:../../packages/renderer-dom
-      '@facadeur/store-yjs':
-        specifier: workspace:*
-        version: link:../../packages/store-yjs
       '@facadeur/style-engine':
         specifier: workspace:*
         version: link:../../packages/style-engine
@@ -83,9 +80,6 @@ importers:
       react-dom:
         specifier: ^19.1.1
         version: 19.3.0(react@19.3.0)
-      yjs:
-        specifier: ^13.6.27
-        version: 13.6.33
     devDependencies:
       '@types/node':
         specifier: ^22.19.0

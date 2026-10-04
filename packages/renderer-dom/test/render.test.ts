@@ -12,7 +12,12 @@ import {
   type DocumentFile,
   type DocumentStore,
 } from '@facadeur/core';
-import { createDomRenderer, renderDocument } from '@facadeur/renderer-dom';
+import {
+  createDomRenderer,
+  createRenderContext,
+  renderDocument,
+  renderNode,
+} from '@facadeur/renderer-dom';
 import { renderedNode, renderedNodes } from './rendered-node';
 
 const examplesDir = resolve(process.cwd(), 'examples');
@@ -25,6 +30,90 @@ function examples(): DocumentFile[] {
 }
 
 describe('renderer', () => {
+  it('automatically forwards matching parent values unless the instance opts out', () => {
+    const parent: DocumentFile = {
+      version: 1,
+      id: 'auto-field-parent',
+      name: 'Auto field parent',
+      kind: 'component',
+      fields: [{ name: 'value', type: 'text', default: 'Parent value' }],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          { id: 'forwarded', type: 'instance', component: 'auto-field-child' },
+          {
+            id: 'manual',
+            type: 'instance',
+            component: 'auto-field-child',
+            forwardFields: false,
+          },
+        ],
+      },
+    };
+    const child: DocumentFile = {
+      version: 1,
+      id: 'auto-field-child',
+      name: 'Auto field child',
+      kind: 'atom',
+      fields: [{ name: 'value', type: 'text', default: 'Child default' }],
+      root: {
+        id: 'root',
+        type: 'text',
+        bindings: [{ field: 'value', target: 'text' }],
+      },
+    };
+
+    expect(() => validateCatalog([parent, child])).not.toThrow();
+    if (parent.root.type !== 'frame') throw new Error('Expected a parent frame');
+    const [forwarded, manual] = parent.root.children ?? [];
+    if (!forwarded || !manual) throw new Error('Expected both child instances');
+    const context = createRenderContext([parent, child]);
+    context.scope = { value: 'Parent runtime value' };
+    expect(renderNode(forwarded, context).textContent).toBe('Parent runtime value');
+    expect(renderNode(manual, context).textContent).toBe('Child default');
+  });
+
+  it('lets an explicit local instance value override the bound value in preview', () => {
+    const parent: DocumentFile = {
+      version: 1,
+      id: 'preview-override-parent',
+      name: 'Preview override parent',
+      kind: 'component',
+      fields: [{ name: 'source', type: 'text', default: 'Bound value' }],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'child',
+            type: 'instance',
+            component: 'preview-override-child',
+            fields: { label: 'Local preview' },
+            fieldBindings: { label: 'source' },
+          },
+        ],
+      },
+    };
+    const child: DocumentFile = {
+      version: 1,
+      id: 'preview-override-child',
+      name: 'Preview override child',
+      kind: 'atom',
+      fields: [{ name: 'label', type: 'text' }],
+      root: {
+        id: 'root',
+        type: 'text',
+        bindings: [{ field: 'label', target: 'text' }],
+      },
+    };
+
+    expect(() => validateCatalog([parent, child])).not.toThrow();
+    const host = document.createElement('div');
+    renderDocument(parent, [parent, child], host, { paintRoot: true });
+    expect(renderedNode(host, 'root/child')?.textContent).toBe('Local preview');
+  });
+
   it('can preview a named mounted variant without changing the source document', () => {
     const component: DocumentFile = {
       version: 1,

@@ -6,11 +6,6 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const children = [
   spawn(
     process.execPath,
-    [path.join(root, 'node_modules/tsx/dist/cli.mjs'), 'apps/server/src/start.ts'],
-    { cwd: root, stdio: 'inherit' },
-  ),
-  spawn(
-    process.execPath,
     [path.join(root, 'apps/editor/node_modules/next/dist/bin/next'), 'dev', '--port', '3001'],
     { cwd: path.join(root, 'apps/editor'), stdio: 'inherit' },
   ),

@@ -1,0 +1,33 @@
+import type { NestingRule } from '../../document/kinds.js';
+import type { FlatDocument } from '../../document/flat.js';
+import type { DocumentFile, FieldDefinition, SchemaCatalog } from '../../document/schema.js';
+
+export type ContractDocument = DocumentFile | FlatDocument;
+export type ContractCatalog = ReadonlyMap<string, ContractDocument>;
+
+export interface SchemaResolverContext {
+  documents: ContractCatalog;
+  schemaCatalog?: SchemaCatalog;
+}
+
+export type ContractResolverInput = ContractCatalog | SchemaResolverContext;
+
+export interface AutomaticFieldGroup {
+  instanceId: string;
+  componentId: string;
+  componentName: string;
+  enabled: boolean;
+  fields: FieldDefinition[];
+}
+
+export interface ValidateOptions {
+  rules?: Readonly<Record<string, NestingRule>>;
+  /** When set, instance targets must resolve to a kind allowed by the nesting rule. */
+  resolveKind?: (componentId: string) => string | undefined;
+  /** Paths of global DTCG tokens; validates component token defaults when set. */
+  globalTokenPaths?: ReadonlySet<string>;
+  /** Local component token paths for a catalog document id; validates tokenInterface.sets keys. */
+  resolveComponentTokenPaths?: (documentId: string) => ReadonlySet<string> | undefined;
+  /** When available, verifies nested style paths against rendered local instance roots. */
+  resolveNestedStyleTarget?: (documentId: string, path: readonly string[]) => boolean | undefined;
+}

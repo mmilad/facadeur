@@ -10,6 +10,14 @@ const meta = {
   title: 'Pages/FormControls',
   component: FormControls,
   tags: ['autodocs'],
+  args: {
+    formFields: [
+      { id: 'name', kind: 'input', label: 'Name', placeholder: 'Your name' },
+      { id: 'message', kind: 'textarea', label: 'Message', rows: 3 },
+      { id: 'property', kind: 'select', label: 'Property' },
+      { id: 'enabled', kind: 'toggle', label: 'Use token' },
+    ],
+  },
 } satisfies Meta<typeof FormControls>;
 
 export default meta;

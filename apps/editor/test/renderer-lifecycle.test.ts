@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
 import { createDomRenderer } from '@facadeur/renderer-dom';
-import { createDocumentStore } from '@facadeur/store-yjs';
+import { createTestDocumentStore } from './controller-store.js';
 import { createStyleEngine } from '@facadeur/style-engine';
 
 const source: DocumentFile = {
@@ -27,7 +27,7 @@ const source: DocumentFile = {
 
 describe('live renderer lifecycle', () => {
   it('keeps a focused input and its unsaved value through layout-only edits', () => {
-    const store = createDocumentStore(source);
+    const store = createTestDocumentStore(source);
     const host = document.createElement('div');
     document.body.append(host);
     const styles = createStyleEngine(document);
@@ -67,7 +67,7 @@ describe('live renderer lifecycle', () => {
   });
 
   it('removes hidden subtree records and restores them on undo', () => {
-    const store = createDocumentStore(source);
+    const store = createTestDocumentStore(source);
     const host = document.createElement('div');
     const renderer = createDomRenderer({ parent: host, catalog: [source], paintRoot: true });
     renderer.mount(source);

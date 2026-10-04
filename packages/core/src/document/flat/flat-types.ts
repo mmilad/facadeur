@@ -1,6 +1,7 @@
 import type {
   Binding,
   ChildFieldOverrides,
+  ComponentSchemaUse,
   DisplayOn,
   DocumentSettings,
   EventBinding,
@@ -12,6 +13,7 @@ import type {
   IconDefinition,
   Layout,
   PreviewData,
+  SchemaCatalog,
   StyleBlock,
   TokenInterface,
   VariantAxis,
@@ -19,8 +21,8 @@ import type {
   VariantRule,
   Repeat,
 } from '../schema.js';
-import type { ComponentTokenMap } from '../../component-tokens.js';
-import type { TokenTree } from '../../token-tree.js';
+import type { ComponentTokenMap } from '../../controller/style/tokens/component/contract.js';
+import type { TokenTree } from '../../controller/style/tokens/types.js';
 
 export interface FlatNodeBase {
   id: string;
@@ -63,6 +65,7 @@ export interface InstanceNode {
   component: string;
   fields?: Record<string, FieldValue>;
   childFields?: ChildFieldOverrides;
+  forwardFields?: boolean;
   fieldBindings?: Record<string, string>;
   variants?: Record<string, string>;
   variantRules?: VariantRule[];
@@ -97,5 +100,9 @@ export interface FlatDocument {
   tokenInterface?: TokenInterface;
   /** Local tokens owned by this document; defaults reference globals or literals. */
   componentTokens?: ComponentTokenMap;
+  /** Named JSON Schemas live with the project's design document. */
+  schemaCatalog?: SchemaCatalog;
+  /** This component's persisted assignment/composition of named schemas. */
+  schemaUse?: ComponentSchemaUse;
   nodes: Record<string, FlatNode>;
 }

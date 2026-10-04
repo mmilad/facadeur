@@ -1,6 +1,7 @@
 import { DocumentError } from './errors.js';
-import { cloneBreakpoints, cloneFonts } from '../styles/libraries.js';
-import { canonicalizeLayout } from '../styles/layout.js';
+import { cloneBreakpoints } from '../controller/style/breakpoints.js';
+import { cloneFonts } from '../controller/style/fonts.js';
+import { canonicalizeLayout } from '../controller/style/layout.js';
 import type {
   Binding,
   DisplayOn,
@@ -11,9 +12,12 @@ import type {
   NestedNode,
 } from './schema.js';
 import { isVariantAxis, isVariantPreset } from './schema.js';
-import { canonicalizeComponentTokens } from '../component-tokens.js';
-import { canonicalizeStyleBlock, canonicalizeTokenInterface } from '../styles/style-block.js';
-import { canonicalizeTokenTree } from '../token-tree.js';
+import { canonicalizeComponentTokens } from '../controller/style/tokens/component/contract.js';
+import {
+  canonicalizeStyleBlock,
+  canonicalizeTokenInterface,
+} from '../controller/style/blocks/contract.js';
+import { canonicalizeTokenTree } from '../controller/style/tokens/global/tree.js';
 import {
   cloneBinding,
   cloneChildFields,
@@ -39,7 +43,7 @@ export type {
 } from './flat/flat-types.js';
 export { collectSubtree, findParent, isInsideSubtree } from './flat/flat-tree.js';
 
-export function toFlat(file: DocumentFile): FlatDocument {
+export function toFlat(file: DocumentFile) {
   const nodes: Record<string, FlatNode> = {};
   const rootId = flattenSubtree(file.root, nodes, new Set());
   return canonicalizeFlat({
@@ -65,6 +69,8 @@ export function toFlat(file: DocumentFile): FlatDocument {
     ...(file.styles ? { styles: file.styles } : {}),
     ...(file.tokenInterface ? { tokenInterface: file.tokenInterface } : {}),
     ...(file.componentTokens ? { componentTokens: file.componentTokens } : {}),
+    ...(file.schemaCatalog ? { schemaCatalog: structuredClone(file.schemaCatalog) } : {}),
+    ...(file.schemaUse ? { schemaUse: structuredClone(file.schemaUse) } : {}),
     nodes,
   });
 }
@@ -107,6 +113,8 @@ export function toNested(doc: FlatDocument): DocumentFile {
   if (doc.componentTokens && Object.keys(doc.componentTokens).length) {
     file.componentTokens = doc.componentTokens;
   }
+  if (doc.schemaCatalog) file.schemaCatalog = structuredClone(doc.schemaCatalog);
+  if (doc.schemaUse) file.schemaUse = structuredClone(doc.schemaUse);
   return file;
 }
 
@@ -153,6 +161,8 @@ export function canonicalizeFlat(doc: FlatDocument): FlatDocument {
     ...(styles ? { styles } : {}),
     ...(tokenInterface ? { tokenInterface } : {}),
     ...(componentTokens ? { componentTokens } : {}),
+    ...(doc.schemaCatalog ? { schemaCatalog: structuredClone(doc.schemaCatalog) } : {}),
+    ...(doc.schemaUse ? { schemaUse: structuredClone(doc.schemaUse) } : {}),
     nodes,
   };
 }
@@ -203,6 +213,7 @@ export function flattenSubtree(
     component: node.component,
     ...(node.fields ? { fields: node.fields } : {}),
     ...(node.childFields ? { childFields: cloneChildFields(node.childFields) } : {}),
+    ...(node.forwardFields !== undefined ? { forwardFields: node.forwardFields } : {}),
     ...(node.fieldBindings ? { fieldBindings: { ...node.fieldBindings } } : {}),
     ...(node.variants ? { variants: node.variants } : {}),
     ...(node.variantRules?.length ? { variantRules: structuredClone(node.variantRules) } : {}),
@@ -227,6 +238,7 @@ export function makeFlatNode(node: FlatNode): FlatNode {
       component: node.component,
       ...(fields ? { fields } : {}),
       ...(childFields ? { childFields } : {}),
+      ...(node.forwardFields !== undefined ? { forwardFields: node.forwardFields } : {}),
       ...(node.fieldBindings ? { fieldBindings: { ...node.fieldBindings } } : {}),
       ...(variants ? { variants } : {}),
       ...(node.variantRules?.length ? { variantRules: structuredClone(node.variantRules) } : {}),
@@ -296,6 +308,7 @@ function expandNode(doc: FlatDocument, id: string, stack: Set<string>): NestedNo
       component: node.component,
       ...(node.fields ? { fields: { ...node.fields } } : {}),
       ...(node.childFields ? { childFields: cloneChildFields(node.childFields) } : {}),
+      ...(node.forwardFields !== undefined ? { forwardFields: node.forwardFields } : {}),
       ...(node.fieldBindings ? { fieldBindings: { ...node.fieldBindings } } : {}),
       ...(node.variants ? { variants: { ...node.variants } } : {}),
       ...(node.variantRules?.length ? { variantRules: structuredClone(node.variantRules) } : {}),
@@ -321,7 +334,7 @@ function sharedFromNested(node: Exclude<NestedNode, { type: 'instance' }>): Flat
   };
 }
 
-function sharedFlat(node: Exclude<FlatNode, InstanceNode>): FlatNodeBase {
+function sharedFlat(node: Exclude<FlatNode, InstanceNode>) {
   const base: FlatNodeBase = { id: node.id };
   if (node.name) base.name = node.name;
   if (node.styleName) base.styleName = node.styleName;
@@ -364,6 +377,6 @@ function sharedToNested(node: Exclude<FlatNode, InstanceNode>): {
   };
 }
 
-function cleanLayout(layout: Layout | undefined): Layout | undefined {
+function cleanLayout(layout: Layout | undefined) {
   return canonicalizeLayout(layout);
 }

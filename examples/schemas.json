@@ -1,7 +1,7 @@
 {
-  "_instructions": "This file is the schema library the Schemas tab loads. To add a schema, append an object to schemas with a stable id, a name, a short description, and a JSON Schema in schema. Use type object and properties for a component field list. Property types are string, number, integer, or boolean. Put required names in required. Use oneOf when a component accepts different shapes, as Media does for an image (alt) and a video (poster). To attach a schema to an example component, set assignments to { documentId: schemaId }. Document ids match the example file names: input, textarea, card, media. Reload the editor after editing this file. A schema changed in the browser is stored in local storage and then overrides this file for that id.",
+  "_instructions": "This file is the schema library the Schemas tab loads. To add a schema, append an object to schemas with a stable id, a name, a short description, and a JSON Schema in schema. Use type object and properties for a component field list. Property types are string, number, integer, or boolean. Put required names in required. A oneOf schema used as a component contract must also declare its flat editor fields in root properties; the oneOf branches then constrain valid shapes without being flattened into that contract. To attach a schema to an example component, set assignments to { documentId: schemaId }. Reload the editor after editing this file. A schema changed in the browser is stored in local storage and then overrides this file for that id.",
   "assignments": {
-    "input": "input",
+    "form-input": "input",
     "textarea": "textarea",
     "card": "card",
     "media": "media"
@@ -10,15 +10,15 @@
     {
       "id": "input",
       "name": "Input",
-      "description": "Text control props from the Input component.",
+      "description": "Native input fields owned by the Input atom. Wrapper labels are declared locally on the Input component.",
       "schema": {
         "type": "object",
         "title": "Input",
         "properties": {
-          "label": { "type": "string", "title": "Label" },
           "value": { "type": "string", "title": "Value" },
           "placeholder": { "type": "string", "title": "Placeholder" },
-          "name": { "type": "string", "title": "Name" }
+          "name": { "type": "string", "title": "Name" },
+          "disabled": { "type": "boolean", "title": "Disabled" }
         }
       }
     },
@@ -41,31 +41,35 @@
     {
       "id": "image",
       "name": "Image",
-      "description": "Image shape taken from the Media component. Alt is the image-only field.",
+      "description": "Image branch of Media. Alt is specific to images.",
       "schema": {
         "type": "object",
         "title": "Image",
-        "required": ["src"],
+        "required": ["kind", "src"],
         "properties": {
+          "kind": { "type": "string", "enum": ["image"], "title": "Media kind" },
           "src": { "type": "string", "title": "Source" },
           "alt": { "type": "string", "title": "Alt text" },
           "ratio": { "type": "string", "title": "Ratio" }
-        }
+        },
+        "additionalProperties": false
       }
     },
     {
       "id": "video",
       "name": "Video",
-      "description": "Video shape taken from the Media component. Poster is the video-only field.",
+      "description": "Video branch of Media. Poster is specific to videos.",
       "schema": {
         "type": "object",
         "title": "Video",
-        "required": ["src"],
+        "required": ["kind", "src"],
         "properties": {
+          "kind": { "type": "string", "enum": ["video"], "title": "Media kind" },
           "src": { "type": "string", "title": "Source" },
           "poster": { "type": "string", "title": "Poster" },
           "ratio": { "type": "string", "title": "Ratio" }
-        }
+        },
+        "additionalProperties": false
       }
     },
     {
@@ -85,29 +89,24 @@
     {
       "id": "media",
       "name": "Media",
-      "description": "Union of an image and a video. A value matches exactly one branch.",
+      "description": "Media editor contract with image and video variants.",
       "schema": {
+        "type": "object",
         "title": "Media",
+        "required": ["kind", "src"],
+        "properties": {
+          "kind": { "type": "string", "enum": ["image", "video"], "title": "Media kind" },
+          "src": { "type": "string", "title": "Source" },
+          "alt": { "type": "string", "title": "Alt text" },
+          "poster": { "type": "string", "title": "Poster" },
+          "ratio": { "type": "string", "title": "Ratio" }
+        },
         "oneOf": [
           {
-            "title": "Image",
-            "type": "object",
-            "required": ["src"],
-            "properties": {
-              "src": { "type": "string", "title": "Source" },
-              "alt": { "type": "string", "title": "Alt text" },
-              "ratio": { "type": "string", "title": "Ratio" }
-            }
+            "$ref": "facadeur://schema/image"
           },
           {
-            "title": "Video",
-            "type": "object",
-            "required": ["src"],
-            "properties": {
-              "src": { "type": "string", "title": "Source" },
-              "poster": { "type": "string", "title": "Poster" },
-              "ratio": { "type": "string", "title": "Ratio" }
-            }
+            "$ref": "facadeur://schema/video"
           }
         ]
       }

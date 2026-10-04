@@ -34,6 +34,7 @@ export function Input({
         placeholder={placeholder}
         name={name}
         onCommit={onCommit}
+        disabled={false}
       />
     </label>
   );

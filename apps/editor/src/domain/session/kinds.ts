@@ -1,5 +1,5 @@
 import { DocumentError, type DefaultKind, type FlatDocument } from '@facadeur/core';
-import type { YjsDocumentStore } from '@facadeur/store-yjs';
+import type { ControllerDocumentStore } from '@facadeur/core';
 
 export const KINDS: readonly DefaultKind[] = ['atom', 'component', 'section', 'page'];
 
@@ -14,7 +14,7 @@ export function kindOf(doc: FlatDocument): DefaultKind {
   return doc.kind;
 }
 
-export function kindOfStore(store: YjsDocumentStore | undefined): DefaultKind | null {
+export function kindOfStore(store: ControllerDocumentStore | undefined): DefaultKind | null {
   if (!store) return null;
   const kind = store.getDocument().kind;
   return isKind(kind) ? kind : null;
@@ -30,7 +30,7 @@ export function applyWorkspaceChange(options: {
   workspace: DefaultKind;
   openFlatKind: string;
   remembered: string | undefined;
-  assetStores: ReadonlyMap<string, YjsDocumentStore>;
+  assetStores: ReadonlyMap<string, ControllerDocumentStore>;
   order: readonly string[];
   onSwitch: (openId: string) => void;
 }): DefaultKind | null {
@@ -60,7 +60,7 @@ export function normalizeBreakpointId(breakpointId: string | null): string | nul
 
 export function syncDocumentKinds(
   order: readonly string[],
-  assetStores: ReadonlyMap<string, YjsDocumentStore>,
+  assetStores: ReadonlyMap<string, ControllerDocumentStore>,
   kinds: Map<string, string>,
 ): void {
   kinds.clear();

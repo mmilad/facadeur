@@ -12,7 +12,7 @@ const input: DocumentFile = {
   version: 1,
   id: 'input',
   name: 'Input',
-  kind: 'atom',
+  kind: 'component',
   fields: [{ name: 'label', type: 'text', default: 'Default label' }],
   root: {
     id: 'root',
@@ -96,7 +96,7 @@ describe('nested selection', () => {
       instance: { id: 'email' },
       target: { id: 'input' },
       fields: [{ name: 'label' }],
-      values: { label: 'Form label' },
+      values: { label: 'Work' },
     });
   });
 
@@ -113,8 +113,8 @@ describe('nested selection', () => {
       nestedSelection: selected,
       catalog,
     });
-    expect(context?.values).toMatchObject({ label: 'Form label' });
-    expect(context?.inheritedValues).toMatchObject({ label: 'Form label' });
+    expect(context?.values).toMatchObject({ label: 'Work' });
+    expect(context?.inheritedValues).toMatchObject({ label: 'Work' });
   });
 
   it('gives every virtual row a unique address and guards cycles', () => {

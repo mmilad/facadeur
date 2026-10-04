@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
   compileDocumentValidator,
   documentJsonSchema,
+  publicFieldsFor,
   toFlat,
   toNested,
   validateCatalog,
@@ -35,11 +36,23 @@ describe('examples', () => {
       const control = documents.find((document) => document.id === id);
       expect(control?.kind).toBe('component');
       expect(control?.group).toBe('form');
-      expect(control?.fields?.length).toBeGreaterThan(0);
     }
+    const input = documents.find((document) => document.id === 'input')!;
+    expect(input.schemaUse).toEqual({
+      fields: [{ name: 'label', type: { kind: 'type', type: 'string' } }],
+    });
+    expect(input.expose?.fields).toEqual({
+      value: 'control.value',
+      placeholder: 'control.placeholder',
+      name: 'control.name',
+    });
+    expect(
+      [...publicFieldsFor(input, new Map(documents.map((document) => [document.id, document]))).keys()],
+    ).toEqual(['label', 'value', 'placeholder', 'name', 'disabled']);
+    const textarea = documents.find((document) => document.id === 'textarea');
+    expect(textarea?.fields?.length).toBeGreaterThan(0);
     const link = documents.find((document) => document.id === 'link');
     expect(link?.fields?.map((field) => field.name)).toEqual(['label', 'href']);
-    const textarea = documents.find((document) => document.id === 'textarea');
     expect(textarea?.variants?.[0]?.name).toBe('resize');
     const toggle = documents.find((document) => document.id === 'form-toggle');
     expect(toggle?.styles?.children?.switch?.declarations?.borderRadius).toBe('{radius.full}');

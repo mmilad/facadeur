@@ -55,7 +55,7 @@ describe('fonts domain panel', () => {
       (host!.querySelector('button[name="add-font-trigger"]') as HTMLButtonElement).click();
     });
     const idInput = document.querySelector('input[name="new-font-id"]') as HTMLInputElement;
-    setInput(idInput, 'display');
+    await act(async () => setInput(idInput, 'display'));
     await act(async () => {
       (document.querySelector('button[name="add-font"]') as HTMLButtonElement).click();
     });

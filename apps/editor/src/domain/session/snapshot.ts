@@ -7,8 +7,9 @@ import {
   type FlatNode,
 } from '@facadeur/core';
 import { withPreviewData } from '@facadeur/core';
-import type { YjsDocumentStore } from '@facadeur/store-yjs';
+import type { ControllerDocumentStore } from '@facadeur/core';
 import {
+  automaticFieldGroupsFor,
   componentVariantsFor,
   publicEventsFor,
   publicFieldsFor,
@@ -56,7 +57,8 @@ export interface SnapshotBuildContext {
   designRevision: number;
   revision: number;
   order: readonly string[];
-  assetStores: ReadonlyMap<string, YjsDocumentStore>;
+  assetStores: ReadonlyMap<string, ControllerDocumentStore>;
+  catalogDocuments?: ReadonlyMap<string, FlatDocument>;
   savedJson: SavedJsonBaselines;
   designId: string;
   canUndo: boolean;
@@ -82,9 +84,10 @@ export function buildEditorSnapshot(ctx: SnapshotBuildContext): EditorSnapshot {
   const catalog: AssetSummary[] = [];
   const catalogDocuments = new Map<string, FlatDocument>();
   for (const id of ctx.order) {
-    const store = ctx.assetStores.get(id);
-    if (!store) continue;
-    const doc = store.getDocument();
+    const doc = ctx.catalogDocuments
+      ? ctx.catalogDocuments.get(id)
+      : ctx.assetStores.get(id)?.getDocument();
+    if (!doc) continue;
     catalogDocuments.set(doc.id, doc);
     if (!isKind(doc.kind)) continue;
     catalog.push({
@@ -106,7 +109,18 @@ export function buildEditorSnapshot(ctx: SnapshotBuildContext): EditorSnapshot {
   if (selectedNode?.type === 'instance') {
     componentTarget = catalogDocuments.get(selectedNode.component) ?? null;
   }
-  const componentFields = componentTarget ? publicFieldsFor(componentTarget, catalogDocuments) : [];
+  const componentFields = componentTarget
+    ? publicFieldsFor(componentTarget, catalogDocuments, design.schemaCatalog)
+    : [];
+  const automaticFieldGroups = automaticFieldGroupsFor(
+    activeDocument,
+    catalogDocuments,
+    design.schemaCatalog,
+  );
+  const documentScopeFields =
+    activeDocument.kind === 'atom' || activeDocument.kind === 'component'
+      ? publicFieldsFor(activeDocument, catalogDocuments, design.schemaCatalog)
+      : activeDocument.fields;
   const componentEvents = componentTarget ? publicEventsFor(componentTarget, catalogDocuments) : [];
   const componentVariants = componentTarget ? componentVariantsFor(componentTarget) : [];
   const nestedSelection = ctx.nestedSelection;
@@ -115,6 +129,7 @@ export function buildEditorSnapshot(ctx: SnapshotBuildContext): EditorSnapshot {
     selectedNode,
     nestedSelection,
     catalog: catalogDocuments,
+    schemaCatalog: design.schemaCatalog,
     childFields: (ownerNodeId, instancePath) => {
       const owner = activeDocument.nodes[ownerNodeId];
       if (owner?.type !== 'instance') return undefined;
@@ -127,10 +142,14 @@ export function buildEditorSnapshot(ctx: SnapshotBuildContext): EditorSnapshot {
     },
   });
   const nestedSelectionWithFields = nestedSelection ? { ...nestedSelection, fieldContext } : null;
-  const prepareDocument = (source: FlatDocument, variant?: string): FlatDocument =>
-    toFlat(withPreviewData(overlaySchemaDefaults(toNested(source)), variant));
+  const prepareDocument = (source: FlatDocument, variant?: string): FlatDocument => {
+    const fields = publicFieldsFor(source, catalogDocuments, design.schemaCatalog);
+    const prepared = overlaySchemaDefaults(toNested(source), fields);
+    return toFlat(withPreviewData(prepared, variant, fields));
+  };
   const layers = virtualLayerTree(activeDocument, {
     catalog: catalogDocuments,
+    schemaCatalog: design.schemaCatalog,
     paintRoot: activeDocument.kind !== 'page',
     prepareDocument,
   });
@@ -155,6 +174,8 @@ export function buildEditorSnapshot(ctx: SnapshotBuildContext): EditorSnapshot {
     activeVariantName: ctx.activeVariantName,
     componentTarget,
     componentFields,
+    automaticFieldGroups,
+    documentScopeFields,
     componentEvents,
     componentVariants,
     canUndo: ctx.canUndo,
@@ -188,7 +209,7 @@ export function readViewportChromeForOpenDocument(
 
 export function buildDrillParentsForSnapshot(
   drillStack: readonly DrillStackFrame[],
-  assetStores: ReadonlyMap<string, YjsDocumentStore>,
+  assetStores: ReadonlyMap<string, ControllerDocumentStore>,
 ): DrillParent[] {
   return drillStack.map((frame) => {
     const live = assetStores.get(frame.documentId)?.getDocument();

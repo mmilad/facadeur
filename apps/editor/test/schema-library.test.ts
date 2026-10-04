@@ -159,7 +159,7 @@ describe('schema library', () => {
       'media',
     ]);
     expect(library.assignments).toMatchObject({
-      input: 'input',
+      'form-input': 'input',
       textarea: 'textarea',
       card: 'card',
       media: 'media',
@@ -167,10 +167,11 @@ describe('schema library', () => {
     expect(library.schemas.find((schema) => schema.id === 'media')?.schema.oneOf).toHaveLength(2);
     const input = library.schemas.find((schema) => schema.id === 'input')?.schema;
     expect(input?.properties).toMatchObject({
-      label: { type: 'string' },
+      value: { type: 'string' },
       placeholder: { type: 'string' },
     });
-    expect(input?.properties?.label).not.toHaveProperty('default');
+    expect(input?.properties).not.toHaveProperty('label');
+    expect(input?.properties?.value).not.toHaveProperty('default');
   });
 
   it('drops legacy default keywords copied onto a stored schema', () => {
@@ -207,8 +208,8 @@ describe('schema library', () => {
     );
     reloadSchemaLibrary();
     expect(getSchemaLibrary().schemas.map((schema) => schema.id)).toContain('custom');
-    removeLibrarySchema('image');
-    expect(reloadSchemaLibrary().schemas.map((schema) => schema.id)).not.toContain('image');
+    expect(removeLibrarySchema('textarea')).toEqual([]);
+    expect(reloadSchemaLibrary().schemas.map((schema) => schema.id)).not.toContain('textarea');
     expect(getSchemaLibrary().schemas.map((schema) => schema.id)).toContain('video');
   });
 

@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { createId, listComponentTokens } from '@facadeur/core';
+import { listComponentTokens } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -43,7 +43,9 @@ describe('component tokens inspector', () => {
       design: createProjectTemplateDocument(),
     });
     session.openAsset('button', 'root');
-    const id = createId();
+    const id = listComponentTokens(
+      session.project.styles.document('button').componentTokens ?? {},
+    ).find((token) => token.path === 'color.bg')!.id;
     await act(async () => {
       session.execute({
         type: 'setComponentToken',
@@ -55,6 +57,7 @@ describe('component tokens inspector', () => {
     expect(tokenValueByPath(session.getSnapshot().document, 'color.bg')).toBe(
       '{color.accent.default}',
     );
+    expect(session.getSnapshot().notice?.tone).not.toBe('error');
 
     host = document.createElement('div');
     document.body.append(host);
@@ -101,7 +104,9 @@ describe('component tokens inspector', () => {
     accentDefault.$extensions = { facadeur: { label: 'Warm' } };
     const session = createEditorSession({ documents, design });
     session.openAsset('button', 'root');
-    const id = createId();
+    const id = listComponentTokens(
+      session.project.styles.document('button').componentTokens ?? {},
+    ).find((token) => token.path === 'color.bg')!.id;
     await act(async () => {
       session.execute({
         type: 'setComponentToken',
@@ -111,6 +116,8 @@ describe('component tokens inspector', () => {
       });
     });
 
+    expect(tokenValueByPath(session.getSnapshot().document, 'color.bg')).toBe('{color.neutral.0}');
+    expect(session.getSnapshot().notice?.tone).not.toBe('error');
     host = document.createElement('div');
     document.body.append(host);
     root = createRoot(host);

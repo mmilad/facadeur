@@ -21,6 +21,11 @@ export function FormControlsSection({
     { id: 'property', kind: 'select', label: 'Property' },
     { id: 'enabled', kind: 'toggle', label: 'Use token' },
   ],
+  icon,
+  hasIcon,
+  disabled,
+  placeholder,
+  name,
   nodeId,
   className,
 }: FormControlsSectionProps) {
@@ -49,12 +54,17 @@ export function FormControlsSection({
           <Input
             nodeId="native-input"
             className={styles['native-input']}
+            placeholder={placeholder}
+            name={name}
+            disabled={disabled}
             label="Input"
             value="Value"
           />
           <Textarea
             nodeId="native-textarea"
             className={styles['native-textarea']}
+            placeholder={placeholder}
+            name={name}
             label="Textarea"
             value="Write a message"
             rows={3}
@@ -69,6 +79,11 @@ export function FormControlsSection({
           <FormTextInput
             nodeId="input-default"
             className={styles['input-default']}
+            icon={icon}
+            hasIcon={hasIcon}
+            placeholder={placeholder}
+            name={name}
+            disabled={disabled}
             label="Label"
             value="Button"
             hint="Default"
@@ -77,6 +92,9 @@ export function FormControlsSection({
           <FormTextInput
             nodeId="input-focused"
             className={styles['input-focused']}
+            placeholder={placeholder}
+            name={name}
+            disabled={disabled}
             label="Label"
             value="Button"
             hint="Focused"
@@ -87,6 +105,11 @@ export function FormControlsSection({
           <FormTextInput
             nodeId="input-invalid"
             className={styles['input-invalid']}
+            icon={icon}
+            hasIcon={hasIcon}
+            placeholder={placeholder}
+            name={name}
+            disabled={disabled}
             label="Label"
             value="Button"
             hint="Invalid value"
@@ -95,6 +118,11 @@ export function FormControlsSection({
           <FormTextInput
             nodeId="input-disabled"
             className={styles['input-disabled']}
+            icon={icon}
+            hasIcon={hasIcon}
+            placeholder={placeholder}
+            name={name}
+            disabled={disabled}
             label="Label"
             value="Disabled"
             hint="Disabled"
@@ -217,6 +245,10 @@ export function FormControlsSection({
               <FormTextInput
                 nodeId="data-input"
                 className={styles['data-input']}
+                icon={icon}
+                hasIcon={hasIcon}
+                name={name}
+                disabled={disabled}
                 label={field?.label}
                 hint={field?.hint}
                 value={field?.value}
@@ -227,6 +259,7 @@ export function FormControlsSection({
               <Textarea
                 nodeId="data-textarea"
                 className={styles['data-textarea']}
+                name={name}
                 label={field?.label}
                 value={field?.value}
                 placeholder={field?.placeholder}

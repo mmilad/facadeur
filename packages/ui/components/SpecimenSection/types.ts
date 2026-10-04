@@ -4,6 +4,14 @@
  */
 
 export interface SpecimenSectionProps {
+  eyebrow?: string;
+  title?: string;
+  body?: string;
+  value?: string;
+  placeholder?: string;
+  name?: string;
+  disabled?: boolean;
+  label?: string;
   /** Instance id. Sets `data-node` so a parent style rule can address this element. */
   nodeId?: string;
   className?: string;

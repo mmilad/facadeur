@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useState } from 'react';
 import { connectProject, loadProject } from '../domain/project/client.js';
+import { logProjectFailure } from '../domain/project/diagnostics.js';
 import { EditorShell } from '../ui/shell/EditorShell.js';
 
 export function EditorBootstrap() {
@@ -11,17 +12,21 @@ export function EditorBootstrap() {
   useEffect(() => {
     const abort = new AbortController();
     let active: ReturnType<typeof connectProject> | null = null;
+    let phase: 'load' | 'connect' = 'load';
     setError(null);
     setConnection(null);
     void loadProject(abort.signal)
       .then((project) => {
         if (abort.signal.aborted) return;
+        phase = 'connect';
         active = connectProject(project);
         setConnection(active);
       })
       .catch((error: unknown) => {
-        if (!abort.signal.aborted)
+        if (!abort.signal.aborted) {
+          logProjectFailure(error, { phase });
           setError(error instanceof Error ? error.message : 'Could not load the project');
+        }
       });
     return () => {
       abort.abort();
@@ -35,7 +40,7 @@ export function EditorBootstrap() {
       {error ? (
         <>
           <p role="alert">{error}</p>
-          <p>Start the project server with the editor using pnpm dev.</p>
+          <p>Check the browser console for details, then retry.</p>
           <button type="button" onClick={() => setAttempt(attempt + 1)}>
             Retry
           </button>
@@ -46,10 +51,10 @@ export function EditorBootstrap() {
 }
 
 function ConnectedEditor({ connection }: { connection: ReturnType<typeof connectProject> }) {
-  const status = useSyncExternalStore(
-    connection.subscribe,
-    connection.getStatus,
-    connection.getStatus,
+  return (
+    <EditorShell
+      session={connection.session}
+      persistPendingChanges={connection.persistPendingChanges}
+    />
   );
-  return <EditorShell session={connection.session} connectionStatus={status} />;
 }

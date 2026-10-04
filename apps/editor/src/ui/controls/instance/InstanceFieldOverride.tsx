@@ -19,7 +19,6 @@ export function InstanceFieldOverride({
   onInvalid?: (message: string) => void;
   preserveEmptyStrings?: boolean;
 }) {
-  const disabled = boundPath !== undefined;
   const label = boundPath
     ? `${fieldDisplayLabel(field.name)} · bound to ${boundPath}`
     : fieldDisplayLabel(field.name);
@@ -31,7 +30,6 @@ export function InstanceFieldOverride({
           name={`field-${field.name}`}
           aria-label={label}
           value={current}
-          disabled={disabled}
           options={[
             {
               value: '',
@@ -53,7 +51,6 @@ export function InstanceFieldOverride({
           aria-label={label}
           label="On"
           value={checked}
-          disabled={disabled}
           onCommit={(next) => onSetField(next)}
         />
       </Field>
@@ -74,9 +71,8 @@ export function InstanceFieldOverride({
           name={`field-${field.name}`}
           aria-label={label}
           value={shown}
-          placeholder={placeholder}
+          placeholder={boundPath ? `Preview override · ${boundPath}` : placeholder}
           rows={4}
-          disabled={disabled}
           onCommit={(raw) => {
             try {
               onSetField(raw.trim() === '' ? null : parseInstanceFieldValue(field, raw));
@@ -101,8 +97,7 @@ export function InstanceFieldOverride({
         name={`field-${field.name}`}
         aria-label={label}
         value={shown}
-        placeholder={placeholder}
-        disabled={disabled}
+        placeholder={boundPath ? `Preview override · ${boundPath}` : placeholder}
         onCommit={(raw) => {
           try {
             onSetField(

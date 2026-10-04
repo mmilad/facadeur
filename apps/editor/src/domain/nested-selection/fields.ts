@@ -1,5 +1,5 @@
 import { publicFieldsFor } from '../schema/component-contract.js';
-import type { FieldValue, FlatDocument, FlatNode } from '@facadeur/core';
+import type { FieldValue, FlatDocument, FlatNode, SchemaCatalog } from '@facadeur/core';
 import { findParent } from '@facadeur/core';
 import type { NestedFieldContext, NestedSelection } from './types.js';
 export function fieldContextForSelection(input: {
@@ -7,12 +7,13 @@ export function fieldContextForSelection(input: {
   selectedNode: FlatNode | null;
   nestedSelection: NestedSelection | null;
   catalog: ReadonlyMap<string, FlatDocument>;
+  schemaCatalog?: SchemaCatalog;
   childFields?: (
     ownerNodeId: string,
     instancePath: string,
   ) => Record<string, FieldValue> | undefined;
 }): NestedFieldContext | null {
-  const { document, selectedNode, nestedSelection, catalog, childFields } = input;
+  const { document, selectedNode, nestedSelection, catalog, childFields, schemaCatalog } = input;
   const source = nestedSelection?.document ?? document;
   const selected = nestedSelection?.node ?? selectedNode;
   if (!selected) return null;
@@ -36,7 +37,7 @@ export function fieldContextForSelection(input: {
 
   const target = nestedSelection?.target ?? catalog.get(instance.component);
   if (!target) return null;
-  const allFields = publicFieldsFor(target, catalog);
+  const allFields = publicFieldsFor(target, catalog, schemaCatalog);
   const fields =
     selected.type === 'instance'
       ? allFields

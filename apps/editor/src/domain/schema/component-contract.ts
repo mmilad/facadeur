@@ -1,13 +1,19 @@
 import {
   resolveVariantDocument,
+  publicFieldsFor as resolvePublicFields,
+  automaticFieldGroupsFor as resolveAutomaticFieldGroups,
   toFlat,
   toNested,
   variantPresets,
   type EventDefinition,
+  type AutomaticFieldGroup,
   type FieldDefinition,
   type FlatDocument,
+  type SchemaCatalog,
   type VariantPreset,
 } from '@facadeur/core';
+
+export type { AutomaticFieldGroup } from '@facadeur/core';
 
 export interface ComponentVariantContract {
   /** The stable name used by instances and generated components. */
@@ -23,21 +29,33 @@ export interface ComponentVariantContract {
 /**
  * Return the fields a component makes public to its instances.
  *
- * Direct fields stay unchanged. Exposed fields are copied under their public
- * name so instance overrides use the same contract that validation and codegen
- * already understand. Expose paths may cross more than one component layer.
+ * Local fields and explicit exposes form the component's authored contract.
+ * Public fields from embedded components are appended in document order when
+ * the instance has not opted out. Later extensions replace earlier names.
  */
 export function publicFieldsFor(
   document: FlatDocument,
   catalog: ReadonlyMap<string, FlatDocument>,
+  schemaCatalog?: SchemaCatalog,
 ): FieldDefinition[] {
-  const fields = new Map((document.fields ?? []).map((field) => [field.name, field]));
-  for (const [name, path] of Object.entries(document.expose?.fields ?? {})) {
-    if (fields.has(name)) continue;
-    const resolved = resolveField(document, path, catalog);
-    if (resolved) fields.set(name, { ...resolved, name });
-  }
-  return [...fields.values()];
+  return [
+    ...resolvePublicFields(document, {
+      documents: catalog,
+      ...(schemaCatalog ? { schemaCatalog } : {}),
+    }).values(),
+  ];
+}
+
+/** Describe component instances that can contribute fields to this contract. */
+export function automaticFieldGroupsFor(
+  document: FlatDocument,
+  catalog: ReadonlyMap<string, FlatDocument>,
+  schemaCatalog?: SchemaCatalog,
+): AutomaticFieldGroup[] {
+  return resolveAutomaticFieldGroups(document, {
+    documents: catalog,
+    ...(schemaCatalog ? { schemaCatalog } : {}),
+  });
 }
 
 /**
@@ -83,29 +101,6 @@ export function componentVariantsFor(document: FlatDocument): ComponentVariantCo
       document: toFlat(resolveVariantDocument(nested, name)),
     };
   });
-}
-
-function resolveField(
-  document: FlatDocument,
-  path: string,
-  catalog: ReadonlyMap<string, FlatDocument>,
-  seen = new Set<string>(),
-): FieldDefinition | undefined {
-  const key = `${document.id}:${path}`;
-  if (seen.has(key)) return undefined;
-  const nextSeen = new Set(seen).add(key);
-  const [nodeId, ...rest] = path.split('.');
-  const node = nodeId ? document.nodes[nodeId] : undefined;
-  if (!node || node.type !== 'instance' || rest.length === 0) return undefined;
-
-  const child = catalog.get(node.component);
-  if (!child) return undefined;
-  const member = rest.join('.');
-  const direct = child.fields.find((field) => field.name === member);
-  if (direct) return direct;
-
-  const nestedPath = child.expose?.fields?.[member];
-  return nestedPath ? resolveField(child, nestedPath, catalog, nextSeen) : undefined;
 }
 
 function resolveEvent(

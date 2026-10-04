@@ -203,10 +203,6 @@ describe('editor shell', () => {
 
     await act(async () => {
       session.execute({
-        type: 'defineField',
-        field: { name: 'label', type: 'text' },
-      });
-      session.execute({
         type: 'setPreviewData',
         previewData: { fields: { label: 'Go' } },
       });
@@ -217,13 +213,7 @@ describe('editor shell', () => {
         .querySelector('button[data-surface="schema"]')
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
-    await act(async () => {
-      const fieldToggle = [...host!.querySelectorAll('button.eu-section__title')].find(
-        (button) => button.textContent === 'Label',
-      );
-      fieldToggle?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-    expect(host.querySelector('select[name="field-type-label"]')).toBeInstanceOf(HTMLSelectElement);
+    expect(host.querySelector('input[name="new-field-name"]')).toBeNull();
 
     await act(async () => {
       window.dispatchEvent(

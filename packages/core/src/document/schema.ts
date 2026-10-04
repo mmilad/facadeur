@@ -56,6 +56,21 @@ import {
 } from './schemas/schema-style.js';
 import { componentTokensSchema } from './schemas/schema-component-tokens.js';
 import {
+  basicSchemaTypes,
+  componentSchemaUseSchema,
+  schemaCatalogSchema,
+  schemaTypeRefSchema,
+  schemaFieldUseSchema,
+  namedSchemaSchema,
+  type BasicSchemaType,
+  type ComponentSchemaUse,
+  type JsonSchema,
+  type NamedSchema,
+  type SchemaCatalog,
+  type SchemaFieldUse,
+  type SchemaTypeRef,
+} from './schemas/schema-contract.js';
+import {
   variantAxisSchema,
   variantInsertionSchema,
   variantNodeOverrideSchema,
@@ -115,6 +130,12 @@ export {
   variantPresetSchema,
   previewDataSchema,
   settingsSchema,
+  componentSchemaUseSchema,
+  basicSchemaTypes,
+  schemaCatalogSchema,
+  schemaTypeRefSchema,
+  schemaFieldUseSchema,
+  namedSchemaSchema,
 };
 
 export const DOCUMENT_SCHEMA_ID = 'https://github.com/mmilad/facadeur/schema/document.schema.json';
@@ -152,6 +173,8 @@ function documentProperties<Kind extends TSchema>(kind: Kind) {
     styles: Type.Optional(styleBlockSchema),
     tokenInterface: Type.Optional(tokenInterfaceSchema),
     componentTokens: Type.Optional(componentTokensSchema),
+    schemaCatalog: Type.Optional(schemaCatalogSchema),
+    schemaUse: Type.Optional(componentSchemaUseSchema),
     root: nestedNodeSchema,
   };
 }
@@ -208,6 +231,15 @@ export type Binding = Static<typeof bindingSchema>;
 export type NestedNode = Static<typeof nestedNodeSchema>;
 export type DocumentSettings = Static<typeof settingsSchema>;
 export type DocumentFile = Static<typeof documentFileSchema>;
+export type {
+  BasicSchemaType,
+  ComponentSchemaUse,
+  JsonSchema,
+  NamedSchema,
+  SchemaCatalog,
+  SchemaFieldUse,
+  SchemaTypeRef,
+};
 export type FontStyle = Static<typeof fontStyleSchema>;
 export type FontFaceFile = Static<typeof fontFaceFileSchema>;
 export type FontSource = Static<typeof fontSourceSchema>;

@@ -14,7 +14,22 @@ import type { CatalogEntry, PropSpec, VariantTypeSpec } from './types';
 
 export { assertDefault, jsLiteral } from './catalog-fields';
 
-export function assignCatalog(documents: readonly DocumentFile[]): Map<string, CatalogEntry> {
+export function exposedMemberName(
+  target: CatalogEntry,
+  path: string,
+  kind: 'field' | 'event',
+): string | undefined {
+  const members = kind === 'field' ? target.fields : target.events;
+  if (members.has(path)) return path;
+  const mappings =
+    kind === 'field' ? target.document.expose?.fields : target.document.expose?.events;
+  return Object.entries(mappings ?? {}).find(([, mappedPath]) => mappedPath === path)?.[0];
+}
+
+export function assignCatalog(
+  documents: readonly DocumentFile[],
+  contracts: ReadonlyMap<string, Map<string, FieldDefinition>>,
+): Map<string, CatalogEntry> {
   const catalog = new Map<string, CatalogEntry>();
   const componentNames = new Set<string>();
   for (const document of documents) {
@@ -22,7 +37,9 @@ export function assignCatalog(documents: readonly DocumentFile[]): Map<string, C
     const used = new Set<string>(['nodeId', 'className']);
     const typeNames = new Set<string>([component, `${component}Props`]);
     const fields = new Map<string, PropSpec>();
-    for (const field of document.fields ?? []) {
+    const contractFields = contracts.get(document.id);
+    if (!contractFields) throw new CodegenError(`Missing resolved contract for "${document.id}"`);
+    for (const field of contractFields.values()) {
       const spec = fieldProp(document.id, field, used);
       fields.set(field.name, spec);
     }
@@ -66,7 +83,15 @@ export function assignCatalog(documents: readonly DocumentFile[]): Map<string, C
           defaultExpr: quote('default'),
         }
       : undefined;
-    catalog.set(document.id, { document, component, fields, variants, events, namedVariant });
+    catalog.set(document.id, {
+      document,
+      component,
+      contractFields,
+      fields,
+      variants,
+      events,
+      namedVariant,
+    });
   }
   for (const document of documents) {
     const entry = catalog.get(document.id);
@@ -78,17 +103,6 @@ export function assignCatalog(documents: readonly DocumentFile[]): Map<string, C
         (prop) => prop.name,
       ),
     ]);
-    for (const [name, path] of Object.entries(document.expose?.fields ?? {})) {
-      const resolved = resolveExposedMember(document, path, catalog, 'field');
-      if (entry.fields.has(name)) {
-        throw new CodegenError(`Exposed field "${name}" collides with a direct field`);
-      }
-      entry.fields.set(name, {
-        ...resolved,
-        source: name,
-        name: propName(name, used),
-      });
-    }
     for (const [name, path] of Object.entries(document.expose?.events ?? {})) {
       const resolved = resolveExposedMember(document, path, catalog, 'event');
       if (entry.events.has(name)) {
@@ -294,7 +308,7 @@ export function variantTypeSpecs(document: DocumentFile, entry: CatalogEntry): V
 function applyVariantDefaults(entry: CatalogEntry, variantProp: string): void {
   const variants = variantPresets(entry.document).filter((variant) => variant.name !== 'default');
   for (const [fieldName, prop] of entry.fields) {
-    const field = entry.document.fields?.find((candidate) => candidate.name === fieldName);
+    const field = entry.contractFields.get(fieldName);
     if (!field) continue;
     const overrides = variants.flatMap((variant) => {
       if (variant.overrides?.unsetFields?.includes(fieldName)) {

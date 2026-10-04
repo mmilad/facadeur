@@ -1,23 +1,18 @@
 'use client';
 
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useState } from 'react';
+import { createId, validateCatalog } from '@facadeur/core';
 import { SchemaBuilderProvider, type JsonSchema as JoySchema } from 'jsonjoy-builder';
 import 'jsonjoy-builder/styles.css';
 import TypeEditor from './jsonjoy-type-editor.js';
 import type { EditorSnapshot } from '../../domain/session.js';
-import {
-  createLibrarySchema,
-  getSchemaLibrary,
-  removeLibrarySchema,
-  renameLibrarySchema,
-  subscribeSchemaLibrary,
-  updateLibrarySchema,
-  schemaRefUri,
-  validateLibrarySchemas,
-  type JsonSchema,
-  type LibrarySchema,
-  type SchemaValidationIssue,
+import type {
+  JsonSchema,
+  LibrarySchema,
+  SchemaValidationIssue,
 } from '../../domain/schema/schema-library.js';
+import type { EditorSession } from '../../domain/session.js';
+import { schemaRefUri } from '../../domain/schema/schema-library.js';
 import { Field, InlineError, TextInput } from '../form/index.js';
 import styles from './SchemaLibraryStage.module.css';
 
@@ -36,18 +31,51 @@ const EDITOR_LABELS = {
   stringAllowedValuesEnumLabel: 'Allowed values (enum)',
 };
 
-const EMPTY = { schemas: [], assignments: {} };
-
-/**
- * Project schema library. This is a second authoring path beside the document
- * field list: schemas are created here and then chosen on a component.
- */
-export function SchemaLibraryStage({ snap }: { snap: EditorSnapshot }) {
-  const library = useSyncExternalStore(subscribeSchemaLibrary, getSchemaLibrary, () => EMPTY);
-  const assignedId = library.assignments[snap.document.id];
+/** Shared named schemas are part of the design document contract. */
+export function SchemaLibraryStage({
+  session,
+  snap,
+}: {
+  session: EditorSession;
+  snap: EditorSnapshot;
+}) {
+  const library = snap.design.schemaCatalog ?? { schemas: [] };
   const [pickedId, setPickedId] = useState<string | null>(null);
-  const selected =
-    library.schemas.find((schema) => schema.id === (pickedId ?? assignedId)) ?? library.schemas[0];
+  const selected = library.schemas.find((schema) => schema.id === pickedId) ?? library.schemas[0];
+
+  function validate(schemas: LibrarySchema[]): SchemaValidationIssue[] {
+    try {
+      validateCatalog(session.boardDocuments(), { schemaCatalog: { schemas } });
+      return [];
+    } catch (error) {
+      return [
+        {
+          schemaId: selected?.id ?? '',
+          message: error instanceof Error ? error.message : 'Invalid schema catalog',
+        },
+      ];
+    }
+  }
+
+  function commit(schemas: LibrarySchema[]): SchemaValidationIssue[] {
+    const issues = validate(schemas);
+    if (issues.length > 0) return issues;
+    session.executeDesign({
+      type: 'setSchemaCatalog',
+      schemaCatalog: { schemas },
+    });
+    return [];
+  }
+
+  function createSchema() {
+    const schema = {
+      id: createId(),
+      name: uniqueName(library.schemas, 'Schema'),
+      schema: { type: 'object', properties: {} },
+    };
+    const issues = commit([...library.schemas, schema]);
+    if (issues.length === 0) setPickedId(schema.id);
+  }
 
   return (
     <section
@@ -62,9 +90,9 @@ export function SchemaLibraryStage({ snap }: { snap: EditorSnapshot }) {
           <h1>Schemas</h1>
         </div>
         <p className="schema-stage-note">
-          One of is a union, such as Media’s image or video. Any of matches at least one option. A
-          string schema can list an enum. Add another contract in examples/schemas.json, then
-          reload.
+          Create reusable JSON Schema contracts here, then assign a schema or named fields to a
+          component. Defaults use the resolved public fields, including fields forwarded from
+          embedded components.
         </p>
       </header>
       <div className={styles.body}>
@@ -73,7 +101,7 @@ export function SchemaLibraryStage({ snap }: { snap: EditorSnapshot }) {
             type="button"
             className="text-button"
             name="create-library-schema"
-            onClick={() => setPickedId(createLibrarySchema().id)}
+            onClick={createSchema}
           >
             New schema
           </button>
@@ -100,7 +128,29 @@ export function SchemaLibraryStage({ snap }: { snap: EditorSnapshot }) {
             key={selected.id}
             schema={selected}
             schemas={library.schemas}
-            onChange={(next) => updateLibrarySchema(selected.id, next)}
+            validate={validate}
+            onChange={(next) =>
+              commit(
+                library.schemas.map((entry) =>
+                  entry.id === selected.id ? { ...entry, schema: next } : entry,
+                ),
+              )
+            }
+            onRename={(name) =>
+              commit(
+                library.schemas.map((entry) =>
+                  entry.id === selected.id ? { ...entry, name: name.trim() || entry.name } : entry,
+                ),
+              )
+            }
+            onDelete={() => {
+              const next = library.schemas.filter((entry) => entry.id !== selected.id);
+              const issues = commit(next);
+              if (issues.length === 0) {
+                setPickedId(next[0]?.id ?? null);
+              }
+              return issues;
+            }}
           />
         ) : (
           <p className="inspector-empty">
@@ -115,24 +165,31 @@ export function SchemaLibraryStage({ snap }: { snap: EditorSnapshot }) {
 function SchemaEditorPanel({
   schema,
   schemas,
+  validate,
   onChange,
+  onRename,
+  onDelete,
 }: {
   schema: LibrarySchema;
   schemas: LibrarySchema[];
+  validate: (schemas: LibrarySchema[]) => SchemaValidationIssue[];
   onChange: (next: JsonSchema) => SchemaValidationIssue[];
+  onRename: (name: string) => SchemaValidationIssue[];
+  onDelete: () => SchemaValidationIssue[];
 }) {
-  const [validationIssues, setValidationIssues] = useState<SchemaValidationIssue[]>(() =>
-    validateLibrarySchemas(schemas),
-  );
+  const [validationIssues, setValidationIssues] = useState(() => validate(schemas));
   const composition = schemaComposition(schema.schema, schemas);
   const editorSchema = withoutManagedComposition(schema.schema, schemas);
 
-  useEffect(() => {
-    setValidationIssues(validateLibrarySchemas(schemas));
-  }, [schemas]);
+  useEffect(() => setValidationIssues(validate(schemas)), [schemas]);
 
   function commit(next: JsonSchema) {
-    setValidationIssues(onChange(next));
+    setValidationIssues(
+      onChange(next) ??
+        validate(
+          schemas.map((entry) => (entry.id === schema.id ? { ...entry, schema: next } : entry)),
+        ),
+    );
   }
 
   function setComposition(kind: 'allOf' | 'oneOf', schemaIds: string[]) {
@@ -156,15 +213,14 @@ function SchemaEditorPanel({
           <TextInput
             name="library-schema-name"
             value={schema.name}
-            onCommit={(name) => renameLibrarySchema(schema.id, name)}
+            onCommit={(name) => setValidationIssues(onRename(name))}
           />
         </Field>
         <button
           type="button"
           className="text-button"
           onClick={() => {
-            const issues = removeLibrarySchema(schema.id);
-            if (issues.length > 0) setValidationIssues(issues);
+            setValidationIssues(onDelete());
           }}
         >
           Delete schema
@@ -425,6 +481,14 @@ function schemaComposition(schema: JsonSchema, schemas: LibrarySchema[]) {
 
 function schemaName(schemas: LibrarySchema[], id: string): string {
   return schemas.find((entry) => entry.id === id)?.name ?? id;
+}
+
+function uniqueName(schemas: LibrarySchema[], base: string): string {
+  const names = new Set(schemas.map((schema) => schema.name));
+  if (!names.has(base)) return base;
+  let index = 2;
+  while (names.has(`${base} ${index}`)) index += 1;
+  return `${base} ${index}`;
 }
 
 function validationMessage(

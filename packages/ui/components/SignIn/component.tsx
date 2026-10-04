@@ -8,7 +8,15 @@ import type { SignInProps } from './types';
 import { Button } from '../Button';
 import { Input } from '../Input';
 
-export function SignIn({ eyebrow, title, body, nodeId, className }: SignInProps) {
+export function SignIn({
+  eyebrow,
+  title,
+  body,
+  placeholder,
+  disabled,
+  nodeId,
+  className,
+}: SignInProps) {
   return (
     <article
       data-component="sign-in"
@@ -27,6 +35,8 @@ export function SignIn({ eyebrow, title, body, nodeId, className }: SignInProps)
       <Input
         nodeId="email"
         className={styles['email']}
+        placeholder={placeholder}
+        disabled={disabled}
         label="Work email"
         value="ada@atelier.test"
         name="work-email"

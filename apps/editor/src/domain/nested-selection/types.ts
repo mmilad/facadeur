@@ -1,4 +1,10 @@
-import type { FieldDefinition, FieldValue, FlatDocument, FlatNode } from '@facadeur/core';
+import type {
+  FieldDefinition,
+  FieldValue,
+  FlatDocument,
+  FlatNode,
+  SchemaCatalog,
+} from '@facadeur/core';
 
 export interface NestedSelection {
   ownerNodeId: string;
@@ -27,6 +33,7 @@ export interface NestedFieldContext {
 
 export interface VirtualLayerOptions {
   catalog?: ReadonlyMap<string, FlatDocument>;
+  schemaCatalog?: SchemaCatalog;
   paintRoot?: boolean;
   prepareDocument?: (document: FlatDocument, variant?: string) => FlatDocument;
 }

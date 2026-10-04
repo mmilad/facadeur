@@ -5,6 +5,8 @@ import type {
   DocumentStore,
   FlatDocument,
   FlatNode,
+  FieldDefinition,
+  ProjectController,
 } from '@facadeur/core';
 import type { DesignInput } from '@facadeur/tokens';
 import type { JsonFileHandle } from '../assets/files.js';
@@ -14,6 +16,7 @@ import type { ViewportChromeSettings } from '../viewport/viewport-chrome.js';
 import type { StyleEditMode } from '../viewport/viewport-edit.js';
 import type { DrillParent } from '../navigation/drill-navigation.js';
 import type { VariantSummary } from '../edits/variant-edit.js';
+import type { AutomaticFieldGroup } from '../schema/component-contract.js';
 
 export type EditorTool = 'select' | 'frame' | 'text' | 'image';
 
@@ -64,6 +67,10 @@ export interface EditorSnapshot {
   componentTarget: FlatDocument | null;
   /** Public fields of the selected component, including recursive expose paths. */
   componentFields: import('@facadeur/core').FieldDefinition[];
+  /** Nested component contracts that can be forwarded into the open component. */
+  automaticFieldGroups: AutomaticFieldGroup[];
+  /** Fields available to bindings throughout the open document's data scope. */
+  documentScopeFields: FieldDefinition[];
   /** Public events of the selected component, including recursive expose paths. */
   componentEvents: import('@facadeur/core').EventDefinition[];
   /** Default plus named component variants with resolved editor documents. */
@@ -92,19 +99,12 @@ export interface EditorSnapshot {
 }
 
 export interface EditorSession {
-  /** Register new remote documents without merging updates into existing stores. */
-  acceptProjectDocuments: (
-    entries: Array<{
-      document: DocumentFile;
-      update: Uint8Array;
-      source: string;
-      saved: boolean;
-    }>,
-  ) => void;
-  /** Live stores for the project transport; rendering still uses DocumentStore. */
-  syncStores: () => import('@facadeur/store-yjs').YjsDocumentStore[];
-  /** Reflect a server snapshot save without replacing the document or Undo history. */
-  markProjectSaved: (id: string, saved: boolean) => void;
+  /** Live Core project API. UI interactions normally retain the session's guarded command methods. */
+  readonly project: ProjectController;
+  /** Renderer-facing views over controller state. */
+  documentStores: () => DocumentStore[];
+  /** Mark the exact persisted snapshot, preserving edits made during an async save. */
+  markDocumentSaved: (id: string, document: FlatDocument) => void;
   destroy: () => void;
   subscribe: (listener: () => void) => () => void;
   getSnapshot: () => EditorSnapshot;
@@ -133,6 +133,8 @@ export interface EditorSession {
   endDrag: () => void;
   execute: (command: Command) => void;
   executeDesign: (command: Command) => void;
+  /** Execute a command against a project document without changing the editor selection. */
+  executeDocument: (documentId: string, command: Command) => void;
   undo: () => void;
   redo: () => void;
   loadDocument: (file: DocumentFile, handle?: JsonFileHandle) => void;
@@ -160,7 +162,7 @@ export interface EditorSessionOptions {
   design: DocumentFile;
   /** Document id to filename, for the examples that are not `<id>.json`. */
   sources?: Readonly<Record<string, string>>;
-  /** Hydrate exactly the server Yjs history rather than independently seeding it. */
-  updates?: Readonly<Record<string, Uint8Array>>;
-  saveDocument?: (id: string) => Promise<FlatDocument>;
+  /** Recovered drafts have no saved baseline until explicitly persisted. */
+  unsavedDocumentIds?: readonly string[];
+  saveDocument?: (id: string, document: FlatDocument) => Promise<FlatDocument>;
 }

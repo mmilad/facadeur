@@ -9,27 +9,29 @@ import type { EditorSession, EditorSnapshot } from '../src/domain/session';
 import { PreviewDataStage } from '../src/ui/stage/PreviewDataStage';
 
 function snapshot(overrides: Partial<EditorSnapshot> = {}): EditorSnapshot {
+  const document = {
+    version: 1,
+    id: 'preview-stage',
+    name: 'Preview stage',
+    kind: 'component' as const,
+    fields: [
+      { name: 'background', type: 'text' as const },
+      { name: 'label', type: 'text' as const, required: true },
+      { name: 'enabled', type: 'boolean' as const },
+      { name: 'items', type: 'array' as const },
+    ],
+    previewData: { fields: { background: '{color.unknown}', label: 'Base label' } },
+    variantLabels: { default: 'Base' },
+    variants: [],
+    settings: {},
+    tokens: {},
+    fonts: [],
+    nodes: { root: { id: 'root', type: 'frame' as const, children: [] } },
+    rootId: 'root',
+  };
   return {
-    document: {
-      version: 1,
-      id: 'preview-stage',
-      name: 'Preview stage',
-      kind: 'component',
-      fields: [
-        { name: 'background', type: 'text' },
-        { name: 'label', type: 'text', required: true },
-        { name: 'enabled', type: 'boolean' },
-        { name: 'items', type: 'array' },
-      ],
-      previewData: { fields: { background: '{color.unknown}', label: 'Base label' } },
-      variantLabels: { default: 'Base' },
-      variants: [],
-      settings: {},
-      tokens: {},
-      fonts: [],
-      nodes: { root: { id: 'root', type: 'frame', children: [] } },
-      rootId: 'root',
-    },
+    document,
+    documentScopeFields: document.fields,
     activeVariantName: 'compact',
     ...overrides,
   } as EditorSnapshot;
@@ -46,6 +48,32 @@ describe('PreviewDataStage', () => {
     expect(screen.getByRole('textbox', { name: 'Background' })).toHaveValue('{color.unknown}');
     expect(screen.getByRole('textbox', { name: 'Label' })).toHaveValue('Base label');
     expect(execute).not.toHaveBeenCalled();
+  });
+
+  it('shows exposed component fields that are absent from the document field declarations', () => {
+    const execute = vi.fn();
+    const session = { execute } as unknown as EditorSession;
+    const snap = snapshot({
+      document: {
+        ...snapshot().document,
+        fields: [{ name: 'label', type: 'text' }],
+      },
+      documentScopeFields: [
+        { name: 'label', type: 'text' },
+        { name: 'value', type: 'text' },
+        { name: 'placeholder', type: 'text' },
+        { name: 'name', type: 'text' },
+        { name: 'disabled', type: 'boolean' },
+      ],
+    });
+
+    render(<PreviewDataStage session={session} snap={snap} />);
+
+    expect(screen.getByRole('textbox', { name: 'Label' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Value' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Placeholder' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Name' })).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Disabled' })).toBeInTheDocument();
   });
 
   it('writes only the changed field into the active variant', async () => {
@@ -168,6 +196,7 @@ describe('PreviewDataStage', () => {
         },
       },
     ];
+    snap.documentScopeFields = snap.document.fields;
     render(<PreviewDataStage session={session} snap={snap} />);
     const items = screen.getByRole('textbox', { name: 'Items' });
     fireEvent.change(items, { target: { value: '[{"count":"wrong"}]' } });

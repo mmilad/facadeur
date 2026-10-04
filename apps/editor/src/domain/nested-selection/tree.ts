@@ -1,8 +1,8 @@
 import type { FieldValue, FlatDocument, FlatNode } from '@facadeur/core';
 import { childOverridePath, mergeChildFieldContext } from '@facadeur/core';
 import {
-  resolveFieldBindings,
-  resolveFields,
+  resolveInstanceFieldScope,
+  resolveDocumentFieldScope,
   resolveTargetDocument,
   MAX_NESTED_DEPTH,
 } from './resolve.js';
@@ -14,6 +14,7 @@ export function virtualLayerTree(
   const root = document.nodes[document.rootId];
   if (!root) return null;
   const catalog = options.catalog ?? new Map<string, FlatDocument>();
+  const schemaCatalog = options.schemaCatalog;
   return layerItem({
     document,
     node: root,
@@ -22,7 +23,8 @@ export function virtualLayerTree(
     ownerNodeId: undefined,
     instancePath: [],
     catalog,
-    scope: resolveFields(document.fields, undefined),
+    schemaCatalog,
+    scope: resolveDocumentFieldScope(document, catalog, schemaCatalog),
     childFields: undefined,
     childFieldPath: null,
     depth: 0,
@@ -39,6 +41,7 @@ function layerItem(input: {
   ownerNodeId: string | undefined;
   instancePath: string[];
   catalog: ReadonlyMap<string, FlatDocument>;
+  schemaCatalog?: VirtualLayerOptions['schemaCatalog'];
   scope: Record<string, FieldValue>;
   childFields?: Record<string, Record<string, FieldValue>>;
   childFieldPath?: string | null;
@@ -93,10 +96,14 @@ function layerItem(input: {
       : null;
     const targetRoot = target?.nodes[target.rootId] ?? null;
     if (target && targetRoot?.type === 'frame' && !input.stack.has(target.id)) {
-      const scope = resolveFields(target.fields, {
-        ...(effectiveNode.fields ?? {}),
-        ...resolveFieldBindings(node.fieldBindings, input.scope),
-      });
+      const scope = resolveInstanceFieldScope(
+        node,
+        target,
+        input.scope,
+        catalog,
+        effectiveNode.fields,
+        input.schemaCatalog,
+      );
       const stack = new Set(input.stack).add(target.id);
       for (const id of targetRoot.children) {
         const child = target.nodes[id];
@@ -112,6 +119,7 @@ function layerItem(input: {
             ownerNodeId: nextOwner,
             instancePath: nextPath,
             catalog,
+            schemaCatalog: input.schemaCatalog,
             scope,
             childFields: mergeChildFieldContext(input.childFields, node.childFields, overridePath),
             childFieldPath: overridePath ?? '',

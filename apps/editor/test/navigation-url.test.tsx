@@ -68,7 +68,7 @@ describe('editor URL selection', () => {
           version: 1,
           id: 'button',
           name: 'Button',
-          kind: 'atom',
+          kind: 'component',
           fields: [{ name: 'label', type: 'text', default: 'Button' }],
           root: {
             id: 'root',

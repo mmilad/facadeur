@@ -96,6 +96,82 @@ describe('Yjs document store', () => {
     store.destroy();
   });
 
+  it('preserves the instance automatic field forwarding preference through the Yjs codec', () => {
+    const file: DocumentFile = {
+      ...initial,
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          { id: 'default', type: 'instance', component: 'input' },
+          { id: 'opted-out', type: 'instance', component: 'input', forwardFields: false },
+        ],
+      },
+    };
+    const store = createDocumentStore(file);
+    expect(store.getDocument()).toEqual(toFlat(file));
+    expect(store.getNode('default')).not.toHaveProperty('forwardFields');
+    expect(store.getNode('opted-out')).toMatchObject({ forwardFields: false });
+
+    store.execute({
+      type: 'setProp',
+      nodeId: 'opted-out',
+      prop: 'forwardFields',
+      value: true,
+    });
+    expect(store.getNode('opted-out')).toMatchObject({ forwardFields: true });
+    store.undo();
+    expect(store.getNode('opted-out')).toMatchObject({ forwardFields: false });
+    store.destroy();
+  });
+
+  it('persists the project schema catalog and component schema use through commands and undo', () => {
+    const file: DocumentFile = {
+      ...initial,
+      schemaUse: { direct: { kind: 'schema', schemaId: 'button' }, defaults: { label: 'Sample' } },
+      schemaCatalog: {
+        schemas: [
+          {
+            id: 'button',
+            name: 'Button',
+            description: 'Reusable button contract',
+            schema: {
+              type: 'object',
+              properties: { label: { type: 'string', default: 'Button' } },
+            },
+          },
+        ],
+      },
+    };
+    const store = createDocumentStore(file, {
+      schemaResolverContext: {
+        documents: new Map([[file.id, file]]),
+        schemaCatalog: file.schemaCatalog,
+      },
+    });
+    expect(store.getDocument()).toEqual(toFlat(file));
+
+    const reorderedUse = { defaults: { label: 'Updated' }, direct: file.schemaUse!.direct };
+    store.execute({ type: 'setSchemaUse', schemaUse: reorderedUse });
+    expect(store.getDocument().schemaUse).toEqual(reorderedUse);
+    store.undo();
+    expect(store.getDocument().schemaUse).toEqual(file.schemaUse);
+
+    store.execute({
+      type: 'setSchemaUse',
+      schemaUse: { fields: [{ name: 'title', type: { kind: 'type', type: 'string' } }] },
+    });
+    expect(store.getDocument().schemaUse?.fields?.[0]?.name).toBe('title');
+    store.undo();
+    expect(store.getDocument().schemaUse).toEqual(file.schemaUse);
+
+    store.execute({ type: 'setSchemaCatalog', schemaCatalog: null });
+    expect(store.getDocument().schemaCatalog).toBeUndefined();
+    store.undo();
+    expect(store.getDocument().schemaCatalog).toEqual(file.schemaCatalog);
+    store.destroy();
+  });
+
   it('round-trips and undoes sparse child field overrides', () => {
     const file: DocumentFile = {
       ...initial,

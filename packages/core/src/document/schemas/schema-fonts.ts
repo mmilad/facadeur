@@ -83,7 +83,7 @@ export const DTCG_DEFS = {
 } as const;
 
 /** Attach token definitions without changing the TypeBox static type. */
-export function withTokenDefs<T extends object>(schema: T): T {
+export function withTokenDefs<T extends object>(schema: T) {
   Object.assign(schema, { $defs: DTCG_DEFS });
   return schema;
 }

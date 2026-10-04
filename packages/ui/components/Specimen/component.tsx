@@ -7,7 +7,18 @@ import styles from './style.module.css';
 import type { SpecimenProps } from './types';
 import { SpecimenSection } from '../SpecimenSection';
 
-export function Specimen({ nodeId, className }: SpecimenProps) {
+export function Specimen({
+  eyebrow,
+  title,
+  body,
+  value,
+  placeholder,
+  name,
+  disabled,
+  label,
+  nodeId,
+  className,
+}: SpecimenProps) {
   return (
     <div
       data-component="specimen"
@@ -17,6 +28,14 @@ export function Specimen({ nodeId, className }: SpecimenProps) {
       <SpecimenSection
         nodeId="specimen-section"
         className={styles['specimen-section']}
+        eyebrow={eyebrow}
+        title={title}
+        body={body}
+        value={value}
+        placeholder={placeholder}
+        name={name}
+        disabled={disabled}
+        label={label}
         childFields={{ 'input-email': { value: 'ada@atelier.testyy' } }}
       />
     </div>

@@ -1,4 +1,5 @@
 import { resolveLibrarySchema } from './schema-validation.js';
+import type { JsonSchema, NamedSchema } from '@facadeur/core';
 
 export const BASIC_SCHEMA_TYPES = [
   'string',
@@ -26,26 +27,8 @@ export interface ComponentSchemaUse {
   defaults?: unknown;
 }
 
-export interface NamedSchema {
-  id: string;
-  name: string;
-  schema: PreviewSchema;
-}
-
-export interface PreviewSchema {
-  $ref?: string;
-  type?: string | string[];
-  title?: string;
-  properties?: Record<string, PreviewSchema>;
-  required?: string[];
-  items?: PreviewSchema;
-  enum?: unknown[];
-  oneOf?: PreviewSchema[];
-  anyOf?: PreviewSchema[];
-  allOf?: PreviewSchema[];
-  default?: unknown;
-  additionalProperties?: boolean | PreviewSchema;
-}
+export type { NamedSchema };
+type PreviewSchema = JsonSchema;
 
 export type PreviewKind =
   'string' | 'number' | 'integer' | 'boolean' | 'enum' | 'object' | 'array' | 'choice';
@@ -197,10 +180,6 @@ function controlForSchema(
       required,
       kind: 'object',
       children: [
-        ...schema.allOf.flatMap((branch) => {
-          const control = controlForSchema(branch, path, label, required);
-          return control.children ?? [control];
-        }),
         ...Object.entries(schema.properties ?? {}).map(([name, property]) =>
           controlForSchema(
             property,
@@ -209,6 +188,10 @@ function controlForSchema(
             requiredNames.has(name),
           ),
         ),
+        ...schema.allOf.flatMap((branch) => {
+          const control = controlForSchema(branch, path, label, required);
+          return control.children ?? [control];
+        }),
       ],
     };
   }

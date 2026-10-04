@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { DocumentError, toFlat, toNested, type DocumentFile } from '@facadeur/core';
+import {
+  DocumentError,
+  toFlat,
+  toNested,
+  validateDocumentFile,
+  type DocumentFile,
+} from '@facadeur/core';
 
 const sample: DocumentFile = {
   version: 1,
@@ -86,6 +92,42 @@ describe('flat conversion', () => {
   it('round-trips nested JSON without dropping fields', () => {
     expect(toNested(toFlat(sample))).toEqual(sample);
     const flat = toFlat(sample);
+    expect(toFlat(toNested(flat))).toEqual(flat);
+  });
+
+  it('preserves an instance opt-out for automatic field forwarding', () => {
+    const file: DocumentFile = {
+      version: 1,
+      id: 'forward-fields',
+      name: 'Forward fields',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          { id: 'automatic', type: 'instance', component: 'control' },
+          { id: 'explicit', type: 'instance', component: 'control', forwardFields: false },
+        ],
+      },
+    };
+    const flat = toFlat(file);
+
+    expect(flat.nodes.automatic).not.toHaveProperty('forwardFields');
+    expect(flat.nodes.explicit).toMatchObject({ forwardFields: false });
+    expect(validateDocumentFile(file)).toEqual(file);
+    expect(() =>
+      validateDocumentFile({
+        ...file,
+        root: {
+          id: 'root',
+          type: 'frame',
+          children: [
+            { id: 'explicit', type: 'instance', component: 'control', forwardFields: 'no' },
+          ],
+        },
+      }),
+    ).toThrow(/must be boolean/);
+    expect(toNested(flat)).toEqual(file);
     expect(toFlat(toNested(flat))).toEqual(flat);
   });
 

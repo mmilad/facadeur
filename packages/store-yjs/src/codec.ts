@@ -60,6 +60,14 @@ export function patchDocument(doc: Y.Doc, next: FlatDocument): void {
   syncJsonObject(doc.getMap('expose'), (next.expose ?? {}) as Record<string, JsonValue>);
   syncJsonObject(doc.getMap('previewData'), (next.previewData ?? {}) as Record<string, JsonValue>);
   syncJsonObject(doc.getMap('variantLabels'), next.variantLabels ?? {});
+  syncJsonObject(
+    doc.getMap('schemaCatalog'),
+    (next.schemaCatalog ?? {}) as unknown as Record<string, JsonValue>,
+  );
+  syncJsonObject(
+    doc.getMap('schemaUse'),
+    (next.schemaUse ?? {}) as unknown as Record<string, JsonValue>,
+  );
 }
 
 export function readDocument(doc: Y.Doc): FlatDocument {
@@ -68,6 +76,8 @@ export function readDocument(doc: Y.Doc): FlatDocument {
   for (const [id, map] of doc.getMap<Y.Map<unknown>>('nodes').entries()) {
     nodes[id] = readNode(map);
   }
+  const schemaCatalog = readJsonObject(doc.getMap('schemaCatalog'));
+  const schemaUse = readJsonObject(doc.getMap('schemaUse'));
   return {
     version: 1,
     id: stringValue(meta.get('id')),
@@ -93,6 +103,12 @@ export function readDocument(doc: Y.Doc): FlatDocument {
     ...(Object.keys(readJsonObject(doc.getMap('variantLabels'))).length
       ? { variantLabels: readJsonObject(doc.getMap('variantLabels')) as Record<string, string> }
       : {}),
+    ...(Object.keys(schemaCatalog).length
+      ? { schemaCatalog: schemaCatalog as unknown as FlatDocument['schemaCatalog'] }
+      : {}),
+    ...(Object.keys(schemaUse).length
+      ? { schemaUse: schemaUse as unknown as FlatDocument['schemaUse'] }
+      : {}),
     nodes,
   };
 }
@@ -114,4 +130,6 @@ export function ensureDocumentMaps(doc: Y.Doc): void {
   doc.getMap('expose');
   doc.getMap('previewData');
   doc.getMap('variantLabels');
+  doc.getMap('schemaCatalog');
+  doc.getMap('schemaUse');
 }

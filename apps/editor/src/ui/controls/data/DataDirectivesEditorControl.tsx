@@ -56,7 +56,11 @@ export function DataDirectivesEditorControl({
 }
 
 /** Return the fields visible at a node, including aliases from ancestor repeaters. */
-export function dataFieldsForNode(document: FlatDocument, nodeId: string): FieldDefinition[] {
+export function dataFieldsForNode(
+  document: FlatDocument,
+  nodeId: string,
+  documentFields: readonly FieldDefinition[] = document.fields,
+): FieldDefinition[] {
   const ancestors: FlatNode[] = [];
   let currentId = nodeId;
   while (true) {
@@ -66,7 +70,7 @@ export function dataFieldsForNode(document: FlatDocument, nodeId: string): Field
     currentId = parent.id;
   }
 
-  const fields = new Map(document.fields.map((field) => [field.name, field]));
+  const fields = new Map(documentFields.map((field) => [field.name, field]));
   for (const ancestor of ancestors) {
     if (ancestor.type !== 'frame' || !ancestor.repeat) continue;
     const source = findField(fieldPathOptions([...fields.values()]), ancestor.repeat.path);

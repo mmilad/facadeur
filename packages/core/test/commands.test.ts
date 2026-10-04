@@ -534,6 +534,59 @@ describe('applyCommand', () => {
     ).toThrow(/field binding/);
   });
 
+  it('sets, clears, and inserts the instance automatic field forwarding preference', () => {
+    const doc = toFlat({
+      version: 1,
+      id: 'forward-fields-command',
+      name: 'Forward fields command',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [{ id: 'child', type: 'instance', component: 'input' }],
+      },
+    });
+    const optedOut = applyCommand(doc, {
+      type: 'setProp',
+      nodeId: 'child',
+      prop: 'forwardFields',
+      value: false,
+    });
+    expect(optedOut.nodes.child).toMatchObject({ forwardFields: false });
+    expect(() =>
+      applyCommand(doc, {
+        type: 'setProp',
+        nodeId: 'child',
+        prop: 'forwardFields',
+        value: 'false',
+      }),
+    ).toThrow(/forwardFields must be a boolean/);
+
+    const reset = applyCommand(optedOut, {
+      type: 'setProp',
+      nodeId: 'child',
+      prop: 'forwardFields',
+      value: null,
+    });
+    expect(reset.nodes.child).not.toHaveProperty('forwardFields');
+
+    const inserted = applyCommand(doc, {
+      type: 'insert',
+      parentId: 'root',
+      node: {
+        id: 'explicit',
+        type: 'instance',
+        component: 'input',
+        forwardFields: false,
+        fieldBindings: { value: 'record.value' },
+      },
+    });
+    expect(inserted.nodes.explicit).toMatchObject({
+      forwardFields: false,
+      fieldBindings: { value: 'record.value' },
+    });
+  });
+
   it('sets and clears the public expose contract', () => {
     let doc = toFlat({
       version: 1,

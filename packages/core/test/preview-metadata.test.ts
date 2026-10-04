@@ -33,6 +33,18 @@ describe('editor preview metadata', () => {
       applyCommand(toFlat(file), { type: 'setVariantLabels', labels: { missing: 'Unknown' } }),
     ).toThrow();
   });
+  it('accepts preview values for fields exposed by the component contract', () => {
+    const component = toFlat({
+      ...file,
+      kind: 'component',
+      expose: { fields: { externalValue: 'control.value' } },
+    });
+    const updated = applyCommand(component, {
+      type: 'setPreviewData',
+      previewData: { fields: { externalValue: 'Example' } },
+    });
+    expect(updated.previewData?.fields?.externalValue).toBe('Example');
+  });
   it('removes sample values and labels when their definitions are removed', () => {
     const start = toFlat({
       ...file,

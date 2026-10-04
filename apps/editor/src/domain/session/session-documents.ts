@@ -1,11 +1,5 @@
-import {
-  DocumentError,
-  toNested,
-  type CommandContext,
-  type DefaultKind,
-  type FlatDocument,
-} from '@facadeur/core';
-import type { YjsDocumentStore } from '@facadeur/store-yjs';
+import { DocumentError, type DefaultKind, type FlatDocument } from '@facadeur/core';
+import type { ControllerDocumentStore } from '@facadeur/core';
 import { markDocumentSaved, type SavedJsonBaselines } from '../assets/save-state.js';
 import type { JsonFileHandle } from '../assets/files.js';
 import { isKind } from './kinds.js';
@@ -30,83 +24,60 @@ import type {
 } from './types.js';
 
 export function bindSessionDocumentStores(deps: {
-  assetStores: Map<string, YjsDocumentStore>;
-  unsubs: Map<YjsDocumentStore, () => void>;
+  assetStores: Map<string, ControllerDocumentStore>;
+  unsubs: Map<ControllerDocumentStore, () => void>;
   undoHistory: ReturnType<typeof createUndoHistory>;
   getOpenId: () => string;
   onStoreChange: (source: 'asset' | 'design') => void;
 }) {
   const { assetStores, unsubs, undoHistory, getOpenId, onStoreChange } = deps;
 
-  function watch(store: YjsDocumentStore, source: 'asset' | 'design') {
+  function watch(store: ControllerDocumentStore, source: 'asset' | 'design') {
     unsubs.get(store)?.();
     unsubs.set(
       store,
-      store.subscribe(() => onStoreChange(source)),
+      store.subscribe((change) => {
+        if (change.reason === 'command') undoHistory.noteCommand(store);
+        onStoreChange(source);
+      }),
     );
   }
 
-  function forget(store: YjsDocumentStore | undefined) {
+  function forget(store: ControllerDocumentStore | undefined) {
     undoHistory.forget(store);
   }
 
-  function openStore(): YjsDocumentStore {
+  function openStore(): ControllerDocumentStore {
     const openId = getOpenId();
     const store = assetStores.get(openId);
     if (!store) throw new DocumentError('missing-node', `No open document "${openId}"`);
     return store;
   }
 
-  function openFlat(): FlatDocument {
-    return openStore().getDocument();
-  }
-
-  function catalogDocuments(): ReadonlyMap<string, FlatDocument> {
-    const documents = new Map<string, FlatDocument>();
-    for (const store of assetStores.values()) {
-      const document = store.getDocument();
-      documents.set(document.id, document);
-    }
-    return documents;
-  }
-
-  function catalogNestedDocuments() {
-    const documents = new Map<string, ReturnType<typeof toNested>>();
-    for (const store of assetStores.values()) {
-      const document = store.getDocument();
-      documents.set(document.id, toNested(document));
-    }
-    return documents;
-  }
-
   return {
     watch,
     forget,
     openStore,
-    openFlat,
-    catalogDocuments,
-    catalogNestedDocuments,
   };
 }
 
 export function bootstrapSessionDocumentCatalog(options: {
   documents: EditorSessionOptions['documents'];
   designId: string;
-  commandContext: CommandContext;
-  assetStores: Map<string, YjsDocumentStore>;
+  getStore: (id: string) => ControllerDocumentStore;
+  assetStores: Map<string, ControllerDocumentStore>;
   order: string[];
   syncKinds: () => void;
-  watch: (store: YjsDocumentStore, source: 'asset' | 'design') => void;
-  designStore: YjsDocumentStore;
+  watch: (store: ControllerDocumentStore, source: 'asset' | 'design') => void;
+  designStore: ControllerDocumentStore;
   savedJson: SavedJsonBaselines;
   applyPreferredOpen: (id: string, workspace: DefaultKind) => void;
   rebuildSnapshot: () => void;
-  updates?: Readonly<Record<string, Uint8Array>>;
 }) {
   const {
     documents,
     designId,
-    commandContext,
+    getStore,
     assetStores,
     order,
     syncKinds,
@@ -120,10 +91,9 @@ export function bootstrapSessionDocumentCatalog(options: {
   registerSessionAssetDocuments({
     documents,
     designId,
-    commandContext,
+    getStore,
     assetStores,
     order,
-    updates: options.updates,
   });
   syncKinds();
   watch(designStore, 'design');
@@ -151,6 +121,7 @@ export function bindRefreshSelection(deps: {
   selectionDocument: () => FlatDocument;
   paintRoot: () => boolean;
   catalogDocuments: () => ReadonlyMap<string, FlatDocument>;
+  getSchemaCatalog: () => import('@facadeur/core').SchemaCatalog | undefined;
   prepareNestedDocument: (document: FlatDocument, variant?: string) => FlatDocument;
   getNestedSelection: () => NestedSelection | null;
   setNestedSelection: (selection: NestedSelection | null) => void;
@@ -173,6 +144,7 @@ export function bindRefreshSelection(deps: {
         deps.catalogDocuments(),
         deps.paintRoot(),
         deps.prepareNestedDocument,
+        deps.getSchemaCatalog(),
       );
       if (!next || next.ownerNodeId !== selectedNodeId) {
         deps.clearSelection();
@@ -206,8 +178,9 @@ export function bindBuildEditorSnapshot(deps: {
   getGeneration: () => number;
   getDesignRevision: () => number;
   getRevision: () => number;
+  catalogDocuments?: () => ReadonlyMap<string, FlatDocument>;
   order: string[];
-  assetStores: Map<string, YjsDocumentStore>;
+  assetStores: Map<string, ControllerDocumentStore>;
   savedJson: SavedJsonBaselines;
   designId: string;
   canUndo: () => boolean;
@@ -241,6 +214,7 @@ export function bindBuildEditorSnapshot(deps: {
       designRevision: deps.getDesignRevision(),
       revision: deps.getRevision(),
       order: deps.order,
+      catalogDocuments: deps.catalogDocuments?.(),
       assetStores: deps.assetStores,
       savedJson: deps.savedJson,
       designId: deps.designId,

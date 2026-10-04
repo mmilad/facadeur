@@ -188,6 +188,7 @@ function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
       'childFields',
       node.childFields as unknown as Record<string, JsonValue> | undefined,
     );
+    syncScalar(map, 'forwardFields', node.forwardFields);
     syncStringMap(map, 'fieldBindings', node.fieldBindings);
     syncStringMap(map, 'variants', node.variants);
     if (node.variantRules?.length)
@@ -227,6 +228,7 @@ function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
     'component',
     'fields',
     'childFields',
+    'forwardFields',
     'fieldBindings',
     'variants',
     'variantRules',

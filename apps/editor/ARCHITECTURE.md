@@ -6,13 +6,20 @@ The editor lives in `apps/editor` (npm name `@facadeur/editor`). This note docum
 
 - Next.js App Router entry: `layout.tsx`, `page.tsx`, `globals.css`
 - `EditorBootstrap.tsx` — client session bootstrap (specimen catalog + design template)
-- `api/facadeur/examples/route.ts` — dev save fallback (`PUT /__facadeur/examples` via rewrite)
+- `api/projects/default/` — local JSON catalog and explicit saves, in the same Next process
+- `domain/project/files.ts` — filesystem validation, source-hash checks, atomic writes and recovery drafts
 
 **Routing:** design-domain vs properties uses the `?surface=` query segment (`properties` default; `colors`, `fonts`, etc. for design domains). The iframe stage is unchanged on `/`.
 
 ## Domain (`src/domain/`)
 
 Session, editing commands, selection, viewports, style/token edit helpers, files I/O, frame host — no React.
+
+`session.project` owns live document state. Renderer stores are Core controller views;
+they hold history snapshots but no independent live document. Core changes publish after
+commit, so selection, dirty state, Undo and rendering observe the same state. The editor
+has no Yjs dependency or WebSocket transport. Retired integration files are preserved as
+text in `legacy/yjs/`; the separate server and adapter package remain optional legacy code.
 
 ## UI (`src/ui/`)
 

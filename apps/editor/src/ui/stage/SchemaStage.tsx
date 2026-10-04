@@ -2,7 +2,6 @@ import type { EditorSession, EditorSnapshot } from '../../domain/session.js';
 import { variantLabel } from '../../domain/edits/variant-edit.js';
 import { ComponentEvents } from '../sidebar/properties/content/component/ComponentEvents.js';
 import { ComponentExpose } from '../sidebar/properties/content/component/ComponentExpose.js';
-import { ComponentFields } from '../sidebar/properties/content/component/ComponentFields.js';
 import { ComponentVariants } from '../sidebar/properties/content/component/ComponentVariants.js';
 import { ownsComponentFeatures } from '../sidebar/properties/content/component/owns-component-features.js';
 import { SchemaUseControl } from './SchemaUseControl.js';
@@ -34,7 +33,7 @@ export function SchemaStage({
         <p className="schema-stage-note">
           {snap.activeVariantName
             ? `Editing ${variantLabel(document, snap.activeVariantName)}; schema stays shared with the base document.`
-            : 'Choose a shared schema, then keep this document’s fields, events, and exposed API.'}
+            : 'Choose a shared schema and set the defaults this component contributes to instances.'}
         </p>
       </header>
       <div className="schema-stage-body">
@@ -45,9 +44,7 @@ export function SchemaStage({
               aria-labelledby="schema-definition-title"
             >
               <h2 id="schema-definition-title">Component definition</h2>
-              <SchemaUseControl documentId={document.id} onOpenSchemas={onOpenSchemas} />
-              <h3>Props</h3>
-              <ComponentFields session={session} snap={snap} />
+              <SchemaUseControl session={session} snap={snap} onOpenSchemas={onOpenSchemas} />
               <ComponentEvents session={session} snap={snap} />
               <ComponentExpose session={session} snap={snap} />
               {document.variants.length ? (

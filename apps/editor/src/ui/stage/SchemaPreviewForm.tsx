@@ -1,3 +1,4 @@
+import type { FieldDefinition } from '@facadeur/core';
 import { useMemo } from 'react';
 import type {
   ComponentSchemaUse,
@@ -11,11 +12,8 @@ import {
   retargetControl,
   setAt,
 } from '../../domain/schema/schema-use.js';
-import {
-  getComponentSchemaUse,
-  setComponentSchemaUse,
-} from '../../domain/schema/schema-library.js';
 import { Checkbox, Combobox, Field, NumberInput, Stack, TextInput } from '../form/index.js';
+import type { EditorSession } from '../../domain/session.js';
 
 function joinPath(parent: string, name: string): string {
   return parent ? `${parent}.${name}` : name;
@@ -42,29 +40,35 @@ function seedControl(control: PreviewControl): unknown {
 }
 
 export function SchemaPreviewForm({
-  documentId,
+  session,
   use,
   schemas,
+  fields,
 }: {
-  documentId: string;
+  session: EditorSession;
   use: ComponentSchemaUse | null;
   schemas: NamedSchema[];
+  fields: FieldDefinition[];
 }) {
-  const controls = useMemo(() => (use ? previewControlsForUse(use, schemas) : []), [use, schemas]);
+  const controls = useMemo(() => {
+    const assigned = use ? previewControlsForUse(use, schemas) : [];
+    const names = new Set(assigned.map((control) => control.path.split('.')[0]).filter(Boolean));
+    return [...assigned, ...fields.filter((field) => !names.has(field.name)).map(controlForField)];
+  }, [fields, schemas, use]);
   const defaults = use?.defaults;
 
   function commitDefaults(nextDefaults: unknown) {
-    const current = getComponentSchemaUse(documentId) ?? use;
-    if (!current?.direct && !current?.fields?.length) return;
-    const next: ComponentSchemaUse = current.fields?.length
-      ? { fields: current.fields, defaults: nextDefaults }
-      : { direct: current.direct!, defaults: nextDefaults };
-    setComponentSchemaUse(documentId, next);
+    const current = use ?? undefined;
+    const next: ComponentSchemaUse = {
+      ...(current?.direct ? { direct: current.direct } : {}),
+      ...(current?.fields ? { fields: current.fields } : {}),
+      defaults: nextDefaults,
+    };
+    session.execute({ type: 'setSchemaUse', schemaUse: next });
   }
 
   function writeAt(path: string, value: unknown) {
-    const current = getComponentSchemaUse(documentId);
-    commitDefaults(setAt(current?.defaults ?? {}, path, value));
+    commitDefaults(setAt(use?.defaults ?? {}, path, value));
   }
 
   return (
@@ -86,6 +90,34 @@ export function SchemaPreviewForm({
       )}
     </section>
   );
+}
+
+function controlForField(field: FieldDefinition): PreviewControl {
+  const required = field.required === true;
+  if (field.type === 'enum') {
+    return {
+      path: field.name,
+      label: field.name,
+      required,
+      kind: 'enum',
+      options: (field.options ?? []).map((value) => ({ value, label: value })),
+    };
+  }
+  if (field.type === 'boolean')
+    return { path: field.name, label: field.name, required, kind: 'boolean' };
+  if (field.type === 'number')
+    return { path: field.name, label: field.name, required, kind: 'number' };
+  if (field.type === 'array')
+    return {
+      path: field.name,
+      label: field.name,
+      required,
+      kind: 'array',
+      item: controlForField({ name: '0', type: field.items?.type ?? 'text' }),
+    };
+  if (field.type === 'object')
+    return { path: field.name, label: field.name, required, kind: 'object' };
+  return { path: field.name, label: field.name, required, kind: 'string' };
 }
 
 function PreviewControlField({

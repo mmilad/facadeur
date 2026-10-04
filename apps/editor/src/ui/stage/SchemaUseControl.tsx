@@ -1,17 +1,10 @@
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
-import {
-  getComponentSchemaUse,
-  getSchemaLibrary,
-  setComponentSchemaUse,
-  subscribeSchemaLibrary,
-} from '../../domain/schema/schema-library.js';
+import { useEffect, useMemo, useState } from 'react';
+import type { EditorSession, EditorSnapshot } from '../../domain/session.js';
 import type { ComponentSchemaUse, SchemaFieldUse } from '../../domain/schema/schema-use.js';
 import { parseTypeRef, typeRefValue } from '../../domain/schema/schema-use.js';
 import { Combobox, Field, SegmentedControl, Stack, TextInput } from '../form/index.js';
 import { SchemaPreviewForm } from './SchemaPreviewForm.js';
 import { schemaTypeOptions } from './schema-type-options.js';
-
-const emptyLibrary = { schemas: [], assignments: {} };
 
 type SchemaUseMode = 'direct' | 'fields';
 
@@ -25,18 +18,17 @@ function emptyFieldRow(): SchemaFieldUse {
 }
 
 export function SchemaUseControl({
-  documentId,
+  session,
+  snap,
   onOpenSchemas,
 }: {
-  documentId: string;
+  session: EditorSession;
+  snap: EditorSnapshot;
   onOpenSchemas: () => void;
 }) {
-  const library = useSyncExternalStore(
-    subscribeSchemaLibrary,
-    getSchemaLibrary,
-    () => emptyLibrary,
-  );
-  const use = getComponentSchemaUse(documentId);
+  const documentId = snap.document.id;
+  const library = snap.design.schemaCatalog ?? { schemas: [] };
+  const use = snap.document.schemaUse ?? null;
   const typeOptions = useMemo(() => schemaTypeOptions(library.schemas), [library.schemas]);
   const namedSchemas = useMemo(
     () =>
@@ -54,22 +46,26 @@ export function SchemaUseControl({
   );
 
   useEffect(() => {
-    const next = getComponentSchemaUse(documentId);
+    const next = snap.document.schemaUse ?? null;
     setMode(modeForUse(next));
     setFieldRows(next?.fields?.length ? next.fields : [emptyFieldRow()]);
-  }, [documentId]);
+  }, [documentId, snap.document.schemaUse]);
+
+  function commit(next: ComponentSchemaUse | null) {
+    session.execute({ type: 'setSchemaUse', schemaUse: next });
+  }
 
   function saveDirect(refValue: string) {
     const ref = parseTypeRef(refValue);
     if (!ref) return;
-    setComponentSchemaUse(documentId, { direct: ref, defaults: use?.defaults });
+    commit({ direct: ref, defaults: use?.defaults });
   }
 
   function saveMode(nextMode: SchemaUseMode) {
     if (nextMode === mode) return;
     setMode(nextMode);
     if (nextMode === 'direct') {
-      setComponentSchemaUse(documentId, {
+      commit({
         direct: use?.direct ??
           use?.fields?.find((field) => field.name.trim())?.type ?? {
             kind: 'type',
@@ -87,7 +83,7 @@ export function SchemaUseControl({
     setFieldRows(seed);
     const named = seed.filter((row) => row.name.trim());
     if (named.length) {
-      setComponentSchemaUse(documentId, { fields: named, defaults: use?.defaults });
+      commit({ fields: named, defaults: use?.defaults });
     }
   }
 
@@ -98,13 +94,10 @@ export function SchemaUseControl({
       .map((row) => ({ ...row, name: row.name.trim() }));
     if (!fields.length) {
       if (use?.fields?.length)
-        setComponentSchemaUse(
-          documentId,
-          use.defaults === undefined ? null : { defaults: use.defaults },
-        );
+        commit(use.defaults === undefined ? null : { defaults: use.defaults });
       return;
     }
-    setComponentSchemaUse(documentId, {
+    commit({
       fields,
       defaults: use?.defaults,
     });
@@ -197,7 +190,12 @@ export function SchemaUseControl({
         </p>
       </div>
 
-      <SchemaPreviewForm documentId={documentId} use={previewUse} schemas={namedSchemas} />
+      <SchemaPreviewForm
+        session={session}
+        use={previewUse}
+        schemas={namedSchemas}
+        fields={snap.documentScopeFields}
+      />
     </div>
   );
 }

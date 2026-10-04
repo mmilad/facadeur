@@ -10,22 +10,30 @@ export {
   type ComponentToken,
   type ComponentTokenMap,
   type ListedComponentToken,
-} from './component-tokens.js';
+} from './controller/style/tokens/component/contract.js';
 export {
   applyCommand,
   type Command,
   type CommandContext,
   type InsertNode,
   type NodeProp,
-} from './commands/commands.js';
+} from './controller/document/commands/index.js';
 export { DocumentError } from './document/errors.js';
+export { ProjectController } from './controller/project/controller.js';
+export { StyleController } from './controller/style/controller.js';
+export type {
+  DocumentCommandExecutor,
+  ProjectControllerOptions,
+  ProjectChange,
+} from './controller/project/types.js';
 export { canonicalizeJson, isJsonValue, isPlainObject, type JsonValue } from './document/json.js';
 export {
   childOverridePath,
   mergeChildFieldContext,
   mergeChildFieldOverrides,
 } from './document/child-fields.js';
-export { assertBreakpoints, assertFont, assertFonts, fontStyles } from './styles/libraries.js';
+export { assertBreakpoints } from './controller/style/breakpoints.js';
+export { assertFont, assertFonts, fontStyles } from './controller/style/fonts.js';
 export {
   canonicalizeFlat,
   collectSubtree,
@@ -43,15 +51,15 @@ export {
   type TextNode,
 } from './document/flat.js';
 export { createId, ID_PATTERN, TAG_PATTERN } from './document/ids.js';
-export { canonicalizeLayout, layoutTokenRefs, parseLayout } from './styles/layout.js';
+export { canonicalizeLayout, layoutTokenRefs, parseLayout } from './controller/style/layout.js';
 export {
   assertStyleSelector,
   bindStyleRuleSelector,
   renderStyleRuleSelector,
   replaceSelectorClasses,
   selectorClassNames,
-} from './styles/selectors.js';
-export { documentClassNames } from './styles/class-names.js';
+} from './controller/style/selectors.js';
+export { documentClassNames } from './controller/style/class-names.js';
 export {
   defaultKinds,
   defaultNestingRules,
@@ -85,7 +93,10 @@ export {
   type BindingTarget,
   breakpointLabel,
   defaultBreakpoints,
+  basicSchemaTypes,
+  type BasicSchemaType,
   type Breakpoint,
+  type ComponentSchemaUse,
   type DocumentFile,
   type DocumentSchemaOptions,
   type DocumentSettings,
@@ -100,6 +111,11 @@ export {
   type ChildFieldOverrides,
   type FieldType,
   type FieldValue,
+  type JsonSchema,
+  type NamedSchema,
+  type SchemaCatalog,
+  type SchemaFieldUse,
+  type SchemaTypeRef,
   type FontFaceFile,
   type FontFamily,
   type IconDefinition,
@@ -133,8 +149,9 @@ export {
   removeTokenFromTree,
   setGroupInTree,
   setTokenInTree,
-  tokenReference,
-  TOKEN_SEGMENT,
+} from './controller/style/tokens/global/tree.js';
+export { tokenReference, TOKEN_SEGMENT } from './controller/style/tokens/syntax.js';
+export {
   type IndexedGroup,
   type IndexedToken,
   type TokenDefinition,
@@ -142,28 +159,29 @@ export {
   type TokenIndex,
   type TokenTier,
   type TokenTree,
-} from './token-tree.js';
-export { type DocumentChange, type DocumentStore } from './commands/store.js';
+} from './controller/style/tokens/types.js';
+export { type DocumentChange, type DocumentStore } from './store/types.js';
+export { createControllerStore, type ControllerDocumentStore } from './store/controller-store.js';
 export {
   deriveVariantPreset,
   resolveVariantDocument,
   variantPresets,
-} from './variants/variants.js';
-export { resolvePreviewData, withPreviewData } from './variants/preview-data.js';
+} from './controller/variants/index.js';
+export { resolvePreviewData, withPreviewData } from './controller/variants/preview-data.js';
 export {
   assertStyleContract,
   assertStyleMap,
   assertStyleNameAvailable,
   canonicalizeStyleBlock,
   canonicalizeTokenInterface,
+} from './controller/style/blocks/contract.js';
+export {
   collectTokenRefs,
   isFontFamilyRef,
-  omitVariantAxis,
-  omitVariantValues,
-  parseStyleBlock,
-  parseTokenInterface,
   refsInText,
-} from './styles/style-block.js';
+} from './controller/style/references/collect.js';
+export { omitVariantAxis, omitVariantValues } from './controller/style/blocks/edit.js';
+export { parseStyleBlock, parseTokenInterface } from './controller/style/blocks/parse.js';
 export {
   assertDefinitionKind,
   assertDisplayOn,
@@ -179,10 +197,20 @@ export {
   compileDocumentValidator,
   validateCatalog,
   resolveChildFieldDefinition,
+  automaticFieldGroupsFor,
+  exposedFields,
+  publicFieldsFor,
+  resolveComponentContract,
+  type AutomaticFieldGroup,
+  type ContractCatalog,
+  type ContractDocument,
+  type ContractResolverInput,
+  type SchemaResolverContext,
+  type ValidateCatalogOptions,
   validateDefinitions,
   validateDocumentFile,
   validateLibraries,
   validateTree,
   assertValueMatches,
   type ValidateOptions,
-} from './validate.js';
+} from './controller/validation/index.js';

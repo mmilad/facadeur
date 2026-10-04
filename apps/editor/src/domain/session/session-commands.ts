@@ -1,46 +1,50 @@
-import { toNested, type Command } from '@facadeur/core';
-import type { YjsDocumentStore } from '@facadeur/store-yjs';
+import { toNested, type Command, type ProjectController } from '@facadeur/core';
+import type { ControllerDocumentStore } from '@facadeur/core';
 import { errorText } from './kinds.js';
-import type { createUndoHistory } from './undo-history.js';
+import { executeProjectCommand } from './session-project.js';
+import { logProjectFailure } from '../project/diagnostics.js';
 import { applyActiveVariantCommand, variantEditableCommand } from './session-variant-context.js';
 import type { EditorSnapshot } from './types.js';
 
 export function bindSessionCommandRunner(deps: {
-  undoHistory: ReturnType<typeof createUndoHistory>;
-  assetStores: Map<string, YjsDocumentStore>;
+  getProject: () => ProjectController;
+  assetStores: Map<string, ControllerDocumentStore>;
   getOpenId: () => string;
   getSnapshot: () => EditorSnapshot | null;
   resolveKind: (componentId: string) => string | undefined;
   catalogNestedDocuments: () => Map<string, ReturnType<typeof toNested>>;
-  /** Stores close over one context object. Refresh design token paths before each command. */
-  prepareCommandContext: () => void;
+  getSchemaCatalog: () => import('@facadeur/core').SchemaCatalog | undefined;
   setErrorNotice: (message: string) => void;
   publish: () => void;
 }) {
   const {
-    undoHistory,
+    getProject,
     assetStores,
     getOpenId,
     getSnapshot,
     resolveKind,
     catalogNestedDocuments,
-    prepareCommandContext,
+    getSchemaCatalog,
     setErrorNotice,
     publish,
   } = deps;
 
-  function run(store: YjsDocumentStore, command: Command) {
-    undoHistory.noteCommand(store);
+  function run(store: ControllerDocumentStore, command: Command) {
     try {
-      prepareCommandContext();
-      store.execute(command);
+      executeProjectCommand(getProject(), store.getDocument().id, command);
     } catch (error) {
+      logProjectFailure(error, {
+        phase: 'command',
+        document: store.getDocument(),
+        command: command.type,
+        schemaCatalog: getSchemaCatalog(),
+      });
       setErrorNotice(errorText(error));
       publish();
     }
   }
 
-  function runWithActiveVariant(store: YjsDocumentStore, command: Command) {
+  function runWithActiveVariant(store: ControllerDocumentStore, command: Command) {
     const activeStore = assetStores.get(getOpenId());
     const variantName = getSnapshot()?.activeVariantName;
     if (store !== activeStore || !variantName || !variantEditableCommand(command)) {
@@ -57,9 +61,17 @@ export function bindSessionCommandRunner(deps: {
           command,
           resolveKind,
           catalogNestedDocuments,
+          getSchemaCatalog,
+          commandContext: getProject().commandContext,
         }),
       );
     } catch (error) {
+      logProjectFailure(error, {
+        phase: 'command',
+        document: store.getDocument(),
+        command: command.type,
+        schemaCatalog: getSchemaCatalog(),
+      });
       setErrorNotice(errorText(error));
       publish();
     }

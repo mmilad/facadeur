@@ -1,4 +1,4 @@
-import type { DocumentFile, FieldType } from '@facadeur/core';
+import type { DocumentFile, FieldDefinition, FieldType } from '@facadeur/core';
 
 export interface PropSpec {
   /** Document field or variant-axis name. */
@@ -40,6 +40,8 @@ export type LocalClassNames = ReadonlyMap<string, string>;
 
 export interface CatalogEntry {
   document: DocumentFile;
+  /** Canonical Core-resolved public fields, including schema-derived defaults. */
+  contractFields: ReadonlyMap<string, FieldDefinition>;
   component: string;
   fields: Map<string, PropSpec>;
   variants: Map<string, PropSpec>;

@@ -10,9 +10,7 @@ import type {
   VariantPreset,
 } from '../schema.js';
 
-export function sortStringRecord(
-  record: Record<string, string> | undefined,
-): Record<string, string> | undefined {
+export function sortStringRecord(record: Record<string, string> | undefined) {
   if (!record) return undefined;
   const keys = Object.keys(record).sort();
   if (!keys.length) return undefined;
@@ -24,9 +22,7 @@ export function sortStringRecord(
   return Object.keys(next).length ? next : undefined;
 }
 
-export function sortFieldValues(
-  record: Record<string, FieldValue> | undefined,
-): Record<string, FieldValue> | undefined {
+export function sortFieldValues(record: Record<string, FieldValue> | undefined) {
   if (!record) return undefined;
   const keys = Object.keys(record).sort();
   if (!keys.length) return undefined;
@@ -38,9 +34,7 @@ export function sortFieldValues(
   return Object.keys(next).length ? next : undefined;
 }
 
-export function cloneChildFields(
-  value: ChildFieldOverrides | undefined,
-): ChildFieldOverrides | undefined {
+export function cloneChildFields(value: ChildFieldOverrides | undefined) {
   if (!value) return undefined;
   const next: ChildFieldOverrides = {};
   for (const path of Object.keys(value).sort()) {
@@ -56,7 +50,7 @@ export function cloneChildFields(
   return Object.keys(next).length ? next : undefined;
 }
 
-export function cloneBinding(binding: Binding): Binding {
+export function cloneBinding(binding: Binding) {
   return {
     field: binding.field,
     target: binding.target,
@@ -64,7 +58,7 @@ export function cloneBinding(binding: Binding): Binding {
   };
 }
 
-export function cloneEventBindings(bindings: EventBinding[]): EventBinding[] {
+export function cloneEventBindings(bindings: EventBinding[]) {
   return bindings.map((binding) => ({
     event: binding.event,
     name: binding.name,
@@ -91,21 +85,21 @@ export function cloneField(field: FieldDefinition): FieldDefinition {
   };
 }
 
-export function cloneEvent(event: EventDefinition): EventDefinition {
+export function cloneEvent(event: EventDefinition) {
   return {
     name: event.name,
     ...(event.payload ? { payload: { ...event.payload } } : {}),
   };
 }
 
-export function cloneExpose(expose: Expose): Expose {
+export function cloneExpose(expose: Expose) {
   return {
     ...(expose.fields ? { fields: { ...expose.fields } } : {}),
     ...(expose.events ? { events: { ...expose.events } } : {}),
   };
 }
 
-export function cloneVariant(variant: VariantAxis): VariantAxis {
+export function cloneVariant(variant: VariantAxis) {
   return {
     name: variant.name,
     values: [...variant.values],
@@ -113,7 +107,7 @@ export function cloneVariant(variant: VariantAxis): VariantAxis {
   };
 }
 
-export function clonePreset(variant: VariantPreset): VariantPreset {
+export function clonePreset(variant: VariantPreset) {
   return {
     name: variant.name,
     ...(variant.overrides

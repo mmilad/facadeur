@@ -21,8 +21,8 @@ export function FormInput({
     <input
       data-component="form-input"
       data-node={nodeId}
-      type="text"
       autoComplete="off"
+      type="text"
       value={value}
       placeholder={placeholder}
       name={name}

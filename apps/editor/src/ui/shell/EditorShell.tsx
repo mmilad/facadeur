@@ -11,6 +11,8 @@ import {
   download,
 } from '../../domain/assets/files.js';
 import { isEditableTarget } from '../../domain/keyboard.js';
+import { migrateLegacySchemaLibrary } from '../../domain/schema/migrate-legacy-schema-library.js';
+import { logProjectFailure } from '../../domain/project/diagnostics.js';
 import type { EditorSession } from '../../domain/session.js';
 import {
   EDITOR_VIEW_ITEMS,
@@ -44,11 +46,23 @@ import { useEditorNavigation } from './useEditorNavigation.js';
 export function EditorShell({
   session,
   connectionStatus,
+  persistPendingChanges,
 }: {
   session: EditorSession;
   connectionStatus?: string;
+  persistPendingChanges?: () => Promise<void>;
 }) {
   const snap = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
+  useEffect(() => {
+    if (!persistPendingChanges) return;
+    void migrateLegacySchemaLibrary(session, persistPendingChanges).catch((error: unknown) => {
+      logProjectFailure(error, { phase: 'save' });
+      session.setNotice(
+        error instanceof Error ? error.message : 'Could not migrate schema library',
+        'error',
+      );
+    });
+  }, [session, connectionStatus, persistPendingChanges]);
   const { surface, setSurface } = useEditorNavigation(session, snap);
   const designSurface = isDesignDomain(surface);
   const settingsSurface = isSettingsTokenDomain(surface) || surface === 'schemas';
@@ -199,7 +213,7 @@ export function EditorShell({
                 <SettingsSections surface={surface} onSelect={setSurface} />
               </div>
             </header>
-            <SchemaLibraryStage snap={snap} />
+            <SchemaLibraryStage session={session} snap={snap} />
           </section>
         ) : surface === 'schema' ? (
           <SchemaStage session={session} snap={snap} onOpenSchemas={() => setSurface('schemas')} />

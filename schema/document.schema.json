@@ -2771,6 +2771,253 @@
         }
       }
     },
+    "schemaCatalog": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["schemas"],
+      "properties": {
+        "schemas": {
+          "type": "array",
+          "items": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": ["id", "name", "schema"],
+            "properties": {
+              "id": {
+                "minLength": 1,
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+                "type": "string"
+              },
+              "name": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "schema": {
+                "$id": "T1",
+                "additionalProperties": true,
+                "type": "object",
+                "properties": {
+                  "$ref": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "type": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "properties": {
+                    "type": "object",
+                    "patternProperties": {
+                      "^(.*)$": {
+                        "$ref": "T1"
+                      }
+                    }
+                  },
+                  "required": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "items": {
+                    "$ref": "T1"
+                  },
+                  "enum": {
+                    "type": "array",
+                    "items": {}
+                  },
+                  "oneOf": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "T1"
+                    }
+                  },
+                  "anyOf": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "T1"
+                    }
+                  },
+                  "allOf": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "T1"
+                    }
+                  },
+                  "default": {},
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "T1"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "schemaUse": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "direct": {
+          "anyOf": [
+            {
+              "additionalProperties": false,
+              "type": "object",
+              "required": ["kind", "type"],
+              "properties": {
+                "kind": {
+                  "const": "type",
+                  "type": "string"
+                },
+                "type": {
+                  "anyOf": [
+                    {
+                      "const": "string",
+                      "type": "string"
+                    },
+                    {
+                      "const": "number",
+                      "type": "string"
+                    },
+                    {
+                      "const": "integer",
+                      "type": "string"
+                    },
+                    {
+                      "const": "boolean",
+                      "type": "string"
+                    },
+                    {
+                      "const": "object",
+                      "type": "string"
+                    },
+                    {
+                      "const": "array",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "additionalProperties": false,
+              "type": "object",
+              "required": ["kind", "schemaId"],
+              "properties": {
+                "kind": {
+                  "const": "schema",
+                  "type": "string"
+                },
+                "schemaId": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": ["name", "type"],
+            "properties": {
+              "name": {
+                "minLength": 1,
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+                "type": "string"
+              },
+              "type": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "type": "object",
+                    "required": ["kind", "type"],
+                    "properties": {
+                      "kind": {
+                        "const": "type",
+                        "type": "string"
+                      },
+                      "type": {
+                        "anyOf": [
+                          {
+                            "const": "string",
+                            "type": "string"
+                          },
+                          {
+                            "const": "number",
+                            "type": "string"
+                          },
+                          {
+                            "const": "integer",
+                            "type": "string"
+                          },
+                          {
+                            "const": "boolean",
+                            "type": "string"
+                          },
+                          {
+                            "const": "object",
+                            "type": "string"
+                          },
+                          {
+                            "const": "array",
+                            "type": "string"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "additionalProperties": false,
+                    "type": "object",
+                    "required": ["kind", "schemaId"],
+                    "properties": {
+                      "kind": {
+                        "const": "schema",
+                        "type": "string"
+                      },
+                      "schemaId": {
+                        "minLength": 1,
+                        "type": "string"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "defaults": {}
+      }
+    },
     "root": {
       "$id": "https://github.com/mmilad/facadeur/schema/nested-node",
       "anyOf": [
@@ -6429,6 +6676,9 @@
                   }
                 }
               }
+            },
+            "forwardFields": {
+              "type": "boolean"
             },
             "fieldBindings": {
               "type": "object",

@@ -1,16 +1,13 @@
 import {
   DocumentError,
-  readTokenTree,
-  resolveChildFieldDefinition,
   resolveVariantDocument,
   toFlat,
   toNested,
   validateCatalog,
-  type CommandContext,
   type DefaultKind,
   type FlatDocument,
 } from '@facadeur/core';
-import { createDocumentStore, type YjsDocumentStore } from '@facadeur/store-yjs';
+import type { ControllerDocumentStore } from '@facadeur/core';
 import type { JsonFileHandle } from '../assets/files.js';
 import type { SavedJsonBaselines } from '../assets/save-state.js';
 import { markDocumentSaved, clearDocumentSaved } from '../assets/save-state.js';
@@ -24,12 +21,9 @@ import {
   applyOpenAssetChange,
   bindLoadDocument,
   bindPersistDocumentSave,
-  boardDocumentsForOrder,
   boardStoresForOrder,
-  designInputFromStore,
 } from './save.js';
 import { createEditorSessionSurface, createUndoHistory } from './undo-history.js';
-import { migratePreviewData } from '../preview-data.js';
 import { bindSessionCommandRunner } from './session-commands.js';
 import {
   bindBuildEditorSnapshot,
@@ -39,7 +33,7 @@ import {
   createSessionSaveHooks,
 } from './session-documents.js';
 import { prepareNestedDocument } from './session-variant-context.js';
-import { bindAcceptProjectDocuments } from './session-catalog.js';
+import { createSessionProject } from './session-project.js';
 import type {
   EditorDrag,
   EditorNotice,
@@ -55,15 +49,14 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   }
   const sources = { ...options.sources };
   const listeners = new Set<() => void>();
-  // Hydration validates instance targets before any stores are registered.
-  // Seed the entire catalog so design and forward asset references can resolve.
+  // Seed the complete catalog before resolving forward references.
   const kinds = new Map<string, string>(
     [...options.documents, options.design].map((file) => [file.id, file.kind]),
   );
-  const assetStores = new Map<string, YjsDocumentStore>();
+  const assetStores = new Map<string, ControllerDocumentStore>();
   const order: string[] = [];
   const handles = new Map<string, JsonFileHandle>();
-  const unsubs = new Map<YjsDocumentStore, () => void>();
+  const unsubs = new Map<ControllerDocumentStore, () => void>();
   const lastOpen = new Map<DefaultKind, string>();
   const undoHistory = createUndoHistory();
   let fitHandler: (() => void) | null = null;
@@ -91,14 +84,11 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   const savedJson: SavedJsonBaselines = new Map();
   let drillStack: DrillStackFrame[] = [];
   let snapshot: EditorSnapshot | null = null;
-
   const resolveKind = (componentId: string) => kinds.get(componentId);
-  const commandContext: CommandContext = { resolveKind };
-  let designStore: YjsDocumentStore = createDocumentStore(
-    options.updates?.[designId] ? options.design : migratePreviewData(options.design),
-    commandContext,
-    { update: options.updates?.[designId] },
-  );
+  const sessionProject = createSessionProject(options);
+  const getProject = () => sessionProject.project;
+  for (const document of getProject().documents) kinds.set(document.id, document.kind);
+  let designStore = sessionProject.store(designId);
 
   function filenameFor(id: string) {
     return sources[id] ?? `${id}.json`;
@@ -109,14 +99,23 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   }
 
   let onStoreChange: (source: 'asset' | 'design') => void = () => {};
-  const { watch, forget, openStore, openFlat, catalogDocuments, catalogNestedDocuments } =
-    bindSessionDocumentStores({
-      assetStores,
-      unsubs,
-      undoHistory,
-      getOpenId: () => openId,
-      onStoreChange: (source) => onStoreChange(source),
-    });
+  const { watch, forget, openStore } = bindSessionDocumentStores({
+    assetStores,
+    unsubs,
+    undoHistory,
+    getOpenId: () => openId,
+    onStoreChange: (source) => onStoreChange(source),
+  });
+
+  const openFlat = () => getProject().document(openId).manifest;
+  const catalogDocuments = () =>
+    new Map(
+      getProject()
+        .documents.filter((document) => document.id !== designId)
+        .map((document) => [document.id, document.manifest] as const),
+    );
+  const catalogNestedDocuments = () =>
+    new Map([...catalogDocuments()].map(([id, document]) => [id, toNested(document)] as const));
 
   function selectionDocument(): FlatDocument {
     const document = openFlat();
@@ -143,12 +142,16 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     selectedViewportId = null;
   }
 
+  const prepareNested = (document: FlatDocument, variant?: string) =>
+    prepareNestedDocument(document, variant, catalogDocuments(), getProject().schemaCatalog);
+
   const refreshSelection = bindRefreshSelection({
     getSelectedNodeId: () => selectedNodeId,
     selectionDocument,
     paintRoot,
     catalogDocuments,
-    prepareNestedDocument,
+    getSchemaCatalog: () => getProject().schemaCatalog,
+    prepareNestedDocument: prepareNested,
     getNestedSelection: () => nestedSelection,
     setNestedSelection: (selection) => {
       nestedSelection = selection;
@@ -161,7 +164,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
 
   const build = bindBuildEditorSnapshot({
     openFlat,
-    getDesignDocument: () => designStore.getDocument(),
+    getDesignDocument: () => getProject().designDocument,
     getWorkspace: () => workspace,
     getOpenId: () => openId,
     getSelectedNodeId: () => selectedNodeId,
@@ -179,6 +182,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     getGeneration: () => generation,
     getDesignRevision: () => designRevision,
     getRevision: () => revision,
+    catalogDocuments,
     order,
     assetStores,
     savedJson,
@@ -243,23 +247,14 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     publish();
   }
 
-  commandContext.resolveChildField = (node, path, field) =>
-    resolveChildFieldDefinition(node, path, field, catalogNestedDocuments());
-
-  function prepareCommandContext() {
-    commandContext.globalTokenPaths = new Set(
-      readTokenTree(designStore.getDocument().tokens).tokens.keys(),
-    );
-  }
-
   const runWithActiveVariant = bindSessionCommandRunner({
-    undoHistory,
+    getProject,
     assetStores,
     getOpenId: () => openId,
     getSnapshot: () => snapshot,
     resolveKind,
     catalogNestedDocuments,
-    prepareCommandContext,
+    getSchemaCatalog: () => getProject().schemaCatalog,
     setErrorNotice: (message) => {
       notice = { tone: 'error', text: message };
     },
@@ -268,9 +263,8 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
 
   bootstrapSessionDocumentCatalog({
     documents: options.documents,
-    updates: options.updates,
     designId,
-    commandContext,
+    getStore: sessionProject.store,
     assetStores,
     order,
     syncKinds,
@@ -296,27 +290,16 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     publish,
   });
 
+  for (const id of options.unsavedDocumentIds ?? []) clearDocumentSaved(savedJson, id);
+  snapshot = build();
+
   return {
-    acceptProjectDocuments: bindAcceptProjectDocuments({
-      assetStores,
-      getDesignStore: () => designStore,
-      kinds,
-      commandContext,
-      order,
-      sources,
-      savedJson,
-      watch,
-      publishCatalog: () => {
-        generation += 1;
-        publish();
-      },
-    }),
-    syncStores: () => [designStore, ...assetStores.values()],
-    markProjectSaved(id, saved) {
-      const store = id === designId ? designStore : assetStores.get(id);
-      if (!store) return;
-      if (saved) markDocumentSaved(savedJson, id, store.getDocument());
-      else clearDocumentSaved(savedJson, id);
+    get project() {
+      return getProject();
+    },
+    documentStores: () => [designStore, ...assetStores.values()],
+    markDocumentSaved(id, document) {
+      markDocumentSaved(savedJson, id, document);
       publish();
     },
     destroy() {
@@ -365,7 +348,8 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
           renderedId,
           catalogDocuments(),
           paintRoot(),
-          prepareNestedDocument,
+          prepareNested,
+          getProject().schemaCatalog,
         ),
       getFocusViewportId: () => focusViewportId,
       setFocusViewportId: (id) => {
@@ -405,7 +389,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       setDrillStack: (stack) => {
         drillStack = stack;
       },
-      designStore,
+      getDesignStore: () => designStore,
       handles,
       undoHistory,
       clearSelection,
@@ -416,6 +400,10 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       paintRoot,
       openStore,
       run: runWithActiveVariant,
+      runDocument: (documentId, command) => {
+        const store = assetStores.get(documentId);
+        if (store) runWithActiveVariant(store, command);
+      },
       loadDocument: bindLoadDocument({
         designId,
         getDesignStore: () => designStore,
@@ -426,7 +414,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
         assetStores,
         handles,
         savedJson,
-        commandContext,
+        createStore: sessionProject.loadDocument,
         forget,
         watch,
         syncKinds,
@@ -464,13 +452,20 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       },
       getFitHandler: () => fitHandler,
       filenameFor,
-      boardDocuments: () => boardDocumentsForOrder(order, assetStores),
+      boardDocuments: () => order.map((id) => toNested(getProject().document(id).manifest)),
       boardStores: () => boardStoresForOrder(order, assetStores),
-      designInput: () => designInputFromStore(designStore),
+      designInput: () => ({
+        tokens: getProject().styles.globalTokens,
+        fonts: getProject().styles.fonts,
+        breakpoints: getProject().styles.breakpoints,
+      }),
       saveOpenDocument: bindPersistDocumentSave({
         ...saveHooks,
         saveDocument: options.saveDocument,
-        validate: () => validateCatalog(boardDocumentsForOrder(order, assetStores)),
+        validate: () =>
+          validateCatalog([...catalogDocuments().values()].map(toNested), {
+            schemaCatalog: getProject().schemaCatalog,
+          }),
         build: () => {
           const snap = build();
           return { id: snap.openId, filename: filenameFor(snap.openId), document: snap.document };

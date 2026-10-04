@@ -116,6 +116,165 @@ describe('durable project repository', () => {
     expect(open(directory).getState('button')).toMatchObject({ revision: 1, savedRevision: 1 });
   });
 
+  it('restores schema-backed documents with the complete project resolver context', () => {
+    const directory = fixture();
+    let project = open(directory);
+    const catalog = {
+      schemas: [
+        {
+          id: 'card',
+          name: 'Canonical card override',
+          schema: {
+            type: 'object',
+            properties: {
+              eyebrow: { type: 'string' },
+              title: { type: 'string' },
+              body: { type: 'string' },
+              canonicalBadge: { type: 'string' },
+            },
+          },
+        },
+      ],
+    };
+    project.edit('project-template', { type: 'setSchemaCatalog', schemaCatalog: catalog }, 0);
+    project.edit(
+      'card',
+      {
+        type: 'setSchemaUse',
+        schemaUse: {
+          direct: { kind: 'schema', schemaId: 'card' },
+          defaults: { canonicalBadge: 'Canonical wins' },
+        },
+      },
+      0,
+    );
+    project.destroy();
+
+    project = open(directory);
+    const snapshot = project.snapshot();
+    expect(snapshot.design.schemaCatalog).toEqual(catalog);
+    expect(snapshot.documents.find((file) => file.id === 'card')?.schemaUse).toEqual({
+      direct: { kind: 'schema', schemaId: 'card' },
+      defaults: { canonicalBadge: 'Canonical wins' },
+    });
+  });
+
+  it('uses the legacy schemas.json catalog to validate durable schemaUse without embedding it', () => {
+    const directory = fixture();
+    let project = open(directory);
+    const schemaUse = {
+      direct: { kind: 'schema' as const, schemaId: 'card' },
+      defaults: { eyebrow: 'Featured story' },
+    };
+    project.edit('card', { type: 'setSchemaUse', schemaUse }, 0);
+    project.destroy();
+
+    project = open(directory);
+    const snapshot = project.snapshot();
+    expect(snapshot.design.schemaCatalog).toBeUndefined();
+    expect(snapshot.documents.find((file) => file.id === 'card')?.schemaUse).toEqual(schemaUse);
+  });
+
+  it('augments a legacy schema from local fields before restoring preview data', () => {
+    const directory = fixture();
+    let project = open(directory);
+    const schemaUse = {
+      direct: { kind: 'schema' as const, schemaId: 'input' },
+      defaults: { disabled: false },
+    };
+    project.edit('form-input', { type: 'setSchemaUse', schemaUse }, 0);
+    project.destroy();
+
+    project = open(directory);
+    const snapshot = project.snapshot();
+    expect(snapshot.design.schemaCatalog).toBeUndefined();
+    expect(snapshot.documents.find((file) => file.id === 'form-input')?.schemaUse).toEqual(
+      schemaUse,
+    );
+  });
+
+  it('projects legacy fields for a union schema only in the compatibility fallback', () => {
+    const directory = fixture();
+    let project = open(directory);
+    const schemaUse = {
+      direct: { kind: 'schema' as const, schemaId: 'media' },
+      defaults: { kind: 'image' },
+    };
+    project.edit('media', { type: 'setSchemaUse', schemaUse }, 0);
+    project.destroy();
+
+    project = open(directory);
+    const snapshot = project.snapshot();
+    expect(snapshot.design.schemaCatalog).toBeUndefined();
+    expect(snapshot.documents.find((file) => file.id === 'media')?.schemaUse).toEqual(schemaUse);
+  });
+
+  it('permits stale expose collisions only for schemaUse backed by the legacy fallback', () => {
+    const directory = fixture();
+    let project = open(directory);
+    const schemaUse = {
+      direct: { kind: 'schema' as const, schemaId: 'input' },
+      fields: [{ name: 'label', type: { kind: 'type' as const, type: 'string' as const } }],
+    };
+    project.edit('input', { type: 'setSchemaUse', schemaUse }, 0);
+    project.destroy();
+
+    project = open(directory);
+    const snapshot = project.snapshot();
+    const input = snapshot.documents.find((file) => file.id === 'input')!;
+    expect(snapshot.design.schemaCatalog).toBeUndefined();
+    expect(input.schemaUse).toEqual(schemaUse);
+    expect(input.expose?.fields).toEqual({
+      value: 'control.value',
+      placeholder: 'control.placeholder',
+      name: 'control.name',
+    });
+  });
+
+  it('keeps canonical schemaCatalog expose-collision validation strict', () => {
+    const project = open(fixture());
+    project.edit(
+      'project-template',
+      {
+        type: 'setSchemaCatalog',
+        schemaCatalog: {
+          schemas: [
+            {
+              id: 'input',
+              name: 'Canonical input',
+              schema: {
+                type: 'object',
+                properties: {
+                  label: { type: 'string' },
+                  value: { type: 'string' },
+                  placeholder: { type: 'string' },
+                  name: { type: 'string' },
+                },
+              },
+            },
+          ],
+        },
+      },
+      0,
+    );
+
+    status(
+      () =>
+        project.edit(
+          'input',
+          {
+            type: 'setSchemaUse',
+            schemaUse: { direct: { kind: 'schema', schemaId: 'input' } },
+          },
+          0,
+        ),
+      400,
+    );
+    expect(project.snapshot().documents.find((file) => file.id === 'input')?.schemaUse).toEqual({
+      fields: [{ name: 'label', type: { kind: 'type', type: 'string' } }],
+    });
+  });
+
   it('merges API and concurrent Yjs edits, returns differential updates, and ignores replay', () => {
     const project = open(fixture());
     const store = client(project);

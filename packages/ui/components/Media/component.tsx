@@ -6,7 +6,7 @@
 import styles from './style.module.css';
 import type { MediaProps } from './types';
 
-export function Media({ kind = 'image', src, alt, ratio, nodeId, className }: MediaProps) {
+export function Media({ kind = 'image', src, alt, poster, ratio, nodeId, className }: MediaProps) {
   return (
     <div
       data-component="media"
@@ -27,6 +27,7 @@ export function Media({ kind = 'image', src, alt, ratio, nodeId, className }: Me
           data-node="video"
           controls
           src={src}
+          poster={poster}
           className={styles['video']}
           style={{ aspectRatio: ratio }}
         />

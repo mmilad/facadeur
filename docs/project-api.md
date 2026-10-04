@@ -1,77 +1,16 @@
-# Local project API
+# Local project JSON API
 
-`pnpm dev` starts the editor on localhost:3001 and the project server on
-127.0.0.1:3002. Run `pnpm dev:server` and `pnpm dev:editor` separately when needed.
-The server loads `examples/` and stores authoritative Yjs history in
-`.facadeur/default/project.json` (ignored by Git).
+The editor runs on localhost:3001. Its Next routes load and save project JSON; no separate server or Yjs runtime is required. ProjectController owns live editing state and Undo/Redo uses snapshots.
 
-## Edits and Save
+| Method | Path | Result |
+| --- | --- | --- |
+| GET | /api/projects/default | Design, documents, source filenames, hashes and recovered unsaved IDs |
+| POST | /api/projects/default/documents/:id/save | Explicitly write a document JSON snapshot |
 
-Browser commands and HTTP commands change the same server-owned document. WebSocket
-updates reach other connected editors. Updates are validated against the complete
-catalog and persisted before acknowledgement. API edits are remote transactions:
-local Undo does not undo somebody else's API edit.
+Save accepts `{ document, source, expectedHash }`. Use the source/hash from GET; a new document uses its chosen JSON filename and a null hash. The document ID must match the URL. Validation includes the current catalog and design schema. Saves are serialized and files are replaced atomically. A source changed externally returns 409. Saving a snapshot only clears the dirty baseline for that exact snapshot, preserving later edits.
 
-Save is a separate, explicit export of the current shared state to its JSON source.
-It does not open a file picker. Export JSON remains a browser download. Code generation
-continues to read these JSON sources, so Save before generating updated components.
+Editing stays in the browser until Save. Export JSON remains a browser download. Code generation reads the exported files, so save before generating components. There is currently no cross-tab collaboration, remote command API, or automatic persistence of new edits.
 
-| Method | Path                                       | Result                                  |
-| ------ | ------------------------------------------ | --------------------------------------- |
-| GET    | `/api/projects/default`                    | Catalog, design, sources and Yjs states |
-| GET    | `/api/projects/default/documents/:id`      | Document and current revision           |
-| POST   | `/api/projects/default/documents`          | Create a new document with `{document}` |
-| POST   | `/api/projects/default/documents/:id/edit` | Apply `{revision, command}`             |
-| POST   | `/api/projects/default/documents/:id/save` | Export using `{revision}`               |
+During the Yjs removal, 13 unsaved documents (including new-atom) were recovered into ignored `.facadeur/editor-recovery.json`. GET overlays these drafts onto unchanged source files and marks them unsaved. Save removes only the successfully exported draft from recovery. `.facadeur/yjs-retirement-snapshot.json` preserves the full prior catalog; original durable Yjs data is untouched. A conflicting source is reported instead of silently overriding either version.
 
-For example, fetch Card's current revision and submit an ordinary Core command:
-
-```http
-GET /api/projects/default/documents/card
-
-POST /api/projects/default/documents/card/edit
-Content-Type: application/json
-
-{"revision":0,"command":{"type":"setProp","nodeId":"root","prop":"name","value":"Product card"}}
-```
-
-Use the actual revision and root ID from GET, not fixed example values. Edit and Save return the new
-revision, savedRevision, Yjs state and document. A stale revision returns 409;
-reload the document and reconsider the intended edit instead of blindly retrying.
-Invalid commands or updates return 400. Changed JSON sources also return 409 and
-are never silently overwritten. Storage failures are reported rather than falling
-back to a download or pretending the save succeeded.
-
-The editor uses one ordered `/sync?project=default` WebSocket stream. Its initial
-`{type:"catalog", project:...}` snapshot and subsequent catalog additions are processed
-before document frames. Sync/update requests and responses carry `id` to route them
-to their document store. New documents therefore appear in other tabs without a reload,
-and dependent instance updates cannot overtake catalog registration. The existing
-`/sync?project=default&id=:id` channel remains supported for single-document clients.
-Both exchange state vectors, updates and durable acknowledgements; reconnection
-merges outstanding tab edits with the server history. Client-generated documents
-may include an initial base64 `update` when creating a document, preserving their
-Yjs identity instead of seeding two competing histories.
-
-## Boundaries and recovery
-
-- One local project, no authentication or production deployment yet. The server
-  binds to loopback and accepts browser origins only from the configured editor.
-- Existing documents and new catalog entries synchronize live. Receiving a catalog
-  never replaces existing stores, local Undo history or the current selection.
-- Importing JSON over an existing project ID is deliberately rejected. Use editor
-  commands or the Edit API; replacement/import migration needs its own policy.
-- Schema-library management remains browser-local; `examples/schemas.json` is not
-  part of the shared document catalog.
-- Unsaved **acknowledged** edits survive a server restart. Offline edits remain in
-  the current tab until reconnecting; there is no browser-local durable outbox yet.
-- Do not delete the state directory to resolve an external JSON conflict: that
-  would discard unsaved shared history. Preserve both versions and explicitly
-  reconcile them. A server storage failure requires a restart after repair.
-- Run only one server process per state directory. This is not a distributed
-  database or a multi-process collaboration deployment.
-
-Configuration: `FACADEUR_PROJECT_DIR`, `FACADEUR_STATE_DIR`,
-`FACADEUR_SERVER_PORT` (3002), `FACADEUR_EDITOR_PORT` (3001).
-For a separately configured editor use `FACADEUR_API_URL` for its HTTP proxy and
-`NEXT_PUBLIC_FACADEUR_SYNC_URL` for the browser WebSocket address.
+Set FACADEUR_PROJECT_DIR to load a different project directory. The default is examples/. The former server and sync adapter remain outside the editor runtime as reference code; see [the legacy API](project-api-yjs-legacy.md).

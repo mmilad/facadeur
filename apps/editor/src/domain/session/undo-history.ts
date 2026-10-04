@@ -1,5 +1,5 @@
 import { type Command, type DefaultKind, type FlatDocument } from '@facadeur/core';
-import type { YjsDocumentStore } from '@facadeur/store-yjs';
+import type { ControllerDocumentStore } from '@facadeur/core';
 import type { JsonFileHandle } from '../assets/files.js';
 import {
   chromeStorageKey,
@@ -25,8 +25,8 @@ import type {
 } from './types.js';
 
 export interface UndoHistory {
-  noteCommand: (store: YjsDocumentStore) => void;
-  forget: (store: YjsDocumentStore | undefined) => void;
+  noteCommand: (store: ControllerDocumentStore) => void;
+  forget: (store: ControllerDocumentStore | undefined) => void;
   canUndo: () => boolean;
   canRedo: () => boolean;
   undo: () => void;
@@ -34,8 +34,8 @@ export interface UndoHistory {
 }
 
 export function createUndoHistory(): UndoHistory {
-  const history: YjsDocumentStore[] = [];
-  let redoStore: YjsDocumentStore | null = null;
+  const history: ControllerDocumentStore[] = [];
+  let redoStore: ControllerDocumentStore | null = null;
 
   return {
     noteCommand(store) {
@@ -74,7 +74,7 @@ export function drillToMasterDocument(options: {
   openId: string;
   selectedNodeId: string | null;
   document: FlatDocument;
-  assetStores: ReadonlyMap<string, YjsDocumentStore>;
+  assetStores: ReadonlyMap<string, ControllerDocumentStore>;
   drillStack: DrillStackFrame[];
   applyDrillStack: (stack: DrillStackFrame[]) => void;
   openAsset: (id: string, focus?: 'root') => void;
@@ -121,7 +121,7 @@ export interface EditorSessionSurfaceDeps {
   setWorkspace: (value: DefaultKind) => void;
   openFlat: () => FlatDocument;
   lastOpen: Map<DefaultKind, string>;
-  assetStores: ReadonlyMap<string, YjsDocumentStore>;
+  assetStores: ReadonlyMap<string, ControllerDocumentStore>;
   order: readonly string[];
   getOpenId: () => string;
   setOpenId: (id: string) => void;
@@ -152,7 +152,7 @@ export interface EditorSessionSurfaceDeps {
   setDrag: (drag: EditorDrag | null) => void;
   getDrillStack: () => DrillStackFrame[];
   setDrillStack: (stack: DrillStackFrame[]) => void;
-  designStore: YjsDocumentStore;
+  getDesignStore: () => ControllerDocumentStore;
   handles: Map<string, JsonFileHandle>;
   undoHistory: UndoHistory;
   clearSelection: () => void;
@@ -161,8 +161,9 @@ export interface EditorSessionSurfaceDeps {
   openAssetCore: (id: string, focus?: 'root', keepDrillStack?: boolean) => void;
   applySelectNode: (nodeId: string) => void;
   paintRoot: () => boolean;
-  openStore: () => YjsDocumentStore;
-  run: (store: YjsDocumentStore, command: Command) => void;
+  openStore: () => ControllerDocumentStore;
+  run: (store: ControllerDocumentStore, command: Command) => void;
+  runDocument: (documentId: string, command: Command) => void;
   loadDocument: EditorSession['loadDocument'];
   setZoomByHandler: (handler: ((factor: number) => void) | null) => void;
   getZoomByHandler: () => ((factor: number) => void) | null;
@@ -181,12 +182,7 @@ export function createEditorSessionSurface(
   deps: EditorSessionSurfaceDeps,
 ): Omit<
   EditorSession,
-  | 'subscribe'
-  | 'getSnapshot'
-  | 'syncStores'
-  | 'markProjectSaved'
-  | 'acceptProjectDocuments'
-  | 'destroy'
+  'subscribe' | 'getSnapshot' | 'documentStores' | 'markDocumentSaved' | 'destroy' | 'project'
 > {
   let zoomScale = 1;
   return {
@@ -310,11 +306,6 @@ export function createEditorSessionSurface(
         deps.publish();
         return;
       }
-      if (context.boundFields.includes(field) && value !== null) {
-        deps.setNotice({ tone: 'info', text: `Field "${field}" is bound to parent data.` });
-        deps.publish();
-        return;
-      }
       const nested = deps.getNestedSelection();
       if (nested) {
         if (nested.instancePath) {
@@ -406,7 +397,8 @@ export function createEditorSessionSurface(
       }
       deps.run(deps.openStore(), command);
     },
-    executeDesign: (command) => deps.run(deps.designStore, command),
+    executeDesign: (command) => deps.run(deps.getDesignStore(), command),
+    executeDocument: deps.runDocument,
     undo: () => deps.undoHistory.undo(),
     redo: () => deps.undoHistory.redo(),
     loadDocument: deps.loadDocument,

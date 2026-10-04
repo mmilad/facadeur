@@ -71,6 +71,7 @@ export const nestedNodeSchema = Type.Recursive(
           childFields: Type.Optional(
             Type.Record(childFieldPathSchema, Type.Record(idSchema, fieldValueSchema)),
           ),
+          forwardFields: Type.Optional(Type.Boolean()),
           fieldBindings: Type.Optional(Type.Record(idSchema, dataPathSchema)),
           variants: Type.Optional(Type.Record(idSchema, Type.String())),
           variantRules: Type.Optional(Type.Array(variantRuleSchema)),

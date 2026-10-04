@@ -13,7 +13,6 @@
     "@facadeur/codegen": "workspace:*",
     "@facadeur/core": "workspace:*",
     "@facadeur/renderer-dom": "workspace:*",
-    "@facadeur/store-yjs": "workspace:*",
     "@facadeur/style-engine": "workspace:*",
     "@facadeur/tokens": "workspace:*",
     "@radix-ui/react-dialog": "^1.1.23",
@@ -21,8 +20,7 @@
     "jsonjoy-builder": "1.0.4",
     "next": "^15.5.3",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "yjs": "^13.6.27"
+    "react-dom": "^19.1.1"
   },
   "devDependencies": {
     "@types/node": "^22.19.0",

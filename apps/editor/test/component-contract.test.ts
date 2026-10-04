@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { toFlat, type DocumentFile } from '@facadeur/core';
 import {
+  automaticFieldGroupsFor,
   componentVariantsFor,
   publicEventsFor,
   publicFieldsFor,
@@ -83,8 +84,108 @@ describe('component public contract', () => {
     };
 
     const fields = publicFieldsFor(toFlat(outer), catalogOf(atom, inner, outer));
-    expect(fields.map((field) => field.name)).toEqual(['value']);
-    expect(fields[0]?.type).toBe('text');
+    expect(fields.map((field) => field.name)).toEqual(['content', 'value']);
+    expect(fields[1]?.type).toBe('text');
+  });
+
+  it('automatically extends its public fields from nested components after local fields', () => {
+    const atom: DocumentFile = {
+      version: 1,
+      id: 'form-input',
+      name: 'Form input',
+      kind: 'atom',
+      fields: [
+        { name: 'value', type: 'text' },
+        { name: 'placeholder', type: 'text' },
+        { name: 'disabled', type: 'boolean' },
+      ],
+      root: { id: 'root', type: 'text', tag: 'input' },
+    };
+    const component: DocumentFile = {
+      version: 1,
+      id: 'input',
+      name: 'Input',
+      kind: 'component',
+      fields: [{ name: 'label', type: 'text' }],
+      root: {
+        id: 'root',
+        type: 'frame',
+        tag: 'label',
+        children: [{ id: 'control', type: 'instance', component: 'form-input' }],
+      },
+    };
+    const catalog = catalogOf(atom, component);
+
+    expect(publicFieldsFor(toFlat(component), catalog).map((field) => field.name)).toEqual([
+      'label',
+      'value',
+      'placeholder',
+      'disabled',
+    ]);
+    expect(automaticFieldGroupsFor(toFlat(component), catalog)).toMatchObject([
+      {
+        instanceId: 'control',
+        componentId: 'form-input',
+        componentName: 'Form input',
+        enabled: true,
+        fields: [{ name: 'value' }, { name: 'placeholder' }, { name: 'disabled' }],
+      },
+    ]);
+  });
+
+  it('allows a component instance to opt out and lets later extensions win collisions', () => {
+    const first: DocumentFile = {
+      version: 1,
+      id: 'first',
+      name: 'First',
+      kind: 'atom',
+      fields: [
+        { name: 'value', type: 'text' },
+        { name: 'placeholder', type: 'text' },
+      ],
+      root: { id: 'root', type: 'text', tag: 'input' },
+    };
+    const last: DocumentFile = {
+      version: 1,
+      id: 'last',
+      name: 'Last',
+      kind: 'atom',
+      fields: [{ name: 'value', type: 'number' }],
+      root: { id: 'root', type: 'text', tag: 'input' },
+    };
+    const component: DocumentFile = {
+      version: 1,
+      id: 'wrapper',
+      name: 'Wrapper',
+      kind: 'component',
+      fields: [
+        { name: 'label', type: 'text' },
+        { name: 'value', type: 'text' },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        tag: 'label',
+        children: [
+          { id: 'first-control', type: 'instance', component: 'first' },
+          { id: 'last-control', type: 'instance', component: 'last' },
+          { id: 'manual-control', type: 'instance', component: 'first', forwardFields: false },
+        ],
+      },
+    };
+    const catalog = catalogOf(first, last, component);
+
+    expect(publicFieldsFor(toFlat(component), catalog).map((field) => field.name)).toEqual([
+      'label',
+      'placeholder',
+      'value',
+    ]);
+    expect(
+      publicFieldsFor(toFlat(component), catalog).find((field) => field.name === 'value')?.type,
+    ).toBe('number');
+    expect(
+      automaticFieldGroupsFor(toFlat(component), catalog).map((group) => group.enabled),
+    ).toEqual([true, true, false]);
   });
 
   it('includes direct and recursively exposed events under their public names', () => {

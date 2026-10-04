@@ -12,6 +12,8 @@ export interface FormTextInputProps {
   hasIcon?: boolean;
   value?: string;
   placeholder?: string;
+  name?: string;
+  disabled?: boolean;
   state?: FormTextInputState;
   onCommit?: (payload: { value: string }) => void;
   /** Instance id. Sets `data-node` so a parent style rule can address this element. */

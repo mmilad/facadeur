@@ -1,4 +1,5 @@
 import { createId } from '@facadeur/core';
+import type { JsonSchema as CoreJsonSchema } from '@facadeur/core';
 import { BUILTIN_SCHEMAS, DEFAULT_SCHEMA_ASSIGNMENTS } from './builtin-schemas.js';
 import {
   type ComponentSchemaUse,
@@ -6,21 +7,7 @@ import {
   schemaUseFromAssignment,
 } from './schema-use.js';
 
-export interface JsonSchema {
-  $ref?: string;
-  type?: string | string[];
-  title?: string;
-  description?: string;
-  properties?: Record<string, JsonSchema>;
-  required?: string[];
-  items?: JsonSchema;
-  enum?: unknown[];
-  oneOf?: JsonSchema[];
-  anyOf?: JsonSchema[];
-  allOf?: JsonSchema[];
-  default?: unknown;
-  additionalProperties?: boolean | JsonSchema;
-}
+export type JsonSchema = CoreJsonSchema;
 
 export { resolveLibrarySchema, schemaRefUri, validateLibrarySchemas } from './schema-validation.js';
 export type { SchemaValidationIssue } from './schema-validation.js';

@@ -25,6 +25,24 @@ For repeatable refactoring work, use `.agents/skills/refactor/SKILL.md`. It comb
 candidate detector, this checklist, and `docs/refactoring-guidelines.md`; size-based splitting
 remains a review decision, not an automatic action.
 
+## TypeScript return types and dependencies
+
+Prefer inferred return types for simple getters, forwarding functions, and internal helpers
+when TypeScript already derives the intended type from the implementation. Do not repeat a
+type solely for documentation or AI assistance, and remove imports used only by redundant
+annotations. Keep parameter types and shared domain contracts explicit where needed.
+
+Retain explicit return types when they enforce an intentional boundary: stable public API
+contracts, readonly views, intentional widening/normalization, recursive inference, overloads,
+type predicates, and assertion functions. Being exported alone does not require an annotation;
+a getter or forwarding function can inherit an existing domain contract. Do not replace a
+removed annotation with a cast or a new dependency just to silence the compiler.
+
+When cleaning up annotations, preserve the inferred public type (including optionality,
+literal unions, mutability, and generics), check for inference cycles, and remove unused type
+imports. Type inference reduces explicit coupling and maintenance; it does not remove the
+underlying semantic dependency or change runtime imports by itself.
+
 ## Tooling friction
 
 When a development command is repeatedly blocked, unexpectedly slow, or needs a workaround,

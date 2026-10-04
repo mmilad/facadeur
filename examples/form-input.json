@@ -1,85 +1,15 @@
 {
   "version": 1,
   "id": "form-input",
-  "previewData": {
-    "fields": {
-      "value": "",
-      "placeholder": "Enter a value",
-      "name": "example-input",
-      "disabled": false
-    }
-  },
   "name": "Input",
   "kind": "atom",
-  "fields": [
-    {
-      "name": "value",
-      "type": "text"
-    },
-    {
-      "name": "placeholder",
-      "type": "text"
-    },
-    {
-      "name": "name",
-      "type": "text"
-    },
-    {
-      "name": "disabled",
-      "type": "boolean"
-    }
-  ],
-  "events": [
-    {
-      "name": "commit",
-      "payload": {
-        "value": "text"
-      }
-    }
-  ],
-  "tokenInterface": {
-    "reads": [
-      "color.accent.default",
-      "color.neutral.0",
-      "color.neutral.400",
-      "color.text.primary",
-      "input.padding.x",
-      "input.padding.y",
-      "radius.sm",
-      "type.body"
-    ]
-  },
-  "styles": {
-    "declarations": {
-      "appearance": "none",
-      "background": "{color.surface}",
-      "border": "1px solid {color.border}",
-      "borderRadius": "{shape.radius}",
-      "boxSizing": "border-box",
-      "color": "{color.text}",
-      "font": "{type.body}",
-      "paddingBlock": "{input.padding.y}",
-      "paddingInline": "{input.padding.x}",
-      "width": "100%"
-    },
-    "states": {
-      "focus-visible": {
-        "borderColor": "{color.accent.default}",
-        "outline": "2px solid {color.accent.default}",
-        "outlineOffset": "1px"
-      },
-      "disabled": {
-        "opacity": "0.55"
-      }
-    }
-  },
   "root": {
     "id": "root",
-    "type": "frame",
+    "name": "Input",
     "tag": "input",
     "attributes": {
-      "type": "text",
-      "autocomplete": "off"
+      "autocomplete": "off",
+      "type": "text"
     },
     "layout": {
       "width": {
@@ -116,18 +46,91 @@
         "event": "commit",
         "name": "change"
       }
+    ],
+    "type": "frame"
+  },
+  "fields": [
+    {
+      "name": "value",
+      "type": "text"
+    },
+    {
+      "name": "placeholder",
+      "type": "text"
+    },
+    {
+      "name": "name",
+      "type": "text"
+    },
+    {
+      "name": "disabled",
+      "type": "boolean"
+    }
+  ],
+  "previewData": {
+    "fields": {
+      "value": "",
+      "placeholder": "Enter a valueasdasdasd",
+      "name": "example-input",
+      "disabled": false
+    }
+  },
+  "events": [
+    {
+      "name": "commit",
+      "payload": {
+        "value": "text"
+      }
+    }
+  ],
+  "styles": {
+    "declarations": {
+      "appearance": "none",
+      "background": "{color.surfa}",
+      "border": "1px solid {color.border}",
+      "borderRadius": "{shape.radius}",
+      "boxSizing": "border-box",
+      "color": "{color.text}",
+      "font": "{type.body}",
+      "paddingBlock": "{input.padding.y}",
+      "paddingInline": "{input.padding.x}",
+      "width": "100%"
+    },
+    "states": {
+      "focus-visible": {
+        "borderColor": "{color.accent.default}",
+        "outline": "2px solid {color.accent.default}",
+        "outlineOffset": "1px"
+      },
+      "disabled": {
+        "opacity": "0.55"
+      }
+    }
+  },
+  "tokenInterface": {
+    "reads": [
+      "color.accent.default",
+      "color.neutral.0",
+      "color.neutral.400",
+      "color.text.primary",
+      "input.padding.x",
+      "input.padding.y",
+      "radius.sm",
+      "type.body"
     ]
   },
   "componentTokens": {
     "n_4eopchjeve": {
       "path": "color.border",
       "type": "color",
-      "value": "{color.neutral.400}"
+      "value": "{color.neutral.400}",
+      "label": "Borderxxxx"
     },
     "n_dwafwrelsc": {
-      "path": "color.surface",
+      "path": "color.surfa",
       "type": "color",
-      "value": "{color.neutral.0}"
+      "value": "{color.neutral.0}",
+      "label": "Surdddtttface"
     },
     "n_snilkgkaph": {
       "path": "color.text",

@@ -3,12 +3,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
-import { createDocumentStore } from '@facadeur/store-yjs';
-import {
-  createLibrarySchema,
-  resetSchemaLibrary,
-  setComponentSchemaUse,
-} from '../src/domain/schema/schema-library';
+import { createTestDocumentStore } from './controller-store.js';
 import { createViewportBoard } from '../src/domain/viewport/viewports';
 
 const section: DocumentFile = {
@@ -47,7 +42,7 @@ describe('viewport board', () => {
         ],
       },
     };
-    const store = createDocumentStore(source);
+    const store = createTestDocumentStore(source);
     const parent = document.createElement('div');
     document.body.append(parent);
     const board = createViewportBoard({
@@ -94,7 +89,7 @@ describe('viewport board', () => {
   });
 
   it('gives each breakpoint its own iframe, renderer, and style engine on one store', async () => {
-    const store = createDocumentStore(section);
+    const store = createTestDocumentStore(section);
     const parent = document.createElement('div');
     document.body.append(parent);
     const board = createViewportBoard({
@@ -157,7 +152,7 @@ describe('viewport board', () => {
   });
 
   it('updates design CSS without rebuilding frames when breakpoints stay put', async () => {
-    const store = createDocumentStore(section);
+    const store = createTestDocumentStore(section);
     const parent = document.createElement('div');
     document.body.append(parent);
     const breakpoints = [
@@ -188,9 +183,7 @@ describe('viewport board', () => {
     parent.remove();
   });
 
-  it('paints schema assignment defaults and updates them when the library changes', () => {
-    resetSchemaLibrary();
-    const schema = createLibrarySchema('Input');
+  it('paints canonical schema defaults and updates them when the component document changes', () => {
     const source: DocumentFile = {
       version: 1,
       id: 'form-input',
@@ -200,6 +193,13 @@ describe('viewport board', () => {
         { name: 'value', type: 'text' },
         { name: 'placeholder', type: 'text' },
       ],
+      schemaUse: {
+        fields: [
+          { name: 'value', type: { kind: 'type', type: 'string' } },
+          { name: 'placeholder', type: { kind: 'type', type: 'string' } },
+        ],
+        defaults: { placeholder: 'Email address' },
+      },
       root: {
         id: 'root',
         type: 'frame',
@@ -210,11 +210,7 @@ describe('viewport board', () => {
         ],
       },
     };
-    setComponentSchemaUse(source.id, {
-      direct: { kind: 'schema', schemaId: schema.id },
-      defaults: { placeholder: 'Email address' },
-    });
-    const store = createDocumentStore(source);
+    const store = createTestDocumentStore(source);
     const parent = document.createElement('div');
     document.body.append(parent);
     const board = createViewportBoard({
@@ -230,15 +226,20 @@ describe('viewport board', () => {
     expect(input()?.getAttribute('placeholder')).toBe('Email address');
     expect(input()?.hasAttribute('value')).toBe(false);
 
-    setComponentSchemaUse(source.id, {
-      direct: { kind: 'schema', schemaId: schema.id },
-      defaults: { placeholder: 'Your name' },
+    store.execute({
+      type: 'setSchemaUse',
+      schemaUse: {
+        fields: [
+          { name: 'value', type: { kind: 'type', type: 'string' } },
+          { name: 'placeholder', type: { kind: 'type', type: 'string' } },
+        ],
+        defaults: { placeholder: 'Your name' },
+      },
     });
     expect(input()?.getAttribute('placeholder')).toBe('Your name');
 
     board.destroy();
     store.destroy();
     parent.remove();
-    resetSchemaLibrary();
   });
 });

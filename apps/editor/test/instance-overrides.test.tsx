@@ -57,7 +57,7 @@ describe('instance override editor', () => {
     expect(onSetField).toHaveBeenCalledWith('items', [{ kind: 'input' }]);
   });
 
-  it('treats a bound field as read-only and clears its static override', async () => {
+  it('keeps a static preview override when a data binding is added', async () => {
     const onSetField = vi.fn();
     const onSetFieldBindings = vi.fn();
     const { container } = render(
@@ -67,6 +67,7 @@ describe('instance override editor', () => {
         variants={[]}
         fieldOverrides={{ label: 'Static label' }}
         fieldBindings={{}}
+        forwardFields={false}
         dataFields={[{ name: 'title', type: 'text' }]}
         variantOverrides={undefined}
         onOpenMaster={() => undefined}
@@ -81,19 +82,26 @@ describe('instance override editor', () => {
     const user = userEvent.setup();
     await user.selectOptions(select!, 'title');
 
-    expect(onSetField).toHaveBeenCalledWith('label', null);
+    expect(onSetField).not.toHaveBeenCalled();
     expect(onSetFieldBindings).toHaveBeenCalledWith({ label: 'title' });
   });
 
-  it('disables the static editor while a field is bound', () => {
+  it('keeps static text and boolean overrides editable while bound', () => {
     const { container } = render(
       <InstanceOverridesControl
         masterName="Form"
-        fields={[{ name: 'label', type: 'text' }]}
+        fields={[
+          { name: 'label', type: 'text' },
+          { name: 'disabled', type: 'boolean' },
+        ]}
         variants={[]}
         fieldOverrides={undefined}
-        fieldBindings={{ label: 'title' }}
-        dataFields={[{ name: 'title', type: 'text' }]}
+        fieldBindings={{ label: 'title', disabled: 'isDisabled' }}
+        forwardFields={false}
+        dataFields={[
+          { name: 'title', type: 'text' },
+          { name: 'isDisabled', type: 'boolean' },
+        ]}
         variantOverrides={undefined}
         onOpenMaster={() => undefined}
         onSetField={() => undefined}
@@ -102,7 +110,8 @@ describe('instance override editor', () => {
       />,
     );
 
-    expect(container.querySelector('input[name="field-label"]')).toBeDisabled();
+    expect(container.querySelector('input[name="field-label"]')).toBeEnabled();
+    expect(container.querySelector('input[name="field-disabled"]')).toBeEnabled();
     expect(container.textContent).toContain('bound to title');
   });
 });

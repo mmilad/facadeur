@@ -1,17 +1,20 @@
-import type { DocumentFile, FieldValue, PreviewData } from '@facadeur/core';
-import { getComponentSchemaUse } from './schema-library.js';
+import type { ComponentSchemaUse, DocumentFile, FieldValue, PreviewData } from '@facadeur/core';
 
 /**
  * Schema-library defaults for fields this document actually declares.
  * Explicit preview data wins over these defaults.
  */
-export function schemaFieldDefaultsFor(document: {
-  id: string;
-  fields?: readonly { name: string }[];
-}): Record<string, FieldValue> {
-  const raw = getComponentSchemaUse(document.id)?.defaults;
+export function schemaFieldDefaultsFor(
+  document: {
+    id: string;
+    schemaUse?: ComponentSchemaUse;
+    fields?: readonly { name: string }[];
+  },
+  allowedFields: readonly { name: string }[] = document.fields ?? [],
+): Record<string, FieldValue> {
+  const raw = document.schemaUse?.defaults;
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
-  const names = new Set((document.fields ?? []).map((field) => field.name));
+  const names = new Set(allowedFields.map((field) => field.name));
   const fields: Record<string, FieldValue> = {};
   for (const [name, value] of Object.entries(raw)) {
     if (!names.has(name) || !isFieldValue(value)) continue;
@@ -21,8 +24,11 @@ export function schemaFieldDefaultsFor(document: {
 }
 
 /** Copy schema-library defaults onto a render clone. Stored fields stay untouched. */
-export function overlaySchemaDefaults(document: DocumentFile): DocumentFile {
-  const defaults = schemaFieldDefaultsFor(document);
+export function overlaySchemaDefaults(
+  document: DocumentFile,
+  fields: readonly { name: string }[] = document.fields ?? [],
+): DocumentFile {
+  const defaults = schemaFieldDefaultsFor(document, fields);
   if (Object.keys(defaults).length === 0) return document;
   const next = structuredClone(document);
   const preview: PreviewData = structuredClone(next.previewData ?? {});

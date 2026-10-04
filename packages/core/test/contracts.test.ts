@@ -328,7 +328,7 @@ describe('component contracts', () => {
     expect(() => validateCatalog([owner, target])).toThrow(/may be undefined/);
   });
 
-  it('requires every required instance field and rejects static/bound conflicts', () => {
+  it('requires every required instance field and allows static preview overrides alongside bindings', () => {
     const target: DocumentFile = {
       version: 1,
       id: 'required-instance-control',
@@ -372,7 +372,7 @@ describe('component contracts', () => {
         ],
       },
     };
-    expect(() => validateCatalog([conflict, target])).toThrow(/cannot set and bind field "value"/);
+    expect(() => validateCatalog([conflict, target])).not.toThrow();
   });
 
   it('validates sparse child instance field overrides against nested contracts', () => {
@@ -418,6 +418,8 @@ describe('component contracts', () => {
             id: 'owner',
             type: 'instance',
             component: owner.id,
+            fields: { value: 'Wrapped' },
+            forwardFields: false,
             childFields: { control: { placeholder: 'Search' } },
           },
         ],

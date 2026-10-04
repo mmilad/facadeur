@@ -1,4 +1,10 @@
-import type { DocumentFile } from '@facadeur/core';
+import {
+  DocumentError,
+  resolveComponentContract,
+  type DocumentFile,
+  type FieldDefinition,
+  type SchemaResolverContext,
+} from '@facadeur/core';
 import type { DesignInput } from '@facadeur/tokens';
 import { assignCatalog, renderComponent, type ComponentFile } from './component';
 import { renderDocumentCss, renderTokenCss } from './css';
@@ -32,7 +38,20 @@ export function generateReact(options: GenerateReactOptions): GenerateReactOutpu
     seen.add(document.id);
   }
   const selected = selectDocuments(documents, options.entries);
-  const catalog = assignCatalog(selected);
+  const contractContext: SchemaResolverContext = {
+    documents: new Map(selected.map((document) => [document.id, document])),
+    ...(options.schemaCatalog ? { schemaCatalog: options.schemaCatalog } : {}),
+  };
+  const contracts = new Map<string, Map<string, FieldDefinition>>();
+  for (const document of selected) {
+    try {
+      contracts.set(document.id, resolveComponentContract(document, contractContext));
+    } catch (error) {
+      if (error instanceof DocumentError) throw new CodegenError(error.message);
+      throw error;
+    }
+  }
+  const catalog = assignCatalog(selected, contracts);
   const classNames = new Map(selected.map((document) => [document.id, localClassNames(document)]));
   const components = selected.map((document) =>
     renderComponent(document, catalog, { classNames: classNames.get(document.id)! }),
@@ -54,7 +73,7 @@ export function generateReact(options: GenerateReactOptions): GenerateReactOutpu
     { path: 'css-modules.d.ts', contents: cssModulesDeclaration() },
     { path: 'index.ts', contents: renderIndex(components) },
   ];
-  return { ui, stories: generateStories(selected, components) };
+  return { ui, stories: generateStories(selected, components, contracts) };
 }
 
 function selectDocuments(

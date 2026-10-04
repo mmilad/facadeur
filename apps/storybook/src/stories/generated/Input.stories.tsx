@@ -11,7 +11,8 @@ const meta = {
   component: Input,
   tags: ['autodocs'],
   args: {
-    label: 'Work email',
+    label: 'Work emails',
+    placeholder: 'placeholder',
   },
 } satisfies Meta<typeof Input>;
 

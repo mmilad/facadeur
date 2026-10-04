@@ -9,9 +9,9 @@ import {
   matchesDisplay,
   MAX_DEPTH,
   repeatKeySegment,
-  resolveFieldBindings,
-  resolveFields,
+  resolveDocumentFields,
   resolveInstance,
+  resolveInstanceFields,
   resolvePath,
   resolveVariants,
   selectedVariantForInstance,
@@ -46,7 +46,7 @@ export function renderDocument(
 ): Map<string, RenderedNode> {
   const ctx = createRenderContext(documents);
   ctx.catalog.set(document.id, document);
-  ctx.scope = resolveFields(document.fields, undefined);
+  ctx.scope = resolveDocumentFields(document, ctx.catalog);
   ctx.canvasDocument = document;
   ctx.styleDocumentId = document.id;
   paintCanvas(parent, document, ctx, options.paintRoot === true);
@@ -136,10 +136,7 @@ function paintInstance(
   const overridePath = childOverridePath(ctx.childFieldPath, node.id);
   const childOverride = overridePath ? ctx.childFields?.[overridePath] : undefined;
   const effectiveFields = { ...(node.fields ?? {}), ...(childOverride ?? {}) };
-  const scope = resolveFields(definition.fields, {
-    ...effectiveFields,
-    ...resolveFieldBindings(node.fieldBindings, ctx.scope),
-  });
+  const scope = resolveInstanceFields(node, definition, ctx.scope, ctx.catalog, effectiveFields);
   const selected = selectedVariantForInstance(node, ctx);
   const variants = resolveVariants(definition, {
     ...node.variants,

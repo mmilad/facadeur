@@ -30,6 +30,10 @@
       "type": "text"
     },
     {
+      "name": "poster",
+      "type": "text"
+    },
+    {
       "name": "ratio",
       "type": "text"
     }
@@ -78,6 +82,11 @@
             "field": "src",
             "target": "attribute",
             "name": "src"
+          },
+          {
+            "field": "poster",
+            "target": "attribute",
+            "name": "poster"
           },
           {
             "field": "ratio",

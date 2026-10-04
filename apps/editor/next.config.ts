@@ -17,19 +17,12 @@ const nextConfig: NextConfig = {
   transpilePackages: [
     '@facadeur/core',
     '@facadeur/renderer-dom',
-    '@facadeur/store-yjs',
     '@facadeur/style-engine',
     '@facadeur/tokens',
     'jsonjoy-builder',
   ],
   async rewrites() {
-    return [
-      {
-        source: '/api/projects/:path*',
-        destination: `${process.env.FACADEUR_API_URL ?? 'http://127.0.0.1:3002'}/api/projects/:path*`,
-      },
-      { source: '/__facadeur/examples', destination: '/api/facadeur/examples' },
-    ];
+    return [{ source: '/__facadeur/examples', destination: '/api/facadeur/examples' }];
   },
   webpack: (config) => {
     config.resolve.extensionAlias = {
@@ -41,7 +34,6 @@ const nextConfig: NextConfig = {
       '@facadeur/renderer-dom': workspaceAlias('renderer-dom'),
       '@facadeur/tokens': workspaceAlias('tokens'),
       '@facadeur/style-engine': workspaceAlias('style-engine'),
-      '@facadeur/store-yjs': workspaceAlias('store-yjs'),
     };
     return config;
   },

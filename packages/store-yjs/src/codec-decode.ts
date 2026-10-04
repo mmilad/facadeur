@@ -48,6 +48,7 @@ export function readNode(map: Y.Map<unknown>): FlatNode {
   if (type === 'instance') {
     const fields = readValueMap(map.get('fields'));
     const childFields = readChildFields(map.get('childFields'));
+    const forwardFields = map.get('forwardFields');
     const fieldBindings = readStringMap(map.get('fieldBindings'));
     const variants = readStringMap(map.get('variants'));
     const displayOn = readDisplayOn(map.get('displayOn'));
@@ -62,6 +63,7 @@ export function readNode(map: Y.Map<unknown>): FlatNode {
       component: stringValue(map.get('component')),
       ...(fields ? { fields } : {}),
       ...(childFields ? { childFields } : {}),
+      ...(typeof forwardFields === 'boolean' ? { forwardFields } : {}),
       ...(fieldBindings ? { fieldBindings } : {}),
       ...(variants ? { variants } : {}),
       ...(readJsonArray(map.get('variantRules')).length

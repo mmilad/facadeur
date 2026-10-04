@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { WebSocket } from 'ws';
 import { createDocumentStore } from '@facadeur/store-yjs';
 import { type DocumentFile } from '@facadeur/core';
-import { createProjectSync, type ProjectSyncSocket } from '../../editor/src/domain/project/sync';
+import { createProjectSync, type ProjectSyncSocket } from './support/project-sync';
 import { createProjectServer } from '../src/http';
 import { openProject } from '../src/project/index';
 

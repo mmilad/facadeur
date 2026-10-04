@@ -16,6 +16,8 @@ export function FormTextInput({
   hasIcon,
   value,
   placeholder,
+  name,
+  disabled,
   state = 'default',
   onCommit,
   nodeId,
@@ -46,6 +48,8 @@ export function FormTextInput({
           value={value}
           placeholder={placeholder}
           onCommit={onCommit}
+          name={name}
+          disabled={disabled}
         />
       </div>
       <span data-node="hint" className={styles['hint']}>

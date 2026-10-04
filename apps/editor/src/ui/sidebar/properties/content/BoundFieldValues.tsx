@@ -1,4 +1,3 @@
-import { useSyncExternalStore } from 'react';
 import {
   resolvePreviewData,
   type FieldDefinition,
@@ -7,10 +6,6 @@ import {
 } from '@facadeur/core';
 import { parsePreviewFieldValue, patchPreviewData } from '../../../../domain/preview-data.js';
 import { schemaFieldDefaultsFor } from '../../../../domain/schema/schema-defaults.js';
-import {
-  getSchemaLibrary,
-  subscribeSchemaLibrary,
-} from '../../../../domain/schema/schema-library.js';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
 import { variantLabel } from '../../../../domain/edits/variant-edit.js';
 import { fieldDisplayLabel } from '../../../controls/data/field-label.js';
@@ -22,17 +17,18 @@ export function BoundFieldValues({
   session,
   snap,
   node,
+  fields,
 }: {
   session: EditorSession;
   snap: EditorSnapshot;
   node: Exclude<FlatNode, { type: 'instance' }>;
+  fields?: readonly FieldDefinition[];
 }) {
-  useSyncExternalStore(subscribeSchemaLibrary, getSchemaLibrary, getSchemaLibrary);
-  const fields = boundFields(snap.document.fields, node.bindings);
-  if (fields.length === 0) return null;
+  const visibleFields = fields ?? boundFields(snap.document.fields, node.bindings);
+  if (visibleFields.length === 0) return null;
 
-  const preview = resolvePreviewData(snap.document, snap.activeVariantName);
-  const schemaDefaults = schemaFieldDefaultsFor(snap.document);
+  const preview = resolvePreviewData(snap.document, snap.activeVariantName, visibleFields);
+  const schemaDefaults = schemaFieldDefaultsFor(snap.document, visibleFields);
   const variantName = snap.activeVariantName;
 
   function write(field: FieldDefinition, value: FieldValue | undefined) {
@@ -56,7 +52,7 @@ export function BoundFieldValues({
       {variantName ? (
         <p className="meta">Values for {variantLabel(snap.document, variantName)}.</p>
       ) : null}
-      {fields.map((field) => (
+      {visibleFields.map((field) => (
         <BoundFieldControl
           key={field.name}
           field={field}

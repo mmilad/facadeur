@@ -7,6 +7,7 @@ export interface MediaProps {
   kind?: 'image' | 'video';
   src: string;
   alt?: string;
+  poster?: string;
   ratio?: string;
   /** Instance id. Sets `data-node` so a parent style rule can address this element. */
   nodeId?: string;

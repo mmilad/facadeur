@@ -25,13 +25,18 @@ export async function runReactCli(args: readonly string[]): Promise<void> {
       'Usage: facadeur-codegen --out <ui-dir> [--storybook <app-dir>] [--design <document.json>] <document.json>...',
     );
   }
-  const documents = validateCatalog(files.map((file) => JSON.parse(readFileSync(file, 'utf8'))));
-  const design = designPath
-    ? designFromDocument(validateDocumentFile(JSON.parse(readFileSync(designPath, 'utf8'))))
+  const rawDocuments = files.map((file) => JSON.parse(readFileSync(file, 'utf8')) as unknown);
+  const designDocument = designPath
+    ? validateDocumentFile(JSON.parse(readFileSync(designPath, 'utf8')))
     : undefined;
+  const documents = validateCatalog(rawDocuments, {
+    ...(designDocument?.schemaCatalog ? { schemaCatalog: designDocument.schemaCatalog } : {}),
+  });
+  const design = designDocument ? designFromDocument(designDocument) : undefined;
   const { ui, stories } = generateReact({
     documents,
     ...(design ? { design } : {}),
+    ...(designDocument?.schemaCatalog ? { schemaCatalog: designDocument.schemaCatalog } : {}),
     entries,
   });
   await writeFiles(resolve(out), ui, ['components', 'styles/components.css']);

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 import { type DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
@@ -14,7 +15,7 @@ const documents: DocumentFile[] = [
     version: 1,
     id: 'input',
     name: 'Input',
-    kind: 'atom',
+    kind: 'component',
     styles: { declarations: { opacity: '0.8' } },
     fields: [
       { name: 'label', type: 'text', default: 'Base label' },
@@ -232,7 +233,42 @@ describe('nested field inspector', () => {
     expect(session.getSnapshot().document.nodes.email).not.toHaveProperty('childFields');
   });
 
-  it('shows data-bound values as read-only instead of creating ineffective overrides', () => {
+  it('lets an instance disable automatic field forwarding and retains manual bindings', async () => {
+    const testDocuments = structuredClone(documents);
+    const form = testDocuments[1]!;
+    form.fields = [{ name: 'title', type: 'text' }];
+    if (form.root.type !== 'frame') throw new Error('Expected frame');
+    const email = form.root.children?.[0];
+    if (email?.type !== 'instance') throw new Error('Expected instance');
+    email.fieldBindings = { label: 'title' };
+
+    const session = createEditorSession({
+      documents: testDocuments,
+      design: createProjectTemplateDocument(),
+    });
+    session.openAsset('form');
+    session.selectNode('email');
+    const view = render(<PropertiesPanel session={session} snap={session.getSnapshot()} />);
+
+    const forwardToggle = screen.getByRole('switch', {
+      name: 'Forward matching fields automatically',
+    });
+    expect(forwardToggle).toBeChecked();
+    expect(screen.queryByRole('combobox', { name: 'Label' })).not.toBeInTheDocument();
+
+    await userEvent.setup().click(forwardToggle);
+    view.rerender(<PropertiesPanel session={session} snap={session.getSnapshot()} />);
+
+    expect(session.getSnapshot().document.nodes.email).toMatchObject({
+      forwardFields: false,
+      fieldBindings: { label: 'title' },
+    });
+    expect(
+      view.container.querySelector<HTMLSelectElement>('select[name="field-binding-label"]'),
+    ).toHaveValue('title');
+  });
+
+  it('shows local field values as editable preview overrides over data bindings', () => {
     const boundDocuments = structuredClone(documents);
     const form = boundDocuments[1]!;
     form.fields = [{ name: 'title', type: 'text', default: 'Bound label' }];
@@ -254,11 +290,11 @@ describe('nested field inspector', () => {
     session.selectRendered('root/first/email');
     render(<PropertiesPanel session={session} snap={session.getSnapshot()} />);
     const label = screen.getByRole('textbox', { name: /Label .* bound to title/ });
-    expect(label).toBeDisabled();
-    expect(label).toHaveValue('Bound label');
-    act(() => session.setNestedField('label', 'Ignored'));
+    expect(label).toBeEnabled();
+    expect(label).toHaveValue('Dormant local label');
+    act(() => session.setNestedField('label', 'Local preview'));
     expect(session.getSnapshot().document.nodes.first).toMatchObject({
-      childFields: { email: { label: 'Dormant local label' } },
+      childFields: { email: { label: 'Local preview' } },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Reset Label' }));
     expect(session.getSnapshot().document.nodes.first).not.toHaveProperty('childFields');

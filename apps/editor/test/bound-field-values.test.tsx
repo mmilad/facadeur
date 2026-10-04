@@ -4,10 +4,12 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import userEvent from '@testing-library/user-event';
+import { fireEvent } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import type { Binding, FieldDefinition } from '@facadeur/core';
+import type { Binding, DocumentFile, FieldDefinition, SchemaCatalog } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import formInput from '../../../examples/form-input.json';
+import input from '../../../examples/input.json';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { boundFields } from '../src/ui/sidebar/properties/content/bound-fields';
 import { App } from '../src/ui/shell/EditorShell';
@@ -18,6 +20,24 @@ const fields: FieldDefinition[] = [
   { name: 'placeholder', type: 'text' },
   { name: 'label', type: 'text' },
 ];
+
+const inputSchemaCatalog = {
+  schemas: [
+    {
+      id: 'input',
+      name: 'Input',
+      schema: {
+        type: 'object',
+        properties: {
+          label: { type: 'string' },
+          value: { type: 'string' },
+          placeholder: { type: 'string' },
+          name: { type: 'string' },
+        },
+      },
+    },
+  ],
+} satisfies SchemaCatalog;
 
 describe('bound fields', () => {
   it('lists each bound document field once, in binding order', () => {
@@ -79,5 +99,78 @@ describe('content example values', () => {
     });
 
     expect(session.getSnapshot().document.previewData?.fields?.placeholder).toBe('Email address');
+  });
+
+  it('shows public component fields at the root and applies schema defaults', async () => {
+    const documents = expandExampleCatalog([input]).map((document) =>
+      document.id === 'input'
+        ? {
+            ...document,
+            expose: undefined,
+            schemaUse: {
+              direct: { kind: 'schema' as const, schemaId: 'input' },
+              defaults: { value: 'Schema default' },
+            },
+          }
+        : document,
+    );
+    const session = createEditorSession({
+      documents,
+      design: { ...createProjectTemplateDocument(), schemaCatalog: inputSchemaCatalog },
+    });
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => {
+      root?.render(<App session={session} />);
+    });
+    await act(async () => {
+      session.openAsset('input');
+      session.selectNode('root');
+    });
+
+    const value = host.querySelector('input[name="example-value"]') as HTMLInputElement | null;
+    expect(value).toBeInstanceOf(HTMLInputElement);
+    expect(value?.value).toBe('Schema default');
+    expect(host.querySelector('input[name="example-label"]')).toBeInstanceOf(HTMLInputElement);
+    expect(host.querySelector('input[name="example-placeholder"]')).toBeInstanceOf(
+      HTMLInputElement,
+    );
+    expect(host.querySelector('input[name="example-name"]')).toBeInstanceOf(HTMLInputElement);
+
+    await act(async () => {
+      fireEvent.change(value!, { target: { value: 'Mapped example' } });
+      fireEvent.blur(value!);
+    });
+    expect(session.getSnapshot().document.previewData?.fields?.value).toBe('Mapped example');
+  });
+
+  it('offers exposed owner fields as sources for nested instance bindings', async () => {
+    const manualInput = structuredClone(input) as DocumentFile;
+    if (manualInput.root.type !== 'frame') throw new Error('Expected the input root frame');
+    const control = manualInput.root.children?.find((node) => node.id === 'control');
+    if (control?.type !== 'instance') throw new Error('Expected the input control instance');
+    control.forwardFields = false;
+    const session = createEditorSession({
+      documents: expandExampleCatalog([manualInput]),
+      design: createProjectTemplateDocument(),
+    });
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => {
+      root?.render(<App session={session} />);
+    });
+    await act(async () => {
+      session.openAsset('input');
+      session.selectNode('control');
+    });
+
+    const options = [
+      ...host.querySelectorAll<HTMLSelectElement>(
+        'select[name="field-binding-placeholder"] option',
+      ),
+    ].map((option) => option.value);
+    expect(options).toEqual(['', 'label', 'value', 'placeholder', 'name']);
   });
 });

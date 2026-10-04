@@ -1,7 +1,7 @@
 import type { DocumentFile } from '@facadeur/core';
 import { toNested } from '@facadeur/core';
 import { paintCanvas, repaintComponent } from './paint';
-import { isStyleOnly, resolveFields } from './resolve';
+import { isStyleOnly, resolveDocumentFields } from './resolve';
 import type { DocumentStyles, DomRenderer, RenderContext, RenderedNode } from './types';
 
 export function createDomRenderer(options: {
@@ -29,7 +29,7 @@ export function createDomRenderer(options: {
       catalog,
       records,
       path: null,
-      scope: canvas ? resolveFields(canvas.fields, undefined) : {},
+      scope: canvas ? resolveDocumentFields(canvas, catalog) : {},
       ownerId: null,
       depth: 0,
       canvasId: mountedId,
@@ -59,7 +59,7 @@ export function createDomRenderer(options: {
     if (!source) return;
     const document = mountedDocument(source);
     const ctx = context();
-    ctx.scope = resolveFields(document.fields, undefined);
+    ctx.scope = resolveDocumentFields(document, catalog);
     ctx.styleDocumentId = document.id;
     paintCanvas(parent, document, ctx, paintRoot);
   }

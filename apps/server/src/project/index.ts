@@ -4,11 +4,17 @@ import { basename, join, resolve } from 'node:path';
 import {
   applyCommand,
   toNested,
+  isPlainObject,
   validateDocumentFile,
   type Command,
   type DocumentFile,
+  type SchemaCatalog,
 } from '@facadeur/core';
-import { createDocumentStore, type YjsDocumentStore } from '@facadeur/store-yjs';
+import {
+  createDocumentStore,
+  readDocumentFromUpdate,
+  type YjsDocumentStore,
+} from '@facadeur/store-yjs';
 import * as Y from 'yjs';
 import {
   atomicWrite,
@@ -47,6 +53,7 @@ export class ProjectRepository {
   private readonly stores = new Map<string, YjsDocumentStore>();
   private readonly listeners = new Set<(id: string, state: ProjectState) => void>();
   private designId = '';
+  private legacySchemaCatalog?: SchemaCatalog;
   private closed = false;
   private failed = false;
   private rehydrateFromSource = new Set<string>();
@@ -105,12 +112,24 @@ export class ProjectRepository {
         validateDocumentFile(JSON.parse(readFileSync(join(this.directory, name), 'utf8'))),
       );
     });
-    // Exported JSON can intentionally lag the shared catalog (including newly
-    // created unsaved dependencies). Validate the complete restored catalog below.
-    if (!recovering) validate(files);
     this.designId = files[filenames.indexOf('project-template.json')]?.id ?? '';
     if (!this.designId)
       throw new ProjectError(400, 'Missing project-template.json design document');
+    const design = files.find((file) => file.id === this.designId)!;
+    this.legacySchemaCatalog = invalid(() =>
+      readLegacySchemaCatalog(join(this.directory, 'schemas.json'), design),
+    );
+    // Exported JSON can intentionally lag the shared catalog (including newly
+    // created unsaved dependencies). Validate the complete restored catalog below.
+    if (!recovering) validate(files, this.legacySchemaCatalog);
+    const restored = new Map<string, DocumentFile>();
+    const restorePlan: Array<{
+      file: DocumentFile;
+      source: string;
+      existing: DurableProject['entries'][string] | undefined;
+      rehydrate: boolean;
+      update: Uint8Array | undefined;
+    }> = [];
     for (const [index, file] of files.entries()) {
       const source = filenames[index]!;
       const existing = Object.hasOwn(this.durable.entries, file.id)
@@ -119,12 +138,21 @@ export class ProjectRepository {
       if (existing && existing.source !== source)
         throw new ProjectError(409, `Source mapping changed for ${file.id}`);
       const rehydrate = existing ? this.rehydrateFromSource.has(file.id) : false;
+      const update = existing && !rehydrate ? decodeUpdate(existing.update) : undefined;
+      restored.set(file.id, update ? toNested(readDocumentFromUpdate(update)) : file);
+      restorePlan.push({ file, source, existing, rehydrate, update });
+    }
+    for (const [id, entry] of Object.entries(this.durable.entries)) {
+      if (restored.has(id)) continue;
+      if (entry.hash !== null) throw new ProjectError(409, `Missing source: ${entry.source}`);
+      restored.set(id, toNested(readDocumentFromUpdate(decodeUpdate(entry.update))));
+    }
+    // Build the resolver against the complete restored project before hydrating any
+    // store. Per-file maps here would make validation depend on filename order.
+    const commandContext = context([...restored.values()], this.designId, this.legacySchemaCatalog);
+    for (const { file, source, existing, rehydrate, update } of restorePlan) {
       const store = invalid(() =>
-        createDocumentStore(
-          file,
-          {},
-          existing && !rehydrate ? { update: decodeUpdate(existing.update) } : undefined,
-        ),
+        createDocumentStore(file, commandContext, update ? { update } : undefined),
       );
       this.stores.set(file.id, store);
       if (store.getDocument().id !== file.id)
@@ -147,14 +175,14 @@ export class ProjectRepository {
     for (const [id, entry] of Object.entries(this.durable.entries)) {
       if (this.stores.has(id)) continue;
       if (entry.hash !== null) throw new ProjectError(409, `Missing source: ${entry.source}`);
-      const placeholder = { ...files[0]!, id };
+      const placeholder = restored.get(id)!;
       const store = invalid(() =>
-        createDocumentStore(placeholder, {}, { update: decodeUpdate(entry.update) }),
+        createDocumentStore(placeholder, commandContext, { update: decodeUpdate(entry.update) }),
       );
       this.stores.set(id, store);
       if (store.getDocument().id !== id) throw new ProjectError(400, 'Durable document id changed');
     }
-    validate(this.files());
+    validate(this.files(), this.legacySchemaCatalog);
     for (const [id, store] of this.stores) {
       if (this.encode(store, 0, 0).stateVector !== this.durable.entries[id]!.stateVector) {
         throw new ProjectError(400, 'Durable state vector does not match its update');
@@ -244,7 +272,11 @@ export class ProjectRepository {
     this.checkRevision(id, expectedRevision);
     assertCommand(command);
     const files = this.files();
-    const commandContext = context(files, this.designId);
+    const resolverFiles =
+      command.type === 'setSchemaUse' && command.schemaUse
+        ? files.map((file) => (file.id === id ? { ...file, schemaUse: command.schemaUse! } : file))
+        : files;
+    const commandContext = context(resolverFiles, this.designId, this.legacySchemaCatalog);
     // Use the pure result once so generated insert/wrap ids are shared with the
     // store application. Remote store execution accepts a fixed id generator.
     const generated: string[] = [];
@@ -284,9 +316,11 @@ export class ProjectRepository {
     if (!(update instanceof Uint8Array) || !update.length)
       throw new ProjectError(400, 'Invalid Yjs update');
     const candidate = invalid(() =>
-      createDocumentStore(toNested(store.getDocument()), context(this.files(), this.designId), {
-        update: Y.encodeStateAsUpdate(store.doc),
-      }),
+      createDocumentStore(
+        toNested(store.getDocument()),
+        context(this.files(), this.designId, this.legacySchemaCatalog),
+        { update: Y.encodeStateAsUpdate(store.doc) },
+      ),
     );
     try {
       invalid(() => candidate.applyRemoteUpdate(update));
@@ -354,7 +388,7 @@ export class ProjectRepository {
     const candidate = invalid(() =>
       createDocumentStore(
         document,
-        context([...this.files(), document], this.designId),
+        context([...this.files(), document], this.designId, this.legacySchemaCatalog),
         update ? { update } : undefined,
       ),
     );
@@ -420,7 +454,10 @@ export class ProjectRepository {
 
   private validateCandidate(id: string, document: DocumentFile): void {
     if (document.id !== id) throw new ProjectError(400, 'Document id is immutable');
-    validate([...this.files().filter((file) => file.id !== id), document]);
+    validate(
+      [...this.files().filter((file) => file.id !== id), document],
+      this.legacySchemaCatalog,
+    );
   }
 
   private encode(store: YjsDocumentStore, revision: number, savedRevision: number): ProjectState {
@@ -473,4 +510,14 @@ export class ProjectRepository {
 
 export function openProject(options: ProjectOptions): ProjectRepository {
   return new ProjectRepository(options);
+}
+
+function readLegacySchemaCatalog(path: string, design: DocumentFile): SchemaCatalog | undefined {
+  if (!existsSync(path)) return undefined;
+  const library = JSON.parse(readFileSync(path, 'utf8')) as unknown;
+  if (!isPlainObject(library) || !Array.isArray(library.schemas)) return undefined;
+  return validateDocumentFile({
+    ...design,
+    schemaCatalog: { schemas: library.schemas },
+  }).schemaCatalog;
 }

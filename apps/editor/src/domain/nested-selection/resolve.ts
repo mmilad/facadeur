@@ -1,4 +1,4 @@
-import type { FieldValue, FlatDocument, FlatNode } from '@facadeur/core';
+import type { FieldValue, FlatDocument, FlatNode, SchemaCatalog } from '@facadeur/core';
 import {
   childOverridePath,
   mergeChildFieldContext,
@@ -7,6 +7,7 @@ import {
   toNested,
 } from '@facadeur/core';
 import type { NestedSelection } from './types.js';
+import { publicFieldsFor } from '../schema/component-contract.js';
 
 export const MAX_NESTED_DEPTH = 32;
 export function resolveNestedSelection(
@@ -15,6 +16,7 @@ export function resolveNestedSelection(
   catalog: ReadonlyMap<string, FlatDocument>,
   paintRoot: boolean,
   prepareDocument?: (document: FlatDocument, variant?: string) => FlatDocument,
+  schemaCatalog?: SchemaCatalog,
 ): NestedSelection | null {
   const parts = renderedId.split('/').filter(Boolean);
   if (!parts.length) return null;
@@ -41,7 +43,8 @@ export function resolveNestedSelection(
     instancePath: [],
     renderId: first.id,
     depth: 0,
-    scope: resolveFields(preparedDocument.fields, undefined),
+    schemaCatalog,
+    scope: resolveDocumentFieldScope(preparedDocument, catalog, schemaCatalog),
     prepareDocument,
   });
 }
@@ -52,6 +55,7 @@ interface WalkInput {
   documentIndex: number;
   parts: readonly string[];
   catalog: ReadonlyMap<string, FlatDocument>;
+  schemaCatalog?: SchemaCatalog;
   ownerNodeId: string | null;
   instancePath: readonly string[];
   containingInstance?: Extract<FlatNode, { type: 'instance' }>;
@@ -80,14 +84,22 @@ function walkRenderedNode(input: WalkInput): NestedSelection | null {
         ? resolveTargetDocument(rawTarget, effectiveNode, input.scope, input.prepareDocument)
         : null;
       if (!target) return null;
-      const inheritedFields = resolveFields(target.fields, {
-        ...(node.fields ?? {}),
-        ...resolveFieldBindings(node.fieldBindings, input.scope),
-      });
-      const resolvedFields = resolveFields(target.fields, {
-        ...(effectiveNode.fields ?? {}),
-        ...resolveFieldBindings(node.fieldBindings, input.scope),
-      });
+      const inheritedFields = resolveInstanceFieldScope(
+        node,
+        target,
+        input.scope,
+        input.catalog,
+        undefined,
+        input.schemaCatalog,
+      );
+      const resolvedFields = resolveInstanceFieldScope(
+        node,
+        target,
+        input.scope,
+        input.catalog,
+        effectiveNode.fields,
+        input.schemaCatalog,
+      );
       return input.ownerNodeId
         ? {
             ownerNodeId: input.ownerNodeId,
@@ -130,14 +142,26 @@ function walkRenderedNode(input: WalkInput): NestedSelection | null {
     const targetRoot = target && target.nodes[target.rootId];
     if (!targetRoot || targetRoot.type !== 'frame') return null;
     const ownerNodeId = input.ownerNodeId ?? node.id;
-    const inheritedScope = resolveFields(target?.fields, {
-      ...(node.fields ?? {}),
-      ...resolveFieldBindings(node.fieldBindings, input.scope),
-    });
-    const scope = resolveFields(target?.fields, {
-      ...(effectiveNode.fields ?? {}),
-      ...resolveFieldBindings(node.fieldBindings, input.scope),
-    });
+    const inheritedScope = target
+      ? resolveInstanceFieldScope(
+          node,
+          target,
+          input.scope,
+          input.catalog,
+          undefined,
+          input.schemaCatalog,
+        )
+      : {};
+    const scope = target
+      ? resolveInstanceFieldScope(
+          node,
+          target,
+          input.scope,
+          input.catalog,
+          effectiveNode.fields,
+          input.schemaCatalog,
+        )
+      : {};
     const nextId = parts[nextIndex];
     const child = targetRoot.children
       .map((id) => target.nodes[id])
@@ -209,6 +233,42 @@ export function resolveFields(
   }
   Object.assign(values, overrides ?? {});
   return values;
+}
+
+/** Local document defaults seed editor preview scope while public fields define the contract. */
+export function resolveDocumentFieldScope(
+  document: FlatDocument,
+  catalog: ReadonlyMap<string, FlatDocument>,
+  schemaCatalog?: SchemaCatalog,
+): Record<string, FieldValue> {
+  const localDefaults: Record<string, FieldValue> = {};
+  for (const field of document.fields ?? []) {
+    if (field.default !== undefined) localDefaults[field.name] = field.default;
+  }
+  return resolveFields(publicFieldsFor(document, catalog, schemaCatalog), localDefaults);
+}
+
+export function resolveInstanceFieldScope(
+  instance: Extract<FlatNode, { type: 'instance' }>,
+  target: FlatDocument,
+  parentScope: Record<string, FieldValue>,
+  catalog: ReadonlyMap<string, FlatDocument>,
+  localFields: Record<string, FieldValue> | undefined = instance.fields,
+  schemaCatalog?: SchemaCatalog,
+): Record<string, FieldValue> {
+  const fields = publicFieldsFor(target, catalog, schemaCatalog);
+  const inherited: Record<string, FieldValue> = {};
+  if (instance.forwardFields !== false) {
+    for (const field of fields) {
+      if (Object.hasOwn(parentScope, field.name))
+        inherited[field.name] = structuredClone(parentScope[field.name]!);
+    }
+  }
+  return resolveFields(fields, {
+    ...inherited,
+    ...resolveFieldBindings(instance.fieldBindings, parentScope),
+    ...(localFields ?? {}),
+  });
 }
 
 export function resolveFieldBindings(

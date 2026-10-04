@@ -12,6 +12,7 @@ export interface ProductCardProps {
   imageSrc?: string;
   imageAlt?: string;
   buttonLabel?: string;
+  label?: string;
   /** Instance id. Sets `data-node` so a parent style rule can address this element. */
   nodeId?: string;
   className?: string;

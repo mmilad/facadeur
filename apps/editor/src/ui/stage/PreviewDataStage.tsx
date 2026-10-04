@@ -18,7 +18,8 @@ export function PreviewDataStage({
   snap: EditorSnapshot;
 }) {
   const document = snap.document;
-  const values = resolvePreviewData(document, snap.activeVariantName);
+  const fields = snap.documentScopeFields;
+  const values = resolvePreviewData(document, snap.activeVariantName, fields);
   const baseLabel = variantLabel(document, 'default');
 
   function write(field: FieldDefinition, value: FieldValue | undefined) {
@@ -58,9 +59,9 @@ export function PreviewDataStage({
             data-testid="preview-data-slot"
           >
             <h2 id="preview-values-title">Preview values</h2>
-            {document.fields.length ? (
+            {fields.length ? (
               <Stack gap={12}>
-                {document.fields.map((field) => (
+                {fields.map((field) => (
                   <PreviewField
                     key={field.name}
                     field={field}

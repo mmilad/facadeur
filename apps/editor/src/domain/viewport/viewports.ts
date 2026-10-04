@@ -9,16 +9,18 @@ import {
   resolveVariantDocument,
   withPreviewData,
   toNested,
+  toFlat,
   type Breakpoint,
   type DocumentFile,
   type DocumentStore,
+  type SchemaCatalog,
 } from '@facadeur/core';
 import { createDomRenderer, type DomRenderer } from '@facadeur/renderer-dom';
 import { createStyleEngine, type StyleEngine } from '@facadeur/style-engine';
 import { activeBreakpoints, type DesignInput } from '@facadeur/tokens';
 import { createFrameHost, type FrameHost } from './frame-host.js';
 import { overlaySchemaDefaults } from '../schema/schema-defaults.js';
-import { subscribeSchemaLibrary } from '../schema/schema-library.js';
+import { publicFieldsFor } from '../schema/component-contract.js';
 import { resolvedViewportChrome, type ViewportChromeSettings } from './viewport-chrome.js';
 
 export interface ViewportFrame {
@@ -52,6 +54,7 @@ export function createViewportBoard(options: {
   page: DocumentFile;
   stores: readonly DocumentStore[];
   design: DesignInput;
+  schemaCatalog?: SchemaCatalog;
   /**
    * Paint the open document's root. Off for pages, where the root frame is the
    * canvas and only its children are content.
@@ -66,6 +69,9 @@ export function createViewportBoard(options: {
   const parent = options.parent;
   const stores = options.stores;
   const pageId = options.page.id;
+  const catalogDocuments = new Map(
+    options.documents.map((document) => [document.id, toFlat(document)]),
+  );
   const paintRoot = options.paintRoot === true;
   let design = options.design;
   const row = parent.ownerDocument.createElement('div');
@@ -184,13 +190,17 @@ export function createViewportBoard(options: {
             document.id === page.id && variantName
               ? resolveVariantDocument(document, variantName)
               : document;
+          const fields = publicFieldsFor(toFlat(resolved), catalogDocuments, options.schemaCatalog);
           return withPreviewData(
-            overlaySchemaDefaults(resolved),
+            overlaySchemaDefaults(resolved, fields),
             document.id === page.id ? variantName : null,
+            fields,
           );
         },
-        prepareInstanceDocument: (document, variant) =>
-          withPreviewData(overlaySchemaDefaults(document), variant),
+        prepareInstanceDocument: (document, variant) => {
+          const fields = publicFieldsFor(toFlat(document), catalogDocuments, options.schemaCatalog);
+          return withPreviewData(overlaySchemaDefaults(document, fields), variant, fields);
+        },
         paintRoot,
       });
       renderer.mount(page);
@@ -229,15 +239,6 @@ export function createViewportBoard(options: {
 
   const pageStore = stores.find((item) => item.getDocument().id === pageId);
   if (pageStore) unsubscribers.push(pageStore.subscribe(() => scheduleRebuild()));
-  unsubscribers.push(
-    subscribeSchemaLibrary(() => {
-      if (destroyed || frames.length === 0) return;
-      const documents = documentsNow();
-      const page = documents.find((document) => document.id === pageId) ?? pageDocument();
-      for (const frame of frames) frame.renderer.mount(page);
-      syncHeights();
-    }),
-  );
   createFrames();
   for (const store of stores) {
     unsubscribers.push(

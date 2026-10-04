@@ -432,7 +432,7 @@ describe('properties inspector tabs', () => {
     expect(host.querySelector('[name="open-component"]')?.textContent).toContain(
       'Edit master · Specimen section',
     );
-    expect(host.textContent).toContain('This component exposes no fields or variants yet.');
+    expect(host.textContent).toContain('Embedded fields');
 
     await act(async () => {
       host!
@@ -444,7 +444,7 @@ describe('properties inspector tabs', () => {
     expect(host.querySelector('button[name="open-component"]')).toBeInstanceOf(HTMLButtonElement);
   });
 
-  it('mounts field definitions on Content and legacy variant axes on Schema (Spec C)', async () => {
+  it('keeps field definitions out of the inspector and mounts legacy variant axes on Schema', async () => {
     const session: EditorSession = createEditorSession({
       documents,
       design: createProjectTemplateDocument(),
@@ -466,12 +466,8 @@ describe('properties inspector tabs', () => {
         .querySelector('button[data-surface="schema"]')
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
-    await act(async () => {
-      host!
-        .querySelector('button[name="open-add-field"]')
-        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-    expect(host.querySelector('input[name="new-field-name"]')).toBeInstanceOf(HTMLInputElement);
+    expect(host.querySelector('button[name="open-add-field"]')).toBeNull();
+    expect(host.querySelector('input[name="new-field-name"]')).toBeNull();
     expect(host.querySelector('input[name="new-axis-name"]')).toBeInstanceOf(HTMLInputElement);
 
     await act(async () => {

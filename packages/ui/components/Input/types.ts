@@ -8,6 +8,7 @@ export interface InputProps {
   value?: string;
   placeholder?: string;
   name?: string;
+  disabled?: boolean;
   onCommit?: (payload: { value: string }) => void;
   /** Instance id. Sets `data-node` so a parent style rule can address this element. */
   nodeId?: string;

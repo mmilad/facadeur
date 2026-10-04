@@ -11,6 +11,7 @@ import {
   childOverridePath,
   isVariantAxis,
   mergeChildFieldContext,
+  publicFieldsFor,
   resolveVariantDocument,
   variantPresets,
 } from '@facadeur/core';
@@ -48,6 +49,39 @@ export function resolveFields(
   }
   for (const [name, value] of Object.entries(overrides ?? {})) resolved[name] = value;
   return resolved;
+}
+
+/** Local document defaults seed the preview even when a forwarded contract overrides their type. */
+export function resolveDocumentFields(
+  document: DocumentFile,
+  catalog: ReadonlyMap<string, DocumentFile>,
+): Record<string, FieldValue> {
+  const localDefaults: Record<string, FieldValue> = {};
+  for (const field of document.fields ?? []) {
+    if (field.default !== undefined) localDefaults[field.name] = field.default;
+  }
+  return resolveFields([...publicFieldsFor(document, catalog).values()], localDefaults);
+}
+
+export function resolveInstanceFields(
+  node: Extract<NestedNode, { type: 'instance' }>,
+  definition: DocumentFile,
+  parentScope: Record<string, FieldValue>,
+  catalog: ReadonlyMap<string, DocumentFile>,
+  localFields: Record<string, FieldValue> | undefined = node.fields,
+): Record<string, FieldValue> {
+  const inherited: Record<string, FieldValue> = {};
+  const fields = publicFieldsFor(definition, catalog);
+  if (node.forwardFields !== false) {
+    for (const field of fields.values()) {
+      if (Object.hasOwn(parentScope, field.name)) inherited[field.name] = parentScope[field.name]!;
+    }
+  }
+  return resolveFields([...fields.values()], {
+    ...inherited,
+    ...resolveFieldBindings(node.fieldBindings, parentScope),
+    ...(localFields ?? {}),
+  });
 }
 
 export function resolveVariants(
@@ -128,10 +162,13 @@ function walkRendered(
     const definition = definitionForInstance(node, ctx);
     if (!definition || definition.root.type !== 'frame') return null;
     const path = joinId(parent.path, node.id);
-    const scope = resolveFields(definition.fields, {
-      ...(effectiveNode.fields ?? {}),
-      ...resolveFieldBindings(node.fieldBindings, parent.scope),
-    });
+    const scope = resolveInstanceFields(
+      node,
+      definition,
+      parent.scope,
+      ctx.catalog,
+      effectiveNode.fields,
+    );
     const root = definition.root;
     const repeated = root.repeat ? repeatedItem(root.repeat, scope, parts[index + 1]) : undefined;
     const childIndex = root.repeat ? index + 2 : index + 1;

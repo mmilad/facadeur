@@ -1,6 +1,7 @@
 import {
   applyCommand,
   canonicalizeFlat,
+  canonicalizeJson,
   DocumentError,
   toFlat,
   toNested,
@@ -34,6 +35,23 @@ export interface YjsDocumentStore extends DocumentStore {
   /** Apply a validated API command without adding it to local Undo history. */
   executeRemote(command: Command): void;
   destroy(): void;
+}
+
+/** Read a complete persisted Yjs document before its store is created. */
+export function readDocumentFromUpdate(update: Uint8Array): FlatDocument {
+  const doc = new Y.Doc();
+  try {
+    Y.applyUpdate(doc, update, REMOTE_ORIGIN);
+    if (doc.store.pendingStructs || doc.store.pendingDs) {
+      throw new DocumentError('schema', 'Yjs update is missing dependencies');
+    }
+    const document = canonicalizeFlat(readDocument(doc));
+    if (!document.id) throw new DocumentError('schema', 'Yjs update has no document id');
+    validateDocumentFile(toNested(document));
+    return document;
+  } finally {
+    doc.destroy();
+  }
 }
 
 /**
@@ -83,6 +101,8 @@ export function createDocumentStore(
       doc.getMap('styles'),
       doc.getMap('tokenInterface'),
       doc.getMap('componentTokens'),
+      doc.getMap('schemaCatalog'),
+      doc.getMap('schemaUse'),
     ],
     {
       trackedOrigins: new Set([COMMAND_ORIGIN]),
@@ -110,7 +130,11 @@ export function createDocumentStore(
     const next = applyCommand(canonicalizeFlat(readDocument(doc)), command, options);
     assertDesignResolvable(next);
     doc.transact(() => patchDocument(doc, next), origin);
-    if (JSON.stringify(canonicalizeFlat(readDocument(doc))) !== JSON.stringify(next)) {
+    const actual = canonicalizeJson(
+      JSON.parse(JSON.stringify(canonicalizeFlat(readDocument(doc)))),
+    );
+    const expected = canonicalizeJson(JSON.parse(JSON.stringify(next)));
+    if (JSON.stringify(actual) !== JSON.stringify(expected)) {
       throw new DocumentError(
         'diverged',
         'The Yjs document does not match the result of the command',
@@ -178,7 +202,7 @@ function assertHydratedDocument(doc: Y.Doc, expectedId: string, options: Command
     );
   }
   validateTree(hydrated, options);
-  validateDefinitions(hydrated);
+  validateDefinitions(hydrated, options.schemaResolverContext);
   validateLibraries(hydrated, options);
   validateDocumentFile(toNested(hydrated));
   assertDesignResolvable(hydrated);

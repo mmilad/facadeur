@@ -10,7 +10,19 @@ import { Card } from '../Card';
 import { Input } from '../Input';
 import { SignIn } from '../SignIn';
 
-export function SpecimenSection({ nodeId, className, childFields }: SpecimenSectionProps) {
+export function SpecimenSection({
+  eyebrow,
+  title,
+  body,
+  value,
+  placeholder,
+  name,
+  disabled,
+  label,
+  nodeId,
+  className,
+  childFields,
+}: SpecimenSectionProps) {
   return (
     <div
       data-component="specimen-section"
@@ -88,6 +100,16 @@ export function SpecimenSection({ nodeId, className, childFields }: SpecimenSect
           <Input
             nodeId="input-email"
             className={styles['input-email']}
+            placeholder={
+              childFields?.['input-email']?.placeholder !== undefined
+                ? (childFields?.['input-email']?.placeholder as string)
+                : placeholder
+            }
+            disabled={
+              childFields?.['input-email']?.disabled !== undefined
+                ? (childFields?.['input-email']?.disabled as boolean)
+                : disabled
+            }
             label={
               childFields?.['input-email']?.label !== undefined
                 ? (childFields?.['input-email']?.label as string)
@@ -103,15 +125,20 @@ export function SpecimenSection({ nodeId, className, childFields }: SpecimenSect
                 ? (childFields?.['input-email']?.value as string)
                 : 'ada@atelier.test'
             }
-            placeholder={
-              childFields?.['input-email']?.placeholder !== undefined
-                ? (childFields?.['input-email']?.placeholder as string)
-                : undefined
-            }
           />
           <Input
             nodeId="input-search"
             className={styles['input-search']}
+            value={
+              childFields?.['input-search']?.value !== undefined
+                ? (childFields?.['input-search']?.value as string)
+                : value
+            }
+            disabled={
+              childFields?.['input-search']?.disabled !== undefined
+                ? (childFields?.['input-search']?.disabled as boolean)
+                : disabled
+            }
             label={
               childFields?.['input-search']?.label !== undefined
                 ? (childFields?.['input-search']?.label as string)
@@ -126,11 +153,6 @@ export function SpecimenSection({ nodeId, className, childFields }: SpecimenSect
               childFields?.['input-search']?.placeholder !== undefined
                 ? (childFields?.['input-search']?.placeholder as string)
                 : 'Search components'
-            }
-            value={
-              childFields?.['input-search']?.value !== undefined
-                ? (childFields?.['input-search']?.value as string)
-                : undefined
             }
           />
         </div>
@@ -165,17 +187,42 @@ export function SpecimenSection({ nodeId, className, childFields }: SpecimenSect
             eyebrow={
               childFields?.['card-signin']?.eyebrow !== undefined
                 ? (childFields?.['card-signin']?.eyebrow as string)
-                : undefined
+                : eyebrow
             }
             title={
               childFields?.['card-signin']?.title !== undefined
                 ? (childFields?.['card-signin']?.title as string)
-                : undefined
+                : title
             }
             body={
               childFields?.['card-signin']?.body !== undefined
                 ? (childFields?.['card-signin']?.body as string)
-                : undefined
+                : body
+            }
+            value={
+              childFields?.['card-signin']?.value !== undefined
+                ? (childFields?.['card-signin']?.value as string)
+                : value
+            }
+            placeholder={
+              childFields?.['card-signin']?.placeholder !== undefined
+                ? (childFields?.['card-signin']?.placeholder as string)
+                : placeholder
+            }
+            name={
+              childFields?.['card-signin']?.name !== undefined
+                ? (childFields?.['card-signin']?.name as string)
+                : name
+            }
+            disabled={
+              childFields?.['card-signin']?.disabled !== undefined
+                ? (childFields?.['card-signin']?.disabled as boolean)
+                : disabled
+            }
+            label={
+              childFields?.['card-signin']?.label !== undefined
+                ? (childFields?.['card-signin']?.label as string)
+                : label
             }
           />
         </div>

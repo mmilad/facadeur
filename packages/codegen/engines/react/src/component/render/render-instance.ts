@@ -1,6 +1,6 @@
 import { isVariantAxis, variantPresets, type FieldValue, type NestedNode } from '@facadeur/core';
 import { CodegenError } from '../../names';
-import { assertDefault, jsLiteral } from '../catalog';
+import { assertDefault, exposedMemberName, jsLiteral } from '../catalog';
 import { childFieldValue, childFieldsForInstance, withChildFieldOverride } from '../child-fields';
 import { conditionForNode, dataExpression, variantRuleExpression } from './data-expressions';
 import { jsxText } from './jsx-text';
@@ -73,6 +73,31 @@ export function renderInstance(
     usedProps.add(source.name);
     attrs.push({ name: destination.name, value: { kind: 'expr', code: source.name } });
   }
+  if (node.forwardFields !== false) {
+    const explicitlyBoundFields = new Set(Object.keys(node.fieldBindings ?? {}));
+    const explicitlySetFields = new Set(Object.keys(node.fields ?? {}));
+    for (const [fieldName, prop] of target.fields) {
+      const source = owner.fields.get(fieldName);
+      if (
+        !source ||
+        forwardedFields.has(fieldName) ||
+        explicitlyBoundFields.has(fieldName) ||
+        explicitlySetFields.has(fieldName)
+      ) {
+        continue;
+      }
+      forwardedFields.add(fieldName);
+      usedProps.add(source.name);
+      attrs.push({
+        name: prop.name,
+        value: withChildFieldOverride(
+          { kind: 'expr', code: source.name },
+          childFieldValue(childFieldsProp, node.id, fieldName),
+          prop,
+        ) ?? { kind: 'expr', code: source.name },
+      });
+    }
+  }
   const boundFields = new Set<string>();
   for (const [fieldName, path] of Object.entries(node.fieldBindings ?? {})) {
     if (forwardedFields.has(fieldName)) continue;
@@ -90,11 +115,8 @@ export function renderInstance(
   }
   for (const [fieldName, value] of Object.entries(node.fields ?? {})) {
     if (forwardedFields.has(fieldName) || boundFields.has(fieldName)) {
-      if (boundFields.has(fieldName)) {
-        throw new CodegenError(
-          `Instance "${node.id}" cannot set and bind field "${fieldName}" on "${node.component}" together`,
-        );
-      }
+      // Bound fields use their dynamic data source at runtime. Static instance
+      // values remain editor-preview overrides and are not generated for them.
       continue;
     }
     const prop = target.fields.get(fieldName);
@@ -103,7 +125,7 @@ export function renderInstance(
         `Instance "${node.id}" sets unknown field "${fieldName}" on "${node.component}"`,
       );
     }
-    const directField = target.document.fields?.find((field) => field.name === fieldName);
+    const directField = target.contractFields.get(fieldName);
     if (directField) assertDefault(node.component, directField, value);
     attrs.push({
       name: prop.name,
@@ -196,18 +218,6 @@ export function renderInstance(
       ? { condition: conditionForNode(node.displayOn, owner, dataScope, usedProps) }
       : {}),
   };
-}
-
-function exposedMemberName(
-  target: CatalogEntry,
-  path: string,
-  kind: 'field' | 'event',
-): string | undefined {
-  const members = kind === 'field' ? target.fields : target.events;
-  if (members.has(path)) return path;
-  const mappings =
-    kind === 'field' ? target.document.expose?.fields : target.document.expose?.events;
-  return Object.entries(mappings ?? {}).find(([, mappedPath]) => mappedPath === path)?.[0];
 }
 
 function valueAttr(name: string, value: FieldValue): Attr {

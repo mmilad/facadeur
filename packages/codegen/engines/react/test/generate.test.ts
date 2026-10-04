@@ -4,7 +4,12 @@ import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
-import { validateCatalog, validateDocumentFile, type DocumentFile } from '@facadeur/core';
+import {
+  validateCatalog,
+  validateDocumentFile,
+  type DocumentFile,
+  type NestedNode,
+} from '@facadeur/core';
 import { CodegenError, designFromDocument, generateReact } from '../src/index';
 import { formatGenerated, readRepoFile } from '../src/format';
 
@@ -148,7 +153,7 @@ describe('generateReact', () => {
     expect(signIn).toContain("label='Continue'");
     expect(signIn).toContain("tone='primary'");
     expect(signIn).toContain("size='sm'");
-    expect(signIn).not.toContain('placeholder=');
+    expect(signIn).toContain('placeholder={placeholder}');
   });
 
   it('renders a page as its section instance', () => {
@@ -485,7 +490,14 @@ describe('bindings outside the examples', () => {
       root: {
         id: 'root',
         type: 'frame',
-        children: [{ id: 'control', type: 'instance', component: control.id }],
+        children: [
+          {
+            id: 'control',
+            type: 'instance',
+            component: control.id,
+            forwardFields: false,
+          },
+        ],
       },
     };
 
@@ -647,10 +659,11 @@ describe('nested child field codegen', () => {
     const sectionTypes = componentTypes(files, 'NestedSection');
 
     expect(hostSource).toContain(
-      "childFields={{ 'section-part': { 'title': 'Local title' }, 'section-part/control': { 'value': 'Deep value' } }}",
+      "childFields2={{ 'section-part': { 'title': 'Local title' }, 'section-part/control': { 'value': 'Deep value' } }}",
     );
-    expect(fieldTypes).toContain('childFields?: Record<string, Record<string, unknown>>;');
-    expect(fieldSource).toContain("childFields?.['section-part']?.title");
+    expect(fieldTypes).toContain('childFields?: string;');
+    expect(fieldTypes).toContain('childFields2?: Record<string, Record<string, unknown>>;');
+    expect(fieldSource).toContain("childFields2?.['section-part']?.title");
     expect(fieldSource).toContain('childFields2={{ ...');
     expect(sectionSource).toContain('childFields2?.control?.value');
     expect(sectionTypes).toContain('childFields?: string;');
@@ -659,7 +672,295 @@ describe('nested child field codegen', () => {
   });
 });
 
+describe('nested component field forwarding', () => {
+  const child: DocumentFile = {
+    version: 1,
+    id: 'forwarded-child',
+    name: 'Forwarded child',
+    kind: 'component',
+    fields: [{ name: 'label', type: 'text', default: 'Child default' }],
+    root: { id: 'root', type: 'text', bindings: [{ field: 'label', target: 'text' }] },
+  };
+
+  function generateParent(
+    instance: Extract<NestedNode, { type: 'instance' }>,
+    fields: NonNullable<DocumentFile['fields']> = [],
+    childDocument: DocumentFile = child,
+  ): { source: string; types: string } {
+    const parent: DocumentFile = {
+      version: 1,
+      id: 'forwarding-parent',
+      name: 'Forwarding parent',
+      kind: 'component',
+      fields,
+      root: { id: 'root', type: 'frame', children: [instance] },
+    };
+    const generated = generateReact({ documents: [parent, childDocument] });
+    return {
+      source: componentSource(generated.ui, 'ForwardingParent'),
+      types: componentTypes(generated.ui, 'ForwardingParent'),
+    };
+  }
+
+  it('forwards matching public fields by default', () => {
+    const generated = generateParent({
+      id: 'child-instance',
+      type: 'instance',
+      component: child.id,
+    });
+
+    expect(generated.source).toContain('label={label}');
+    expect(generated.types).toContain('label?: string;');
+  });
+
+  it('does not implicitly forward matching fields when disabled', () => {
+    const generated = generateParent({
+      id: 'child-instance',
+      type: 'instance',
+      component: child.id,
+      forwardFields: false,
+    });
+
+    expect(generated.source).not.toContain('label={label}');
+    expect(generated.types).not.toContain('label?: string;');
+  });
+
+  it('provides required child fields through the generated parent contract by default', () => {
+    const requiredChild: DocumentFile = {
+      ...child,
+      id: 'required-forwarded-child',
+      name: 'Required forwarded child',
+      fields: [{ name: 'label', type: 'text', required: true }],
+    };
+    const generated = generateParent(
+      { id: 'child-instance', type: 'instance', component: requiredChild.id },
+      [],
+      requiredChild,
+    );
+
+    expect(generated.source).toContain('label={label}');
+    expect(generated.types).toContain('label: string;');
+  });
+
+  it('keeps explicit field bindings ahead of same-name forwarding', () => {
+    const generated = generateParent(
+      {
+        id: 'child-instance',
+        type: 'instance',
+        component: child.id,
+        fieldBindings: { label: 'source' },
+      },
+      [
+        { name: 'label', type: 'boolean' },
+        { name: 'source', type: 'text' },
+      ],
+    );
+
+    expect(generated.source).toContain('label={source}');
+    expect(generated.source).not.toContain('label={label}');
+    expect(generated.types).toContain('label?: string;');
+    expect(generated.types).not.toContain('label?: boolean;');
+  });
+
+  it('keeps an explicit instance value ahead of same-name forwarding', () => {
+    const generated = generateParent(
+      {
+        id: 'child-instance',
+        type: 'instance',
+        component: child.id,
+        fields: { label: 'Local label' },
+      },
+      [{ name: 'label', type: 'boolean' }],
+    );
+
+    expect(generated.source).toContain("label='Local label'");
+    expect(generated.source).not.toContain('label={label}');
+    expect(generated.types).toContain('label?: string;');
+    expect(generated.types).not.toContain('label?: boolean;');
+  });
+
+  it('places an auto-forwarded duplicate after local fields and uses the child spec', () => {
+    const childWithShared: DocumentFile = {
+      ...child,
+      id: 'forwarded-shared-child',
+      name: 'Forwarded shared child',
+      fields: [{ name: 'shared', type: 'text', default: 'Child value' }],
+      root: {
+        id: 'root',
+        type: 'text',
+        bindings: [{ field: 'shared', target: 'text' }],
+      },
+    };
+    const generated = generateParent(
+      { id: 'child-instance', type: 'instance', component: childWithShared.id },
+      [
+        { name: 'shared', type: 'boolean', default: false },
+        { name: 'local', type: 'text', default: 'Local value' },
+      ],
+      childWithShared,
+    );
+
+    expect(generated.types).toContain('shared?: string;');
+    expect(generated.types).not.toContain('shared?: boolean;');
+    expect(generated.types.indexOf('local?: string;')).toBeLessThan(
+      generated.types.indexOf('shared?: string;'),
+    );
+  });
+
+  it('uses the latest auto-forwarded spec when child extensions share a field name', () => {
+    const firstChild: DocumentFile = {
+      ...child,
+      id: 'first-shared-child',
+      name: 'First shared child',
+      fields: [{ name: 'shared', type: 'boolean', default: false }],
+      root: {
+        id: 'root',
+        type: 'text',
+        bindings: [{ field: 'shared', target: 'text' }],
+      },
+    };
+    const lastChild: DocumentFile = {
+      ...child,
+      id: 'last-shared-child',
+      name: 'Last shared child',
+      fields: [{ name: 'shared', type: 'text', default: 'Last value' }],
+      root: {
+        id: 'root',
+        type: 'text',
+        bindings: [{ field: 'shared', target: 'text' }],
+      },
+    };
+    const parent: DocumentFile = {
+      version: 1,
+      id: 'ordered-extension-parent',
+      name: 'Ordered extension parent',
+      kind: 'component',
+      fields: [{ name: 'local', type: 'text', default: 'Local value' }],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          { id: 'first', type: 'instance', component: firstChild.id },
+          { id: 'last', type: 'instance', component: lastChild.id },
+        ],
+      },
+    };
+    const generated = generateReact({ documents: [parent, firstChild, lastChild] });
+    const types = componentTypes(generated.ui, 'OrderedExtensionParent');
+
+    expect(types).toContain('shared?: string;');
+    expect(types).not.toContain('shared?: boolean;');
+    expect(types.indexOf('local?: string;')).toBeLessThan(types.indexOf('shared?: string;'));
+  });
+
+  it('propagates inherited fields through nested component contracts', () => {
+    const leaf: DocumentFile = {
+      ...child,
+      id: 'forwarded-leaf',
+      name: 'Forwarded leaf',
+    };
+    const middle: DocumentFile = {
+      version: 1,
+      id: 'forwarded-middle',
+      name: 'Forwarded middle',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [{ id: 'leaf', type: 'instance', component: leaf.id }],
+      },
+    };
+    const parent: DocumentFile = {
+      version: 1,
+      id: 'forwarded-outer',
+      name: 'Forwarded outer',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [{ id: 'middle', type: 'instance', component: middle.id }],
+      },
+    };
+    const generated = generateReact({ documents: [parent, middle, leaf] });
+
+    expect(componentTypes(generated.ui, 'ForwardedMiddle')).toContain('label?: string;');
+    expect(componentTypes(generated.ui, 'ForwardedOuter')).toContain('label?: string;');
+    expect(componentSource(generated.ui, 'ForwardedMiddle')).toContain('label={label}');
+    expect(componentSource(generated.ui, 'ForwardedOuter')).toContain('label={label}');
+  });
+
+  it('propagates explicitly exposed child fields through auto-forwarding contracts', () => {
+    const middle: DocumentFile = {
+      version: 1,
+      id: 'forwarded-exposed-middle',
+      name: 'Forwarded exposed middle',
+      kind: 'component',
+      expose: { fields: { caption: 'leaf.label' } },
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [{ id: 'leaf', type: 'instance', component: child.id }],
+      },
+    };
+    const parent: DocumentFile = {
+      version: 1,
+      id: 'forwarded-exposed-outer',
+      name: 'Forwarded exposed outer',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [{ id: 'middle', type: 'instance', component: middle.id }],
+      },
+    };
+    const generated = generateReact({ documents: [parent, middle, child] });
+
+    expect(componentTypes(generated.ui, 'ForwardedExposedMiddle')).toContain('caption?: string;');
+    expect(componentTypes(generated.ui, 'ForwardedExposedOuter')).toContain('caption?: string;');
+  });
+});
+
 describe('atom contracts', () => {
+  it('uses data bindings for generated inputs while keeping static values preview-only', () => {
+    const child: DocumentFile = {
+      version: 1,
+      id: 'bound-preview-child',
+      name: 'Bound preview child',
+      kind: 'atom',
+      fields: [{ name: 'label', type: 'text' }],
+      root: {
+        id: 'root',
+        type: 'text',
+        bindings: [{ field: 'label', target: 'text' }],
+      },
+    };
+    const parent: DocumentFile = {
+      version: 1,
+      id: 'bound-preview-parent',
+      name: 'Bound preview parent',
+      kind: 'component',
+      fields: [{ name: 'source', type: 'text' }],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'child',
+            type: 'instance',
+            component: child.id,
+            fields: { label: 'Local preview' },
+            fieldBindings: { label: 'source' },
+          },
+        ],
+      },
+    };
+
+    const generated = generateReact({ documents: [parent, child] });
+    const sourceText = componentSource(generated.ui, 'BoundPreviewParent');
+    expect(sourceText).toContain('label={source}');
+    expect(sourceText).not.toContain('label="Local preview"');
+  });
+
   it('generates required inputs and semantic native events', () => {
     const field: DocumentFile = {
       version: 1,

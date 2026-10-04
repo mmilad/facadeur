@@ -1,52 +1,80 @@
 ---
 name: facadeur-refactor
-description: Plan and implement responsibility-based refactors in the Facadeur monorepo, using the repository's candidate detector and refactoring rules. Use when a change adds responsibility to an existing module, duplicates behavior, or needs a justified file or domain split.
+description: Review or implement responsibility-based refactors in the Facadeur monorepo, using its candidate detector, ownership rules, and TypeScript conventions. Use for structural reviews, reducing coupling, deduplication, or justified file/domain splits. Reviews remain read-only unless implementation is requested.
 metadata:
-  short-description: Safe, responsibility-based Facadeur refactoring
+  short-description: Responsibility-based Facadeur refactoring
 ---
 
 # Facadeur refactoring
 
-Use this skill for structural refactoring in `D:\newProjects\facadeur`. The goal is a clearer
-ownership boundary with unchanged behavior and public contracts—not a lower line count.
+Improve ownership and make dependencies explicit while preserving behavior and public contracts.
+Resolve repository paths from the current checkout. Current user instructions and
+[`AGENTS.md`](../../../AGENTS.md) take precedence over historical plans.
 
-## Required workflow
+## Workflow
 
-1. Read `docs/refactoring-checklist.md` and `docs/refactoring-guidelines.md` before planning.
-2. Run `node scripts/refactor-candidates.mjs <affected files or directories>` before extending
-   source. If the affected paths are not known yet, run it without arguments.
-3. Identify the changing responsibility, current owner, consumers, public entry points, and
-   dependency direction. Record an in-scope refactor in `docs/plan.md` before its dependent
-   feature; record unrelated candidates in the backlog only.
-4. Choose the smallest meaningful boundary. Keep cohesive parsers, schemas, algorithms, and
-   orchestrators together when extraction would add indirection or cycles.
-5. Move code mechanically first, preserving behavior, imports, exports, data formats, and
-   dependency direction. Then make the requested behavior change.
-6. Validate with focused tests and relevant typecheck/lint/build checks. Repeat the detector on
-   affected paths and explain any remaining candidate or why the file stays cohesive.
+1. Establish scope and mode. Review requests authorize inspection and recommendations, not
+   edits. Inspect current files and staging; preserve changes made since earlier turns.
+2. Read [`docs/refactoring-checklist.md`](../../../docs/refactoring-checklist.md) and
+   [`docs/refactoring-guidelines.md`](../../../docs/refactoring-guidelines.md). Run
+   `node scripts/refactor-candidates.mjs <affected paths>` before extending source.
+3. Identify the responsibility, owner, consumers, public entry points, and dependency direction.
+   For implementation, record the evidence, boundary, preserved contracts, and validation in
+   `docs/plan.md` before editing. Record unrelated candidates in its backlog; a read-only review
+   reports findings in chat without modifying the plan.
+4. Move code mechanically first. Update consumers and remove superseded implementations once
+   the migration is complete. Temporary copies are acceptable during migration, not competing
+   long-term implementations. Keep supported public exports unless their change is authorized.
+5. Validate in proportion to the change and the user's current request. Normally use focused
+   behavioral checks and relevant typecheck/lint/build checks. Honor a request to defer tests
+   for that task; do not turn it into a permanent no-tests policy. Repeat the detector on
+   affected existing paths, inspect imports/contracts, and state what was and was not checked.
 
-## Split decision
+## Responsibilities and naming
 
-Split only for a concrete signal: independent reasons to change, pure domain logic hidden in
-UI/effects, duplicated behavior with identical semantics, repeated case branching with a stable
-contract, or unrelated state/workflows in one owner. Prefer feature/domain directories and
-private helpers next to their consumer. Share only after actual reuse; put cross-package
-contracts behind the owning package's public API. Do not create generic utility packages,
-speculative registries, or one-file folders.
+- Start with ownership, not file size. Keep cohesive parsers and algorithms together. Group
+  related modules when they form a real subdomain: style-block parsing, editing, and contracts
+  belong in `style/blocks/`, with `parse.ts`, `edit.ts`, and `contract.ts`.
+- Let directories supply the domain name: `project/controller.ts`, not
+  `project/project-controller.ts`. Name a file after its actual role; a store backed by a
+  controller is still a store. Do not introduce controller classes for stateless algorithms.
+- A small command domain may use `commands.ts`; a larger one may use `commands/`. Give each
+  command directory an `index.ts` with explicit named exports so outside consumers have one
+  entry point. Within the domain, import implementations directly to avoid barrel cycles.
+  Use other barrels only for meaningful boundaries; do not export private helpers by default.
+- Keep types and helpers near their owner (`types.ts`, a focused helper module, or `utils.ts`
+  for small genuinely shared domain primitives). Do not create generic utility packages or
+  one-file directories just to reduce size or imports.
 
-## Facadeur ownership
+## Type contracts and coupling
 
-- `core`: portable document/DSL contracts and invariants
+- Apply the return-type rule in AGENTS.md: infer simple getters, forwarding functions, and
+  internal helpers; retain explicit types for intentional API boundaries, readonly views,
+  predicates/assertions, overloads, recursion, or deliberate widening. Remove imports made
+  unused by annotation cleanup. Do not replace annotations with casts.
+- Put a fixed integration contract at its owning interface. If a context's `updateDocument`
+  returns `DocumentController`, declare it there with `import type` and let callers infer it.
+  Do not propagate `Result` through controllers merely to conceal that concrete relationship.
+  Introduce generics only when actual consumers require meaningful variation.
+- A type-only import is not a runtime dependency. Distinguish useful domain contracts from
+  accidental coupling; fewer imports alone do not prove better architecture. Preserve return
+  values and public type shapes rather than switching to `void` just to remove an import.
+- When reviewing stateful controllers, check who owns mutations, whether returned objects
+  expose live mutable state, how events behave after commit, and how removal affects cached
+  views/history. TypeScript `readonly` alone does not isolate referenced mutable objects.
+  Report behavioral defects separately; implement them only within the authorized scope.
+
+## Package ownership
+
+- `core`: portable document/DSL contracts, invariants, project/controller state and store views
 - `tokens`: token evaluation and output
-- `style-engine`: stylesheet compilation
+- `style-engine`: stylesheet compilation and runtime application
 - `renderer-dom`: DOM rendering
-- `store-yjs`: Yjs encoding and persistence adapter
-- `codegen-react`: React output
-- `apps/editor`: editor selection, controls, and interaction state
+- `store-yjs`: retained Yjs encoding/persistence adapter; not the owner of Core project state
+- `codegen/engines/react`: React output
+- `apps/editor`: editor selection, controls, sessions, and interaction state
 
-Core must remain independent of adapters. Inside a package, prefer direct internal imports; use
-barrels only for meaningful public boundaries.
-
-For detailed heuristics, extraction patterns, contract checks, and plan-entry examples, read
-[`docs/refactoring-guidelines.md`](../../../docs/refactoring-guidelines.md). The repository
-checklist remains authoritative when this skill and a local convention differ.
+ProjectController owns project coordination; domain controllers receive focused contexts.
+Keep Core independent of adapters. Cross-package consumers use the owning package's public
+API. Treat the existing architecture as context, not a reason to introduce new frameworks,
+metadata features, or dependencies during a structural refactor.

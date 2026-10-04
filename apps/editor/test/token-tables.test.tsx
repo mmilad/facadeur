@@ -4,7 +4,6 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import {
-  createId,
   listComponentTokens,
   readTokenTree,
   setTokenInTree,
@@ -159,7 +158,9 @@ describe('design token tables', () => {
   it('refreshes component token labels after undo with an active draft', async () => {
     const session = createEditorSession({ documents, design: createProjectTemplateDocument() });
     session.openAsset('button', 'root');
-    const id = createId();
+    const id = listComponentTokens(
+      session.project.styles.document('button').componentTokens ?? {},
+    ).find((token) => token.path === 'color.bg')!.id;
     await act(async () => {
       session.execute({
         type: 'setComponentToken',
@@ -168,6 +169,8 @@ describe('design token tables', () => {
         token: { type: 'color', value: '#ffffff' },
       });
     });
+    expect(session.project.styles.document('button').componentTokens?.[id]?.value).toBe('#ffffff');
+    expect(session.getSnapshot().notice?.tone).not.toBe('error');
     host = document.createElement('div');
     document.body.append(host);
     root = createRoot(host);

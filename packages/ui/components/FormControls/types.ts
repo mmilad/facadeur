@@ -4,6 +4,25 @@
  */
 
 export interface FormControlsProps {
+  formFields?: {
+    id: string;
+    kind: 'input' | 'textarea' | 'select' | 'toggle';
+    label: string;
+    value?: string;
+    placeholder?: string;
+    hint?: string;
+    rows?: number;
+  }[];
+  type?: string;
+  hint?: string;
+  icon?: string;
+  hasIcon?: boolean;
+  disabled?: boolean;
+  placeholder?: string;
+  name?: string;
+  rows?: number;
+  label?: string;
+  value?: string;
   /** Instance id. Sets `data-node` so a parent style rule can address this element. */
   nodeId?: string;
   className?: string;
