@@ -1,6 +1,6 @@
 import { Type, type Static, type TSchema } from '@sinclair/typebox';
-import { defaultKinds } from './kinds.js';
-import { childFieldPathSchema, idSchema, kindSchema } from './schemas/schema-common.js';
+import { defaultKinds } from '../document/kinds.js';
+import { childFieldPathSchema, idSchema, kindSchema } from './common.js';
 import {
   bindingSchema,
   bindingTargetSchema,
@@ -19,7 +19,7 @@ import {
   type BindingTarget,
   type FieldType,
   type FieldValue,
-} from './schemas/schema-fields.js';
+} from './fields.js';
 import {
   breakpointSchema,
   fontFaceFileSchema,
@@ -34,7 +34,7 @@ import {
   tokenTypes,
   withTokenDefs,
   type TokenType,
-} from './schemas/schema-fonts.js';
+} from './fonts.js';
 import {
   axisSizeSchema,
   layoutOverrideSchema,
@@ -44,8 +44,8 @@ import {
   spacingSchema,
   tokenPathSchema,
   tokenRefSchema,
-} from './schemas/schema-layout.js';
-import { nestedNodeSchema } from './schemas/schema-nodes.js';
+} from './layout.js';
+import { nestedNodeSchema } from './nodes.js';
 import {
   styleBlockSchema,
   styleChildSchema,
@@ -53,8 +53,8 @@ import {
   styleRuleSchema,
   styleStatesSchema,
   tokenInterfaceSchema,
-} from './schemas/schema-style.js';
-import { componentTokensSchema } from './schemas/schema-component-tokens.js';
+} from './style.js';
+import { componentTokensSchema } from './component-tokens.js';
 import {
   basicSchemaTypes,
   componentSchemaUseSchema,
@@ -69,14 +69,14 @@ import {
   type SchemaCatalog,
   type SchemaFieldUse,
   type SchemaTypeRef,
-} from './schemas/schema-contract.js';
+} from './contract.js';
 import {
   variantAxisSchema,
   variantInsertionSchema,
   variantNodeOverrideSchema,
   variantOverridesSchema,
   variantPresetSchema,
-} from './schemas/schema-variants.js';
+} from './variants.js';
 
 export {
   fieldTypes,
@@ -226,7 +226,6 @@ export type StyleRule = Static<typeof styleRuleSchema>;
 export type StyleChild = Static<typeof styleChildSchema>;
 export type StyleBlock = Static<typeof styleBlockSchema>;
 export type TokenInterface = Static<typeof tokenInterfaceSchema>;
-export type ComponentTokens = Static<typeof componentTokensSchema>;
 export type Binding = Static<typeof bindingSchema>;
 export type NestedNode = Static<typeof nestedNodeSchema>;
 export type DocumentSettings = Static<typeof settingsSchema>;

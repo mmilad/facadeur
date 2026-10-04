@@ -1,4 +1,4 @@
-import type { ChildFieldOverrides } from './schema.js';
+import type { ChildFieldOverrides } from '../schema/document.js';
 
 /** Merge sparse variant overrides by path and field, with the source winning. */
 export function mergeChildFieldOverrides(

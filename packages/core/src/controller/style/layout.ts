@@ -1,5 +1,5 @@
 import { DocumentError } from '../../document/errors.js';
-import { isPlainObject as isRecord } from '../../document/json.js';
+import { isPlainObject as isRecord } from '../../utils.js';
 import type {
   AxisSize,
   Layout,
@@ -7,7 +7,7 @@ import type {
   SizeValue,
   Spacing,
   SpacingBox,
-} from '../../document/schema.js';
+} from '../../schema/document.js';
 
 const TOKEN_REF = /^\{[a-z][a-z0-9]*(?:\.[a-z0-9]+)+\}$/;
 const BREAKPOINT_ID = /^[a-z][a-z0-9]*$/;

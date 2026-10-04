@@ -1,5 +1,5 @@
 import { DocumentError } from '../../document/errors.js';
-import type { StyleRule } from '../../document/schema.js';
+import type { StyleRule } from '../../schema/document.js';
 
 const CLASS_NAME = /^[A-Za-z_][A-Za-z0-9_-]*$/;
 const CLASS_CHAR = /[A-Za-z0-9_-]/;

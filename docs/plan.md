@@ -38,6 +38,14 @@ Result: initialize the live controller from decoded authoritative updates before
 
 ## Open implementation and verification items
 
+### Shared schemas, JSON utilities, and unused Core modules
+
+- [x] Move reusable JSON primitives to `src/utils.ts`, collect schemas in `src/schema/` without redundant prefixes, and remove verified unreachable internal modules.
+
+Evidence: JSON helpers are used across style/token, validation, and document domains; schemas are shared contracts rather than document-controller behavior. Retain `document/` for flat/nested conversion, tree operations, identifiers, kinds, child-field semantics, and document errors. Preserve public Core exports and schema-derived types. Identify dead modules using reachability from the public entry point plus repository deep-import searches; public exports are not dead merely because this repository has no caller. Validation: Core/workspace typecheck, scoped lint/format, detector, and import reachability; tests deferred per current preference.
+
+Removed the unreachable internal `style/blocks/index.ts` barrel and the unreferenced, non-public `assertId` function and `ComponentTokens` type alias. `src/index.ts` keeps all existing public symbols. Retained the local token-value predicate: unlike recursive `utils.isJsonValue`, it intentionally accepts arrays/objects shallowly, so merging them would change validation semantics.
+
 ### Concrete style command result
 
 - [x] Define `DocumentController` once as the style context write result and remove propagated Result generics. Evidence: the generic adds no variation to the actual project contract. Returned document views and method behavior are preserved; the user's DocumentStyle naming is retained. Core typecheck, scoped lint/format and detector pass; no tests run. This supersedes the generic style result described in the preceding boundary refactor.

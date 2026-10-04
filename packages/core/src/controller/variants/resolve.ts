@@ -11,7 +11,7 @@ import {
   type StyleLayer,
   type VariantNodeOverride,
   type VariantPreset,
-} from '../../document/schema.js';
+} from '../../schema/document.js';
 import { removeNamedVariantLayer } from './style-layers.js';
 
 /** Return named overlay variants without exposing the legacy axis definitions. */

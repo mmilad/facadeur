@@ -9,8 +9,10 @@ package exports. Inside core, import the owning module directly rather than `src
 
 | Area                     | Owns                                                                                                                    | Does not own                                              |
 | ------------------------ | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| `document/`              | Document schemas/types, serialization, IDs, JSON, errors.                                                               | UI selection or DOM addressing.                           |
-| `store/`                 | Renderer-facing store contracts and controller-backed views with snapshot Undo/Redo.                                  | CRDT ownership or a second live document state.            |
+| `document/`              | Flat document model, serialization, tree operations, IDs, kinds, child fields, document errors.                         | UI selection or DOM addressing.                           |
+| `schema/`                | Shared TypeBox contracts and derived types, assembled by `document.ts`.                                                 | Controller state or command execution.                    |
+| `utils.ts`               | Shared JSON value checks, plain-object checks, canonical JSON cloning.                                                  | Domain-specific behavior or controller state.             |
+| `store/`                 | Renderer-facing store contracts and controller-backed views with snapshot Undo/Redo.                                    | CRDT ownership or a second live document state.           |
 | `controller/project/`    | Project state, shared context, command coordination.                                                                    | Persistence or organization features not yet implemented. |
 | `controller/document/`   | Live document views, node/field/event/schema commands.                                                                  | Yjs transactions or editor interaction state.             |
 | `controller/variants/`   | Variant commands, sparse resolution/derivation, preview-data composition.                                               | Inspector tabs or variant selection widgets.              |

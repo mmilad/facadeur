@@ -1,8 +1,8 @@
 import { DocumentError } from '../../../../document/errors.js';
 import { makeFlatNode, type FlatDocument, type FlatNode } from '../../../../document/flat.js';
 import { ID_PATTERN } from '../../../../document/ids.js';
-import { isPlainObject as isRecord } from '../../../../document/json.js';
-import type { VariantRule } from '../../../../document/schema.js';
+import { isPlainObject as isRecord } from '../../../../utils.js';
+import type { VariantRule } from '../../../../schema/document.js';
 import { assertStyleNameAvailable } from '../../../style/blocks/contract.js';
 import {
   assertAttributes,

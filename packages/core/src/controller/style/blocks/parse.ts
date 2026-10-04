@@ -1,5 +1,5 @@
 import { DocumentError } from '../../../document/errors.js';
-import { isPlainObject as isRecord } from '../../../document/json.js';
+import { isPlainObject as isRecord } from '../../../utils.js';
 import type {
   StyleBlock,
   StyleChild,
@@ -8,7 +8,7 @@ import type {
   StyleRule,
   StyleStates,
   TokenInterface,
-} from '../../../document/schema.js';
+} from '../../../schema/document.js';
 import { assertStyleSelector, selectorClassNames } from '../selectors.js';
 
 export const CSS_PROPERTY = /^(--)?[A-Za-z_][\w-]*$/;

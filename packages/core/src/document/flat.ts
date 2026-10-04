@@ -10,8 +10,8 @@ import type {
   EventBinding,
   Layout,
   NestedNode,
-} from './schema.js';
-import { isVariantAxis, isVariantPreset } from './schema.js';
+} from '../schema/document.js';
+import { isVariantAxis, isVariantPreset } from '../schema/document.js';
 import { canonicalizeComponentTokens } from '../controller/style/tokens/component/contract.js';
 import {
   canonicalizeStyleBlock,

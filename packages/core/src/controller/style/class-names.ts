@@ -1,5 +1,5 @@
 import { DocumentError } from '../../document/errors.js';
-import type { DocumentFile, NestedNode } from '../../document/schema.js';
+import type { DocumentFile, NestedNode } from '../../schema/document.js';
 import type { FlatDocument } from '../../document/flat.js';
 
 const STYLE_NAME = /^[A-Za-z_][A-Za-z0-9_-]*$/;

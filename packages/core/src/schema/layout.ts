@@ -1,5 +1,5 @@
 import { Type } from '@sinclair/typebox';
-import { breakpointIdSchema } from './schema-common.js';
+import { breakpointIdSchema } from './common.js';
 
 /** `{color.blue.500}` — a token reference stored in a style or layout value. */
 export const tokenRefSchema = Type.String({

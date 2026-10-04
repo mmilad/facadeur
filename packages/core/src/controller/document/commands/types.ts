@@ -21,7 +21,7 @@ import type {
   VariantAxis,
   VariantPreset,
   VariantRule,
-} from '../../../document/schema.js';
+} from '../../../schema/document.js';
 import type { ComponentToken } from '../../style/tokens/component/contract.js';
 import type { TokenDefinition, TokenGroupDefinition } from '../../style/tokens/types.js';
 import type { SchemaResolverContext } from '../../validation/types.js';

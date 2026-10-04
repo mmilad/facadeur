@@ -1,6 +1,6 @@
 import { Type } from '@sinclair/typebox';
-import { idSchema } from './schema-common.js';
-import { fieldValueSchema } from './schema-fields.js';
+import { idSchema } from './common.js';
+import { fieldValueSchema } from './fields.js';
 
 export const tokenTypes = [
   'color',

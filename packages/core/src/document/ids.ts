@@ -12,9 +12,3 @@ export function createId(): string {
   }
   return `n_${body}`;
 }
-
-export function assertId(id: string) {
-  if (!ID_PATTERN.test(id)) {
-    throw new Error(`Invalid id "${id}"`);
-  }
-}

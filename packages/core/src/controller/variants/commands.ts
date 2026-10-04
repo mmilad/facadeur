@@ -5,7 +5,7 @@ import {
   type VariantAxis,
   type VariantPreset,
   type StyleBlock,
-} from '../../document/schema.js';
+} from '../../schema/document.js';
 import { omitVariantAxis, omitVariantValues } from '../style/blocks/edit.js';
 import { parseStyleBlock } from '../style/blocks/parse.js';
 import { removeNamedVariantLayer } from './style-layers.js';

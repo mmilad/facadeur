@@ -6,7 +6,7 @@ import type {
   FieldDefinition,
   NestedNode,
   SchemaCatalog,
-} from '../../document/schema.js';
+} from '../../schema/document.js';
 import { localContractFieldsFor } from './schema-use.js';
 
 import type {

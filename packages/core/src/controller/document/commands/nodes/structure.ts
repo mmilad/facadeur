@@ -15,7 +15,7 @@ import type {
   EventBinding,
   Layout,
   NestedNode,
-} from '../../../../document/schema.js';
+} from '../../../../schema/document.js';
 import {
   assertAttributes,
   assertBindings,

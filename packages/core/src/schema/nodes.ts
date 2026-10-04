@@ -1,10 +1,5 @@
 import { Type } from '@sinclair/typebox';
-import {
-  childFieldPathSchema,
-  dataPathSchema,
-  idSchema,
-  stringMapSchema,
-} from './schema-common.js';
+import { childFieldPathSchema, dataPathSchema, idSchema, stringMapSchema } from './common.js';
 import {
   bindingSchema,
   displayOnSchema,
@@ -13,8 +8,8 @@ import {
   fieldValueSchema,
   repeatSchema,
   variantRuleSchema,
-} from './schema-fields.js';
-import { layoutSchema } from './schema-layout.js';
+} from './fields.js';
+import { layoutSchema } from './layout.js';
 
 const sharedNodeProps = {
   id: idSchema,

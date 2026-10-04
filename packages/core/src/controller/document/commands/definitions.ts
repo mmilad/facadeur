@@ -5,7 +5,7 @@ import type {
   Expose,
   FieldDefinition,
   FieldValue,
-} from '../../../document/schema.js';
+} from '../../../schema/document.js';
 import {
   assertEventDefinition,
   assertExpose,

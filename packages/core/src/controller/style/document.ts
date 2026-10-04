@@ -1,5 +1,5 @@
 import { DocumentError } from '../../document/errors.js';
-import type { StyleBlock, TokenInterface } from '../../document/schema.js';
+import type { StyleBlock, TokenInterface } from '../../schema/document.js';
 import { collectTokenRefs } from './references/collect.js';
 import type { ComponentToken } from './tokens/component/contract.js';
 import type { DocumentStyleCommand, StyleControllerContext } from './types.js';

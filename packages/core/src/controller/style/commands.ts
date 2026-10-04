@@ -1,6 +1,6 @@
 import { DocumentError } from '../../document/errors.js';
 import { makeFlatNode, type FlatDocument } from '../../document/flat.js';
-import type { Breakpoint, FontFamily } from '../../document/schema.js';
+import type { Breakpoint, FontFamily } from '../../schema/document.js';
 import type { CommandContext } from '../document/commands/types.js';
 import { setVariantStyleBlock } from '../variants/commands.js';
 import type { StyleCommand } from './types.js';

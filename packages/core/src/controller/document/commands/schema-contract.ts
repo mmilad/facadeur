@@ -1,10 +1,10 @@
 import { DocumentError } from '../../../document/errors.js';
-import { isPlainObject, isJsonValue } from '../../../document/json.js';
+import { isPlainObject, isJsonValue } from '../../../utils.js';
 import {
   basicSchemaTypes,
   type ComponentSchemaUse,
   type SchemaCatalog,
-} from '../../../document/schema.js';
+} from '../../../schema/document.js';
 import type { FlatDocument } from '../../../document/flat.js';
 
 export function setSchemaCatalog(doc: FlatDocument, value: SchemaCatalog | null) {

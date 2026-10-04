@@ -8,7 +8,7 @@ import type {
   VariantNodeOverride,
   VariantOverrides,
   VariantPreset,
-} from '../../document/schema.js';
+} from '../../schema/document.js';
 import { deriveNodeOverride, sameValue } from './derive-node.js';
 import { removeNamedVariantLayer } from './style-layers.js';
 

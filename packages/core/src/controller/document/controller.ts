@@ -1,5 +1,5 @@
 import { DocumentError } from '../../document/errors.js';
-import type { FieldDefinition } from '../../document/schema.js';
+import type { FieldDefinition } from '../../schema/document.js';
 import { localContractFieldsFor } from '../validation/schema-use.js';
 import { publicFieldsFor } from '../validation/catalog-exposed.js';
 import type { DocumentControllerContext } from './types.js';

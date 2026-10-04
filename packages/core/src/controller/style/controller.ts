@@ -1,4 +1,4 @@
-import type { Breakpoint, FontFamily } from '../../document/schema.js';
+import type { Breakpoint, FontFamily } from '../../schema/document.js';
 import { DocumentStyle } from './document.js';
 import { readTokenTree } from './tokens/global/tree.js';
 import type { TokenDefinition, TokenGroupDefinition } from './tokens/types.js';

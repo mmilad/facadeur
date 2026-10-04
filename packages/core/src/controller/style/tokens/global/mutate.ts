@@ -1,11 +1,6 @@
 import { DocumentError } from '../../../../document/errors.js';
-import {
-  canonicalizeJson,
-  isJsonValue,
-  isPlainObject,
-  type JsonValue,
-} from '../../../../document/json.js';
-import { tokenTypes } from '../../../../document/schema.js';
+import { canonicalizeJson, isJsonValue, isPlainObject, type JsonValue } from '../../../../utils.js';
+import { tokenTypes } from '../../../../schema/document.js';
 import type { TokenDefinition, TokenGroupDefinition, TokenTree } from '../types.js';
 
 import { TOKEN_SEGMENT } from '../syntax.js';

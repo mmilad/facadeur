@@ -6,7 +6,7 @@ import {
   type FieldValue,
   type VariantPreset,
   type SchemaCatalog,
-} from '../../document/schema.js';
+} from '../../schema/document.js';
 import {
   assertEventDefinition,
   assertExpose,

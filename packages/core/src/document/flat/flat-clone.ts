@@ -8,7 +8,7 @@ import type {
   FieldValue,
   VariantAxis,
   VariantPreset,
-} from '../schema.js';
+} from '../../schema/document.js';
 
 export function sortStringRecord(record: Record<string, string> | undefined) {
   if (!record) return undefined;

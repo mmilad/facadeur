@@ -46,9 +46,12 @@ describe('examples', () => {
       placeholder: 'control.placeholder',
       name: 'control.name',
     });
-    expect(
-      [...publicFieldsFor(input, new Map(documents.map((document) => [document.id, document]))).keys()],
-    ).toEqual(['label', 'value', 'placeholder', 'name', 'disabled']);
+    expect([
+      ...publicFieldsFor(
+        input,
+        new Map(documents.map((document) => [document.id, document])),
+      ).keys(),
+    ]).toEqual(['label', 'value', 'placeholder', 'name', 'disabled']);
     const textarea = documents.find((document) => document.id === 'textarea');
     expect(textarea?.fields?.length).toBeGreaterThan(0);
     const link = documents.find((document) => document.id === 'link');

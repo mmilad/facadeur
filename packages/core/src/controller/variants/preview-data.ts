@@ -4,7 +4,7 @@ import {
   type FieldValue,
   type FieldDefinition,
   type PreviewData,
-} from '../../document/schema.js';
+} from '../../schema/document.js';
 import type { FlatDocument } from '../../document/flat.js';
 
 type PreviewDocument = DocumentFile | FlatDocument;

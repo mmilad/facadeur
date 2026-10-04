@@ -1,7 +1,7 @@
 import { applyCommand, type Command, type CommandContext } from '../document/commands/index.js';
 import { DocumentError } from '../../document/errors.js';
 import { canonicalizeFlat, toNested, type FlatDocument } from '../../document/flat.js';
-import type { SchemaCatalog } from '../../document/schema.js';
+import type { SchemaCatalog } from '../../schema/document.js';
 import { DocumentController } from '../document/controller.js';
 import type { DocumentControllerContext } from '../document/types.js';
 import { readTokenTree } from '../style/tokens/global/tree.js';

@@ -7,7 +7,7 @@ import {
   type FieldValue,
   type NestedNode,
   type SchemaCatalog,
-} from '../../document/schema.js';
+} from '../../schema/document.js';
 import { resolveVariantDocument, variantPresets } from '../variants/resolve.js';
 import { assertValueMatches } from './assertions.js';
 import { validateDataContracts } from './data-contracts.js';

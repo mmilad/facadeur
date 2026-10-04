@@ -4,7 +4,7 @@ import type {
   FieldValue,
   NestedNode,
   VariantNodeOverride,
-} from '../../document/schema.js';
+} from '../../schema/document.js';
 
 export function deriveNodeOverride(base: NestedNode, edited: NestedNode, variantName: string) {
   if (base.type !== edited.type) {

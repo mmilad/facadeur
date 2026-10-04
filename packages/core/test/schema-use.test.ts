@@ -178,8 +178,14 @@ describe('Core schema-use contract resolution', () => {
                 ratio: { type: 'string' },
               },
               oneOf: [
-                { type: 'object', properties: { src: { type: 'string' }, alt: { type: 'string' } } },
-                { type: 'object', properties: { src: { type: 'string' }, poster: { type: 'string' } } },
+                {
+                  type: 'object',
+                  properties: { src: { type: 'string' }, alt: { type: 'string' } },
+                },
+                {
+                  type: 'object',
+                  properties: { src: { type: 'string' }, poster: { type: 'string' } },
+                },
               ],
             },
           },

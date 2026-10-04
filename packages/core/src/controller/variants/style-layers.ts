@@ -1,4 +1,4 @@
-import type { StyleBlock } from '../../document/schema.js';
+import type { StyleBlock } from '../../schema/document.js';
 
 /** Remove one named preset value, or the entire reserved axis after materializing a preset. */
 export function removeNamedVariantLayer(styles: StyleBlock, name?: string) {

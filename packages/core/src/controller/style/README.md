@@ -44,7 +44,6 @@ style/
     parse.ts             Parse authored style blocks and token interfaces
     contract.ts          Validate and canonicalize style contracts
     edit.ts              Prune/rebase nodes and variant axes in style blocks
-    index.ts             Explicit style-block algorithm exports
   tokens/
     types.ts             DTCG tree, token/group definitions, and indexes
     syntax.ts            Token path segments and whole-value reference syntax

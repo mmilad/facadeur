@@ -26,7 +26,7 @@ export type {
   ProjectControllerOptions,
   ProjectChange,
 } from './controller/project/types.js';
-export { canonicalizeJson, isJsonValue, isPlainObject, type JsonValue } from './document/json.js';
+export { canonicalizeJson, isJsonValue, isPlainObject, type JsonValue } from './utils.js';
 export {
   childOverridePath,
   mergeChildFieldContext,
@@ -142,7 +142,7 @@ export {
   type VariantNodeOverride,
   type VariantOverrides,
   type VariantPreset,
-} from './document/schema.js';
+} from './schema/document.js';
 export {
   readTokenTree,
   removeGroupFromTree,

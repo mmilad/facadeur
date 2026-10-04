@@ -1,6 +1,6 @@
 import { DocumentError } from '../../../../document/errors.js';
-import { isPlainObject, type JsonValue } from '../../../../document/json.js';
-import type { TokenType } from '../../../../document/schema.js';
+import { isPlainObject, type JsonValue } from '../../../../utils.js';
+import type { TokenType } from '../../../../schema/document.js';
 
 import { tokenReference } from '../syntax.js';
 const FONT_WEIGHT_KEYWORDS = new Set(['normal', 'bold', 'lighter', 'bolder']);

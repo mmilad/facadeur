@@ -1,6 +1,6 @@
 import { Type } from '@sinclair/typebox';
-import { breakpointIdSchema, idSchema } from './schema-common.js';
-import { tokenPathSchema } from './schema-layout.js';
+import { breakpointIdSchema, idSchema } from './common.js';
+import { tokenPathSchema } from './layout.js';
 
 const cssPropertySchema = Type.String({ pattern: '^(--)?[A-Za-z_][\\w-]*$' });
 const styleDeclarationsSchema = Type.Record(cssPropertySchema, Type.String());

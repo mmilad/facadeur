@@ -1,8 +1,8 @@
 import { DocumentError } from '../../../../document/errors.js';
 import type { FlatDocument } from '../../../../document/flat.js';
 import { ID_PATTERN, TAG_PATTERN } from '../../../../document/ids.js';
-import { isPlainObject as isRecord } from '../../../../document/json.js';
-import type { Binding, FieldValue } from '../../../../document/schema.js';
+import { isPlainObject as isRecord } from '../../../../utils.js';
+import type { Binding, FieldValue } from '../../../../schema/document.js';
 import { parseLayout } from '../../../style/layout.js';
 
 export function requireNode(doc: FlatDocument, id: string) {

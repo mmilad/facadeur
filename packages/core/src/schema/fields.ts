@@ -1,5 +1,5 @@
 import { Type } from '@sinclair/typebox';
-import { dataPathSchema, idSchema } from './schema-common.js';
+import { dataPathSchema, idSchema } from './common.js';
 
 export const fieldTypes = [
   'text',

@@ -1,5 +1,5 @@
-import { isPlainObject as isRecord } from '../../../document/json.js';
-import type { StyleBlock, StyleChild, StyleLayer } from '../../../document/schema.js';
+import { isPlainObject as isRecord } from '../../../utils.js';
+import type { StyleBlock, StyleChild, StyleLayer } from '../../../schema/document.js';
 import { parseStyleBlock } from './parse.js';
 
 /** Drop style rules targeting removed local node ids and their nested paths. */

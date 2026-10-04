@@ -1,5 +1,5 @@
 import { DocumentError } from '../../document/errors.js';
-import type { Breakpoint } from '../../document/schema.js';
+import type { Breakpoint } from '../../schema/document.js';
 
 const BREAKPOINT_ID = /^[a-z][a-z0-9]*$/;
 

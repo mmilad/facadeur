@@ -13,7 +13,7 @@ import {
   type StyleDeclarations,
   type StyleLayer,
   type TokenInterface,
-} from '../../../document/schema.js';
+} from '../../../schema/document.js';
 import { DocumentError } from '../../../document/errors.js';
 import type { FlatDocument } from '../../../document/flat.js';
 import type { ValidateOptions } from '../../validation/types.js';

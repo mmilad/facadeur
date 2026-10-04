@@ -1,5 +1,5 @@
 import { DocumentError } from '../../document/errors.js';
-import { isPlainObject as isRecord } from '../../document/json.js';
+import { isPlainObject as isRecord } from '../../utils.js';
 import { type FlatNode } from '../../document/flat.js';
 import { ID_PATTERN } from '../../document/ids.js';
 import {
@@ -13,7 +13,7 @@ import {
   type FieldValue,
   type Repeat,
   type VariantPreset,
-} from '../../document/schema.js';
+} from '../../schema/document.js';
 import { parseLayout } from '../style/layout.js';
 
 const DATA_PATH = /^[A-Za-z_$][A-Za-z0-9_$-]*(\.[A-Za-z_$][A-Za-z0-9_$-]*)*$/;

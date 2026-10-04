@@ -1,6 +1,6 @@
 import { DocumentError } from '../../document/errors.js';
 import { type FlatDocument, toNested, type FlatNode } from '../../document/flat.js';
-import { type FieldDefinition } from '../../document/schema.js';
+import { type FieldDefinition } from '../../schema/document.js';
 import { variantPresets } from '../variants/resolve.js';
 import { assertValueMatches } from './assertions.js';
 import { publicFieldsFor } from './catalog-exposed.js';

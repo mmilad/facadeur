@@ -5,7 +5,7 @@ import {
   documentFileSchema,
   type DocumentFile,
   type DocumentSchemaOptions,
-} from '../../document/schema.js';
+} from '../../schema/document.js';
 
 const ajv = new Ajv({ allErrors: true, strict: false });
 const validateFile: ValidateFunction = ajv.compile(documentFileSchema);

@@ -1,11 +1,6 @@
 import { DocumentError } from '../../../../document/errors.js';
-import {
-  canonicalizeJson,
-  isJsonValue,
-  isPlainObject,
-  type JsonValue,
-} from '../../../../document/json.js';
-import type { TokenType } from '../../../../document/schema.js';
+import { canonicalizeJson, isJsonValue, isPlainObject, type JsonValue } from '../../../../utils.js';
+import type { TokenType } from '../../../../schema/document.js';
 import {
   assertPath,
   cloneTree,

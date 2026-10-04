@@ -67,6 +67,8 @@ command coordination. See the [style file map](style/README.md) for the complete
 - Other internal imports point at the owning implementation, never the Core
   package barrel. Avoid repeating the domain name in filenames.
 
-`src/document/` retains persisted schemas, flat/nested serialization, identifiers,
-JSON primitives and errors. The store interface lives in `src/store/types.ts`. Serialization reuses pure domain
+`src/document/` retains the flat model, flat/nested serialization, tree operations, identifiers,
+kinds, child-field helpers, and document errors. Shared schemas and derived types live in
+`src/schema/`; reusable JSON primitives live in `src/utils.ts`.
+The store interface lives in `src/store/types.ts`. Serialization reuses pure domain
 normalizers; it must not depend on the stateful project/document controllers.

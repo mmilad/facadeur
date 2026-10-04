@@ -1,5 +1,5 @@
 import { DocumentError } from '../../document/errors.js';
-import type { FontFaceFile, FontFamily, FontSource, FontStyle } from '../../document/schema.js';
+import type { FontFaceFile, FontFamily, FontSource, FontStyle } from '../../schema/document.js';
 
 /** CSS generic families. A font stack must end on one so it always resolves. */
 const GENERIC_FAMILIES = new Set([
