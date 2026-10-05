@@ -43,12 +43,21 @@ export function readNode(map: Y.Map<unknown>): FlatNode {
   const type = map.get('type');
   const id = stringValue(map.get('id'));
   const name = optionalString(map.get('name'));
+  if (type === 'repeater' || type === 'switch') {
+    return makeFlatNode({
+      id,
+      type,
+      ...(name !== undefined ? { name } : {}),
+      children: readStringArray(map.get('children')),
+    });
+  }
   const styleName = optionalString(map.get('styleName'));
   const layout = readLayout(map.get('layout'));
   if (type === 'instance') {
     const fields = readValueMap(map.get('fields'));
     const childFields = readChildFields(map.get('childFields'));
     const forwardFields = map.get('forwardFields');
+    const switchCase = optionalString(map.get('switchCase'));
     const fieldBindings = readStringMap(map.get('fieldBindings'));
     const variants = readStringMap(map.get('variants'));
     const displayOn = readDisplayOn(map.get('displayOn'));
@@ -64,6 +73,7 @@ export function readNode(map: Y.Map<unknown>): FlatNode {
       ...(fields ? { fields } : {}),
       ...(childFields ? { childFields } : {}),
       ...(typeof forwardFields === 'boolean' ? { forwardFields } : {}),
+      ...(switchCase !== undefined ? { switchCase } : {}),
       ...(fieldBindings ? { fieldBindings } : {}),
       ...(variants ? { variants } : {}),
       ...(readJsonArray(map.get('variantRules')).length
@@ -131,6 +141,9 @@ export function readFields(list: Y.Array<Y.Map<unknown>>): FieldDefinition[] {
     const itemsValue = map.get('items');
     const items = itemsValue instanceof Y.Map ? readJsonObject(itemsValue) : {};
     if (Object.keys(items).length) field.items = items as unknown as FieldDefinition['items'];
+    const schemaValue = map.get('schema');
+    const schema = schemaValue instanceof Y.Map ? readJsonObject(schemaValue) : {};
+    if (Object.keys(schema).length) field.schema = schema;
     return field;
   });
 }

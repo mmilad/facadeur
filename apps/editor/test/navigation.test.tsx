@@ -3,11 +3,10 @@
  */
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';
-import { editorStandardCatalog } from './fixtures/example-catalog';
+import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
 
 const documents = editorStandardCatalog();
 
@@ -24,7 +23,7 @@ describe('editor subnavigation', () => {
   });
 
   it('places schema library in Settings and Icons in the subnav', async () => {
-    const session = createEditorSession({ documents, design: createProjectTemplateDocument() });
+    const session = createEditorSession({ documents, design: editorStandardDesign() });
     session.openAsset('card', 'root');
     host = document.createElement('div');
     document.body.append(host);
@@ -57,7 +56,7 @@ describe('editor subnavigation', () => {
   it('switches Editor, Schema, and Preview data without resetting selection or variant', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     session.openAsset('card', 'root');
     session.execute({

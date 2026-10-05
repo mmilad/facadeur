@@ -4,4 +4,4 @@
  */
 
 export { FormControls } from './component';
-export type { FormControlsProps } from './types';
+export type { FormControlsProps, FormControlsData } from './types';

@@ -6,6 +6,7 @@ import type {
   FieldDefinition,
   FieldValue,
   NestedNode,
+  SchemaCatalog,
 } from '@facadeur/core';
 import {
   childOverridePath,
@@ -13,9 +14,13 @@ import {
   mergeChildFieldContext,
   publicFieldsFor,
   resolveVariantDocument,
+  selectStructuralChild,
+  structuralChildSchemas,
   variantPresets,
 } from '@facadeur/core';
 import type { RenderContext } from './types';
+import { repeatedDataScope, scopeForInstance, scopeWithStructuralProps } from './repeat-scope';
+import type { RepeatScope } from './repeat-scope';
 
 export const MAX_DEPTH = 32;
 
@@ -55,12 +60,21 @@ export function resolveFields(
 export function resolveDocumentFields(
   document: DocumentFile,
   catalog: ReadonlyMap<string, DocumentFile>,
+  schemaCatalog?: SchemaCatalog,
 ): Record<string, FieldValue> {
   const localDefaults: Record<string, FieldValue> = {};
   for (const field of document.fields ?? []) {
     if (field.default !== undefined) localDefaults[field.name] = field.default;
   }
-  return resolveFields([...publicFieldsFor(document, catalog).values()], localDefaults);
+  return resolveFields(
+    [
+      ...publicFieldsFor(document, {
+        documents: catalog,
+        ...(schemaCatalog ? { schemaCatalog } : {}),
+      }).values(),
+    ],
+    localDefaults,
+  );
 }
 
 export function resolveInstanceFields(
@@ -69,12 +83,24 @@ export function resolveInstanceFields(
   parentScope: Record<string, FieldValue>,
   catalog: ReadonlyMap<string, DocumentFile>,
   localFields: Record<string, FieldValue> | undefined = node.fields,
+  schemaCatalog?: SchemaCatalog,
 ): Record<string, FieldValue> {
   const inherited: Record<string, FieldValue> = {};
-  const fields = publicFieldsFor(definition, catalog);
+  const fields = publicFieldsFor(definition, {
+    documents: catalog,
+    ...(schemaCatalog ? { schemaCatalog } : {}),
+  });
   if (node.forwardFields !== false) {
     for (const field of fields.values()) {
-      if (Object.hasOwn(parentScope, field.name)) inherited[field.name] = parentScope[field.name]!;
+      if (
+        typeof parentScope.props === 'object' &&
+        parentScope.props !== null &&
+        !Array.isArray(parentScope.props) &&
+        Object.hasOwn(parentScope.props, field.name)
+      ) {
+        inherited[field.name] = parentScope.props[field.name]!;
+      } else if (Object.hasOwn(parentScope, field.name))
+        inherited[field.name] = parentScope[field.name]!;
     }
   }
   return resolveFields([...fields.values()], {
@@ -113,6 +139,7 @@ export function resolveInstance(
   depth: number;
   childFields?: ChildFieldOverrides;
   childFieldPath?: string | null;
+  repeatScope?: RepeatScope;
 } | null {
   const parts = renderedId.split('/');
   const rootId = parts[0];
@@ -125,6 +152,7 @@ export function resolveInstance(
     ownerId: null,
     depth: 0,
     childFieldPath: null,
+    repeatScope: undefined,
   });
 }
 
@@ -140,6 +168,7 @@ function walkRendered(
     depth: number;
     childFields?: ChildFieldOverrides;
     childFieldPath?: string | null;
+    repeatScope?: RepeatScope;
   },
 ): {
   instance: Extract<NestedNode, { type: 'instance' }>;
@@ -149,6 +178,7 @@ function walkRendered(
   depth: number;
   childFields?: ChildFieldOverrides;
   childFieldPath?: string | null;
+  repeatScope?: RepeatScope;
 } | null {
   if (node.id !== parts[index]) return null;
   const last = index === parts.length - 1;
@@ -160,34 +190,106 @@ function walkRendered(
       : node;
     if (last) return { instance: effectiveNode, ...parent };
     const definition = definitionForInstance(node, ctx);
-    if (!definition || definition.root.type !== 'frame') return null;
+    if (!definition) return null;
     const path = joinId(parent.path, node.id);
-    const scope = resolveInstanceFields(
+    const resolvedScope = resolveInstanceFields(
       node,
       definition,
       parent.scope,
       ctx.catalog,
       effectiveNode.fields,
+      ctx.schemaCatalog,
     );
     const root = definition.root;
-    const repeated = root.repeat ? repeatedItem(root.repeat, scope, parts[index + 1]) : undefined;
+    const contextualProps = root.type === 'switch' ? resolvedScope.props : resolvedScope;
+    const scope = scopeForInstance(resolvedScope, parent.repeatScope, contextualProps);
+    const componentContext = { ...ctx, styleDocumentId: definition.id };
+    if (root.type === 'repeater' || root.type === 'switch') {
+      return walkRendered(root, parts, index + 1, componentContext, {
+        path,
+        scope,
+        ownerId: path,
+        depth: parent.depth + 1,
+        childFields: mergeChildFieldContext(parent.childFields, node.childFields, overridePath),
+        childFieldPath: overridePath ?? '',
+        repeatScope: parent.repeatScope,
+      });
+    }
+    if (root.type !== 'frame') return null;
+    const repeated = root.repeat
+      ? repeatedItem(root.repeat, scope, parts[index + 1], parent.repeatScope)
+      : undefined;
     const childIndex = root.repeat ? index + 2 : index + 1;
     const nextId = parts[childIndex];
     const child = (root.children ?? []).find((entry) => entry.id === nextId);
     if (!child || (root.repeat && !repeated)) return null;
-    return walkRendered(child, parts, childIndex, ctx, {
+    return walkRendered(child, parts, childIndex, componentContext, {
       path: repeated ? joinId(path, repeated.key) : path,
       scope: repeated?.scope ?? scope,
       ownerId: path,
       depth: parent.depth + 1,
       childFields: mergeChildFieldContext(parent.childFields, node.childFields, overridePath),
       childFieldPath: overridePath ?? '',
+      repeatScope: repeated?.repeatScope ?? parent.repeatScope,
+    });
+  }
+  if (node.type === 'repeater' || node.type === 'switch') {
+    if (last) return null;
+    const owner = ctx.styleDocumentId ? ctx.catalog.get(ctx.styleDocumentId) : ctx.canvasDocument;
+    if (!owner) return null;
+    const candidates = structuralChildSchemas(owner, node.id, {
+      documents: ctx.catalog,
+      ...(ctx.schemaCatalog ? { schemaCatalog: ctx.schemaCatalog } : {}),
+    });
+    const prefix: string[] = [];
+    let value: FieldValue | undefined;
+    let scope = parent.scope;
+    let repeatScope = parent.repeatScope;
+    if (node.type === 'repeater') {
+      const itemIndex = Number(parts[index + 1]);
+      const items = parent.scope.items;
+      if (!Number.isInteger(itemIndex) || itemIndex < 0 || !Array.isArray(items)) return null;
+      value = items[itemIndex];
+      if (value === undefined) return null;
+      prefix.push(parts[index + 1]!);
+      const repeated = repeatedDataScope(
+        parent.scope,
+        value,
+        itemIndex,
+        'item',
+        parent.repeatScope,
+      );
+      scope = repeated.scope;
+      repeatScope = repeated.repeatScope;
+    } else {
+      value = parent.scope.props;
+      if (value === undefined) return null;
+    }
+    const selection = selectStructuralChild(value, candidates);
+    const candidate = selection ? candidates[selection.index] : undefined;
+    if (!candidate || !selection) return null;
+    const expected = [...prefix, ...candidate.path];
+    for (let offset = 0; offset < expected.length; offset += 1) {
+      if (parts[index + 1 + offset] !== expected[offset]) return null;
+    }
+    return walkRendered(candidate.node as NestedNode, parts, index + expected.length, ctx, {
+      ...parent,
+      path: expected
+        .slice(0, -1)
+        .reduce((path, segment) => joinId(path, segment), joinId(parent.path, node.id)),
+      scope: scopeWithStructuralProps(
+        scope,
+        selection.props,
+        node.type === 'repeater' ? value : undefined,
+        selection.legacy,
+      ),
+      repeatScope,
     });
   }
   if (node.type !== 'frame' || last) return null;
   const path = joinId(parent.path, node.id);
   const repeated = node.repeat
-    ? repeatedItem(node.repeat, parent.scope, parts[index + 1])
+    ? repeatedItem(node.repeat, parent.scope, parts[index + 1], parent.repeatScope)
     : undefined;
   const childIndex = node.repeat ? index + 2 : index + 1;
   const nextId = parts[childIndex];
@@ -204,7 +306,8 @@ export function repeatedItem(
   repeat: NonNullable<Extract<NestedNode, { type: 'frame' }>['repeat']>,
   scope: Record<string, FieldValue>,
   segment: string | undefined,
-): { key: string; scope: Record<string, FieldValue> } | undefined {
+  parent?: RepeatScope,
+): { key: string; scope: Record<string, FieldValue>; repeatScope: RepeatScope } | undefined {
   if (segment === undefined) return undefined;
   const source = resolvePath(scope, repeat.path);
   if (!Array.isArray(source)) return undefined;
@@ -212,7 +315,10 @@ export function repeatedItem(
   for (const [index, item] of source.entries()) {
     const rawKey = repeat.key ? resolvePath(item, repeat.key) : index;
     const key = repeatKeySegment(rawKey, index);
-    if (key === segment) return { key, scope: { ...scope, [itemName]: item } };
+    if (key === segment) {
+      const repeated = repeatedDataScope(scope, item, index, itemName, parent);
+      return { key, scope: repeated.scope, repeatScope: repeated.repeatScope };
+    }
   }
   return undefined;
 }

@@ -12,12 +12,15 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
-import { toNested, type Command, type DocumentFile } from '@facadeur/core';
+import { toNested, type Command, type DocumentFile, type SchemaCatalog } from '@facadeur/core';
 import { createDocumentStore } from '@facadeur/store-yjs';
 import * as Y from 'yjs';
 import { openProject, ProjectError, type ProjectRepository } from '../src/project/index';
 
 const exampleDirectory = fileURLToPath(new URL('../../../examples/', import.meta.url));
+const exampleSchemas = JSON.parse(
+  readFileSync(join(exampleDirectory, 'schemas.json'), 'utf8'),
+) as SchemaCatalog;
 const temporary: string[] = [];
 const repositories: ProjectRepository[] = [];
 
@@ -121,6 +124,7 @@ describe('durable project repository', () => {
     let project = open(directory);
     const catalog = {
       schemas: [
+        ...exampleSchemas.schemas.filter((schema) => schema.id !== 'card'),
         {
           id: 'card',
           name: 'Canonical card override',
@@ -239,6 +243,7 @@ describe('durable project repository', () => {
         type: 'setSchemaCatalog',
         schemaCatalog: {
           schemas: [
+            ...exampleSchemas.schemas.filter((schema) => schema.id !== 'input'),
             {
               id: 'input',
               name: 'Canonical input',

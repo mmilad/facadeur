@@ -43,12 +43,32 @@ export function validateTree(doc: FlatDocument, options: ValidateOptions = {}): 
       throw new DocumentError('schema', `Node key "${id}" does not match its id "${node.id}"`);
     }
     seen.add(id);
-    const allowed = isRoot ? rule.rootNodeTypes : rule.nodeTypes;
+    const parent = parentId ? doc.nodes[parentId] : undefined;
+    const structuralChild = parent?.type === 'repeater' || parent?.type === 'switch';
+    const allowed = isRoot
+      ? rule.rootNodeTypes
+      : structuralChild && parent?.type === 'repeater'
+        ? (['instance', 'switch'] as const)
+        : structuralChild && parent?.type === 'switch'
+          ? (['instance'] as const)
+          : rule.nodeTypes;
     if (!allowed.includes(node.type)) {
       const where = isRoot ? 'as the root' : `under "${parentId}"`;
       throw new DocumentError(
         'nesting',
         `${doc.kind} cannot contain a ${node.type} node ${where} ("${id}")`,
+      );
+    }
+    if (
+      !isRoot &&
+      (node.type === 'repeater' || node.type === 'switch') &&
+      !structuralChild &&
+      doc.kind !== 'component' &&
+      doc.kind !== 'section'
+    ) {
+      throw new DocumentError(
+        'nesting',
+        `Structural ${node.type} nodes belong to components and sections`,
       );
     }
     assertNodeData(node);
@@ -57,14 +77,46 @@ export function validateTree(doc: FlatDocument, options: ValidateOptions = {}): 
       if (kind === undefined) {
         throw new DocumentError('unknown-component', `Unknown component "${node.component}"`);
       }
-      if (!rule.instanceKinds.includes(kind)) {
+      const structuralTarget = structuralChild && (kind === 'component' || kind === 'section');
+      if (!rule.instanceKinds.includes(kind) && !structuralTarget) {
         throw new DocumentError(
           'nesting',
           `${doc.kind} cannot contain an instance of ${kind} "${node.component}"`,
         );
       }
     }
-    if (node.type === 'frame') {
+    if (node.type === 'frame' || node.type === 'repeater' || node.type === 'switch') {
+      if (node.type === 'repeater') {
+        const switchCount = node.children.filter(
+          (childId) => doc.nodes[childId]?.type === 'switch',
+        ).length;
+        if (switchCount > 1 || (switchCount === 1 && node.children.length > 1)) {
+          throw new DocumentError(
+            'nesting',
+            `Repeater "${node.id}" accepts direct alternatives or one switch`,
+          );
+        }
+        for (const childId of node.children) {
+          const child = doc.nodes[childId];
+          if (child && child.type !== 'instance' && child.type !== 'switch') {
+            throw new DocumentError(
+              'nesting',
+              `Repeater "${node.id}" can contain only instances or switches`,
+            );
+          }
+        }
+      }
+      if (node.type === 'switch') {
+        for (const childId of node.children) {
+          const child = doc.nodes[childId];
+          if (child && child.type !== 'instance') {
+            throw new DocumentError(
+              'nesting',
+              `Switch "${node.id}" can contain only component instances`,
+            );
+          }
+        }
+      }
       for (const childId of node.children) visit(childId, false, id);
     }
   };
@@ -94,15 +146,6 @@ export function assertNodeData(node: FlatNode) {
   if (node.displayOn) assertDisplayOn(node.displayOn);
   if (node.type === 'frame' && node.repeat) assertRepeat(node.repeat);
   if (node.layout) assertLayout(node.layout);
-  if (node.type === 'frame') {
-    const children = new Set<string>();
-    for (const childId of node.children) {
-      if (children.has(childId)) {
-        throw new DocumentError('duplicate-id', `Duplicate child "${childId}" under "${node.id}"`);
-      }
-      children.add(childId);
-    }
-  }
   if (node.type === 'instance' && node.expose) assertExpose(node.expose);
   if (node.type === 'instance' && node.childFields) assertChildFields(node.childFields);
   if (node.type === 'instance') {

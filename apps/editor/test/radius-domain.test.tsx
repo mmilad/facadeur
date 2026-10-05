@@ -4,12 +4,11 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { readTokenTree } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { withTokenBreakpoint } from '../src/domain/edits/token-edit';
 import { App } from '../src/ui/shell/EditorShell';
-import { editorStandardCatalog } from './fixtures/example-catalog';
+import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
 import { openSettingsDomain } from './settings-navigation';
 
 const documents = editorStandardCatalog();
@@ -62,7 +61,7 @@ describe('radius domain panel', () => {
   it('adds a radius token with a valid path and default value', async () => {
     const session = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     await openRadius(session);
 
@@ -79,7 +78,7 @@ describe('radius domain panel', () => {
   it('blocks removing a radius token that other tokens still reference', async () => {
     const session = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     await openRadius(session);
 
@@ -95,7 +94,7 @@ describe('radius domain panel', () => {
   it('rejects an empty label on add', async () => {
     const session = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     await openRadius(session);
 
@@ -111,7 +110,7 @@ describe('radius domain panel', () => {
   it('suffixes a generated radius path when the label collides', async () => {
     const session = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     await openRadius(session);
 
@@ -126,7 +125,7 @@ describe('radius domain panel', () => {
   it('shows viewport override cues and resets a radius token override', async () => {
     const session = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     session.executeDesign({
       type: 'setToken',

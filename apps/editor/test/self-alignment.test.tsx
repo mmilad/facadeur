@@ -4,11 +4,10 @@ import { act, useSyncExternalStore } from 'react';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { DocumentFile } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { afterEach, expect, it } from 'vitest';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { LayoutPanel } from '../src/ui/sidebar/properties/layout/LayoutPanel';
-import { expandExampleCatalog } from './fixtures/example-catalog';
+import { editorStandardDesign, expandExampleCatalog } from './fixtures/example-catalog';
 
 afterEach(cleanup);
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -47,7 +46,7 @@ function Harness({ session }: { session: EditorSession }) {
 function setup(document = fixture(), variant = false, viewport = false) {
   const session = createEditorSession({
     documents: expandExampleCatalog([document]),
-    design: createProjectTemplateDocument(),
+    design: editorStandardDesign(),
   });
   session.openAsset('self-align', 'root');
   session.selectNode('action');

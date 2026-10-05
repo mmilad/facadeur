@@ -3,6 +3,8 @@ import {
   childOverridePath,
   mergeChildFieldContext,
   resolveVariantDocument,
+  selectStructuralChild,
+  structuralChildSchemas,
   toFlat,
   toNested,
 } from '@facadeur/core';
@@ -140,7 +142,7 @@ function walkRenderedNode(input: WalkInput): NestedSelection | null {
       ? resolveTargetDocument(rawTarget, effectiveNode, input.scope, input.prepareDocument)
       : null;
     const targetRoot = target && target.nodes[target.rootId];
-    if (!targetRoot || targetRoot.type !== 'frame') return null;
+    if (!targetRoot || !('children' in targetRoot)) return null;
     const ownerNodeId = input.ownerNodeId ?? node.id;
     const inheritedScope = target
       ? resolveInstanceFieldScope(
@@ -152,7 +154,7 @@ function walkRenderedNode(input: WalkInput): NestedSelection | null {
           input.schemaCatalog,
         )
       : {};
-    const scope = target
+    const resolvedScope = target
       ? resolveInstanceFieldScope(
           node,
           target,
@@ -162,6 +164,24 @@ function walkRenderedNode(input: WalkInput): NestedSelection | null {
           input.schemaCatalog,
         )
       : {};
+    const scope = preserveStructuralAliases(resolvedScope, input.scope);
+    if (targetRoot.type === 'repeater' || targetRoot.type === 'switch') {
+      if (parts[nextIndex] !== targetRoot.id) return null;
+      return walkRenderedNode({
+        ...input,
+        document: target,
+        node: targetRoot,
+        documentIndex: nextIndex,
+        ownerNodeId,
+        containingInstance: node,
+        renderId: `${input.renderId}/${targetRoot.id}`,
+        depth: input.depth + 1,
+        scope,
+        inheritedFields: preserveStructuralAliases(inheritedScope, input.scope),
+        childFields: mergeChildFieldContext(input.childFields, node.childFields, overridePath),
+        childFieldPath: overridePath ?? '',
+      });
+    }
     const nextId = parts[nextIndex];
     const child = targetRoot.children
       .map((id) => target.nodes[id])
@@ -185,12 +205,76 @@ function walkRenderedNode(input: WalkInput): NestedSelection | null {
       scope,
       childFields: mergeChildFieldContext(input.childFields, node.childFields, overridePath),
       childFieldPath: overridePath ?? '',
-      inheritedFields: inheritedScope,
+      inheritedFields: preserveStructuralAliases(inheritedScope, input.scope),
     });
   }
 
-  if (node.type !== 'frame') return null;
-  const nextId = parts[nextIndex];
+  if (!('children' in node)) return null;
+  let childIndex = nextIndex;
+  let scope = input.scope;
+  let renderPrefix = input.renderId;
+  if (node.type === 'repeater') {
+    const indexPart = parts[childIndex];
+    if (!indexPart || !/^\d+$/.test(indexPart)) return null;
+    const items = input.scope.items;
+    const item = Array.isArray(items) ? items[Number(indexPart)] : undefined;
+    if (item === undefined) return null;
+    const candidates = structuralChildSchemas(input.document, node.id, {
+      documents: input.catalog,
+      ...(input.schemaCatalog ? { schemaCatalog: input.schemaCatalog } : {}),
+    });
+    const selection = selectStructuralChild(item, candidates);
+    const selected = selection ? candidates[selection.index] : undefined;
+    if (!selection || !selected) return null;
+    scope = structuralItemScope(
+      input.scope,
+      item,
+      Number(indexPart),
+      selection.props,
+      selection.legacy,
+    );
+    renderPrefix += `/${indexPart}`;
+    childIndex += 1;
+    const directChild = input.document.nodes[selected.path[0] ?? ''];
+    if (selected.path.length === 1 && directChild?.type === 'instance') {
+      return walkRenderedNode({
+        ...input,
+        node: selected.node,
+        documentIndex: childIndex,
+        instancePath: input.ownerNodeId
+          ? [...input.instancePath, selected.node.id]
+          : input.instancePath,
+        containingInstance: selected.node,
+        renderId: `${renderPrefix}/${selected.node.id}`,
+        depth: input.depth + 1,
+        scope,
+      });
+    }
+  } else if (node.type === 'switch') {
+    const props = input.scope.props;
+    if (props === undefined) return null;
+    const candidates = structuralChildSchemas(input.document, node.id, {
+      documents: input.catalog,
+      ...(input.schemaCatalog ? { schemaCatalog: input.schemaCatalog } : {}),
+    });
+    const selection = selectStructuralChild(props, candidates);
+    const selected = selection ? candidates[selection.index] : undefined;
+    if (!selection || !selected || selected.path.length !== 1) return null;
+    scope = structuralSwitchScope(input.scope, selection.props, selection.legacy);
+    return walkRenderedNode({
+      ...input,
+      node: selected.node,
+      documentIndex: childIndex,
+      instancePath: input.ownerNodeId
+        ? [...input.instancePath, selected.node.id]
+        : input.instancePath,
+      containingInstance: selected.node,
+      renderId: `${input.renderId}/${selected.node.id}`,
+      depth: input.depth + 1,
+      scope,
+    });
+  }
+  const nextId = parts[childIndex];
   const child = node.children
     .map((id) => input.document.nodes[id])
     .find((candidate) => candidate?.id === nextId);
@@ -203,11 +287,68 @@ function walkRenderedNode(input: WalkInput): NestedSelection | null {
   return walkRenderedNode({
     ...input,
     node: child,
-    documentIndex: nextIndex,
+    documentIndex: childIndex,
     instancePath: nextPath,
     containingInstance: input.containingInstance,
-    renderId: `${input.renderId}/${child.id}`,
+    renderId: `${renderPrefix}/${child.id}`,
+    scope,
   });
+}
+
+function structuralItemScope(
+  scope: Record<string, FieldValue>,
+  item: FieldValue,
+  index: number,
+  props: FieldValue,
+  legacy: boolean,
+) {
+  const parent = repeatParent(scope);
+  const result: Record<string, FieldValue> = {
+    ...scope,
+    ...(legacy && isRecord(props) ? props : {}),
+    item,
+    index,
+    props,
+    ...(parent ? { parent } : {}),
+  };
+  if (!parent) delete result.parent;
+  return result;
+}
+
+function structuralSwitchScope(
+  scope: Record<string, FieldValue>,
+  props: FieldValue,
+  legacy: boolean,
+) {
+  return {
+    ...scope,
+    ...(legacy && isRecord(props) ? props : {}),
+    props,
+  };
+}
+
+function repeatParent(scope: Record<string, FieldValue>) {
+  if (scope.item === undefined && scope.index === undefined) return undefined;
+  return {
+    ...(scope.item !== undefined ? { item: structuredClone(scope.item) } : {}),
+    ...(scope.index !== undefined ? { index: structuredClone(scope.index) } : {}),
+    ...(scope.parent !== undefined ? { parent: structuredClone(scope.parent) } : {}),
+  };
+}
+
+function preserveStructuralAliases(
+  resolved: Record<string, FieldValue>,
+  inherited: Record<string, FieldValue>,
+) {
+  const scope = { ...resolved };
+  for (const name of ['item', 'index', 'parent', 'props'] as const) {
+    if (Object.hasOwn(inherited, name)) scope[name] = structuredClone(inherited[name]!);
+  }
+  return scope;
+}
+
+function isRecord(value: FieldValue): value is Record<string, FieldValue> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 export function resolveTargetDocument(

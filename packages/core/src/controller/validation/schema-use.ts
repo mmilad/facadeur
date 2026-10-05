@@ -1,4 +1,3 @@
-import { DocumentError } from '../../document/errors.js';
 import type {
   FieldDefinition,
   FieldType,
@@ -46,7 +45,10 @@ export function localContractFieldsFor(
   if (!schema) return new Map();
   const fields = new Map<string, FieldDefinition>();
   collectObjectFields(schema, schemaCatalog, new Set(), fields);
-  if (!fields.size && schemaType(schema) && schemaType(schema) !== 'object') {
+  if (
+    !fields.size &&
+    ((schemaType(schema) && schemaType(schema) !== 'object') || schema.oneOf || schema.anyOf)
+  ) {
     const valueField = definitionFromSchema('value', schema, schemaCatalog);
     if (valueField) fields.set(valueField.name, valueField);
   }
@@ -68,12 +70,6 @@ function collectObjectFields(
   // A schema can declare a flat component contract in `properties` while using
   // oneOf/anyOf to constrain valid values. In that case the explicit properties
   // are authoritative; union branches must not be flattened into the contract.
-  if ((schema.oneOf?.length || schema.anyOf?.length) && !schema.properties) {
-    throw new DocumentError(
-      'schema',
-      'oneOf/anyOf schema contracts cannot be represented as flat component fields',
-    );
-  }
   const refId = schema.$ref ? schemaIdFromRef(schema.$ref) : undefined;
   if (refId) {
     const referenced = resolveNamedSchema(refId, catalog, ancestors);
@@ -99,14 +95,22 @@ function definitionFromSchema(
   const resolved = resolveInlineSchema(schema, catalog, ancestors);
   const type = fieldTypeForSchema(resolved);
   if (!type) return undefined;
-  const result: FieldDefinition = { name, type };
+  const result: FieldDefinition = {
+    name,
+    type,
+    schema: resolveSchemaMetadata(schema, catalog, ancestors),
+  };
   if (required) result.required = true;
   if (isFieldValue(resolved.default)) result.default = resolved.default;
   const options = resolved.enum?.filter((value): value is string => typeof value === 'string');
   if (type === 'enum' && options?.length) result.options = [...options];
   if (type === 'array' && resolved.items) {
     const itemType = fieldTypeForSchema(resolveInlineSchema(resolved.items, catalog, ancestors));
-    if (itemType) result.items = { type: itemType };
+    if (itemType)
+      result.items = {
+        type: itemType,
+        schema: resolveSchemaMetadata(resolved.items, catalog, ancestors),
+      };
   }
   if (type === 'object' && resolved.properties) {
     const childRequired = new Set(resolved.required ?? []);
@@ -130,12 +134,6 @@ function resolveInlineSchema(
   catalog: SchemaCatalog | undefined,
   ancestors: ReadonlySet<string>,
 ): JsonSchema {
-  if ((schema.oneOf?.length || schema.anyOf?.length) && !schema.properties) {
-    throw new DocumentError(
-      'schema',
-      'oneOf/anyOf schema contracts cannot be represented as flat component fields',
-    );
-  }
   let result: JsonSchema = {};
   const refId = schema.$ref ? schemaIdFromRef(schema.$ref) : undefined;
   if (refId && !ancestors.has(refId)) {
@@ -147,6 +145,45 @@ function resolveInlineSchema(
     result = mergeSchema(result, resolveInlineSchema(branch, catalog, ancestors));
   }
   return mergeSchema(result, schema);
+}
+
+function resolveSchemaMetadata(
+  schema: JsonSchema,
+  catalog: SchemaCatalog | undefined,
+  ancestors: ReadonlySet<string>,
+): JsonSchema {
+  const refId = schema.$ref ? schemaIdFromRef(schema.$ref) : undefined;
+  if (refId && !ancestors.has(refId)) {
+    const referenced = resolveNamedSchema(refId, catalog, ancestors);
+    if (!referenced) return structuredClone(schema);
+    return resolveSchemaMetadata(referenced, catalog, new Set(ancestors).add(refId));
+  }
+  const result = structuredClone(schema);
+  delete result.$ref;
+  for (const keyword of ['oneOf', 'anyOf', 'allOf'] as const) {
+    if (schema[keyword]) {
+      result[keyword] = schema[keyword]!.map((branch) =>
+        resolveSchemaMetadata(branch, catalog, ancestors),
+      );
+    }
+  }
+  if (schema.properties) {
+    result.properties = Object.fromEntries(
+      Object.entries(schema.properties).map(([name, property]) => [
+        name,
+        resolveSchemaMetadata(property, catalog, ancestors),
+      ]),
+    );
+  }
+  if (schema.items) result.items = resolveSchemaMetadata(schema.items, catalog, ancestors);
+  if (schema.additionalProperties && typeof schema.additionalProperties === 'object') {
+    result.additionalProperties = resolveSchemaMetadata(
+      schema.additionalProperties,
+      catalog,
+      ancestors,
+    );
+  }
+  return result;
 }
 
 function resolveNamedSchema(
@@ -179,6 +216,7 @@ function fieldTypeForSchema(schema: JsonSchema) {
     return custom as FieldType;
   if (schema.enum?.every((value) => typeof value === 'string')) return 'enum';
   const type = schemaType(schema);
+  if ((schema.oneOf?.length || schema.anyOf?.length) && !type) return 'object';
   if (type === 'string') return 'text';
   if (type === 'number' || type === 'integer') return 'number';
   if (type === 'boolean') return 'boolean';

@@ -26,6 +26,7 @@ import {
   assertLayout,
   assertRepeat,
 } from '../../../validation/assertions.js';
+import { structuralCaseSlug } from '../../../validation/structural-nodes.js';
 import { assertStyleMap, assertStyleNameAvailable } from '../../../style/blocks/contract.js';
 import { pruneStyleBlockNodes, rebaseStyleBlockChildPaths } from '../../../style/blocks/edit.js';
 import type { InsertNode, Command, CommandContext } from '../types.js';
@@ -33,7 +34,7 @@ import { adoptTokenReads } from '../../../style/references/adopt.js';
 import {
   ID_PATTERN,
   assertIndex,
-  requireFrame,
+  requireChildrenParent,
   requireLayout,
   requireName,
   requireString,
@@ -45,7 +46,7 @@ export function insertNode(
   command: Extract<Command, { type: 'insert' }>,
   ctx: CommandContext,
 ) {
-  const parent = requireFrame(doc, command.parentId);
+  const parent = requireChildrenParent(doc, command.parentId);
   const seen = new Set(Object.keys(doc.nodes));
   const nested = materialize(command.node, seen, ctx.createId ?? createId);
   const subtree: Record<string, FlatNode> = {};
@@ -60,8 +61,14 @@ export function insertNode(
   }
   const index = command.index ?? parent.children.length;
   assertIndex(index, parent.children.length);
+  assertInsertAllowed(parent.type, nested.type);
+  assertStructuralChildren(parent.type, [
+    ...parent.children.map((childId) => doc.nodes[childId]?.type ?? ''),
+    nested.type,
+  ]);
   Object.assign(doc.nodes, subtree);
   parent.children.splice(index, 0, rootId);
+  captureStructuralCases(doc, ctx.schemaResolverContext?.documents);
   adoptTokenReads(doc);
 }
 
@@ -129,7 +136,11 @@ function pruneVariantPresetNodes(doc: FlatDocument, removed: ReadonlySet<string>
   }
 }
 
-export function moveNode(doc: FlatDocument, command: Extract<Command, { type: 'move' }>) {
+export function moveNode(
+  doc: FlatDocument,
+  command: Extract<Command, { type: 'move' }>,
+  ctx: CommandContext,
+) {
   if (command.nodeId === doc.rootId) {
     throw new DocumentError('nesting', 'The document root cannot be moved');
   }
@@ -147,11 +158,17 @@ export function moveNode(doc: FlatDocument, command: Extract<Command, { type: 'm
     throw new DocumentError('missing-node', `Node "${command.nodeId}" has no parent`);
   }
   const previousPath = renderedNodePath(doc, command.nodeId);
-  const to = requireFrame(doc, command.parentId);
+  const to = requireChildrenParent(doc, command.parentId);
+  assertInsertAllowed(to.type, doc.nodes[command.nodeId]!.type);
+  assertStructuralChildren(to.type, [
+    ...to.children.filter((id) => id !== command.nodeId).map((id) => doc.nodes[id]?.type ?? ''),
+    doc.nodes[command.nodeId]!.type,
+  ]);
   from.children = from.children.filter((id) => id !== command.nodeId);
   const target = from.id === to.id ? from : to;
   assertIndex(command.index, target.children.length);
   target.children.splice(command.index, 0, command.nodeId);
+  captureStructuralCases(doc, ctx.schemaResolverContext?.documents);
   rebaseDocumentStylePaths(doc, previousPath, renderedNodePath(doc, command.nodeId));
 }
 
@@ -167,6 +184,9 @@ export function wrapNode(
   const parent = findParent(doc, command.nodeId);
   if (!node || !parent) {
     throw new DocumentError('missing-node', `Node "${command.nodeId}" is not in the document`);
+  }
+  if (parent.type === 'repeater' || parent.type === 'switch') {
+    throw new DocumentError('nesting', `Cannot wrap an instance inside a ${parent.type}`);
   }
   const previousPath = renderedNodePath(doc, command.nodeId);
   const frameId = command.frameId ?? (ctx.createId ?? createId)();
@@ -223,6 +243,48 @@ function materialize(draft: InsertNode, seen: Set<string>, nextId: () => string)
   }
   if (draft.forwardFields !== undefined && typeof draft.forwardFields !== 'boolean') {
     throw new DocumentError('schema', 'forwardFields must be a boolean');
+  }
+  if (draft.switchCase !== undefined && draft.type !== 'instance') {
+    throw new DocumentError('schema', 'Only instances can set switchCase');
+  }
+  if (draft.switchCase !== undefined && !draft.switchCase.trim()) {
+    throw new DocumentError('schema', 'Switch cases must be non-empty strings');
+  }
+  if (draft.type === 'repeater' || draft.type === 'switch') {
+    if (
+      draft.styleName !== undefined ||
+      draft.tag !== undefined ||
+      draft.attributes !== undefined ||
+      draft.displayOn !== undefined ||
+      draft.layout !== undefined ||
+      draft.bindings !== undefined ||
+      draft.eventBindings !== undefined ||
+      draft.fieldBindings !== undefined ||
+      draft.repeat !== undefined ||
+      draft.style !== undefined ||
+      draft.text !== undefined ||
+      draft.src !== undefined ||
+      draft.alt !== undefined ||
+      draft.component !== undefined ||
+      draft.fields !== undefined ||
+      draft.childFields !== undefined ||
+      draft.variants !== undefined ||
+      draft.variantRules !== undefined
+    ) {
+      throw new DocumentError('schema', `${draft.type} nodes only support name and children`);
+    }
+    const children = (draft.children ?? []).map((child) => materialize(child, seen, nextId));
+    for (const child of children) assertInsertAllowed(draft.type, child.type);
+    assertStructuralChildren(
+      draft.type,
+      children.map((child) => child.type),
+    );
+    return {
+      id,
+      type: draft.type,
+      ...(draft.name !== undefined ? { name: requireName(draft.name) } : {}),
+      ...(children.length ? { children } : {}),
+    };
   }
   if (draft.type === 'frame') {
     const children = (draft.children ?? []).map((child) => materialize(child, seen, nextId));
@@ -292,6 +354,7 @@ function materialize(draft: InsertNode, seen: Set<string>, nextId: () => string)
       ? { childFields: structuredClone(draft.childFields) }
       : {}),
     ...(draft.forwardFields !== undefined ? { forwardFields: draft.forwardFields } : {}),
+    ...(draft.switchCase !== undefined ? { switchCase: draft.switchCase.trim() } : {}),
     ...(draft.fieldBindings && Object.keys(draft.fieldBindings).length
       ? { fieldBindings: { ...(draft.fieldBindings as Record<string, string>) } }
       : {}),
@@ -300,6 +363,69 @@ function materialize(draft: InsertNode, seen: Set<string>, nextId: () => string)
       : {}),
     ...(draft.variantRules?.length ? { variantRules: structuredClone(draft.variantRules) } : {}),
   };
+}
+
+function assertInsertAllowed(parentType: string, childType: string) {
+  if (parentType === 'switch' && childType !== 'instance') {
+    throw new DocumentError('nesting', 'Switch nodes can contain only component instances');
+  }
+  if (parentType === 'repeater' && childType !== 'instance' && childType !== 'switch') {
+    throw new DocumentError('nesting', 'Repeater nodes can contain only instances or a switch');
+  }
+  if (parentType === 'repeater' && childType === 'switch') {
+    // A repeater uses either direct alternatives or one switch that owns them.
+    return;
+  }
+}
+
+function assertStructuralChildren(parentType: string, childTypes: readonly string[]) {
+  if (parentType !== 'repeater') return;
+  const switches = childTypes.filter((type) => type === 'switch').length;
+  if (switches > 1 || (switches === 1 && childTypes.length > 1)) {
+    throw new DocumentError(
+      'nesting',
+      'A repeater accepts direct instance alternatives or one switch containing alternatives',
+    );
+  }
+}
+
+function captureStructuralCases(
+  doc: FlatDocument,
+  documents?: ReadonlyMap<string, { name: string }>,
+) {
+  for (const owner of Object.values(doc.nodes)) {
+    if (owner.type !== 'repeater' && owner.type !== 'switch') continue;
+    const alternatives =
+      owner.type === 'switch'
+        ? owner.children
+        : owner.children.length === 1 && doc.nodes[owner.children[0]!]?.type === 'switch'
+          ? (doc.nodes[owner.children[0]!] as Extract<FlatNode, { type: 'switch' }>).children
+          : owner.children;
+    const instances = alternatives.flatMap((id) => {
+      const child = doc.nodes[id];
+      return child?.type === 'instance' ? [child] : [];
+    });
+    const used = new Set<string>();
+    for (const instance of instances) {
+      const value = instance.switchCase?.trim();
+      if (!value) continue;
+      if (used.has(value)) {
+        throw new DocumentError('schema', `Structural case "${value}" must be unique`);
+      }
+      used.add(value);
+    }
+    for (const instance of instances) {
+      if (instance.switchCase?.trim()) continue;
+      const base = structuralCaseSlug(
+        documents?.get(instance.component)?.name ?? instance.component,
+      );
+      let value = base;
+      let suffix = 2;
+      while (used.has(value)) value = `${base}-${suffix++}`;
+      instance.switchCase = value;
+      used.add(value);
+    }
+  }
 }
 
 function elementBase(

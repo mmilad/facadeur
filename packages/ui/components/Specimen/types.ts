@@ -3,7 +3,9 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
-export interface SpecimenProps {
+import type { ComponentProps } from '../../contracts';
+
+export interface SpecimenData {
   eyebrow?: string;
   title?: string;
   body?: string;
@@ -12,7 +14,6 @@ export interface SpecimenProps {
   name?: string;
   disabled?: boolean;
   label?: string;
-  /** Instance id. Sets `data-node` so a parent style rule can address this element. */
-  nodeId?: string;
-  className?: string;
 }
+
+export interface SpecimenProps extends ComponentProps, SpecimenData {}

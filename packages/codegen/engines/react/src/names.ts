@@ -50,7 +50,7 @@ const RESERVED = new Set([
 ]);
 
 /** Props every generated component owns, besides the document's fields and variants. */
-export const builtinProps = ['nodeId', 'className'] as const;
+export const builtinProps = ['nodeId', 'className', 'context'] as const;
 
 export class CodegenError extends Error {
   constructor(message: string) {

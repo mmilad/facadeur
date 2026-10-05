@@ -6,9 +6,11 @@ import { layoutDeclarations, layoutOverrideDeclarations } from '../layout/declar
 import { selectorFor } from '../selectors/nodes';
 import { appendCompiledRule, emitSparseStyleLayers } from './rules';
 export function walk(document: DocumentFile, node: NestedNode, state: WalkState): void {
-  if (state.rendered) emitNode(document, node, state);
-  if (node.type !== 'frame') return;
-  const direction = node.layout?.direction ?? 'column';
+  const structural = node.type === 'repeater' || node.type === 'switch';
+  if (state.rendered && !structural) emitNode(document, node, state);
+  if (node.type !== 'frame' && !structural) return;
+  const direction =
+    node.type === 'frame' ? (node.layout?.direction ?? 'column') : state.parentDirection;
   for (const child of node.children ?? []) {
     const childPath = state.path ? `${state.path}/${child.id}` : child.id;
     walk(document, child, {

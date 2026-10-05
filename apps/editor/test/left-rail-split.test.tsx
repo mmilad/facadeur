@@ -3,11 +3,10 @@
  */
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createEditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';
-import { editorStandardCatalog } from './fixtures/example-catalog';
+import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
 import {
   LEFT_RAIL_PROJECT_COLLAPSED_HEIGHT,
   LEFT_RAIL_PROJECT_RATIO_DEFAULT,
@@ -38,7 +37,7 @@ describe('left rail split', () => {
   async function mount() {
     const session = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);

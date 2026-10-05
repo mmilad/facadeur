@@ -6,10 +6,9 @@ import { createRoot, type Root } from 'react-dom/client';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';
-import { expandExampleCatalog } from './fixtures/example-catalog';
+import { editorStandardDesign, expandExampleCatalog } from './fixtures/example-catalog';
 
 const variantComponent: DocumentFile = {
   version: 1,
@@ -53,7 +52,7 @@ describe('properties inspector tabs', () => {
   it('shows component tokens only on the Tokens tab', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -82,7 +81,7 @@ describe('properties inspector tabs', () => {
   it('keeps layout controls in the Style tab', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -113,7 +112,7 @@ describe('properties inspector tabs', () => {
   it('shows named variants above the inspector and resolves their values for editing', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -154,7 +153,7 @@ describe('properties inspector tabs', () => {
   it('always shows Default as the first variant tab', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -180,7 +179,7 @@ describe('properties inspector tabs', () => {
     const user = userEvent.setup();
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -216,7 +215,7 @@ describe('properties inspector tabs', () => {
   it('separates guided controls from manual declarations grouped by purpose', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -259,7 +258,7 @@ describe('properties inspector tabs', () => {
   it('puts manual CSS rows in their own section outside guided Layout', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -299,7 +298,7 @@ describe('properties inspector tabs', () => {
   it('keeps the selected properties tab when selection changes', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -330,7 +329,7 @@ describe('properties inspector tabs', () => {
   it('shows the document path for a nested selection', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -352,7 +351,7 @@ describe('properties inspector tabs', () => {
   it('labels the component root as the document being edited', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -377,7 +376,7 @@ describe('properties inspector tabs', () => {
   it('explains inherited styles for an empty variant override', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -408,7 +407,7 @@ describe('properties inspector tabs', () => {
   it('makes instance overrides and the master relationship explicit', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -447,7 +446,7 @@ describe('properties inspector tabs', () => {
   it('keeps field definitions out of the inspector and mounts legacy variant axes on Schema', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -481,7 +480,7 @@ describe('properties inspector tabs', () => {
   it('does not show property tabs when a viewport is selected', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -503,7 +502,7 @@ describe('properties inspector tabs', () => {
   it('shows the selected viewport context before its preview settings', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);

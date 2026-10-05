@@ -199,31 +199,25 @@
 }
 
 @layer facadeur.instances {
-  .root .input-email {
+  .root :global(.SpecimenSection__input-email) {
     width: 300px;
     flex: 0 0 auto;
     height: fit-content;
   }
 
-  .root .input-search {
+  .root :global(.SpecimenSection__input-search) {
     width: 300px;
     flex: 0 0 auto;
     height: fit-content;
   }
 
-  .root
-    > [data-node='cards']
-    > [data-node='card-row']
-    > [data-node='card-notes'][data-component='card'][data-component='card'] {
+  .root :global(.SpecimenSection__card-notes) {
     align-self: stretch;
     width: auto;
     height: auto;
   }
 
-  .root
-    > [data-node='cards']
-    > [data-node='card-row']
-    > [data-node='card-signin'][data-component='sign-in'][data-component='sign-in'] {
+  .root :global(.SpecimenSection__card-signin) {
     height: auto;
     width: auto;
   }
@@ -231,10 +225,7 @@
 
 @media (min-width: 1024px) {
   @layer facadeur.instances {
-    .root
-      > [data-node='cards']
-      > [data-node='card-row']
-      > [data-node='card-notes'][data-component='card'][data-component='card'] {
+    .root :global(.SpecimenSection__card-notes) {
       align-self: stretch;
       justify-self: stretch;
     }
@@ -250,10 +241,7 @@
   }
 
   @layer facadeur.instances {
-    .root
-      > [data-node='cards']
-      > [data-node='card-row']
-      > [data-node='card-notes'][data-component='card'][data-component='card'] {
+    .root :global(.SpecimenSection__card-notes) {
       justify-self: auto;
     }
   }
@@ -265,22 +253,4 @@
       gap: var(--space-gap-md);
     }
   }
-}
-
-.btn-primary {
-}
-
-.btn-secondary {
-}
-
-.btn-ghost {
-}
-
-.btn-small {
-}
-
-.card-notes {
-}
-
-.card-signin {
 }

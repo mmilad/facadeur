@@ -4,12 +4,11 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { readTokenTree } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { withTokenBreakpoint } from '../src/domain/edits/token-edit';
 import { App } from '../src/ui/shell/EditorShell';
-import { editorStandardCatalog } from './fixtures/example-catalog';
+import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
 import { openSettingsDomain } from './settings-navigation';
 
 const documents = editorStandardCatalog();
@@ -62,7 +61,7 @@ describe('shadow domain panel', () => {
   it('adds a shadow token with a valid path and default value', async () => {
     const session = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     await openShadow(session);
 
@@ -85,7 +84,7 @@ describe('shadow domain panel', () => {
   it('blocks removing a shadow token that other tokens still reference', async () => {
     const session = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     await openShadow(session);
 
@@ -101,7 +100,7 @@ describe('shadow domain panel', () => {
   it('rejects an empty label on add', async () => {
     const session = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     await openShadow(session);
 
@@ -117,7 +116,7 @@ describe('shadow domain panel', () => {
   it('suffixes a generated shadow path when the label collides', async () => {
     const session = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     await openShadow(session);
 
@@ -132,7 +131,7 @@ describe('shadow domain panel', () => {
   it('shows viewport override cues and resets a shadow token override', async () => {
     const session = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     const smOverride = {
       blur: '40px',

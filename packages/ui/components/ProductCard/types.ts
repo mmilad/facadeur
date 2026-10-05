@@ -3,17 +3,19 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
+import type { ComponentProps } from '../../contracts';
+
 export type ProductCardVariant = 'default' | 'compact';
 
-export interface ProductCardProps {
-  variant?: ProductCardVariant;
+export interface ProductCardData {
   title?: string;
   price?: string;
   imageSrc?: string;
   imageAlt?: string;
   buttonLabel?: string;
   label?: string;
-  /** Instance id. Sets `data-node` so a parent style rule can address this element. */
-  nodeId?: string;
-  className?: string;
+}
+
+export interface ProductCardProps extends ComponentProps, ProductCardData {
+  variant?: ProductCardVariant;
 }

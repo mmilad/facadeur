@@ -13,21 +13,16 @@ export function Textarea({
   name,
   rows,
   resize = 'vertical',
-  nodeId,
   className,
 }: TextareaProps) {
   return (
     <label
       data-component="textarea"
-      data-node={nodeId}
       data-variant-resize={resize}
       className={[styles['root'], className].filter(Boolean).join(' ')}
     >
-      <span data-node="label" className={styles['label']}>
-        {label}
-      </span>
+      <span className={styles['label']}>{label}</span>
       <textarea
-        data-node="control"
         readOnly
         tabIndex={-1}
         placeholder={placeholder}

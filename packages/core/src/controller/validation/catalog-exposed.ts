@@ -8,6 +8,20 @@ import type {
   SchemaCatalog,
 } from '../../schema/document.js';
 import { localContractFieldsFor } from './schema-use.js';
+import {
+  addStructuralField,
+  componentDataSchemaInternalForTarget,
+  deriveStructuralChildSchemas,
+  deriveStructuralCaseValue,
+  deriveStructuralNodeSchema,
+  deriveStructuralScopeFields,
+  matchesSchemaValue,
+  structuralSelection,
+  structuralNodesForContract,
+  type StructuralChildSchema,
+  type StructuralFieldResolver,
+  type StructuralInstance,
+} from './structural-nodes.js';
 
 import type {
   ContractDocument,
@@ -71,6 +85,90 @@ export function resolveComponentContract(
   return resolvePublicFields(document, context, new Set());
 }
 
+/** Return the effective fields, including fixed root repeater/switch contracts. */
+export function structuralNodeFields(document: ContractDocument, catalog: ContractResolverInput) {
+  return resolvePublicFields(document, resolverContext(catalog), new Set());
+}
+
+/** Resolve the JSON Schema value contract for a structural node in its owner document. */
+export function structuralNodeSchema(
+  document: ContractDocument,
+  nodeId: string,
+  catalog: ContractResolverInput,
+) {
+  return deriveStructuralNodeSchema(
+    document,
+    nodeId,
+    resolverContext(catalog),
+    resolvePublicFields as StructuralFieldResolver,
+    new Set(),
+  );
+}
+
+/** Return ordered component alternatives for a repeater/switch, with identity paths. */
+export function structuralChildSchemas(
+  document: ContractDocument,
+  nodeId: string,
+  catalog: ContractResolverInput,
+): StructuralChildSchema[] {
+  return deriveStructuralChildSchemas(
+    document,
+    nodeId,
+    resolverContext(catalog),
+    resolvePublicFields as StructuralFieldResolver,
+    new Set(),
+  );
+}
+
+/** Resolve an instance's effective structural case, including placement collision suffixes. */
+export function structuralCaseValue(
+  document: ContractDocument,
+  instance: StructuralInstance,
+  catalog: ContractResolverInput,
+) {
+  return deriveStructuralCaseValue(
+    document,
+    instance,
+    resolverContext(catalog),
+    resolvePublicFields as StructuralFieldResolver,
+  );
+}
+
+/** Select a discriminated structural branch, or an ordered legacy payload match. */
+export function selectStructuralChild(
+  value: unknown,
+  candidates: Parameters<typeof structuralSelection>[1],
+) {
+  return structuralSelection(value, candidates);
+}
+
+/** Return root data fields plus the local aliases visible at a structural branch. */
+export function structuralScopeFields(
+  document: ContractDocument,
+  nodeId: string,
+  catalog: ContractResolverInput,
+  inheritedFields: readonly FieldDefinition[] = [],
+) {
+  return deriveStructuralScopeFields(
+    document,
+    nodeId,
+    resolverContext(catalog),
+    resolvePublicFields as StructuralFieldResolver,
+    inheritedFields,
+  );
+}
+
+/** Build one component/section data schema while preserving its authored union keywords. */
+export function componentDataSchema(documentId: string, catalog: ContractResolverInput) {
+  return componentDataSchemaInternalForTarget(
+    documentId,
+    resolverContext(catalog),
+    resolvePublicFields as StructuralFieldResolver,
+  );
+}
+
+export { matchesSchemaValue };
+
 /** Describe the contributing child instances in the order their fields are applied. */
 export function automaticFieldGroupsFor(
   document: ContractDocument,
@@ -116,6 +214,9 @@ function resolvePublicFields(
       fields.delete(definition.name);
       fields.set(definition.name, definition);
     }
+  }
+  for (const node of structuralNodesForContract(document)) {
+    addStructuralField(document, node, fields, context, resolvePublicFields, nextAncestors);
   }
   return fields;
 }
@@ -203,6 +304,8 @@ function instancesInDocumentOrder(document: ContractDocument) {
   const instances: Array<{ id: string; component: string; forwardFields?: boolean }> = [];
   if ('root' in document) {
     const visit = (node: NestedNode) => {
+      // Structural alternatives contribute only through their owner's items/props schema.
+      if (node.type === 'repeater' || node.type === 'switch') return;
       if (node.type === 'instance') instances.push(node);
       else if (node.type === 'frame') {
         for (const child of node.children ?? []) visit(child);
@@ -214,6 +317,7 @@ function instancesInDocumentOrder(document: ContractDocument) {
   const visit = (id: string) => {
     const node: FlatNode | undefined = document.nodes[id];
     if (!node) return;
+    if (node.type === 'repeater' || node.type === 'switch') return;
     if (node.type === 'instance') instances.push(node);
     else if (node.type === 'frame') {
       for (const childId of node.children) visit(childId);

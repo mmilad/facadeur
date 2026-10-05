@@ -20,22 +20,17 @@ export function FormTextInput({
   disabled,
   state = 'default',
   onCommit,
-  nodeId,
   className,
 }: FormTextInputProps) {
   return (
     <label
       data-component="form-text-input"
-      data-node={nodeId}
       data-variant-state={state}
       className={[styles['root'], className].filter(Boolean).join(' ')}
     >
-      <span data-node="label" className={styles['label']}>
-        {label}
-      </span>
-      <div data-node="controlShell" className={styles['controlShell']}>
+      <span className={styles['label']}>{label}</span>
+      <div className={styles['controlShell']}>
         <img
-          data-node="leadingIcon"
           aria-hidden="true"
           src={icon}
           alt=""
@@ -43,8 +38,7 @@ export function FormTextInput({
           hidden={hasIcon === false}
         />
         <FormInput
-          nodeId="control"
-          className={styles['control']}
+          className="FormTextInput__control"
           value={value}
           placeholder={placeholder}
           onCommit={onCommit}
@@ -52,9 +46,7 @@ export function FormTextInput({
           disabled={disabled}
         />
       </div>
-      <span data-node="hint" className={styles['hint']}>
-        {hint}
-      </span>
+      <span className={styles['hint']}>{hint}</span>
     </label>
   );
 }

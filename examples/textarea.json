@@ -1,17 +1,75 @@
 {
   "version": 1,
   "id": "textarea",
-  "previewData": {
-    "fields": {
-      "label": "Message",
-      "value": "",
-      "placeholder": "Tell us about your project",
-      "name": "message",
-      "rows": 3
-    }
-  },
   "name": "Textarea",
   "kind": "component",
+  "root": {
+    "id": "root",
+    "tag": "label",
+    "layout": {
+      "direction": "column",
+      "gap": "{space.gap.xs}",
+      "align": "stretch",
+      "width": {
+        "mode": "fill"
+      },
+      "height": {
+        "mode": "hug"
+      }
+    },
+    "type": "frame",
+    "children": [
+      {
+        "id": "label",
+        "tag": "span",
+        "bindings": [
+          {
+            "field": "label",
+            "target": "text"
+          }
+        ],
+        "type": "text"
+      },
+      {
+        "id": "control",
+        "tag": "textarea",
+        "attributes": {
+          "readonly": "readonly",
+          "tabindex": "-1"
+        },
+        "layout": {
+          "width": {
+            "mode": "fill"
+          },
+          "height": {
+            "mode": "hug"
+          }
+        },
+        "bindings": [
+          {
+            "field": "value",
+            "target": "text"
+          },
+          {
+            "field": "placeholder",
+            "target": "attribute",
+            "name": "placeholder"
+          },
+          {
+            "field": "name",
+            "target": "attribute",
+            "name": "name"
+          },
+          {
+            "field": "rows",
+            "target": "attribute",
+            "name": "rows"
+          }
+        ],
+        "type": "frame"
+      }
+    ]
+  },
   "group": "form",
   "fields": [
     {
@@ -35,6 +93,15 @@
       "type": "number"
     }
   ],
+  "previewData": {
+    "fields": {
+      "label": "Message",
+      "value": "",
+      "placeholder": "Tell us about your project",
+      "name": "message",
+      "rows": 3
+    }
+  },
   "variants": [
     {
       "name": "resize",
@@ -42,22 +109,6 @@
       "default": "vertical"
     }
   ],
-  "tokenInterface": {
-    "reads": [
-      "color.accent.default",
-      "color.bg.muted",
-      "color.neutral.400",
-      "color.text.primary",
-      "color.text.secondary",
-      "input.padding.x",
-      "input.padding.y",
-      "input.radius",
-      "space.0",
-      "space.gap.xs",
-      "type.body",
-      "type.label"
-    ]
-  },
   "styles": {
     "declarations": {
       "color": "{color.text.secondary}",
@@ -72,8 +123,8 @@
           "borderRadius": "{input.radius}",
           "boxSizing": "border-box",
           "color": "{color.text}",
-          "font": "{type.body}",
           "display": "block",
+          "font": "{type.body}",
           "letterSpacing": "0",
           "paddingBlock": "{input.padding.y}",
           "paddingInline": "{input.padding.x}",
@@ -107,71 +158,20 @@
       }
     }
   },
-  "root": {
-    "id": "root",
-    "type": "frame",
-    "tag": "label",
-    "layout": {
-      "direction": "column",
-      "align": "stretch",
-      "gap": "{space.gap.xs}",
-      "width": {
-        "mode": "fill"
-      },
-      "height": {
-        "mode": "hug"
-      }
-    },
-    "children": [
-      {
-        "id": "label",
-        "type": "text",
-        "tag": "span",
-        "bindings": [
-          {
-            "field": "label",
-            "target": "text"
-          }
-        ]
-      },
-      {
-        "id": "control",
-        "type": "frame",
-        "tag": "textarea",
-        "layout": {
-          "width": {
-            "mode": "fill"
-          },
-          "height": {
-            "mode": "hug"
-          }
-        },
-        "attributes": {
-          "readonly": "readonly",
-          "tabindex": "-1"
-        },
-        "bindings": [
-          {
-            "field": "value",
-            "target": "text"
-          },
-          {
-            "field": "placeholder",
-            "target": "attribute",
-            "name": "placeholder"
-          },
-          {
-            "field": "name",
-            "target": "attribute",
-            "name": "name"
-          },
-          {
-            "field": "rows",
-            "target": "attribute",
-            "name": "rows"
-          }
-        ]
-      }
+  "tokenInterface": {
+    "reads": [
+      "color.accent.default",
+      "color.bg.muted",
+      "color.neutral.400",
+      "color.text.primary",
+      "color.text.secondary",
+      "input.padding.x",
+      "input.padding.y",
+      "input.radius",
+      "space.0",
+      "space.gap.xs",
+      "type.body",
+      "type.label"
     ]
   },
   "componentTokens": {
@@ -179,6 +179,12 @@
       "path": "color.text",
       "type": "color",
       "value": "{color.text.primary}"
+    }
+  },
+  "schemaUse": {
+    "direct": {
+      "kind": "schema",
+      "schemaId": "textarea"
     }
   }
 }

@@ -8,10 +8,14 @@ import {
   toFlat,
   toNested,
   validateCatalog,
+  type SchemaCatalog,
 } from '@facadeur/core';
 
 const examplesDir = fileURLToPath(new URL('../../../examples/', import.meta.url));
 const schemaPath = fileURLToPath(new URL('../../../schema/document.schema.json', import.meta.url));
+const exampleSchemaCatalog = JSON.parse(
+  readFileSync(`${examplesDir}schemas.json`, 'utf8'),
+) as SchemaCatalog;
 
 describe('examples', () => {
   const files = readdirSync(examplesDir)
@@ -23,7 +27,7 @@ describe('examples', () => {
     const raw = files.map(
       (name) => JSON.parse(readFileSync(`${examplesDir}${name}`, 'utf8')) as unknown,
     );
-    const documents = validateCatalog(raw);
+    const documents = validateCatalog(raw, { schemaCatalog: exampleSchemaCatalog });
     for (const document of documents) {
       expect(toNested(toFlat(document))).toEqual(document);
     }

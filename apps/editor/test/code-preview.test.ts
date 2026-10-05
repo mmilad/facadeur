@@ -29,6 +29,8 @@ describe('code preview adapter', () => {
     expect(result.error).toBeUndefined();
     expect(result.source).toContain('label: string;');
     expect(result.source).toContain('onCommit?: (payload: { value: string }) => void;');
+    expect(result.source).toContain('onCommit?: (payload: TPayload) => void;');
+    expect(result.source).toContain('context?: DataContext;');
     expect(result.source).toContain('variant?: PreviewCardVariant;');
     expect(result.source).not.toContain('Base sample');
     expect(result.source).not.toContain('Compact sample');

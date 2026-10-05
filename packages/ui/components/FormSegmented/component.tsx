@@ -6,27 +6,18 @@
 import styles from './style.module.css';
 import type { FormSegmentedProps } from './types';
 
-export function FormSegmented({ label, state = 'start', nodeId, className }: FormSegmentedProps) {
+export function FormSegmented({ label, state = 'start', className }: FormSegmentedProps) {
   return (
     <div
       data-component="form-segmented"
-      data-node={nodeId}
       data-variant-state={state}
       className={[styles['root'], className].filter(Boolean).join(' ')}
     >
-      <span data-node="label" className={styles['label']}>
-        {label}
-      </span>
-      <div data-node="options" className={styles['options']}>
-        <span data-node="start" className={styles['start']}>
-          Start
-        </span>
-        <span data-node="center" className={styles['center']}>
-          Center
-        </span>
-        <span data-node="end" className={styles['end']}>
-          End
-        </span>
+      <span className={styles['label']}>{label}</span>
+      <div className={styles['options']}>
+        <span className={styles['start']}>Start</span>
+        <span className={styles['center']}>Center</span>
+        <span className={styles['end']}>End</span>
       </div>
     </div>
   );

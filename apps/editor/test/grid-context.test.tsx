@@ -4,12 +4,11 @@ import { act, useSyncExternalStore } from 'react';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { DocumentFile } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { afterEach, expect, it } from 'vitest';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { LayoutPanel } from '../src/ui/sidebar/properties/layout/LayoutPanel';
 import { gridDeclarations } from '../src/ui/sidebar/properties/layout/grid/edits';
-import { expandExampleCatalog } from './fixtures/example-catalog';
+import { editorStandardDesign, expandExampleCatalog } from './fixtures/example-catalog';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 afterEach(cleanup);
@@ -36,7 +35,7 @@ function Harness({ session, nodeId }: { session: EditorSession; nodeId: string }
 function setup(variant = false, viewport = false, nodeId = 'root') {
   const session = createEditorSession({
     documents: expandExampleCatalog([fixture()]),
-    design: createProjectTemplateDocument(),
+    design: editorStandardDesign(),
   });
   session.openAsset('grid-test', 'root');
   if (variant) session.setActiveVariant('compact');
@@ -58,7 +57,7 @@ it.each([false, true])(
     child.style = { 'grid-area': 'action', 'grid-column-start': 'action', opacity: '0.5' };
     const session = createEditorSession({
       documents: expandExampleCatalog([file]),
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     session.openAsset('grid-test', 'root');
     if (variant) session.setActiveVariant('compact');
@@ -118,7 +117,7 @@ it('assigns an area to a child component instance without editing its master', a
   };
   const session = createEditorSession({
     documents: expandExampleCatalog([file, master]),
-    design: createProjectTemplateDocument(),
+    design: editorStandardDesign(),
   });
   session.openAsset('grid-test', 'root');
   render(<Harness session={session} nodeId="action" />);
@@ -164,7 +163,7 @@ it.each([false, true])(
     };
     const session = createEditorSession({
       documents: expandExampleCatalog([file, master]),
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     session.openAsset('grid-test', 'root');
     render(<Harness session={session} nodeId="root" />);

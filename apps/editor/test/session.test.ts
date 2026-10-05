@@ -1,9 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import * as files from '../src/domain/assets/files';
 import { readTokenTree, resolvePreviewData, type DocumentFile } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { createEditorSession } from '../src/domain/session';
-import { expandExampleCatalog } from './fixtures/example-catalog';
+import { editorStandardDesign, expandExampleCatalog } from './fixtures/example-catalog';
 
 const variantComponent: DocumentFile = {
   version: 1,
@@ -46,7 +45,7 @@ const documents = expandExampleCatalog([
 function session(extraDocuments: readonly DocumentFile[] = []) {
   return createEditorSession({
     documents: [...documents, ...extraDocuments],
-    design: createProjectTemplateDocument(),
+    design: editorStandardDesign(),
     sources: { specimen: 'specimen-page.json' },
   });
 }

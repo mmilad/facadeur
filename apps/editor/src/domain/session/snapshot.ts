@@ -118,7 +118,9 @@ export function buildEditorSnapshot(ctx: SnapshotBuildContext): EditorSnapshot {
     design.schemaCatalog,
   );
   const documentScopeFields =
-    activeDocument.kind === 'atom' || activeDocument.kind === 'component'
+    activeDocument.kind === 'atom' ||
+    activeDocument.kind === 'component' ||
+    activeDocument.kind === 'section'
       ? publicFieldsFor(activeDocument, catalogDocuments, design.schemaCatalog)
       : activeDocument.fields;
   const componentEvents = componentTarget ? publicEventsFor(componentTarget, catalogDocuments) : [];

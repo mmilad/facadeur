@@ -184,6 +184,7 @@ export function createViewportBoard(options: {
       const renderer = createDomRenderer({
         parent: host.contentDocument().body,
         catalog: documents,
+        schemaCatalog: options.schemaCatalog,
         styles,
         resolveMountedDocument: (document) => {
           const resolved =

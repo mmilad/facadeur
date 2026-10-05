@@ -3,11 +3,12 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
-export interface CardProps {
+import type { ComponentProps } from '../../contracts';
+
+export interface CardData {
   eyebrow?: string;
   title?: string;
   body?: string;
-  /** Instance id. Sets `data-node` so a parent style rule can address this element. */
-  nodeId?: string;
-  className?: string;
 }
+
+export interface CardProps extends ComponentProps, CardData {}

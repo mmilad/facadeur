@@ -70,6 +70,7 @@ export function cloneField(field: FieldDefinition): FieldDefinition {
   return {
     name: field.name,
     type: field.type,
+    ...(field.schema ? { schema: structuredClone(field.schema) } : {}),
     ...(field.required !== undefined ? { required: field.required } : {}),
     ...(field.default !== undefined ? { default: field.default } : {}),
     ...(field.options ? { options: [...field.options] } : {}),
@@ -77,6 +78,7 @@ export function cloneField(field: FieldDefinition): FieldDefinition {
       ? {
           items: {
             type: field.items.type,
+            ...(field.items.schema ? { schema: structuredClone(field.items.schema) } : {}),
             ...(field.items.options ? { options: [...field.items.options] } : {}),
             ...(field.items.fields ? { fields: field.items.fields.map(cloneField) } : {}),
           },

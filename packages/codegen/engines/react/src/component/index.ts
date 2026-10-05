@@ -2,7 +2,7 @@ import { resolveVariantDocument, variantPresets, type DocumentFile } from '@faca
 import { CodegenError } from '../names';
 import { variantTypeSpecs } from './catalog';
 import type { LocalClassNames } from './types';
-import { printComponentFile, printComponentIndex, printElement, printTypesFile } from './print';
+import { printComponentFile, printComponentIndex, printRootElement, printTypesFile } from './print';
 import { renderNode } from './render';
 import type { CatalogEntry, ComponentFile, ComponentImport } from './types';
 
@@ -20,6 +20,7 @@ export function renderComponent(
   const imports = new Map<string, ComponentImport>();
   const usedProps = new Set<string>();
   let usesCssProperties = false;
+  let usesStructuralNodes = false;
   const acceptsChildFields = entry.acceptsChildFields === true;
   const names = entry.namedVariant
     ? [
@@ -31,6 +32,16 @@ export function renderComponent(
     : ['default'];
   const roots = names.map((name) => {
     const effective = resolveVariantDocument(document, name);
+    const dataScope = new Map([
+      ['item', '(context?.item as any)'],
+      ['index', 'context?.index'],
+      ['parent', '(context?.parent as any)'],
+      ['$repeatScope', 'context'],
+    ]);
+    if (effective.root.type !== 'switch') {
+      dataScope.set('$effectiveProps', 'true');
+      dataScope.set('props', '__facadeurEffectiveProps');
+    }
     return renderNode(
       effective,
       effective.root,
@@ -42,14 +53,18 @@ export function renderComponent(
       () => {
         usesCssProperties = true;
       },
-      new Map(),
+      dataScope,
       acceptsChildFields ? entry.childFieldsProp : undefined,
       options.classNames,
+      () => {
+        usesStructuralNodes = true;
+      },
     );
   });
   const body = entry.namedVariant
     ? renderVariantBranches(roots, names, entry.namedVariant.name)
-    : printElement(roots[0]!, 2);
+    : printRootElement(roots[0]!, 2);
+  const usesContext = usedProps.has('$context');
   const props = [
     ...(entry.namedVariant ? [entry.namedVariant] : []),
     ...entry.fields.values(),
@@ -63,9 +78,12 @@ export function renderComponent(
     variantTypes,
     imports: [...imports.values()].sort((left, right) => left.from.localeCompare(right.from, 'en')),
     usesCssProperties,
+    usesFragment: usesStructuralNodes,
     acceptsChildFields,
     childFieldsPropName: entry.childFieldsProp ?? 'childFields',
     usedProps,
+    usesContext,
+    dataContract: entry.dataContract,
     body,
   };
   return {
@@ -77,6 +95,7 @@ export function renderComponent(
     imports: [...imports.values()],
     usesCssProperties,
     acceptsChildFields,
+    usesContext,
     componentContents: printComponentFile(printed),
     typesContents: printTypesFile(printed),
     indexContents: printComponentIndex(printed),
@@ -99,5 +118,5 @@ function renderVariantBranches(
 }
 
 function quoteBranch(root: ReturnType<typeof renderNode>): string {
-  return `\n${printElement(root, 2)}\n  `;
+  return `\n${printRootElement(root, 2)}\n  `;
 }

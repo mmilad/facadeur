@@ -16,18 +16,15 @@ export function Specimen({
   name,
   disabled,
   label,
-  nodeId,
   className,
 }: SpecimenProps) {
   return (
     <div
       data-component="specimen"
-      data-node={nodeId}
       className={[styles['root'], className].filter(Boolean).join(' ')}
     >
       <SpecimenSection
-        nodeId="specimen-section"
-        className={styles['specimen-section']}
+        className="Specimen__specimen-section"
         eyebrow={eyebrow}
         title={title}
         body={body}

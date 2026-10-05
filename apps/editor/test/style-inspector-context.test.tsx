@@ -3,10 +3,9 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';
-import { expandExampleCatalog } from './fixtures/example-catalog';
+import { editorStandardDesign, expandExampleCatalog } from './fixtures/example-catalog';
 
 const source: DocumentFile = {
   version: 1,
@@ -70,7 +69,7 @@ describe('style inspector context', () => {
   function mount(): EditorSession {
     const session = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);

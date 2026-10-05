@@ -4,4 +4,4 @@
  */
 
 export { ProductCard } from './component';
-export type { ProductCardProps, ProductCardVariant } from './types';
+export type { ProductCardProps, ProductCardData, ProductCardVariant } from './types';

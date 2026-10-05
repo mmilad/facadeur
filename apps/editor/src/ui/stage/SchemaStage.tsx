@@ -21,19 +21,20 @@ export function SchemaStage({
   onOpenSchemas: () => void;
 }) {
   const document = snap.document;
-  const hasSchema = ownsComponentFeatures(document.kind);
+  const hasSchema = ownsComponentFeatures(document.kind) || document.kind === 'section';
+  const schemaOwner = document.kind === 'section' ? 'Section' : 'Component';
 
   return (
     <section className="schema-stage eu-form" aria-label="Schema" data-testid="schema-stage">
       <header className="schema-stage-head">
         <div>
-          <p className="schema-stage-kicker">Shared component contract</p>
+          <p className="schema-stage-kicker">Shared {schemaOwner.toLowerCase()} contract</p>
           <h1>Schema</h1>
         </div>
         <p className="schema-stage-note">
           {snap.activeVariantName
             ? `Editing ${variantLabel(document, snap.activeVariantName)}; schema stays shared with the base document.`
-            : 'Choose a shared schema and set the defaults this component contributes to instances.'}
+            : `Choose a shared schema and set the defaults this ${schemaOwner.toLowerCase()} contributes to instances.`}
         </p>
       </header>
       <div className="schema-stage-body">
@@ -43,7 +44,7 @@ export function SchemaStage({
               className="schema-card schema-definition-card"
               aria-labelledby="schema-definition-title"
             >
-              <h2 id="schema-definition-title">Component definition</h2>
+              <h2 id="schema-definition-title">{schemaOwner} definition</h2>
               <SchemaUseControl session={session} snap={snap} onOpenSchemas={onOpenSchemas} />
               <ComponentEvents session={session} snap={snap} />
               <ComponentExpose session={session} snap={snap} />

@@ -13,6 +13,7 @@
     "src/stories/generated/FormToggle.stories.tsx",
     "src/stories/generated/Input.stories.tsx",
     "src/stories/generated/Media.stories.tsx",
+    "src/stories/generated/NewSection.stories.tsx",
     "src/stories/generated/ProductCard.stories.tsx",
     "src/stories/generated/SignIn.stories.tsx",
     "src/stories/generated/Specimen.stories.tsx",

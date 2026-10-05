@@ -11,25 +11,17 @@ export function FormFieldRow({
   type,
   value,
   state = 'default',
-  nodeId,
   className,
 }: FormFieldRowProps) {
   return (
     <div
       data-component="form-field-row"
-      data-node={nodeId}
       data-variant-state={state}
       className={[styles['root'], className].filter(Boolean).join(' ')}
     >
-      <span data-node="name" className={styles['name']}>
-        {name}
-      </span>
-      <span data-node="type" className={styles['type']}>
-        {type}
-      </span>
-      <span data-node="value" className={styles['value']}>
-        {value}
-      </span>
+      <span className={styles['name']}>{name}</span>
+      <span className={styles['type']}>{type}</span>
+      <span className={styles['value']}>{value}</span>
     </div>
   );
 }

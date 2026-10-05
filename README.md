@@ -46,7 +46,7 @@ pnpm codegen
 pnpm storybook
 ```
 
-`pnpm codegen` reads the example documents and `examples/project-template.json`, then writes:
+`pnpm codegen` reads the example documents, `examples/project-template.json`, and the shared schema library `examples/schemas.json` through `--schemas`, then writes:
 
 - **`packages/ui`** — React components, barrel export, token and component CSS (`@facadeur/ui`)
 - **`apps/storybook/src/stories/generated`** — CSF3 stories (args from field and variant defaults)

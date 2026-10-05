@@ -17,7 +17,7 @@
     "test": "vitest run",
     "verify": "pnpm typecheck && pnpm lint && pnpm test",
     "schema": "tsx scripts/export-schema.ts",
-    "codegen": "tsx packages/codegen/src/cli.ts --design examples/project-template.json --out packages/ui --storybook apps/storybook examples/button.json examples/card.json examples/product-card.json examples/form-input.json examples/input.json examples/textarea.json examples/sign-in.json examples/form-text-input.json examples/form-select.json examples/form-toggle.json examples/form-segmented.json examples/form-field-row.json examples/media.json examples/specimen-page.json examples/specimen-section.json examples/form-controls-page.json examples/form-controls-section.json",
+    "codegen": "tsx packages/codegen/src/cli.ts --design examples/project-template.json --schemas examples/schemas.json --out packages/ui --storybook apps/storybook examples/button.json examples/card.json examples/product-card.json examples/form-input.json examples/input.json examples/textarea.json examples/sign-in.json examples/form-text-input.json examples/form-select.json examples/form-toggle.json examples/form-segmented.json examples/form-field-row.json examples/media.json examples/specimen-page.json examples/specimen-section.json examples/form-controls-page.json examples/new-section.json examples/form-controls-section.json",
     "storybook": "pnpm --filter @facadeur/storybook dev"
   },
   "devDependencies": {

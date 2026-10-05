@@ -70,7 +70,7 @@ function layerItem(input: {
       }),
     );
 
-  if (node.type === 'frame') {
+  if ('children' in node) {
     for (const id of node.children) {
       const child = document.nodes[id];
       if (child) {
@@ -95,7 +95,7 @@ function layerItem(input: {
       ? resolveTargetDocument(rawTarget, effectiveNode, input.scope, input.prepareDocument)
       : null;
     const targetRoot = target?.nodes[target.rootId] ?? null;
-    if (target && targetRoot?.type === 'frame' && !input.stack.has(target.id)) {
+    if (target && targetRoot && 'children' in targetRoot && !input.stack.has(target.id)) {
       const scope = resolveInstanceFieldScope(
         node,
         target,

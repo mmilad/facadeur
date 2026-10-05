@@ -30,7 +30,13 @@ import {
   sortFieldValues,
   sortStringRecord,
 } from './flat/flat-clone.js';
-import type { FlatDocument, FlatNode, FlatNodeBase, InstanceNode } from './flat/flat-types.js';
+import type {
+  FlatDocument,
+  FlatNode,
+  FlatNodeBase,
+  InstanceNode,
+  StructuralNode,
+} from './flat/flat-types.js';
 
 export type {
   FlatNodeBase,
@@ -38,6 +44,9 @@ export type {
   TextNode,
   ImageNode,
   InstanceNode,
+  RepeaterNode,
+  SwitchNode,
+  StructuralNode,
   FlatNode,
   FlatDocument,
 } from './flat/flat-types.js';
@@ -176,6 +185,16 @@ export function flattenSubtree(
     throw new DocumentError('duplicate-id', `Duplicate id "${node.id}"`);
   }
   seen.add(node.id);
+  if (node.type === 'repeater' || node.type === 'switch') {
+    const children = (node.children ?? []).map((child) => flattenSubtree(child, nodes, seen));
+    nodes[node.id] = {
+      id: node.id,
+      type: node.type,
+      ...(node.name !== undefined ? { name: node.name } : {}),
+      children,
+    };
+    return node.id;
+  }
   if (node.type === 'frame') {
     const children = (node.children ?? []).map((child) => flattenSubtree(child, nodes, seen));
     nodes[node.id] = makeFlatNode({
@@ -214,6 +233,7 @@ export function flattenSubtree(
     ...(node.fields ? { fields: node.fields } : {}),
     ...(node.childFields ? { childFields: cloneChildFields(node.childFields) } : {}),
     ...(node.forwardFields !== undefined ? { forwardFields: node.forwardFields } : {}),
+    ...(node.switchCase !== undefined ? { switchCase: node.switchCase } : {}),
     ...(node.fieldBindings ? { fieldBindings: { ...node.fieldBindings } } : {}),
     ...(node.variants ? { variants: node.variants } : {}),
     ...(node.variantRules?.length ? { variantRules: structuredClone(node.variantRules) } : {}),
@@ -223,6 +243,14 @@ export function flattenSubtree(
 }
 
 export function makeFlatNode(node: FlatNode): FlatNode {
+  if (node.type === 'repeater' || node.type === 'switch') {
+    return {
+      id: node.id,
+      type: node.type,
+      ...(node.name ? { name: node.name } : {}),
+      children: [...node.children],
+    };
+  }
   if (node.type === 'instance') {
     const fields = sortFieldValues(node.fields);
     const childFields = cloneChildFields(node.childFields);
@@ -239,6 +267,7 @@ export function makeFlatNode(node: FlatNode): FlatNode {
       ...(fields ? { fields } : {}),
       ...(childFields ? { childFields } : {}),
       ...(node.forwardFields !== undefined ? { forwardFields: node.forwardFields } : {}),
+      ...(node.switchCase !== undefined ? { switchCase: node.switchCase } : {}),
       ...(node.fieldBindings ? { fieldBindings: { ...node.fieldBindings } } : {}),
       ...(variants ? { variants } : {}),
       ...(node.variantRules?.length ? { variantRules: structuredClone(node.variantRules) } : {}),
@@ -275,7 +304,16 @@ function expandNode(doc: FlatDocument, id: string, stack: Set<string>): NestedNo
   }
   stack.add(id);
   let nested: NestedNode;
-  if (node.type === 'frame') {
+  if (node.type === 'repeater' || node.type === 'switch') {
+    nested = {
+      id: node.id,
+      type: node.type,
+      ...(node.name !== undefined ? { name: node.name } : {}),
+      ...(node.children.length
+        ? { children: node.children.map((childId) => expandNode(doc, childId, stack)) }
+        : {}),
+    };
+  } else if (node.type === 'frame') {
     const shared = sharedToNested(node);
     const children = node.children.map((childId) => expandNode(doc, childId, stack));
     nested = children.length
@@ -309,6 +347,7 @@ function expandNode(doc: FlatDocument, id: string, stack: Set<string>): NestedNo
       ...(node.fields ? { fields: { ...node.fields } } : {}),
       ...(node.childFields ? { childFields: cloneChildFields(node.childFields) } : {}),
       ...(node.forwardFields !== undefined ? { forwardFields: node.forwardFields } : {}),
+      ...(node.switchCase !== undefined ? { switchCase: node.switchCase } : {}),
       ...(node.fieldBindings ? { fieldBindings: { ...node.fieldBindings } } : {}),
       ...(node.variants ? { variants: { ...node.variants } } : {}),
       ...(node.variantRules?.length ? { variantRules: structuredClone(node.variantRules) } : {}),
@@ -319,7 +358,9 @@ function expandNode(doc: FlatDocument, id: string, stack: Set<string>): NestedNo
   return nested;
 }
 
-function sharedFromNested(node: Exclude<NestedNode, { type: 'instance' }>): FlatNodeBase {
+function sharedFromNested(
+  node: Exclude<NestedNode, { type: 'instance' | 'repeater' | 'switch' }>,
+): FlatNodeBase {
   return {
     id: node.id,
     ...(node.name !== undefined ? { name: node.name } : {}),
@@ -334,7 +375,7 @@ function sharedFromNested(node: Exclude<NestedNode, { type: 'instance' }>): Flat
   };
 }
 
-function sharedFlat(node: Exclude<FlatNode, InstanceNode>) {
+function sharedFlat(node: Exclude<FlatNode, InstanceNode | StructuralNode>) {
   const base: FlatNodeBase = { id: node.id };
   if (node.name) base.name = node.name;
   if (node.styleName) base.styleName = node.styleName;
@@ -351,7 +392,7 @@ function sharedFlat(node: Exclude<FlatNode, InstanceNode>) {
   return base;
 }
 
-function sharedToNested(node: Exclude<FlatNode, InstanceNode>): {
+function sharedToNested(node: Exclude<FlatNode, InstanceNode | StructuralNode>): {
   id: string;
   name?: string;
   styleName?: string;

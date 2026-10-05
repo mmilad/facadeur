@@ -5,6 +5,54 @@ import { describe, expect, it } from 'vitest';
 import { runReactCli } from '../src/cli';
 
 describe('React codegen CLI', () => {
+  it('loads an explicit schema library before validating component assignments', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'facadeur-codegen-library-'));
+    try {
+      const schemasPath = join(root, 'schemas.json');
+      const componentPath = join(root, 'textarea.json');
+      const outPath = join(root, 'out');
+      writeFileSync(
+        schemasPath,
+        JSON.stringify({
+          schemas: [
+            {
+              id: 'textarea',
+              name: 'Textarea',
+              schema: {
+                type: 'object',
+                properties: { value: { type: 'string' } },
+              },
+            },
+          ],
+          assignments: { textarea: 'textarea' },
+        }),
+      );
+      writeFileSync(
+        componentPath,
+        JSON.stringify({
+          version: 1,
+          id: 'textarea',
+          name: 'Textarea',
+          kind: 'component',
+          schemaUse: { direct: { kind: 'schema', schemaId: 'textarea' } },
+          root: { id: 'root', type: 'text', bindings: [{ field: 'value', target: 'text' }] },
+        }),
+      );
+      await expect(runReactCli(['--out', outPath, componentPath])).rejects.toThrow(
+        'missing schema "textarea"',
+      );
+      await runReactCli(['--schemas', schemasPath, '--out', outPath, componentPath]);
+      expect(readFileSync(join(outPath, 'types/TextareaSchema.ts'), 'utf8')).toContain(
+        'value?: string;',
+      );
+      expect(readFileSync(join(outPath, 'components/Textarea/types.ts'), 'utf8')).toContain(
+        'TextareaSchema',
+      );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('loads component schemas from the project design document', async () => {
     const root = mkdtempSync(join(tmpdir(), 'facadeur-codegen-cli-'));
     try {
@@ -53,7 +101,10 @@ describe('React codegen CLI', () => {
         'utf8',
       );
       const types = readFileSync(join(outPath, 'components/SchemaComponent/types.ts'), 'utf8');
-      expect(types).toContain('label?: string;');
+      expect(types).toContain('label?: LabelSchema;');
+      expect(readFileSync(join(outPath, 'types/LabelSchema.ts'), 'utf8')).toContain(
+        'LabelSchema = string;',
+      );
       expect(component).toContain('data-component="schema-component"');
     } finally {
       rmSync(root, { recursive: true, force: true });

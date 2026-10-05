@@ -4,4 +4,4 @@
  */
 
 export { FormSegmented } from './component';
-export type { FormSegmentedProps, FormSegmentedState } from './types';
+export type { FormSegmentedProps, FormSegmentedData, FormSegmentedState } from './types';

@@ -10,13 +10,12 @@ import {
   type JsonValue,
   type TokenTree,
 } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { afterEach, describe, expect, it } from 'vitest';
 import button from '../../../examples/button.json';
 import { withTokenLabel, withTokenValue } from '../src/domain/edits/token-edit';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';
-import { expandExampleCatalog } from './fixtures/example-catalog';
+import { editorStandardDesign, expandExampleCatalog } from './fixtures/example-catalog';
 import { openSettingsDomain } from './settings-navigation';
 
 const documents = expandExampleCatalog([button]);
@@ -49,7 +48,7 @@ describe('design token tables', () => {
   }
 
   it('sorts numeric token paths naturally and searches names and values', async () => {
-    const session = createEditorSession({ documents, design: createProjectTemplateDocument() });
+    const session = createEditorSession({ documents, design: editorStandardDesign() });
     await openDomain(session, 'spacing');
 
     const paths = [...host!.querySelectorAll<HTMLElement>('tr[data-token-path]')].map(
@@ -73,7 +72,7 @@ describe('design token tables', () => {
   });
 
   it('adds a token through the compact popover action', async () => {
-    const session = createEditorSession({ documents, design: createProjectTemplateDocument() });
+    const session = createEditorSession({ documents, design: editorStandardDesign() });
     await openDomain(session, 'colors');
     expect(host!.querySelector('.token-table-group-toggle')?.textContent).not.toContain('Color ');
     expect(host!.querySelector('.token-table-group-toggle small')).toBeNull();
@@ -95,7 +94,7 @@ describe('design token tables', () => {
   });
 
   it('keeps table labels synchronized through undo, redo, and an external snapshot update', async () => {
-    const session = createEditorSession({ documents, design: createProjectTemplateDocument() });
+    const session = createEditorSession({ documents, design: editorStandardDesign() });
     await openDomain(session, 'spacing');
     const inputFor = () =>
       host!.querySelector<HTMLInputElement>(
@@ -156,7 +155,7 @@ describe('design token tables', () => {
   });
 
   it('refreshes component token labels after undo with an active draft', async () => {
-    const session = createEditorSession({ documents, design: createProjectTemplateDocument() });
+    const session = createEditorSession({ documents, design: editorStandardDesign() });
     session.openAsset('button', 'root');
     const id = listComponentTokens(
       session.project.styles.document('button').componentTokens ?? {},
@@ -207,7 +206,7 @@ describe('design token tables', () => {
   });
 
   it('shows labels for token references in typography and shadow summaries', async () => {
-    const design = structuredClone(createProjectTemplateDocument());
+    const design = structuredClone(editorStandardDesign());
     let tokens = (design.tokens ?? {}) as TokenTree;
     tokens = setTokenInTree(tokens, 'space.4', withTokenLabel(tokens, 'space.4', 'Comfortable'));
     const body = readTokenTree(tokens).tokens.get('type.body')?.value as Record<string, JsonValue>;

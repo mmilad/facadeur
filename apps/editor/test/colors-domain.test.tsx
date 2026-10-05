@@ -4,11 +4,10 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { readTokenTree } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';
-import { editorStandardCatalog } from './fixtures/example-catalog';
+import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
 import { openSettingsDomain } from './settings-navigation';
 
 const documents = editorStandardCatalog();
@@ -61,7 +60,7 @@ describe('colors domain panel', () => {
   it('adds a color token with a valid path and default value', async () => {
     const session = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     await openColors(session);
 
@@ -78,7 +77,7 @@ describe('colors domain panel', () => {
   it('blocks removing a color that other tokens still reference', async () => {
     const session = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     await openColors(session);
 
@@ -98,7 +97,7 @@ describe('colors domain panel', () => {
   it('rejects an empty label on add', async () => {
     const session = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     await openColors(session);
 
@@ -114,7 +113,7 @@ describe('colors domain panel', () => {
   it('suffixes a generated color path when the label collides', async () => {
     const session = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     await openColors(session);
 

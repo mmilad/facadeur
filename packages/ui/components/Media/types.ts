@@ -3,13 +3,14 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
-export interface MediaProps {
+import type { ComponentProps } from '../../contracts';
+
+export interface MediaData {
   kind?: 'image' | 'video';
   src: string;
   alt?: string;
   poster?: string;
   ratio?: string;
-  /** Instance id. Sets `data-node` so a parent style rule can address this element. */
-  nodeId?: string;
-  className?: string;
 }
+
+export interface MediaProps extends ComponentProps, MediaData {}

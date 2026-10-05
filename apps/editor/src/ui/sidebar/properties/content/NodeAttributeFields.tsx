@@ -10,7 +10,7 @@ export function NodeAttributeFields({
   entries,
 }: {
   session: EditorSession;
-  node: Exclude<FlatNode, { type: 'instance' }>;
+  node: Extract<FlatNode, { type: 'frame' | 'text' | 'image' }>;
   entries: [string, string][];
 }) {
   return entries.map(([key, value]) => {
@@ -41,7 +41,7 @@ export function NodeAttributeFields({
 
 function commitAttribute(
   session: EditorSession,
-  node: Exclude<FlatNode, { type: 'instance' }>,
+  node: Extract<FlatNode, { type: 'frame' | 'text' | 'image' }>,
   key: string,
   value: string,
 ) {

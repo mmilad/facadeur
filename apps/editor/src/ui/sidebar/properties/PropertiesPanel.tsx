@@ -43,6 +43,7 @@ export function PropertiesPanel({
     : snap;
   const node = inspectorSnap.selectedNode;
   const [primaryTab, setPrimaryTab] = useState<PropertyPrimaryTab>('content');
+  const isStructuralNode = node?.type === 'repeater' || node?.type === 'switch';
   const isRoot = node?.id === inspectorSnap.document.rootId;
   const showComponentTokens =
     node?.id === snap.document.rootId &&
@@ -50,7 +51,10 @@ export function PropertiesPanel({
     (snap.document.kind === 'atom' ||
       snap.document.kind === 'component' ||
       snap.document.kind === 'section');
-  const propertyTabs = propertyPrimaryTabs(showComponentTokens);
+  const propertyTabs = isStructuralNode
+    ? ([['content', 'Content']] as const)
+    : propertyPrimaryTabs(showComponentTokens);
+  const activePrimaryTab = isStructuralNode ? 'content' : primaryTab;
   const tokenViewport = viewportEditContext({
     breakpoints: editorBreakpoints(snap.document, snap.design),
     focusId: snap.focusViewportId,
@@ -58,8 +62,9 @@ export function PropertiesPanel({
   });
 
   useEffect(() => {
+    if (isStructuralNode && primaryTab !== 'content') setPrimaryTab('content');
     if (primaryTab === 'tokens' && !showComponentTokens) setPrimaryTab('content');
-  }, [primaryTab, showComponentTokens]);
+  }, [isStructuralNode, primaryTab, showComponentTokens]);
 
   if (snap.nestedSelection) return <NestedFieldsPanel session={session} snap={snap} />;
 
@@ -89,7 +94,7 @@ export function PropertiesPanel({
       ? `Local to ${inspectorSnap.document.name} · edit master for shared changes`
       : node
         ? isRoot
-          ? `Root frame · ${inspectorSnap.document.name}`
+          ? `${rootElementLabel(node)} · ${inspectorSnap.document.name}`
           : `${node.type} · ${inspectorSnap.document.name}`
         : inspectorSnap.document.kind === 'component'
           ? 'Master · select a layer to edit'
@@ -112,7 +117,7 @@ export function PropertiesPanel({
           ) : null}
         </div>
       )}
-      <VariantTabs session={session} snap={snap} />
+      {!isStructuralNode ? <VariantTabs session={session} snap={snap} /> : null}
       <div className="tabs property-tabs" role="tablist" aria-label="Properties sections">
         {propertyTabs.map(([id, label]) => (
           <button
@@ -120,15 +125,15 @@ export function PropertiesPanel({
             type="button"
             role="tab"
             name={`property-tab-${id}`}
-            className={primaryTab === id ? 'tab is-active' : 'tab'}
-            aria-selected={primaryTab === id}
+            className={activePrimaryTab === id ? 'tab is-active' : 'tab'}
+            aria-selected={activePrimaryTab === id}
             onClick={() => setPrimaryTab(id)}
           >
             {label}
           </button>
         ))}
       </div>
-      {primaryTab === 'content' ? (
+      {activePrimaryTab === 'content' ? (
         <div role="tabpanel" className="property-panel">
           {!node ? (
             <p className="inspector-empty">
@@ -140,7 +145,7 @@ export function PropertiesPanel({
           )}
         </div>
       ) : null}
-      {primaryTab === 'style' ? (
+      {activePrimaryTab === 'style' ? (
         <div role="tabpanel" className="property-panel">
           {node ? (
             <StyleInspector session={session} snap={snap} node={node} />
@@ -149,12 +154,12 @@ export function PropertiesPanel({
           )}
         </div>
       ) : null}
-      {primaryTab === 'styles' ? (
+      {activePrimaryTab === 'styles' ? (
         <div role="tabpanel" className="property-panel">
           <StylesPanel session={session} snap={snap} />
         </div>
       ) : null}
-      {primaryTab === 'tokens' && showComponentTokens ? (
+      {activePrimaryTab === 'tokens' && showComponentTokens ? (
         <div role="tabpanel" className="property-panel">
           <TokenPreviewProvider
             design={snap.design}
@@ -208,4 +213,10 @@ function documentKindLabel(kind: FlatDocument['kind']): string {
     default:
       return 'Atom';
   }
+}
+
+function rootElementLabel(node: FlatNode): string {
+  if (node.type === 'repeater') return 'Repeater root';
+  if (node.type === 'switch') return 'Switch root';
+  return 'Root frame';
 }

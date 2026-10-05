@@ -1,9 +1,8 @@
 import { expect, it } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { createEditorSession } from '../src/domain/session';
 import { commitGridChanges } from '../src/ui/sidebar/properties/layout/grid/edits';
-import { expandExampleCatalog } from './fixtures/example-catalog';
+import { editorStandardDesign, expandExampleCatalog } from './fixtures/example-catalog';
 
 const file: DocumentFile = {
   version: 1,
@@ -31,7 +30,7 @@ it.each([false, true])(
   (variant) => {
     const session = createEditorSession({
       documents: expandExampleCatalog([file]),
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     session.openAsset('grid-edits', 'root');
     if (variant) session.setActiveVariant('compact');
@@ -53,7 +52,7 @@ it.each([false, true])(
 it('builds multiple sparse viewport style owners without overwriting earlier edits', () => {
   const session = createEditorSession({
     documents: expandExampleCatalog([file]),
-    design: createProjectTemplateDocument(),
+    design: editorStandardDesign(),
   });
   session.openAsset('grid-edits', 'root');
   session.setActiveVariant('compact');

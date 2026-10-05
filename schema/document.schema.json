@@ -102,6 +102,7 @@
               }
             ]
           },
+          "schema": {},
           "required": {
             "type": "boolean"
           },
@@ -182,6 +183,7 @@
                   }
                 ]
               },
+              "schema": {},
               "options": {
                 "minItems": 1,
                 "uniqueItems": true,
@@ -6680,6 +6682,10 @@
             "forwardFields": {
               "type": "boolean"
             },
+            "switchCase": {
+              "minLength": 1,
+              "type": "string"
+            },
             "fieldBindings": {
               "type": "object",
               "patternProperties": {
@@ -6788,6 +6794,106 @@
                     }
                   }
                 }
+              }
+            }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "type": "object",
+          "required": ["id", "type"],
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+              "type": "string"
+            },
+            "name": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "styleName": {
+              "not": {}
+            },
+            "tag": {
+              "not": {}
+            },
+            "attributes": {
+              "not": {}
+            },
+            "displayOn": {
+              "not": {}
+            },
+            "layout": {
+              "not": {}
+            },
+            "bindings": {
+              "not": {}
+            },
+            "eventBindings": {
+              "not": {}
+            },
+            "style": {
+              "not": {}
+            },
+            "type": {
+              "const": "repeater",
+              "type": "string"
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "https://github.com/mmilad/facadeur/schema/nested-node"
+              }
+            }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "type": "object",
+          "required": ["id", "type"],
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+              "type": "string"
+            },
+            "name": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "styleName": {
+              "not": {}
+            },
+            "tag": {
+              "not": {}
+            },
+            "attributes": {
+              "not": {}
+            },
+            "displayOn": {
+              "not": {}
+            },
+            "layout": {
+              "not": {}
+            },
+            "bindings": {
+              "not": {}
+            },
+            "eventBindings": {
+              "not": {}
+            },
+            "style": {
+              "not": {}
+            },
+            "type": {
+              "const": "switch",
+              "type": "string"
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "https://github.com/mmilad/facadeur/schema/nested-node"
               }
             }
           }

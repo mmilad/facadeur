@@ -1,15 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { pushDrillFrame, stackThroughParent } from '../src/domain/navigation/drill-navigation';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { createEditorSession } from '../src/domain/session';
-import { editorStandardCatalog } from './fixtures/example-catalog';
+import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
 
 const documents = editorStandardCatalog();
 
 function session() {
   return createEditorSession({
     documents,
-    design: createProjectTemplateDocument(),
+    design: editorStandardDesign(),
     sources: { specimen: 'specimen-page.json' },
   });
 }

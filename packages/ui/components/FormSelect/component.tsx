@@ -6,29 +6,17 @@
 import styles from './style.module.css';
 import type { FormSelectProps } from './types';
 
-export function FormSelect({
-  label,
-  value,
-  state = 'default',
-  nodeId,
-  className,
-}: FormSelectProps) {
+export function FormSelect({ label, value, state = 'default', className }: FormSelectProps) {
   return (
     <label
       data-component="form-select"
-      data-node={nodeId}
       data-variant-state={state}
       className={[styles['root'], className].filter(Boolean).join(' ')}
     >
-      <span data-node="label" className={styles['label']}>
-        {label}
-      </span>
-      <div data-node="control" className={styles['control']}>
-        <span data-node="value" className={styles['value']}>
-          {value}
-        </span>
+      <span className={styles['label']}>{label}</span>
+      <div className={styles['control']}>
+        <span className={styles['value']}>{value}</span>
         <img
-          data-node="chevron"
           aria-hidden="true"
           src="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Cpath d=%22m4 6 4 4 4-4%22 fill=%22none%22 stroke=%22%236f675e%22 stroke-width=%221.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E"
           alt=""

@@ -5,10 +5,9 @@ import '@testing-library/jest-dom/vitest';
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { createEditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';
-import { expandExampleCatalog } from './fixtures/example-catalog';
+import { editorStandardDesign, expandExampleCatalog } from './fixtures/example-catalog';
 
 const target: DocumentFile = {
   version: 1,
@@ -54,7 +53,7 @@ describe('instance inspector context', () => {
   it('keeps nested variant selection read-only while preserving owner tabs and master navigation', async () => {
     const session = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     const view = render(<App session={session} />);
     await act(async () => {

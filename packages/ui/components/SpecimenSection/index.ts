@@ -4,4 +4,4 @@
  */
 
 export { SpecimenSection } from './component';
-export type { SpecimenSectionProps } from './types';
+export type { SpecimenSectionProps, SpecimenSectionData } from './types';

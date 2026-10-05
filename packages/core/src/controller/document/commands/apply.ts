@@ -41,13 +41,13 @@ export function applyCommand(
       removeNode(next, command.nodeId);
       break;
     case 'move':
-      moveNode(next, command);
+      moveNode(next, command, ctx);
       break;
     case 'wrap':
       wrapNode(next, command, ctx);
       break;
     case 'setProp':
-      setProp(next, command);
+      setProp(next, command, ctx);
       break;
     case 'setField':
       setField(next, command);

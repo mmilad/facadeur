@@ -4,4 +4,4 @@
  */
 
 export { FormTextInput } from './component';
-export type { FormTextInputProps, FormTextInputState } from './types';
+export type { FormTextInputProps, FormTextInputData, FormTextInputState } from './types';

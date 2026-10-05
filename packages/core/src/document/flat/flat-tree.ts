@@ -1,8 +1,12 @@
-import type { FlatDocument, FrameNode } from './flat-types.js';
+import type { FlatDocument, FrameNode, StructuralNode } from './flat-types.js';
 
-export function findParent(doc: FlatDocument, id: string): FrameNode | undefined {
+export function findParent(doc: FlatDocument, id: string): FrameNode | StructuralNode | undefined {
   for (const node of Object.values(doc.nodes)) {
-    if (node.type === 'frame' && node.children.includes(id)) return node;
+    if (
+      (node.type === 'frame' || node.type === 'repeater' || node.type === 'switch') &&
+      node.children.includes(id)
+    )
+      return node;
   }
   return undefined;
 }
@@ -12,7 +16,7 @@ export function collectSubtree(doc: FlatDocument, id: string): string[] {
   const walk = (current: string) => {
     ids.push(current);
     const node = doc.nodes[current];
-    if (node?.type === 'frame') {
+    if (node && 'children' in node) {
       for (const child of node.children) walk(child);
     }
   };
@@ -23,14 +27,14 @@ export function collectSubtree(doc: FlatDocument, id: string): string[] {
 export function isInsideSubtree(doc: FlatDocument, ancestorId: string, nodeId: string): boolean {
   if (ancestorId === nodeId) return true;
   const ancestor = doc.nodes[ancestorId];
-  if (!ancestor || ancestor.type !== 'frame') return false;
+  if (!ancestor || !('children' in ancestor)) return false;
   const stack = [...ancestor.children];
   while (stack.length) {
     const next = stack.pop();
     if (!next) continue;
     if (next === nodeId) return true;
     const node = doc.nodes[next];
-    if (node?.type === 'frame') stack.push(...node.children);
+    if (node && 'children' in node) stack.push(...node.children);
   }
   return false;
 }

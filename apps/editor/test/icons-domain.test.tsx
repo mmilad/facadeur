@@ -3,12 +3,11 @@
  */
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { afterEach, describe, expect, it } from 'vitest';
 import button from '../../../examples/button.json';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';
-import { expandExampleCatalog } from './fixtures/example-catalog';
+import { editorStandardDesign, expandExampleCatalog } from './fixtures/example-catalog';
 
 const documents = expandExampleCatalog([button]);
 
@@ -41,7 +40,7 @@ describe('icons domain panel', () => {
   it('selects a gallery icon and shows stable id and source details', async () => {
     const session = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     await openIcons(session);
 
@@ -62,7 +61,7 @@ describe('icons domain panel', () => {
   it('filters icons by category and keeps the panel read only', async () => {
     const session = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     await openIcons(session);
 

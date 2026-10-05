@@ -6,24 +6,19 @@
 import styles from './style.module.css';
 import type { FormToggleProps } from './types';
 
-export function FormToggle({ label, value, state = 'on', nodeId, className }: FormToggleProps) {
+export function FormToggle({ label, value, state = 'on', className }: FormToggleProps) {
   return (
     <label
       data-component="form-toggle"
-      data-node={nodeId}
       data-variant-state={state}
       className={[styles['root'], className].filter(Boolean).join(' ')}
     >
-      <span data-node="label" className={styles['label']}>
-        {label}
-      </span>
-      <div data-node="control" className={styles['control']}>
-        <div data-node="switch" className={styles['switch']}>
-          <span data-node="thumb" className={styles['thumb']} />
+      <span className={styles['label']}>{label}</span>
+      <div className={styles['control']}>
+        <div className={styles['switch']}>
+          <span className={styles['thumb']} />
         </div>
-        <span data-node="state" className={styles['state']}>
-          {value}
-        </span>
+        <span className={styles['state']}>{value}</span>
       </div>
     </label>
   );

@@ -4,10 +4,9 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { describe, expect, it, afterEach } from 'vitest';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';
-import { editorStandardCatalog } from './fixtures/example-catalog';
+import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
 
 const documents = editorStandardCatalog();
 
@@ -28,7 +27,7 @@ describe('viewport layers UX', () => {
   it('keeps viewports out of Layers while updating stage titles', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -52,7 +51,7 @@ describe('viewport layers UX', () => {
   it('selects a viewport on stage and shows chrome options in the inspector', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -85,7 +84,7 @@ describe('viewport layers UX', () => {
   it('keeps node properties and ViewportEditBar when a layer is selected', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);

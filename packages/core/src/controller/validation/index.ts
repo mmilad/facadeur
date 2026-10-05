@@ -22,6 +22,7 @@ export {
 export { assertDefinitionKind, validateDefinitions } from './definitions.js';
 export { validateLibraries, validateTree } from './tree.js';
 export { type ValidateOptions } from './types.js';
+export { matchingSchemaIndex } from './json-schema-value.js';
 export {
   resolveChildFieldDefinition,
   validateCatalog,
@@ -29,10 +30,24 @@ export {
 } from './catalog.js';
 export {
   automaticFieldGroupsFor,
+  componentDataSchema,
   exposedFields,
+  matchesSchemaValue,
   publicFieldsFor,
   resolveComponentContract,
+  selectStructuralChild,
+  structuralCaseValue,
+  structuralChildSchemas,
+  structuralNodeFields,
+  structuralNodeSchema,
+  structuralScopeFields,
 } from './catalog-exposed.js';
+export {
+  type StructuralChildSchema,
+  type StructuralInstance,
+  type StructuralSelection,
+  type StructuralNodeInput,
+} from './structural-nodes.js';
 export type {
   AutomaticFieldGroup,
   ContractCatalog,

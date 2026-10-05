@@ -15,6 +15,7 @@ import {
   type VariantPreset,
 } from '../../schema/document.js';
 import { parseLayout } from '../style/layout.js';
+import { matchesLegacyStructuralValue, matchesSchemaValue } from './json-schema-value.js';
 
 const DATA_PATH = /^[A-Za-z_$][A-Za-z0-9_$-]*(\.[A-Za-z_$][A-Za-z0-9_$-]*)*$/;
 const EXPOSE_PATH = /^[A-Za-z][A-Za-z0-9_-]*(\.[A-Za-z][A-Za-z0-9_-]*)*$/;
@@ -52,7 +53,12 @@ export function assertFieldDefinition(field: FieldDefinition): void {
     throw new DocumentError('schema', `Enum item field "${field.name}" needs options`);
   }
   if ((field.type === 'array' || field.type === 'object') && field.items) {
-    if (field.type === 'array' && field.items.type === 'object' && !field.items.fields?.length) {
+    if (
+      field.type === 'array' &&
+      field.items.type === 'object' &&
+      !field.items.fields?.length &&
+      !field.items.schema
+    ) {
       throw new DocumentError('schema', `Object array field "${field.name}" needs item fields`);
     }
     const nestedNames = new Set<string>();
@@ -276,6 +282,15 @@ function assertVariantUnsetPaths(
 
 export function assertValueMatches(field: FieldDefinition, value: FieldValue): void {
   const label = `Field "${field.name}"`;
+  if (field.schema) {
+    if (
+      !matchesSchemaValue(value, field.schema) &&
+      !matchesLegacyStructuralValue(value, field.schema)
+    ) {
+      throw new DocumentError('schema', `${label} does not match its JSON Schema contract`);
+    }
+    return;
+  }
   switch (field.type) {
     case 'boolean':
       if (typeof value !== 'boolean') {
@@ -298,6 +313,7 @@ export function assertValueMatches(field: FieldDefinition, value: FieldValue): v
       const itemField: FieldDefinition = {
         name: `${field.name}[]`,
         type: field.items.type,
+        ...(field.items.schema ? { schema: field.items.schema } : {}),
         ...(field.items.options ? { options: field.items.options } : {}),
         ...(field.items.fields
           ? { items: { type: field.items.type, fields: field.items.fields } }

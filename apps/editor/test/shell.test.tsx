@@ -6,11 +6,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';
-import { editorStandardCatalog } from './fixtures/example-catalog';
+import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
 import { openSettingsDomain } from './settings-navigation';
 
 const documents = editorStandardCatalog();
@@ -48,7 +47,7 @@ describe('editor shell', () => {
   it('renders shell regions that participate in the height layout', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -67,7 +66,7 @@ describe('editor shell', () => {
   it('follows the store from the panels and undoes with Ctrl+Z', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -231,7 +230,7 @@ describe('editor shell', () => {
   it('zooms from the topbar without changing reset view', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -261,7 +260,7 @@ describe('editor shell', () => {
   it('shows unsaved badges for document and design edits', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -294,7 +293,7 @@ describe('editor shell', () => {
   it('searches the tree, opens design domains on the stage, and creates an asset', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     const view = document.createElement('div');
     host = view;
@@ -344,7 +343,7 @@ describe('editor shell', () => {
   it('keeps native text controls in the form component group', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -365,7 +364,7 @@ describe('editor shell', () => {
   it('shows a primary focus cue and writes a viewport style override from the inspector', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -421,7 +420,7 @@ describe('editor shell', () => {
   it('shows a drill breadcrumb and clears it when opening from the tree', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);

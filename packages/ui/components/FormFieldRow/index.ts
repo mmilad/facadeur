@@ -4,4 +4,4 @@
  */
 
 export { FormFieldRow } from './component';
-export type { FormFieldRowProps, FormFieldRowState } from './types';
+export type { FormFieldRowProps, FormFieldRowData, FormFieldRowState } from './types';

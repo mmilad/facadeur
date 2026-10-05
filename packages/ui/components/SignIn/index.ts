@@ -4,4 +4,4 @@
  */
 
 export { SignIn } from './component';
-export type { SignInProps } from './types';
+export type { SignInProps, SignInData } from './types';

@@ -4,4 +4,4 @@
  */
 
 export { FormToggle } from './component';
-export type { FormToggleProps, FormToggleState } from './types';
+export type { FormToggleProps, FormToggleData, FormToggleState } from './types';

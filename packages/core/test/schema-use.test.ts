@@ -54,9 +54,18 @@ describe('Core schema-use contract resolution', () => {
     const catalog = new Map([[baseDocument.id, baseDocument]]);
     const fields = resolveComponentContract(baseDocument, { documents: catalog, schemaCatalog });
     expect([...fields]).toEqual([
-      ['title', { name: 'title', type: 'text', default: 'Extended title', required: true }],
-      ['disabled', { name: 'disabled', type: 'boolean' }],
-      ['label', { name: 'label', type: 'text', required: true }],
+      [
+        'title',
+        {
+          name: 'title',
+          type: 'text',
+          default: 'Extended title',
+          required: true,
+          schema: { type: 'string', default: 'Extended title' },
+        },
+      ],
+      ['disabled', { name: 'disabled', type: 'boolean', schema: { type: 'boolean' } }],
+      ['label', { name: 'label', type: 'text', required: true, schema: { type: 'string' } }],
     ]);
     expect(publicFieldsFor(baseDocument, { documents: catalog, schemaCatalog })).toEqual(fields);
   });
@@ -78,7 +87,7 @@ describe('Core schema-use contract resolution', () => {
       [legacy.id, legacy],
     ]);
     expect([...publicFieldsFor(withUse, { documents: catalog, schemaCatalog })]).toEqual([
-      ['current', { name: 'current', type: 'boolean' }],
+      ['current', { name: 'current', type: 'boolean', schema: { type: 'boolean' } }],
     ]);
     expect([...publicFieldsFor(legacy, { documents: catalog, schemaCatalog })]).toEqual([
       ['legacy', { name: 'legacy', type: 'number' }],
@@ -111,7 +120,11 @@ describe('Core schema-use contract resolution', () => {
       [child.id, child],
     ]);
     const fields = publicFieldsFor(owner, { documents: docs, schemaCatalog });
-    expect(fields.get('title')).toEqual({ name: 'title', type: 'number' });
+    expect(fields.get('title')).toEqual({
+      name: 'title',
+      type: 'number',
+      schema: { type: 'number' },
+    });
   });
 
   it('rejects missing schema references and composition cycles', () => {
@@ -135,25 +148,26 @@ describe('Core schema-use contract resolution', () => {
     ).toThrow(/composition cycle/);
   });
 
-  it('does not flatten oneOf and anyOf branches into a single field contract', () => {
+  it('preserves oneOf and anyOf branches in field schema metadata', () => {
     const union: DocumentFile = {
       ...baseDocument,
       schemaUse: { direct: { kind: 'schema', schemaId: 'union' } },
     };
-    expect(() =>
-      publicFieldsFor(union, {
-        documents: new Map([[union.id, union]]),
-        schemaCatalog: {
-          schemas: [
-            {
-              id: 'union',
-              name: 'Union',
-              schema: { oneOf: [{ type: 'object', properties: { a: { type: 'string' } } }] },
-            },
-          ],
-        },
-      }),
-    ).toThrow(/oneOf\/anyOf schema contracts cannot be represented/);
+    const fields = publicFieldsFor(union, {
+      documents: new Map([[union.id, union]]),
+      schemaCatalog: {
+        schemas: [
+          {
+            id: 'union',
+            name: 'Union',
+            schema: { oneOf: [{ type: 'object', properties: { a: { type: 'string' } } }] },
+          },
+        ],
+      },
+    });
+    expect(fields.get('value')?.schema).toEqual({
+      oneOf: [{ type: 'object', properties: { a: { type: 'string' } } }],
+    });
   });
 
   it('uses explicit root properties as the contract when a schema also has union validation', () => {

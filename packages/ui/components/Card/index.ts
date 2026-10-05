@@ -4,4 +4,4 @@
  */
 
 export { Card } from './component';
-export type { CardProps } from './types';
+export type { CardProps, CardData } from './types';

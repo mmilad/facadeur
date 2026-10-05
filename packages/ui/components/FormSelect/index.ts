@@ -4,4 +4,4 @@
  */
 
 export { FormSelect } from './component';
-export type { FormSelectProps, FormSelectState } from './types';
+export type { FormSelectProps, FormSelectData, FormSelectState } from './types';

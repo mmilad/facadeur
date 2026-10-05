@@ -6,22 +6,15 @@
 import styles from './style.module.css';
 import type { CardProps } from './types';
 
-export function Card({ eyebrow, title, body, nodeId, className }: CardProps) {
+export function Card({ eyebrow, title, body, className }: CardProps) {
   return (
     <article
       data-component="card"
-      data-node={nodeId}
       className={[styles['root'], className].filter(Boolean).join(' ')}
     >
-      <p data-node="eyebrow" className={styles['eyebrow']}>
-        {eyebrow}
-      </p>
-      <h2 data-node="title" className={styles['title']}>
-        {title}
-      </h2>
-      <p data-node="body" className={styles['body']}>
-        {body}
-      </p>
+      <p className={styles['eyebrow']}>{eyebrow}</p>
+      <h2 className={styles['title']}>{title}</h2>
+      <p className={styles['body']}>{body}</p>
     </article>
   );
 }

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 import { type DocumentFile } from '@facadeur/core';
@@ -298,5 +298,92 @@ describe('nested field inspector', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Reset Label' }));
     expect(session.getSnapshot().document.nodes.first).not.toHaveProperty('childFields');
+  });
+
+  it('offers outer typed item fields as parent scope across a drilled component boundary', async () => {
+    const nestedTarget: DocumentFile = {
+      version: 1,
+      id: 'nested-target',
+      name: 'Nested target',
+      kind: 'component',
+      fields: [{ name: 'innerTitle', type: 'text' }],
+      root: { id: 'root', type: 'text', tag: 'span' },
+    };
+    const inner: DocumentFile = {
+      version: 1,
+      id: 'inner-scope',
+      name: 'Inner scope',
+      kind: 'component',
+      fields: [{ name: 'outerTitle', type: 'text' }],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'inner-repeat',
+            type: 'repeater',
+            children: [
+              {
+                id: 'inner-switch',
+                type: 'switch',
+                children: [
+                  { id: 'nested-placement', type: 'instance', component: 'nested-target' },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    };
+    const owner: DocumentFile = {
+      version: 1,
+      id: 'scope-owner',
+      name: 'Scope owner',
+      kind: 'section',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'outer-repeat',
+            type: 'repeater',
+            children: [
+              {
+                id: 'outer-switch',
+                type: 'switch',
+                children: [{ id: 'inner-placement', type: 'instance', component: 'inner-scope' }],
+              },
+            ],
+          },
+        ],
+      },
+    };
+    const session = createEditorSession({
+      documents: [owner, inner, nestedTarget],
+      design: createProjectTemplateDocument(),
+    });
+    session.openAsset('scope-owner');
+    session.selectNode('inner-placement');
+    session.drillToMaster('inner-scope');
+    session.selectNode('nested-placement');
+    const view = render(<PropertiesPanel session={session} snap={session.getSnapshot()} />);
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Add condition' }));
+    view.rerender(<PropertiesPanel session={session} snap={session.getSnapshot()} />);
+    const paths = within(screen.getByRole('combobox', { name: 'Field' }))
+      .getAllByRole('option')
+      .map((option) => (option as HTMLOptionElement).value);
+    expect(paths).toContain('parent.item.props.outerTitle');
+    expect(paths).toContain('item.props.innerTitle');
+    expect(paths).toContain('props.innerTitle');
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Field' }),
+      'parent.item.props.outerTitle',
+    );
+    expect(session.getSnapshot().document.nodes['nested-placement']?.displayOn).toEqual({
+      path: 'parent.item.props.outerTitle',
+      truthy: true,
+    });
   });
 });

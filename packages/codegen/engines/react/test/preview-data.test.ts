@@ -59,7 +59,7 @@ describe('preview values stay outside runtime code', () => {
       '';
     const types =
       output.ui.find((file) => file.path === 'components/SchemaSample/types.ts')?.contents ?? '';
-    expect(types).toContain('value?: string;');
+    expect(types).toContain('value?: TextFieldSchema;');
     expect(component).toContain("value = 'RUNTIME_DEFAULT'");
     expect(output.stories[0]?.contents).toContain('value: "STORY_SAMPLE"');
     expect(output.stories[0]?.contents).not.toContain('RUNTIME_DEFAULT');

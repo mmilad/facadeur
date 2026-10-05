@@ -1,5 +1,6 @@
 import { Type } from '@sinclair/typebox';
 import { dataPathSchema, idSchema } from './common.js';
+import type { JsonSchema } from './contract.js';
 
 export const fieldTypes = [
   'text',
@@ -57,6 +58,7 @@ export const fieldDefinitionSchema = Type.Recursive((Self) =>
     {
       name: idSchema,
       type: fieldTypeSchema,
+      schema: Type.Optional(Type.Unsafe<JsonSchema>()),
       required: Type.Optional(Type.Boolean()),
       default: Type.Optional(fieldValueSchema),
       options: Type.Optional(Type.Array(Type.String({ minLength: 1 }), { minItems: 1 })),
@@ -64,6 +66,7 @@ export const fieldDefinitionSchema = Type.Recursive((Self) =>
         Type.Object(
           {
             type: fieldTypeSchema,
+            schema: Type.Optional(Type.Unsafe<JsonSchema>()),
             options: Type.Optional(
               Type.Array(Type.String({ minLength: 1 }), { minItems: 1, uniqueItems: true }),
             ),

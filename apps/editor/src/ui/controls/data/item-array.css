@@ -1,0 +1,33 @@
+.eu-item-array__header,
+.eu-item-array__card-header,
+.eu-item-array__nested-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.eu-item-array__header {
+  margin-bottom: 8px;
+}
+
+.eu-item-array__card {
+  padding: 8px;
+  border: 1px solid var(--eu-border);
+  border-radius: var(--eu-radius);
+}
+
+.eu-item-array__card-header {
+  margin-bottom: 8px;
+}
+
+.eu-item-array__choices {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.eu-item-array__nested-value {
+  flex: 1;
+  min-width: 0;
+}

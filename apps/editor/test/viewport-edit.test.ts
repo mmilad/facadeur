@@ -5,12 +5,11 @@ import {
   type TokenDefinition,
   type TokenTree,
 } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { createEditorSession } from '../src/domain/session';
 import { writeStyleDeclaration } from '../src/domain/edits/style-edit';
 import { withTokenBreakpoint } from '../src/domain/edits/token-edit';
 import { viewportEditContext } from '../src/domain/viewport/viewport-edit';
-import { editorStandardCatalog } from './fixtures/example-catalog';
+import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
 
 const documents = editorStandardCatalog();
 
@@ -45,7 +44,7 @@ describe('viewport edit context', () => {
   it('tracks focus without changing the edit target or the base style', () => {
     const editor = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     expect(editor.getSnapshot().focusViewportId).toBeNull();
     expect(editor.getSnapshot().editTarget).toBe('base');

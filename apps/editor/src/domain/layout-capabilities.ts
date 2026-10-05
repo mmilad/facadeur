@@ -90,7 +90,8 @@ export function layoutCapabilities(input: LayoutCapabilitiesInput): LayoutCapabi
     node &&
     (position
       ? position === 'absolute'
-      : effectiveLayout(node.layout, breakpointId, input.breakpoints).position === 'absolute'),
+      : effectiveLayout('layout' in node ? node.layout : undefined, breakpointId, input.breakpoints)
+          .position === 'absolute'),
   );
   const selectedDisplay = selectedNode
     ? displayMode(selectedNode, input.styleDeclarations?.[node?.id ?? selectedNode.id])
@@ -103,6 +104,7 @@ export function layoutCapabilities(input: LayoutCapabilitiesInput): LayoutCapabi
 
   const available = new Set<LayoutField>(['position', 'width', 'height', 'margin']);
   const disabledReasons: Partial<Record<LayoutField, string>> = {};
+  const structural = node?.type === 'repeater' || node?.type === 'switch';
   const selectedIsFrame = selectedNode?.type === 'frame';
   if (selectedIsFrame) available.add('padding');
 
@@ -131,13 +133,15 @@ export function layoutCapabilities(input: LayoutCapabilitiesInput): LayoutCapabi
   }
 
   const property = (propertyName: string): LayoutPropertyCapability =>
-    cssPropertyCapability(
-      propertyName,
-      selectedDisplay,
-      parentDisplay,
-      directFlexItem,
-      directGridItem,
-    );
+    structural
+      ? { supported: false, reason: 'Repeater and Switch have no style or layout.' }
+      : cssPropertyCapability(
+          propertyName,
+          selectedDisplay,
+          parentDisplay,
+          directFlexItem,
+          directGridItem,
+        );
 
   return {
     selectedRole,
@@ -149,8 +153,12 @@ export function layoutCapabilities(input: LayoutCapabilitiesInput): LayoutCapabi
     isAbsolute,
     breakpointId,
     variantName: input.variantName ?? null,
-    availableFields: [...available],
-    disabledReasons,
+    availableFields: structural ? [] : [...available],
+    disabledReasons: structural
+      ? Object.fromEntries(
+          STRUCTURED_FIELDS.map((field) => [field, 'Repeater and Switch have no style or layout.']),
+        )
+      : disabledReasons,
     property,
   };
 }

@@ -41,6 +41,8 @@ function resolveNodeDeclarations(
   breakpoints: readonly StyleBreakpointRef[],
   omitTargetLayer: boolean,
 ): Record<string, string> {
+  const node = document.nodes[nodeId];
+  if (node?.type === 'repeater' || node?.type === 'switch') return {};
   const block = document.styles;
   const owner: StyleChild | undefined =
     nodeId === document.rootId ? block : block?.children?.[nodeId];
@@ -71,15 +73,13 @@ function resolveNodeDeclarations(
       merge(declarations, layer.declarations);
     }
     if (id === null) {
-      const inline =
-        document.nodes[nodeId]?.type === 'instance' ? undefined : document.nodes[nodeId]?.style;
+      const inline = node && 'style' in node ? node.style : undefined;
       merge(declarations, inline);
       mergedInline = true;
     }
   }
   if (!mergedInline) {
-    const inline =
-      document.nodes[nodeId]?.type === 'instance' ? undefined : document.nodes[nodeId]?.style;
+    const inline = node && 'style' in node ? node.style : undefined;
     merge(declarations, inline);
   }
   if (target.state) {

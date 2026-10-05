@@ -41,8 +41,7 @@ export function LayerContextMenu({
   const insideEntries = showInside ? layerInsertEntriesForLayer(snap, item, 'inside') : [];
   const belowEntries = showBelow ? layerInsertEntriesForLayer(snap, item, 'below') : [];
   const hasInsert = insideEntries.length > 0 || belowEntries.length > 0;
-  const insertLabel =
-    snap.document.kind === 'atom' || snap.document.kind === 'page' ? 'Insert' : 'Insert atom';
+  const insertLabel = 'Insert';
 
   useLayoutEffect(() => {
     const menu = menuRef.current;
@@ -148,7 +147,7 @@ function InsertSubmenu({
         >
           {entries.map((entry) => (
             <button
-              key={entry.kind === 'primitive' ? entry.tool : entry.assetId}
+              key={entry.kind === 'instance' ? entry.assetId : entry.tool}
               type="button"
               role="menuitem"
               onClick={() => onPick(entry)}

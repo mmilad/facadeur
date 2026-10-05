@@ -18,11 +18,12 @@ export const STANDARD_ATOM_IDS = [
 
 export type LayerInsertEntry =
   | { kind: 'primitive'; tool: InsertTool; label: string }
+  | { kind: 'structural'; tool: 'repeater' | 'switch'; label: string }
   | { kind: 'instance'; assetId: string; label: string };
 
 /**
  * Atoms are single-element documents — no layer insert. Composed documents insert
- * catalog atoms; pages insert sections or components.
+ * frames and data containers alongside catalog atoms; pages insert sections or components.
  */
 export function layerInsertEntries(snap: EditorSnapshot): LayerInsertEntry[] {
   const kind = snap.document.kind;
@@ -35,7 +36,12 @@ export function layerInsertEntries(snap: EditorSnapshot): LayerInsertEntry[] {
       (asset) => asset.kind === 'section' || asset.kind === 'component',
     );
   }
-  return catalogInstances(snap, (asset) => asset.kind === 'atom');
+  return [
+    { kind: 'primitive', tool: 'frame', label: 'Frame' },
+    { kind: 'structural', tool: 'repeater', label: 'Repeater' },
+    { kind: 'structural', tool: 'switch', label: 'Switch' },
+    ...catalogInstances(snap, (asset) => asset.kind === 'atom'),
+  ];
 }
 
 function catalogInstances(
@@ -58,7 +64,7 @@ function catalogInstances(
     }));
 }
 
-/** Resolve the parent frame that will receive a contextual insert. */
+/** Resolve the parent container that will receive a contextual insert. */
 export function layerInsertTarget(
   snap: EditorSnapshot,
   item: LayerItem,
@@ -67,7 +73,7 @@ export function layerInsertTarget(
   const doc = snap.document;
   if (placement === 'inside') {
     const frame = doc.nodes[item.id];
-    if (frame?.type !== 'frame') return null;
+    if (!frame || !('children' in frame)) return null;
     return { parentId: item.id, index: frame.children.length };
   }
   return layerInsertAt(doc, item.id, 'after');
@@ -81,10 +87,22 @@ export function layerInsertEntriesForLayer(
   const target = layerInsertTarget(snap, item, placement);
   if (!target) return [];
   const doc = snap.document;
-  return layerInsertEntries(snap).filter((entry) => {
+  const parent = doc.nodes[target.parentId];
+  const entries =
+    parent?.type === 'repeater' || parent?.type === 'switch'
+      ? [
+          { kind: 'structural' as const, tool: 'switch' as const, label: 'Switch' },
+          ...catalogInstances(
+            snap,
+            (asset) => asset.kind === 'component' || asset.kind === 'section',
+          ),
+        ]
+      : layerInsertEntries(snap);
+  return entries.filter((entry) => {
     if (entry.kind === 'primitive') {
       return placementAllowed(doc, target.parentId, entry.tool);
     }
+    if (entry.kind === 'structural') return placementAllowed(doc, target.parentId, entry.tool);
     const assetKind = snap.catalog.find((asset) => asset.id === entry.assetId)?.kind;
     return assetKind ? placementAllowed(doc, target.parentId, 'instance', assetKind) : false;
   });

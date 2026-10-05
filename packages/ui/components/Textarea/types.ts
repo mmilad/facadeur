@@ -3,16 +3,17 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
+import type { ComponentProps } from '../../contracts';
+
+import type { TextareaSchema } from '../../types/TextareaSchema';
+
 export type TextareaResize = 'vertical' | 'none';
 
-export interface TextareaProps {
-  label?: string;
-  value?: string;
-  placeholder?: string;
-  name?: string;
-  rows?: number;
+export type TextareaData = Pick<
+  TextareaSchema,
+  'label' | 'value' | 'placeholder' | 'name' | 'rows'
+>;
+
+export interface TextareaProps extends ComponentProps, TextareaData {
   resize?: TextareaResize;
-  /** Instance id. Sets `data-node` so a parent style rule can address this element. */
-  nodeId?: string;
-  className?: string;
 }

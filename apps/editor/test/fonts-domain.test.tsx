@@ -3,12 +3,11 @@
  */
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { fireEvent } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';
-import { editorStandardCatalog } from './fixtures/example-catalog';
+import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
 import { openSettingsDomain } from './settings-navigation';
 
 const documents = editorStandardCatalog();
@@ -47,7 +46,7 @@ describe('fonts domain panel', () => {
   it('adds a font with a valid id and default stack', async () => {
     const session = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     await openFonts(session);
 
@@ -76,7 +75,7 @@ describe('fonts domain panel', () => {
   it('blocks removing a font that typography tokens still reference', async () => {
     const session = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     await openFonts(session);
 
@@ -92,7 +91,7 @@ describe('fonts domain panel', () => {
   it('rejects fallbacks that do not end on a generic family', async () => {
     const session = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     await openFonts(session);
 
@@ -113,7 +112,7 @@ describe('fonts domain panel', () => {
   it('searches resource metadata and expands the compact detail row', async () => {
     const session = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     await openFonts(session);
 

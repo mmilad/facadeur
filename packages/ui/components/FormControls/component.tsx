@@ -24,18 +24,15 @@ export function FormControls({
   rows,
   label,
   value,
-  nodeId,
   className,
 }: FormControlsProps) {
   return (
     <div
       data-component="form-controls"
-      data-node={nodeId}
       className={[styles['root'], className].filter(Boolean).join(' ')}
     >
       <FormControlsSection
-        nodeId="form-controls-section"
-        className={styles['form-controls-section']}
+        className="FormControls__form-controls-section"
         formFields={formFields}
         type={type}
         hint={hint}

@@ -1,4 +1,4 @@
-export const nodeTypes = ['frame', 'text', 'image', 'instance'] as const;
+export const nodeTypes = ['frame', 'text', 'image', 'instance', 'repeater', 'switch'] as const;
 export type NodeType = (typeof nodeTypes)[number];
 
 /** Default document kinds. The list is data: pass a different rule map to replace it. */
@@ -28,13 +28,13 @@ export const defaultNestingRules: Record<DefaultKind, NestingRule> = {
     instanceKinds: [],
   },
   component: {
-    rootNodeTypes: ['frame', 'text', 'image'],
-    nodeTypes: ['frame', 'text', 'image', 'instance'],
+    rootNodeTypes: ['frame', 'text', 'image', 'repeater', 'switch'],
+    nodeTypes: ['frame', 'text', 'image', 'instance', 'repeater', 'switch'],
     instanceKinds: ['atom', 'component'],
   },
   section: {
-    rootNodeTypes: ['frame', 'text', 'image'],
-    nodeTypes: ['frame', 'text', 'image', 'instance'],
+    rootNodeTypes: ['frame', 'text', 'image', 'repeater', 'switch'],
+    nodeTypes: ['frame', 'text', 'image', 'instance', 'repeater', 'switch'],
     instanceKinds: ['atom', 'component'],
   },
   page: {

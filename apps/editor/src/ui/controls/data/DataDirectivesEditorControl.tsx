@@ -5,7 +5,9 @@ import {
   type FlatDocument,
   type FlatNode,
   type Repeat,
+  type ContractResolverInput,
 } from '@facadeur/core';
+import { structuralScopeFields } from '@facadeur/core';
 import { Field, Section, Select, Stack, TextInput } from '../../form/index.js';
 import '../../form/form.css';
 import { DisplayConditionEditor } from './DisplayConditionEditor.js';
@@ -27,17 +29,20 @@ export function DataDirectivesEditorControl({
   onChangeDisplayOn,
   onChangeRepeat,
   onInvalid,
+  conditionTitle = 'Display condition',
 }: {
-  node: Exclude<FlatNode, { type: 'instance' }>;
+  node: Extract<FlatNode, { type: 'frame' | 'text' | 'image' }>;
   fields: FieldDefinition[];
   onChangeDisplayOn: (value: DisplayOn | null) => void;
   onChangeRepeat: (value: Repeat | null) => void;
   onInvalid?: (message: string) => void;
+  conditionTitle?: string;
 }) {
   const paths = fieldPathOptions(fields);
   return (
     <Stack gap={12}>
       <DisplayConditionEditor
+        title={conditionTitle}
         condition={node.displayOn}
         paths={paths}
         onChange={onChangeDisplayOn}
@@ -60,8 +65,12 @@ export function dataFieldsForNode(
   document: FlatDocument,
   nodeId: string,
   documentFields: readonly FieldDefinition[] = document.fields,
+  includeSelf = false,
+  context?: ContractResolverInput,
+  inheritedFields?: readonly FieldDefinition[],
 ): FieldDefinition[] {
   const ancestors: FlatNode[] = [];
+  if (includeSelf && document.nodes[nodeId]) ancestors.push(document.nodes[nodeId]!);
   let currentId = nodeId;
   while (true) {
     const parent = findParent(document, currentId);
@@ -70,7 +79,10 @@ export function dataFieldsForNode(
     currentId = parent.id;
   }
 
-  const fields = new Map(documentFields.map((field) => [field.name, field]));
+  const scopedFields = context
+    ? structuralScopeFields(document, nodeId, context, inheritedFields)
+    : documentFields;
+  const fields = new Map(scopedFields.map((field) => [field.name, field]));
   for (const ancestor of ancestors) {
     if (ancestor.type !== 'frame' || !ancestor.repeat) continue;
     const source = findField(fieldPathOptions([...fields.values()]), ancestor.repeat.path);

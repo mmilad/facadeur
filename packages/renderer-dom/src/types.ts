@@ -4,7 +4,9 @@ import type {
   DocumentStore,
   FieldValue,
   NestedNode,
+  SchemaCatalog,
 } from '@facadeur/core';
+import type { RepeatScope } from './repeat-scope';
 
 export interface RenderedNode {
   id: string;
@@ -21,9 +23,13 @@ export interface RenderedNode {
 
 export interface RenderContext {
   catalog: Map<string, DocumentFile>;
+  /** Named schemas used to resolve structural component alternatives. */
+  schemaCatalog?: SchemaCatalog;
   records: Map<string, RenderedNode>;
   path: string | null;
   scope: Record<string, FieldValue>;
+  /** Innermost enclosing repeated item, carried across component boundaries. */
+  repeatScope?: RepeatScope;
   /** Sparse field overrides owned by an enclosing instance. */
   childFields?: ChildFieldOverrides;
   /** Path to the current instance within `childFields`; empty means direct children. */

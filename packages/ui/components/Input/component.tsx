@@ -9,27 +9,12 @@ import styles from './style.module.css';
 import type { InputProps } from './types';
 import { FormInput } from '../FormInput';
 
-export function Input({
-  label,
-  value,
-  placeholder,
-  name,
-  onCommit,
-  nodeId,
-  className,
-}: InputProps) {
+export function Input({ label, value, placeholder, name, onCommit, className }: InputProps) {
   return (
-    <label
-      data-component="input"
-      data-node={nodeId}
-      className={[styles['root'], className].filter(Boolean).join(' ')}
-    >
-      <span data-node="label" className={styles['label']}>
-        {label}
-      </span>
+    <label data-component="input" className={[styles['root'], className].filter(Boolean).join(' ')}>
+      <span className={styles['label']}>{label}</span>
       <FormInput
-        nodeId="control"
-        className={styles['control']}
+        className="Input__control"
         value={value}
         placeholder={placeholder}
         name={name}

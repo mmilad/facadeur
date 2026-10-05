@@ -38,12 +38,12 @@
     border-radius: var(--input-radius);
     box-sizing: border-box;
     color: var(--textarea-color-text, var(--color-text-primary));
+    display: block;
     font-family: var(--type-body--font-family);
     font-size: var(--type-body--font-size);
     font-weight: var(--type-body--font-weight);
     line-height: var(--type-body--line-height);
     letter-spacing: 0;
-    display: block;
     padding-block: var(--input-padding-y);
     padding-inline: var(--input-padding-x);
     resize: vertical;

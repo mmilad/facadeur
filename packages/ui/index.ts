@@ -5,6 +5,8 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference -- load ambient CSS module types for consumers
 /// <reference path="./css-modules.d.ts" />
 
+export type { ComponentProps, DataContext, LabelProps, ValueProps, CommitProps } from './contracts';
+export type * from './types';
 export * from './components/Button';
 export * from './components/Card';
 export * from './components/FormControls';
@@ -17,6 +19,7 @@ export * from './components/FormTextInput';
 export * from './components/FormToggle';
 export * from './components/Input';
 export * from './components/Media';
+export * from './components/NewSection';
 export * from './components/ProductCard';
 export * from './components/SignIn';
 export * from './components/Specimen';

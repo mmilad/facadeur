@@ -3,9 +3,11 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
+import type { ComponentProps } from '../../contracts';
+
 export type FormTextInputState = 'default' | 'focused' | 'disabled' | 'invalid';
 
-export interface FormTextInputProps {
+export interface FormTextInputData {
   label?: string;
   hint?: string;
   icon?: string;
@@ -14,9 +16,9 @@ export interface FormTextInputProps {
   placeholder?: string;
   name?: string;
   disabled?: boolean;
+}
+
+export interface FormTextInputProps extends ComponentProps, FormTextInputData {
   state?: FormTextInputState;
   onCommit?: (payload: { value: string }) => void;
-  /** Instance id. Sets `data-node` so a parent style rule can address this element. */
-  nodeId?: string;
-  className?: string;
 }

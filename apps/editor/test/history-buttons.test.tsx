@@ -5,12 +5,11 @@ import '@testing-library/jest-dom/vitest';
 import { act } from 'react';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createEditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';
 import { HistoryButtons } from '../src/ui/shell/HistoryButtons';
-import { editorStandardCatalog } from './fixtures/example-catalog';
+import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
 
 const documents = editorStandardCatalog();
 
@@ -60,7 +59,7 @@ describe('undo and redo affordances', () => {
   it('follows session history on the top bar', () => {
     const session = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     render(<App session={session} />);
 

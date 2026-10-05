@@ -49,6 +49,10 @@
     "components/Media/index.ts",
     "components/Media/style.module.css",
     "components/Media/types.ts",
+    "components/NewSection/component.tsx",
+    "components/NewSection/index.ts",
+    "components/NewSection/style.module.css",
+    "components/NewSection/types.ts",
     "components/ProductCard/component.tsx",
     "components/ProductCard/index.ts",
     "components/ProductCard/style.module.css",
@@ -69,8 +73,16 @@
     "components/Textarea/index.ts",
     "components/Textarea/style.module.css",
     "components/Textarea/types.ts",
+    "contracts.ts",
     "css-modules.d.ts",
     "index.ts",
-    "styles/tokens.css"
+    "styles/tokens.css",
+    "types/CardSchema.ts",
+    "types/ImageSchema.ts",
+    "types/index.ts",
+    "types/InputSchema.ts",
+    "types/MediaSchema.ts",
+    "types/TextareaSchema.ts",
+    "types/VideoSchema.ts"
   ]
 }

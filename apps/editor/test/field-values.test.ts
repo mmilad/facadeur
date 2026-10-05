@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { FieldDefinition, JsonSchema } from '@facadeur/core';
 import { fieldDefinitionFromDraft, replaceFieldDefault } from '../src/domain/definitions';
 import { parseFieldValue } from '../src/domain/field-values';
 import { parsePreviewFieldValue } from '../src/domain/preview-data';
@@ -70,6 +71,47 @@ describe('editor field values', () => {
       },
     };
     expect(parsePreviewFieldValue(withDefault, '[{"kind":"small"}]')).toEqual([{ kind: 'small' }]);
+  });
+
+  it('preserves mixed union schemas for array items and object values', () => {
+    const itemSchema: JsonSchema = {
+      anyOf: [
+        { type: 'string' },
+        {
+          type: 'object',
+          properties: { label: { type: 'string' } },
+          required: ['label'],
+          additionalProperties: false,
+        },
+      ],
+    };
+    const items = {
+      name: 'items',
+      type: 'array' as const,
+      items: { type: 'object' as const, schema: itemSchema },
+    };
+    expect(parsePreviewFieldValue(items, '["text",{"label":"card"}]')).toEqual([
+      'text',
+      { label: 'card' },
+    ]);
+    expect(() => parsePreviewFieldValue(items, '["text",{"label":2}]')).toThrow(
+      /JSON Schema contract/,
+    );
+    expect(() => parsePreviewFieldValue(items, '["text",2]')).toThrow(/JSON Schema contract/);
+
+    const props: FieldDefinition = {
+      name: 'props',
+      type: 'object' as const,
+      schema: {
+        anyOf: [
+          { type: 'object', properties: { title: { type: 'string' } }, required: ['title'] },
+          { type: 'object', properties: { count: { type: 'number' } }, required: ['count'] },
+        ],
+      },
+    };
+    expect(parsePreviewFieldValue(props, '{"title":"hello"}')).toEqual({ title: 'hello' });
+    expect(parsePreviewFieldValue(props, '{"count":2}')).toEqual({ count: 2 });
+    expect(() => parsePreviewFieldValue(props, '{"count":"two"}')).toThrow(/JSON Schema contract/);
   });
 
   it('rejects invalid JSON and invalid boolean input', () => {

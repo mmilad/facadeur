@@ -6,11 +6,10 @@ import { act, useSyncExternalStore } from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { DocumentFile } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { LayoutPanel } from '../src/ui/sidebar/properties/layout/LayoutPanel';
-import { expandExampleCatalog } from './fixtures/example-catalog';
+import { editorStandardDesign, expandExampleCatalog } from './fixtures/example-catalog';
 
 const layoutDocument: DocumentFile = {
   version: 1,
@@ -76,7 +75,7 @@ function LayoutHarness({ session }: { session: EditorSession }) {
 function setup(document: DocumentFile = layoutDocument) {
   const session = createEditorSession({
     documents: expandExampleCatalog([document]),
-    design: createProjectTemplateDocument(),
+    design: editorStandardDesign(),
   });
   session.openAsset('layout-context', 'root');
   session.selectNode('root');

@@ -24,7 +24,26 @@ export function dataExpression(
   const [head, ...tail] = path.split('.');
   if (!head) throw new CodegenError(`Data path "${path}" is empty`);
   const scoped = dataScope.get(head);
-  if (scoped) return `${scoped}${propertyAccess(tail)}`;
+  if (scoped) {
+    if (/\bcontext\b/.test(scoped)) usedProps.add('$context');
+    if (head === 'props' && dataScope.has('$effectiveProps')) {
+      if (tail.length === 0) {
+        const fields = [...owner.fields.values()];
+        fields.forEach((field) => usedProps.add(field.name));
+        return `{ ${fields.map((field) => `${quote(field.source)}: ${field.name}`).join(', ')} }`;
+      }
+      const [fieldName, ...nested] = tail;
+      const field = fieldName ? owner.fields.get(fieldName) : undefined;
+      if (!field) {
+        throw new CodegenError(
+          `Data path "${path}" needs a field or repeat context on "${owner.document.id}"`,
+        );
+      }
+      usedProps.add(field.name);
+      return `${field.name}${propertyAccess(nested)}`;
+    }
+    return `${scoped}${propertyAccess(tail)}`;
+  }
   const prop = owner.fields.get(head);
   if (!prop) {
     throw new CodegenError(
@@ -49,6 +68,22 @@ export function repeatLocalName(
     ...dataScope.values(),
   ]);
   return propName(alias, used);
+}
+
+export function repeatedDataScope(
+  dataScope: ReadonlyMap<string, string>,
+  alias: string,
+  item: string,
+  index: string,
+): Map<string, string> {
+  const parentScope = dataScope.get('$repeatScope') ?? 'undefined';
+  const parent = `(${parentScope} as any)`;
+  return new Map(dataScope)
+    .set(alias, item)
+    .set('item', item)
+    .set('index', index)
+    .set('parent', parent)
+    .set('$repeatScope', `{ item: ${item}, index: ${index}, parent: ${parentScope} }`);
 }
 
 export function variantRuleExpression(

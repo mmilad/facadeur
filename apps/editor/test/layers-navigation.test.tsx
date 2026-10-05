@@ -126,7 +126,7 @@ it('inserts an atom instance from the insert submenu', async () => {
     keys: '[MouseRight>]',
     target: layers.getByRole('button', { name: 'frame root' }),
   });
-  const insertInside = screen.getByRole('menuitem', { name: 'Insert atom inside' });
+  const insertInside = screen.getByRole('menuitem', { name: 'Insert inside' });
   await user.hover(insertInside);
   await user.click(insertInside);
   fireEvent.click(await screen.findByRole('menuitem', { name: 'Button' }));

@@ -62,6 +62,7 @@ export interface InsertNode {
   fields?: Record<string, FieldValue>;
   childFields?: Record<string, Record<string, FieldValue>>;
   forwardFields?: boolean;
+  switchCase?: string;
   variants?: Record<string, string>;
   variantRules?: VariantRule[];
   children?: InsertNode[];
@@ -80,6 +81,7 @@ export type NodeProp =
   | 'bindings'
   | 'eventBindings'
   | 'forwardFields'
+  | 'switchCase'
   | 'fieldBindings'
   | 'variantRules'
   | 'repeat'

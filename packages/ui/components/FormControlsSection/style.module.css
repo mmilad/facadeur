@@ -314,107 +314,86 @@
 }
 
 @layer facadeur.instances {
-  .root .native-input {
+  .root :global(.FormControlsSection__native-input) {
     width: 250px;
     flex: 0 0 auto;
     height: fit-content;
   }
 
-  .root .native-textarea {
+  .root :global(.FormControlsSection__native-textarea) {
     width: 250px;
     flex: 0 0 auto;
     height: fit-content;
   }
 
-  .root .input-default {
+  .root :global(.FormControlsSection__input-default) {
     width: 250px;
     flex: 0 0 auto;
     height: fit-content;
   }
 
-  .root .input-focused {
+  .root :global(.FormControlsSection__input-focused) {
     width: 250px;
     flex: 0 0 auto;
     height: fit-content;
   }
 
-  .root .input-invalid {
+  .root :global(.FormControlsSection__input-invalid) {
     width: 250px;
     flex: 0 0 auto;
     height: fit-content;
   }
 
-  .root .input-disabled {
+  .root :global(.FormControlsSection__input-disabled) {
     width: 250px;
     flex: 0 0 auto;
     height: fit-content;
   }
 
-  .root .select-default {
+  .root :global(.FormControlsSection__select-default) {
     width: 250px;
     flex: 0 0 auto;
     height: fit-content;
   }
 
-  .root .select-focused {
+  .root :global(.FormControlsSection__select-focused) {
     width: 250px;
     flex: 0 0 auto;
     height: fit-content;
   }
 
-  .root .select-disabled {
+  .root :global(.FormControlsSection__select-disabled) {
     width: 250px;
     flex: 0 0 auto;
     height: fit-content;
   }
 
-  .root .alignment {
+  .root :global(.FormControlsSection__alignment) {
     width: 270px;
     flex: 0 0 auto;
     height: fit-content;
   }
 
-  .root .toggle-on {
+  .root :global(.FormControlsSection__toggle-on) {
     width: 180px;
     flex: 0 0 auto;
     height: fit-content;
   }
 
-  .root .toggle-off {
+  .root :global(.FormControlsSection__toggle-off) {
     width: 180px;
     flex: 0 0 auto;
     height: fit-content;
   }
 
-  .root .toggle-disabled {
+  .root :global(.FormControlsSection__toggle-disabled) {
     width: 180px;
     flex: 0 0 auto;
     height: fit-content;
   }
 
-  .root .add-field {
+  .root :global(.FormControlsSection__add-field) {
     width: fit-content;
     height: fit-content;
   }
-}
-
-.field-label {
-}
-
-.field-tone {
-}
-
-.field-disabled {
-}
-
-.data-input {
-}
-
-.data-textarea {
-}
-
-.data-select {
-}
-
-.data-toggle {
 }

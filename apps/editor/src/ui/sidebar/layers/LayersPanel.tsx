@@ -185,7 +185,12 @@ export function LayersPanel({ session, snap }: { session: EditorSession; snap: E
 function zoneFor(event: DragEvent, type: string): DropZone {
   const rect = event.currentTarget.getBoundingClientRect();
   const ratio = rect.height > 0 ? (event.clientY - rect.top) / rect.height : 0.5;
-  if (type === 'frame' && ratio > 0.28 && ratio < 0.72) return 'inside';
+  if (
+    (type === 'frame' || type === 'repeater' || type === 'switch') &&
+    ratio > 0.28 &&
+    ratio < 0.72
+  )
+    return 'inside';
   return ratio < 0.5 ? 'before' : 'after';
 }
 

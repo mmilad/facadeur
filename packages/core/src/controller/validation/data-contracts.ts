@@ -3,13 +3,19 @@ import { type FlatDocument, toNested, type FlatNode } from '../../document/flat.
 import { type FieldDefinition } from '../../schema/document.js';
 import { variantPresets } from '../variants/resolve.js';
 import { assertValueMatches } from './assertions.js';
-import { publicFieldsFor } from './catalog-exposed.js';
+import {
+  componentDataSchema,
+  publicFieldsFor,
+  structuralChildSchemas,
+  structuralScopeFields,
+} from './catalog-exposed.js';
 import type { SchemaResolverContext } from './types.js';
 import { localContractFieldsFor } from './schema-use.js';
 
 interface DataScope {
   fields: ReadonlyMap<string, FieldDefinition>;
   aliases: ReadonlyMap<string, FieldDefinition>;
+  ambientAliases: ReadonlyMap<string, FieldDefinition>;
 }
 
 export function validateDataContracts(doc: FlatDocument, context: SchemaResolverContext) {
@@ -17,6 +23,7 @@ export function validateDataContracts(doc: FlatDocument, context: SchemaResolver
   for (const [name, definition] of publicFieldsFor(doc, context)) {
     if (!fields.has(name)) fields.set(name, definition);
   }
+  const ambientAliases = ambientStructuralAliases(doc, context);
   const visit = (id: string, scope: DataScope) => {
     const node = doc.nodes[id];
     if (!node) return;
@@ -52,9 +59,41 @@ export function validateDataContracts(doc: FlatDocument, context: SchemaResolver
       for (const [field, path] of Object.entries(node.fieldBindings ?? {})) {
         const source = assertDataPath(path, scope, `field binding "${field}" on node "${node.id}"`);
         const destination = targetFields?.get(field);
-        if (destination) {
+        if (destination && source.schema?.['x-facadeur-ambient-parent'] !== true) {
           assertFieldBinding(source, destination, node, field, path);
         }
+      }
+      return;
+    }
+
+    if (node.type === 'repeater') {
+      const source = assertDataPath('items', scope, `repeater on node "${node.id}"`);
+      if (source.type !== 'array') {
+        throw new DocumentError('schema', `Repeater on node "${node.id}" needs array items`);
+      }
+      const inherited = [...scope.aliases.values()];
+      for (const candidate of structuralChildSchemas(doc, node.id, context)) {
+        visit(
+          candidate.node.id,
+          scopeForFields(
+            structuralScopeFields(doc, candidate.node.id, context, inherited),
+            scope.ambientAliases,
+          ),
+        );
+      }
+      return;
+    }
+
+    if (node.type === 'switch') {
+      const inherited = [...scope.aliases.values()];
+      for (const candidate of structuralChildSchemas(doc, node.id, context)) {
+        visit(
+          candidate.node.id,
+          scopeForFields(
+            structuralScopeFields(doc, candidate.node.id, context, inherited),
+            scope.ambientAliases,
+          ),
+        );
       }
       return;
     }
@@ -99,12 +138,37 @@ export function validateDataContracts(doc: FlatDocument, context: SchemaResolver
       childScope = {
         fields: scope.fields,
         aliases: new Map(scope.aliases).set(repeatAlias, item ?? scalarItemField(repeatAlias)),
+        ambientAliases: scope.ambientAliases,
       };
     }
     for (const childId of node.children) visit(childId, childScope);
   };
 
-  visit(doc.rootId, { fields, aliases: new Map() });
+  visit(doc.rootId, { fields, aliases: new Map(), ambientAliases });
+}
+
+function ambientStructuralAliases(doc: FlatDocument, context: SchemaResolverContext) {
+  const payload = componentDataSchema(doc.id, context) ?? { type: 'object' as const };
+  const item: FieldDefinition = {
+    name: 'item',
+    type: 'object',
+    schema: {
+      type: 'object',
+      properties: {
+        type: { type: 'string' },
+        props: payload,
+      },
+      required: ['type', 'props'],
+      additionalProperties: false,
+    },
+  };
+  const props: FieldDefinition = { name: 'props', type: 'object', schema: payload };
+  const index: FieldDefinition = { name: 'index', type: 'number', schema: { type: 'integer' } };
+  return new Map([
+    ['item', item],
+    ['props', props],
+    ['index', index],
+  ]);
 }
 
 function assertFieldBinding(
@@ -186,6 +250,7 @@ function fieldFromItems(
   return {
     name,
     type: items.type,
+    ...(items.schema ? { schema: items.schema } : {}),
     ...(items.options ? { options: items.options } : {}),
     ...(items.fields ? { items: { type: items.type, fields: items.fields } } : {}),
   };
@@ -238,20 +303,40 @@ function fieldValueKind(type: FieldDefinition['type']) {
 function assertDataPath(path: string, scope: DataScope, context: string) {
   const field = resolveDataPath(path, scope);
   if (!field) {
+    if (
+      /^parent(?:\.parent)*\.[A-Za-z_$][A-Za-z0-9_$-]*(?:\.[A-Za-z_$][A-Za-z0-9_$-]*)*$/.test(path)
+    ) {
+      return {
+        name: path.split('.').at(-1)!,
+        type: 'text',
+        schema: { 'x-facadeur-ambient-parent': true },
+      } satisfies FieldDefinition;
+    }
     throw new DocumentError('unknown-field', `Data path "${path}" in ${context} is not defined`);
   }
   return field;
 }
 
+function scopeForFields(
+  fields: readonly FieldDefinition[],
+  ambientAliases: ReadonlyMap<string, FieldDefinition> = new Map(),
+): DataScope {
+  return {
+    fields: new Map(fields.map((field) => [field.name, field])),
+    aliases: new Map(),
+    ambientAliases,
+  };
+}
+
 function resolveDataPath(path: string, scope: DataScope) {
   const [head, ...parts] = path.split('.');
   if (!head) return undefined;
-  let current = scope.aliases.has(head) ? scope.aliases.get(head) : scope.fields.get(head);
+  let current = scope.aliases.get(head) ?? scope.fields.get(head) ?? scope.ambientAliases.get(head);
   if (!current) return undefined;
   for (const part of parts) {
-    const nextField: FieldDefinition | undefined = current.items?.fields?.find(
-      (field) => field.name === part,
-    );
+    const nextField: FieldDefinition | undefined =
+      current.items?.fields?.find((field) => field.name === part) ??
+      (current.schema ? fieldFromSchema(current.schema, part) : undefined);
     if (!nextField) return undefined;
     current = nextField;
   }
@@ -264,6 +349,7 @@ function itemField(field: FieldDefinition, name: string): FieldDefinition | unde
   return {
     name,
     type: items.type,
+    ...(items.schema ? { schema: items.schema } : {}),
     required: true,
     ...(items.options ? { options: items.options } : {}),
     ...(items.fields ? { items: { type: items.type, fields: items.fields } } : {}),
@@ -278,5 +364,32 @@ function scopeForObject(field: FieldDefinition): DataScope {
   return {
     fields: new Map(field.items?.fields?.map((item) => [item.name, item]) ?? []),
     aliases: new Map(),
+    ambientAliases: new Map(),
   };
+}
+
+function fieldFromSchema(schema: NonNullable<FieldDefinition['schema']>, name: string) {
+  const alternatives = schema.oneOf ?? schema.anyOf ?? schema.allOf ?? [schema];
+  const branches = alternatives.flatMap((branch) => {
+    const property = branch.properties?.[name];
+    return property ? [{ branch, property }] : [];
+  });
+  if (!branches.length) return undefined;
+  const schemas = branches.map(({ property }) => property);
+  const type = schemas.every((entry) => entry.type === 'number' || entry.type === 'integer')
+    ? 'number'
+    : schemas.every((entry) => entry.type === 'boolean')
+      ? 'boolean'
+      : schemas.every((entry) => entry.type === 'array')
+        ? 'array'
+        : schemas.every((entry) => entry.type === 'object' || entry.properties)
+          ? 'object'
+          : 'text';
+  const required = branches.every(({ branch }) => branch.required?.includes(name) === true);
+  return {
+    name,
+    type,
+    ...(required ? { required: true } : {}),
+    schema: schemas.length === 1 ? schemas[0] : { anyOf: schemas },
+  } satisfies FieldDefinition;
 }

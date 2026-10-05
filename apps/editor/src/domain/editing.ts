@@ -236,20 +236,20 @@ export function dropParentId(
   accepts?: (parentId: string) => boolean,
 ): string | null {
   const root = doc.nodes[doc.rootId];
-  if (!chain.length) return root?.type === 'frame' ? doc.rootId : null;
+  if (!chain.length) return root && 'children' in root ? doc.rootId : null;
   const deepest = chain[chain.length - 1];
   if (!deepest) return null;
   const node = doc.nodes[deepest];
   let candidate: string | null;
-  if (node?.type === 'frame' && intoDeepestFrame) candidate = deepest;
-  else if (node?.type === 'frame') candidate = findParent(doc, deepest)?.id ?? null;
+  if (node && 'children' in node && intoDeepestFrame) candidate = deepest;
+  else if (node && 'children' in node) candidate = findParent(doc, deepest)?.id ?? null;
   else candidate = findParent(doc, deepest)?.id ?? null;
-  if (!candidate && root?.type === 'frame') candidate = doc.rootId;
+  if (!candidate && root && 'children' in root) candidate = doc.rootId;
   while (candidate) {
     const frame = doc.nodes[candidate];
     const insideDrag = draggedId !== null && isInsideSubtree(doc, draggedId, candidate);
     const allowed = !accepts || accepts(candidate);
-    if (!insideDrag && frame?.type === 'frame' && allowed) return candidate;
+    if (!insideDrag && frame && 'children' in frame && allowed) return candidate;
     candidate = findParent(doc, candidate)?.id ?? null;
   }
   return null;
@@ -315,7 +315,7 @@ export function layerDropTarget(
   const spot = layerInsertAt(doc, targetId, zone);
   if (!spot) return null;
   const parent = doc.nodes[spot.parentId];
-  if (parent?.type !== 'frame') return null;
+  if (!parent || !('children' in parent)) return null;
   return {
     parentId: spot.parentId,
     index: indexAfterRemoval(parent.children, draggedId, spot.index),
@@ -330,7 +330,7 @@ export function layerInsertAt(
 ): { parentId: string; index: number } | null {
   if (zone === 'inside') {
     const target = doc.nodes[targetId];
-    if (target?.type !== 'frame') return null;
+    if (!target || !('children' in target)) return null;
     return { parentId: targetId, index: target.children.length };
   }
   const parent = findParent(doc, targetId);
@@ -486,6 +486,12 @@ export function placementAllowed(
   const rule = ruleFor(doc.kind);
   if (!rule) return false;
   const parent = doc.nodes[parentId];
+  if (parent?.type === 'repeater' || parent?.type === 'switch') {
+    if (nodeType === 'switch') return parent.type === 'repeater' && parent.children.length === 0;
+    if (nodeType !== 'instance') return false;
+    if (parent.children.some((id) => doc.nodes[id]?.type === 'switch')) return false;
+    return instanceKind === 'component' || instanceKind === 'section';
+  }
   if (parent?.type !== 'frame') return false;
   if (!rule.nodeTypes.includes(nodeType)) return false;
   if (nodeType !== 'instance') return true;

@@ -1,7 +1,9 @@
 import type { DocumentFile } from '@facadeur/core';
+import type { SchemaCatalog } from '@facadeur/core';
 import { toNested } from '@facadeur/core';
 import { paintCanvas, repaintComponent } from './paint';
 import { isStyleOnly, resolveDocumentFields } from './resolve';
+import { mountedScope } from './mounted-scope';
 import type { DocumentStyles, DomRenderer, RenderContext, RenderedNode } from './types';
 
 export function createDomRenderer(options: {
@@ -11,6 +13,8 @@ export function createDomRenderer(options: {
   /** Resolve the mounted document for a preview-only editor context. */
   resolveMountedDocument?: (document: DocumentFile) => DocumentFile;
   prepareInstanceDocument?: (document: DocumentFile, variant: string | undefined) => DocumentFile;
+  /** Named schemas supplied separately from the renderable document catalog. */
+  schemaCatalog?: SchemaCatalog;
   /** When set, the root node is painted. Pages omit this: the root frame is the canvas. */
   paintRoot?: boolean;
 }): DomRenderer {
@@ -27,9 +31,12 @@ export function createDomRenderer(options: {
     const canvas = mounted ? mountedDocument(mounted) : undefined;
     return {
       catalog,
+      ...(options.schemaCatalog ? { schemaCatalog: options.schemaCatalog } : {}),
       records,
       path: null,
-      scope: canvas ? resolveDocumentFields(canvas, catalog) : {},
+      scope: canvas
+        ? mountedScope(canvas, resolveDocumentFields(canvas, catalog, options.schemaCatalog))
+        : {},
       ownerId: null,
       depth: 0,
       canvasId: mountedId,
@@ -59,7 +66,10 @@ export function createDomRenderer(options: {
     if (!source) return;
     const document = mountedDocument(source);
     const ctx = context();
-    ctx.scope = resolveDocumentFields(document, catalog);
+    ctx.scope = mountedScope(
+      document,
+      resolveDocumentFields(document, catalog, options.schemaCatalog),
+    );
     ctx.styleDocumentId = document.id;
     paintCanvas(parent, document, ctx, paintRoot);
   }

@@ -6,25 +6,14 @@
 import styles from './style.module.css';
 import type { MediaProps } from './types';
 
-export function Media({ kind = 'image', src, alt, poster, ratio, nodeId, className }: MediaProps) {
+export function Media({ kind = 'image', src, alt, poster, ratio, className }: MediaProps) {
   return (
-    <div
-      data-component="media"
-      data-node={nodeId}
-      className={[styles['root'], className].filter(Boolean).join(' ')}
-    >
+    <div data-component="media" className={[styles['root'], className].filter(Boolean).join(' ')}>
       {kind === 'image' && (
-        <img
-          data-node="image"
-          src={src}
-          alt={alt}
-          className={styles['image']}
-          style={{ aspectRatio: ratio }}
-        />
+        <img src={src} alt={alt} className={styles['image']} style={{ aspectRatio: ratio }} />
       )}
       {kind === 'video' && (
         <video
-          data-node="video"
           controls
           src={src}
           poster={poster}

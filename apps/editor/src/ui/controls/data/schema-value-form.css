@@ -1,0 +1,11 @@
+.eu-schema-value__nested-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.eu-schema-value__nested-value {
+  flex: 1;
+  min-width: 0;
+}

@@ -4,4 +4,4 @@
  */
 
 export { Input } from './component';
-export type { InputProps } from './types';
+export type { InputProps, InputData } from './types';

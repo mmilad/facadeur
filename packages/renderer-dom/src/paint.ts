@@ -30,6 +30,9 @@ import {
   syncVariants,
 } from './presentation';
 import type { RenderContext, RenderedNode } from './types';
+import { expandStructuralChildren } from './structural-children';
+import { repeatedDataScope, scopeForInstance } from './repeat-scope';
+import { mountedScope } from './mounted-scope';
 
 const classNameCache = new WeakMap<DocumentFile, Map<string, string>>();
 
@@ -42,11 +45,14 @@ export function renderDocument(
   document: DocumentFile,
   documents: readonly DocumentFile[],
   parent: HTMLElement,
-  options: { paintRoot?: boolean } = {},
+  options: { paintRoot?: boolean; schemaCatalog?: RenderContext['schemaCatalog'] } = {},
 ): Map<string, RenderedNode> {
-  const ctx = createRenderContext(documents);
+  const ctx = createRenderContext(documents, { schemaCatalog: options.schemaCatalog });
   ctx.catalog.set(document.id, document);
-  ctx.scope = resolveDocumentFields(document, ctx.catalog);
+  ctx.scope = mountedScope(
+    document,
+    resolveDocumentFields(document, ctx.catalog, ctx.schemaCatalog),
+  );
   ctx.canvasDocument = document;
   ctx.styleDocumentId = document.id;
   paintCanvas(parent, document, ctx, options.paintRoot === true);
@@ -103,6 +109,7 @@ export function repaintComponent(
       scope: resolved.scope,
       ownerId: resolved.ownerId,
       depth: resolved.depth,
+      repeatScope: resolved.repeatScope,
       childFields: resolved.childFields,
       childFieldPath: resolved.childFieldPath,
     };
@@ -136,13 +143,22 @@ function paintInstance(
   const overridePath = childOverridePath(ctx.childFieldPath, node.id);
   const childOverride = overridePath ? ctx.childFields?.[overridePath] : undefined;
   const effectiveFields = { ...(node.fields ?? {}), ...(childOverride ?? {}) };
-  const scope = resolveInstanceFields(node, definition, ctx.scope, ctx.catalog, effectiveFields);
+  const resolvedScope = resolveInstanceFields(
+    node,
+    definition,
+    ctx.scope,
+    ctx.catalog,
+    effectiveFields,
+    ctx.schemaCatalog,
+  );
+  const root = definition.root;
+  const contextualProps = root.type === 'switch' ? resolvedScope.props : resolvedScope;
+  const scope = scopeForInstance(resolvedScope, ctx.repeatScope, contextualProps);
   const selected = selectedVariantForInstance(node, ctx);
   const variants = resolveVariants(definition, {
     ...node.variants,
     ...(selected ? { variant: selected } : {}),
   });
-  const root = definition.root;
   const ownerDocumentId = ctx.styleDocumentId;
   el.dataset.id = id;
   el.dataset.type = 'instance';
@@ -188,6 +204,15 @@ function paintInstance(
     };
     if (root.repeat) reconcileRepeatedChildren(el, root.children ?? [], childContext, root.repeat);
     else reconcileChildren(el, root.children ?? [], childContext);
+  } else if (root.type === 'repeater' || root.type === 'switch') {
+    reconcileChildren(el, [root], {
+      ...ctx,
+      path: id,
+      styleDocumentId: definition.id,
+      scope,
+      ownerId: id,
+      depth: ctx.depth + 1,
+    });
   } else {
     reconcileChildren(el, [], ctx);
   }
@@ -300,9 +325,9 @@ function reconcileChildren(
     if (isHtmlElement(child) && child.dataset.id) existing.set(child.dataset.id, child);
   }
   const next: HTMLElement[] = [];
-  for (const child of children) {
-    const id = joinId(ctx.path, child.id);
-    if (child.displayOn && !matchesDisplay(child.displayOn, ctx.scope)) {
+  for (const { node: child, context } of expandStructuralChildren(children, ctx)) {
+    const id = joinId(context.path, child.id);
+    if (child.displayOn && !matchesDisplay(child.displayOn, context.scope)) {
       const hidden = existing.get(id);
       if (hidden) {
         dropRecords(ctx.records, id);
@@ -312,7 +337,7 @@ function reconcileChildren(
       continue;
     }
     let el = existing.get(id);
-    const tag = tagFor(child, ctx);
+    const tag = tagFor(child, context);
     if (el && el.tagName.toLowerCase() !== tag) {
       dropRecords(ctx.records, id);
       el.remove();
@@ -320,7 +345,7 @@ function reconcileChildren(
     }
     if (!el) el = elementFor(tag, parent.ownerDocument);
     existing.delete(id);
-    paint(el, child, ctx);
+    paint(el, child, context);
     next.push(el);
   }
   for (const [id, el] of existing) {
@@ -347,10 +372,12 @@ function reconcileRepeatedChildren(
   items.forEach((item, index) => {
     const keyValue = repeat.key ? resolvePath(item, repeat.key) : index;
     const key = repeatKeySegment(keyValue, index);
+    const repeated = repeatedDataScope(ctx.scope, item, index, itemName, ctx.repeatScope);
     const itemContext = {
       ...ctx,
       path: joinId(ctx.path, key),
-      scope: { ...ctx.scope, [itemName]: item },
+      scope: repeated.scope,
+      repeatScope: repeated.repeatScope,
     };
     for (const child of children) {
       const id = joinId(itemContext.path, child.id);

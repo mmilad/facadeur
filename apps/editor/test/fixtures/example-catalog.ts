@@ -6,7 +6,9 @@ import {
   validateDocumentFile,
   type DocumentFile,
   type NestedNode,
+  type SchemaCatalog,
 } from '@facadeur/core';
+import { createProjectTemplateDocument } from '@facadeur/tokens';
 
 function resolveExamplesDir(): string {
   const candidates = [resolve(process.cwd(), 'examples'), resolve(process.cwd(), '../../examples')];
@@ -25,6 +27,26 @@ const examplesDir = resolveExamplesDir();
 
 let examplePoolCache: Map<string, DocumentFile> | null = null;
 let allExamplesCache: DocumentFile[] | null = null;
+let schemaCatalogCache: SchemaCatalog | null = null;
+
+/** The checked-in example schema library used by both catalog and session fixtures. */
+export function exampleSchemaCatalog(): SchemaCatalog {
+  if (!schemaCatalogCache) {
+    const source = JSON.parse(readFileSync(join(examplesDir, 'schemas.json'), 'utf8')) as {
+      schemas?: SchemaCatalog['schemas'];
+    };
+    schemaCatalogCache = { schemas: source.schemas ?? [] };
+  }
+  return schemaCatalogCache;
+}
+
+/** Project design context paired with the standard example component catalog. */
+export function editorStandardDesign() {
+  return {
+    ...createProjectTemplateDocument(),
+    schemaCatalog: exampleSchemaCatalog(),
+  };
+}
 
 /** Raw example documents from `examples/` (not yet validated as a catalog). */
 export function loadExampleFiles(): DocumentFile[] {
@@ -95,7 +117,10 @@ export function expandExampleCatalog(seeds: readonly unknown[]): DocumentFile[] 
     }
   }
 
-  return validateCatalog([...byId.values()].sort((left, right) => left.id.localeCompare(right.id)));
+  return validateCatalog(
+    [...byId.values()].sort((left, right) => left.id.localeCompare(right.id)),
+    { schemaCatalog: exampleSchemaCatalog() },
+  );
 }
 
 /** Specimen + form stack used by most editor UI integration tests. */
@@ -115,7 +140,9 @@ export function editorStandardCatalog(): DocumentFile[] {
 /** Every committed example, validated together (hydration, forward references). */
 export function allExampleDocuments(): DocumentFile[] {
   if (!allExamplesCache) {
-    allExamplesCache = validateCatalog(loadExampleFiles());
+    allExamplesCache = validateCatalog(loadExampleFiles(), {
+      schemaCatalog: exampleSchemaCatalog(),
+    });
   }
   return allExamplesCache;
 }

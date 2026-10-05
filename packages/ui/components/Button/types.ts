@@ -3,14 +3,16 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
+import type { ComponentProps } from '../../contracts';
+
 export type ButtonTone = 'primary' | 'secondary' | 'ghost';
 export type ButtonSize = 'sm' | 'md';
 
-export interface ButtonProps {
+export interface ButtonData {
   label?: string;
+}
+
+export interface ButtonProps extends ComponentProps, ButtonData {
   tone?: ButtonTone;
   size?: ButtonSize;
-  /** Instance id. Sets `data-node` so a parent style rule can address this element. */
-  nodeId?: string;
-  className?: string;
 }

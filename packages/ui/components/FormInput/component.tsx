@@ -14,13 +14,11 @@ export function FormInput({
   name,
   disabled,
   onCommit,
-  nodeId,
   className,
 }: FormInputProps) {
   return (
     <input
       data-component="form-input"
-      data-node={nodeId}
       autoComplete="off"
       type="text"
       value={value}

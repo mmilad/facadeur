@@ -25,6 +25,7 @@
 - **Evidence:** The sandbox resolves `pnpm` to `C:\Program Files\nodejs\pnpm.ps1`; invoking it attempts `GET https://registry.npmjs.org/pnpm` because the project pins `pnpm@10.33.3`. Network access is unavailable, so the command hangs until interrupted and reports `fetch failed`. The Codex fallback pnpm is 11.19.0, which does not match the project pin.
 - **Impact:** Package typechecks and tests cannot start reliably from this process, so current validation is blocked before reaching project code.
 - **Fix:** Make the already-installed pnpm 10.33.3 executable available to the sandbox process, or run verification with the user's matching pnpm environment outside the restricted process. Do not change the project pin just to bypass sandbox PATH mismatch.
+- **Update (2026-10-04, structural renderer):** `pnpm exec vitest run packages/renderer-dom/test/render.test.ts` stayed silent for over 30 seconds in the restricted process and had to be interrupted. The focused test run therefore needs the documented matching pnpm environment outside the sandbox; no test runner output was produced before interruption.
 
 ## Browser automation setup fails
 
@@ -32,3 +33,19 @@
 - **Evidence:** The CUA kernel exits before returning app/window state with `windows sandbox failed: helper_unknown_error: setup refresh had errors`. Resetting the CUA runtime does not resolve it. This has also prevented visual checks in earlier editor work.
 - **Impact:** UI changes can be compiled and tested, but cannot be visually verified through the current Windows browser automation session.
 - **Fix:** Restart Codex and retry the native sandbox setup, then collect a fresh Windows sandbox log if it persists. The current user config already selects the recommended `elevated` mode; the repo cannot repair the CUA helper itself.
+- **Update (2026-10-05):** The DOM-capable in-app browser works for the isolated structural-node preview. Browser interaction and screenshots are verified through CUA; the earlier native-helper limitation no longer blocks this task.
+
+## Workspace link update requests reinstall without a terminal
+
+- **Reproduction:** `pnpm install --offline --ignore-scripts` after adding an existing workspace dependency to `packages/ui`.
+- **Evidence:** pnpm 10.33.3 aborts with `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY` before changing the installation; it requests purging the current modules directory. The precise reason it requires reinstalling the supplied dependency layout remains unconfirmed.
+- **Impact:** Updating a workspace link through the full install would interrupt a running preview and cannot proceed unattended in this environment.
+- **Workaround:** `pnpm install --lockfile-only --offline --ignore-scripts`, retain only the intended importer change, and create the missing local workspace junction without replacing node_modules. The isolated preview can keep running.
+- **Fix:** Align the supplied modules layout and package-manager configuration with pnpm 10.33.3 so workspace link updates do not request a purge; verify an offline full install in a disposable checkout before changing the live dependency installation.
+
+## Resolved: codegen did not load the separate example schema library
+
+- **Reproduction:** `pnpm codegen` with Textarea assigned to the `textarea` schema.
+- **Cause/evidence:** `examples/project-template.json` has no embedded schema catalog; the definition exists in `examples/schemas.json`, which the CLI command omitted. Validation consistently reported `Schema use on "textarea" references missing schema "textarea"`; this was not a race condition.
+- **Impact:** The normal generator command failed; earlier verification used a temporary design document containing the schema library and did not cover this command.
+- **Fix (2026-10-05):** Add validated `--schemas <schemas.json>` input and pass `--schemas examples/schemas.json` in the package script. The actual `pnpm codegen` command and separate/embedded-library regression tests now pass.

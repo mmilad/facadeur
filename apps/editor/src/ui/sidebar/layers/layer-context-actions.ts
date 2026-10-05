@@ -22,7 +22,7 @@ export function canDeleteLayer(item: LayerItem, snap: EditorSnapshot): boolean {
 }
 
 export function canInsertInsideLayer(item: LayerItem, snap: EditorSnapshot): boolean {
-  if (!canEditLayerItem(item, snap) || item.type !== 'frame') return false;
+  if (!canEditLayerItem(item, snap)) return false;
   return layerInsertEntriesForLayer(snap, item, 'inside').length > 0;
 }
 
@@ -44,6 +44,19 @@ export function insertLayerEntry(
   const doc = snap.document;
   const spot = layerInsertTarget(snap, item, placement);
   if (!spot) return;
+
+  if (entry.kind === 'structural') {
+    if (!placementAllowed(doc, spot.parentId, entry.tool)) return;
+    const id = createId();
+    session.execute({
+      type: 'insert',
+      parentId: spot.parentId,
+      index: spot.index,
+      node: { id, type: entry.tool, name: entry.label, children: [] },
+    });
+    if (session.getSnapshot().document.nodes[id]) session.selectNode(id);
+    return;
+  }
 
   if (entry.kind === 'primitive') {
     if (!placementAllowed(doc, spot.parentId, entry.tool)) {

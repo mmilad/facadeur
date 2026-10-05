@@ -3,12 +3,14 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
+import type { ComponentProps } from '../../contracts';
+
 export type FormSegmentedState = 'start' | 'center' | 'end';
 
-export interface FormSegmentedProps {
+export interface FormSegmentedData {
   label?: string;
+}
+
+export interface FormSegmentedProps extends ComponentProps, FormSegmentedData {
   state?: FormSegmentedState;
-  /** Instance id. Sets `data-node` so a parent style rule can address this element. */
-  nodeId?: string;
-  className?: string;
 }

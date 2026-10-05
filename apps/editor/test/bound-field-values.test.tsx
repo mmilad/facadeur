@@ -7,13 +7,12 @@ import userEvent from '@testing-library/user-event';
 import { fireEvent } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { Binding, DocumentFile, FieldDefinition, SchemaCatalog } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import formInput from '../../../examples/form-input.json';
 import input from '../../../examples/input.json';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { boundFields } from '../src/ui/sidebar/properties/content/bound-fields';
 import { App } from '../src/ui/shell/EditorShell';
-import { expandExampleCatalog } from './fixtures/example-catalog';
+import { editorStandardDesign, expandExampleCatalog } from './fixtures/example-catalog';
 
 const fields: FieldDefinition[] = [
   { name: 'value', type: 'text' },
@@ -71,7 +70,7 @@ describe('content example values', () => {
   it('edits a bound field example from the content tab', async () => {
     const session: EditorSession = createEditorSession({
       documents: expandExampleCatalog([formInput]),
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -116,7 +115,7 @@ describe('content example values', () => {
     );
     const session = createEditorSession({
       documents,
-      design: { ...createProjectTemplateDocument(), schemaCatalog: inputSchemaCatalog },
+      design: { ...editorStandardDesign(), schemaCatalog: inputSchemaCatalog },
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -153,7 +152,7 @@ describe('content example values', () => {
     control.forwardFields = false;
     const session = createEditorSession({
       documents: expandExampleCatalog([manualInput]),
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -171,6 +170,17 @@ describe('content example values', () => {
         'select[name="field-binding-placeholder"] option',
       ),
     ].map((option) => option.value);
-    expect(options).toEqual(['', 'label', 'value', 'placeholder', 'name']);
+    expect(options).toEqual([
+      '',
+      'label',
+      'value',
+      'placeholder',
+      'name',
+      'props',
+      'props.label',
+      'props.value',
+      'props.placeholder',
+      'props.name',
+    ]);
   });
 });

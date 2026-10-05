@@ -15,6 +15,7 @@ export function renderInstance(
   dataScope: ReadonlyMap<string, string>,
   childFieldsProp: string | undefined,
   localClass: string | undefined,
+  structuralProps?: string,
 ): ElementNode {
   const target = catalog.get(node.component);
   if (!target) {
@@ -22,7 +23,6 @@ export function renderInstance(
       tag: 'div',
       void: false,
       attrs: [
-        { name: 'data-node', value: { kind: 'literal', value: node.id } },
         { name: 'data-component', value: { kind: 'literal', value: node.component } },
         {
           name: 'className',
@@ -37,8 +37,19 @@ export function renderInstance(
   if (target.document.id !== node.component) {
     throw new CodegenError(`Catalog entry "${node.component}" does not match its document`);
   }
-  imports.set(target.component, { name: target.component, from: `../${target.component}` });
-  const attrs: Attr[] = [{ name: 'nodeId', value: { kind: 'literal', value: node.id } }];
+  imports.set(target.component, {
+    name: target.component,
+    from: `../${target.component}`,
+  });
+  const attrs: Attr[] = [];
+  const repeatScope = dataScope.get('$repeatScope');
+  if (repeatScope && target.acceptsContext) {
+    if (/\bcontext\b/.test(repeatScope)) usedProps.add('$context');
+    attrs.push({
+      name: 'context',
+      value: { kind: 'expr', code: repeatScope },
+    });
+  }
   if (localClass)
     attrs.push({
       name: 'className',
@@ -73,7 +84,7 @@ export function renderInstance(
     usedProps.add(source.name);
     attrs.push({ name: destination.name, value: { kind: 'expr', code: source.name } });
   }
-  if (node.forwardFields !== false) {
+  if (node.forwardFields !== false && !structuralProps) {
     const explicitlyBoundFields = new Set(Object.keys(node.fieldBindings ?? {}));
     const explicitlySetFields = new Set(Object.keys(node.fields ?? {}));
     for (const [fieldName, prop] of target.fields) {
@@ -143,7 +154,7 @@ export function renderInstance(
     ...Object.keys(node.fields ?? {}),
   ]);
   for (const [fieldName, prop] of target.fields) {
-    if (prop.required && !providedFields.has(fieldName)) {
+    if (prop.required && !providedFields.has(fieldName) && !structuralProps) {
       throw new CodegenError(
         `Instance "${node.id}" is missing required field "${fieldName}" on "${node.component}"`,
       );
@@ -212,6 +223,7 @@ export function renderInstance(
   return {
     tag: target.component,
     attrs,
+    ...(structuralProps ? { spreads: [structuralProps] } : {}),
     children: [],
     void: true,
     ...(node.displayOn

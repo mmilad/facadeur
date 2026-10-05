@@ -5,12 +5,11 @@ import { cleanup, render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, it } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { StyleInspector } from '../src/ui/sidebar/properties/style/StyleInspector';
 import { gridDeclarations } from '../src/ui/sidebar/properties/layout/grid/edits';
 import { shownAxis } from '../src/ui/sidebar/properties/layout/sizing';
-import { expandExampleCatalog } from './fixtures/example-catalog';
+import { editorStandardDesign, expandExampleCatalog } from './fixtures/example-catalog';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 afterEach(cleanup);
@@ -71,7 +70,7 @@ it.each([
   async (variant, viewport) => {
     const session = createEditorSession({
       documents: expandExampleCatalog([file, master]),
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     session.openAsset(file.id, 'root');
     session.selectNode('card');
@@ -115,7 +114,7 @@ it('keeps manual CSS height separate and synchronizes edits with the guided size
   };
   const session = createEditorSession({
     documents: expandExampleCatalog([native]),
-    design: createProjectTemplateDocument(),
+    design: editorStandardDesign(),
   });
   session.openAsset(file.id, 'root');
   const { container } = render(<Harness session={session} />);
@@ -150,7 +149,7 @@ it('replaces a legacy Hug height atomically while preserving width and unrelated
   };
   const session = createEditorSession({
     documents: expandExampleCatalog([native]),
-    design: createProjectTemplateDocument(),
+    design: editorStandardDesign(),
   });
   session.openAsset(file.id, 'root');
   const { container } = render(<Harness session={session} />);
@@ -194,7 +193,7 @@ it.each([false, true])(
     };
     const session = createEditorSession({
       documents: expandExampleCatalog([native]),
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     session.openAsset(file.id, 'root');
     if (variant) session.setActiveVariant('compact');

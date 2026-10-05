@@ -112,8 +112,10 @@ function setNodeStyle(doc: FlatDocument, command: Extract<StyleCommand, { type: 
   if (!node) {
     throw new DocumentError('missing-node', `Node "${command.nodeId}" is not in the document`);
   }
-  if (node.type === 'instance') {
+  if (node.type === 'instance')
     throw new DocumentError('nesting', 'Instances cannot carry style overrides');
+  if (node.type === 'repeater' || node.type === 'switch') {
+    throw new DocumentError('nesting', `${node.type} nodes cannot carry style overrides`);
   }
   if (!STYLE_PROPERTY.test(command.property)) {
     throw new DocumentError('schema', `Invalid style property "${command.property}"`);

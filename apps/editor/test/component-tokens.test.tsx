@@ -2,7 +2,6 @@
  * @vitest-environment jsdom
  */
 import { listComponentTokens } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -10,7 +9,7 @@ import button from '../../../examples/button.json';
 import { readComponentTokens } from '../src/domain/component-tokens';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';
-import { expandExampleCatalog } from './fixtures/example-catalog';
+import { editorStandardDesign, expandExampleCatalog } from './fixtures/example-catalog';
 
 const documents = expandExampleCatalog([button]);
 
@@ -40,7 +39,7 @@ describe('component tokens inspector', () => {
   it('updates a local token default from a global ref to a literal', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     session.openAsset('button', 'root');
     const id = listComponentTokens(
@@ -95,7 +94,7 @@ describe('component tokens inspector', () => {
   });
 
   it('selects a global reference by its saved label and preserves the reference', async () => {
-    const design = structuredClone(createProjectTemplateDocument());
+    const design = structuredClone(editorStandardDesign());
     const accentDefault = (
       design.tokens as unknown as {
         color: { accent: { default: { $value: string; $extensions?: object } } };

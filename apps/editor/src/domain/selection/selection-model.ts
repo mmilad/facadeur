@@ -76,9 +76,11 @@ function descend(doc: FlatDocument, id: string, parts: string[], index: number):
   if (parts[index] !== id) return null;
   const node = doc.nodes[id];
   if (!node) return null;
-  const next = parts[index + 1];
-  if (!next || node.type !== 'frame' || !node.children.includes(next)) return id;
-  return descend(doc, next, parts, index + 1) ?? id;
+  const childIndex =
+    node.type === 'repeater' && /^\d+$/.test(parts[index + 1] ?? '') ? index + 2 : index + 1;
+  const next = parts[childIndex];
+  if (!next || !('children' in node) || !node.children.includes(next)) return id;
+  return descend(doc, next, parts, childIndex) ?? id;
 }
 
 function layerItem(
@@ -89,7 +91,7 @@ function layerItem(
   ownerNodeId: string | undefined,
   instancePath: string,
 ): LayerItem {
-  const children = node.type === 'frame' ? node.children : [];
+  const children = 'children' in node ? node.children : [];
   return {
     id: node.id,
     address,

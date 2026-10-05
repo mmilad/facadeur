@@ -3,13 +3,15 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
+import type { ComponentProps } from '../../contracts';
+
 export type FormSelectState = 'default' | 'focused' | 'disabled';
 
-export interface FormSelectProps {
+export interface FormSelectData {
   label?: string;
   value?: string;
+}
+
+export interface FormSelectProps extends ComponentProps, FormSelectData {
   state?: FormSelectState;
-  /** Instance id. Sets `data-node` so a parent style rule can address this element. */
-  nodeId?: string;
-  className?: string;
 }

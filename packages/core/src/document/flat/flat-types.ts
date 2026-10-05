@@ -43,6 +43,38 @@ export interface FrameNode extends FlatNodeBase {
   children: string[];
 }
 
+export interface RepeaterNode {
+  id: string;
+  type: 'repeater';
+  name?: string;
+  styleName?: never;
+  tag?: never;
+  attributes?: never;
+  displayOn?: never;
+  layout?: never;
+  bindings?: never;
+  eventBindings?: never;
+  style?: never;
+  repeat?: never;
+  children: string[];
+}
+
+export interface SwitchNode {
+  id: string;
+  type: 'switch';
+  name?: string;
+  styleName?: never;
+  tag?: never;
+  attributes?: never;
+  displayOn?: never;
+  layout?: never;
+  bindings?: never;
+  eventBindings?: never;
+  style?: never;
+  repeat?: never;
+  children: string[];
+}
+
 export interface TextNode extends FlatNodeBase {
   type: 'text';
   text?: string;
@@ -66,13 +98,16 @@ export interface InstanceNode {
   fields?: Record<string, FieldValue>;
   childFields?: ChildFieldOverrides;
   forwardFields?: boolean;
+  switchCase?: string;
   fieldBindings?: Record<string, string>;
   variants?: Record<string, string>;
   variantRules?: VariantRule[];
   expose?: Expose;
 }
 
-export type FlatNode = FrameNode | TextNode | ImageNode | InstanceNode;
+export type StructuralNode = RepeaterNode | SwitchNode;
+
+export type FlatNode = FrameNode | TextNode | ImageNode | InstanceNode | StructuralNode;
 
 /** In-memory document: one map of nodes, children as ordered id lists. */
 export interface FlatDocument {

@@ -23,6 +23,13 @@ export function flatDocumentClassNames(document: FlatDocument) {
   const visit = (id: string, isRoot: boolean) => {
     const node = document.nodes[id];
     if (!node) return;
+    if (node.type === 'repeater' || node.type === 'switch') {
+      // Structural nodes are transparent to styling, but renderers still need a
+      // stable class-map identity for a structural document root and its paths.
+      nodes.push({ id, readable: isRoot ? 'root' : node.name?.trim() || id });
+      for (const child of node.children) visit(child, false);
+      return;
+    }
     nodes.push({
       id,
       ...(node.styleName ? { explicit: node.styleName } : {}),
@@ -89,6 +96,11 @@ function assignClassNames(nodes: readonly ClassNameEntry[]) {
 }
 
 function collectNested(node: NestedNode, nodes: ClassNameEntry[], isRoot: boolean): void {
+  if (node.type === 'repeater' || node.type === 'switch') {
+    nodes.push({ id: node.id, readable: isRoot ? 'root' : node.name?.trim() || node.id });
+    for (const child of node.children ?? []) collectNested(child, nodes, false);
+    return;
+  }
   nodes.push({
     id: node.id,
     ...(node.styleName ? { explicit: node.styleName } : {}),

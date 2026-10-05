@@ -157,6 +157,7 @@ function writeField(map: Y.Map<unknown>, field: FieldDefinition): void {
   syncScalar(map, 'name', field.name);
   syncScalar(map, 'type', field.type);
   syncScalar(map, 'required', field.required);
+  syncJsonMap(map, 'schema', field.schema as Record<string, JsonValue> | undefined);
   syncScalar(map, 'default', field.default);
   if (field.options) {
     if (!map.doc || !sameList(map.get('options'), field.options))
@@ -176,6 +177,14 @@ function writeVariant(map: Y.Map<unknown>, axis: VariantAxis): void {
 function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
   syncScalar(map, 'id', node.id);
   syncScalar(map, 'type', node.type);
+  if (node.type === 'repeater' || node.type === 'switch') {
+    syncScalar(map, 'name', node.name);
+    syncChildren(map, node.children);
+    for (const key of [...map.keys()]) {
+      if (!['id', 'type', 'name', 'children'].includes(key)) map.delete(key);
+    }
+    return;
+  }
   if (node.type === 'instance') {
     syncScalar(map, 'name', node.name);
     syncScalar(map, 'styleName', node.styleName);
@@ -189,6 +198,7 @@ function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
       node.childFields as unknown as Record<string, JsonValue> | undefined,
     );
     syncScalar(map, 'forwardFields', node.forwardFields);
+    syncScalar(map, 'switchCase', node.switchCase);
     syncStringMap(map, 'fieldBindings', node.fieldBindings);
     syncStringMap(map, 'variants', node.variants);
     if (node.variantRules?.length)
@@ -229,6 +239,7 @@ function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
     'fields',
     'childFields',
     'forwardFields',
+    'switchCase',
     'fieldBindings',
     'variants',
     'variantRules',

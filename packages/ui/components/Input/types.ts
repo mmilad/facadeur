@@ -3,14 +3,16 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
-export interface InputProps {
+import type { ComponentProps } from '../../contracts';
+
+export interface InputData {
   label?: string;
   value?: string;
   placeholder?: string;
   name?: string;
   disabled?: boolean;
+}
+
+export interface InputProps extends ComponentProps, InputData {
   onCommit?: (payload: { value: string }) => void;
-  /** Instance id. Sets `data-node` so a parent style rule can address this element. */
-  nodeId?: string;
-  className?: string;
 }

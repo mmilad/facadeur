@@ -1,4 +1,9 @@
-import { type DocumentFile, type NestedNode } from '@facadeur/core';
+import {
+  structuralChildSchemas,
+  type ContractResolverInput,
+  type DocumentFile,
+  type NestedNode,
+} from '@facadeur/core';
 import {
   booleanAttributeValue,
   isBooleanAttribute,
@@ -8,12 +13,17 @@ import {
   reactAttributeName,
 } from '../attributes';
 import { CodegenError, quote } from '../names';
-import { conditionForNode, dataExpression, repeatLocalName } from './render/data-expressions';
+import {
+  conditionForNode,
+  dataExpression,
+  repeatLocalName,
+  repeatedDataScope,
+} from './render/data-expressions';
 import { eventAttributes } from './render/event-attributes';
 import { bindingsFor } from './render/field-bindings';
 import { isJsxName, jsxText } from './render/jsx-text';
 import { renderInstance } from './render/render-instance';
-import { moduleClassExpression } from './class-names';
+import { moduleClassExpression, placementClassName } from './class-names';
 import type {
   Attr,
   Bound,
@@ -37,7 +47,24 @@ export function renderNode(
   dataScope: ReadonlyMap<string, string> = new Map(),
   childFieldsProp?: string,
   classNames: LocalClassNames = new Map(),
+  markStructural: () => void = () => {},
 ): ElementNode {
+  if (node.type === 'repeater' || node.type === 'switch') {
+    markStructural();
+    return renderStructuralNode(
+      document,
+      node,
+      catalog,
+      owner,
+      isRoot,
+      imports,
+      usedProps,
+      markStyle,
+      dataScope,
+      childFieldsProp,
+      classNames,
+    );
+  }
   if (node.type === 'instance') {
     return renderInstance(
       node,
@@ -47,7 +74,7 @@ export function renderNode(
       usedProps,
       dataScope,
       childFieldsProp,
-      nodeClassExpression(classNames.get(node.id)),
+      instanceClassExpression(owner.component, classNames.get(node.id), isRoot),
     );
   }
   const tag = node.tag ?? (node.type === 'text' ? 'span' : node.type === 'image' ? 'img' : 'div');
@@ -61,7 +88,6 @@ export function renderNode(
   const attrs: Attr[] = [];
   if (isRoot) {
     attrs.push({ name: 'data-component', value: { kind: 'literal', value: document.id } });
-    attrs.push({ name: 'data-node', value: { kind: 'expr', code: 'nodeId' } });
     for (const prop of owner.variants.values()) {
       attrs.push({
         name: `data-variant-${prop.source}`,
@@ -74,8 +100,6 @@ export function renderNode(
         value: { kind: 'expr', code: owner.namedVariant.name },
       });
     }
-  } else {
-    attrs.push({ name: 'data-node', value: { kind: 'literal', value: node.id } });
   }
 
   const consumed = new Set<string>();
@@ -122,7 +146,7 @@ export function renderNode(
     const alias = node.repeat.as ?? 'item';
     const item = repeatLocalName(alias, owner, dataScope, usedProps);
     const index = `${item}Index`;
-    childScope = new Map(dataScope).set(alias, item);
+    childScope = repeatedDataScope(dataScope, alias, item, index);
     const key = node.repeat.key
       ? `${dataExpression(`${alias}.${node.repeat.key}`, owner, childScope, usedProps)} ?? ${index}`
       : index;
@@ -148,6 +172,7 @@ export function renderNode(
           childScope,
           childFieldsProp,
           classNames,
+          markStructural,
         ),
       );
     }
@@ -165,8 +190,105 @@ export function renderNode(
   };
 }
 
+function renderStructuralNode(
+  document: DocumentFile,
+  node: Extract<NestedNode, { type: 'repeater' | 'switch' }>,
+  catalog: Map<string, CatalogEntry>,
+  owner: CatalogEntry,
+  isRoot: boolean,
+  imports: Map<string, ComponentImport>,
+  usedProps: Set<string>,
+  markStyle: () => void,
+  dataScope: ReadonlyMap<string, string>,
+  childFieldsProp: string | undefined,
+  classNames: LocalClassNames,
+): ElementNode {
+  const documents = new Map([...catalog].map(([id, entry]) => [id, entry.document]));
+  const resolver: ContractResolverInput = {
+    documents,
+    ...(owner.schemaCatalog ? { schemaCatalog: owner.schemaCatalog } : {}),
+  };
+  const candidates = structuralChildSchemas(document, node.id, resolver);
+  const value = dataExpression(
+    node.type === 'repeater' ? 'items' : 'props',
+    owner,
+    dataScope,
+    usedProps,
+  );
+  const item =
+    node.type === 'repeater' ? repeatLocalName('item', owner, dataScope, usedProps) : undefined;
+  const index = item ? `${item}Index` : undefined;
+  const branchScope =
+    item && index ? repeatedDataScope(dataScope, 'item', item, index) : new Map(dataScope);
+  const cases: NonNullable<ElementNode['choice']>['cases'] = [];
+  const discriminator = `${item ?? value}.type`;
+  const payload = `${item ?? value}.props`;
+  for (const candidate of candidates) {
+    const candidateScope = new Map(branchScope);
+    candidateScope.delete('$effectiveProps');
+    candidateScope.set('props', payload);
+    const child = renderInstance(
+      candidate.node as Extract<NestedNode, { type: 'instance' }>,
+      catalog,
+      imports,
+      owner,
+      usedProps,
+      candidateScope,
+      childFieldsProp,
+      structuralClassExpression(owner.component, classNames, node.id, candidate.node.id, isRoot),
+      payload,
+    );
+    cases.push({ value: candidate.caseValue, node: child });
+  }
+  return {
+    tag: '',
+    attrs: [],
+    children: [
+      { tag: '', attrs: [], children: [], void: false, choice: { value: discriminator, cases } },
+    ],
+    void: false,
+    fragment: true,
+    ...(item && index
+      ? {
+          repeat: {
+            source: `(${value} ?? [])`,
+            item,
+            index,
+            key: index,
+          },
+        }
+      : {}),
+  };
+}
+
+function instanceClassExpression(component: string, name: string | undefined, isRoot: boolean) {
+  const parts = [
+    ...(isRoot ? [moduleClassExpression('root'), 'className'] : []),
+    ...(name ? [quote(placementClassName(component, name))] : []),
+  ];
+  return parts.length === 1
+    ? parts[0]
+    : parts.length
+      ? `[${parts.join(', ')}].filter(Boolean).join(' ')`
+      : undefined;
+}
+
 function nodeClassExpression(className: string | undefined): string | undefined {
   return className ? moduleClassExpression(className) : undefined;
+}
+
+function structuralClassExpression(
+  component: string,
+  classNames: LocalClassNames,
+  structuralId: string,
+  instanceId: string,
+  isRoot: boolean,
+): string | undefined {
+  const parts = [
+    ...(isRoot ? [moduleClassExpression(classNames.get(structuralId) ?? 'root'), 'className'] : []),
+    quote(placementClassName(component, classNames.get(instanceId)!)),
+  ];
+  return parts.length === 1 ? parts[0] : `[${parts.join(', ')}].filter(Boolean).join(' ')`;
 }
 
 function textChild(

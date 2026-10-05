@@ -4,4 +4,4 @@
  */
 
 export { Button } from './component';
-export type { ButtonProps, ButtonTone, ButtonSize } from './types';
+export type { ButtonProps, ButtonData, ButtonTone, ButtonSize } from './types';

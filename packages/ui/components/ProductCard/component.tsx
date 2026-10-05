@@ -14,43 +14,32 @@ export function ProductCard({
   imageSrc,
   imageAlt,
   buttonLabel,
-  nodeId,
   className,
 }: ProductCardProps) {
   return variant === 'compact' ? (
     <article
       data-component="product-card"
-      data-node={nodeId}
       data-variant={variant}
       className={[styles['root'], className].filter(Boolean).join(' ')}
     >
-      <img data-node="image" src={imageSrc} alt={imageAlt} className={styles['image']} />
-      <div data-node="content" className={styles['content']}>
-        <h2 data-node="title" className={styles['title']}>
-          {title}
-        </h2>
-        <p data-node="price" className={styles['price']}>
-          {price}
-        </p>
-        <Button nodeId="button" className={styles['button']} label={buttonLabel} />
+      <img src={imageSrc} alt={imageAlt} className={styles['image']} />
+      <div className={styles['content']}>
+        <h2 className={styles['title']}>{title}</h2>
+        <p className={styles['price']}>{price}</p>
+        <Button className="ProductCard__button" label={buttonLabel} />
       </div>
     </article>
   ) : (
     <article
       data-component="product-card"
-      data-node={nodeId}
       data-variant={variant}
       className={[styles['root'], className].filter(Boolean).join(' ')}
     >
-      <img data-node="image" src={imageSrc} alt={imageAlt} className={styles['image']} />
-      <div data-node="content" className={styles['content']}>
-        <h2 data-node="title" className={styles['title']}>
-          {title}
-        </h2>
-        <p data-node="price" className={styles['price']}>
-          {price}
-        </p>
-        <Button nodeId="button" className={styles['button']} label={buttonLabel} />
+      <img src={imageSrc} alt={imageAlt} className={styles['image']} />
+      <div className={styles['content']}>
+        <h2 className={styles['title']}>{title}</h2>
+        <p className={styles['price']}>{price}</p>
+        <Button className="ProductCard__button" label={buttonLabel} />
       </div>
     </article>
   );

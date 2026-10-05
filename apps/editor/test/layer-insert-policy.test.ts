@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { toFlat } from '@facadeur/core';
 import { layerInsertEntries, layerInsertEntriesForLayer } from '../src/domain/layer-insert-policy';
 import type { EditorSnapshot } from '../src/domain/session';
+import { dataFieldsForNode } from '../src/ui/controls/data';
 
 function snap(partial: {
   document: EditorSnapshot['document'];
@@ -16,6 +17,31 @@ function snap(partial: {
 }
 
 describe('layer insert policy', () => {
+  it('includes the target parent repeat scope for nested inserts', () => {
+    const document = toFlat({
+      version: 1,
+      id: 'list',
+      name: 'List',
+      kind: 'component',
+      fields: [
+        {
+          name: 'items',
+          type: 'array',
+          items: {
+            type: 'object',
+            fields: [{ name: 'children', type: 'array', items: { type: 'text' } }],
+          },
+        },
+      ],
+      root: { id: 'root', type: 'frame', repeat: { path: 'items', as: 'item' } },
+    });
+    const fields = dataFieldsForNode(document, 'root', document.fields, true);
+    expect(fields.find((field) => field.name === 'item')?.items?.fields?.[0]?.name).toBe(
+      'children',
+    );
+    expect(dataFieldsForNode(document, 'root').some((field) => field.name === 'item')).toBe(false);
+  });
+
   it('offers no insert entries when editing an atom', () => {
     const document = toFlat({
       version: 1,
@@ -53,6 +79,9 @@ describe('layer insert policy', () => {
       }),
     );
     expect(entries).toEqual([
+      { kind: 'primitive', tool: 'frame', label: 'Frame' },
+      { kind: 'structural', tool: 'repeater', label: 'Repeater' },
+      { kind: 'structural', tool: 'switch', label: 'Switch' },
       { kind: 'instance', assetId: 'button', label: 'Button' },
       { kind: 'instance', assetId: 'link', label: 'Link' },
     ]);

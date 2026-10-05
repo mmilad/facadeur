@@ -4,4 +4,4 @@
  */
 
 export { Textarea } from './component';
-export type { TextareaProps, TextareaResize } from './types';
+export type { TextareaProps, TextareaData, TextareaResize } from './types';

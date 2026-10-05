@@ -219,6 +219,14 @@ function validateInstanceOverrides(
   catalog: Map<string, DocumentFile>,
   resolverContext: SchemaResolverContext,
 ) {
+  const structuralInstances = new Set<string>();
+  for (const structural of Object.values(doc.nodes)) {
+    if (structural.type !== 'repeater' && structural.type !== 'switch') continue;
+    for (const childId of structural.children) {
+      const child = doc.nodes[childId];
+      if (child?.type === 'instance') structuralInstances.add(child.id);
+    }
+  }
   for (const node of Object.values(doc.nodes)) {
     if (node.type !== 'instance') continue;
     const target = catalog.get(node.component);
@@ -276,6 +284,7 @@ function validateInstanceOverrides(
     }
     const providedFields = new Set([...staticFields, ...boundFields]);
     for (const [name, field] of fields) {
+      if (structuralInstances.has(node.id)) continue;
       if (field.required === true && field.default === undefined && !providedFields.has(name)) {
         throw new DocumentError(
           'schema',

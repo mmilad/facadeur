@@ -22,8 +22,11 @@ export function codePreview({
     if (!component) return { error: `No generated component was found for "${documentId}".` };
     const directory = component.path.slice(0, -'/component.tsx'.length);
     const types = files.find((file) => file.path === `${directory}/types.ts`);
+    const contracts = files.find((file) => file.path === 'contracts.ts');
     return {
-      source: types ? `${types.contents}\n${component.contents}` : component.contents,
+      source: [contracts?.contents, types?.contents, component.contents]
+        .filter((contents) => contents !== undefined)
+        .join('\n'),
     };
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'Could not generate React preview.' };

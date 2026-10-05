@@ -1,5 +1,6 @@
 import { DocumentError } from '../../../../document/errors.js';
 import type { FlatDocument } from '../../../../document/flat.js';
+import type { FlatNode, FrameNode, StructuralNode } from '../../../../document/flat.js';
 import { ID_PATTERN, TAG_PATTERN } from '../../../../document/ids.js';
 import { isPlainObject as isRecord } from '../../../../utils.js';
 import type { Binding, FieldValue } from '../../../../schema/document.js';
@@ -14,6 +15,14 @@ export function requireNode(doc: FlatDocument, id: string) {
 export function requireFrame(doc: FlatDocument, id: string) {
   const node = requireNode(doc, id);
   if (node.type !== 'frame') {
+    throw new DocumentError('invalid-parent', `Node "${id}" cannot contain children`);
+  }
+  return node;
+}
+
+export function requireChildrenParent(doc: FlatDocument, id: string): FrameNode | StructuralNode {
+  const node: FlatNode | undefined = doc.nodes[id];
+  if (!node || (node.type !== 'frame' && node.type !== 'repeater' && node.type !== 'switch')) {
     throw new DocumentError('invalid-parent', `Node "${id}" cannot contain children`);
   }
   return node;

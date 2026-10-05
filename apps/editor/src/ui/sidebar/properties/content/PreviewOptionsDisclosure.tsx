@@ -8,7 +8,7 @@ export function PreviewOptionsDisclosure({
   entries,
 }: {
   session: EditorSession;
-  node: Exclude<FlatNode, { type: 'instance' }>;
+  node: Extract<FlatNode, { type: 'frame' | 'text' | 'image' }>;
   entries: [string, string][];
 }) {
   if (entries.length === 0) return null;

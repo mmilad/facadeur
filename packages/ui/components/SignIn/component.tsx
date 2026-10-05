@@ -8,46 +8,24 @@ import type { SignInProps } from './types';
 import { Button } from '../Button';
 import { Input } from '../Input';
 
-export function SignIn({
-  eyebrow,
-  title,
-  body,
-  placeholder,
-  disabled,
-  nodeId,
-  className,
-}: SignInProps) {
+export function SignIn({ eyebrow, title, body, placeholder, disabled, className }: SignInProps) {
   return (
     <article
       data-component="sign-in"
-      data-node={nodeId}
       className={[styles['root'], className].filter(Boolean).join(' ')}
     >
-      <p data-node="eyebrow" className={styles['eyebrow']}>
-        {eyebrow}
-      </p>
-      <h2 data-node="title" className={styles['title']}>
-        {title}
-      </h2>
-      <p data-node="body" className={styles['body']}>
-        {body}
-      </p>
+      <p className={styles['eyebrow']}>{eyebrow}</p>
+      <h2 className={styles['title']}>{title}</h2>
+      <p className={styles['body']}>{body}</p>
       <Input
-        nodeId="email"
-        className={styles['email']}
+        className="SignIn__email"
         placeholder={placeholder}
         disabled={disabled}
         label="Work email"
         value="ada@atelier.test"
         name="work-email"
       />
-      <Button
-        nodeId="continue"
-        className={styles['continue']}
-        label="Continue"
-        tone="primary"
-        size="sm"
-      />
+      <Button className="SignIn__continue" label="Continue" tone="primary" size="sm" />
     </article>
   );
 }

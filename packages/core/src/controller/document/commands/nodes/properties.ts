@@ -1,8 +1,13 @@
 import { DocumentError } from '../../../../document/errors.js';
-import { makeFlatNode, type FlatDocument, type FlatNode } from '../../../../document/flat.js';
+import {
+  findParent,
+  makeFlatNode,
+  type FlatDocument,
+  type FlatNode,
+} from '../../../../document/flat.js';
 import { ID_PATTERN } from '../../../../document/ids.js';
 import { isPlainObject as isRecord } from '../../../../utils.js';
-import type { VariantRule } from '../../../../schema/document.js';
+import type { FieldValue, VariantRule } from '../../../../schema/document.js';
 import { assertStyleNameAvailable } from '../../../style/blocks/contract.js';
 import {
   assertAttributes,
@@ -13,6 +18,8 @@ import {
   assertRepeat,
 } from '../../../validation/assertions.js';
 import { assertValueMatches } from '../../../validation/assertions.js';
+import { structuralCaseSlug } from '../../../validation/structural-nodes.js';
+import { structuralCaseValue } from '../../../validation/catalog-exposed.js';
 import type { Command, NodeProp, CommandContext } from '../types.js';
 import { adoptTokenReads } from '../../../style/references/adopt.js';
 import {
@@ -69,15 +76,26 @@ const PROPS: Record<NodeType, readonly NodeProp[]> = {
     'layout',
     'component',
     'forwardFields',
+    'switchCase',
     'fieldBindings',
     'variantRules',
   ],
+  repeater: ['name'],
+  switch: ['name'],
 };
 
 const CHILD_FIELD_PATH = /^[A-Za-z][A-Za-z0-9_-]*(\/[A-Za-z][A-Za-z0-9_-]*)*$/;
 
-export function setProp(doc: FlatDocument, command: Extract<Command, { type: 'setProp' }>) {
+export function setProp(
+  doc: FlatDocument,
+  command: Extract<Command, { type: 'setProp' }>,
+  context: CommandContext,
+) {
   const node = requireNode(doc, command.nodeId);
+  const oldCase =
+    node.type === 'instance' && command.prop === 'switchCase'
+      ? (node.switchCase ?? caseValueFor(doc, node, context))
+      : undefined;
   if (command.prop === 'styleName' && typeof command.value === 'string') {
     assertStyleNameAvailable(doc, command.value, node.id);
   }
@@ -89,8 +107,56 @@ export function setProp(doc: FlatDocument, command: Extract<Command, { type: 'se
   } else {
     applyElementProp(node, command.prop, command.value);
   }
+  if (node.type === 'instance' && command.prop === 'switchCase' && oldCase) {
+    const nextCase = node.switchCase ?? caseValueFor(doc, node, context);
+    if (nextCase !== oldCase) renamePreviewCase(doc, node, oldCase, nextCase);
+  }
   doc.nodes[node.id] = makeFlatNode(node);
   if (command.prop === 'layout') adoptTokenReads(doc);
+}
+
+function caseValueFor(
+  doc: FlatDocument,
+  node: Extract<FlatNode, { type: 'instance' }>,
+  context: CommandContext,
+) {
+  if (context.schemaResolverContext) {
+    return structuralCaseValue(doc, node, context.schemaResolverContext);
+  }
+  return structuralCaseSlug(node.component);
+}
+
+function renamePreviewCase(
+  doc: FlatDocument,
+  node: Extract<FlatNode, { type: 'instance' }>,
+  previous: string,
+  next: string,
+) {
+  const parent = findParent(doc, node.id);
+  const structuralParent =
+    parent?.type === 'switch' && findParent(doc, parent.id)?.type === 'repeater'
+      ? findParent(doc, parent.id)
+      : parent;
+  const field =
+    structuralParent?.type === 'repeater'
+      ? 'items'
+      : structuralParent?.type === 'switch'
+        ? 'props'
+        : undefined;
+  if (!field || !doc.previewData) return;
+  const renameValue = (value: FieldValue): FieldValue => {
+    if (Array.isArray(value)) return value.map(renameValue);
+    if (!isRecord(value)) return value;
+    if (value.type === previous && Object.hasOwn(value, 'props')) {
+      return { ...value, type: next } as FieldValue;
+    }
+    return value;
+  };
+  const fields = doc.previewData.fields;
+  if (fields && Object.hasOwn(fields, field)) fields[field] = renameValue(fields[field]!);
+  for (const values of Object.values(doc.previewData.variants ?? {})) {
+    if (Object.hasOwn(values, field)) values[field] = renameValue(values[field]!);
+  }
 }
 
 export function setField(doc: FlatDocument, command: Extract<Command, { type: 'setField' }>) {
@@ -249,6 +315,7 @@ function applyElementProp(
       return;
     case 'variantRules':
     case 'component':
+    case 'switchCase':
       break;
     case 'forwardFields':
     case 'fieldBindings':
@@ -318,6 +385,11 @@ function applyInstanceProp(
       if (value === null) delete node.forwardFields;
       else if (typeof value === 'boolean') node.forwardFields = value;
       else throw new DocumentError('schema', 'forwardFields must be a boolean');
+      return;
+    case 'switchCase':
+      if (value === null) delete node.switchCase;
+      else if (typeof value === 'string' && value.trim()) node.switchCase = value.trim();
+      else throw new DocumentError('schema', 'Switch cases must be non-empty strings');
       return;
     default:
       throw new DocumentError('schema', `Instances have no "${prop}" property`);

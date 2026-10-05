@@ -1,6 +1,13 @@
 import { quote } from '../names';
 import { childFieldsPropType } from './child-fields';
-import type { Attr, ComponentImport, ElementNode, PropSpec, VariantTypeSpec } from './types';
+import type {
+  Attr,
+  CatalogEntry,
+  ComponentImport,
+  ElementNode,
+  PropSpec,
+  VariantTypeSpec,
+} from './types';
 
 interface PrintedComponent {
   id: string;
@@ -9,14 +16,20 @@ interface PrintedComponent {
   variantTypes: VariantTypeSpec[];
   imports: ComponentImport[];
   usesCssProperties: boolean;
+  usesFragment: boolean;
   acceptsChildFields: boolean;
   childFieldsPropName: string;
   usedProps: Set<string>;
+  usesContext: boolean;
+  dataContract?: CatalogEntry['dataContract'];
   body: string;
 }
 
 export function printTypesFile(file: PrintedComponent): string {
   const lines = generatedBanner(file.id);
+  lines.push(`import type { ComponentProps } from '../../contracts';`, '');
+  const data = file.dataContract;
+  if (data) lines.push(...data.imports, '');
   if (file.usesCssProperties) {
     lines.push(`import type { CSSProperties } from 'react';`, '');
   }
@@ -24,15 +37,30 @@ export function printTypesFile(file: PrintedComponent): string {
     lines.push(`export type ${variant.name} = ${variant.union};`);
   }
   if (file.variantTypes.length) lines.push('');
-  lines.push(`export interface ${file.component}Props {`);
-  for (const prop of file.props) {
+  lines.push(...(data?.aliases ?? []));
+  const fields =
+    data?.fields ??
+    file.props.filter((prop) => prop.fieldType !== 'variant' && prop.fieldType !== 'event');
+  if (!fields.length && data?.bases.length) {
+    lines.push(`export type ${file.component}Data = ${data.bases.join(' & ')};`, '');
+  } else {
+    lines.push(
+      `export interface ${file.component}Data${data?.bases.length ? ` extends ${data.bases.join(', ')}` : ''} {`,
+    );
+    for (const prop of fields) {
+      lines.push(`  ${prop.name}${prop.required ? '' : '?'}: ${prop.type};`);
+    }
+    lines.push('}', '');
+  }
+  const transportFields = file.props.filter(
+    (prop) => prop.fieldType === 'variant' || prop.fieldType === 'event',
+  );
+  lines.push(
+    `export interface ${file.component}Props extends ComponentProps, ${file.component}Data {`,
+  );
+  for (const prop of transportFields) {
     lines.push(`  ${prop.name}${prop.required ? '' : '?'}: ${prop.type};`);
   }
-  lines.push(
-    '  /** Instance id. Sets `data-node` so a parent style rule can address this element. */',
-  );
-  lines.push('  nodeId?: string;');
-  lines.push('  className?: string;');
   if (file.acceptsChildFields) {
     lines.push(`  ${file.childFieldsPropName}?: ${childFieldsPropType};`);
   }
@@ -45,11 +73,14 @@ export function printComponentFile(file: PrintedComponent): string {
   const lines = generatedBanner(file.id);
   if (file.props.some((prop) => prop.fieldType === 'event')) lines.push("'use client';", '');
   lines.push("import styles from './style.module.css';");
+  if (file.usesFragment) lines.push("import { Fragment } from 'react';");
   if (file.usesCssProperties) lines.push(`import type { CSSProperties } from 'react';`);
   lines.push(`import type { ${file.component}Props } from './types';`);
   for (const spec of file.imports) {
     if (spec.name === file.component) continue;
-    lines.push(`import { ${spec.name} } from ${quote(spec.from)};`);
+    lines.push(
+      `import { ${spec.name}${spec.propsName ? `, type ${spec.propsName}` : ''} } from ${quote(spec.from)};`,
+    );
   }
   lines.push('');
   lines.push(`export function ${file.component}({`);
@@ -63,8 +94,8 @@ export function printComponentFile(file: PrintedComponent): string {
           : '';
     lines.push(`  ${prop.name}${initializer},`);
   }
-  lines.push('  nodeId,');
   lines.push('  className,');
+  if (file.usesContext) lines.push('  context,');
   if (file.acceptsChildFields) lines.push(`  ${file.childFieldsPropName},`);
   lines.push(`}: ${file.component}Props) {`);
   lines.push('  return (');
@@ -76,13 +107,26 @@ export function printComponentFile(file: PrintedComponent): string {
 }
 
 export function printComponentIndex(file: PrintedComponent): string {
-  const types = [`${file.component}Props`, ...file.variantTypes.map((variant) => variant.name)];
+  const types = [
+    `${file.component}Props`,
+    `${file.component}Data`,
+    ...file.variantTypes.map((variant) => variant.name),
+  ];
   return [
     ...generatedBanner(file.id),
     `export { ${file.component} } from './component';`,
     `export type { ${types.join(', ')} } from './types';`,
     '',
   ].join('\n');
+}
+
+/** JSX child containers need their outer braces removed in a component return expression. */
+export function printRootElement(element: ElementNode, indent = 2) {
+  const rendered = printElement(element, indent);
+  if (!element.condition && (!element.repeat || element.fragment)) return rendered;
+  const start = rendered.indexOf('{');
+  const end = rendered.lastIndexOf('}');
+  return rendered.slice(0, start) + rendered.slice(start + 1, end);
 }
 
 function generatedBanner(id: string): string[] {
@@ -97,32 +141,67 @@ function generatedBanner(id: string): string[] {
 
 export function printElement(element: ElementNode, indent: number): string {
   const pad = '  '.repeat(indent);
+  if (element.choice) {
+    const lines = [`${pad}{(() => {`, `${pad}  switch (${element.choice.value}) {`];
+    for (const branch of element.choice.cases) {
+      lines.push(`${pad}    case ${quote(branch.value)}:`, `${pad}      return (`);
+      lines.push(printRootElement(branch.node, indent + 4));
+      lines.push(`${pad}      );`);
+    }
+    lines.push(`${pad}    default:`, `${pad}      return null;`, `${pad}  }`, `${pad}})()}`);
+    return lines.join('\n');
+  }
   const attrs = [
     ...element.attrs,
     ...(element.repeat
       ? [{ name: 'key', value: { kind: 'expr' as const, code: element.repeat.key } }]
       : []),
   ].map(printAttr);
-  const inlineAttrs = attrs.length ? ` ${attrs.join(' ')}` : '';
+  const printedAttrs = [...(element.spreads ?? []).map((spread) => `{...${spread}}`), ...attrs];
+  if (element.fragment) {
+    const body = element.children
+      .map((child) => ('text' in child ? `${pad}  ${child.text}` : printElement(child, indent + 1)))
+      .join('\n');
+    if (!element.repeat) {
+      const rendered = body ? `${pad}<Fragment>\n${body}\n${pad}</Fragment>` : `${pad}<Fragment />`;
+      return wrapCondition(element.condition, rendered, pad);
+    }
+    const innerPad = '  '.repeat(indent + 1);
+    const itemBody = body
+      .split('\n')
+      .map((line) => `${innerPad}    ${line.slice(pad.length + 2)}`)
+      .join('\n');
+    const rendered = [
+      `${pad}<Fragment>`,
+      `${innerPad}{${element.repeat.source}.map((${element.repeat.item}, ${element.repeat.index}) => (`,
+      `${innerPad}  <Fragment key={${element.repeat.key}}>`,
+      ...(itemBody ? [itemBody] : []),
+      `${innerPad}  </Fragment>`,
+      `${innerPad}))}`,
+      `${pad}</Fragment>`,
+    ].join('\n');
+    return wrapCondition(element.condition, rendered, pad);
+  }
+  const inlineAttrs = printedAttrs.length ? ` ${printedAttrs.join(' ')}` : '';
   if (element.void || element.children.length === 0) {
     const one = `${pad}<${element.tag}${inlineAttrs} />`;
     const rendered =
-      attrs.length <= 3 && one.length <= 100
+      printedAttrs.length <= 3 && one.length <= 100
         ? one
-        : `${pad}<${element.tag}\n${attrs.map((attr) => `${pad}  ${attr}`).join('\n')}\n${pad}/>`;
+        : `${pad}<${element.tag}\n${printedAttrs.map((attr) => `${pad}  ${attr}`).join('\n')}\n${pad}/>`;
     return wrapRepeat(element.repeat, wrapCondition(element.condition, rendered, pad), pad);
   }
   const only = element.children[0];
   if (element.children.length === 1 && only && 'text' in only && !only.text.includes('\n')) {
     const one = `${pad}<${element.tag}${inlineAttrs}>${only.text}</${element.tag}>`;
-    if (attrs.length <= 2 && one.length <= 100) {
+    if (printedAttrs.length <= 2 && one.length <= 100) {
       return wrapRepeat(element.repeat, wrapCondition(element.condition, one, pad), pad);
     }
   }
   const open =
-    attrs.length === 0
+    printedAttrs.length === 0
       ? `${pad}<${element.tag}>`
-      : `${pad}<${element.tag}\n${attrs.map((attr) => `${pad}  ${attr}`).join('\n')}\n${pad}>`;
+      : `${pad}<${element.tag}\n${printedAttrs.map((attr) => `${pad}  ${attr}`).join('\n')}\n${pad}>`;
   const children = element.children
     .map((child) => ('text' in child ? `${pad}  ${child.text}` : printElement(child, indent + 1)))
     .join('\n');
@@ -156,5 +235,8 @@ function printAttr(attr: Attr): string {
     return attr.value.value ? attr.name : `${attr.name}={false}`;
   }
   if (attr.value.kind === 'literal') return `${attr.name}=${quote(attr.value.value)}`;
+  if (attr.name === 'className' && /^'[A-Za-z_][A-Za-z0-9_-]*'$/.test(attr.value.code)) {
+    return `${attr.name}=${attr.value.code}`;
+  }
   return `${attr.name}={${attr.value.code}}`;
 }

@@ -4,6 +4,7 @@ import {
   resolveVariantDocument,
   validateCatalog,
   type DocumentFile,
+  type NestedNode,
 } from '../src/index';
 
 const specimen: DocumentFile = {
@@ -102,7 +103,7 @@ describe('variant overlays', () => {
       ...specimen,
       id: 'laid-out-variant-specimen',
       root: {
-        ...specimen.root,
+        ...(specimen.root as Extract<NestedNode, { type: 'frame' }>),
         layout: {
           direction: 'column',
           padding: '{space.inset.md}',

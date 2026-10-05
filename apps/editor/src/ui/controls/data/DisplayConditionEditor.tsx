@@ -11,6 +11,7 @@ export function DisplayConditionEditor({
   namePrefix = '',
   title = 'Display condition',
   removable = true,
+  emptyHint,
 }: {
   condition?: DisplayOn;
   paths: PathOption[];
@@ -19,6 +20,7 @@ export function DisplayConditionEditor({
   namePrefix?: string;
   title?: string;
   removable?: boolean;
+  emptyHint?: string;
 }) {
   const path = condition?.path ?? paths[0]?.value ?? '';
   const field = findField(paths, path);
@@ -36,7 +38,9 @@ export function DisplayConditionEditor({
     <Section title={title} collapsible defaultOpen>
       {!condition ? (
         <>
-          <p className="meta">Always rendered. Add a condition to render only when it matches.</p>
+          <p className="meta">
+            {emptyHint ?? 'Always rendered. Add a condition to render only when it matches.'}
+          </p>
           <button
             type="button"
             className="text-button"
@@ -61,6 +65,7 @@ export function DisplayConditionEditor({
           ) : null}
           <Field label="Field">
             <Select
+              aria-label="Field"
               name={`${namePrefix}display-condition-path`}
               value={path}
               options={pathOptions.map((option) => ({ value: option.value, label: option.label }))}
@@ -74,6 +79,7 @@ export function DisplayConditionEditor({
           </Field>
           <Field label="When">
             <Select
+              aria-label="When"
               name={`${namePrefix}display-condition-mode`}
               value={mode}
               options={[
@@ -91,6 +97,7 @@ export function DisplayConditionEditor({
           {mode === 'truthy' ? (
             <Field label="Truthy">
               <Select
+                aria-label="Truthy"
                 name={`${namePrefix}display-condition-truthy`}
                 value={String(truthy)}
                 options={[
@@ -142,6 +149,7 @@ function DisplayValueField({
     return (
       <Field label="Value">
         <Select
+          aria-label="Value"
           name={`${namePrefix}display-condition-value`}
           value={String(value ?? false)}
           options={[
@@ -157,6 +165,7 @@ function DisplayValueField({
     return (
       <Field label="Value">
         <NumberInput
+          aria-label="Value"
           name={`${namePrefix}display-condition-value`}
           value={typeof value === 'number' ? value : 0}
           onCommit={(next) => {
@@ -176,6 +185,7 @@ function DisplayValueField({
     return (
       <Field label="Value">
         <Select
+          aria-label="Value"
           name={`${namePrefix}display-condition-value`}
           value={selected}
           options={[
@@ -192,6 +202,7 @@ function DisplayValueField({
   return (
     <Field label="Value">
       <TextInput
+        aria-label="Value"
         name={`${namePrefix}display-condition-value`}
         value={displayValue(value)}
         onCommit={(next) => onChange(next)}

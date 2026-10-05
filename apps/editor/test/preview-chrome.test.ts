@@ -2,7 +2,6 @@
  * @vitest-environment jsdom
  */
 import { describe, expect, it } from 'vitest';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import button from '../../../examples/button.json';
 import { documentToJson } from '../src/domain/assets/files';
 import { createFrameHost } from '../src/domain/viewport/frame-host';
@@ -14,7 +13,11 @@ import {
 } from '../src/domain/viewport/viewport-chrome';
 import { createViewportBoard } from '../src/domain/viewport/viewports';
 import { createTestDocumentStore } from './controller-store.js';
-import { editorStandardCatalog, expandExampleCatalog } from './fixtures/example-catalog';
+import {
+  editorStandardCatalog,
+  editorStandardDesign,
+  expandExampleCatalog,
+} from './fixtures/example-catalog';
 
 const documents = editorStandardCatalog();
 
@@ -31,7 +34,7 @@ describe('asset preview chrome', () => {
     const store = createTestDocumentStore(buttonDoc);
     const parent = document.createElement('div');
     document.body.append(parent);
-    const designDoc = createProjectTemplateDocument();
+    const designDoc = editorStandardDesign();
     const board = createViewportBoard({
       parent,
       documents: [buttonDoc],
@@ -75,7 +78,7 @@ describe('asset preview chrome', () => {
   it('keeps page previews unpadded by default', () => {
     const editor = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     const breakpoint = { id: 'mobile', minWidth: 375 };
     expect(

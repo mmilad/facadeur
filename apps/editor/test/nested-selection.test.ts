@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { toFlat, type DocumentFile } from '@facadeur/core';
+import { structuralScopeFields, toFlat, type DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { createEditorSession } from '../src/domain/session';
+import {
+  dataFieldsForNode,
+  fieldPathOptions,
+} from '../src/ui/controls/data/DataDirectivesEditorControl.js';
 import {
   fieldContextForSelection,
   resolveNestedSelection,
@@ -115,6 +119,68 @@ describe('nested selection', () => {
     });
     expect(context?.values).toMatchObject({ label: 'Work' });
     expect(context?.inheritedValues).toMatchObject({ label: 'Work' });
+  });
+
+  it('offers nested parent item payload fields inside a drilled structural component', () => {
+    const outer: DocumentFile = {
+      version: 1,
+      id: 'outer-list',
+      name: 'Outer list',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'outer-repeat',
+            type: 'repeater',
+            children: [
+              {
+                id: 'outer-switch',
+                type: 'switch',
+                children: [{ id: 'outer-card', type: 'instance', component: 'input' }],
+              },
+            ],
+          },
+        ],
+      },
+    };
+    const inner: DocumentFile = {
+      version: 1,
+      id: 'inner-list',
+      name: 'Inner list',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'inner-repeat',
+            type: 'repeater',
+            children: [{ id: 'inner-card', type: 'instance', component: 'input' }],
+          },
+        ],
+      },
+    };
+    const flatDocuments = [outer, inner, input].map(toFlat);
+    const documents = new Map(flatDocuments.map((document) => [document.id, document]));
+    const context = { documents };
+    const outerFields = structuralScopeFields(documents.get('outer-list')!, 'outer-card', context);
+    const inherited = outerFields.filter((field) =>
+      ['item', 'index', 'props', 'parent'].includes(field.name),
+    );
+    const fields = dataFieldsForNode(
+      documents.get('inner-list')!,
+      'inner-card',
+      undefined,
+      false,
+      context,
+      inherited,
+    );
+
+    expect(fieldPathOptions(fields).map((option) => option.value)).toContain(
+      'parent.item.props.label',
+    );
   });
 
   it('gives every virtual row a unique address and guards cycles', () => {

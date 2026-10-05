@@ -3,13 +3,15 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
+import type { ComponentProps } from '../../contracts';
+
 export type FormToggleState = 'on' | 'off' | 'disabled';
 
-export interface FormToggleProps {
+export interface FormToggleData {
   label?: string;
   value?: string;
+}
+
+export interface FormToggleProps extends ComponentProps, FormToggleData {
   state?: FormToggleState;
-  /** Instance id. Sets `data-node` so a parent style rule can address this element. */
-  nodeId?: string;
-  className?: string;
 }

@@ -10,7 +10,7 @@ export function NodeBindings({
 }: {
   session: EditorSession;
   snap: EditorSnapshot;
-  node: Exclude<FlatNode, { type: 'instance' }>;
+  node: Extract<FlatNode, { type: 'frame' | 'text' | 'image' }>;
 }) {
   if (!ownsComponentFeatures(snap.document.kind)) {
     return null;
@@ -48,7 +48,7 @@ export function NodeBindings({
 
 function writeBindings(
   session: EditorSession,
-  node: Exclude<FlatNode, { type: 'instance' }>,
+  node: Extract<FlatNode, { type: 'frame' | 'text' | 'image' }>,
   bindings: Binding[],
 ) {
   session.execute({

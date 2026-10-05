@@ -17,6 +17,7 @@ export function fieldContextForSelection(input: {
   const source = nestedSelection?.document ?? document;
   const selected = nestedSelection?.node ?? selectedNode;
   if (!selected) return null;
+  if (selected.type === 'repeater' || selected.type === 'switch') return null;
 
   const ownerNodeId = nestedSelection?.ownerNodeId ?? selected.id;
   let instancePath = nestedSelection?.instancePath ?? '';

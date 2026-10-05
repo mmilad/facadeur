@@ -7,6 +7,7 @@ import {
   type DocumentFile,
   type FieldDefinition,
   type NestedNode,
+  type SchemaCatalog,
 } from '@facadeur/core';
 import { CodegenError, componentName, propName, quote, variantTypeName } from '../names';
 import { assertDefault, fieldTypeName, jsLiteral } from './catalog-fields';
@@ -29,12 +30,13 @@ export function exposedMemberName(
 export function assignCatalog(
   documents: readonly DocumentFile[],
   contracts: ReadonlyMap<string, Map<string, FieldDefinition>>,
+  schemaCatalog?: SchemaCatalog,
 ): Map<string, CatalogEntry> {
   const catalog = new Map<string, CatalogEntry>();
   const componentNames = new Set<string>();
   for (const document of documents) {
     const component = componentName(document.id, componentNames);
-    const used = new Set<string>(['nodeId', 'className']);
+    const used = new Set<string>(['nodeId', 'className', 'context']);
     const typeNames = new Set<string>([component, `${component}Props`]);
     const fields = new Map<string, PropSpec>();
     const contractFields = contracts.get(document.id);
@@ -85,6 +87,7 @@ export function assignCatalog(
       : undefined;
     catalog.set(document.id, {
       document,
+      ...(schemaCatalog ? { schemaCatalog } : {}),
       component,
       contractFields,
       fields,
@@ -99,6 +102,7 @@ export function assignCatalog(
     const used = new Set<string>([
       'nodeId',
       'className',
+      'context',
       ...[...entry.fields.values(), ...entry.variants.values(), ...entry.events.values()].map(
         (prop) => prop.name,
       ),

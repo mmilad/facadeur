@@ -11,6 +11,8 @@ import {
   type DocumentChange,
   type DocumentFile,
   type DocumentStore,
+  type FieldValue,
+  type SchemaCatalog,
 } from '@facadeur/core';
 import {
   createDomRenderer,
@@ -18,18 +20,598 @@ import {
   renderDocument,
   renderNode,
 } from '@facadeur/renderer-dom';
+import { resolveDocumentFields, resolveInstance } from '../src/resolve';
 import { renderedNode, renderedNodes } from './rendered-node';
 
 const examplesDir = resolve(process.cwd(), 'examples');
+
+function exampleSchemaCatalog(): SchemaCatalog {
+  const raw = JSON.parse(readFileSync(resolve(examplesDir, 'schemas.json'), 'utf8')) as {
+    schemas: SchemaCatalog['schemas'];
+  };
+  return { schemas: raw.schemas };
+}
 
 function examples(): DocumentFile[] {
   const raw = readdirSync(examplesDir)
     .filter((name) => name.endsWith('.json') && name !== 'schemas.json')
     .map((name) => JSON.parse(readFileSync(resolve(examplesDir, name), 'utf8')) as unknown);
-  return validateCatalog(raw);
+  return validateCatalog(raw, { schemaCatalog: exampleSchemaCatalog() });
 }
 
 describe('renderer', () => {
+  it('selects the first matching switch child and keeps the switch transparent', () => {
+    const page: DocumentFile = {
+      version: 1,
+      id: 'structural-switch-page',
+      name: 'Structural switch page',
+      kind: 'page',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'switch-instance',
+            type: 'instance',
+            component: 'structural-switch',
+            fields: { props: { title: 'First card' } },
+          },
+        ],
+      },
+    };
+    const switched: DocumentFile = {
+      version: 1,
+      id: 'structural-switch',
+      name: 'Structural switch',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'switch',
+        children: [
+          { id: 'card', type: 'instance', component: 'structural-card' },
+          { id: 'badge', type: 'instance', component: 'structural-badge' },
+        ],
+      },
+    };
+    const card: DocumentFile = {
+      version: 1,
+      id: 'structural-card',
+      name: 'Card',
+      kind: 'component',
+      fields: [{ name: 'title', type: 'text', required: true }],
+      root: {
+        id: 'root',
+        type: 'text',
+        tag: 'article',
+        bindings: [{ field: 'title', target: 'text' }],
+      },
+    };
+    const badge: DocumentFile = {
+      version: 1,
+      id: 'structural-badge',
+      name: 'Badge',
+      kind: 'component',
+      fields: [{ name: 'label', type: 'text', required: true }],
+      root: {
+        id: 'root',
+        type: 'text',
+        tag: 'strong',
+        bindings: [{ field: 'label', target: 'text' }],
+      },
+    };
+    const host = document.createElement('main');
+    renderDocument(page, [page, switched, card, badge], host);
+
+    expect(host.querySelectorAll('article')).toHaveLength(1);
+    expect(host.querySelector('strong')).toBeNull();
+    expect(host.querySelector('[data-id="switch-instance/root/card"]')?.textContent).toBe(
+      'First card',
+    );
+    expect(host.querySelector('[data-id="switch-instance/root"]')).toBeNull();
+  });
+
+  it('renders repeater union items as matching component instances without repeater wrappers', () => {
+    const schemaCatalog: SchemaCatalog = {
+      schemas: [
+        {
+          id: 'CardData',
+          name: 'Card data',
+          schema: {
+            type: 'object',
+            properties: { type: { type: 'string', enum: ['card'] }, title: { type: 'string' } },
+            required: ['type', 'title'],
+            additionalProperties: false,
+          },
+        },
+        {
+          id: 'BadgeData',
+          name: 'Badge data',
+          schema: {
+            type: 'object',
+            properties: { type: { type: 'string', enum: ['badge'] }, label: { type: 'string' } },
+            required: ['type', 'label'],
+            additionalProperties: false,
+          },
+        },
+      ],
+    };
+    const page: DocumentFile = {
+      version: 1,
+      id: 'structural-repeater-page',
+      name: 'Structural repeater page',
+      kind: 'page',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'repeat-instance',
+            type: 'instance',
+            component: 'structural-repeater',
+            fields: {
+              items: [
+                { type: 'card', title: 'Card row' },
+                { type: 'badge', label: 'Badge row' },
+              ],
+            },
+          },
+        ],
+      },
+    };
+    const repeater: DocumentFile = {
+      version: 1,
+      id: 'structural-repeater',
+      name: 'Structural repeater',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'repeater',
+        children: [
+          {
+            id: 'choice',
+            type: 'switch',
+            children: [
+              { id: 'card', type: 'instance', component: 'structural-card' },
+              { id: 'badge', type: 'instance', component: 'structural-badge' },
+            ],
+          },
+        ],
+      },
+    };
+    const card: DocumentFile = {
+      version: 1,
+      id: 'structural-card',
+      name: 'Card',
+      kind: 'component',
+      schemaUse: { direct: { kind: 'schema', schemaId: 'CardData' } },
+      root: {
+        id: 'root',
+        type: 'text',
+        tag: 'article',
+        bindings: [{ field: 'title', target: 'text' }],
+      },
+    };
+    const badge: DocumentFile = {
+      version: 1,
+      id: 'structural-badge',
+      name: 'Badge',
+      kind: 'section',
+      schemaUse: { direct: { kind: 'schema', schemaId: 'BadgeData' } },
+      root: {
+        id: 'root',
+        type: 'text',
+        tag: 'strong',
+        bindings: [{ field: 'label', target: 'text' }],
+      },
+    };
+    const host = document.createElement('main');
+    renderDocument(page, [page, repeater, card, badge], host, { schemaCatalog });
+
+    expect([...host.querySelectorAll('article, strong')].map((node) => node.textContent)).toEqual([
+      'Card row',
+      'Badge row',
+    ]);
+    expect(host.querySelectorAll('[data-type="repeater"], [data-type="switch"]')).toHaveLength(0);
+    expect(host.querySelector('[data-id="repeat-instance/root/0/choice/card"]')).not.toBeNull();
+    expect(host.querySelector('[data-id="repeat-instance/root/1/choice/badge"]')).not.toBeNull();
+
+    const context = createRenderContext([page, repeater, card, badge], { schemaCatalog });
+    context.canvasDocument = page;
+    context.styleDocumentId = page.id;
+    context.scope = resolveDocumentFields(page, context.catalog, context.schemaCatalog);
+    const resolved = resolveInstance('repeat-instance/root/1/choice/badge', context);
+    expect(resolved?.instance.id).toBe('badge');
+    expect(resolved?.path).toBe('repeat-instance/root/1/choice');
+    expect(resolved?.scope.props).toEqual({ type: 'badge', label: 'Badge row' });
+  });
+
+  it('carries three nested repeat scopes through a component instance', () => {
+    const page: DocumentFile = {
+      version: 1,
+      id: 'nested-repeat-parent-page',
+      name: 'Nested repeat parent page',
+      kind: 'page',
+      fields: [
+        {
+          name: 'sections',
+          type: 'array',
+          default: [
+            {
+              name: 'Section one',
+              rows: [{ name: 'Row one', values: [{ name: 'Leaf one' }] }],
+            },
+          ],
+          items: {
+            type: 'object',
+            fields: [
+              { name: 'name', type: 'text', required: true },
+              {
+                name: 'rows',
+                type: 'array',
+                items: {
+                  type: 'object',
+                  fields: [
+                    { name: 'name', type: 'text', required: true },
+                    {
+                      name: 'values',
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        fields: [{ name: 'name', type: 'text', required: true }],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'sections',
+            type: 'frame',
+            repeat: { path: 'sections', as: 'section' },
+            children: [
+              {
+                id: 'rows',
+                type: 'frame',
+                repeat: { path: 'section.rows', as: 'row' },
+                children: [
+                  {
+                    id: 'values',
+                    type: 'frame',
+                    repeat: { path: 'row.values', as: 'value' },
+                    children: [
+                      {
+                        id: 'probe',
+                        type: 'instance',
+                        component: 'nested-repeat-scope-probe',
+                        fieldBindings: {
+                          currentName: 'value.name',
+                          rowName: 'parent.item.name',
+                          sectionName: 'parent.parent.item.name',
+                          currentIndex: 'index',
+                          rowIndex: 'parent.index',
+                          sectionIndex: 'parent.parent.index',
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    };
+    const probe: DocumentFile = {
+      version: 1,
+      id: 'nested-repeat-scope-probe',
+      name: 'Nested repeat scope probe',
+      kind: 'atom',
+      fields: [
+        { name: 'currentName', type: 'text' },
+        { name: 'rowName', type: 'text' },
+        { name: 'sectionName', type: 'text' },
+        { name: 'currentIndex', type: 'number' },
+        { name: 'rowIndex', type: 'number' },
+        { name: 'sectionIndex', type: 'number' },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          { id: 'current', type: 'text', bindings: [{ field: 'currentName', target: 'text' }] },
+          { id: 'row', type: 'text', bindings: [{ field: 'rowName', target: 'text' }] },
+          { id: 'section', type: 'text', bindings: [{ field: 'sectionName', target: 'text' }] },
+          {
+            id: 'current-index',
+            type: 'text',
+            bindings: [{ field: 'currentIndex', target: 'text' }],
+          },
+          { id: 'row-index', type: 'text', bindings: [{ field: 'rowIndex', target: 'text' }] },
+          {
+            id: 'section-index',
+            type: 'text',
+            bindings: [{ field: 'sectionIndex', target: 'text' }],
+          },
+        ],
+      },
+    };
+    const host = document.createElement('main');
+    renderDocument(page, [page, probe], host);
+
+    expect(host.textContent).toBe('Leaf oneRow oneSection one000');
+    expect(host.querySelector('[data-id="sections/0/rows/0/values/0/probe"]')).not.toBeNull();
+  });
+
+  it('selects explicit same-schema cases and preserves nested item, props, index, and parent scopes', () => {
+    const schemaCatalog: SchemaCatalog = {
+      schemas: [
+        {
+          id: 'OuterPayload',
+          name: 'Outer payload',
+          schema: {
+            type: 'object',
+            properties: {
+              title: { type: 'string' },
+              items: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    type: { const: 'child' },
+                    props: {
+                      type: 'object',
+                      properties: { title: { type: 'string' } },
+                      required: ['title'],
+                      additionalProperties: false,
+                    },
+                  },
+                  required: ['type', 'props'],
+                  additionalProperties: false,
+                },
+              },
+            },
+            required: ['title', 'items'],
+            additionalProperties: false,
+          },
+        },
+        {
+          id: 'InnerPayload',
+          name: 'Inner payload',
+          schema: {
+            type: 'object',
+            properties: { title: { type: 'string' } },
+            required: ['title'],
+            additionalProperties: false,
+          },
+        },
+      ],
+    };
+    const page: DocumentFile = {
+      version: 1,
+      id: 'explicit-case-page',
+      name: 'Explicit case page',
+      kind: 'page',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'list-instance',
+            type: 'instance',
+            component: 'explicit-case-list',
+            fields: {
+              items: [
+                {
+                  type: 'wrapper',
+                  props: {
+                    title: 'Outer card',
+                    items: [{ type: 'child', props: { title: 'Inner row' } }],
+                  },
+                },
+                { type: 'alternate', props: { title: 'Alternate card', items: [] } },
+              ],
+            },
+          },
+        ],
+      },
+    };
+    const list: DocumentFile = {
+      version: 1,
+      id: 'explicit-case-list',
+      name: 'Explicit case list',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'repeater',
+        children: [
+          {
+            id: 'choice',
+            type: 'switch',
+            children: [
+              {
+                id: 'wrapper',
+                type: 'instance',
+                component: 'outer-wrapper',
+                switchCase: 'wrapper',
+              },
+              {
+                id: 'alternate',
+                type: 'instance',
+                component: 'outer-alternate',
+                switchCase: 'alternate',
+              },
+            ],
+          },
+        ],
+      },
+    };
+    const wrapper: DocumentFile = {
+      version: 1,
+      id: 'outer-wrapper',
+      name: 'Outer wrapper',
+      kind: 'component',
+      schemaUse: { direct: { kind: 'schema', schemaId: 'OuterPayload' } },
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'nested-list',
+            type: 'instance',
+            component: 'nested-case-list',
+            fieldBindings: { items: 'items' },
+          },
+        ],
+      },
+    };
+    const alternate: DocumentFile = {
+      version: 1,
+      id: 'outer-alternate',
+      name: 'Outer alternate',
+      kind: 'component',
+      schemaUse: { direct: { kind: 'schema', schemaId: 'OuterPayload' } },
+      root: {
+        id: 'root',
+        type: 'text',
+        tag: 'article',
+        bindings: [{ field: 'title', target: 'text' }],
+      },
+    };
+    const nestedList: DocumentFile = {
+      version: 1,
+      id: 'nested-case-list',
+      name: 'Nested case list',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'repeater',
+        children: [
+          {
+            id: 'choice',
+            type: 'switch',
+            children: [
+              {
+                id: 'child',
+                type: 'instance',
+                component: 'inner-row',
+                switchCase: 'child',
+              },
+            ],
+          },
+        ],
+      },
+    };
+    const innerRow: DocumentFile = {
+      version: 1,
+      id: 'inner-row',
+      name: 'Inner row',
+      kind: 'component',
+      schemaUse: { direct: { kind: 'schema', schemaId: 'InnerPayload' } },
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'probe',
+            type: 'instance',
+            component: 'scope-probe',
+            fields: { title: 'Nested local title' },
+            fieldBindings: {
+              outerType: 'parent.item.type',
+              outerTitle: 'parent.item.props.title',
+              outerIndex: 'parent.index',
+              innerType: 'item.type',
+              innerTitle: 'props.title',
+              innerIndex: 'index',
+            },
+          },
+        ],
+      },
+    };
+    const probe: DocumentFile = {
+      version: 1,
+      id: 'scope-probe',
+      name: 'Scope probe',
+      kind: 'component',
+      fields: [
+        { name: 'title', type: 'text' },
+        { name: 'outerType', type: 'text' },
+        { name: 'outerTitle', type: 'text' },
+        { name: 'outerIndex', type: 'number' },
+        { name: 'innerType', type: 'text' },
+        { name: 'innerTitle', type: 'text' },
+        { name: 'innerIndex', type: 'number' },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          { id: 'outer-type', type: 'text', bindings: [{ field: 'outerType', target: 'text' }] },
+          { id: 'outer-title', type: 'text', bindings: [{ field: 'outerTitle', target: 'text' }] },
+          { id: 'outer-index', type: 'text', bindings: [{ field: 'outerIndex', target: 'text' }] },
+          { id: 'inner-type', type: 'text', bindings: [{ field: 'innerType', target: 'text' }] },
+          { id: 'inner-title', type: 'text', bindings: [{ field: 'innerTitle', target: 'text' }] },
+          { id: 'inner-index', type: 'text', bindings: [{ field: 'innerIndex', target: 'text' }] },
+          {
+            id: 'nested-props',
+            type: 'instance',
+            component: 'scope-probe-leaf',
+            fieldBindings: { observed: 'props.title' },
+          },
+        ],
+      },
+    };
+    const probeLeaf: DocumentFile = {
+      version: 1,
+      id: 'scope-probe-leaf',
+      name: 'Scope probe leaf',
+      kind: 'atom',
+      fields: [{ name: 'observed', type: 'text' }],
+      root: {
+        id: 'root',
+        type: 'text',
+        bindings: [{ field: 'observed', target: 'text' }],
+      },
+    };
+    expect(() =>
+      validateCatalog([page, list, wrapper, alternate, nestedList, innerRow, probe, probeLeaf], {
+        schemaCatalog,
+      }),
+    ).not.toThrow();
+    const listInstance = page.root.type === 'frame' ? page.root.children?.[0] : undefined;
+    if (!listInstance || listInstance.type !== 'instance') throw new Error('missing list instance');
+    listInstance.fields = {
+      ...listInstance.fields,
+      items: [
+        ...((listInstance.fields?.items as FieldValue[] | undefined) ?? []),
+        { type: 'unknown', props: { title: 'Must not render', items: [] } },
+      ],
+    };
+    const host = document.createElement('main');
+    renderDocument(
+      page,
+      [page, list, wrapper, alternate, nestedList, innerRow, probe, probeLeaf],
+      host,
+      {
+        schemaCatalog,
+      },
+    );
+
+    expect(
+      host.querySelector('[data-id="list-instance/root/1/choice/alternate"]')?.textContent,
+    ).toBe('Alternate card');
+    expect(host.querySelector('[data-id="list-instance/root/2/choice/wrapper"]')).toBeNull();
+    const probeNode = host.querySelector('[data-component="scope-probe"]');
+    expect(probeNode?.textContent).toBe('wrapperOuter card0childInner row0Nested local title');
+  });
+
   it('automatically forwards matching parent values unless the instance opts out', () => {
     const parent: DocumentFile = {
       version: 1,
@@ -138,6 +720,38 @@ describe('renderer', () => {
 
     expect(renderedNode(host, 'root')?.textContent).toBe('Compact');
     expect(component.root).toMatchObject({ text: 'Base' });
+    renderer.destroy();
+  });
+
+  it('exposes a mounted ordinary component’s effective fields through props scope', () => {
+    const component: DocumentFile = {
+      version: 1,
+      id: 'mounted-props-scope',
+      name: 'Mounted props scope',
+      kind: 'component',
+      fields: [{ name: 'title', type: 'text', default: 'Standalone' }],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'visible',
+            type: 'text',
+            text: 'Visible',
+            displayOn: { path: 'props.title', equals: 'Standalone' },
+          },
+        ],
+      },
+    };
+
+    const directHost = document.createElement('main');
+    renderDocument(component, [component], directHost);
+    expect(renderedNode(directHost, 'visible')?.textContent).toBe('Visible');
+
+    const mountedHost = document.createElement('main');
+    const renderer = createDomRenderer({ parent: mountedHost, catalog: [component] });
+    renderer.mount(component);
+    expect(renderedNode(mountedHost, 'visible')?.textContent).toBe('Visible');
     renderer.destroy();
   });
 
@@ -326,7 +940,9 @@ describe('renderer', () => {
     const page = documents.find((document) => document.id === 'specimen');
     if (!page) throw new Error('missing page');
     const host = document.createElement('div');
-    const records = renderDocument(page, documents, host);
+    const records = renderDocument(page, documents, host, {
+      schemaCatalog: exampleSchemaCatalog(),
+    });
     expect(renderedNode(host, 'specimen-section/intro/heading')?.textContent).toBe('Specimen');
     expect(renderedNode(host, 'specimen-section/buttons/button-row/btn-primary')?.textContent).toBe(
       'Primary',
@@ -382,7 +998,9 @@ describe('renderer', () => {
     const documents = examples();
     const page = documents.find((entry) => entry.id === 'specimen');
     if (!page) throw new Error('missing page');
-    renderDocument(page, documents, frameDocument.body);
+    renderDocument(page, documents, frameDocument.body, {
+      schemaCatalog: exampleSchemaCatalog(),
+    });
     const heading = renderedNode(frameDocument, 'specimen-section/intro/heading');
     expect(heading?.ownerDocument).toBe(frameDocument);
     expect(heading?.textContent).toBe('Specimen');
@@ -713,9 +1331,10 @@ describe('renderer', () => {
         ],
       },
     };
-    expect(() => validateCatalog([host, media])).not.toThrow();
+    const schemaCatalog = exampleSchemaCatalog();
+    expect(() => validateCatalog([host, media], { schemaCatalog })).not.toThrow();
     const element = document.createElement('div');
-    renderDocument(host, [host, media], element, { paintRoot: true });
+    renderDocument(host, [host, media], element, { paintRoot: true, schemaCatalog });
     expect(renderedNode(element, 'root/image/image')?.getAttribute('src')).toBe('/cover.png');
     expect(renderedNode(element, 'root/image/video')).toBeNull();
     expect(renderedNode(element, 'root/video/video')?.getAttribute('src')).toBe('/intro.mp4');

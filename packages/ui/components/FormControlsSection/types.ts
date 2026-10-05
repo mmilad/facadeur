@@ -3,7 +3,9 @@
  * The facadeur JSON is the source of truth. Do not edit by hand.
  */
 
-export interface FormControlsSectionProps {
+import type { ComponentProps } from '../../contracts';
+
+export interface FormControlsSectionData {
   formFields?: {
     id: string;
     kind: 'input' | 'textarea' | 'select' | 'toggle';
@@ -23,7 +25,6 @@ export interface FormControlsSectionProps {
   rows?: number;
   label?: string;
   value?: string;
-  /** Instance id. Sets `data-node` so a parent style rule can address this element. */
-  nodeId?: string;
-  className?: string;
 }
+
+export interface FormControlsSectionProps extends ComponentProps, FormControlsSectionData {}

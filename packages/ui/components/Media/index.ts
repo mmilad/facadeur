@@ -4,4 +4,4 @@
  */
 
 export { Media } from './component';
-export type { MediaProps } from './types';
+export type { MediaProps, MediaData } from './types';

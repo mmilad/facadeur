@@ -6,12 +6,11 @@ import { fireEvent } from '@testing-library/react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
 import button from '../../../examples/button.json';
 import textarea from '../../../examples/textarea.json';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';
-import { expandExampleCatalog } from './fixtures/example-catalog';
+import { editorStandardDesign, expandExampleCatalog } from './fixtures/example-catalog';
 
 /** Native control node — preview-options UI is tested apart from composed `input` → `form-input`. */
 const inputWithNativeControl: DocumentFile = {
@@ -71,7 +70,7 @@ describe('Content tab preview options disclosure', () => {
   it('keeps non-preview attributes above the disclosure', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     await renderInputControl(session);
 
@@ -94,7 +93,7 @@ describe('Content tab preview options disclosure', () => {
   it('renders allowlist attributes inside a collapsed Preview options disclosure', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     await renderInputControl(session);
 
@@ -113,7 +112,7 @@ describe('Content tab preview options disclosure', () => {
   it('omits the disclosure when the node has no preview attributes', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     host = document.createElement('div');
     document.body.append(host);
@@ -132,7 +131,7 @@ describe('Content tab preview options disclosure', () => {
   it('still commits attribute edits from inside the disclosure', async () => {
     const session: EditorSession = createEditorSession({
       documents,
-      design: createProjectTemplateDocument(),
+      design: editorStandardDesign(),
     });
     await renderInputControl(session);
 

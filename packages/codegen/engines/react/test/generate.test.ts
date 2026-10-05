@@ -9,9 +9,11 @@ import {
   validateDocumentFile,
   type DocumentFile,
   type NestedNode,
+  type SchemaCatalog,
 } from '@facadeur/core';
 import { CodegenError, designFromDocument, generateReact } from '../src/index';
 import { formatGenerated, readRepoFile } from '../src/format';
+import { generatedRuntime } from './generated-runtime';
 
 const examplesDir = fileURLToPath(new URL('../../../../../examples/', import.meta.url));
 
@@ -33,21 +35,26 @@ const componentFiles = [
   'specimen-section.json',
   'form-controls-page.json',
   'form-controls-section.json',
+  'new-section.json',
 ];
 
 function loadCatalog(): {
   documents: DocumentFile[];
   design: ReturnType<typeof designFromDocument>;
 } {
+  const designDocument = validateDocumentFile(
+    JSON.parse(readFileSync(`${examplesDir}project-template.json`, 'utf8')) as unknown,
+  );
+  const schemaLibrary = JSON.parse(readFileSync(`${examplesDir}schemas.json`, 'utf8')) as {
+    schemas: SchemaCatalog['schemas'];
+  };
+  const schemaCatalog: SchemaCatalog = { schemas: schemaLibrary.schemas };
+  const design = { ...designFromDocument(designDocument), schemaCatalog };
   const documents = validateCatalog(
     componentFiles.map(
       (name) => JSON.parse(readFileSync(`${examplesDir}${name}`, 'utf8')) as unknown,
     ),
-  );
-  const design = designFromDocument(
-    validateDocumentFile(
-      JSON.parse(readFileSync(`${examplesDir}project-template.json`, 'utf8')) as unknown,
-    ),
+    { schemaCatalog },
   );
   return { documents, design };
 }
@@ -84,7 +91,7 @@ function expectGeneratedTypecheck(files: { path: string; contents: string }[]): 
     }
     writeFileSync(
       join(root, 'react.d.ts'),
-      "declare module 'react' { export type CSSProperties = Record<string, string | number>; }\ndeclare module 'react/jsx-runtime' { export const Fragment: unknown; export function jsx(...args: unknown[]): unknown; export function jsxs(...args: unknown[]): unknown; }\ntype TestChangeEvent = { currentTarget: { value: string } };\ndeclare namespace JSX { interface IntrinsicElements { [element: string]: any; input: { [key: string]: any; onChange?: (event: TestChangeEvent) => void }; textarea: { [key: string]: any; onChange?: (event: TestChangeEvent) => void }; } }\n",
+      "declare module 'react' { export type CSSProperties = Record<string, string | number>; export const Fragment: (props: any) => any; }\ndeclare module 'react/jsx-runtime' { export const Fragment: unknown; export function jsx(...args: unknown[]): unknown; export function jsxs(...args: unknown[]): unknown; }\ntype TestChangeEvent = { currentTarget: { value: string } };\ndeclare namespace JSX { interface IntrinsicElements { [element: string]: any; input: { [key: string]: any; onChange?: (event: TestChangeEvent) => void }; textarea: { [key: string]: any; onChange?: (event: TestChangeEvent) => void }; } }\n",
       'utf8',
     );
     roots.push(join(root, 'react.d.ts'));
@@ -110,7 +117,265 @@ function expectGeneratedTypecheck(files: { path: string; contents: string }[]): 
 
 describe('generateReact', () => {
   const { documents, design } = loadCatalog();
-  const { ui: files } = generateReact({ documents, design });
+  const { ui: files } = generateReact({ documents, design, schemaCatalog: design.schemaCatalog });
+
+  it('separates authored data contracts from transport without forwarding unused context', () => {
+    const shared = source(files, 'contracts.ts');
+    expect(shared).toContain('export interface ComponentProps');
+    expect(shared).toContain('context?: DataContext;');
+    expect(shared).toContain('export interface CommitProps<TPayload>');
+    expect(componentTypes(files, 'FormInput')).toContain('extends ComponentProps, FormInputData');
+    expect(componentTypes(files, 'Input')).toContain('label?: string;');
+    expect(componentTypes(files, 'Card')).not.toContain('value?: string;');
+    for (const name of ['FormInput', 'Input', 'Card', 'SignIn']) {
+      expect(componentSource(files, name)).not.toMatch(/\bcontext\b/);
+      expect(componentTypes(files, name)).not.toContain('FacadeurRepeatScope');
+    }
+    expectGeneratedTypecheck([
+      ...files,
+      {
+        path: 'contract-check.ts',
+        contents: `import type { FormInputProps, InputProps, CardProps } from './index';
+type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
+type Assert<T extends true> = T;
+export type ValueCheck = Assert<Equal<FormInputProps['value'], string | undefined>>;
+export type LabelCheck = Assert<Equal<InputProps['label'], string | undefined>>;
+export type CommitCheck = Assert<Equal<Parameters<NonNullable<FormInputProps['onCommit']>>[0], { value: string }>>;
+export type CardCheck = Assert<Equal<'value' extends keyof CardProps ? true : false, false>>;
+`,
+      },
+    ]);
+  });
+
+  it('emits schema references, composition and component-owned extensions', () => {
+    const schemaCatalog: SchemaCatalog = {
+      schemas: [
+        {
+          id: 'shared',
+          name: 'Shared',
+          schema: {
+            type: 'object',
+            properties: { title: { type: 'string' }, count: { type: 'integer', default: 2 } },
+            required: ['title', 'count'],
+            additionalProperties: false,
+          },
+        },
+        {
+          id: 'choice',
+          name: 'Choice',
+          schema: {
+            type: 'object',
+            properties: { enabled: { type: 'boolean' } },
+            required: ['enabled'],
+            oneOf: [
+              { $ref: 'facadeur://schema/shared' },
+              { type: 'object', properties: { value: { type: 'string' } }, required: ['value'] },
+            ],
+          },
+        },
+      ],
+    };
+    const shared: DocumentFile = {
+      version: 1,
+      id: 'assigned',
+      name: 'Assigned',
+      kind: 'component',
+      schemaUse: { direct: { kind: 'schema', schemaId: 'shared' } },
+      root: { id: 'root', type: 'text', bindings: [{ field: 'title', target: 'text' }] },
+    };
+    const extended: DocumentFile = {
+      version: 1,
+      id: 'extended',
+      name: 'Extended',
+      kind: 'component',
+      schemaUse: {
+        fields: [
+          { name: 'payload', type: { kind: 'schema', schemaId: 'choice' } },
+          { name: 'label', type: { kind: 'type', type: 'string' } },
+        ],
+      },
+      root: { id: 'root', type: 'text', bindings: [{ field: 'label', target: 'text' }] },
+    };
+    const { ui } = generateReact({ documents: [shared, extended], schemaCatalog });
+    expect(source(ui, 'types/ChoiceSchema.ts')).toContain('import type { SharedSchema }');
+    expect(source(ui, 'types/ChoiceSchema.ts')).toContain("'enabled': boolean");
+    expect(source(ui, 'types/ChoiceSchema.ts')).toContain('& (SharedSchema |');
+    expect(componentTypes(ui, 'Assigned')).toContain("extends Pick<SharedSchema, 'title'>");
+    expect(componentTypes(ui, 'Assigned')).toContain('count?: number;');
+    expect(componentTypes(ui, 'Extended')).toContain('payload?: ChoiceSchema;');
+    expect(componentTypes(ui, 'Extended')).toContain('label?: string;');
+    expectGeneratedTypecheck([
+      ...ui,
+      {
+        path: 'schema-check.ts',
+        contents: `
+import type { ChoiceSchema, AssignedProps, ExtendedData } from './index';
+const choice: ChoiceSchema = { enabled: true, title: 'Title', count: 2 };
+const assigned: AssignedProps = { title: 'Default count' };
+const extended: ExtendedData = { label: 'Local field', payload: choice };
+// @ts-expect-error shared required field must stay required
+const invalid: AssignedProps = {};
+// @ts-expect-error composition must retain root requirements
+const invalidChoice: ChoiceSchema = { title: 'Title', count: 2 };
+export { assigned, extended, invalid, invalidChoice };
+`,
+      },
+    ]);
+  });
+
+  it('keeps root Switch case and payload types correlated', () => {
+    const card: DocumentFile = {
+      version: 1,
+      id: 'case-card',
+      name: 'Card',
+      kind: 'component',
+      fields: [{ name: 'title', type: 'text', required: true }],
+      root: { id: 'root', type: 'text', bindings: [{ field: 'title', target: 'text' }] },
+    };
+    const textarea: DocumentFile = {
+      version: 1,
+      id: 'case-textarea',
+      name: 'Textarea',
+      kind: 'component',
+      fields: [{ name: 'value', type: 'text', required: true }],
+      root: { id: 'root', type: 'text', bindings: [{ field: 'value', target: 'text' }] },
+    };
+    const document: DocumentFile = {
+      version: 1,
+      id: 'case-switch',
+      name: 'Case switch',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'switch',
+        children: [
+          { id: 'card', type: 'instance', component: card.id, switchCase: 'A' },
+          { id: 'textarea', type: 'instance', component: textarea.id, switchCase: 'B' },
+        ],
+      },
+    };
+    const { ui } = generateReact({ documents: [document, card, textarea] });
+    expect(componentTypes(ui, 'CaseSwitch')).toContain('CaseCardItem | CaseTextareaItem');
+    expectGeneratedTypecheck([
+      ...ui,
+      {
+        path: 'case-check.ts',
+        contents: `
+import type { CaseSwitchData } from './index';
+const card: CaseSwitchData = { props: { type: 'A', props: { title: 'Card' } } };
+const textarea: CaseSwitchData = { props: { type: 'B', props: { value: 'Textarea' } } };
+// @ts-expect-error case A requires the Card payload
+const invalid: CaseSwitchData = { props: { type: 'A', props: { value: 'Textarea' } } };
+export { card, textarea, invalid };
+`,
+      },
+    ]);
+    const runtime = generatedRuntime(ui);
+    const component = runtime.load('components/CaseSwitch').CaseSwitch;
+    const cardHtml: string = runtime.server.renderToStaticMarkup(
+      runtime.react.createElement(component, { props: { type: 'A', props: { title: 'Card' } } }),
+    );
+    const textareaHtml: string = runtime.server.renderToStaticMarkup(
+      runtime.react.createElement(component, {
+        props: { type: 'B', props: { value: 'Textarea' } },
+      }),
+    );
+    expect(cardHtml).toContain('data-component="case-card"');
+    expect(cardHtml).not.toContain('data-component="case-textarea"');
+    expect(textareaHtml).toContain('data-component="case-textarea"');
+    expect(textareaHtml).not.toContain('data-component="case-card"');
+  });
+
+  it('preserves value types, required fields and authored fields named context', () => {
+    const control: DocumentFile = {
+      version: 1,
+      id: 'shared-control',
+      name: 'Shared control',
+      kind: 'component',
+      fields: [
+        { name: 'label', type: 'text', required: true },
+        { name: 'value', type: 'boolean' },
+        { name: 'context', type: 'text' },
+      ],
+      events: [{ name: 'commit', payload: { value: 'boolean' } }],
+      root: { id: 'root', type: 'text', bindings: [{ field: 'context', target: 'text' }] },
+    };
+    const { ui } = generateReact({ documents: [control] });
+    expect(componentTypes(ui, 'SharedControl')).toContain('value?: boolean;');
+    expect(componentTypes(ui, 'SharedControl')).toContain('label: string;');
+    expect(componentSource(ui, 'SharedControl')).toContain('{contextField}');
+    expectGeneratedTypecheck([
+      ...ui,
+      {
+        path: 'contract-check.ts',
+        contents: `import type { SharedControlProps } from './index';
+type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
+type Assert<T extends true> = T;
+export type ValueCheck = Assert<Equal<SharedControlProps['value'], boolean | undefined>>;
+export type RequiredCheck = Assert<Equal<SharedControlProps['label'], string>>;
+export type FieldCheck = Assert<Equal<SharedControlProps['contextField'], string | undefined>>;
+export type CommitCheck = Assert<Equal<Parameters<NonNullable<SharedControlProps['onCommit']>>[0], { value: boolean }>>;
+`,
+      },
+    ]);
+  });
+
+  it('passes context through wrappers and nested repeaters only to consumers', () => {
+    const leaf: DocumentFile = {
+      version: 1,
+      id: 'context-leaf',
+      name: 'Context leaf',
+      kind: 'component',
+      fields: [{ name: 'title', type: 'text' }],
+      root: {
+        id: 'root',
+        type: 'text',
+        bindings: [{ field: 'title', target: 'text' }],
+        displayOn: { path: 'parent.item.props.title', truthy: true },
+      },
+    };
+    const wrapper: DocumentFile = {
+      version: 1,
+      id: 'context-wrapper',
+      name: 'Context wrapper',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [{ id: 'leaf', type: 'instance', component: leaf.id }],
+      },
+    };
+    const group: DocumentFile = {
+      version: 1,
+      id: 'context-group',
+      name: 'Context group',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'repeater',
+        children: [{ id: 'wrapper', type: 'instance', component: wrapper.id }],
+      },
+    };
+    const list: DocumentFile = {
+      version: 1,
+      id: 'context-list',
+      name: 'Context list',
+      kind: 'section',
+      root: {
+        id: 'root',
+        type: 'repeater',
+        children: [{ id: 'group', type: 'instance', component: group.id }],
+      },
+    };
+    const { ui } = generateReact({ documents: [list, group, wrapper, leaf] });
+    expect(componentSource(ui, 'ContextLeaf')).toContain('(context?.parent as any)');
+    expect(componentSource(ui, 'ContextWrapper')).toContain('context={context}');
+    expect(componentSource(ui, 'ContextGroup')).toContain('parent: context');
+    expect(componentSource(ui, 'ContextList')).toContain('parent: context');
+    expect(componentSource(ui, 'ContextList')).not.toContain('items={items}');
+    expect(ui.some((file) => file.contents.includes('__facadeurRepeatScope'))).toBe(false);
+    expectGeneratedTypecheck(ui);
+  });
 
   it('types button fields and variants and paints the instance selectors', () => {
     const button = componentSource(files, 'Button');
@@ -132,9 +397,9 @@ describe('generateReact', () => {
     const input = componentSource(files, 'Input');
     expect(input).toContain("'use client';");
     expect(input).toContain("data-component='input'");
-    expect(input).toContain("data-node='label'");
+    expect(input).not.toContain('data-node');
     expect(input).toContain("from '../FormInput'");
-    expect(input).toContain("nodeId='control'");
+    expect(input).toContain("className='Input__control'");
     expect(input).toContain('value={value}');
     expect(input).toContain('placeholder={placeholder}');
     expect(input).toContain('name={name}');
@@ -145,11 +410,11 @@ describe('generateReact', () => {
     const signIn = componentSource(files, 'SignIn');
     expect(signIn).toContain("from '../Input'");
     expect(signIn).toContain("from '../Button'");
-    expect(signIn).toContain("nodeId='email'");
+    expect(signIn).toContain("className='SignIn__email'");
     expect(signIn).toContain("label='Work email'");
     expect(signIn).toContain("value='ada@atelier.test'");
     expect(signIn).toContain("name='work-email'");
-    expect(signIn).toContain("nodeId='continue'");
+    expect(signIn).toContain("className='SignIn__continue'");
     expect(signIn).toContain("label='Continue'");
     expect(signIn).toContain("tone='primary'");
     expect(signIn).toContain("size='sm'");
@@ -160,11 +425,11 @@ describe('generateReact', () => {
     const page = componentSource(files, 'Specimen');
     expect(page).toContain("data-component='specimen'");
     expect(page).toContain('<SpecimenSection');
-    expect(page).toContain("nodeId='specimen-section'");
+    expect(page).toContain("className='Specimen__specimen-section'");
     const section = componentSource(files, 'SpecimenSection');
     expect(section).toContain("tone='ghost'");
     expect(section).toContain('>Specimen<');
-    expect(section).toContain("nodeId='card-signin'");
+    expect(section).toContain("className='SpecimenSection__card-signin'");
   });
 
   it('compiles tokens, fonts, and style blocks to CSS', () => {
@@ -190,7 +455,11 @@ describe('generateReact', () => {
   });
 
   it('sorts documents by id so the same catalog always matches', () => {
-    const reversed = generateReact({ documents: [...documents].reverse(), design });
+    const reversed = generateReact({
+      documents: [...documents].reverse(),
+      design,
+      schemaCatalog: design.schemaCatalog,
+    });
     expect(reversed.ui.map((file) => file.path)).toEqual(files.map((file) => file.path));
     expect(reversed.ui.map((file) => file.contents)).toEqual(files.map((file) => file.contents));
   });
@@ -221,6 +490,7 @@ describe('generateReact', () => {
       'components/Button/style.module.css',
       'components/Button/index.ts',
       'css-modules.d.ts',
+      'contracts.ts',
       'index.ts',
     ]);
     expect(generated.stories.map((file) => file.path)).toEqual([
@@ -249,7 +519,9 @@ describe('generateReact', () => {
       .map((file) => file.contents)
       .join('\n');
     expect(sourceText).toContain('className={styles[');
-    expect(sourceText).toMatch(/<Input[\s\S]*?className=\{styles\[/);
+    expect(sourceText).toMatch(/<Input[\s\S]*?className='SignIn__email'/);
+    expect(sourceText).not.toContain('data-node');
+    expect(sourceText).not.toContain('nodeId');
     expect(generated.ui.some((file) => file.path === 'css-modules.d.ts')).toBe(true);
   });
 
@@ -265,7 +537,7 @@ describe('generateReact', () => {
   });
 
   it('emits a CSF3 story per component', () => {
-    const { stories } = generateReact({ documents, design });
+    const { stories } = generateReact({ documents, design, schemaCatalog: design.schemaCatalog });
     expect(stories.map((file) => file.path)).toEqual([
       'src/stories/generated/Button.stories.tsx',
       'src/stories/generated/Card.stories.tsx',
@@ -279,6 +551,7 @@ describe('generateReact', () => {
       'src/stories/generated/FormToggle.stories.tsx',
       'src/stories/generated/Input.stories.tsx',
       'src/stories/generated/Media.stories.tsx',
+      'src/stories/generated/NewSection.stories.tsx',
       'src/stories/generated/ProductCard.stories.tsx',
       'src/stories/generated/SignIn.stories.tsx',
       'src/stories/generated/Specimen.stories.tsx',
@@ -298,6 +571,38 @@ describe('generateReact', () => {
     expect(productStory).toContain('Everyday ceramic mug');
   });
 
+  it('renders the new-section story with typed mixed items and no Facadeur runtime', () => {
+    const section = documents.find((document) => document.id === 'new-section')!;
+    const original = structuredClone(section);
+    const generated = generateReact({ documents, design, schemaCatalog: design.schemaCatalog });
+    const runtime = generatedRuntime([...generated.ui, ...generated.stories]);
+    const meta = runtime.load('src/stories/generated/NewSection.stories.tsx').default as {
+      component: unknown;
+      args: { items: { type: string; props: unknown }[] };
+    };
+    expect(meta.args.items.map((item) => item.type)).toEqual(['textarea', 'card', 'textarea']);
+    expect(meta.args.items.map((item) => item.props)).toEqual(section.previewData?.fields?.items);
+    const html: string = runtime.server.renderToStaticMarkup(
+      runtime.react.createElement(meta.component, meta.args),
+    );
+    expect(html.match(/data-component="textarea"/g)).toHaveLength(2);
+    expect(html.match(/data-component="card"/g)).toHaveLength(1);
+    expect(html).toContain('33333333333');
+    expect(html).toContain('rows="5"');
+    expect(html).toContain('>111</textarea>');
+    expect(section).toEqual(original);
+    expect(componentStyle(generated.ui, 'NewSection')).not.toMatch(/\.[\w-]+\s*\{\s*\}/);
+    const empty: string = runtime.server.renderToStaticMarkup(
+      runtime.react.createElement(meta.component, { items: [] }),
+    );
+    expect(empty).not.toContain('data-component="card"');
+    const unknown: string = runtime.server.renderToStaticMarkup(
+      runtime.react.createElement(meta.component, { items: [{ type: 'unknown', props: {} }] }),
+    );
+    expect(unknown).not.toContain('data-component="card"');
+    expect(unknown).not.toContain('data-component="textarea"');
+  });
+
   it('generates a data-driven media switch with optional metadata', () => {
     const media = componentSource(files, 'Media');
     const types = componentTypes(files, 'Media');
@@ -312,10 +617,10 @@ describe('generateReact', () => {
   });
 
   it('keeps form control state data connected to the rendered control', () => {
-    const generated = generateReact({ documents, design }).ui;
+    const generated = generateReact({ documents, design, schemaCatalog: design.schemaCatalog }).ui;
     const formToggle = componentSource(generated, 'FormToggle');
     expect(componentTypes(generated, 'FormToggle')).toContain('value?: string;');
-    expect(formToggle).toContain("data-node='state'");
+    expect(formToggle).not.toContain('data-node');
     expect(formToggle).toContain('{value}');
   });
 
@@ -449,13 +754,13 @@ describe('bindings outside the examples', () => {
     );
 
     const wrapper = componentSource(files, 'Host');
-    expect(wrapper).toContain("nodeId='note'");
+    expect(wrapper).toContain("className='Host__note'");
     expect(wrapper).toContain("workEmail='bea@example.com'");
     expect(wrapper).toContain('open={false}');
     expect(wrapper).toContain("density='compact'");
     expect(wrapper).toContain("data-component='missing'");
     expect(wrapper).toContain("'ds-unknown'].join(' ')");
-    expect(wrapper).toContain('className={styles[');
+    expect(wrapper).not.toContain('nodeId');
     expect(wrapper).toContain('Unknown component: missing');
     expect(files.map((file) => file.path)[1]).toBe('components/Host/component.tsx');
   });
@@ -560,6 +865,263 @@ describe('bindings outside the examples', () => {
       },
     };
     expect(() => generateReact({ documents: [visibleText] })).toThrow(/boolean field/);
+  });
+});
+
+describe('structural node output', () => {
+  it('generates transparent mixed-component repeaters with typed union items', () => {
+    const repeater: DocumentFile = {
+      version: 1,
+      id: 'mixed-repeater',
+      name: 'Mixed repeater',
+      kind: 'component',
+      root: {
+        id: 'root',
+        type: 'repeater',
+        children: [
+          {
+            id: 'choice',
+            type: 'switch',
+            children: [
+              {
+                id: 'card',
+                type: 'instance',
+                component: 'mixed-card',
+                switchCase: 'primary',
+              },
+              { id: 'badge', type: 'instance', component: 'mixed-badge' },
+              {
+                id: 'card-copy',
+                type: 'instance',
+                component: 'mixed-card-copy',
+                switchCase: 'secondary',
+              },
+            ],
+          },
+        ],
+      },
+    };
+    const card: DocumentFile = {
+      version: 1,
+      id: 'mixed-card',
+      name: 'Mixed card',
+      kind: 'component',
+      schemaUse: { direct: { kind: 'schema', schemaId: 'CardData' } },
+      root: {
+        id: 'root',
+        type: 'text',
+        tag: 'article',
+        bindings: [{ field: 'title', target: 'text' }],
+      },
+    };
+    const badge: DocumentFile = {
+      version: 1,
+      id: 'mixed-badge',
+      name: 'Mixed badge',
+      kind: 'section',
+      schemaUse: { direct: { kind: 'schema', schemaId: 'BadgeData' } },
+      root: {
+        id: 'root',
+        type: 'text',
+        tag: 'strong',
+        bindings: [{ field: 'label', target: 'text' }],
+      },
+    };
+    const cardCopy: DocumentFile = {
+      ...card,
+      id: 'mixed-card-copy',
+      name: 'Mixed card copy',
+    };
+    const schemaCatalog = {
+      schemas: [
+        {
+          id: 'CardData',
+          name: 'Card data',
+          schema: {
+            type: 'object',
+            properties: { type: { type: 'string', enum: ['card'] }, title: { type: 'string' } },
+            required: ['type', 'title'],
+            additionalProperties: false,
+          },
+        },
+        {
+          id: 'BadgeData',
+          name: 'Badge data',
+          schema: {
+            type: 'object',
+            properties: { type: { type: 'string', enum: ['badge'] }, label: { type: 'string' } },
+            required: ['type', 'label'],
+            additionalProperties: false,
+          },
+        },
+      ],
+    } as const;
+    const files = generateReact({ documents: [repeater, card, cardCopy, badge], schemaCatalog }).ui;
+    const types = componentTypes(files, 'MixedRepeater');
+    const component = componentSource(files, 'MixedRepeater');
+
+    expect(types).toContain('items: (');
+    expect(types).toContain('props: MixedCardData;');
+    expect(types).toContain('props: MixedBadgeData;');
+    expect(types).toContain('items: (MixedCardItem | MixedBadgeItem | MixedCardCopyItem)[];');
+    expect(componentTypes(files, 'MixedCard')).toContain('Pick<CardDataSchema');
+    expect(component).not.toMatch(/from ['"]@facadeur\//);
+    expect(component).toContain('<Fragment key={itemIndex}>');
+    expect(component).toContain('switch (item.type)');
+    expect(component).toContain("case 'primary':");
+    expect(component).toContain("case 'secondary':");
+    expect(component).toContain('default:');
+    expect(component).toContain('return null;');
+    expect(component).toContain('{...item.props}');
+    expect(component).not.toContain('payloadSchema');
+    expect(component).not.toContain('nodeId');
+    expectGeneratedTypecheck(files);
+  });
+
+  it('preserves nested repeat parent scopes through generated component calls', () => {
+    const page: DocumentFile = {
+      version: 1,
+      id: 'nested-repeat-codegen-page',
+      name: 'Nested repeat codegen page',
+      kind: 'page',
+      fields: [
+        {
+          name: 'sections',
+          type: 'array',
+          items: {
+            type: 'object',
+            fields: [
+              {
+                name: 'props',
+                type: 'object',
+                items: { type: 'object', fields: [{ name: 'title', type: 'text' }] },
+              },
+              {
+                name: 'rows',
+                type: 'array',
+                items: {
+                  type: 'object',
+                  fields: [
+                    {
+                      name: 'props',
+                      type: 'object',
+                      items: { type: 'object', fields: [{ name: 'title', type: 'text' }] },
+                    },
+                    {
+                      name: 'values',
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        fields: [
+                          {
+                            name: 'props',
+                            type: 'object',
+                            items: { type: 'object', fields: [{ name: 'title', type: 'text' }] },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'sections',
+            type: 'frame',
+            repeat: { path: 'sections', as: 'section' },
+            children: [
+              {
+                id: 'rows',
+                type: 'frame',
+                repeat: { path: 'section.rows', as: 'row' },
+                children: [
+                  {
+                    id: 'values',
+                    type: 'frame',
+                    repeat: { path: 'row.values', as: 'value' },
+                    children: [
+                      {
+                        id: 'probe',
+                        type: 'instance',
+                        component: 'nested-repeat-codegen-probe',
+                        fields: { title: 'Nested local title' },
+                        fieldBindings: {
+                          currentTitle: 'value.props.title',
+                          rowTitle: 'parent.item.props.title',
+                          sectionTitle: 'parent.parent.item.props.title',
+                          currentIndex: 'index',
+                          rowIndex: 'parent.index',
+                          sectionIndex: 'parent.parent.index',
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    };
+    const probe: DocumentFile = {
+      version: 1,
+      id: 'nested-repeat-codegen-probe',
+      name: 'Nested repeat codegen probe',
+      kind: 'component',
+      fields: [
+        { name: 'title', type: 'text' },
+        { name: 'currentTitle', type: 'text' },
+        { name: 'rowTitle', type: 'text' },
+        { name: 'sectionTitle', type: 'text' },
+        { name: 'currentIndex', type: 'number' },
+        { name: 'rowIndex', type: 'number' },
+        { name: 'sectionIndex', type: 'number' },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'nested-props',
+            type: 'instance',
+            component: 'nested-repeat-codegen-probe-leaf',
+            fieldBindings: { observed: 'props.title' },
+          },
+        ],
+      },
+    };
+    const probeLeaf: DocumentFile = {
+      version: 1,
+      id: 'nested-repeat-codegen-probe-leaf',
+      name: 'Nested repeat codegen probe leaf',
+      kind: 'atom',
+      fields: [{ name: 'observed', type: 'text' }],
+      root: {
+        id: 'root',
+        type: 'text',
+        bindings: [{ field: 'observed', target: 'text' }],
+      },
+    };
+
+    const { ui: files } = generateReact({ documents: [page, probe, probeLeaf] });
+    const source = componentSource(files, 'NestedRepeatCodegenPage');
+    const probeSource = componentSource(files, 'NestedRepeatCodegenProbe');
+
+    expect(source).toContain(')?.parent?.item?.props?.title');
+    expect(source).toContain('parent: { item: section, index: sectionIndex');
+    expect(source).toContain('item?.props?.title');
+    expect(source).toContain('currentIndex={valueIndex}');
+    expect(probeSource).toContain('observed={title}');
+    expect(probeSource).toContain('  title,');
+    expect(probeSource).not.toContain('  currentTitle,');
+    expectGeneratedTypecheck(files);
   });
 });
 
@@ -1095,9 +1657,9 @@ describe('atom contracts', () => {
     expect(sourceText).toContain("variant === 'compact'");
     expect(sourceText).toContain('data-variant={variant}');
     expect(sourceText).toContain('Compact');
-    expect(sourceText).toContain("data-node='badge'");
-    expect(sourceText).toContain("data-node='label'");
-    expect(sourceText.match(/data-node='body'/g)).toHaveLength(1);
+    expect(sourceText).toContain('styles["badge"]');
+    expect(sourceText).toContain('styles["label"]');
+    expect(sourceText.match(/styles\["body"\]/g)).toHaveLength(1);
 
     const host: DocumentFile = {
       version: 1,
@@ -1162,6 +1724,7 @@ describe('atom contracts', () => {
             fields: [
               { name: 'id', type: 'text', required: true },
               { name: 'kind', type: 'text', required: true },
+              { name: 'label', type: 'text', required: true },
             ],
           },
         },
@@ -1192,11 +1755,12 @@ describe('atom contracts', () => {
     };
     const generated = generateReact({ documents: [component, row] });
     const sourceText = componentSource(generated.ui, 'RepeatDemo');
-    expect(sourceText).toContain('{(items ?? []).map((item, itemIndex) => (');
+    expect(sourceText).toContain('(items ?? []).map((item, itemIndex) => (');
     expect(sourceText).toContain('key={item?.id ?? itemIndex}');
     expect(sourceText).toContain("item?.kind === 'input'");
     expect(sourceText).toContain("import { RepeatRow } from '../RepeatRow';");
     expect(sourceText).toContain('label={item?.label}');
+    expectGeneratedTypecheck(generated.ui);
   });
 
   it('preserves enum options in array item prop types', () => {
@@ -1307,14 +1871,13 @@ describe('atom contracts', () => {
       fields: [{ name: 'label', type: 'text', required: true }],
       root: { id: 'root', type: 'text', tag: 'li', bindings: [{ field: 'label', target: 'text' }] },
     };
-    const sourceText = componentSource(
-      generateReact({ documents: [component, row] }).ui,
-      'NestedRepeatDemo',
-    );
-    expect(sourceText).toContain('{(sections ?? []).map((section, sectionIndex) => (');
+    const generated = generateReact({ documents: [component, row] });
+    const sourceText = componentSource(generated.ui, 'NestedRepeatDemo');
+    expect(sourceText).toContain('(sections ?? []).map((section, sectionIndex) => (');
     expect(sourceText).toContain('{(section?.rows ?? []).map((row, rowIndex) => (');
     expect(sourceText).toContain('key={row?.label ?? rowIndex}');
     expect(sourceText).toContain('label={row?.label}');
+    expectGeneratedTypecheck(generated.ui);
   });
 
   it('quotes hyphenated data paths and sanitizes repeat aliases', () => {
@@ -1361,13 +1924,12 @@ describe('atom contracts', () => {
       root: { id: 'root', type: 'text', tag: 'li', bindings: [{ field: 'label', target: 'text' }] },
     };
 
-    const sourceText = componentSource(
-      generateReact({ documents: [component, row] }).ui,
-      'HyphenatedRepeatDemo',
-    );
-    expect(sourceText).toContain('{(formFields ?? []).map((formField, formFieldIndex) => (');
+    const generated = generateReact({ documents: [component, row] });
+    const sourceText = componentSource(generated.ui, 'HyphenatedRepeatDemo');
+    expect(sourceText).toContain('(formFields ?? []).map((formField, formFieldIndex) => (');
     expect(sourceText).toContain("key={formField?.['field-id'] ?? formFieldIndex}");
     expect(sourceText).toContain("formField?.kind === 'input'");
     expect(sourceText).toContain("label={formField?.['field-id']}");
+    expectGeneratedTypecheck(generated.ui);
   });
 });

@@ -6,11 +6,10 @@
 import styles from './style.module.css';
 import type { ButtonProps } from './types';
 
-export function Button({ label, tone = 'primary', size = 'md', nodeId, className }: ButtonProps) {
+export function Button({ label, tone = 'primary', size = 'md', className }: ButtonProps) {
   return (
     <button
       data-component="button"
-      data-node={nodeId}
       data-variant-tone={tone}
       data-variant-size={size}
       type="button"

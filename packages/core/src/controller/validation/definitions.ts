@@ -19,21 +19,26 @@ import { localContractFieldsFor } from './schema-use.js';
 import { publicFieldsFor } from './catalog-exposed.js';
 import type { SchemaResolverContext } from './types.js';
 
-/** Sections and pages do not own component properties. Atoms and components do. */
+/** Pages do not own component properties; sections may expose data contracts. */
 export function assertDefinitionKind(
   doc: FlatDocument,
   fields: ReadonlyMap<string, FieldDefinition> = new Map(
     doc.fields.map((field) => [field.name, field]),
   ),
 ): void {
-  if (doc.kind !== 'section' && doc.kind !== 'page') return;
-  if (fields.size || doc.schemaUse) {
-    throw new DocumentError('schema', `${doc.kind} documents cannot define fields`);
+  if (doc.kind === 'page') {
+    if (fields.size || doc.schemaUse) {
+      throw new DocumentError('schema', 'page documents cannot define fields');
+    }
+    if (doc.variants.length || doc.variantPresets?.length) {
+      throw new DocumentError('schema', 'page documents cannot define variants');
+    }
+    return;
   }
-  if (doc.variants.length) {
+  if (doc.kind === 'section' && doc.variants.length) {
     throw new DocumentError('schema', `${doc.kind} documents cannot define variants`);
   }
-  if (doc.variantPresets?.length) {
+  if (doc.kind === 'section' && doc.variantPresets?.length) {
     throw new DocumentError('schema', `${doc.kind} documents cannot define variants`);
   }
 }
@@ -44,7 +49,10 @@ export function validateDefinitions(
 ): void {
   const schemaCatalog = isResolverContext(context) ? context.schemaCatalog : context;
   const localFields = localContractFieldsFor(doc, schemaCatalog);
-  const fields = isResolverContext(context) ? publicFieldsFor(doc, context) : localFields;
+  const resolverContext = isResolverContext(context)
+    ? context
+    : { documents: new Map([[doc.id, doc]]), ...(schemaCatalog ? { schemaCatalog } : {}) };
+  const fields = publicFieldsFor(doc, resolverContext);
   assertDefinitionKind(doc, localFields);
   if (!doc.schemaUse) {
     const names = new Set<string>();
