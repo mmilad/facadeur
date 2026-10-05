@@ -302,7 +302,7 @@ function applyElementProp(
       if (value === null) delete node.eventBindings;
       else {
         assertEventBindings(value);
-        node.eventBindings = value.map((binding) => ({ ...binding }));
+        node.eventBindings = value.map((binding) => structuredClone(binding));
       }
       return;
     case 'repeat':

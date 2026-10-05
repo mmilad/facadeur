@@ -1,17 +1,26 @@
-import type { EventDefinition } from '@facadeur/core';
+import { eventDataSchema, type EventDefinition, type SchemaCatalog } from '@facadeur/core';
 import { useState } from 'react';
-import { eventDefinitionFromDraft, eventPayloadText } from '../../../domain/events.js';
+import { eventDataSelection } from '../../../domain/events.js';
+import type { LibrarySchema } from '../../../domain/schema/schema-library.js';
+import type { SchemaTypeSelection } from '../../../domain/schema/schema-use.js';
 import { Field, Section, Stack, TextInput } from '../../form/index.js';
+import { SchemaTypeSelector } from './SchemaTypeSelector.js';
 import '../../form/form.css';
 
 export function EventsEditorControl({
   events,
+  eventOrigins = {},
+  schemas = [],
+  schemaCatalog,
   onDefineEvent,
   onRemoveEvent,
   onInvalid,
 }: {
   events: EventDefinition[];
-  onDefineEvent: (event: EventDefinition) => void;
+  eventOrigins?: Record<string, string>;
+  schemas?: LibrarySchema[];
+  schemaCatalog?: SchemaCatalog;
+  onDefineEvent: (event: EventDefinition, previousName?: string) => void;
   onRemoveEvent: (name: string) => void;
   onInvalid?: (message: string) => void;
 }) {
@@ -24,27 +33,44 @@ export function EventsEditorControl({
         <EventDefinitionCard
           key={event.name}
           event={event}
+          originalName={eventOrigins[event.name] ?? event.name}
+          schemas={schemas}
+          schemaCatalog={schemaCatalog}
           onDefineEvent={onDefineEvent}
           onRemoveEvent={onRemoveEvent}
           onInvalid={onInvalid}
         />
       ))}
-      <AddEventForm onDefineEvent={onDefineEvent} onInvalid={onInvalid} />
+      <AddEventForm schemas={schemas} onDefineEvent={onDefineEvent} onInvalid={onInvalid} />
     </Stack>
   );
 }
 
 function EventDefinitionCard({
   event,
+  originalName,
+  schemas,
+  schemaCatalog,
   onDefineEvent,
   onRemoveEvent,
   onInvalid,
 }: {
   event: EventDefinition;
-  onDefineEvent: (event: EventDefinition) => void;
+  originalName: string;
+  schemas: LibrarySchema[];
+  schemaCatalog?: SchemaCatalog;
+  onDefineEvent: (event: EventDefinition, previousName?: string) => void;
   onRemoveEvent: (name: string) => void;
   onInvalid?: (message: string) => void;
 }) {
+  const dataUse = eventDataSelection(event);
+  const dataSchema = eventDataSchema(event, schemaCatalog);
+
+  function defineData(data: SchemaTypeSelection | null) {
+    const { payload: _legacyPayload, ...current } = event;
+    onDefineEvent({ ...current, ...(data ? { data } : { data: undefined }) }, originalName);
+  }
+
   return (
     <Section title={event.name} collapsible defaultOpen={false}>
       <Stack gap={8}>
@@ -54,10 +80,13 @@ function EventDefinitionCard({
             value={event.name}
             onCommit={(name) => {
               try {
-                const next = eventDefinitionFromDraft(name, eventPayloadText(event));
-                if (next.name !== event.name) {
-                  onDefineEvent(next);
-                  onRemoveEvent(event.name);
+                const nextName = name.trim();
+                if (nextName && nextName !== event.name) {
+                  const { payload: _legacyPayload, ...current } = event;
+                  onDefineEvent(
+                    { ...current, name: nextName, ...(dataUse ? { data: dataUse } : {}) },
+                    originalName,
+                  );
                 }
               } catch (error) {
                 onInvalid?.(error instanceof Error ? error.message : 'Invalid event');
@@ -65,20 +94,14 @@ function EventDefinitionCard({
             }}
           />
         </Field>
-        <Field label="Payload">
-          <TextInput
-            name={`event-payload-${event.name}`}
-            value={eventPayloadText(event)}
-            placeholder="value:text, valid:boolean"
-            onCommit={(payload) => {
-              try {
-                onDefineEvent(eventDefinitionFromDraft(event.name, payload));
-              } catch (error) {
-                onInvalid?.(error instanceof Error ? error.message : 'Invalid payload');
-              }
-            }}
-          />
-        </Field>
+        <SchemaTypeSelector
+          name={`event-data-${event.name}`}
+          value={dataUse}
+          schemas={schemas}
+          onChange={defineData}
+          helperText="Event data is local to this component and is assembled by each node binding."
+        />
+        <EventCallbackPreview event={event} schema={dataSchema} />
         <button
           type="button"
           className="text-button"
@@ -92,15 +115,32 @@ function EventDefinitionCard({
   );
 }
 
+function EventCallbackPreview({ event, schema }: { event: EventDefinition; schema: unknown }) {
+  const callback = `on${event.name[0]?.toUpperCase() ?? ''}${event.name.slice(1)}`;
+  const dataType = schema
+    ? `${event.name[0]?.toUpperCase() ?? ''}${event.name.slice(1)}Data`
+    : 'undefined';
+  return (
+    <section className="stack" aria-label={`${event.name} callback preview`}>
+      <h4>Public callback</h4>
+      <pre className="schema-json" data-testid={`event-callback-preview-${event.name}`}>
+        {`${callback}?: (event: ComponentEvent<${dataType}, '${event.name}'>) => void\n\nComponentEvent fields:\n  eventName: '${event.name}'\n  event: Event\n  native: string\n  data: ${schema ? dataType : 'undefined'}\n\nEvent data schema:\n${schema ? JSON.stringify(schema, null, 2) : 'undefined'}`}
+      </pre>
+    </section>
+  );
+}
+
 function AddEventForm({
+  schemas,
   onDefineEvent,
   onInvalid,
 }: {
-  onDefineEvent: (event: EventDefinition) => void;
+  schemas: LibrarySchema[];
+  onDefineEvent: (event: EventDefinition, previousName?: string) => void;
   onInvalid?: (message: string) => void;
 }) {
   const [name, setName] = useState('');
-  const [payload, setPayload] = useState('');
+  const [data, setData] = useState<SchemaTypeSelection | null>(null);
   const [open, setOpen] = useState(false);
 
   if (!open) {
@@ -129,23 +169,26 @@ function AddEventForm({
         <Field label="Name">
           <TextInput name="new-event-name" value={name} placeholder="commit" onChange={setName} />
         </Field>
-        <Field label="Payload">
-          <TextInput
-            name="new-event-payload"
-            value={payload}
-            placeholder="value:text, valid:boolean"
-            onChange={setPayload}
-          />
-        </Field>
+        <SchemaTypeSelector
+          name="new-event-data"
+          value={data}
+          schemas={schemas}
+          onChange={setData}
+          helperText="Event data is assembled by node bindings."
+        />
         <button
           type="button"
           className="text-button"
           name="add-event"
           onClick={() => {
             try {
-              onDefineEvent(eventDefinitionFromDraft(name, payload));
+              const eventName = name.trim();
+              if (!/^[A-Za-z][A-Za-z0-9_-]*$/.test(eventName)) {
+                throw new Error('Event names start with a letter and use letters, numbers, _ or -');
+              }
+              onDefineEvent({ name: eventName, ...(data ? { data } : {}) });
               setName('');
-              setPayload('');
+              setData(null);
               setOpen(false);
             } catch (error) {
               onInvalid?.(error instanceof Error ? error.message : 'Invalid event');

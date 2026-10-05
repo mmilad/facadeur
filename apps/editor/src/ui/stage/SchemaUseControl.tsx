@@ -1,21 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
 import type { EditorSession, EditorSnapshot } from '../../domain/session.js';
-import type { ComponentSchemaUse, SchemaFieldUse } from '../../domain/schema/schema-use.js';
-import { parseTypeRef, typeRefValue } from '../../domain/schema/schema-use.js';
-import { Combobox, Field, SegmentedControl, Stack, TextInput } from '../form/index.js';
+import type { ComponentSchemaUse, SchemaTypeSelection } from '../../domain/schema/schema-use.js';
 import { SchemaPreviewForm } from './SchemaPreviewForm.js';
-import { schemaTypeOptions } from './schema-type-options.js';
-
-type SchemaUseMode = 'direct' | 'fields';
-
-function modeForUse(use: ComponentSchemaUse | null): SchemaUseMode {
-  if (use?.fields?.length) return 'fields';
-  return 'direct';
-}
-
-function emptyFieldRow(): SchemaFieldUse {
-  return { name: '', type: { kind: 'type', type: 'string' } };
-}
+import { SchemaTypeSelector } from '../controls/data/SchemaTypeSelector.js';
 
 export function SchemaUseControl({
   session,
@@ -26,173 +12,37 @@ export function SchemaUseControl({
   snap: EditorSnapshot;
   onOpenSchemas: () => void;
 }) {
-  const documentId = snap.document.id;
   const library = snap.design.schemaCatalog ?? { schemas: [] };
   const use = snap.document.schemaUse ?? null;
-  const typeOptions = useMemo(() => schemaTypeOptions(library.schemas), [library.schemas]);
-  const namedSchemas = useMemo(
-    () =>
-      library.schemas.map((schema) => ({
-        id: schema.id,
-        name: schema.name,
-        schema: schema.schema,
-      })),
-    [library.schemas],
-  );
 
-  const [mode, setMode] = useState<SchemaUseMode>(() => modeForUse(use));
-  const [fieldRows, setFieldRows] = useState<SchemaFieldUse[]>(() =>
-    use?.fields?.length ? use.fields : [emptyFieldRow()],
-  );
-
-  useEffect(() => {
-    const next = snap.document.schemaUse ?? null;
-    setMode(modeForUse(next));
-    setFieldRows(next?.fields?.length ? next.fields : [emptyFieldRow()]);
-  }, [documentId, snap.document.schemaUse]);
-
-  function commit(next: ComponentSchemaUse | null) {
-    session.execute({ type: 'setSchemaUse', schemaUse: next });
+  function commitSelection(next: SchemaTypeSelection | null) {
+    const schemaUse: ComponentSchemaUse | null = next
+      ? { ...next, defaults: use?.defaults }
+      : use?.defaults === undefined
+        ? null
+        : { defaults: use.defaults };
+    session.execute({ type: 'setSchemaUse', schemaUse });
   }
 
-  function saveDirect(refValue: string) {
-    const ref = parseTypeRef(refValue);
-    if (!ref) return;
-    commit({ direct: ref, defaults: use?.defaults });
-  }
-
-  function saveMode(nextMode: SchemaUseMode) {
-    if (nextMode === mode) return;
-    setMode(nextMode);
-    if (nextMode === 'direct') {
-      commit({
-        direct: use?.direct ??
-          use?.fields?.find((field) => field.name.trim())?.type ?? {
-            kind: 'type',
-            type: 'string',
-          },
-        defaults: use?.defaults,
-      });
-      return;
-    }
-    const seed = use?.fields?.length
-      ? use.fields
-      : use?.direct
-        ? [{ name: 'value', type: use.direct }]
-        : [emptyFieldRow()];
-    setFieldRows(seed);
-    const named = seed.filter((row) => row.name.trim());
-    if (named.length) {
-      commit({ fields: named, defaults: use?.defaults });
-    }
-  }
-
-  function commitFieldRows(rows: SchemaFieldUse[]) {
-    setFieldRows(rows);
-    const fields = rows
-      .filter((row) => row.name.trim())
-      .map((row) => ({ ...row, name: row.name.trim() }));
-    if (!fields.length) {
-      if (use?.fields?.length)
-        commit(use.defaults === undefined ? null : { defaults: use.defaults });
-      return;
-    }
-    commit({
-      fields,
-      defaults: use?.defaults,
-    });
-  }
-
-  function updateFieldRow(index: number, patch: Partial<SchemaFieldUse>) {
-    const next = fieldRows.map((row, rowIndex) =>
-      rowIndex === index ? { ...row, ...patch } : row,
-    );
-    commitFieldRows(next);
-  }
-
-  function addFieldRow() {
-    commitFieldRows([...fieldRows, emptyFieldRow()]);
-  }
-
-  function removeFieldRow(index: number) {
-    const next = fieldRows.filter((_, rowIndex) => rowIndex !== index);
-    commitFieldRows(next.length ? next : [emptyFieldRow()]);
-  }
-
-  const previewUse: ComponentSchemaUse | null = use ?? null;
-  const directValue = use?.direct ? typeRefValue(use.direct) : '';
+  const namedSchemas = library.schemas.map((schema) => ({
+    id: schema.id,
+    name: schema.name,
+    schema: schema.schema,
+  }));
 
   return (
     <div className="schema-use">
-      <div className="schema-use-editor">
-        <Field label="Contract">
-          <SegmentedControl
-            name="schema-use-mode"
-            value={mode}
-            options={[
-              { value: 'direct', label: 'Use one type' },
-              { value: 'fields', label: 'Declare fields' },
-            ]}
-            onCommit={(value) => saveMode(value as SchemaUseMode)}
-          />
-        </Field>
-
-        {mode === 'direct' ? (
-          <Field label="Type">
-            <Combobox
-              name="schema-type"
-              value={directValue}
-              options={typeOptions}
-              placeholder="Type or schema"
-              onCommit={saveDirect}
-            />
-          </Field>
-        ) : (
-          <Stack gap={8}>
-            {fieldRows.map((row, index) => (
-              <div key={index} className="schema-use-field-row">
-                <Field label="Name">
-                  <TextInput
-                    name={`schema-field-name-${index}`}
-                    value={row.name}
-                    placeholder="Field name"
-                    onCommit={(name) => updateFieldRow(index, { name })}
-                  />
-                </Field>
-                <Field label="Type">
-                  <Combobox
-                    name={`schema-field-type-${index}`}
-                    value={typeRefValue(row.type)}
-                    options={typeOptions}
-                    placeholder="Type or schema"
-                    onCommit={(value) => {
-                      const type = parseTypeRef(value);
-                      if (type) updateFieldRow(index, { type });
-                    }}
-                  />
-                </Field>
-                <button type="button" className="text-button" onClick={() => removeFieldRow(index)}>
-                  Remove field
-                </button>
-              </div>
-            ))}
-            <button type="button" className="text-button" onClick={addFieldRow}>
-              Add field
-            </button>
-          </Stack>
-        )}
-
-        <button type="button" className="text-button" onClick={onOpenSchemas}>
-          Edit schemas
-        </button>
-        <p className="meta">
-          Pick a type or named fields for defaults. Props below are still this document’s fields.
-        </p>
-      </div>
-
+      <SchemaTypeSelector
+        name="schema-use"
+        value={use}
+        schemas={library.schemas}
+        onChange={commitSelection}
+        onOpenSchemas={onOpenSchemas}
+        helperText="Pick a type or named fields for defaults. Props below are still this document’s fields."
+      />
       <SchemaPreviewForm
         session={session}
-        use={previewUse}
+        use={use}
         schemas={namedSchemas}
         fields={snap.documentScopeFields}
       />

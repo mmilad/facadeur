@@ -74,7 +74,10 @@ export function applyCommand(
       removeField(next, command.name);
       break;
     case 'defineEvent':
-      defineEvent(next, command.event);
+      defineEvent(next, command.event, {
+        ...(command.previousName !== undefined ? { previousName: command.previousName } : {}),
+        ...(command.bindings !== undefined ? { bindings: command.bindings } : {}),
+      });
       break;
     case 'removeEvent':
       removeEvent(next, command.name);

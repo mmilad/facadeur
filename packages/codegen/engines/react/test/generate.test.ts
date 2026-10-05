@@ -91,7 +91,7 @@ function expectGeneratedTypecheck(files: { path: string; contents: string }[]): 
     }
     writeFileSync(
       join(root, 'react.d.ts'),
-      "declare module 'react' { export type CSSProperties = Record<string, string | number>; export const Fragment: (props: any) => any; }\ndeclare module 'react/jsx-runtime' { export const Fragment: unknown; export function jsx(...args: unknown[]): unknown; export function jsxs(...args: unknown[]): unknown; }\ntype TestChangeEvent = { currentTarget: { value: string } };\ndeclare namespace JSX { interface IntrinsicElements { [element: string]: any; input: { [key: string]: any; onChange?: (event: TestChangeEvent) => void }; textarea: { [key: string]: any; onChange?: (event: TestChangeEvent) => void }; } }\n",
+      "declare module 'react' { export type CSSProperties = Record<string, string | number>; export const Fragment: (props: any) => any; }\ndeclare module 'react/jsx-runtime' { export const Fragment: unknown; export function jsx(...args: unknown[]): unknown; export function jsxs(...args: unknown[]): unknown; }\ntype TestChangeEvent = { currentTarget: { value: string }; nativeEvent: Event };\ndeclare namespace JSX { interface IntrinsicElements { [element: string]: any; input: { [key: string]: any; onChange?: (event: TestChangeEvent) => void }; textarea: { [key: string]: any; onChange?: (event: TestChangeEvent) => void }; } }\n",
       'utf8',
     );
     roots.push(join(root, 'react.d.ts'));
@@ -123,7 +123,10 @@ describe('generateReact', () => {
     const shared = source(files, 'contracts.ts');
     expect(shared).toContain('export interface ComponentProps');
     expect(shared).toContain('context?: DataContext;');
-    expect(shared).toContain('export interface CommitProps<TPayload>');
+    expect(shared).toContain(
+      'export interface ComponentEvent<TData = undefined, TName extends string = string>',
+    );
+    expect(shared).toContain('export interface CommitProps<TData = undefined>');
     expect(componentTypes(files, 'FormInput')).toContain('extends ComponentProps, FormInputData');
     expect(componentTypes(files, 'Input')).toContain('label?: string;');
     expect(componentTypes(files, 'Card')).not.toContain('value?: string;');
@@ -140,7 +143,7 @@ type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B 
 type Assert<T extends true> = T;
 export type ValueCheck = Assert<Equal<FormInputProps['value'], string | undefined>>;
 export type LabelCheck = Assert<Equal<InputProps['label'], string | undefined>>;
-export type CommitCheck = Assert<Equal<Parameters<NonNullable<FormInputProps['onCommit']>>[0], { value: string }>>;
+export type CommitCheck = Assert<Equal<Parameters<NonNullable<FormInputProps['onCommit']>>[0], { eventName: 'commit'; event: Event; native: string; data: { value: string } }>>;
 export type CardCheck = Assert<Equal<'value' extends keyof CardProps ? true : false, false>>;
 `,
       },
@@ -314,7 +317,7 @@ type Assert<T extends true> = T;
 export type ValueCheck = Assert<Equal<SharedControlProps['value'], boolean | undefined>>;
 export type RequiredCheck = Assert<Equal<SharedControlProps['label'], string>>;
 export type FieldCheck = Assert<Equal<SharedControlProps['contextField'], string | undefined>>;
-export type CommitCheck = Assert<Equal<Parameters<NonNullable<SharedControlProps['onCommit']>>[0], { value: boolean }>>;
+export type CommitCheck = Assert<Equal<Parameters<NonNullable<SharedControlProps['onCommit']>>[0], { eventName: 'commit'; event: Event; native: string; data: { value: boolean } }>>;
 `,
       },
     ]);
@@ -1551,10 +1554,119 @@ describe('atom contracts', () => {
     const types = componentTypes(generated.ui, 'FormInputAtom');
     expect(types).toContain('value: string;');
     expect(types).toContain('disabled?: boolean;');
-    expect(types).toContain('onCommit?: (payload: { value: string }) => void;');
-    expect(sourceText).toContain(
-      'onChange={(event) => onCommit?.({ value: event.currentTarget.value })}',
+    expect(types).toContain(
+      "onCommit?: (event: ComponentEvent<FormInputAtomCommitData, 'commit'>) => void;",
     );
+    expect(sourceText).toContain(
+      "onChange={(reactEvent) => onCommit?.({ eventName: 'commit', event: reactEvent.nativeEvent, native: reactEvent.nativeEvent.type, data: { 'value': reactEvent.currentTarget.value } })}",
+    );
+    expect(sourceText).toContain('defaultValue={value}');
+  });
+
+  it('keeps native form controls uncontrolled and preserves browser event identity', () => {
+    const field: DocumentFile = {
+      version: 1,
+      id: 'uncontrolled-fields',
+      name: 'Uncontrolled fields',
+      kind: 'component',
+      fields: [
+        { name: 'value', type: 'text', default: 'initial' },
+        { name: 'checked', type: 'boolean', default: true },
+      ],
+      events: [
+        {
+          name: 'commit',
+          data: {
+            fields: [{ name: 'value', type: { kind: 'type', type: 'string' } }],
+          },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        tag: 'div',
+        children: [
+          {
+            id: 'text-input',
+            type: 'frame',
+            tag: 'input',
+            attributes: { type: 'text' },
+            bindings: [{ field: 'value', target: 'attribute', name: 'value' }],
+            eventBindings: [
+              {
+                event: 'commit',
+                name: 'keydown',
+                data: [
+                  {
+                    path: 'value',
+                    source: { kind: 'native', path: 'currentTarget.value' },
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: 'checkbox',
+            type: 'frame',
+            tag: 'input',
+            attributes: { type: 'checkbox' },
+            bindings: [{ field: 'checked', target: 'attribute', name: 'checked' }],
+          },
+          {
+            id: 'textarea',
+            type: 'frame',
+            tag: 'textarea',
+            bindings: [{ field: 'value', target: 'text' }],
+          },
+        ],
+      },
+    };
+    const generated = generateReact({ documents: [field] });
+    const sourceText = componentSource(generated.ui, 'UncontrolledFields');
+    expect(sourceText).toContain('onKeyDown={(reactEvent) => onCommit?.(');
+    expect(sourceText).toContain('event: reactEvent.nativeEvent');
+    expect(sourceText).toContain('native: reactEvent.nativeEvent.type');
+    expect(sourceText).toContain('defaultValue={value}');
+    expect(sourceText).toContain('defaultChecked={checked}');
+    expect(sourceText).not.toContain('value={value}');
+    expect(sourceText).not.toContain('checked={checked}');
+    expect(sourceText).not.toContain('>{value}</textarea>');
+
+    const runtime = generatedRuntime(generated.ui);
+    const module = runtime.load('components/UncontrolledFields') as {
+      UncontrolledFields: (props: Record<string, unknown>) => {
+        props: { children: Array<{ type: string; props: Record<string, unknown> }> };
+      };
+    };
+    const tree = module.UncontrolledFields({});
+    const [input, checkbox, textarea] = tree.props.children;
+    expect(input?.props).toHaveProperty('defaultValue', 'initial');
+    expect(input?.props).not.toHaveProperty('value');
+    expect(checkbox?.props).toHaveProperty('defaultChecked', true);
+    expect(checkbox?.props).not.toHaveProperty('checked');
+    expect(textarea?.props).toHaveProperty('defaultValue', 'initial');
+    expect(textarea?.props).not.toHaveProperty('children');
+
+    const received: Array<Record<string, unknown>> = [];
+    const nativeTarget = Object.assign(new EventTarget(), { value: 'typed' });
+    const nativeEvent = new Event('input');
+    nativeTarget.dispatchEvent(nativeEvent);
+    const handler = input?.props.onKeyDown as (event: unknown) => void;
+    handler({ nativeEvent, currentTarget: nativeTarget });
+    expect(received).toEqual([]);
+    const withHandler = module.UncontrolledFields({
+      onCommit: (event: Record<string, unknown>) => received.push(event),
+    });
+    const activeInput = withHandler.props.children[0];
+    const activeHandler = activeInput?.props.onKeyDown as (event: unknown) => void;
+    activeHandler({ nativeEvent, currentTarget: nativeTarget });
+    expect(received[0]).toMatchObject({
+      eventName: 'commit',
+      event: nativeEvent,
+      native: 'input',
+      data: { value: 'typed' },
+    });
+    expect((received[0]?.event as Event).target).toBe(nativeTarget);
   });
 
   it('rejects structured payloads when an event is mapped to a native handler', () => {
@@ -1611,7 +1723,9 @@ describe('atom contracts', () => {
     const sourceText = componentSource(generated.ui, 'ControlWrapper');
     const types = componentTypes(generated.ui, 'ControlWrapper');
     expect(types).toContain('value?: string;');
-    expect(types).toContain('onCommit?: (payload: { value: string }) => void;');
+    expect(types).toContain(
+      "onCommit?: (event: ComponentEvent<ControlAtomCommitData, 'commit'>) => void;",
+    );
     expect(sourceText).toContain('<ControlAtom');
     expect(sourceText).toContain('value={value}');
     expect(sourceText).toContain('onCommit={onCommit}');

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { validateCatalog, type DocumentFile } from '../src/index';
+import {
+  eventDataMappings,
+  eventDataSchema,
+  validateCatalog,
+  type DocumentFile,
+} from '../src/index';
 
 const atom: DocumentFile = {
   version: 1,
@@ -852,5 +857,169 @@ describe('component contracts', () => {
     };
 
     expect(() => validateCatalog([invalid])).toThrow(/structured payload/);
+  });
+
+  it('resolves declared event data and validates typed native, context and literal mappings', () => {
+    const document: DocumentFile = {
+      version: 1,
+      id: 'typed-event',
+      name: 'Typed event',
+      kind: 'atom',
+      fields: [{ name: 'enabled', type: 'boolean', required: true }],
+      events: [
+        {
+          name: 'commit',
+          data: {
+            fields: [
+              { name: 'value', type: { kind: 'type', type: 'string' } },
+              { name: 'enabled', type: { kind: 'type', type: 'boolean' } },
+              { name: 'version', type: { kind: 'type', type: 'number' } },
+            ],
+          },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        tag: 'input',
+        eventBindings: [
+          {
+            event: 'commit',
+            name: 'change',
+            data: [
+              { path: 'value', source: { kind: 'native', path: 'currentTarget.value' } },
+              { path: 'enabled', source: { kind: 'context', path: 'enabled' } },
+              { path: 'version', source: { kind: 'literal', value: 1 } },
+            ],
+          },
+        ],
+        children: [],
+      },
+    };
+
+    expect(eventDataSchema(document.events![0]!)).toEqual({
+      type: 'object',
+      properties: {
+        value: { type: 'string' },
+        enabled: { type: 'boolean' },
+        version: { type: 'number' },
+      },
+      required: ['value', 'enabled', 'version'],
+      additionalProperties: false,
+    });
+    expect(() => validateCatalog([document])).not.toThrow();
+  });
+
+  it('rejects missing or incompatible event data mappings', () => {
+    const document: DocumentFile = {
+      version: 1,
+      id: 'invalid-event-mapping',
+      name: 'Invalid event mapping',
+      kind: 'atom',
+      events: [{ name: 'commit', data: { direct: { kind: 'type', type: 'string' } } }],
+      root: {
+        id: 'root',
+        type: 'text',
+        eventBindings: [
+          {
+            event: 'commit',
+            name: 'change',
+            data: [{ path: '', source: { kind: 'native', path: 'currentTarget.checked' } }],
+          },
+        ],
+      },
+    };
+
+    expect(() => validateCatalog([document])).toThrow(/incompatible/);
+    expect(() =>
+      validateCatalog([
+        {
+          ...document,
+          root: {
+            ...document.root,
+            eventBindings: [{ event: 'commit', name: 'change', data: [] }],
+          },
+        },
+      ]),
+    ).toThrow(/must map its whole data value/);
+  });
+
+  it('validates nested event and context paths through named schemas', () => {
+    const addressSchema = {
+      type: 'object',
+      properties: { city: { type: 'string' } },
+      required: ['city'],
+      additionalProperties: false,
+    };
+    const document: DocumentFile = {
+      version: 1,
+      id: 'nested-event-data',
+      name: 'Nested event data',
+      kind: 'atom',
+      schemaCatalog: {
+        schemas: [{ id: 'address', name: 'Address', schema: addressSchema }],
+      },
+      fields: [
+        {
+          name: 'contact',
+          type: 'object',
+          required: true,
+          schema: { $ref: 'facadeur://schema/address' },
+        },
+      ],
+      events: [
+        {
+          name: 'commit',
+          data: {
+            fields: [
+              { name: 'contact', type: { kind: 'schema', schemaId: 'address' } },
+              { name: 'address', type: { kind: 'schema', schemaId: 'address' } },
+            ],
+          },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'text',
+        eventBindings: [
+          {
+            event: 'commit',
+            name: 'change',
+            data: [
+              { path: 'contact.city', source: { kind: 'context', path: 'contact.city' } },
+              { path: 'address', source: { kind: 'context', path: 'contact' } },
+            ],
+          },
+        ],
+      },
+    };
+
+    expect(() => validateCatalog([document])).not.toThrow();
+  });
+
+  it('normalizes legacy event payload mappings to typed native sources', () => {
+    const event = {
+      name: 'commit',
+      payload: { value: 'text' as const, enabled: 'boolean' as const, count: 'number' as const },
+    };
+    const binding = {
+      event: 'commit',
+      name: 'change',
+      payload: {
+        value: 'value' as const,
+        enabled: 'checked' as const,
+        count: 'valueAsNumber' as const,
+      },
+    };
+    expect(eventDataMappings(event, binding)).toEqual([
+      { path: 'value', source: { kind: 'native', path: 'currentTarget.value' } },
+      { path: 'enabled', source: { kind: 'native', path: 'currentTarget.checked' } },
+      { path: 'count', source: { kind: 'native', path: 'currentTarget.valueAsNumber' } },
+    ]);
+    expect(eventDataMappings(event, { event: 'commit', name: 'change' })).toEqual([
+      { path: 'value', source: { kind: 'native', path: 'currentTarget.value' } },
+      { path: 'enabled', source: { kind: 'native', path: 'currentTarget.checked' } },
+      { path: 'count', source: { kind: 'native', path: 'currentTarget.valueAsNumber' } },
+    ]);
   });
 });

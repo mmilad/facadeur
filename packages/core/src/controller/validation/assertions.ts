@@ -87,6 +87,47 @@ export function assertEventDefinition(event: EventDefinition): void {
       throw new DocumentError('schema', `Event "${event.name}" has an invalid payload`);
     }
   }
+  if (event.payload && event.data) {
+    throw new DocumentError('schema', `Event "${event.name}" cannot define both payload and data`);
+  }
+  if (event.data) {
+    const hasDirect = event.data.direct !== undefined;
+    const hasFields = event.data.fields !== undefined;
+    if (hasDirect === hasFields || (hasFields && event.data.fields!.length === 0)) {
+      throw new DocumentError(
+        'schema',
+        `Event "${event.name}" data needs exactly one direct type or non-empty fields list`,
+      );
+    }
+    const names = new Set<string>();
+    for (const field of event.data.fields ?? []) {
+      if (!ID_PATTERN.test(field.name) || names.has(field.name)) {
+        throw new DocumentError(
+          'schema',
+          `Event "${event.name}" has invalid or duplicate data fields`,
+        );
+      }
+      names.add(field.name);
+      if (!isSchemaTypeRef(field.type)) {
+        throw new DocumentError('schema', `Event "${event.name}" has an invalid data field type`);
+      }
+    }
+    if (event.data.direct && !isSchemaTypeRef(event.data.direct)) {
+      throw new DocumentError('schema', `Event "${event.name}" has an invalid direct data type`);
+    }
+  }
+}
+
+function isSchemaTypeRef(
+  value: unknown,
+): value is { kind: 'type'; type: string } | { kind: 'schema'; schemaId: string } {
+  if (!isRecord(value)) return false;
+  if (value.kind === 'type') {
+    return ['string', 'number', 'integer', 'boolean', 'object', 'array'].includes(
+      String(value.type),
+    );
+  }
+  return value.kind === 'schema' && typeof value.schemaId === 'string' && value.schemaId.length > 0;
 }
 
 export function assertExpose(expose: Expose): void {
@@ -400,6 +441,51 @@ export function assertEventBindings(value: unknown): asserts value is EventBindi
       !binding.name.trim()
     ) {
       throw new DocumentError('schema', 'Each event binding needs an event and native event name');
+    }
+    if (binding.data !== undefined) {
+      if (binding.payload !== undefined) {
+        throw new DocumentError(
+          'schema',
+          `Event binding "${binding.event}" cannot define both payload and data mappings`,
+        );
+      }
+      if (!Array.isArray(binding.data))
+        throw new DocumentError('schema', 'Event data mappings must be an array');
+      for (const mapping of binding.data) {
+        if (
+          !isRecord(mapping) ||
+          typeof mapping.path !== 'string' ||
+          (mapping.path !== '' && !DATA_PATH.test(mapping.path))
+        ) {
+          throw new DocumentError('schema', 'Event data mappings need valid destination paths');
+        }
+        const source = mapping.source;
+        if (!isRecord(source))
+          throw new DocumentError('schema', 'Event data mappings need a source');
+        if (source.kind === 'native') {
+          if (
+            ![
+              'currentTarget.value',
+              'currentTarget.checked',
+              'currentTarget.valueAsNumber',
+            ].includes(String(source.path))
+          ) {
+            throw new DocumentError(
+              'schema',
+              'Event data mappings use an unsupported native source',
+            );
+          }
+        } else if (source.kind === 'context') {
+          if (typeof source.path !== 'string' || !DATA_PATH.test(source.path)) {
+            throw new DocumentError('schema', 'Event data context sources need a valid data path');
+          }
+        } else if (source.kind === 'literal') {
+          if (!isFieldValueValue(source.value))
+            throw new DocumentError('schema', 'Event data literals must be field values');
+        } else {
+          throw new DocumentError('schema', 'Event data mappings use an unsupported source');
+        }
+      }
     }
   }
 }

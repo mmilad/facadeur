@@ -109,7 +109,12 @@ export type Command =
   | { type: 'setPreviewData'; previewData: PreviewData | null }
   | { type: 'setVariantLabels'; labels: Record<string, string> | null }
   | { type: 'removeField'; name: string }
-  | { type: 'defineEvent'; event: EventDefinition }
+  | {
+      type: 'defineEvent';
+      event: EventDefinition;
+      previousName?: string;
+      bindings?: Record<string, EventBinding[]>;
+    }
   | { type: 'removeEvent'; name: string }
   | { type: 'setExpose'; expose: Expose | null }
   | { type: 'defineVariant'; axis: VariantAxis }

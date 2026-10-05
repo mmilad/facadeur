@@ -48,7 +48,7 @@
     "fields": {
       "type": "array",
       "items": {
-        "$id": "T0",
+        "$id": "T1",
         "additionalProperties": false,
         "type": "object",
         "required": ["name", "type"],
@@ -196,7 +196,7 @@
               "fields": {
                 "type": "array",
                 "items": {
-                  "$ref": "T0"
+                  "$ref": "T1"
                 }
               }
             }
@@ -332,6 +332,143 @@
                     "type": "string"
                   }
                 ]
+              }
+            }
+          },
+          "data": {
+            "additionalProperties": false,
+            "type": "object",
+            "properties": {
+              "direct": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "type": "object",
+                    "required": ["kind", "type"],
+                    "properties": {
+                      "kind": {
+                        "const": "type",
+                        "type": "string"
+                      },
+                      "type": {
+                        "anyOf": [
+                          {
+                            "const": "string",
+                            "type": "string"
+                          },
+                          {
+                            "const": "number",
+                            "type": "string"
+                          },
+                          {
+                            "const": "integer",
+                            "type": "string"
+                          },
+                          {
+                            "const": "boolean",
+                            "type": "string"
+                          },
+                          {
+                            "const": "object",
+                            "type": "string"
+                          },
+                          {
+                            "const": "array",
+                            "type": "string"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "additionalProperties": false,
+                    "type": "object",
+                    "required": ["kind", "schemaId"],
+                    "properties": {
+                      "kind": {
+                        "const": "schema",
+                        "type": "string"
+                      },
+                      "schemaId": {
+                        "minLength": 1,
+                        "type": "string"
+                      }
+                    }
+                  }
+                ]
+              },
+              "fields": {
+                "type": "array",
+                "items": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": ["name", "type"],
+                  "properties": {
+                    "name": {
+                      "minLength": 1,
+                      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+                      "type": "string"
+                    },
+                    "type": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["kind", "type"],
+                          "properties": {
+                            "kind": {
+                              "const": "type",
+                              "type": "string"
+                            },
+                            "type": {
+                              "anyOf": [
+                                {
+                                  "const": "string",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "number",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "integer",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "boolean",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "object",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "array",
+                                  "type": "string"
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["kind", "schemaId"],
+                          "properties": {
+                            "kind": {
+                              "const": "schema",
+                              "type": "string"
+                            },
+                            "schemaId": {
+                              "minLength": 1,
+                              "type": "string"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
               }
             }
           }
@@ -1912,6 +2049,98 @@
                                       ]
                                     }
                                   }
+                                },
+                                "data": {
+                                  "type": "array",
+                                  "items": {
+                                    "additionalProperties": false,
+                                    "type": "object",
+                                    "required": ["path", "source"],
+                                    "properties": {
+                                      "path": {
+                                        "pattern": "^(?:[A-Za-z_$][A-Za-z0-9_$-]*(?:\\.[A-Za-z_$][A-Za-z0-9_$-]*)*)?$",
+                                        "type": "string"
+                                      },
+                                      "source": {
+                                        "anyOf": [
+                                          {
+                                            "additionalProperties": false,
+                                            "type": "object",
+                                            "required": ["kind", "path"],
+                                            "properties": {
+                                              "kind": {
+                                                "const": "native",
+                                                "type": "string"
+                                              },
+                                              "path": {
+                                                "anyOf": [
+                                                  {
+                                                    "const": "currentTarget.value",
+                                                    "type": "string"
+                                                  },
+                                                  {
+                                                    "const": "currentTarget.checked",
+                                                    "type": "string"
+                                                  },
+                                                  {
+                                                    "const": "currentTarget.valueAsNumber",
+                                                    "type": "string"
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          {
+                                            "additionalProperties": false,
+                                            "type": "object",
+                                            "required": ["kind", "path"],
+                                            "properties": {
+                                              "kind": {
+                                                "const": "context",
+                                                "type": "string"
+                                              },
+                                              "path": {
+                                                "minLength": 1,
+                                                "pattern": "^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$",
+                                                "type": "string"
+                                              }
+                                            }
+                                          },
+                                          {
+                                            "additionalProperties": false,
+                                            "type": "object",
+                                            "required": ["kind", "value"],
+                                            "properties": {
+                                              "kind": {
+                                                "const": "literal",
+                                                "type": "string"
+                                              },
+                                              "value": {
+                                                "anyOf": [
+                                                  {
+                                                    "type": "string"
+                                                  },
+                                                  {
+                                                    "type": "number"
+                                                  },
+                                                  {
+                                                    "type": "boolean"
+                                                  },
+                                                  {
+                                                    "type": "array"
+                                                  },
+                                                  {
+                                                    "type": "object",
+                                                    "additionalProperties": true
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  }
                                 }
                               }
                             }
@@ -2798,7 +3027,7 @@
                 "type": "string"
               },
               "schema": {
-                "$id": "T1",
+                "$id": "T0",
                 "additionalProperties": true,
                 "type": "object",
                 "properties": {
@@ -2829,7 +3058,7 @@
                     "type": "object",
                     "patternProperties": {
                       "^(.*)$": {
-                        "$ref": "T1"
+                        "$ref": "T0"
                       }
                     }
                   },
@@ -2840,7 +3069,7 @@
                     }
                   },
                   "items": {
-                    "$ref": "T1"
+                    "$ref": "T0"
                   },
                   "enum": {
                     "type": "array",
@@ -2849,19 +3078,19 @@
                   "oneOf": {
                     "type": "array",
                     "items": {
-                      "$ref": "T1"
+                      "$ref": "T0"
                     }
                   },
                   "anyOf": {
                     "type": "array",
                     "items": {
-                      "$ref": "T1"
+                      "$ref": "T0"
                     }
                   },
                   "allOf": {
                     "type": "array",
                     "items": {
-                      "$ref": "T1"
+                      "$ref": "T0"
                     }
                   },
                   "default": {},
@@ -2871,7 +3100,7 @@
                         "type": "boolean"
                       },
                       {
-                        "$ref": "T1"
+                        "$ref": "T0"
                       }
                     ]
                   }
@@ -3922,6 +4151,98 @@
                         ]
                       }
                     }
+                  },
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": ["path", "source"],
+                      "properties": {
+                        "path": {
+                          "pattern": "^(?:[A-Za-z_$][A-Za-z0-9_$-]*(?:\\.[A-Za-z_$][A-Za-z0-9_$-]*)*)?$",
+                          "type": "string"
+                        },
+                        "source": {
+                          "anyOf": [
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": ["kind", "path"],
+                              "properties": {
+                                "kind": {
+                                  "const": "native",
+                                  "type": "string"
+                                },
+                                "path": {
+                                  "anyOf": [
+                                    {
+                                      "const": "currentTarget.value",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "currentTarget.checked",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "currentTarget.valueAsNumber",
+                                      "type": "string"
+                                    }
+                                  ]
+                                }
+                              }
+                            },
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": ["kind", "path"],
+                              "properties": {
+                                "kind": {
+                                  "const": "context",
+                                  "type": "string"
+                                },
+                                "path": {
+                                  "minLength": 1,
+                                  "pattern": "^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$",
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": ["kind", "value"],
+                              "properties": {
+                                "kind": {
+                                  "const": "literal",
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "number"
+                                    },
+                                    {
+                                      "type": "boolean"
+                                    },
+                                    {
+                                      "type": "array"
+                                    },
+                                    {
+                                      "type": "object",
+                                      "additionalProperties": true
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
                   }
                 }
               }
@@ -4867,6 +5188,98 @@
                         ]
                       }
                     }
+                  },
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": ["path", "source"],
+                      "properties": {
+                        "path": {
+                          "pattern": "^(?:[A-Za-z_$][A-Za-z0-9_$-]*(?:\\.[A-Za-z_$][A-Za-z0-9_$-]*)*)?$",
+                          "type": "string"
+                        },
+                        "source": {
+                          "anyOf": [
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": ["kind", "path"],
+                              "properties": {
+                                "kind": {
+                                  "const": "native",
+                                  "type": "string"
+                                },
+                                "path": {
+                                  "anyOf": [
+                                    {
+                                      "const": "currentTarget.value",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "currentTarget.checked",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "currentTarget.valueAsNumber",
+                                      "type": "string"
+                                    }
+                                  ]
+                                }
+                              }
+                            },
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": ["kind", "path"],
+                              "properties": {
+                                "kind": {
+                                  "const": "context",
+                                  "type": "string"
+                                },
+                                "path": {
+                                  "minLength": 1,
+                                  "pattern": "^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$",
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": ["kind", "value"],
+                              "properties": {
+                                "kind": {
+                                  "const": "literal",
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "number"
+                                    },
+                                    {
+                                      "type": "boolean"
+                                    },
+                                    {
+                                      "type": "array"
+                                    },
+                                    {
+                                      "type": "object",
+                                      "additionalProperties": true
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
                   }
                 }
               }
@@ -5785,6 +6198,98 @@
                             "type": "string"
                           }
                         ]
+                      }
+                    }
+                  },
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": ["path", "source"],
+                      "properties": {
+                        "path": {
+                          "pattern": "^(?:[A-Za-z_$][A-Za-z0-9_$-]*(?:\\.[A-Za-z_$][A-Za-z0-9_$-]*)*)?$",
+                          "type": "string"
+                        },
+                        "source": {
+                          "anyOf": [
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": ["kind", "path"],
+                              "properties": {
+                                "kind": {
+                                  "const": "native",
+                                  "type": "string"
+                                },
+                                "path": {
+                                  "anyOf": [
+                                    {
+                                      "const": "currentTarget.value",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "currentTarget.checked",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "currentTarget.valueAsNumber",
+                                      "type": "string"
+                                    }
+                                  ]
+                                }
+                              }
+                            },
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": ["kind", "path"],
+                              "properties": {
+                                "kind": {
+                                  "const": "context",
+                                  "type": "string"
+                                },
+                                "path": {
+                                  "minLength": 1,
+                                  "pattern": "^[A-Za-z_$][A-Za-z0-9_$-]*(\\.[A-Za-z_$][A-Za-z0-9_$-]*)*$",
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "required": ["kind", "value"],
+                              "properties": {
+                                "kind": {
+                                  "const": "literal",
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "number"
+                                    },
+                                    {
+                                      "type": "boolean"
+                                    },
+                                    {
+                                      "type": "array"
+                                    },
+                                    {
+                                      "type": "object",
+                                      "additionalProperties": true
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          ]
+                        }
                       }
                     }
                   }

@@ -51,3 +51,9 @@
 - **Cause/evidence:** `examples/project-template.json` has no embedded schema catalog; the definition exists in `examples/schemas.json`, which the CLI command omitted. Validation consistently reported `Schema use on "textarea" references missing schema "textarea"`; this was not a race condition.
 - **Impact:** The normal generator command failed; earlier verification used a temporary design document containing the schema library and did not cover this command.
 - **Fix (2026-10-05):** Add validated `--schemas <schemas.json>` input and pass `--schemas examples/schemas.json` in the package script. The actual `pnpm codegen` command and separate/embedded-library regression tests now pass.
+
+## Resolved: generated Next demo inferred an external workspace root
+
+- **Reproduction:** `pnpm --dir dist/facadeur next` with an unrelated `D:/newProjects/package-lock.json` alongside the source and generated workspace lockfiles.
+- **Evidence/impact:** Next inferred `D:/newProjects` as the workspace root and warned about multiple lockfiles; startup also rewrote the generated tsconfig to add Next plugin/types entries on each regeneration.
+- **Fix (2026-10-06):** Generate `outputFileTracingRoot` pointing at the standalone workspace and include Next plugin/type entries in its maintained template. Regenerated development startup and production build pass without the external-root warning or tsconfig rewrite.

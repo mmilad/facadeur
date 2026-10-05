@@ -63,6 +63,7 @@ export function cloneEventBindings(bindings: EventBinding[]) {
     event: binding.event,
     name: binding.name,
     ...(binding.payload ? { payload: { ...binding.payload } } : {}),
+    ...(binding.data ? { data: structuredClone(binding.data) } : {}),
   }));
 }
 
@@ -91,6 +92,7 @@ export function cloneEvent(event: EventDefinition) {
   return {
     name: event.name,
     ...(event.payload ? { payload: { ...event.payload } } : {}),
+    ...(event.data ? { data: structuredClone(event.data) } : {}),
   };
 }
 

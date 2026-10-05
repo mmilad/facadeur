@@ -27,7 +27,11 @@ interface PrintedComponent {
 
 export function printTypesFile(file: PrintedComponent): string {
   const lines = generatedBanner(file.id);
-  lines.push(`import type { ComponentProps } from '../../contracts';`, '');
+  const usesEvents = file.props.some((prop) => prop.fieldType === 'event');
+  lines.push(
+    `import type { ${usesEvents ? 'ComponentEvent, ' : ''}ComponentProps } from '../../contracts';`,
+    '',
+  );
   const data = file.dataContract;
   if (data) lines.push(...data.imports, '');
   if (file.usesCssProperties) {
@@ -111,6 +115,7 @@ export function printComponentIndex(file: PrintedComponent): string {
     `${file.component}Props`,
     `${file.component}Data`,
     ...file.variantTypes.map((variant) => variant.name),
+    ...file.props.flatMap((prop) => (prop.eventDataType ? [prop.eventDataType] : [])),
   ];
   return [
     ...generatedBanner(file.id),

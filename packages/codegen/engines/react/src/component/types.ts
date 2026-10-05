@@ -9,7 +9,10 @@ export interface PropSpec {
   defaultExpr?: string;
   variantDefaultExpr?: string;
   required?: boolean;
-  eventPayload?: Record<string, FieldType>;
+  eventName?: string;
+  eventDataType?: string;
+  eventDataTypeExpr?: string;
+  eventDataTypeImport?: string;
 }
 
 export interface VariantTypeSpec {

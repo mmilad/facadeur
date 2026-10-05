@@ -25,13 +25,19 @@ describe('event bindings editor', () => {
       (document.querySelector('select[name="event-binding-name-0"]') as HTMLSelectElement).value,
     ).toBe('input');
     expect(
-      (document.querySelector('select[name="event-binding-payload-0-value"]') as HTMLSelectElement)
-        .value,
-    ).toBe('valueAsNumber');
+      (
+        document.querySelector(
+          'select[name="event-binding-data-source-0-value"]',
+        ) as HTMLSelectElement
+      ).value,
+    ).toBe('native:currentTarget.valueAsNumber');
     expect(
-      (document.querySelector('select[name="event-binding-payload-0-valid"]') as HTMLSelectElement)
-        .value,
-    ).toBe('checked');
+      (
+        document.querySelector(
+          'select[name="event-binding-data-source-0-valid"]',
+        ) as HTMLSelectElement
+      ).value,
+    ).toBe('native:currentTarget.checked');
 
     await user.selectOptions(
       document.querySelector('select[name="event-binding-name-0"]')!,

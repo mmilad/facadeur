@@ -1,6 +1,6 @@
 import { Type } from '@sinclair/typebox';
 import { dataPathSchema, idSchema } from './common.js';
-import type { JsonSchema } from './contract.js';
+import { schemaFieldUseSchema, schemaTypeRefSchema, type JsonSchema } from './contract.js';
 
 export const fieldTypes = [
   'text',
@@ -85,6 +85,15 @@ export const eventDefinitionSchema = Type.Object(
   {
     name: idSchema,
     payload: Type.Optional(Type.Record(idSchema, fieldTypeSchema)),
+    data: Type.Optional(
+      Type.Object(
+        {
+          direct: Type.Optional(schemaTypeRefSchema),
+          fields: Type.Optional(Type.Array(schemaFieldUseSchema)),
+        },
+        { additionalProperties: false },
+      ),
+    ),
   },
   { additionalProperties: false },
 );
@@ -113,6 +122,39 @@ export const eventBindingSchema = Type.Object(
       Type.Record(
         idSchema,
         Type.Union([Type.Literal('value'), Type.Literal('checked'), Type.Literal('valueAsNumber')]),
+      ),
+    ),
+    data: Type.Optional(
+      Type.Array(
+        Type.Object(
+          {
+            path: Type.String({
+              pattern: '^(?:[A-Za-z_$][A-Za-z0-9_$-]*(?:\\.[A-Za-z_$][A-Za-z0-9_$-]*)*)?$',
+            }),
+            source: Type.Union([
+              Type.Object(
+                {
+                  kind: Type.Literal('native'),
+                  path: Type.Union([
+                    Type.Literal('currentTarget.value'),
+                    Type.Literal('currentTarget.checked'),
+                    Type.Literal('currentTarget.valueAsNumber'),
+                  ]),
+                },
+                { additionalProperties: false },
+              ),
+              Type.Object(
+                { kind: Type.Literal('context'), path: dataPathSchema },
+                { additionalProperties: false },
+              ),
+              Type.Object(
+                { kind: Type.Literal('literal'), value: fieldValueSchema },
+                { additionalProperties: false },
+              ),
+            ]),
+          },
+          { additionalProperties: false },
+        ),
       ),
     ),
   },

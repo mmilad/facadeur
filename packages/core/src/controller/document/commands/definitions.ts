@@ -2,12 +2,14 @@ import { DocumentError } from '../../../document/errors.js';
 import { makeFlatNode, type FlatDocument } from '../../../document/flat.js';
 import type {
   EventDefinition,
+  EventBinding,
   Expose,
   FieldDefinition,
   FieldValue,
 } from '../../../schema/document.js';
 import {
   assertEventDefinition,
+  assertEventBindings,
   assertExpose,
   assertFieldDefinition,
   assertValueMatches,
@@ -70,13 +72,66 @@ export function removeField(doc: FlatDocument, name: string) {
   }
 }
 
-export function defineEvent(doc: FlatDocument, event: EventDefinition) {
+export function defineEvent(
+  doc: FlatDocument,
+  event: EventDefinition,
+  options: { previousName?: string; bindings?: Record<string, EventBinding[]> } = {},
+) {
   assertEventDefinition(event);
   const events = doc.events ? [...doc.events] : [];
-  const index = events.findIndex((item) => item.name === event.name);
+  const previousIndex = options.previousName
+    ? events.findIndex((item) => item.name === options.previousName)
+    : -1;
+  if (options.previousName && previousIndex === -1) {
+    throw new DocumentError('unknown-event', `Event "${options.previousName}" is not defined`);
+  }
+  if (
+    options.previousName &&
+    options.previousName !== event.name &&
+    events.some((item) => item.name === event.name)
+  ) {
+    throw new DocumentError('schema', `Event "${event.name}" is already defined`);
+  }
+  const index =
+    previousIndex !== -1 ? previousIndex : events.findIndex((item) => item.name === event.name);
   if (index === -1) events.push(structuredClone(event));
   else events[index] = structuredClone(event);
   doc.events = events;
+  if (options.previousName && options.previousName !== event.name) {
+    for (const node of Object.values(doc.nodes)) {
+      if (
+        node.type === 'instance' ||
+        !node.eventBindings?.some((binding) => binding.event === options.previousName)
+      ) {
+        continue;
+      }
+      const bindings = node.eventBindings.map((binding) => ({
+        ...structuredClone(binding),
+        ...(binding.event === options.previousName ? { event: event.name } : {}),
+      }));
+      node.eventBindings = bindings;
+    }
+  }
+  for (const [nodeId, bindings] of Object.entries(options.bindings ?? {})) {
+    const node = doc.nodes[nodeId];
+    if (!node || node.type === 'instance' || node.type === 'repeater' || node.type === 'switch') {
+      throw new DocumentError(
+        'unknown-node',
+        `Event binding target "${nodeId}" is not a native node`,
+      );
+    }
+    assertEventBindings(bindings);
+    for (const binding of bindings) {
+      if (!events.some((entry) => entry.name === binding.event)) {
+        throw new DocumentError(
+          'unknown-event',
+          `Native node "${nodeId}" binds unknown event "${binding.event}"`,
+        );
+      }
+    }
+    if (bindings.length) node.eventBindings = bindings.map((binding) => structuredClone(binding));
+    else delete node.eventBindings;
+  }
 }
 
 /** Removing a public event also removes native bindings that target it. */

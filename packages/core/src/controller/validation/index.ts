@@ -23,6 +23,7 @@ export { assertDefinitionKind, validateDefinitions } from './definitions.js';
 export { validateLibraries, validateTree } from './tree.js';
 export { type ValidateOptions } from './types.js';
 export { matchingSchemaIndex } from './json-schema-value.js';
+export { eventDataMappings, eventDataSchema } from './schema-use.js';
 export {
   resolveChildFieldDefinition,
   validateCatalog,

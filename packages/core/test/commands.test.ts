@@ -497,6 +497,49 @@ describe('applyCommand', () => {
     );
   });
 
+  it('atomically renames an event and replaces native mappings in the same command', () => {
+    let doc = component();
+    doc = applyCommand(doc, {
+      type: 'setProp',
+      nodeId: 'title',
+      prop: 'eventBindings',
+      value: [{ event: 'commit', name: 'change' }],
+    });
+    doc = applyCommand(doc, {
+      type: 'defineEvent',
+      previousName: 'commit',
+      event: {
+        name: 'save',
+        data: {
+          direct: { kind: 'type', type: 'string' },
+        },
+      },
+      bindings: {
+        title: [
+          {
+            event: 'save',
+            name: 'change',
+            data: [{ path: '', source: { kind: 'native', path: 'currentTarget.value' } }],
+          },
+        ],
+      },
+    });
+
+    expect(doc.events).toContainEqual({
+      name: 'save',
+      data: { direct: { kind: 'type', type: 'string' } },
+    });
+    expect(doc.events?.some((event) => event.name === 'commit')).toBe(false);
+    expect(doc.nodes.title).toMatchObject({
+      eventBindings: [
+        {
+          event: 'save',
+          data: [{ path: '', source: { kind: 'native', path: 'currentTarget.value' } }],
+        },
+      ],
+    });
+  });
+
   it('sets and clears instance field bindings through node props', () => {
     const doc = toFlat({
       version: 1,

@@ -65,7 +65,7 @@ The thin Next.js sample still consumes the same package:
 pnpm --dir dist/facadeur next
 ```
 
-Open the URL Next prints (http://localhost:3000). The page renders Button (tone and size props), Input, Sign in, and Card from `@facadeur/ui`.
+Open the URL Next prints (http://localhost:3000). The page renders Button (tone and size props), Input, Sign in, and Card from `@facadeur/ui`. The input demo displays the semantic event name, native event type and typed data as you edit. Generated native controls use initial defaults, so they are editable without application state.
 
 ## Checks
 

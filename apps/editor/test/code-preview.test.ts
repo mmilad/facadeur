@@ -10,7 +10,12 @@ describe('code preview adapter', () => {
       name: 'Preview card',
       kind: 'component',
       fields: [{ name: 'label', type: 'text', required: true }],
-      events: [{ name: 'commit', payload: { value: 'text' } }],
+      events: [
+        {
+          name: 'commit',
+          data: { fields: [{ name: 'value', type: { kind: 'type', type: 'string' } }] },
+        },
+      ],
       variants: [{ name: 'default' }, { name: 'compact' }],
       previewData: {
         fields: { label: 'Base sample' },
@@ -19,8 +24,15 @@ describe('code preview adapter', () => {
       root: {
         id: 'root',
         type: 'text',
-        bindings: [{ field: 'label', target: 'text' }],
-        eventBindings: [{ event: 'commit', name: 'change' }],
+        tag: 'input',
+        bindings: [{ field: 'label', target: 'attribute', name: 'value' }],
+        eventBindings: [
+          {
+            event: 'commit',
+            name: 'change',
+            data: [{ path: 'value', source: { kind: 'native', path: 'currentTarget.value' } }],
+          },
+        ],
       },
     };
 
@@ -28,8 +40,10 @@ describe('code preview adapter', () => {
 
     expect(result.error).toBeUndefined();
     expect(result.source).toContain('label: string;');
-    expect(result.source).toContain('onCommit?: (payload: { value: string }) => void;');
-    expect(result.source).toContain('onCommit?: (payload: TPayload) => void;');
+    expect(result.source).toContain(
+      "onCommit?: (event: ComponentEvent<PreviewCardCommitData, 'commit'>) => void;",
+    );
+    expect(result.source).toContain("onCommit?: (event: ComponentEvent<TData, 'commit'>) => void;");
     expect(result.source).toContain('context?: DataContext;');
     expect(result.source).toContain('variant?: PreviewCardVariant;');
     expect(result.source).not.toContain('Base sample');

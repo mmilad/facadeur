@@ -156,6 +156,13 @@ export function readEvents(list: Y.Array<Y.Map<unknown>>): EventDefinition[] {
       ...(payload instanceof Y.Map
         ? { payload: readJsonObject(payload) as EventDefinition['payload'] }
         : {}),
+      ...(map.get('data') instanceof Y.Map
+        ? {
+            data: readJsonObject(
+              map.get('data') as Y.Map<unknown>,
+            ) as unknown as EventDefinition['data'],
+          }
+        : {}),
     };
   });
 }
@@ -365,7 +372,17 @@ function readEventBindings(value: unknown): EventBinding[] | undefined {
     const name = item.get('name');
     if (typeof event === 'string' && typeof name === 'string') {
       const payload = readStringMap(item.get('payload')) as EventBinding['payload'];
-      bindings.push({ event, name, ...(payload ? { payload } : {}) });
+      const dataValue = item.get('data');
+      const data =
+        dataValue instanceof Y.Array
+          ? (readJsonArray(dataValue) as unknown as EventBinding['data'])
+          : undefined;
+      bindings.push({
+        event,
+        name,
+        ...(payload ? { payload } : {}),
+        ...(dataValue instanceof Y.Array ? { data } : {}),
+      });
     }
   }
   return bindings.length ? bindings : undefined;

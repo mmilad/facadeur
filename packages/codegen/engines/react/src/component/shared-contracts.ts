@@ -25,8 +25,15 @@ export interface ValueProps<TValue = string> {
   value?: TValue;
 }
 
-export interface CommitProps<TPayload> {
-  onCommit?: (payload: TPayload) => void;
+export interface ComponentEvent<TData = undefined, TName extends string = string> {
+  eventName: TName;
+  event: Event;
+  native: string;
+  data: TData;
+}
+
+export interface CommitProps<TData = undefined> {
+  onCommit?: (event: ComponentEvent<TData, 'commit'>) => void;
 }
 `;
 }

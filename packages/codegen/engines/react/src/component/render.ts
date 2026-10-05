@@ -114,13 +114,16 @@ export function renderNode(
     if (reactName === 'className' || reactName === 'style') continue;
     if (bound.attrs.has(reactName)) continue;
     consumed.add(reactName);
-    attrs.push({ name: reactName, value: staticAttrValue(reactName, value) });
+    attrs.push({
+      name: uncontrolledFormProp(tag, reactName),
+      value: staticAttrValue(reactName, value),
+    });
   }
   for (const [name, value] of bound.attrs) {
     if (consumed.has(name)) continue;
-    attrs.push({ name, value });
+    attrs.push({ name: uncontrolledFormProp(tag, name), value });
   }
-  attrs.push(...eventAttributes(node.eventBindings, owner, usedProps));
+  attrs.push(...eventAttributes(node.eventBindings, owner, usedProps, dataScope, tag));
 
   if (node.type === 'image') {
     pushMedia(attrs, 'src', bound.src, node.src);
@@ -156,7 +159,13 @@ export function renderNode(
     repeat = { source: `(${source} ?? [])`, item, index, key };
   }
   const text = textChild(node, bound);
-  if (text && !isVoidTag(tag)) childNodes.push({ text });
+  if (tag.toLowerCase() === 'textarea' && bound.text) {
+    const literal = node.type === 'text' ? node.text : undefined;
+    attrs.push({
+      name: 'defaultValue',
+      value: { kind: 'expr', code: withFallback(bound.text, literal) },
+    });
+  } else if (text && !isVoidTag(tag)) childNodes.push({ text });
   if (!isVoidTag(tag)) {
     for (const child of children) {
       childNodes.push(
@@ -188,6 +197,15 @@ export function renderNode(
       : {}),
     ...(repeat ? { repeat } : {}),
   };
+}
+
+function uncontrolledFormProp(tag: string, name: string): string {
+  const element = tag.toLowerCase();
+  if ((element === 'input' || element === 'textarea' || element === 'select') && name === 'value') {
+    return 'defaultValue';
+  }
+  if (element === 'input' && name === 'checked') return 'defaultChecked';
+  return name;
 }
 
 function renderStructuralNode(

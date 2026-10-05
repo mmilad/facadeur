@@ -1,5 +1,7 @@
 import {
+  eventDataSchema,
   structuralChildSchemas,
+  type EventDefinition,
   type NestedNode,
   type SchemaCatalog,
   type SchemaResolverContext,
@@ -47,7 +49,23 @@ export function assignDataContracts(
     const inherited = new Set<string>();
     const aliases: string[] = [];
     const branchTypes = new Map<string, string>();
-    const aliasNames = new Set([`${entry.component}Data`, `${entry.component}Props`]);
+    const aliasNames = new Set([
+      `${entry.component}Data`,
+      `${entry.component}Props`,
+      ...[...entry.events.values()].flatMap((prop) =>
+        prop.eventDataType ? [prop.eventDataType] : [],
+      ),
+    ]);
+    for (const prop of entry.events.values()) {
+      if (prop.eventDataTypeImport && prop.eventDataTypeExpr) {
+        imports.add(
+          `import type { ${prop.eventDataTypeExpr} } from '${prop.eventDataTypeImport}';`,
+        );
+      }
+    }
+    for (const event of entry.document.events ?? []) {
+      assignEventDataType(entry, event, schemas, names, imports, aliases);
+    }
     visitStructural(entry.document.root, (node) => {
       for (const branch of structuralChildSchemas(entry.document, node.id, context)) {
         const target = catalog.get(branch.node.component);
@@ -124,6 +142,61 @@ export function assignDataContracts(
     };
   }
   return files;
+}
+
+function assignEventDataType(
+  entry: CatalogEntry,
+  event: EventDefinition,
+  schemas: SchemaCatalog | undefined,
+  schemaNames: ReadonlyMap<string, string>,
+  imports: Set<string>,
+  aliases: string[],
+): void {
+  const prop = entry.events.get(event.name);
+  if (!prop) return;
+  const schema = eventDataSchema(event, schemas);
+  if (!schema) {
+    if (event.data) {
+      throw new CodegenError(`Cannot resolve event data schema for "${event.name}"`);
+    }
+    prop.type = `(event: ComponentEvent<undefined, ${quote(event.name)}>) => void`;
+    return;
+  }
+
+  const typeName = prop.eventDataType;
+  if (!typeName) throw new CodegenError(`Missing generated data type for event "${event.name}"`);
+  let type: string;
+  const direct = event.data?.direct;
+  if (direct?.kind === 'schema') {
+    const namedType = schemaNames.get(direct.schemaId);
+    if (!namedType)
+      throw new CodegenError(`Unknown schema "${direct.schemaId}" on event "${event.name}"`);
+    imports.add(`import type { ${namedType} } from '../../types/${namedType}';`);
+    type = namedType;
+  } else if (event.data?.fields) {
+    const fields = event.data.fields.map((field) => {
+      const valueType =
+        field.type.kind === 'schema'
+          ? schemaNames.get(field.type.schemaId)
+          : schemaTypeName({ type: field.type.type });
+      if (!valueType) {
+        const reference = field.type.kind === 'schema' ? field.type.schemaId : field.type.type;
+        throw new CodegenError(`Unknown event data type "${reference}" on "${event.name}"`);
+      }
+      if (field.type.kind === 'schema') {
+        imports.add(`import type { ${valueType} } from '../../types/${valueType}';`);
+      }
+      return `${quote(field.name)}: ${valueType}`;
+    });
+    type = `{ ${fields.join('; ')} }`;
+  } else {
+    type = schemaTypeName(schema);
+  }
+
+  aliases.push(`export type ${typeName} = ${type};`);
+  prop.eventDataType = typeName;
+  prop.eventDataTypeExpr = typeName;
+  prop.type = `(event: ComponentEvent<${typeName}, ${quote(event.name)}>) => void`;
 }
 
 const banner =

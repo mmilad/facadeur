@@ -1,5 +1,38 @@
 # facadeur – Plan
 
+### Typed event envelopes and event data contracts
+
+- [x] Implement the [event contract plan](event-contract-plan.md): derive public callbacks from
+      events, reuse component contract selection for event data, always forward the native
+      browser event, preserve explicit instance forwarding and generate native form defaults.
+      The plan records ownership, migration, in-scope refactoring boundaries and validation.
+
+Refactoring review: extract only the shared schema selector into editor `ui/controls/data`;
+component defaults and command ownership stay on the schema surface. Retain Core's cohesive
+598-line data-contract validation traversal: native event mappings need the same root/repeater
+scope resolution, and splitting it would duplicate scope rules. Retain ContentPanel's 482-line
+property orchestration (seven added lines) and the data-control directory: its controls own the
+same contract editing domain. Preserve persisted document compatibility, public forwarding,
+Undo, and recovered drafts; validate with contract/control/adapter tests and workspace checks.
+Retain the assertion and definition validators (530/483 lines): they own the canonical native
+source/type and event declaration checks, while schema resolution and scoped binding checks
+already have separate owners. The 12-file validation directory is a single validation domain.
+Unrelated candidate: structural-nodes.ts remains 572 lines and is unchanged by this task;
+review its repeater/switch validation boundaries separately, preserving structural contracts
+and using the existing structural-node regression suite before any later split.
+
+Result (2026-10-06): editor events reuse component schema selection and expose typed callback
+previews. Core owns legacy normalization and validates required native/context/literal data
+mappings. Contract changes with affected bindings are reviewed locally and saved as one
+undoable command; Cancel discards the draft. Generated callbacks always receive the original
+native Event, its actual type, eventName and typed data; exposed wrappers preserve identity.
+Native form defaults generate defaultValue/defaultChecked, and the Next demo shows event data.
+Validation: source/generated workspace typechecks, scoped ESLint/Prettier, document schema and
+workspace regeneration, Storybook and Next production builds, and browser add-field, Cancel,
+mapping review, Save/Undo and editable input checks pass. Full suite: 1079/1080 passed; the
+existing repeater inspector test exceeded its 5-second timeout under parallel load and all
+three tests in that file pass on isolated rerun. User recovered drafts and staging are preserved.
+
 ### Controller test migration and coverage audit
 
 - [x] Run the maintained suite after the controller/Yjs migration; classify failures by preserved behavior versus retired transport semantics. Keep pure Core command tests, move controller ownership/events/history coverage to Core controller/store tests, and cover local JSON/session integration at the editor boundary. Migrate useful archived workflow/save/catalog assertions; remove only obsolete CRDT, WebSocket and shared-server expectations. Preserve current user changes/staging and actual behavior contracts (sparse variants, commands, Undo, source conflicts and async save baselines). Record unrelated refactor candidates rather than extending scope. Validation: full suite, focused checks after repairs, workspace typecheck, scoped lint/format and detector rerun.
@@ -504,3 +537,7 @@ Layer move follow-up (2026-10-05): a layer-drag regression verifies moving a sib
   - Validation: workspace CLI regeneration/preservation tests, React runtime tests, source typecheck, standalone install/typecheck/Storybook build, detector rerun.
 
 Result: `pnpm codegen` writes an independent ignored `dist/facadeur` pnpm workspace. Bootstrap templates own UI/Storybook configuration and the optional Next demo; internal generated packages and their lockfile importers are removed. Runtime tests resolve React through codegen itself. Legacy component-only CLI modes remain supported. Independent install, source and generated workspace typechecks, Storybook production build, 77 generator/preview tests, scoped ESLint and formatting pass. The detector still reports only the cohesive 12-module React engine directory. Prior output was backed up under `.facadeur/output-migration-2026-10-06`; staging was preserved.
+
+Event implementation scope: extract reusable schema selection before extending event editing; Core owns canonical legacy/data schema resolution, binding validation and persistence, the editor owns reusable controls and command routing, React codegen owns DOM event envelopes and native form defaults. Source event definitions stay serializable, callbacks derive from declarations, explicit forwarding and Undo remain intact. Review the canonical Core API across workers before integration; migrate only the existing FormInput event example and regenerate output. Validation will include focused Core/adapter/editor/generator tests, schema export, source/generated typechecks, standalone build and a browser interaction check.
+
+React event ownership review: `component/catalog.ts` currently builds flat event callback types; `render/event-attributes.ts` owns native extraction; `print.ts` and `data-contracts.ts` own emitted contracts; `render-instance.ts` owns forwarding. Retain these cohesive boundaries and share Core schema/mapping resolution, preserving the native event envelope, typed data and explicit forwarding. No generic runtime library or unrelated split is needed.

@@ -1,6 +1,10 @@
 import { DocumentError } from '../../document/errors.js';
 import { type FlatDocument, toNested, type FlatNode } from '../../document/flat.js';
-import { type FieldDefinition } from '../../schema/document.js';
+import {
+  type FieldDefinition,
+  type JsonSchema,
+  type SchemaCatalog,
+} from '../../schema/document.js';
 import { variantPresets } from '../variants/resolve.js';
 import { assertValueMatches } from './assertions.js';
 import {
@@ -10,12 +14,14 @@ import {
   structuralScopeFields,
 } from './catalog-exposed.js';
 import type { SchemaResolverContext } from './types.js';
-import { localContractFieldsFor } from './schema-use.js';
+import { eventDataMappings, eventDataSchema, localContractFieldsFor } from './schema-use.js';
+import { resolveJsonSchema } from './json-schema-value.js';
 
 interface DataScope {
   fields: ReadonlyMap<string, FieldDefinition>;
   aliases: ReadonlyMap<string, FieldDefinition>;
   ambientAliases: ReadonlyMap<string, FieldDefinition>;
+  schemaCatalog?: SchemaCatalog;
 }
 
 export function validateDataContracts(doc: FlatDocument, context: SchemaResolverContext) {
@@ -27,6 +33,34 @@ export function validateDataContracts(doc: FlatDocument, context: SchemaResolver
   const visit = (id: string, scope: DataScope) => {
     const node = doc.nodes[id];
     if (!node) return;
+
+    for (const binding of ('eventBindings' in node ? node.eventBindings : undefined) ?? []) {
+      const event = doc.events?.find((entry) => entry.name === binding.event);
+      if (!event) continue;
+      const schema = eventDataSchema(event, context.schemaCatalog);
+      if (!schema) continue;
+      for (const mapping of eventDataMappings(event, binding) ?? []) {
+        if (mapping.source.kind !== 'context') continue;
+        const source = assertDataPath(
+          mapping.source.path,
+          scope,
+          `event data mapping "${mapping.path}" on node "${node.id}"`,
+        );
+        const destination = schemaAtPath(schema, mapping.path);
+        if (
+          destination &&
+          (!schemaAcceptsField(destination, source, scope.schemaCatalog) ||
+            (isRequiredEventDataPath(schema, mapping.path) &&
+              source.required !== true &&
+              source.default === undefined))
+        ) {
+          throw new DocumentError(
+            'schema',
+            `Context path "${mapping.source.path}" is incompatible with event data "${mapping.path}" on node "${node.id}"`,
+          );
+        }
+      }
+    }
 
     if (node.displayOn) {
       const conditionField = assertDataPath(
@@ -78,6 +112,7 @@ export function validateDataContracts(doc: FlatDocument, context: SchemaResolver
           scopeForFields(
             structuralScopeFields(doc, candidate.node.id, context, inherited),
             scope.ambientAliases,
+            scope.schemaCatalog,
           ),
         );
       }
@@ -92,6 +127,7 @@ export function validateDataContracts(doc: FlatDocument, context: SchemaResolver
           scopeForFields(
             structuralScopeFields(doc, candidate.node.id, context, inherited),
             scope.ambientAliases,
+            scope.schemaCatalog,
           ),
         );
       }
@@ -125,7 +161,7 @@ export function validateDataContracts(doc: FlatDocument, context: SchemaResolver
         }
         const keyField = assertDataPath(
           node.repeat.key,
-          scopeForObject(item),
+          scopeForObject(item, scope.schemaCatalog),
           `repeat key on node "${node.id}"`,
         );
         if (!isScalarField(keyField)) {
@@ -144,7 +180,160 @@ export function validateDataContracts(doc: FlatDocument, context: SchemaResolver
     for (const childId of node.children) visit(childId, childScope);
   };
 
-  visit(doc.rootId, { fields, aliases: new Map(), ambientAliases });
+  visit(doc.rootId, {
+    fields,
+    aliases: new Map(),
+    ambientAliases,
+    ...(context.schemaCatalog ? { schemaCatalog: context.schemaCatalog } : {}),
+  });
+}
+
+function schemaAtPath(schema: JsonSchema, path: string): JsonSchema | undefined {
+  if (!path) return schema;
+  const [part, ...remaining] = path.split('.');
+  if (!part) return undefined;
+  const candidates: JsonSchema[] = [
+    ...(schema.properties?.[part] ? [schema.properties[part]!] : []),
+    ...[...(schema.allOf ?? []), ...(schema.oneOf ?? []), ...(schema.anyOf ?? [])].flatMap(
+      (branch) => {
+        const candidate: JsonSchema | undefined = schemaAtPath(branch, path);
+        return candidate ? [candidate] : [];
+      },
+    ),
+  ]
+    .map((candidate: JsonSchema) =>
+      remaining.length ? schemaAtPath(candidate, remaining.join('.')) : candidate,
+    )
+    .filter((candidate): candidate is JsonSchema => candidate !== undefined);
+  if (!candidates.length) return undefined;
+  return candidates.length === 1 ? candidates[0] : { anyOf: candidates };
+}
+
+function schemaAcceptsField(
+  schema: JsonSchema,
+  source: FieldDefinition,
+  schemaCatalog?: SchemaCatalog,
+): boolean {
+  return schemasCompatible(fieldSchema(source, schemaCatalog), schema);
+}
+
+function fieldSchema(field: FieldDefinition, schemaCatalog?: SchemaCatalog): JsonSchema {
+  if (field.schema) return resolveJsonSchema(field.schema, schemaCatalog);
+  const type = schemaTypeForField(field.type);
+  if (field.type === 'array') {
+    const items = field.items;
+    const itemSchema = items?.schema
+      ? resolveJsonSchema(items.schema, schemaCatalog)
+      : items
+        ? fieldSchema(
+            {
+              name: `${field.name}[]`,
+              type: items.type,
+              ...(items.options ? { options: items.options } : {}),
+              ...(items.fields ? { items: { type: items.type, fields: items.fields } } : {}),
+            },
+            schemaCatalog,
+          )
+        : undefined;
+    return { type, ...(itemSchema ? { items: itemSchema } : {}) };
+  }
+  if (field.type === 'object') {
+    const fields = field.items?.fields ?? [];
+    return {
+      type,
+      properties: Object.fromEntries(
+        fields.map((child) => [child.name, fieldSchema(child, schemaCatalog)]),
+      ),
+      ...(fields.some((child) => child.required === true || child.default !== undefined)
+        ? {
+            required: fields
+              .filter((child) => child.required === true || child.default !== undefined)
+              .map((child) => child.name),
+          }
+        : {}),
+      additionalProperties: false,
+    };
+  }
+  return {
+    type,
+    ...(field.type === 'enum' && field.options?.length ? { enum: field.options } : {}),
+  };
+}
+
+function schemaTypeForField(type: FieldDefinition['type']) {
+  if (type === 'number') return 'number';
+  if (type === 'boolean') return 'boolean';
+  if (type === 'array') return 'array';
+  if (type === 'object') return 'object';
+  return 'string';
+}
+
+function schemasCompatible(source: JsonSchema, destination: JsonSchema): boolean {
+  const sourceType = basicSchemaType(source);
+  const destinationType = basicSchemaType(destination);
+  if (
+    sourceType &&
+    destinationType &&
+    sourceType !== destinationType &&
+    !(sourceType === 'number' && destinationType === 'integer')
+  ) {
+    return false;
+  }
+  if (
+    destination.enum?.length &&
+    (!source.enum?.length || source.enum.some((value) => !destination.enum?.includes(value)))
+  ) {
+    return false;
+  }
+  if ((destination.allOf ?? []).some((branch) => !schemasCompatible(source, branch))) {
+    return false;
+  }
+  for (const alternatives of [destination.oneOf, destination.anyOf]) {
+    if (alternatives?.length && !alternatives.some((branch) => schemasCompatible(source, branch))) {
+      return false;
+    }
+  }
+  if (destinationType === 'object') {
+    for (const name of destination.required ?? []) {
+      const sourceProperty = source.properties?.[name];
+      const destinationProperty = destination.properties?.[name];
+      if (!sourceProperty || !destinationProperty || !source.required?.includes(name)) return false;
+      if (!schemasCompatible(sourceProperty, destinationProperty)) return false;
+    }
+    if (destination.additionalProperties === false) {
+      if (source.additionalProperties !== false) return false;
+      for (const [name, sourceProperty] of Object.entries(source.properties ?? {})) {
+        const destinationProperty = destination.properties?.[name];
+        if (!destinationProperty || !schemasCompatible(sourceProperty, destinationProperty)) {
+          return false;
+        }
+      }
+    }
+  }
+  if (destinationType === 'array' && destination.items) {
+    if (!source.items || !schemasCompatible(source.items, destination.items)) return false;
+  }
+  return true;
+}
+
+function isRequiredEventDataPath(schema: JsonSchema, path: string): boolean {
+  if (!path) return true;
+  const [name, ...parts] = path.split('.');
+  if (!name) return false;
+  const required = [schema, ...(schema.allOf ?? [])].some((parent) =>
+    parent.required?.includes(name),
+  );
+  if (!required) return false;
+  const child = [schema, ...(schema.allOf ?? [])]
+    .map((parent) => parent.properties?.[name])
+    .find(Boolean);
+  return parts.length && child ? isRequiredEventDataPath(child, parts.join('.')) : true;
+}
+
+function basicSchemaType(schema: JsonSchema) {
+  return Array.isArray(schema.type)
+    ? schema.type.find((type) => type !== 'null')
+    : (schema.type ?? (schema.properties ? 'object' : undefined));
 }
 
 function ambientStructuralAliases(doc: FlatDocument, context: SchemaResolverContext) {
@@ -320,11 +509,13 @@ function assertDataPath(path: string, scope: DataScope, context: string) {
 function scopeForFields(
   fields: readonly FieldDefinition[],
   ambientAliases: ReadonlyMap<string, FieldDefinition> = new Map(),
+  schemaCatalog?: SchemaCatalog,
 ): DataScope {
   return {
     fields: new Map(fields.map((field) => [field.name, field])),
     aliases: new Map(),
     ambientAliases,
+    ...(schemaCatalog ? { schemaCatalog } : {}),
   };
 }
 
@@ -336,7 +527,7 @@ function resolveDataPath(path: string, scope: DataScope) {
   for (const part of parts) {
     const nextField: FieldDefinition | undefined =
       current.items?.fields?.find((field) => field.name === part) ??
-      (current.schema ? fieldFromSchema(current.schema, part) : undefined);
+      (current.schema ? fieldFromSchema(current.schema, part, scope.schemaCatalog) : undefined);
     if (!nextField) return undefined;
     current = nextField;
   }
@@ -360,15 +551,21 @@ function scalarItemField(name: string): FieldDefinition {
   return { name, type: 'text' };
 }
 
-function scopeForObject(field: FieldDefinition): DataScope {
+function scopeForObject(field: FieldDefinition, schemaCatalog?: SchemaCatalog): DataScope {
   return {
     fields: new Map(field.items?.fields?.map((item) => [item.name, item]) ?? []),
     aliases: new Map(),
     ambientAliases: new Map(),
+    ...(schemaCatalog ? { schemaCatalog } : {}),
   };
 }
 
-function fieldFromSchema(schema: NonNullable<FieldDefinition['schema']>, name: string) {
+function fieldFromSchema(
+  schema: NonNullable<FieldDefinition['schema']>,
+  name: string,
+  schemaCatalog?: SchemaCatalog,
+) {
+  schema = resolveJsonSchema(schema, schemaCatalog);
   const alternatives = schema.oneOf ?? schema.anyOf ?? schema.allOf ?? [schema];
   const branches = alternatives.flatMap((branch) => {
     const property = branch.properties?.[name];
@@ -376,20 +573,26 @@ function fieldFromSchema(schema: NonNullable<FieldDefinition['schema']>, name: s
   });
   if (!branches.length) return undefined;
   const schemas = branches.map(({ property }) => property);
-  const type = schemas.every((entry) => entry.type === 'number' || entry.type === 'integer')
-    ? 'number'
-    : schemas.every((entry) => entry.type === 'boolean')
-      ? 'boolean'
-      : schemas.every((entry) => entry.type === 'array')
-        ? 'array'
-        : schemas.every((entry) => entry.type === 'object' || entry.properties)
-          ? 'object'
-          : 'text';
+  const type = schemas.every((entry) => entry.enum?.every((value) => typeof value === 'string'))
+    ? 'enum'
+    : schemas.every((entry) => entry.type === 'number' || entry.type === 'integer')
+      ? 'number'
+      : schemas.every((entry) => entry.type === 'boolean')
+        ? 'boolean'
+        : schemas.every((entry) => entry.type === 'array')
+          ? 'array'
+          : schemas.every((entry) => entry.type === 'object' || entry.properties)
+            ? 'object'
+            : 'text';
   const required = branches.every(({ branch }) => branch.required?.includes(name) === true);
   return {
     name,
     type,
     ...(required ? { required: true } : {}),
     schema: schemas.length === 1 ? schemas[0] : { anyOf: schemas },
+    ...(schemas.length === 1 &&
+    schemas[0]?.enum?.every((value): value is string => typeof value === 'string')
+      ? { options: schemas[0].enum }
+      : {}),
   } satisfies FieldDefinition;
 }

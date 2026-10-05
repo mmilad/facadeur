@@ -1,0 +1,27 @@
+'use client';
+
+import { useState } from 'react';
+import { Input } from '@facadeur/ui';
+
+export function EventDemo() {
+  const [lastEvent, setLastEvent] = useState<{ eventName: string; native: string; value: string }>();
+
+  return (
+    <section className="panel">
+      <h2>Input events</h2>
+      <Input
+        label="Work email"
+        name="work-email"
+        value="ada@atelier.test"
+        onCommit={({ eventName, native, data }) =>
+          setLastEvent({ eventName, native, value: data.value })
+        }
+      />
+      <p aria-live="polite">
+        {lastEvent
+          ? `${lastEvent.eventName} (${lastEvent.native}): ${lastEvent.value}`
+          : 'Edit the input to inspect its event data.'}
+      </p>
+    </section>
+  );
+}

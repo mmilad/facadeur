@@ -65,4 +65,71 @@ describe('preview and variant metadata persistence', () => {
     store.undo();
     expect(toNested(store.getDocument()).root).toEqual(file.root);
   });
+
+  it('round-trips event contracts and typed data mappings through history', () => {
+    const file: DocumentFile = {
+      version: 1,
+      id: 'event-data',
+      name: 'Event data',
+      kind: 'atom',
+      events: [
+        {
+          name: 'commit',
+          data: {
+            fields: [
+              { name: 'value', type: { kind: 'type', type: 'string' } },
+              { name: 'count', type: { kind: 'type', type: 'number' } },
+            ],
+          },
+        },
+      ],
+      root: {
+        id: 'root',
+        type: 'text',
+        eventBindings: [
+          {
+            event: 'commit',
+            name: 'change',
+            data: [
+              { path: 'value', source: { kind: 'native', path: 'currentTarget.value' } },
+              { path: 'count', source: { kind: 'literal', value: 3 } },
+            ],
+          },
+        ],
+      },
+    };
+    const store = createDocumentStore(file);
+    expect(toNested(store.getDocument()).root).toEqual(file.root);
+    expect(toNested(store.getDocument()).events).toEqual(file.events);
+    store.execute({
+      type: 'setProp',
+      nodeId: 'root',
+      prop: 'eventBindings',
+      value: [
+        {
+          event: 'commit',
+          name: 'change',
+          data: [
+            { path: 'value', source: { kind: 'native', path: 'currentTarget.value' } },
+            { path: 'count', source: { kind: 'literal', value: 4 } },
+          ],
+        },
+      ],
+    });
+    store.undo();
+    expect(toNested(store.getDocument()).root).toEqual(file.root);
+    store.redo();
+    expect(
+      (toNested(store.getDocument()).root as { eventBindings?: unknown }).eventBindings,
+    ).toEqual([
+      {
+        event: 'commit',
+        name: 'change',
+        data: [
+          { path: 'value', source: { kind: 'native', path: 'currentTarget.value' } },
+          { path: 'count', source: { kind: 'literal', value: 4 } },
+        ],
+      },
+    ]);
+  });
 });

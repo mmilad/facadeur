@@ -119,6 +119,7 @@ export function syncEvents(list: Y.Array<Y.Map<unknown>>, events: EventDefinitio
     if (event.payload) {
       syncJsonObject(ensureMap(map, 'payload'), event.payload as Record<string, JsonValue>);
     } else if (map.has('payload')) map.delete('payload');
+    syncJsonMap(map, 'data', event.data as unknown as Record<string, JsonValue> | undefined);
     return map;
   });
   reconcile(list, desired);
@@ -379,6 +380,11 @@ function syncEventBindings(map: Y.Map<unknown>, bindings: EventBinding[] | undef
     syncScalar(item, 'event', binding.event);
     syncScalar(item, 'name', binding.name);
     syncStringMap(item, 'payload', binding.payload);
+    if (binding.data === undefined) {
+      if (item.has('data')) item.delete('data');
+    } else {
+      syncJsonArray(ensureArray<unknown>(item, 'data'), binding.data as unknown as JsonValue[]);
+    }
   }
 }
 

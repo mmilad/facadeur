@@ -1,5 +1,5 @@
 import { isVariantAxis, variantPresets, type FieldValue, type NestedNode } from '@facadeur/core';
-import { CodegenError } from '../../names';
+import { CodegenError, quote } from '../../names';
 import { assertDefault, exposedMemberName, jsLiteral } from '../catalog';
 import { childFieldValue, childFieldsForInstance, withChildFieldOverride } from '../child-fields';
 import { conditionForNode, dataExpression, variantRuleExpression } from './data-expressions';
@@ -82,7 +82,16 @@ export function renderInstance(
     const destination = member ? target.events.get(member) : undefined;
     if (!source || !destination) continue;
     usedProps.add(source.name);
-    attrs.push({ name: destination.name, value: { kind: 'expr', code: source.name } });
+    attrs.push({
+      name: destination.name,
+      value: {
+        kind: 'expr',
+        code:
+          source.eventName && destination.eventName && source.eventName !== destination.eventName
+            ? `(forwardedEvent) => ${source.name}?.({ ...forwardedEvent, eventName: ${quote(source.eventName)} })`
+            : source.name,
+      },
+    });
   }
   if (node.forwardFields !== false && !structuralProps) {
     const explicitlyBoundFields = new Set(Object.keys(node.fieldBindings ?? {}));

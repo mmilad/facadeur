@@ -21,9 +21,12 @@ export interface SchemaFieldUse {
 }
 
 /** How one component uses the schema library. A string assignment is the same as a direct schema. */
-export interface ComponentSchemaUse {
+export interface SchemaTypeSelection {
   direct?: SchemaTypeRef;
   fields?: SchemaFieldUse[];
+}
+
+export interface ComponentSchemaUse extends SchemaTypeSelection {
   defaults?: unknown;
 }
 

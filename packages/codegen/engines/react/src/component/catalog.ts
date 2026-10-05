@@ -63,16 +63,17 @@ export function assignCatalog(
     const events = new Map<string, PropSpec>();
     for (const event of document.events ?? []) {
       const name = propName(`on-${event.name}`, used);
-      const payload = event.payload ?? {};
-      const payloadType = Object.entries(payload)
-        .map(([key, type]) => `${key}: ${fieldTypeName({ name: key, type })}`)
-        .join('; ');
+      const eventDataType =
+        event.data || event.payload
+          ? componentName(`${component}-${event.name}-data`, typeNames)
+          : undefined;
       events.set(event.name, {
         source: event.name,
         name,
-        type: payloadType ? `(payload: { ${payloadType} }) => void` : '() => void',
+        type: `(event: ComponentEvent<${eventDataType ?? 'undefined'}, ${quote(event.name)}>) => void`,
         fieldType: 'event',
-        eventPayload: payload,
+        eventName: event.name,
+        ...(eventDataType ? { eventDataType, eventDataTypeExpr: eventDataType } : {}),
       });
     }
     const presets = variantPresets(document).filter((variant) => variant.name !== 'default');
@@ -112,10 +113,13 @@ export function assignCatalog(
       if (entry.events.has(name)) {
         throw new CodegenError(`Exposed event "${name}" collides with a direct event`);
       }
+      const eventDataType = resolved.eventDataTypeExpr ?? 'undefined';
       entry.events.set(name, {
         ...resolved,
         source: name,
         name: propName(`on-${name}`, used),
+        eventName: name,
+        type: `(event: ComponentEvent<${eventDataType}, ${quote(name)}>) => void`,
       });
     }
     if (entry.namedVariant) applyVariantDefaults(entry, entry.namedVariant.name);
@@ -265,7 +269,13 @@ function resolveExposedMember(
       fieldType: direct.fieldType,
       ...(direct.defaultExpr !== undefined ? { defaultExpr: direct.defaultExpr } : {}),
       ...(direct.required ? { required: true } : {}),
-      ...(direct.eventPayload ? { eventPayload: direct.eventPayload } : {}),
+      ...(direct.eventName ? { eventName: direct.eventName } : {}),
+      ...(direct.eventDataType
+        ? {
+            eventDataTypeExpr: direct.eventDataType,
+            eventDataTypeImport: `../${child.component}/types`,
+          }
+        : {}),
     };
   }
   const nestedPath =

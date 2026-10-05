@@ -2,8 +2,11 @@ import { DocumentError } from '../../document/errors.js';
 import { type FlatDocument } from '../../document/flat.js';
 import {
   type Binding,
+  type EventBinding,
+  type EventDefinition,
   type FieldDefinition,
   type FieldValue,
+  type JsonSchema,
   type VariantPreset,
   type SchemaCatalog,
 } from '../../schema/document.js';
@@ -15,8 +18,9 @@ import {
   assertVariantAxis,
   assertVariantPreset,
 } from './assertions.js';
-import { localContractFieldsFor } from './schema-use.js';
+import { eventDataMappings, eventDataSchema, localContractFieldsFor } from './schema-use.js';
 import { publicFieldsFor } from './catalog-exposed.js';
+import { matchesSchemaValue } from './json-schema-value.js';
 import type { SchemaResolverContext } from './types.js';
 
 /** Pages do not own component properties; sections may expose data contracts. */
@@ -47,7 +51,9 @@ export function validateDefinitions(
   doc: FlatDocument,
   context?: SchemaResolverContext | SchemaCatalog,
 ): void {
-  const schemaCatalog = isResolverContext(context) ? context.schemaCatalog : context;
+  const schemaCatalog = isResolverContext(context)
+    ? context.schemaCatalog
+    : (context ?? doc.schemaCatalog);
   const localFields = localContractFieldsFor(doc, schemaCatalog);
   const resolverContext = isResolverContext(context)
     ? context
@@ -68,6 +74,24 @@ export function validateDefinitions(
   const eventNames = new Set<string>();
   for (const event of events) {
     assertEventDefinition(event);
+    if (event.data) {
+      const schema = eventDataSchema(event, schemaCatalog);
+      if (!schema) {
+        throw new DocumentError(
+          'unknown-schema',
+          `Event "${event.name}" refers to an unknown schema`,
+        );
+      }
+      if (
+        event.data.fields &&
+        Object.keys(schema.properties ?? {}).length !== event.data.fields.length
+      ) {
+        throw new DocumentError(
+          'unknown-schema',
+          `Event "${event.name}" refers to an unknown schema`,
+        );
+      }
+    }
     if (eventNames.has(event.name)) {
       throw new DocumentError('schema', `Duplicate event "${event.name}"`);
     }
@@ -158,26 +182,183 @@ export function validateDefinitions(
         throw new DocumentError('schema', `Event binding "${binding.event}" needs a native event`);
       }
       const event = events.find((entry) => entry.name === binding.event);
-      for (const [key, source] of Object.entries(binding.payload ?? {})) {
-        const type = event?.payload?.[key];
-        const expected =
-          type === 'boolean' ? 'checked' : type === 'number' ? 'valueAsNumber' : 'value';
-        if (!type || source !== expected) {
-          throw new DocumentError('schema', `Event payload "${key}" cannot read "${source}"`);
-        }
-      }
       if (event && Object.values(event.payload ?? {}).some(isStructuredFieldType)) {
         throw new DocumentError(
           'schema',
           `Event "${binding.event}" uses a structured payload and cannot be bound directly to a native event`,
         );
       }
+      if (event) assertEventDataMappingContract(event, binding, schemaCatalog);
     }
   }
 }
 
 function isStructuredFieldType(type: FieldDefinition['type']) {
   return type === 'array' || type === 'object';
+}
+
+function assertEventDataMappingContract(
+  event: EventDefinition,
+  binding: EventBinding,
+  schemaCatalog?: SchemaCatalog,
+) {
+  const schema = eventDataSchema(event, schemaCatalog);
+  if (!schema) {
+    if (binding.data?.length || Object.keys(binding.payload ?? {}).length) {
+      throw new DocumentError('schema', `Event "${event.name}" has no data to map`);
+    }
+    return;
+  }
+  const mappings = eventDataMappings(event, binding) ?? [];
+  if (event.data && !binding.data) {
+    throw new DocumentError('schema', `Event "${event.name}" requires explicit data mappings`);
+  }
+  const seen = new Set<string>();
+  for (const mapping of mappings) {
+    if (seen.has(mapping.path)) {
+      throw new DocumentError(
+        'schema',
+        `Event "${event.name}" maps "${mapping.path}" more than once`,
+      );
+    }
+    if (
+      [...seen].some(
+        (path) =>
+          !path ||
+          !mapping.path ||
+          path.startsWith(`${mapping.path}.`) ||
+          mapping.path.startsWith(`${path}.`),
+      )
+    ) {
+      throw new DocumentError('schema', `Event "${event.name}" has overlapping data mappings`);
+    }
+    seen.add(mapping.path);
+    const destination = schemaAtPath(schema, mapping.path);
+    if (!destination) {
+      throw new DocumentError('schema', `Event data path "${mapping.path}" is not defined`);
+    }
+    if (mapping.source.kind === 'native') {
+      const expected = nativeValueType(mapping.source.path);
+      if (destination.enum?.length || !schemaAcceptsType(destination, expected)) {
+        throw new DocumentError(
+          'schema',
+          `Native source "${mapping.source.path}" is incompatible with "${mapping.path}"`,
+        );
+      }
+    } else if (
+      mapping.source.kind === 'literal' &&
+      !matchesSchemaValue(mapping.source.value, destination)
+    ) {
+      throw new DocumentError(
+        'schema',
+        `Literal event data is incompatible with "${mapping.path}"`,
+      );
+    }
+  }
+  const schemaType = basicJsonType(schema);
+  if (schemaType !== 'object' && schemaType !== 'array' && !seen.has('')) {
+    throw new DocumentError('schema', `Scalar event "${event.name}" must map its whole data value`);
+  }
+  if (!hasRequiredMappings(schema, seen)) {
+    const missing = firstMissingRequiredPath(schema, seen);
+    throw new DocumentError(
+      'schema',
+      `Event "${event.name}" is missing required data mapping${missing ? ` "${missing}"` : ''}`,
+    );
+  }
+}
+
+function schemaAtPath(schema: JsonSchema, path: string): JsonSchema | undefined {
+  if (!path) return schema;
+  const [part, ...remaining] = path.split('.');
+  if (!part) return undefined;
+  const candidates = [
+    ...(schema.properties?.[part] ? [schema.properties[part]!] : []),
+    ...[...(schema.allOf ?? []), ...(schema.oneOf ?? []), ...(schema.anyOf ?? [])].flatMap(
+      (branch) => {
+        const candidate = schemaAtPath(branch, path);
+        return candidate ? [candidate] : [];
+      },
+    ),
+  ]
+    .map((candidate) =>
+      remaining.length ? schemaAtPath(candidate, remaining.join('.')) : candidate,
+    )
+    .filter((candidate): candidate is JsonSchema => candidate !== undefined);
+  if (!candidates.length) return undefined;
+  return candidates.length === 1 ? candidates[0] : { anyOf: candidates };
+}
+
+function hasRequiredMappings(
+  schema: JsonSchema,
+  mapped: ReadonlySet<string>,
+  prefix = '',
+): boolean {
+  if (mapped.has('') || mapped.has(prefix)) return true;
+  for (const branch of schema.allOf ?? []) {
+    if (!hasRequiredMappings(branch, mapped, prefix)) return false;
+  }
+  const unions = [...(schema.oneOf ?? []), ...(schema.anyOf ?? [])];
+  if (unions.length && !unions.some((branch) => hasRequiredMappings(branch, mapped, prefix)))
+    return false;
+  for (const name of schema.required ?? []) {
+    const path = prefix ? `${prefix}.${name}` : name;
+    const child = schema.properties?.[name];
+    const directlyMapped = [...mapped].some(
+      (entry) => entry === path || entry.startsWith(`${path}.`),
+    );
+    if (!directlyMapped) return false;
+    if (child && !hasRequiredMappings(child, mapped, path)) return false;
+  }
+  return true;
+}
+
+function firstMissingRequiredPath(
+  schema: JsonSchema,
+  mapped: ReadonlySet<string>,
+  prefix = '',
+): string | undefined {
+  for (const branch of schema.allOf ?? []) {
+    const missing = firstMissingRequiredPath(branch, mapped, prefix);
+    if (missing) return missing;
+  }
+  for (const name of schema.required ?? []) {
+    const path = prefix ? `${prefix}.${name}` : name;
+    if (![...mapped].some((entry) => entry === path || entry.startsWith(`${path}.`))) return path;
+    const child = schema.properties?.[name];
+    if (child) {
+      const missing = firstMissingRequiredPath(child, mapped, path);
+      if (missing) return missing;
+    }
+  }
+  for (const branch of [...(schema.oneOf ?? []), ...(schema.anyOf ?? [])]) {
+    const missing = firstMissingRequiredPath(branch, mapped, prefix);
+    if (missing) return missing;
+  }
+  return undefined;
+}
+
+function nativeValueType(path: string) {
+  return path === 'currentTarget.checked'
+    ? 'boolean'
+    : path === 'currentTarget.valueAsNumber'
+      ? 'number'
+      : 'string';
+}
+
+function basicJsonType(schema: JsonSchema): string | undefined {
+  if (Array.isArray(schema.type)) return schema.type.find((type) => type !== 'null');
+  if (schema.type) return schema.type;
+  if (schema.properties) return 'object';
+  return undefined;
+}
+
+function schemaAcceptsType(schema: JsonSchema, sourceType: string): boolean {
+  const type = basicJsonType(schema);
+  if (type === sourceType || (sourceType === 'number' && type === 'integer')) return true;
+  return (schema.oneOf ?? schema.anyOf ?? []).some((branch) =>
+    schemaAcceptsType(branch, sourceType),
+  );
 }
 
 function assertBindingField(field: FieldDefinition, target: Binding['target'], nodeId: string) {

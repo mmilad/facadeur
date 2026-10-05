@@ -152,7 +152,7 @@ function renderIndex(components: readonly ComponentFile[], hasSchemas: boolean):
     '// eslint-disable-next-line @typescript-eslint/triple-slash-reference -- load ambient CSS module types for consumers',
     '/// <reference path="./css-modules.d.ts" />',
     '',
-    "export type { ComponentProps, DataContext, LabelProps, ValueProps, CommitProps } from './contracts';",
+    "export type { ComponentEvent, ComponentProps, DataContext, LabelProps, ValueProps, CommitProps } from './contracts';",
   ];
   if (hasSchemas) lines.push("export type * from './types';");
   for (const component of components) {

@@ -1,4 +1,6 @@
 import type {
+  EventBinding,
+  EventDefinition,
   FieldDefinition,
   FieldType,
   JsonSchema,
@@ -20,6 +22,71 @@ const FIELD_TYPES = new Set<FieldType>([
   'array',
   'object',
 ]);
+
+/** Resolve an event's declared data contract, including legacy payload declarations. */
+export function eventDataSchema(
+  event: EventDefinition,
+  catalog?: SchemaCatalog,
+): JsonSchema | undefined {
+  if (event.data?.direct) {
+    if (event.data.direct.kind === 'type') return { type: event.data.direct.type };
+    return resolveNamedSchema(event.data.direct.schemaId, catalog, new Set());
+  }
+  if (event.data?.fields) {
+    const properties: Record<string, JsonSchema> = {};
+    for (const field of event.data.fields) {
+      const schema = schemaForTypeRef(field.type, catalog);
+      if (schema) properties[field.name] = schema;
+    }
+    const required = event.data.fields.map(({ name }) => name);
+    return { type: 'object', properties, required, additionalProperties: false };
+  }
+  if (event.payload) {
+    const properties = Object.fromEntries(
+      Object.entries(event.payload).map(([name, type]) => [name, legacyFieldSchema(type)]),
+    );
+    return {
+      type: 'object',
+      properties,
+      required: Object.keys(event.payload),
+      additionalProperties: false,
+    };
+  }
+  return undefined;
+}
+
+/** Normalize legacy event payload bindings at the shared read boundary. */
+export function eventDataMappings(
+  event: EventDefinition,
+  binding: EventBinding,
+): EventBinding['data'] {
+  if (binding.data) return binding.data;
+  if (!event.payload) return undefined;
+  return Object.entries(event.payload).map(([path, type]) => {
+    const legacySource = binding.payload?.[path];
+    const sourcePath =
+      legacySource === 'checked' || (!legacySource && type === 'boolean')
+        ? 'currentTarget.checked'
+        : legacySource === 'valueAsNumber' || (!legacySource && type === 'number')
+          ? 'currentTarget.valueAsNumber'
+          : 'currentTarget.value';
+    return { path, source: { kind: 'native' as const, path: sourcePath } };
+  });
+}
+
+function schemaForTypeRef(ref: SchemaTypeRef, catalog?: SchemaCatalog): JsonSchema | undefined {
+  return ref.kind === 'type'
+    ? { type: ref.type }
+    : resolveNamedSchema(ref.schemaId, catalog, new Set());
+}
+
+function legacyFieldSchema(type: FieldType): JsonSchema {
+  if (type === 'number') return { type: 'number' };
+  if (type === 'boolean') return { type: 'boolean' };
+  if (type === 'array') return { type: 'array' };
+  if (type === 'object') return { type: 'object' };
+  return { type: 'string' };
+}
 
 /** Resolve the local schema-use contribution; legacy fields are read only when no use exists. */
 export function localContractFieldsFor(

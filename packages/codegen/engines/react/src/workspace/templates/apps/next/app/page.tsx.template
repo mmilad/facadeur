@@ -1,5 +1,6 @@
-import { Card, Input, SignIn } from '@facadeur/ui';
+import { Card, SignIn } from '@facadeur/ui';
 import { VariantDemo } from './variant-demo';
+import { EventDemo } from './event-demo';
 
 export default function Page() {
   return (
@@ -15,10 +16,7 @@ export default function Page() {
 
       <VariantDemo />
 
-      <section className="panel">
-        <h2>Input</h2>
-        <Input label="Work email" name="work-email" value="ada@atelier.test" />
-      </section>
+      <EventDemo />
 
       <section>
         <div className="split">
