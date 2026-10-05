@@ -2,9 +2,7 @@ import { createRequire } from 'node:module';
 import { posix } from 'node:path';
 import * as ts from 'typescript';
 
-const reactRequire = createRequire(
-  new URL('../../../../../apps/storybook/package.json', import.meta.url),
-);
+const reactRequire = createRequire(import.meta.url);
 
 /** Execute generated modules with React, CSS modules and relative imports only. */
 export function generatedRuntime(files: readonly { path: string; contents: string }[]) {

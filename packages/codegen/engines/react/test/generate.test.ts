@@ -12,7 +12,7 @@ import {
   type SchemaCatalog,
 } from '@facadeur/core';
 import { CodegenError, designFromDocument, generateReact } from '../src/index';
-import { formatGenerated, readRepoFile } from '../src/format';
+import { workspaceFiles } from '../src/workspace';
 import { generatedRuntime } from './generated-runtime';
 
 const examplesDir = fileURLToPath(new URL('../../../../../examples/', import.meta.url));
@@ -529,10 +529,12 @@ export type CommitCheck = Assert<Equal<Parameters<NonNullable<SharedControlProps
     expectGeneratedTypecheck(files);
   });
 
-  it('matches the committed UI package', async () => {
+  it('preserves components unchanged when assembling a standalone workspace', () => {
+    const output = workspaceFiles(files, []);
     for (const file of files) {
-      const formatted = await formatGenerated(file.path, file.contents);
-      expect(readRepoFile(`packages/ui/${file.path}`)).toBe(formatted);
+      expect(output.find((entry) => entry.path === `packages/ui/${file.path}`)?.contents).toBe(
+        file.contents,
+      );
     }
   });
 

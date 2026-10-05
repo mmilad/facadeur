@@ -43,6 +43,8 @@
 - **Workaround:** `pnpm install --lockfile-only --offline --ignore-scripts`, retain only the intended importer change, and create the missing local workspace junction without replacing node_modules. The isolated preview can keep running.
 - **Fix:** Align the supplied modules layout and package-manager configuration with pnpm 10.33.3 so workspace link updates do not request a purge; verify an offline full install in a disposable checkout before changing the live dependency installation.
 
+- **Update (2026-10-06):** The same no-TTY purge request recurred after removing generated workspace packages. `pnpm install --frozen-lockfile --ignore-scripts --config.confirmModulesPurge=false` successfully rebuilds links without a terminal. A filtered install rebuilt only codegen links and left its workspace dependencies unresolved; run the full workspace install (or include dependency filters) before testing. Full installation restored all nine maintained workspace projects; source typechecks and 77 generator/preview tests then passed.
+
 ## Resolved: codegen did not load the separate example schema library
 
 - **Reproduction:** `pnpm codegen` with Textarea assigned to the `textarea` schema.

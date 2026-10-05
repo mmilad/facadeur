@@ -29,7 +29,6 @@ function maintainedSource(path) {
 function visit(path) {
   const local = relative(root, path).replaceAll('\\', '/');
   if (local.split('/').some((segment) => ignored.has(segment))) return;
-  if (local === 'packages/ui' || local.startsWith('packages/ui/')) return;
   if (statSync(path).isDirectory()) {
     const entries = readdirSync(path, { withFileTypes: true });
     const directFiles = entries.filter((entry) => entry.isFile() && maintainedSource(entry.name));

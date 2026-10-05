@@ -9,5 +9,4 @@ coverage
 *.tsbuildinfo
 .facadeur/
 .DS_Store
-apps/storybook/storybook-static
 legacy

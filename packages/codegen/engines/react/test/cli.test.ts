@@ -1,10 +1,57 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { describe, expect, it } from 'vitest';
 import { runReactCli } from '../src/cli';
 
 describe('React codegen CLI', () => {
+  it('generates an independent workspace and preserves custom files on regeneration', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'facadeur-workspace-'));
+    try {
+      const component = join(root, 'button.json');
+      const output = join(root, 'output');
+      writeFileSync(
+        component,
+        JSON.stringify({
+          version: 1,
+          id: 'button',
+          name: 'Button',
+          kind: 'atom',
+          root: { id: 'root', type: 'text', text: 'Hello' },
+        }),
+      );
+      await runReactCli(['--workspace', output, '--next-example', component]);
+      expect(existsSync(join(output, 'apps/next/package.json'))).toBe(true);
+      writeFileSync(join(output, 'custom.txt'), 'keep me');
+      writeFileSync(join(output, 'pnpm-lock.yaml'), 'custom lock');
+      await runReactCli(['--workspace', output, component]);
+      const manifest = JSON.parse(readFileSync(join(output, 'package.json'), 'utf8'));
+      expect(manifest.private).toBe(true);
+      expect(manifest.scripts.next).toBeUndefined();
+      expect(existsSync(join(output, 'apps/next/package.json'))).toBe(false);
+      expect(readFileSync(join(output, 'custom.txt'), 'utf8')).toBe('keep me');
+      expect(readFileSync(join(output, 'pnpm-lock.yaml'), 'utf8')).toBe('custom lock');
+      expect(readFileSync(join(output, 'pnpm-workspace.yaml'), 'utf8')).toContain('packages/*');
+      const storybook = JSON.parse(
+        readFileSync(join(output, 'apps/storybook/package.json'), 'utf8'),
+      );
+      expect(storybook.dependencies['@facadeur/ui']).toBe('workspace:*');
+      expect(
+        readFileSync(join(output, 'packages/ui/components/Button/component.tsx'), 'utf8'),
+      ).toContain('Hello');
+      expect(
+        existsSync(join(output, 'apps/storybook/src/stories/generated/Button.stories.tsx')),
+      ).toBe(true);
+      expect(readFileSync(join(output, 'packages/ui/tsconfig.json'), 'utf8')).toContain(
+        '../../tsconfig.base.json',
+      );
+      await expect(
+        runReactCli(['--workspace', output, '--out', output, component]),
+      ).rejects.toThrow('cannot be combined');
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
   it('loads an explicit schema library before validating component assignments', async () => {
     const root = mkdtempSync(join(tmpdir(), 'facadeur-codegen-library-'));
     try {

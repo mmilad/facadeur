@@ -1,0 +1,16 @@
+# Generated Facadeur workspace
+
+This project runs independently of the Facadeur editor repository.
+
+```sh
+pnpm install
+pnpm storybook
+pnpm typecheck
+pnpm build
+```
+
+`packages/ui` contains React components and shared schema types.
+`apps/storybook` previews those components with generated example data.
+If generated with `--next-example`, `pnpm next` starts the Next.js demo in `apps/next`.
+
+Regenerating updates managed files and removes stale generated files. Keep custom code in additional files; edits to managed files are overwritten. Dependencies and lockfiles are retained between runs.

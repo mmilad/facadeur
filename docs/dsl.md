@@ -392,9 +392,9 @@ owning component's local root class. Generated component rules are ordered in ca
 component styles, direct instance overrides, then nested instance overrides. Authored selector
 rules share the direct instance layer and preserve their list order there. `css-modules.d.ts`
 declares the generated stylesheet import.
-`pnpm codegen` writes these files to `packages/ui`. Generated CSF3 stories land under
-`apps/storybook/src/stories/generated`. Run `pnpm storybook` to preview them. The Next.js example
-in `examples/next` imports `@facadeur/ui`.
+`pnpm codegen` writes these files to `dist/facadeur/packages/ui`. Generated CSF3 stories land under
+`dist/facadeur/apps/storybook/src/stories/generated`. Run `pnpm storybook` to preview them. The Next.js example
+in `dist/facadeur/apps/next` imports `@facadeur/ui`.
 
 ## Out of scope here
 

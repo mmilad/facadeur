@@ -43,20 +43,26 @@ loads JSON and saves explicitly, with source-hash checks. Yjs synchronization is
 
 ```bash
 pnpm codegen
+pnpm --dir dist/facadeur install
 pnpm storybook
 ```
 
 `pnpm codegen` reads the example documents, `examples/project-template.json`, and the shared schema library `examples/schemas.json` through `--schemas`, then writes:
 
-- **`packages/ui`** — React components, barrel export, token and component CSS (`@facadeur/ui`)
-- **`apps/storybook/src/stories/generated`** — CSF3 stories (args from field and variant defaults)
+- **`dist/facadeur/packages/ui`** — React components, shared schema types, exports and CSS (`@facadeur/ui`)
+- **`dist/facadeur/apps/storybook`** — Storybook configuration and CSF3 stories
+- **`dist/facadeur/apps/next`** — Next.js demonstration app
+
+`dist/facadeur` is an independent pnpm monorepo with its own manifests and TypeScript configuration. It has no runtime dependencies on the Facadeur editor or source packages. Install its dependencies separately; the output can be copied to another directory. Generated output is ignored by Git. Regeneration replaces managed files and removes obsolete generated files while preserving additional custom files and the generated workspace lockfile.
+
+For other document collections, use `--workspace <directory>` instead of `--out`/`--storybook`. `--next-example` includes the bundled Next demo, which uses the example Card, Input, SignIn and Button components.
 
 Storybook opens at http://localhost:6006 and lists every generated atom, component, section, and page.
 
 The thin Next.js sample still consumes the same package:
 
 ```bash
-pnpm --filter @facadeur/example-next dev
+pnpm --dir dist/facadeur next
 ```
 
 Open the URL Next prints (http://localhost:3000). The page renders Button (tone and size props), Input, Sign in, and Card from `@facadeur/ui`.
@@ -76,16 +82,14 @@ pnpm test
 ```
 apps/editor             Next.js + React shell (stage, layers, properties, assets, tokens, fonts)
 apps/server             retained legacy Yjs server; not started by pnpm dev
-apps/storybook          Storybook 8 + Vite; generated CSF3 stories for @facadeur/ui
 packages/core           types, JSON Schema, flat model, commands, DocumentStore
 packages/store-yjs      retained legacy adapter; not used by the editor
 packages/tokens         DTCG parser, reference resolution, CSS custom properties, project template
 packages/style-engine   live CSSStyleRules, component style blocks, auto layout
 packages/renderer-dom   document JSON to DOM, targeted updates from the store
-packages/ui             generated React design system (from pnpm codegen)
 packages/codegen       Shared code-generation entry point; React output engine
 examples/               specimen page, section, atoms, and examples/project-template.json
-examples/next           Next.js app that imports @facadeur/ui
+dist/facadeur/          standalone generated monorepo (UI, Storybook, Next.js)
 schema/                 generated JSON Schema
 docs/dsl.md             the document format
 docs/plan.md            milestones
