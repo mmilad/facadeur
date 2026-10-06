@@ -34,6 +34,7 @@ export type ArrayFieldConfig = FieldConfigBase & {
   type: 'array';
   item: FieldConfig | FieldConfig[];
   defaultItem?: unknown;
+  collapsibleRows?: boolean;
 };
 
 export type RecordFieldConfig = FieldConfigBase & {

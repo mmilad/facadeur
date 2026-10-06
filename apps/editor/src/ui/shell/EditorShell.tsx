@@ -174,7 +174,7 @@ export function EditorShell({
                 snap={snap}
                 surface={surface}
                 onOpenAsset={(id) => {
-                  session.openAsset(id);
+                  session.openAsset(id, 'root');
                   setSurface('editor');
                 }}
                 onOpenDesignDomain={setSurface}
@@ -188,7 +188,7 @@ export function EditorShell({
                   snap={snap}
                   surface={surface}
                   onOpenAsset={(id) => {
-                    session.openAsset(id);
+                    session.openAsset(id, 'root');
                     if (isDesignDomain(surface)) setSurface('editor');
                   }}
                   onOpenDesignDomain={(domain) => setSurface(domain)}

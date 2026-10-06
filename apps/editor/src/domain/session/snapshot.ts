@@ -93,6 +93,7 @@ export function buildEditorSnapshot(ctx: SnapshotBuildContext): EditorSnapshot {
     catalog.push({
       id: doc.id,
       name: doc.name,
+      ...(doc.slug ? { slug: doc.slug } : {}),
       kind: doc.kind,
       group: doc.group,
       ...(ownsVariantContract(doc.kind) ? { variants: variantSummaries(doc) } : {}),
@@ -101,6 +102,7 @@ export function buildEditorSnapshot(ctx: SnapshotBuildContext): EditorSnapshot {
     assets.push({
       id: doc.id,
       name: doc.name,
+      ...(doc.slug ? { slug: doc.slug } : {}),
       kind: doc.kind,
       ...(ownsVariantContract(doc.kind) ? { variants: variantSummaries(doc) } : {}),
     });

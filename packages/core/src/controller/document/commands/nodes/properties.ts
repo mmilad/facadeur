@@ -1,4 +1,5 @@
 import { DocumentError } from '../../../../document/errors.js';
+import { classList } from '../../../../document/class-list.js';
 import {
   findParent,
   makeFlatNode,
@@ -38,6 +39,7 @@ const PROPS: Record<NodeType, readonly NodeProp[]> = {
   frame: [
     'name',
     'styleName',
+    'classes',
     'tag',
     'attributes',
     'displayOn',
@@ -49,6 +51,7 @@ const PROPS: Record<NodeType, readonly NodeProp[]> = {
   text: [
     'name',
     'styleName',
+    'classes',
     'tag',
     'text',
     'attributes',
@@ -60,6 +63,7 @@ const PROPS: Record<NodeType, readonly NodeProp[]> = {
   image: [
     'name',
     'styleName',
+    'classes',
     'tag',
     'src',
     'alt',
@@ -72,6 +76,7 @@ const PROPS: Record<NodeType, readonly NodeProp[]> = {
   instance: [
     'name',
     'styleName',
+    'classes',
     'displayOn',
     'layout',
     'component',
@@ -101,6 +106,13 @@ export function setProp(
   }
   if (!PROPS[node.type].includes(command.prop)) {
     throw new DocumentError('schema', `${node.type} nodes have no "${command.prop}" property`);
+  }
+  if (command.prop === 'classes' && node.type !== 'repeater' && node.type !== 'switch') {
+    const classes = command.value === null ? [] : classList(command.value);
+    if (classes.length) node.classes = classes;
+    else delete node.classes;
+    doc.nodes[node.id] = makeFlatNode(node);
+    return;
   }
   if (node.type === 'instance') {
     applyInstanceProp(node, command.prop, command.value);
@@ -313,6 +325,7 @@ function applyElementProp(
         node.repeat = { ...value };
       }
       return;
+    case 'classes':
     case 'variantRules':
     case 'component':
     case 'switchCase':

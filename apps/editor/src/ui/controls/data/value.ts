@@ -15,6 +15,7 @@ export const BINDING_TARGET_LABEL: Record<BindingTarget, string> = {
   visible: 'Visibility',
   src: 'Image source',
   alt: 'Alt text',
+  options: 'Options',
 };
 
 export function fieldTypeOptions(field: FieldDefinition): FieldType[] {

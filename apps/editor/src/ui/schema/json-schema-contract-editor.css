@@ -1,0 +1,9 @@
+.eu-json-schema-contract-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.eu-json-schema-contract-editor__advanced {
+  margin-top: 4px;
+}

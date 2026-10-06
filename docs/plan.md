@@ -1,5 +1,44 @@
 # facadeur – Plan
 
+### Deprecate explicit public-contract aliases
+
+- [x] Mark the legacy `expose` mechanism as deprecated without removing its compatibility path.
+      Evidence: Input and FormTextInput still store child field/event aliases; Core validation,
+      serialization and React codegen still resolve them. Child fields already forward automatically
+      through instance contracts, while inherited child events need a complete replacement.
+      Add schema/type/command deprecation metadata and a visible editor label. Preserve existing
+      documents, alias resolution, emitted props and callbacks. Validate existing contract/editor
+      behavior and Core types; retain this cohesive legacy compatibility mechanism until migration.
+      Result: editor label, schema metadata, public types and the legacy command are deprecated;
+      38 focused contract/editor/codegen tests and Core typecheck pass, with scoped lint/format clean.
+- [ ] Next refactor: replace parent-authored expose aliases with child-owned public fields/events
+      inherited through stable instance references. A LoginForm's email input, password input and
+      button contribute their contracts and callbacks; distinguish repeated child fields/events
+      rather than overwriting `value` or `commit` by name. Respect Repeater/Switch scope boundaries
+      and existing opt-out controls. Migrate Input/FormTextInput examples and stored aliases before
+      removing expose schemas, setExpose, the editor control, resolver and codegen forwarding.
+      Preserve event envelopes/native events, data types, editable fields, binding paths, Undo and
+      old documents. Validate two same-type inputs, nested wrappers, events, structural scopes and
+      generated callback propagation before deletion. Do not claim event inheritance is already
+      implemented merely because field forwarding exists.
+
+### New project atom catalog
+
+- [x] Seed new managed projects with the repository's built-in atoms (Button, Input and Link)
+      alongside the editable starter section. Evidence: initializeProjectFiles writes only design
+      and new-section, so every new project's Atoms group is empty. Extract the starter catalog into
+      a private project module before extending initialization; file persistence retains path checks
+      and non-overwriting writes. Preserve atom contracts/styles/events and independent project files.
+      Validate populated atom catalogs, repeated initialization and isolation with existing edits;
+      repair local projects still containing only design/starter files without replacing their data.
+
+Result: private starter-catalog owns the canonical atom templates and section/design defaults;
+initialization writes independent copies and leaves existing files intact. Storage regressions
+cover all three atoms, edited atom/section preservation and project isolation. Eleven focused
+API/storage/controller/route tests, API types and scoped lint/format pass; no affected candidates.
+Repair the one local starter-only managed project by adding missing atom files; existing design
+and section files are retained.
+
 ### Management/API pre-commit review
 
 - [x] Review the staged organisation/project implementation and correct verified defects before
@@ -710,3 +749,163 @@ Result: `pnpm codegen` writes an independent ignored `dist/facadeur` pnpm worksp
 Event implementation scope: extract reusable schema selection before extending event editing; Core owns canonical legacy/data schema resolution, binding validation and persistence, the editor owns reusable controls and command routing, React codegen owns DOM event envelopes and native form defaults. Source event definitions stay serializable, callbacks derive from declarations, explicit forwarding and Undo remain intact. Review the canonical Core API across workers before integration; migrate only the existing FormInput event example and regenerate output. Validation will include focused Core/adapter/editor/generator tests, schema export, source/generated typechecks, standalone build and a browser interaction check.
 
 React event ownership review: `component/catalog.ts` currently builds flat event callback types; `render/event-attributes.ts` owns native extraction; `print.ts` and `data-contracts.ts` own emitted contracts; `render-instance.ts` owns forwarding. Retain these cohesive boundaries and share Core schema/mapping resolution, preserving the native event envelope, typed data and explicit forwarding. No generic runtime library or unrelated split is needed.
+
+## Native event authoring repair (2026-10-06)
+
+- Evidence: Add event holds an unsaved local draft, while header Save persists only the document;
+  Schema has no native element binding control, and the inspector disables bindings without a declaration.
+- Boundary: extract the existing native-event binding adapter into a private content component reused
+  by Schema and the inspector. Keep contract review in ComponentEvents and field bindings in NodeBindings.
+  Add event creates a canonical editable declaration immediately; native bindings use atomic defineEvent
+  commands so shared event wiring is not written into a presentation variant.
+- Preserve serializable Core events/data contracts, validation, Undo, persistence and legacy mappings.
+  Validate creation/binding/save/reload, root/child selection, focused event tests, editor types/lint,
+  and rerun the candidate detector. No package or schema-format changes.
+
+Result: Add event now creates a document declaration immediately. Schema exposes native element
+selection and binding; the inspector can create and bind its first event without a disabled button.
+Button/Link default to click. Shared declarations/bindings use document commands independently of
+nested selection and named presentation variants. 34 focused UI/session/inspector tests, editor
+TypeScript, scoped ESLint and formatting pass; detector reports no size candidates. In the running
+local editor, Button's click event was created, bound to root, saved and verified after reload.
+Existing user edits and staging remain intact.
+
+## Unified event authoring (2026-10-06)
+
+- Evidence: contract and native binding controls expose two independent Add workflows and an
+  event-selection dropdown where users expect a name input; section/page guards hide valid events.
+- Boundary: keep each declaration, schema and native targets inside its event accordion. Extract
+  the event-target adapter next to ComponentEvents and reuse the existing mapping editor with its
+  declaration selector hidden. Replace the separate Schema/inspector adapters rather than retain
+  competing flows. Keep ComponentEvents' transactional schema/mapping review intact.
+- Scope/contracts: all four document kinds can declare events; page field/variant restrictions
+  remain. Preserve existing event names, multiple bindings, data mappings, command validation,
+  Undo, JSON round trips and generated callbacks. Native target is optional.
+- ContentPanel's 482 lines remain cohesive scope/content orchestration; no size-only split.
+- Validation: author/rename/schema/target/native changes, all four kinds, save/reload and existing
+  mapping review; editor TypeScript/lint/format and browser check; rerun detector.
+
+Result: all four document kinds expose Events in Schema and the inspector. Each event has one
+accordion containing its editable name, data schema, optional native target(s), native event and
+mapping controls; callback details stay collapsed. Separate declaration/binding selectors and the
+Add click event shortcut are removed. Renaming keeps the accordion open and updates its targets.
+The existing required-mapping review now lives within the same accordion. A target with incomplete
+mappings remains an explicitly marked draft until valid; declarations remain persistable on their own.
+23 focused UI/inspector tests and editor TypeScript pass, including schema/native data, renaming,
+multiple targets, removal and save/reload for atom/component/section/page. Browser verification on
+New section confirmed manual naming and targeting; temporary test edits were undone to the clean
+baseline. The detector retains only cohesive ContentPanel (474 lines); no further split is warranted.
+
+## Schema and Fonts accordion consistency (2026-10-06)
+
+- Evidence: Fonts has a compact chevron button within a rounded resource row; Schema mixes
+  Section triggers, native details and bordered folds with different spacing and chevrons.
+- Boundary: extract Fonts' disclosure trigger into the existing form/layout layer and add an
+  explicit accordion appearance to Section. Fonts retains its table/preview columns; Schema's
+  event, callback, legacy contract and variant disclosures use the same trigger and border style.
+  Keep other Section appearances and unrelated token tables unchanged.
+- Preserve existing expanded defaults, button names, keyboard activation, mounted-body behavior,
+  event drafts and font editing/removal commands. No document or persistence changes.
+- Validation: existing event/schema and design-resource checks, editor TypeScript/lint/format,
+  visual inspection of expanded/collapsed Schema and Fonts, scoped detector rerun.
+
+Result: Fonts and Schema share the extracted disclosure button. Event/schema accordions have the
+Fonts border radius, row padding, muted chevron, hover and keyboard focus styling. Callback preview,
+legacy contract and legacy variant axes use the same appearance; other form sections retain their
+existing styling. Former native-details content stays mounted while hidden to preserve draft state.
+38 existing UI/font/event/integration tests, editor TypeScript and scoped ESLint pass. Browser checks
+confirmed Enter/Space expansion and collapse and matching Fonts/Schema visuals without data edits.
+The scoped detector has no candidates.
+
+## Legacy UI, document naming and utility classes (2026-10-06)
+
+- Evidence: retired expose/variant panels still occupy Schema; the class editor accepts only one
+  identifier and rejects Tailwind tokens; asset IDs are visible but names/IDs lack a rename action.
+- Boundary: remove legacy authoring panels from Schema while retaining persisted compatibility.
+  Core owns optional native/instance classes arrays, canonicalization and commands; adapters preserve
+  them; renderer/codegen add literal utility classes beside generated local styling classes. Editor
+  owns a reusable badge/autocomplete control and project class suggestions. Keep styleName for local
+  selector identity and old documents. The user clarified that reference IDs should remain stable. Add editable `slug` metadata
+  with project uniqueness validation, a guarded Core command and an editor rename dialog; old
+  documents fall back to their existing ID. New asset creation reserves IDs and public identifiers.
+- Contracts: maintain legacy imports/events/variant data, generated CSS scope, repeated instance
+  styling, clone isolation, JSON/Yjs/Undo, class order and arbitrary non-whitespace utility tokens.
+- Retain cohesive node construction (480 lines); the unrelated declaration editor stays unchanged.
+- Validate class commands/round trips, instance/native rendering and generated literals, badge
+  interactions, legacy-panel removal, relevant types/lint and visual editing checks.
+
+Outcome: retired Schema panels are hidden while persisted data remains supported. Name and public
+identifier are editable through the asset context menu; internal reference IDs remain unchanged.
+Native elements and instances persist ordered utility class arrays, with badges, autocomplete from
+common utilities and project classes, and literal generated output beside existing scoped styles.
+48 focused command/adapter/codegen/rename/variant tests and 24 shell/Schema regressions passed.
+Workspace TypeScript, affected-file ESLint/format checks, and schema export passed. Browser checks
+confirmed badge entry, rename and Undo; temporary edits were undone. The repeated detector flags
+the cohesive node materializer, DOM paint module (451 lines) and unrelated declaration editor.
+DOM class application remains part of presentation painting; retain that boundary rather than
+extracting a speculative helper for three class-list additions. No further split is needed.
+
+## Native form atoms and project grouping (2026-10-06)
+
+- Evidence: starter projects have only one input atom; composed Textarea/Select examples are
+  unsuitable as native atoms. Native Select needs options-array rendering in preview and codegen.
+  Document group metadata already exists, but the project tree has no action to edit it.
+- Boundary: add four single-element atom fixtures with typed fields/events. Core owns a focused
+  group command and native options binding contract; adapters preserve it, renderer and generator
+  render native options. Editor owns a group-name dialog using existing groups as suggestions.
+  API project initialization owns a versioned, additive starter upgrade for existing managed
+  projects, preserving edited atoms and custom group assignments.
+- Retain cohesive DOM painting and node validation; isolate native Select option presentation
+  beside renderer presentation, rather than growing the painting orchestrator. Core validates
+  the option-item contract; preview and codegen consume it through existing public field types.
+- Preserve stable references, current staging, group persistence/Undo, native event envelopes,
+  uncontrolled React values, and the distinction between native atoms and composed components.
+- Validate group naming/history, catalog upgrades, atom contracts and native option rendering,
+  generated controls/events, affected types/lint and live project-tree interactions.
+
+Completed: native Textarea, Select, Checkbox and Radio join Input under Form. Asset context
+menus expose group naming/suggestions and removal; history and persistence preserve stable IDs.
+Select renders typed native options in preview and generated React. Multiple semantic events
+on one native event share a generated handler, preserving both callbacks and their envelopes.
+The default generator command includes the four new atoms. 97 focused/regression tests, source
+and generated workspace TypeScript, affected-source ESLint, formatting and codegen passed.
+Live browser checks confirmed the additive starter upgrade, custom group creation, Undo and
+native Select options; temporary grouping edits were undone. Context-menu positioning now
+measures its rendered height so the additional actions remain inside the viewport.
+
+Repeated detector review: retain the cohesive paint orchestrator (454 lines) and definition
+validator (474 lines); native option presentation/validation have focused colocated helpers.
+Validation and renderer directory concentration remains within their existing domain owners;
+unchanged structural/data-contract candidates remain in the existing backlog.
+
+Unrelated refactoring candidate: LayerContextMenu uses the same anchor-bottom placement that
+previously clipped asset actions. When revisiting layer menus, share measured floating-menu
+positioning within the sidebar domain, preserving insert/delete flyouts and keyboard actions;
+validate at viewport edges and with each submenu. This task fixes only the asset menu used by
+the requested group workflow.
+
+## Root selection when opening project assets (2026-10-06)
+
+Project-tree navigation currently opens documents without a layer selection, leaving the
+inspector empty. Reuse the session's existing root-focus option for both shell navigation
+surfaces. Keep document/drill navigation and explicit layer selection contracts unchanged;
+this is a shell navigation behavior fix and needs no structural split. Validate project-row
+clicks across asset kinds, selection resets and existing URL navigation regressions.
+
+Completed: both project-tree entry points open assets with root focus, including clicking an
+already open asset. 12 navigation tests, editor TypeScript and affected-source ESLint passed.
+Updated the stale legacy-panel assertion to match the previously requested hidden UI.
+The repeated scoped detector has no candidates; existing session orchestration remains untouched.
+
+## Structured form options and choice groups (2026-10-06)
+
+Select already declares typed option items, but bound/instance field editors fall back to raw
+JSON. Reuse the existing SchemaValueForm for structured arrays and objects. Extract Core's
+existing field-to-JSON-schema conversion from data-contract validation as a focused public
+contract helper; validation and editor consume the same conversion. Preserve unsupported raw
+JSON editing as an advanced fallback, existing validation, overrides and binding semantics.
+Add declarative Radio group and Checkbox group components with labeled options, preserving
+the existing single-input atoms. Options add an optional checked flag for initial selection.
+Colocate their labeled-option components in the form examples; the existing repeater and
+instance data mappings render rows without adding generator-specific component behavior.
+Validate edits/add/remove, generated contracts/native controls, starter upgrades and source types.

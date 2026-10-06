@@ -28,6 +28,7 @@ export interface FlatNodeBase {
   id: string;
   name?: string;
   styleName?: string;
+  classes?: string[];
   tag?: string;
   attributes?: Record<string, string>;
   displayOn?: DisplayOn;
@@ -48,6 +49,7 @@ export interface RepeaterNode {
   type: 'repeater';
   name?: string;
   styleName?: never;
+  classes?: never;
   tag?: never;
   attributes?: never;
   displayOn?: never;
@@ -64,6 +66,7 @@ export interface SwitchNode {
   type: 'switch';
   name?: string;
   styleName?: never;
+  classes?: never;
   tag?: never;
   attributes?: never;
   displayOn?: never;
@@ -92,6 +95,7 @@ export interface InstanceNode {
   type: 'instance';
   name?: string;
   styleName?: string;
+  classes?: string[];
   displayOn?: DisplayOn;
   layout?: Layout;
   component: string;
@@ -114,6 +118,8 @@ export interface FlatDocument {
   version: 1;
   id: string;
   name: string;
+  /** Editable project identifier; id remains the stable reference key. */
+  slug?: string;
   kind: string;
   group?: string;
   rootId: string;

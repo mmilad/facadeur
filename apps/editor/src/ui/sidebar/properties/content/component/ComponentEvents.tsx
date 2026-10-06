@@ -13,7 +13,7 @@ import {
   EventBindingsEditorControl,
   EventsEditorControl,
 } from '../../../../controls/data/index.js';
-import { ownsComponentFeatures } from './owns-component-features.js';
+import { EventTargets } from './EventTargets.js';
 
 interface PendingEventEdit {
   event: EventDefinition;
@@ -43,8 +43,6 @@ export function ComponentEvents({
     });
     if (committed) setPending(null);
   }, [pending, snap.document]);
-
-  if (!ownsComponentFeatures(snap.document.kind)) return null;
 
   const visibleEvents = pending
     ? [
@@ -86,7 +84,7 @@ export function ComponentEvents({
       }
     }
     if (!previous) {
-      session.execute({ type: 'defineEvent', event });
+      session.executeDocument(snap.document.id, { type: 'defineEvent', event });
       return;
     }
     const affected = Object.entries(snap.document.nodes).flatMap(([nodeId, node]) => {
@@ -100,7 +98,7 @@ export function ComponentEvents({
       ];
     });
     if (!affected.length) {
-      session.execute({
+      session.executeDocument(snap.document.id, {
         type: 'defineEvent',
         event,
         ...(oldName !== event.name ? { previousName: oldName } : {}),
@@ -122,16 +120,19 @@ export function ComponentEvents({
       });
       return;
     }
-    session.execute(command);
+    session.executeDocument(snap.document.id, command);
   }
 
   function removeEvent(name: string) {
     if (pending && pending.event.name === name) {
-      session.execute({ type: 'removeEvent', name: pending.previousName ?? name });
+      session.executeDocument(snap.document.id, {
+        type: 'removeEvent',
+        name: pending.previousName ?? name,
+      });
       setPending(null);
       return;
     }
-    session.execute({ type: 'removeEvent', name });
+    session.executeDocument(snap.document.id, { type: 'removeEvent', name });
   }
 
   function updateReviewBindings(nodeId: string, bindings: EventBinding[]) {
@@ -146,7 +147,7 @@ export function ComponentEvents({
       session.setNotice(validationError, 'error');
       return;
     }
-    session.execute({
+    session.executeDocument(snap.document.id, {
       type: 'defineEvent',
       event: pending.event,
       ...(pending.previousName ? { previousName: pending.previousName } : {}),
@@ -154,9 +155,68 @@ export function ComponentEvents({
     });
   }
 
+  const review = pending ? (
+    <section className="stack event-data-review" aria-label="Review event data bindings">
+      <h4>Review node mappings before saving</h4>
+      <p className="meta">
+        This event is used by native nodes. Map every required data path before applying the
+        contract.
+      </p>
+      {Object.entries(pending.bindings).map(([nodeId, bindings]) => (
+        <div className="stack" key={nodeId}>
+          <h5>{snap.document.nodes[nodeId]?.name ?? nodeId}</h5>
+          <EventBindingsEditorControl
+            embedded
+            bindings={bindings}
+            events={reviewEvents}
+            fields={snap.documentScopeFields}
+            schemaCatalog={schemaCatalog}
+            allowIncomplete
+            validateBindings={(next) =>
+              eventCommandError(
+                {
+                  type: 'defineEvent',
+                  event: pending.event,
+                  ...(pending.previousName ? { previousName: pending.previousName } : {}),
+                  bindings: { ...pending.bindings, [nodeId]: next },
+                },
+                snap,
+                session,
+              )
+            }
+            onChangeBindings={(next) => updateReviewBindings(nodeId, next)}
+            onInvalid={(message) => session.setNotice(message, 'error')}
+          />
+        </div>
+      ))}
+      {validationError ? (
+        <p className="meta" role="status">
+          {validationError}
+        </p>
+      ) : null}
+      <button
+        type="button"
+        className="text-button"
+        name="cancel-event-contract"
+        onClick={() => setPending(null)}
+      >
+        Cancel changes
+      </button>
+      <button
+        type="button"
+        className="text-button"
+        name="save-event-contract"
+        disabled={validationError !== null}
+        onClick={saveReview}
+      >
+        Save event contract
+      </button>
+    </section>
+  ) : null;
+
   return (
     <div className="stack">
-      <h3>Component events</h3>
+      <h3>Events</h3>
       <EventsEditorControl
         events={visibleEvents}
         eventOrigins={eventOrigins}
@@ -165,64 +225,14 @@ export function ComponentEvents({
         onDefineEvent={defineEvent}
         onRemoveEvent={removeEvent}
         onInvalid={(message) => session.setNotice(message, 'error')}
+        renderContent={(event) =>
+          pending?.event.name === event.name ? (
+            review
+          ) : (
+            <EventTargets event={event} session={session} snap={snap} />
+          )
+        }
       />
-      {pending ? (
-        <section className="stack event-data-review" aria-label="Review event data bindings">
-          <h4>Review node mappings before saving</h4>
-          <p className="meta">
-            This event is used by native nodes. Map every required data path before applying the
-            contract.
-          </p>
-          {Object.entries(pending.bindings).map(([nodeId, bindings]) => (
-            <div className="stack" key={nodeId}>
-              <h5>{snap.document.nodes[nodeId]?.name ?? nodeId}</h5>
-              <EventBindingsEditorControl
-                bindings={bindings}
-                events={reviewEvents}
-                fields={snap.documentScopeFields}
-                schemaCatalog={schemaCatalog}
-                allowIncomplete
-                validateBindings={(next) =>
-                  eventCommandError(
-                    {
-                      type: 'defineEvent',
-                      event: pending.event,
-                      ...(pending.previousName ? { previousName: pending.previousName } : {}),
-                      bindings: { ...pending.bindings, [nodeId]: next },
-                    },
-                    snap,
-                    session,
-                  )
-                }
-                onChangeBindings={(next) => updateReviewBindings(nodeId, next)}
-                onInvalid={(message) => session.setNotice(message, 'error')}
-              />
-            </div>
-          ))}
-          {validationError ? (
-            <p className="meta" role="status">
-              {validationError}
-            </p>
-          ) : null}
-          <button
-            type="button"
-            className="text-button"
-            name="cancel-event-contract"
-            onClick={() => setPending(null)}
-          >
-            Cancel changes
-          </button>
-          <button
-            type="button"
-            className="text-button"
-            name="save-event-contract"
-            disabled={validationError !== null}
-            onClick={saveReview}
-          >
-            Save event contract
-          </button>
-        </section>
-      ) : null}
     </div>
   );
 }

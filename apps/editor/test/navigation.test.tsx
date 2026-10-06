@@ -22,6 +22,40 @@ describe('editor subnavigation', () => {
     host = null;
   });
 
+  it('selects each asset root when clicking project rows, including an already open asset', async () => {
+    const session = createEditorSession({
+      design: editorStandardDesign(),
+      documents: (['atom', 'component', 'section', 'page'] as const).map((kind) => ({
+        version: 1,
+        id: kind,
+        name: kind,
+        kind,
+        root: { id: `${kind}-root`, type: 'frame' as const },
+      })),
+    });
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => root?.render(<App session={session} />));
+    for (const kind of ['component', 'section', 'page', 'atom', 'atom']) {
+      act(() => session.selectNode(null));
+      await act(async () =>
+        (host!.querySelector(`[data-asset-id="${kind}"]`) as HTMLButtonElement).click(),
+      );
+      expect(session.getSnapshot().openId).toBe(kind);
+      expect(session.getSnapshot().selectedNodeId).toBe(`${kind}-root`);
+      expect(session.getSnapshot().nestedSelection).toBeNull();
+    }
+    await act(async () =>
+      (host!.querySelector('[data-subnav="settings"]') as HTMLButtonElement).click(),
+    );
+    await act(async () =>
+      (host!.querySelector('[data-asset-id="section"]') as HTMLButtonElement).click(),
+    );
+    expect(session.getSnapshot().selectedNodeId).toBe('section-root');
+    session.destroy();
+  });
+
   it('places schema library in Settings and Icons in the subnav', async () => {
     const session = createEditorSession({ documents, design: editorStandardDesign() });
     session.openAsset('card', 'root');
@@ -97,7 +131,7 @@ describe('editor subnavigation', () => {
     expect(host.textContent).toContain('Props');
     expect(host.textContent).toContain('Defaults');
     expect(host.querySelector('[data-testid="code-stage"]')).toBeNull();
-    expect(host.textContent).toContain('Legacy variant axes');
+    expect(host.textContent).not.toContain('Legacy variant axes');
     await act(async () => {
       (host!.querySelector('[data-surface="code"]') as HTMLButtonElement).click();
     });

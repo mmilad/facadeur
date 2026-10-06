@@ -16,7 +16,15 @@ export const fieldTypes = [
 ] as const;
 export type FieldType = (typeof fieldTypes)[number];
 
-export const bindingTargets = ['text', 'attribute', 'style', 'visible', 'src', 'alt'] as const;
+export const bindingTargets = [
+  'text',
+  'attribute',
+  'style',
+  'visible',
+  'src',
+  'alt',
+  'options',
+] as const;
 export type BindingTarget = (typeof bindingTargets)[number];
 
 export type FieldValue = string | number | boolean | FieldValue[] | { [key: string]: FieldValue };
@@ -51,6 +59,7 @@ export const bindingTargetSchema = Type.Union([
   Type.Literal('visible'),
   Type.Literal('src'),
   Type.Literal('alt'),
+  Type.Literal('options'),
 ]);
 
 export const fieldDefinitionSchema = Type.Recursive((Self) =>
@@ -98,19 +107,19 @@ export const eventDefinitionSchema = Type.Object(
   { additionalProperties: false },
 );
 
-/** Stable path into a composed child contract, for example `control.value`. */
+/** @deprecated Legacy alias path; retained until child-contract inheritance migration. */
 export const exposePathSchema = Type.String({
   minLength: 1,
   pattern: '^[A-Za-z][A-Za-z0-9_-]*(\\.[A-Za-z][A-Za-z0-9_-]*)*$',
 });
 
-/** Explicit public contract inherited from nested atoms or components. */
+/** @deprecated Parent-authored aliases; retained for existing documents pending child-contract inheritance. */
 export const exposeSchema = Type.Object(
   {
     fields: Type.Optional(Type.Record(idSchema, exposePathSchema)),
     events: Type.Optional(Type.Record(idSchema, exposePathSchema)),
   },
-  { additionalProperties: false },
+  { additionalProperties: false, deprecated: true },
 );
 
 /** Maps a semantic atom event to a native event on the node. */

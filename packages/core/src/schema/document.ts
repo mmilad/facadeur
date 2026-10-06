@@ -156,9 +156,10 @@ function documentProperties<Kind extends TSchema>(kind: Kind) {
   return {
     version: Type.Literal(1),
     id: idSchema,
+    slug: Type.Optional(idSchema),
     name: Type.String({ minLength: 1 }),
     kind,
-    group: Type.Optional(idSchema),
+    group: Type.Optional(Type.String({ minLength: 1 })),
     fields: Type.Optional(Type.Array(fieldDefinitionSchema)),
     previewData: Type.Optional(previewDataSchema),
     /** Display names only; preset identifiers remain stable when renamed. */
@@ -204,7 +205,9 @@ export type EventDefinition = Static<typeof eventDefinitionSchema>;
 export type EventBinding = Static<typeof eventBindingSchema>;
 export type EventDataMapping = NonNullable<EventBinding['data']>[number];
 export type EventDataSource = EventDataMapping['source'];
+/** @deprecated Legacy parent-authored aliases; retained until child-contract inheritance migration. */
 export type Expose = Static<typeof exposeSchema>;
+/** @deprecated Legacy expose alias path; retained for document compatibility. */
 export type ExposePath = Static<typeof exposePathSchema>;
 export type VariantAxis = Static<typeof variantAxisSchema>;
 export type DisplayOn = Static<typeof displayOnSchema>;

@@ -10,6 +10,7 @@ const NOUN: Record<DefaultKind, string> = {
 export interface AssetIdentity {
   id: string;
   name: string;
+  slug?: string;
 }
 
 /** Empty frame document for "New". Ids and names stay unique in the catalog. */
@@ -22,7 +23,7 @@ export function blankAsset(kind: DefaultKind, taken: readonly AssetIdentity[]): 
     name = `${baseName} ${count}`;
     count += 1;
   }
-  const ids = new Set(taken.map((asset) => asset.id));
+  const ids = new Set(taken.flatMap((asset) => [asset.id, asset.slug ?? asset.id]));
   const baseId = slug(name);
   let id = baseId;
   let suffix = 2;

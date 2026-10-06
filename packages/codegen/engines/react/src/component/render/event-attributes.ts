@@ -38,7 +38,7 @@ export function eventAttributes(
   dataScope: ReadonlyMap<string, string>,
   tag: string,
 ): Attr[] {
-  const attrs: Attr[] = [];
+  const handlers = new Map<string, string[]>();
   for (const binding of bindings ?? []) {
     const event = owner.events.get(binding.event);
     const definition = owner.document.events?.find((candidate) => candidate.name === binding.event);
@@ -65,15 +65,19 @@ export function eventAttributes(
       }
     }
     const data = schema ? mappedDataExpression(mappings, owner, dataScope, usedProps) : 'undefined';
-    attrs.push({
-      name: nativeName,
-      value: {
-        kind: 'expr',
-        code: `(reactEvent) => ${event.name}?.({ eventName: ${quote(event.eventName ?? binding.event)}, event: reactEvent.nativeEvent, native: reactEvent.nativeEvent.type, data: ${data} })`,
-      },
-    });
+    const callbacks = handlers.get(nativeName) ?? [];
+    callbacks.push(
+      `${event.name}?.({ eventName: ${quote(event.eventName ?? binding.event)}, event: reactEvent.nativeEvent, native: reactEvent.nativeEvent.type, data: ${data} })`,
+    );
+    handlers.set(nativeName, callbacks);
   }
-  return attrs;
+  return [...handlers].map(([name, callbacks]) => ({
+    name,
+    value: {
+      kind: 'expr' as const,
+      code: `(reactEvent) => ${callbacks.length === 1 ? callbacks[0] : `{ ${callbacks.join('; ')}; }`}`,
+    },
+  }));
 }
 
 function assertMappingContract(

@@ -1,4 +1,4 @@
-import type { FieldDefinition } from '@facadeur/core';
+import type { FieldDefinition, FieldValue, JsonSchema } from '@facadeur/core';
 import { useMemo } from 'react';
 import type {
   ComponentSchemaUse,
@@ -14,6 +14,10 @@ import {
 } from '../../domain/schema/schema-use.js';
 import { Checkbox, Combobox, Field, NumberInput, Stack, TextInput } from '../form/index.js';
 import type { EditorSession } from '../../domain/session.js';
+import { fieldDataSchema } from '@facadeur/core';
+import { fieldDisplayLabel } from '../controls/data/field-label.js';
+import { SchemaValueForm } from '../controls/data/SchemaValueForm.js';
+import { isFieldValue } from '../controls/data/item-array-schema.js';
 
 function joinPath(parent: string, name: string): string {
   return parent ? `${parent}.${name}` : name;
@@ -71,12 +75,20 @@ export function SchemaPreviewForm({
     commitDefaults(setAt(use?.defaults ?? {}, path, value));
   }
 
+  const libraryControls = controls.filter(
+    (control) => !fields.some((field) => field.name === control.path),
+  );
+  const documentControls = controls.filter((control) =>
+    fields.some((field) => field.name === control.path),
+  );
+  const mergeDocumentFields = canCombineDocumentDefaults(documentControls, fields);
+
   return (
     <section className="schema-preview" aria-labelledby="schema-defaults-title">
       <h3 id="schema-defaults-title">Defaults</h3>
       {controls.length ? (
         <Stack gap={12}>
-          {controls.map((control) => (
+          {libraryControls.map((control) => (
             <PreviewControlField
               key={control.path || control.label}
               control={control}
@@ -84,12 +96,63 @@ export function SchemaPreviewForm({
               onWrite={writeAt}
             />
           ))}
+          {mergeDocumentFields ? (
+            <SchemaValueForm
+              key="document-field-defaults"
+              label="Field defaults"
+              schema={documentDefaultsSchema(fields)}
+              value={documentDefaultsValue(defaults, fields)}
+              onChange={(next) => commitDefaults(next)}
+            />
+          ) : (
+            documentControls.map((control) => {
+              const field = fields.find((field) => field.name === control.path);
+              if (!field) return null;
+              const value = getAt(defaults, control.path) ?? field.default;
+              return (
+                <SchemaValueForm
+                  key={control.path}
+                  label={fieldDisplayLabel(field.name)}
+                  schema={fieldDataSchema(field)}
+                  value={isFieldValue(value) ? value : undefined}
+                  onChange={(next) => writeAt(control.path, next)}
+                />
+              );
+            })
+          )}
         </Stack>
       ) : (
         <p className="meta">Choose a type or name a field to fill in an example.</p>
       )}
     </section>
   );
+}
+
+function canCombineDocumentDefaults(
+  controls: PreviewControl[],
+  fields: FieldDefinition[],
+): boolean {
+  if (!fields.length || controls.length !== fields.length) return false;
+  const names = new Set(fields.map((field) => field.name));
+  return controls.every((control) => !control.path.includes('.') && names.has(control.path));
+}
+
+function documentDefaultsSchema(fields: FieldDefinition[]): JsonSchema {
+  const required = fields.filter((field) => field.required).map((field) => field.name);
+  return {
+    type: 'object',
+    properties: Object.fromEntries(fields.map((field) => [field.name, fieldDataSchema(field)])),
+    ...(required.length ? { required } : {}),
+  };
+}
+
+function documentDefaultsValue(defaults: unknown, fields: FieldDefinition[]): FieldValue {
+  const record: Record<string, FieldValue> = {};
+  for (const field of fields) {
+    const value = getAt(defaults, field.name) ?? field.default;
+    if (isFieldValue(value)) record[field.name] = value;
+  }
+  return record;
 }
 
 function controlForField(field: FieldDefinition): PreviewControl {

@@ -9,3 +9,26 @@
   flex: 1;
   min-width: 0;
 }
+
+.eu-schema-value__item {
+  border: 1px solid var(--eu-border-muted, #d8dee9);
+  border-radius: 8px;
+  padding: 4px 8px 8px;
+}
+
+.eu-schema-value__item-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.eu-schema-value__item-summary::-webkit-details-marker {
+  display: none;
+}
+
+.eu-schema-value__item[open] > .eu-schema-value__nested-value {
+  margin-top: 8px;
+}

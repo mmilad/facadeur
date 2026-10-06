@@ -4,6 +4,8 @@ import { getPath, resolvePath } from '../../schema/path.js';
 import { IconButton } from '../shared/IconButton.js';
 import { Stack } from '../layout/Stack.js';
 import { Inline } from '../layout/Inline.js';
+import { Section } from '../layout/Section.js';
+import { fieldDisplayLabel } from '../../../controls/data/field-label.js';
 
 export type ArrayFieldHelpers<TItem> = {
   remove: () => void;
@@ -17,6 +19,8 @@ export function ArrayField<TItem>({
   defaultItem,
   disabled,
   onChange,
+  collapsibleRows = false,
+  rowLabel,
   children,
 }: {
   name?: string;
@@ -24,13 +28,16 @@ export function ArrayField<TItem>({
   defaultItem: TItem | (() => TItem);
   disabled?: boolean;
   onChange?: (value: TItem[]) => void;
+  collapsibleRows?: boolean;
+  rowLabel?: string;
   children: (item: TItem, index: number, helpers: ArrayFieldHelpers<TItem>) => ReactNode;
 }) {
   const form = useOptionalFormContext();
   const prefix = usePathPrefix();
   const path = name ? resolvePath(prefix, name) : '';
   const bound = form && name;
-  const items = bound ? ((getPath(form.value, path) as TItem[]) ?? []) : (valueProp ?? []);
+  const rawItems = bound ? getPath(form.value, path) : valueProp;
+  const items = Array.isArray(rawItems) ? rawItems : [];
   const isDisabled = disabled ?? form?.disabled ?? false;
 
   function emit(next: TItem[]) {
@@ -47,22 +54,49 @@ export function ArrayField<TItem>({
     emit(items.filter((_, i) => i !== index));
   }
 
+  const titledRows = rowLabel ?? fieldDisplayLabel(name ?? 'item');
+
   return (
     <Stack gap={8}>
       {items.map((item, index) => (
         <PathPrefixProvider key={index} prefix={name ? `${name}.${index}` : String(index)}>
-          <div className="eu-array-row">
-            <div className="eu-array-row__body">
+          {collapsibleRows ? (
+            <Section
+              title={`${titledRows} ${index + 1}`}
+              collapsible
+              defaultOpen
+              keepMounted
+              appearance="accordion"
+              action={
+                <IconButton
+                  label={`Remove ${titledRows} ${index + 1}`}
+                  disabled={isDisabled}
+                  onClick={() => removeAt(index)}
+                >
+                  ×
+                </IconButton>
+              }
+            >
               {children(item, index, { remove: () => removeAt(index), index, item })}
+            </Section>
+          ) : (
+            <div className="eu-array-row">
+              <div className="eu-array-row__body">
+                {children(item, index, { remove: () => removeAt(index), index, item })}
+              </div>
+              <IconButton label="Remove row" disabled={isDisabled} onClick={() => removeAt(index)}>
+                ×
+              </IconButton>
             </div>
-            <IconButton label="Remove row" disabled={isDisabled} onClick={() => removeAt(index)}>
-              ×
-            </IconButton>
-          </div>
+          )}
         </PathPrefixProvider>
       ))}
       <Inline>
-        <IconButton label="Add row" disabled={isDisabled} onClick={addItem}>
+        <IconButton
+          label={titledRows ? `Add ${titledRows} item` : 'Add row'}
+          disabled={isDisabled}
+          onClick={addItem}
+        >
           +
         </IconButton>
       </Inline>

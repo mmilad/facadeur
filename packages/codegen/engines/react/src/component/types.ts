@@ -101,6 +101,7 @@ export interface Expr {
 }
 
 export interface Bound {
+  options?: Expr;
   text?: Expr;
   attrs: Map<string, Attr['value']>;
   classExpr?: string;

@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "id": "form-checkbox-option",
+  "name": "Checkbox option",
+  "kind": "component",
+  "group": "form",
+  "fields": [
+    {
+      "name": "label",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "value",
+      "type": "text",
+      "required": true
+    },
+    {
+      "name": "disabled",
+      "type": "boolean"
+    },
+    {
+      "name": "checked",
+      "type": "boolean"
+    },
+    {
+      "name": "name",
+      "type": "text"
+    }
+  ],
+  "root": {
+    "id": "root",
+    "type": "frame",
+    "tag": "label",
+    "children": [
+      {
+        "id": "control",
+        "type": "instance",
+        "component": "form-checkbox",
+        "forwardFields": false,
+        "fieldBindings": {
+          "value": "value",
+          "disabled": "disabled",
+          "checked": "checked",
+          "name": "name"
+        }
+      },
+      {
+        "id": "label",
+        "type": "text",
+        "bindings": [
+          {
+            "field": "label",
+            "target": "text"
+          }
+        ]
+      }
+    ]
+  },
+  "styles": {
+    "declarations": {
+      "display": "flex",
+      "alignItems": "center",
+      "gap": "{space.2}"
+    }
+  },
+  "previewData": {
+    "fields": {
+      "label": "Option",
+      "value": "option",
+      "disabled": false,
+      "checked": false,
+      "name": "choice"
+    }
+  },
+  "tokenInterface": {
+    "reads": ["space.2"]
+  }
+}

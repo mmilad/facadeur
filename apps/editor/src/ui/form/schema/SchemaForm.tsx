@@ -1,3 +1,5 @@
+import { getPath } from '../schema/path.js';
+import { useFormContext, usePathPrefix } from '../FormContext.js';
 import { Field } from '../components/feedback/Field.js';
 import { TextInput } from '../components/input/TextInput.js';
 import { TextArea } from '../components/input/TextArea.js';
@@ -43,7 +45,12 @@ function renderControl(config: FieldConfig) {
   switch (config.type) {
     case 'text':
       return (
-        <TextInput name={config.name} placeholder={config.placeholder} disabled={config.disabled} />
+        <TextInput
+          name={config.name}
+          aria-label={config.label}
+          placeholder={config.placeholder}
+          disabled={config.disabled}
+        />
       );
     case 'textarea':
       return (
@@ -53,6 +60,7 @@ function renderControl(config: FieldConfig) {
       return (
         <NumberInput
           name={config.name}
+          aria-label={config.label}
           min={config.min}
           max={config.max}
           step={config.step}
@@ -88,21 +96,47 @@ function renderControl(config: FieldConfig) {
         />
       );
     case 'toggle':
-      return <Toggle name={config.name} label={config.label} disabled={config.disabled} />;
+      return (
+        <Toggle
+          name={config.name}
+          label={config.label}
+          aria-label={config.label}
+          disabled={config.disabled}
+        />
+      );
     case 'checkbox':
       return <Checkbox name={config.name} label={config.label} disabled={config.disabled} />;
     case 'array':
       return (
         <ArrayField
           name={config.name}
+          collapsibleRows={config.collapsibleRows}
+          rowLabel={config.label}
           defaultItem={
-            config.defaultItem ??
-            (() => (Array.isArray(config.item) ? {} : { [config.item.name]: '' }))
-          }
-        >
-          {(_, __, ___) => (
-            <SchemaForm fields={Array.isArray(config.item) ? config.item : [config.item]} />
-          )}
+              config.defaultItem ??
+              (() => {
+                if (Array.isArray(config.item)) return {};
+                if (
+                  config.item.type === 'text' ||
+                  config.item.type === 'textarea' ||
+                  config.item.type === 'number' ||
+                  config.item.type === 'search' ||
+                  config.item.type === 'color'
+                ) {
+                  return '';
+                }
+                if (config.item.type === 'toggle' || config.item.type === 'checkbox') return false;
+                return { [config.item.name]: '' };
+              })
+            }
+          >
+            {(_, __, ___) =>
+              Array.isArray(config.item) ? (
+                <SchemaForm fields={config.item} />
+              ) : (
+                <PrefixScalarField config={config.item} />
+              )
+            }
         </ArrayField>
       );
     case 'record':
@@ -112,4 +146,48 @@ function renderControl(config: FieldConfig) {
     default:
       return null;
   }
+}
+
+/** Bind primitive array entries directly at the row path (`tags.0`), not `tags.0.item`. */
+function PrefixScalarField({ config }: { config: FieldConfig }) {
+  const form = useFormContext();
+  const path = usePathPrefix();
+  const raw = getPath(form.value, path);
+
+  function write(next: unknown) {
+    form.emitChange(path, next, { commit: true });
+  }
+
+  return (
+    <Field label={config.label} hint={config.hint} required={config.required}>
+      {config.type === 'toggle' ? (
+        <Toggle
+          aria-label={config.label}
+          label={config.label}
+          value={raw === true}
+          disabled={config.disabled}
+          onCommit={write}
+        />
+      ) : config.type === 'number' ? (
+        <NumberInput
+          aria-label={config.label}
+          value={typeof raw === 'number' ? raw : null}
+          min={config.min}
+          max={config.max}
+          step={config.step}
+          disabled={config.disabled}
+          onCommit={(next) => write(next ?? '')}
+        />
+      ) : (
+        <TextInput
+          aria-label={config.label}
+          value={typeof raw === 'string' ? raw : raw == null ? '' : String(raw)}
+          placeholder={config.placeholder}
+          disabled={config.disabled}
+          onChange={(next) => form.emitChange(path, next)}
+          onCommit={write}
+        />
+      )}
+    </Field>
+  );
 }

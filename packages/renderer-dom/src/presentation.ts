@@ -131,7 +131,15 @@ export function applyBindings(
         if (value) el.setAttribute(binding.name, '');
         else el.removeAttribute(binding.name);
       } else {
+        const previous = el.getAttribute(binding.name);
         el.setAttribute(binding.name, String(value));
+        if (
+          binding.name === 'value' &&
+          el.tagName.toLowerCase() === 'textarea' &&
+          previous !== String(value)
+        ) {
+          (el as HTMLTextAreaElement).value = String(value);
+        }
       }
     } else if (binding.target === 'style' && binding.name) {
       el.style.setProperty(binding.name, String(value));

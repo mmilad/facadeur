@@ -24,6 +24,7 @@ export type EditorDrag = { kind: 'node'; nodeId: string } | { kind: 'asset'; ass
 
 export interface AssetSummary {
   id: string;
+  slug?: string;
   name: string;
   kind: DefaultKind;
   group?: string;

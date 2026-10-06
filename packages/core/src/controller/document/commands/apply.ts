@@ -14,6 +14,7 @@ import { setChildField, setField, setProp, setVariant } from './nodes/properties
 import { defineEvent, defineField, removeEvent, removeField, setExpose } from './definitions.js';
 import { adoptTokenReads } from '../../style/references/adopt.js';
 import { applyStyleCommand } from '../../style/commands.js';
+import { setDocumentGroup, setDocumentMetadata } from './metadata.js';
 import { setSchemaCatalog, setSchemaUse } from './schema-contract.js';
 
 /**
@@ -34,6 +35,12 @@ export function applyCommand(
   }
   const next = structuredClone(canonicalizeFlat(doc));
   switch (command.type) {
+    case 'setDocumentGroup':
+      setDocumentGroup(next, command.group);
+      break;
+    case 'setDocumentMetadata':
+      setDocumentMetadata(next, command, ctx);
+      break;
     case 'insert':
       insertNode(next, command, ctx);
       break;

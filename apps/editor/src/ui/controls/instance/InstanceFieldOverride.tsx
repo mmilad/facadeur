@@ -1,8 +1,9 @@
-import type { FieldDefinition, FieldValue } from '@facadeur/core';
+import { type FieldDefinition, type FieldValue } from '@facadeur/core';
 import { Field, Select, TextArea, TextInput, Toggle } from '../../form/index.js';
 import { fieldDisplayLabel } from '../data/field-label.js';
 import { parseInstanceFieldValue } from '../data/value.js';
 import { parseFieldValue } from '../../../domain/field-values.js';
+import { JsonSchemaContractFieldEditor } from '../../schema/JsonSchemaContractFieldEditor.js';
 
 export function InstanceFieldOverride({
   field,
@@ -54,6 +55,36 @@ export function InstanceFieldOverride({
           onCommit={(next) => onSetField(next)}
         />
       </Field>
+    );
+  }
+  if ((field.type === 'array' || field.type === 'object') && (field.schema || field.items)) {
+    return (
+      <>
+        <JsonSchemaContractFieldEditor
+          field={field}
+          value={override ?? field.default}
+          onChange={onSetField}
+        />
+        <button type="button" className="eu-button" onClick={() => onSetField(null)}>
+          Use default
+        </button>
+        <details className="field-schema">
+          <summary>Advanced JSON</summary>
+          <TextArea
+            name={`field-${field.name}`}
+            aria-label={label}
+            value={override === undefined ? '' : JSON.stringify(override)}
+            rows={4}
+            onCommit={(raw) => {
+              try {
+                onSetField(raw.trim() === '' ? null : parseInstanceFieldValue(field, raw));
+              } catch (error) {
+                onInvalid?.(error instanceof Error ? error.message : 'Invalid field');
+              }
+            }}
+          />
+        </details>
+      </>
     );
   }
   if (field.type === 'array' || field.type === 'object') {

@@ -443,7 +443,7 @@ describe('properties inspector tabs', () => {
     expect(host.querySelector('button[name="open-component"]')).toBeInstanceOf(HTMLButtonElement);
   });
 
-  it('keeps field definitions out of the inspector and mounts legacy variant axes on Schema', async () => {
+  it('keeps field definitions out of the inspector and hides retired Schema authoring', async () => {
     const session: EditorSession = createEditorSession({
       documents,
       design: editorStandardDesign(),
@@ -467,14 +467,18 @@ describe('properties inspector tabs', () => {
     });
     expect(host.querySelector('button[name="open-add-field"]')).toBeNull();
     expect(host.querySelector('input[name="new-field-name"]')).toBeNull();
-    expect(host.querySelector('input[name="new-axis-name"]')).toBeInstanceOf(HTMLInputElement);
+    expect(host.querySelector('input[name="new-axis-name"]')).toBeNull();
+    expect(host.textContent).not.toContain('Public contract (deprecated)');
+    expect(host.textContent).not.toContain('Legacy variant axes');
 
     await act(async () => {
       host!
         .querySelector('button[data-surface="schema"]')
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
-    expect(host.querySelector('input[name="new-axis-name"]')).toBeInstanceOf(HTMLInputElement);
+    expect(host.querySelector('input[name="new-axis-name"]')).toBeNull();
+    expect(host.textContent).not.toContain('Public contract (deprecated)');
+    expect(host.textContent).not.toContain('Legacy variant axes');
   });
 
   it('does not show property tabs when a viewport is selected', async () => {

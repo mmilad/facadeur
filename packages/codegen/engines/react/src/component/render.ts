@@ -158,6 +158,13 @@ export function renderNode(
     // arrives instead of emitting `items.map(...)` on `undefined`.
     repeat = { source: `(${source} ?? [])`, item, index, key };
   }
+  if (bound.options) {
+    if (tag.toLowerCase() !== 'select')
+      throw new CodegenError('Options bindings require a native select element');
+    childNodes.push({
+      text: `{(${bound.options.code} ?? []).map((option, optionIndex) => (<option key={optionIndex} value={option.value} disabled={option.disabled}>{option.label}</option>))}`,
+    });
+  }
   const text = textChild(node, bound);
   if (tag.toLowerCase() === 'textarea' && bound.text) {
     const literal = node.type === 'text' ? node.text : undefined;
@@ -348,7 +355,9 @@ function classAttribute(
   isRoot: boolean,
   localClass: string | undefined,
 ): Attr | undefined {
-  const staticClass = classFromAttributes(node.attributes);
+  const staticClass = [classFromAttributes(node.attributes), ...(node.classes ?? [])]
+    .filter(Boolean)
+    .join(' ');
   const parts: string[] = [];
   if (localClass) parts.push(localClass);
   if (staticClass) parts.push(quote(staticClass));

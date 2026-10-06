@@ -17,6 +17,7 @@ describe('preview style-name markers', () => {
         type: 'frame',
         tag: 'button',
         styleName: 'action-button',
+        classes: ['hover:bg-blue-600'],
         children: [{ id: 'label', type: 'text', name: 'Button label' }],
       },
     };
@@ -29,7 +30,7 @@ describe('preview style-name markers', () => {
         id: 'root',
         type: 'frame',
         styleName: 'host-root',
-        children: [{ id: 'submit', type: 'instance', component: 'action' }],
+        children: [{ id: 'submit', type: 'instance', component: 'action', classes: ['w-full'] }],
       },
     };
     const parent = document.createElement('main');
@@ -44,6 +45,14 @@ describe('preview style-name markers', () => {
     expect(button.dataset.styleNode).toBe('host:submit action:root');
     expect(button.dataset.styleDocument).toBe('host');
     expect(button.classList.contains('action-button')).toBe(true);
+    expect(button.classList.contains('hover:bg-blue-600')).toBe(true);
+    expect(button.classList.contains('w-full')).toBe(true);
+    const changed = structuredClone(host);
+    if (changed.root.type === 'frame' && changed.root.children?.[0]?.type === 'instance')
+      changed.root.children[0].classes = ['flex'];
+    renderDocument(changed, [changed, action], parent, { paintRoot: true });
+    expect(button.classList.contains('w-full')).toBe(false);
+    expect(button.classList.contains('flex')).toBe(true);
     expect(label.dataset.styleNode).toBe('action:label');
     expect(label.dataset.styleDocument).toBe('action');
   });

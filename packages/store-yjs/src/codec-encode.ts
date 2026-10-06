@@ -31,6 +31,7 @@ export function syncMeta(meta: Y.Map<unknown>, doc: FlatDocument): void {
   syncScalar(meta, 'version', doc.version);
   syncScalar(meta, 'id', doc.id);
   syncScalar(meta, 'name', doc.name);
+  syncScalar(meta, 'slug', doc.slug);
   syncScalar(meta, 'kind', doc.kind);
   syncScalar(meta, 'group', doc.group);
   syncScalar(meta, 'rootId', doc.rootId);
@@ -189,6 +190,8 @@ function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
   if (node.type === 'instance') {
     syncScalar(map, 'name', node.name);
     syncScalar(map, 'styleName', node.styleName);
+    if (node.classes?.length) syncJsonArray(ensureArray(map, 'classes'), node.classes);
+    else map.delete('classes');
     syncJsonMap(map, 'displayOn', node.displayOn as Record<string, JsonValue> | undefined);
     syncLayout(map, node.layout);
     syncScalar(map, 'component', node.component);
@@ -228,6 +231,8 @@ function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
 
   syncScalar(map, 'name', node.name);
   syncScalar(map, 'styleName', node.styleName);
+  if (node.classes?.length) syncJsonArray(ensureArray(map, 'classes'), node.classes);
+  else map.delete('classes');
   syncScalar(map, 'tag', node.tag);
   syncStringMap(map, 'attributes', node.attributes);
   syncJsonMap(map, 'displayOn', node.displayOn as Record<string, JsonValue> | undefined);

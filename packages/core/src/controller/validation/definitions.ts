@@ -1,3 +1,4 @@
+import { assertSelectOptionsField } from './select-options.js';
 import { schemaAtPath } from './schema-path.js';
 import { DocumentError } from '../../document/errors.js';
 import { type FlatDocument } from '../../document/flat.js';
@@ -170,6 +171,12 @@ export function validateDefinitions(
         );
       }
       const field = fields.get(binding.field);
+      if (
+        binding.target === 'options' &&
+        (node.type !== 'frame' || node.tag?.toLowerCase() !== 'select')
+      ) {
+        throw new DocumentError('schema', 'Options bindings require a native select element');
+      }
       if (field) assertBindingField(field, binding.target, node.id);
     }
     for (const binding of node.eventBindings ?? []) {
@@ -342,6 +349,10 @@ function schemaAcceptsType(schema: JsonSchema, sourceType: string): boolean {
 }
 
 function assertBindingField(field: FieldDefinition, target: Binding['target'], nodeId: string) {
+  if (target === 'options') {
+    assertSelectOptionsField(field);
+    return;
+  }
   if (isStructuredFieldType(field.type)) {
     throw new DocumentError(
       'schema',

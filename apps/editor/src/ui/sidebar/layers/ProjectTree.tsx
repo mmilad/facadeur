@@ -5,6 +5,8 @@ import { AssetContextMenu } from './AssetContextMenu.js';
 import { blankAsset } from '../../../domain/assets/new-asset.js';
 import { ownsVariantContract } from '../../../domain/edits/variant-edit.js';
 import { createNamedVariant, renameNamedVariant } from '../../../domain/variant-actions.js';
+import { GroupAssetDialog } from './GroupAssetDialog.js';
+import { RenameAssetDialog } from './RenameAssetDialog.js';
 import { AssetRows } from './AssetRows.js';
 import type { AssetSummary, EditorSession, EditorSnapshot } from '../../../domain/session.js';
 import {
@@ -34,6 +36,8 @@ export function ProjectTree({
   onOpenDesignDomain: (domain: DesignDomain) => void;
 }) {
   const [query, setQuery] = useState('');
+  const [groupAssetId, setGroupAssetId] = useState<string | null>(null);
+  const [renameAssetId, setRenameAssetId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [expandedVariants, setExpandedVariants] = useState<Record<string, boolean>>({});
   const [assetContextMenu, setAssetContextMenu] = useState<{
@@ -123,7 +127,7 @@ export function ProjectTree({
         ];
         const subgroups = groupNames.map((group) => {
           const groupedAssets = assets.filter((asset) => asset.group === group);
-          const groupLabelHit = Boolean(needle) && group.includes(needle);
+          const groupLabelHit = Boolean(needle) && group.toLowerCase().includes(needle);
           const visible =
             needle && !labelHit && !groupLabelHit
               ? groupedAssets.filter((asset) => assetMatches(asset, needle))
@@ -284,11 +288,40 @@ export function ProjectTree({
               anchor={assetContextMenu.anchor}
               menuRef={contextMenuRef}
               onCreateVariant={createVariant}
+              onRename={(id) => {
+                onOpenAsset(id);
+                setRenameAssetId(id);
+              }}
+              onGroup={(id) => {
+                onOpenAsset(id);
+                setGroupAssetId(id);
+              }}
+              onRemoveGroup={(id) => {
+                onOpenAsset(id);
+                session.executeDocument(id, { type: 'setDocumentGroup', group: null });
+              }}
               onClose={() => setAssetContextMenu(null)}
             />,
             document.body,
           )
         : null}
+      {groupAssetId ? (
+        <GroupAssetDialog
+          key={groupAssetId}
+          session={session}
+          asset={snap.catalog.find((asset) => asset.id === groupAssetId)!}
+          groups={[...new Set(snap.catalog.flatMap((asset) => (asset.group ? [asset.group] : [])))]}
+          onClose={() => setGroupAssetId(null)}
+        />
+      ) : null}
+      {renameAssetId ? (
+        <RenameAssetDialog
+          key={renameAssetId}
+          session={session}
+          asset={snap.catalog.find((asset) => asset.id === renameAssetId)!}
+          onClose={() => setRenameAssetId(null)}
+        />
+      ) : null}
     </section>
   );
 }
@@ -343,8 +376,12 @@ function isOpen(id: string, needle: string, expanded: Record<string, boolean>): 
   return expanded[id] !== false;
 }
 
-function assetMatches(asset: { name: string; id: string }, needle: string): boolean {
-  return asset.name.toLowerCase().includes(needle) || asset.id.toLowerCase().includes(needle);
+function assetMatches(asset: { name: string; id: string; slug?: string }, needle: string): boolean {
+  return (
+    asset.name.toLowerCase().includes(needle) ||
+    asset.id.toLowerCase().includes(needle) ||
+    (asset.slug?.toLowerCase().includes(needle) ?? false)
+  );
 }
 
 function titleCase(value: string): string {

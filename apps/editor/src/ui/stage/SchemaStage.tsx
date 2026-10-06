@@ -1,8 +1,6 @@
 import type { EditorSession, EditorSnapshot } from '../../domain/session.js';
 import { variantLabel } from '../../domain/edits/variant-edit.js';
 import { ComponentEvents } from '../sidebar/properties/content/component/ComponentEvents.js';
-import { ComponentExpose } from '../sidebar/properties/content/component/ComponentExpose.js';
-import { ComponentVariants } from '../sidebar/properties/content/component/ComponentVariants.js';
 import { ownsComponentFeatures } from '../sidebar/properties/content/component/owns-component-features.js';
 import { SchemaUseControl } from './SchemaUseControl.js';
 
@@ -21,8 +19,10 @@ export function SchemaStage({
   onOpenSchemas: () => void;
 }) {
   const document = snap.document;
-  const hasSchema = ownsComponentFeatures(document.kind) || document.kind === 'section';
-  const schemaOwner = document.kind === 'section' ? 'Section' : 'Component';
+  const hasSchema =
+    ownsComponentFeatures(document.kind) || document.kind === 'section' || document.kind === 'page';
+  const schemaOwner =
+    document.kind === 'section' ? 'Section' : document.kind === 'page' ? 'Page' : 'Component';
 
   return (
     <section className="schema-stage eu-form" aria-label="Schema" data-testid="schema-stage">
@@ -34,7 +34,9 @@ export function SchemaStage({
         <p className="schema-stage-note">
           {snap.activeVariantName
             ? `Editing ${variantLabel(document, snap.activeVariantName)}; schema stays shared with the base document.`
-            : `Choose a shared schema and set the defaults this ${schemaOwner.toLowerCase()} contributes to instances.`}
+            : document.kind === 'page'
+              ? 'Define page events, their data contracts and native targets.'
+              : `Choose a shared schema and set the defaults this ${schemaOwner.toLowerCase()} contributes to instances.`}
         </p>
       </header>
       <div className="schema-stage-body">
@@ -45,15 +47,10 @@ export function SchemaStage({
               aria-labelledby="schema-definition-title"
             >
               <h2 id="schema-definition-title">{schemaOwner} definition</h2>
-              <SchemaUseControl session={session} snap={snap} onOpenSchemas={onOpenSchemas} />
-              <ComponentEvents session={session} snap={snap} />
-              <ComponentExpose session={session} snap={snap} />
-              {document.variants.length ? (
-                <details className="fold schema-legacy-variants">
-                  <summary>Legacy variant axes</summary>
-                  <ComponentVariants session={session} snap={snap} />
-                </details>
+              {document.kind !== 'page' ? (
+                <SchemaUseControl session={session} snap={snap} onOpenSchemas={onOpenSchemas} />
               ) : null}
+              <ComponentEvents session={session} snap={snap} />
             </section>
           </div>
         ) : (

@@ -44,8 +44,8 @@ it('adds the only available alternative directly and displays a schema-driven ne
 
   expect(onCommit).toHaveBeenCalledWith([{ kind: 'card', title: '', active: false }]);
   expect(screen.getByRole('group', { name: 'Card item 1' })).toBeInTheDocument();
-  expect(screen.getByRole('textbox', { name: 'title' })).toBeInTheDocument();
-  expect(screen.getByRole('switch', { name: 'active' })).toBeInTheDocument();
+  expect(screen.getByRole('textbox', { name: 'Title' })).toBeInTheDocument();
+  expect(screen.getByRole('switch', { name: 'Active' })).toBeInTheDocument();
 });
 
 it('offers all alternatives, then commits nested edits and removal', () => {
@@ -58,7 +58,7 @@ it('offers all alternatives, then commits nested edits and removal', () => {
   expect(onCommit).toHaveBeenLastCalledWith([...value, { kind: 'banner', text: '' }]);
   expect(screen.getByRole('group', { name: 'Banner item 2' })).toBeInTheDocument();
 
-  fireEvent.change(screen.getByRole('textbox', { name: 'text' }), { target: { value: 'Welcome' } });
+  fireEvent.change(screen.getByRole('textbox', { name: 'Text' }), { target: { value: 'Welcome' } });
   expect(onCommit).toHaveBeenLastCalledWith([value[0], { kind: 'banner', text: 'Welcome' }]);
 
   fireEvent.click(screen.getByRole('button', { name: 'Remove item 1' }));
@@ -66,7 +66,7 @@ it('offers all alternatives, then commits nested edits and removal', () => {
   expect(screen.queryByRole('group', { name: 'Card item 1' })).not.toBeInTheDocument();
   expect(
     within(screen.getByRole('group', { name: 'Banner item 1' })).getByRole('textbox', {
-      name: 'text',
+      name: 'Text',
     }),
   ).toHaveValue('Welcome');
 });
@@ -82,12 +82,12 @@ it('keeps edits local and surfaces validation errors when a value no longer matc
     />,
   );
 
-  fireEvent.change(screen.getByRole('textbox', { name: 'title' }), {
+  fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), {
     target: { value: 'Changed' },
   });
   expect(onCommit).toHaveBeenCalledWith([{ kind: 'card', title: 'Changed', active: false }]);
 
-  fireEvent.click(screen.getByRole('switch', { name: 'active' }));
+  fireEvent.click(screen.getByRole('switch', { name: 'Active' }));
   expect(onCommit).toHaveBeenLastCalledWith([{ kind: 'card', title: 'Changed', active: true }]);
 });
 
@@ -109,14 +109,14 @@ it('adds constrained required fields as editable drafts and keeps the chosen sch
 
   fireEvent.click(screen.getByRole('button', { name: 'Add item' }));
   expect(onCommit).not.toHaveBeenCalled();
-  expect(screen.getByRole('textbox', { name: 'code' })).toHaveValue('aa');
+  expect(screen.getByRole('textbox', { name: 'Code' })).toHaveValue('aa');
   expect(screen.getByRole('alert')).toHaveTextContent(/does not match/i);
 
-  fireEvent.change(screen.getByRole('textbox', { name: 'code' }), { target: { value: 'no' } });
+  fireEvent.change(screen.getByRole('textbox', { name: 'Code' }), { target: { value: 'no' } });
   expect(onCommit).not.toHaveBeenCalled();
-  expect(screen.getByRole('textbox', { name: 'code' })).toHaveValue('no');
+  expect(screen.getByRole('textbox', { name: 'Code' })).toHaveValue('no');
 
-  fireEvent.change(screen.getByRole('textbox', { name: 'code' }), { target: { value: 'okay' } });
+  fireEvent.change(screen.getByRole('textbox', { name: 'Code' }), { target: { value: 'okay' } });
   expect(onCommit).toHaveBeenCalledWith([{ kind: 'promo', code: 'okay' }]);
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 });
@@ -152,7 +152,7 @@ it('creates typed envelopes, lets the Type selector reset payload safely, and ke
   fireEvent.click(screen.getByRole('button', { name: 'Add item' }));
   fireEvent.click(screen.getByRole('menuitem', { name: 'Card' }));
   expect(onCommit).toHaveBeenLastCalledWith([{ type: 'card', props: { title: '' } }]);
-  fireEvent.change(screen.getByRole('textbox', { name: 'title' }), {
+  fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), {
     target: { value: 'Hello' },
   });
   expect(onCommit).toHaveBeenLastCalledWith([{ type: 'card', props: { title: 'Hello' } }]);
@@ -172,7 +172,7 @@ it('creates typed envelopes, lets the Type selector reset payload safely, and ke
   );
   expect(onCommit).not.toHaveBeenCalled();
   expect(screen.getByRole('combobox', { name: 'Type' })).toHaveValue('card');
-  fireEvent.change(screen.getByRole('textbox', { name: 'title' }), {
+  fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), {
     target: { value: 'Migrated by edit' },
   });
   expect(onCommit).toHaveBeenCalledWith([{ type: 'card', props: { title: 'Migrated by edit' } }]);
@@ -190,7 +190,7 @@ it('keeps an unknown explicit case intact until the user chooses a repair type',
   );
   expect(screen.getByRole('combobox', { name: 'Type' })).toHaveValue('removed-case');
   expect(screen.getByText(/Unknown case/)).toBeInTheDocument();
-  expect(screen.queryByRole('textbox', { name: 'title' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('textbox', { name: 'Title' })).not.toBeInTheDocument();
   expect(onCommit).not.toHaveBeenCalled();
 
   fireEvent.change(screen.getByRole('combobox', { name: 'Type' }), {
@@ -228,7 +228,7 @@ it('keeps an optional Input contract distinct from an earlier optional Card cont
   fireEvent.click(screen.getByRole('menuitem', { name: 'Input' }));
   expect(onCommit).toHaveBeenLastCalledWith([{ label: '', placeholder: '' }]);
   expect(screen.getByRole('group', { name: 'Input item 1' })).toBeInTheDocument();
-  fireEvent.change(screen.getByRole('textbox', { name: 'label' }), { target: { value: 'Email' } });
+  fireEvent.change(screen.getByRole('textbox', { name: 'Label' }), { target: { value: 'Email' } });
   expect(onCommit).toHaveBeenLastCalledWith([{ label: 'Email', placeholder: '' }]);
   rerender(
     <ItemArrayControl
@@ -238,9 +238,9 @@ it('keeps an optional Input contract distinct from an earlier optional Card cont
       onCommit={onCommit}
     />,
   );
-  fireEvent.change(screen.getByRole('textbox', { name: 'label' }), { target: { value: '' } });
+  fireEvent.change(screen.getByRole('textbox', { name: 'Label' }), { target: { value: '' } });
   expect(screen.getByRole('group', { name: 'Input item 1' })).toBeInTheDocument();
-  expect(screen.queryByRole('textbox', { name: 'title' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('textbox', { name: 'Title' })).not.toBeInTheDocument();
 });
 
 it('retains an existing alternative form while a required field is cleared and corrected', () => {
@@ -263,32 +263,34 @@ it('retains an existing alternative form while a required field is cleared and c
       onCommit={onCommit}
     />,
   );
-  fireEvent.change(screen.getByRole('textbox', { name: 'text' }), { target: { value: '' } });
+  fireEvent.change(screen.getByRole('textbox', { name: 'Text' }), { target: { value: '' } });
   expect(onCommit).not.toHaveBeenCalled();
   expect(screen.getByRole('group', { name: 'Banner item 1' })).toBeInTheDocument();
   expect(screen.getByRole('alert')).toBeInTheDocument();
-  fireEvent.change(screen.getByRole('textbox', { name: 'text' }), { target: { value: 'Fixed' } });
+  fireEvent.change(screen.getByRole('textbox', { name: 'Text' }), { target: { value: 'Fixed' } });
   expect(onCommit).toHaveBeenLastCalledWith([{ kind: 'banner', text: 'Fixed' }]);
 });
 
 it('creates optional nested arrays on first insertion and edits their entries', () => {
-  const onCommit = vi.fn();
   const schema: JsonSchema = {
     type: 'object',
     properties: { tags: { type: 'array', items: { type: 'string' } } },
   };
-  render(
-    <ItemArrayControl
-      label="Items"
-      value={[{}]}
-      choices={[{ id: 'tagged', label: 'Tagged', schema }]}
-      onCommit={onCommit}
-    />,
-  );
-  fireEvent.click(screen.getByRole('button', { name: 'Add tags item' }));
-  expect(onCommit).toHaveBeenLastCalledWith([{ tags: [''] }]);
-  fireEvent.change(screen.getByRole('textbox', { name: '0' }), { target: { value: 'News' } });
-  expect(onCommit).toHaveBeenLastCalledWith([{ tags: ['News'] }]);
+  function ControlledItems() {
+    const [value, setValue] = useState<FieldValue[]>([{}]);
+    return (
+      <ItemArrayControl
+        label="Items"
+        value={value}
+        choices={[{ id: 'tagged', label: 'Tagged', schema }]}
+        onCommit={setValue}
+      />
+    );
+  }
+  render(<ControlledItems />);
+  fireEvent.click(screen.getByRole('button', { name: 'Add Tags item' }));
+  fireEvent.change(screen.getByRole('textbox', { name: 'Item' }), { target: { value: 'News' } });
+  expect(screen.getByRole('textbox', { name: 'Item' })).toHaveValue('News');
 });
 
 it('offers and edits each typed case in a nested schema array', () => {

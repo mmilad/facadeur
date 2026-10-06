@@ -46,6 +46,7 @@ export interface InsertNode {
   type: NodeType;
   name?: string;
   styleName?: string;
+  classes?: string[];
   tag?: string;
   attributes?: Record<string, string>;
   displayOn?: DisplayOn;
@@ -71,6 +72,7 @@ export interface InsertNode {
 export type NodeProp =
   | 'name'
   | 'styleName'
+  | 'classes'
   | 'tag'
   | 'text'
   | 'src'
@@ -90,6 +92,8 @@ export type NodeProp =
 // Instance selection rules are evaluated against the owning component's data.
 export type Command =
   | { type: 'batch'; commands: Command[] }
+  | { type: 'setDocumentMetadata'; name: string; slug: string }
+  | { type: 'setDocumentGroup'; group: string | null }
   | { type: 'insert'; parentId: string; index?: number; node: InsertNode }
   | { type: 'remove'; nodeId: string }
   | { type: 'move'; nodeId: string; parentId: string; index: number }

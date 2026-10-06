@@ -153,15 +153,7 @@ export function ContentPanel({
           bindings={node.bindings}
         />
       ) : null}
-      {node.type !== 'instance' && ownsComponentFeatures(snap.document.kind) ? (
-        <NodeBindings
-          session={session}
-          snap={snap}
-          node={node}
-          dataFields={fieldsAt(node.id)}
-          schemaCatalog={snap.design.schemaCatalog}
-        />
-      ) : null}
+      {node.type !== 'instance' ? <NodeBindings session={session} snap={snap} node={node} /> : null}
       {node.type !== 'instance' ? (
         <DataDirectivesEditorControl
           conditionTitle="Render condition"

@@ -82,6 +82,7 @@ export function readDocument(doc: Y.Doc): FlatDocument {
     version: 1,
     id: stringValue(meta.get('id')),
     name: stringValue(meta.get('name')),
+    ...(optionalString(meta.get('slug')) ? { slug: optionalString(meta.get('slug')) } : {}),
     kind: stringValue(meta.get('kind')),
     ...(optionalString(meta.get('group')) ? { group: optionalString(meta.get('group')) } : {}),
     rootId: stringValue(meta.get('rootId')),

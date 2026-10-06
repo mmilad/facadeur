@@ -1,15 +1,19 @@
 /**
  * @vitest-environment jsdom
  */
-import { act } from 'react';
+import { act, useSyncExternalStore } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { toFlat, type DocumentFile, type EventBinding } from '@facadeur/core';
 import type { EditorSession, EditorSnapshot } from '../src/domain/session.js';
 import { ComponentEvents } from '../src/ui/sidebar/properties/content/component/ComponentEvents.js';
 import { SchemaUseControl } from '../src/ui/stage/SchemaUseControl.js';
 import { EventsEditorControl } from '../src/ui/controls/data/EventsEditorControl.js';
 import { EventBindingsEditorControl } from '../src/ui/controls/data/EventBindingsEditorControl.js';
+import { SchemaStage } from '../src/ui/stage/SchemaStage.js';
+import { createEditorSession } from '../src/domain/session.js';
+import { editorStandardDesign } from './fixtures/example-catalog.js';
+import * as files from '../src/domain/assets/files.js';
 
 let root: Root | null = null;
 let host: HTMLDivElement | null = null;
@@ -19,6 +23,7 @@ afterEach(() => {
   host?.remove();
   root = null;
   host = null;
+  vi.restoreAllMocks();
 });
 
 describe('event contract controls', () => {
@@ -26,29 +31,169 @@ describe('event contract controls', () => {
 
   it('creates named event fields through the shared contract selector', async () => {
     const defined: unknown[] = [];
+    let events: import('@facadeur/core').EventDefinition[] = [];
     root = createRoot(mount());
-    await act(async () => {
+    const render = () =>
       root!.render(
         <EventsEditorControl
-          events={[]}
-          onDefineEvent={(event) => defined.push(event)}
+          events={events}
+          onDefineEvent={(event) => {
+            defined.push(event);
+            events = [event];
+            render();
+          }}
           onRemoveEvent={() => undefined}
         />,
       );
+    await act(async () => {
+      render();
     });
 
     await click('open-add-event');
+    await input('event-name-event', 'commit');
     await clickText('Declare fields');
-    await input('new-event-name', 'commit');
-    await input('new-event-data-field-name-0', 'value');
-    await click('add-event');
+    await input('event-data-commit-field-name-0', 'value');
 
-    expect(defined).toEqual([
+    expect(defined.at(-1)).toEqual({
+      name: 'commit',
+      data: { fields: [{ name: 'value', type: { kind: 'type', type: 'string' } }] },
+    });
+  });
+
+  it.each(['atom', 'component', 'section', 'page'] as const)(
+    'creates and persists shared click wiring for a %s, with element selection',
+    async (kind) => {
+      const save = vi.spyOn(files, 'saveJsonFile').mockResolvedValue({ via: 'download' });
+      const editor = createEditorSession({
+        documents: [
+          {
+            version: 1,
+            id: 'button',
+            name: 'Button',
+            kind,
+            ...(kind === 'atom' || kind === 'component' ? { variants: [{ name: 'compact' }] } : {}),
+            root: {
+              id: 'root',
+              type: 'frame',
+              tag: 'button',
+              ...(kind === 'component'
+                ? {
+                    children: [
+                      { id: 'label', type: 'text' as const, tag: 'span', text: 'Continue' },
+                    ],
+                  }
+                : {}),
+            },
+          },
+        ],
+        design: editorStandardDesign(),
+      });
+      editor.openAsset('button', 'root');
+      if (kind === 'atom' || kind === 'component') editor.setActiveVariant('compact');
+      function EventSurface() {
+        const snap = useSyncExternalStore(editor.subscribe, editor.getSnapshot);
+        return (
+          <>
+            <SchemaStage session={editor} snap={snap} onOpenSchemas={() => undefined} />
+          </>
+        );
+      }
+      root = createRoot(mount());
+      await act(async () => root!.render(<EventSurface />));
+      await click('open-add-event');
+      expect(host?.querySelector('[name="event-name-event"]')).not.toBeNull();
+      await input('event-name-event', 'click');
+      await select('event-target-click-new', 'root');
+      expect(host?.querySelector('[name="event-binding-event-0"]')).toBeNull();
+      expect(host?.querySelector('[name="add-event-binding"]')).toBeNull();
+      expect(editor.getSnapshot().documentDirty).toBe(true);
+      expect(editor.getSnapshot().document.events).toEqual([{ name: 'click' }]);
+      expect(editor.getSnapshot().document.nodes.root).toMatchObject({
+        eventBindings: [{ event: 'click', name: 'click' }],
+      });
+      if (kind === 'component') {
+        await select('event-target-click-0', 'label');
+        await select('event-binding-name-0', 'input');
+        await select('event-binding-name-0', 'click');
+        expect(editor.getSnapshot().document.nodes.label).toMatchObject({
+          eventBindings: [{ event: 'click', name: 'click' }],
+        });
+        await click('add-event-target-click');
+        await select('event-target-click-new', 'root');
+        await input('event-name-click', 'activate');
+        expect(editor.getSnapshot().document.events).toEqual([{ name: 'activate' }]);
+        expect(editor.getSnapshot().document.nodes.label).toMatchObject({
+          eventBindings: [{ event: 'activate', name: 'click' }],
+        });
+        await input('event-name-activate', 'click');
+      }
+      await act(async () => {
+        expect(await editor.saveOpenDocument()).toBe(true);
+      });
+      const saved = JSON.parse(save.mock.calls[0]?.[0].text ?? '{}') as DocumentFile;
+      expect(saved.events).toEqual([{ name: 'click' }]);
+      expect(saved.root).toMatchObject({ eventBindings: [{ event: 'click', name: 'click' }] });
+      expect(saved.variants?.[0] ?? {}).not.toHaveProperty('overrides');
+      await act(async () => editor.loadDocument(saved));
+      expect(editor.getSnapshot().document.events).toEqual([{ name: 'click' }]);
+      expect(editor.getSnapshot().document.nodes.root).toMatchObject({
+        eventBindings: [{ event: 'click', name: 'click' }],
+      });
+      await act(async () => root!.unmount());
+      root = null;
+      editor.destroy();
+    },
+  );
+
+  it('defines event data and native mappings in the same accordion', async () => {
+    const editor = createEditorSession({
+      documents: [
+        {
+          version: 1,
+          id: 'input',
+          name: 'Input',
+          kind: 'atom',
+          root: { id: 'root', type: 'frame', tag: 'input' },
+        },
+      ],
+      design: editorStandardDesign(),
+    });
+    function EventSurface() {
+      const snap = useSyncExternalStore(editor.subscribe, editor.getSnapshot);
+      return <ComponentEvents session={editor} snap={snap} />;
+    }
+    root = createRoot(mount());
+    await act(async () => root!.render(<EventSurface />));
+    await click('open-add-event');
+    await input('event-name-event', 'commit');
+    await clickText('Declare fields');
+    await input('event-data-commit-field-name-0', 'value');
+    await select('event-target-commit-new', 'root');
+    expect(editor.getSnapshot().document.events).toEqual([
       {
         name: 'commit',
         data: { fields: [{ name: 'value', type: { kind: 'type', type: 'string' } }] },
       },
     ]);
+    expect(editor.getSnapshot().document.nodes.root).toMatchObject({
+      eventBindings: [
+        {
+          event: 'commit',
+          name: 'change',
+          data: [{ path: 'value', source: { kind: 'native', path: 'currentTarget.value' } }],
+        },
+      ],
+    });
+    await select('event-binding-name-0', 'input');
+    expect(editor.getSnapshot().document.nodes.root).toMatchObject({
+      eventBindings: [{ event: 'commit', name: 'input' }],
+    });
+    await click('remove-event-commit');
+    expect(editor.getSnapshot().document.events ?? []).toEqual([]);
+    expect(editor.getSnapshot().document.nodes.root).not.toHaveProperty('eventBindings');
+    await act(async () => root!.unmount());
+    root = null;
+    editor.destroy();
   });
 
   it('edits a direct event type with the schema picker', async () => {
@@ -156,7 +301,8 @@ describe('event contract controls', () => {
     const commands: unknown[] = [];
     const session = {
       project: { commandContext: {} },
-      execute: (command: unknown) => commands.push(command),
+      executeDocument: (_id: string, command: unknown) => commands.push(command),
+      documentStores: () => [],
       setNotice: () => undefined,
     } as unknown as EditorSession;
     const document = toFlat({
@@ -252,8 +398,8 @@ async function clickText(text: string) {
 async function clickCard(title: string) {
   await act(async () => {
     const button = [
-      ...document.querySelectorAll<HTMLButtonElement>('.eu-section__title--collapsible'),
-    ].find((candidate) => candidate.textContent === title);
+      ...document.querySelectorAll<HTMLButtonElement>('.eu-section__header > button'),
+    ].find((candidate) => candidate.textContent?.replace(/^[›⌄]\s*/, '') === title);
     if (!button) throw new Error(`Missing event card ${title}`);
     button.click();
   });

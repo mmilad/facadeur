@@ -70,6 +70,39 @@ describe('Core schema-use contract resolution', () => {
     expect(publicFieldsFor(baseDocument, { documents: catalog, schemaCatalog })).toEqual(fields);
   });
 
+  it('keeps authored fields when schema use only stores defaults', () => {
+    const document: DocumentFile = {
+      version: 1,
+      id: 'select',
+      name: 'Select',
+      kind: 'atom',
+      fields: [
+        {
+          name: 'options',
+          type: 'array',
+          items: {
+            type: 'object',
+            fields: [
+              { name: 'value', type: 'text', required: true },
+              { name: 'label', type: 'text', required: true },
+            ],
+          },
+        },
+        { name: 'value', type: 'text' },
+      ],
+      schemaUse: {
+        defaults: {
+          options: [{ value: 'a', label: 'A' }],
+          value: '',
+        },
+      },
+      root: { id: 'root', type: 'frame', tag: 'select' },
+    };
+    const fields = publicFieldsFor(document, { documents: new Map([[document.id, document]]) });
+    expect([...fields.keys()]).toEqual(['options', 'value']);
+    expect(() => validateCatalog([document])).not.toThrow();
+  });
+
   it('ignores stale legacy fields when schemaUse is present, but falls back when absent', () => {
     const withUse: DocumentFile = {
       ...baseDocument,

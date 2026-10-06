@@ -71,34 +71,11 @@
   border-bottom-color: transparent;
 }
 
-.font-row-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  border: 0;
-  border-radius: 4px;
-  padding: 2px 4px;
-  background: transparent;
-  color: var(--ink);
-  cursor: pointer;
-}
-
-.font-row-toggle:hover {
-  background: rgba(28, 25, 21, 0.06);
-}
-
 .font-row-toggle code,
 .font-weights,
 .icon-details code {
   font-family: var(--mono);
   font-size: 11px;
-}
-
-.font-row-chevron {
-  width: 10px;
-  color: var(--muted);
-  font-size: 15px;
-  line-height: 1;
 }
 
 .font-preview {

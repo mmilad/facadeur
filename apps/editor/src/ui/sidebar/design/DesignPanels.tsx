@@ -12,7 +12,7 @@ import {
 } from '../../../domain/edits/font-edit.js';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
 import { TextControl } from '../../controls/fields/index.js';
-import { Field, Popover, TextInput } from '../../form/index.js';
+import { DisclosureButton, Field, Popover, TextInput } from '../../form/index.js';
 import './design-resources.css';
 
 export { TokensDomainPanel } from './tokens/TokensDomainPanel.js';
@@ -203,18 +203,14 @@ function FontTableRows({
     <>
       <tr className={expanded ? 'font-row is-expanded' : 'font-row'}>
         <th scope="row">
-          <button
-            type="button"
+          <DisclosureButton
             className="font-row-toggle"
             name={`font-details-${font.id}`}
-            aria-expanded={expanded}
+            expanded={expanded}
             onClick={onToggle}
           >
-            <span className="font-row-chevron" aria-hidden="true">
-              {expanded ? '⌄' : '›'}
-            </span>
             <code>{font.id}</code>
-          </button>
+          </DisclosureButton>
         </th>
         <td>
           <span className="font-preview" style={{ fontFamily: fontStack(font) }}>

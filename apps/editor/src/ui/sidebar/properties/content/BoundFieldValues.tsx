@@ -16,6 +16,7 @@ import { Field, Select, Toggle } from '../../../form/index.js';
 import { boundFields } from './bound-fields.js';
 import { ItemArrayControl } from '../../../controls/data/ItemArrayControl.js';
 import { SwitchCaseControl } from '../../../controls/data/SwitchCaseControl.js';
+import { JsonSchemaContractFieldEditor } from '../../../schema/JsonSchemaContractFieldEditor.js';
 
 export function BoundFieldValues({
   session,
@@ -161,6 +162,23 @@ function BoundFieldControl({
           />
         </details>
         <SchemaSummary field={field} />
+      </>
+    );
+  }
+  if ((field.type === 'array' || field.type === 'object') && (field.schema || field.items)) {
+    return (
+      <>
+        <JsonSchemaContractFieldEditor field={field} value={value} onChange={onWrite} />
+        <details className="field-schema">
+          <summary>Advanced JSON</summary>
+          <TextControl
+            label={label}
+            name={`example-${field.name}`}
+            value={value === undefined ? '' : JSON.stringify(value)}
+            multiline
+            onCommit={onWriteRaw}
+          />
+        </details>
       </>
     );
   }

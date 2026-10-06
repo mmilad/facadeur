@@ -30,6 +30,12 @@ function applyBinding(
   prop: PropSpec,
   expr: Expr,
 ): boolean {
+  if (binding.target === 'options') {
+    if (prop.fieldType !== 'array')
+      throw new CodegenError('Options bindings require an array field');
+    bound.options = expr;
+    return true;
+  }
   if (prop.fieldType === 'array' || prop.fieldType === 'object') {
     throw new CodegenError(
       `Binding "${binding.field}" on "${binding.target}" cannot use structured field type "${prop.fieldType}"`,

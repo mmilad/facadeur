@@ -3,6 +3,12 @@ import { validateCatalog } from '@facadeur/core';
 import { blankAsset } from '../src/domain/assets/new-asset';
 
 describe('blankAsset', () => {
+  it('reserves editable identifiers as well as stable ids when creating a document', () => {
+    const asset = blankAsset('component', [
+      { id: 'stable-reference', slug: 'new-component', name: 'Other' },
+    ]);
+    expect(asset.id).toBe('new-component-2');
+  });
   it('names a new frame document and avoids ids already in the catalog', () => {
     const first = blankAsset('component', []);
     expect(first).toMatchObject({

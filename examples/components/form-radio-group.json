@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "id": "form-radio-group",
+  "name": "Radio group",
+  "kind": "component",
+  "group": "form",
+  "fields": [
+    {
+      "name": "options",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "fields": [
+          {
+            "name": "label",
+            "type": "text",
+            "required": true
+          },
+          {
+            "name": "value",
+            "type": "text",
+            "required": true
+          },
+          {
+            "name": "disabled",
+            "type": "boolean"
+          },
+          {
+            "name": "checked",
+            "type": "boolean"
+          }
+        ]
+      }
+    },
+    {
+      "name": "name",
+      "type": "text"
+    }
+  ],
+  "root": {
+    "id": "root",
+    "type": "frame",
+    "attributes": {
+      "role": "radiogroup"
+    },
+    "children": [
+      {
+        "id": "options",
+        "type": "frame",
+        "repeat": {
+          "path": "options",
+          "as": "item"
+        },
+        "children": [
+          {
+            "id": "option",
+            "type": "instance",
+            "component": "form-radio-option",
+            "forwardFields": false,
+            "fieldBindings": {
+              "label": "item.label",
+              "value": "item.value",
+              "disabled": "item.disabled",
+              "checked": "item.checked",
+              "name": "name"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "styles": {
+    "declarations": {
+      "display": "flex",
+      "flexDirection": "column",
+      "gap": "{space.2}"
+    }
+  },
+  "previewData": {
+    "fields": {
+      "options": [
+        {
+          "label": "First option",
+          "value": "first",
+          "disabled": false,
+          "checked": true
+        },
+        {
+          "label": "Second option",
+          "value": "second",
+          "disabled": false,
+          "checked": false
+        }
+      ],
+      "name": "radio-choices"
+    }
+  },
+  "tokenInterface": {
+    "reads": ["space.2"]
+  }
+}

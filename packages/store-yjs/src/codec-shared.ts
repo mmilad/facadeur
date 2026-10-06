@@ -184,7 +184,8 @@ export function isBindingTarget(value: unknown): value is Binding['target'] {
     value === 'style' ||
     value === 'visible' ||
     value === 'src' ||
-    value === 'alt'
+    value === 'alt' ||
+    value === 'options'
   );
 }
 

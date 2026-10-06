@@ -56,3 +56,5 @@ export type {
   ContractResolverInput,
   SchemaResolverContext,
 } from './types.js';
+
+export { fieldDataSchema } from './field-data-schema.js';

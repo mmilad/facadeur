@@ -1,3 +1,4 @@
+import { classList } from './class-list.js';
 import { DocumentError } from './errors.js';
 import { cloneBreakpoints } from '../controller/style/breakpoints.js';
 import { cloneFonts } from '../controller/style/fonts.js';
@@ -59,6 +60,7 @@ export function toFlat(file: DocumentFile) {
     version: 1,
     id: file.id,
     name: file.name,
+    ...(file.slug ? { slug: file.slug } : {}),
     kind: file.kind,
     ...(file.group ? { group: file.group } : {}),
     rootId,
@@ -90,6 +92,7 @@ export function toNested(doc: FlatDocument): DocumentFile {
     version: 1,
     id: doc.id,
     name: doc.name,
+    ...(doc.slug ? { slug: doc.slug } : {}),
     kind: doc.kind as DocumentFile['kind'],
     root: nested,
   };
@@ -151,6 +154,7 @@ export function canonicalizeFlat(doc: FlatDocument): FlatDocument {
     version: 1,
     id: doc.id,
     name: doc.name,
+    ...(doc.slug ? { slug: doc.slug } : {}),
     kind: doc.kind,
     ...(doc.group ? { group: doc.group } : {}),
     rootId: doc.rootId,
@@ -227,6 +231,7 @@ export function flattenSubtree(
     type: 'instance',
     ...(node.name !== undefined ? { name: node.name } : {}),
     ...(node.styleName !== undefined ? { styleName: node.styleName } : {}),
+    ...(node.classes?.length ? { classes: classList(node.classes) } : {}),
     ...(node.displayOn ? { displayOn: { ...node.displayOn } } : {}),
     ...(node.layout ? { layout: node.layout } : {}),
     component: node.component,
@@ -261,6 +266,7 @@ export function makeFlatNode(node: FlatNode): FlatNode {
       type: 'instance',
       ...(node.name ? { name: node.name } : {}),
       ...(node.styleName ? { styleName: node.styleName } : {}),
+      ...(node.classes?.length ? { classes: classList(node.classes) } : {}),
       ...(node.displayOn ? { displayOn: { ...node.displayOn } } : {}),
       ...(layout ? { layout } : {}),
       component: node.component,
@@ -341,6 +347,7 @@ function expandNode(doc: FlatDocument, id: string, stack: Set<string>): NestedNo
       type: 'instance',
       ...(node.name !== undefined ? { name: node.name } : {}),
       ...(node.styleName !== undefined ? { styleName: node.styleName } : {}),
+      ...(node.classes?.length ? { classes: classList(node.classes) } : {}),
       ...(node.displayOn ? { displayOn: { ...node.displayOn } } : {}),
       ...(node.layout ? { layout: { ...node.layout } } : {}),
       component: node.component,
@@ -365,6 +372,7 @@ function sharedFromNested(
     id: node.id,
     ...(node.name !== undefined ? { name: node.name } : {}),
     ...(node.styleName !== undefined ? { styleName: node.styleName } : {}),
+    ...(node.classes?.length ? { classes: classList(node.classes) } : {}),
     ...(node.tag !== undefined ? { tag: node.tag } : {}),
     ...(node.attributes ? { attributes: node.attributes } : {}),
     ...(node.displayOn ? { displayOn: { ...node.displayOn } } : {}),
@@ -379,6 +387,7 @@ function sharedFlat(node: Exclude<FlatNode, InstanceNode | StructuralNode>) {
   const base: FlatNodeBase = { id: node.id };
   if (node.name) base.name = node.name;
   if (node.styleName) base.styleName = node.styleName;
+  if (node.classes?.length) base.classes = classList(node.classes);
   if (node.tag) base.tag = node.tag;
   const attributes = sortStringRecord(node.attributes);
   if (attributes) base.attributes = attributes;
@@ -396,6 +405,7 @@ function sharedToNested(node: Exclude<FlatNode, InstanceNode | StructuralNode>):
   id: string;
   name?: string;
   styleName?: string;
+  classes?: string[];
   tag?: string;
   attributes?: Record<string, string>;
   displayOn?: DisplayOn;
@@ -408,6 +418,7 @@ function sharedToNested(node: Exclude<FlatNode, InstanceNode | StructuralNode>):
     id: node.id,
     ...(node.name !== undefined ? { name: node.name } : {}),
     ...(node.styleName !== undefined ? { styleName: node.styleName } : {}),
+    ...(node.classes?.length ? { classes: classList(node.classes) } : {}),
     ...(node.tag !== undefined ? { tag: node.tag } : {}),
     ...(node.attributes ? { attributes: { ...node.attributes } } : {}),
     ...(node.displayOn ? { displayOn: { ...node.displayOn } } : {}),

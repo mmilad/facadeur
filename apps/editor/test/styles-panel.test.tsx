@@ -53,7 +53,7 @@ function setup() {
 describe('Styles inspector', () => {
   it('edits ordinary class CSS through the same inline and style-block sources', () => {
     const { session, update } = setup();
-    fireEvent.click(screen.getByText('.Primary-action'));
+    fireEvent.click(screen.getAllByText('.Primary-action').at(-1)!);
     const css = screen.getByRole('textbox', { name: 'CSS button' });
     expect(css).toHaveValue('color: red;\nletter-spacing: 2px;');
     fireEvent.change(css, { target: { value: 'color: blue;\nletter-spacing: 3px;' } });
@@ -70,7 +70,7 @@ describe('Styles inspector', () => {
 
   it('keeps invalid declaration drafts visible without writing them, then supports Undo', () => {
     const { session, update } = setup();
-    fireEvent.click(screen.getByText('.Primary-action'));
+    fireEvent.click(screen.getAllByText('.Primary-action').at(-1)!);
     const css = screen.getByRole('textbox', { name: 'CSS button' });
     fireEvent.change(css, { target: { value: 'color blue;' } });
     fireEvent.blur(css);
@@ -129,32 +129,27 @@ describe('Styles inspector', () => {
     expect(session.getSnapshot().document.styles?.rules).toHaveLength(0);
   });
 
-  it('renames a local class while selector bindings continue to point to the same node', () => {
-    vi.stubGlobal('CSS', { supports: () => true });
+  it('adds utility badges without changing selector bindings and supports removal and Undo', () => {
     const { session, update } = setup();
-    fireEvent.click(screen.getByRole('button', { name: 'Add rule' }));
-    update();
-    const rule = session.getSnapshot().document.styles?.rules?.[0];
-    expect(rule).toBeDefined();
-    fireEvent.click(screen.getAllByText('.root').at(-1)!);
-    const selector = screen.getByRole('textbox', { name: `Selector ${rule!.id}` });
-    fireEvent.change(selector, { target: { value: '.Primary-action' } });
-    fireEvent.blur(selector);
-    update();
-    fireEvent.click(screen.getByRole('tab', { name: 'Content' }));
-    fireEvent.click(screen.getByRole('tab', { name: 'Styles' }));
-    const className = screen.getByRole('textbox', { name: 'CSS class for Primary action' });
-    fireEvent.change(className, { target: { value: 'primary-action' } });
-    fireEvent.blur(className);
-    update();
-    expect(
-      (session.getSnapshot().document.nodes.button as { styleName?: string } | undefined)
-        ?.styleName,
-    ).toBe('primary-action');
-    expect(session.getSnapshot().document.styles?.rules?.[0]).toMatchObject({
-      selector: '.Primary-action',
-      bindings: { 'Primary-action': 'button' },
+    const input = screen.getByRole('combobox', { name: 'CSS classes for Primary action' });
+    fireEvent.change(input, {
+      target: { value: 'flex hover:bg-blue-600 w-[calc(100%-2rem)] flex' },
     });
-    expect(screen.getAllByText('.primary-action').length).toBeGreaterThan(0);
+    fireEvent.keyDown(input, { key: 'Enter' });
+    update();
+    expect(session.getSnapshot().document.nodes.button?.classes).toEqual([
+      'flex',
+      'hover:bg-blue-600',
+      'w-[calc(100%-2rem)]',
+    ]);
+    expect(session.getSnapshot().document.nodes.button?.styleName).toBeUndefined();
+    expect(screen.getAllByText('.Primary-action').length).toBeGreaterThan(0);
+    expect(globalThis.document.querySelector('datalist option[value="grid"]')).not.toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Remove class flex' }));
+    update();
+    expect(session.getSnapshot().document.nodes.button?.classes).not.toContain('flex');
+    act(() => session.undo());
+    update();
+    expect(screen.getByRole('button', { name: 'Remove class flex' })).toBeInTheDocument();
   });
 });

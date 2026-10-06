@@ -6,6 +6,7 @@ import '../../form/form.css';
 const EXPOSE_PATH = /^[A-Za-z][A-Za-z0-9_-]*(\.[A-Za-z][A-Za-z0-9_-]*)*$/;
 type ExposeKind = 'fields' | 'events';
 
+/** @deprecated Compatibility editor for legacy expose aliases, pending child-contract inheritance. */
 export function ExposeEditorControl({
   expose,
   onChange,
@@ -60,8 +61,12 @@ export function ExposeEditorControl({
   }
 
   return (
-    <Section title="Public contract" collapsible defaultOpen>
+    <Section title="Public contract (deprecated)" collapsible defaultOpen appearance="accordion">
       <Stack gap={10}>
+        <p className="meta">
+          Legacy mappings remain supported. Child field and event inheritance is the planned
+          replacement.
+        </p>
         {entries.length ? (
           entries.map((entry) => (
             <ExposeEntry

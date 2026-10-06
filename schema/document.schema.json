@@ -16,6 +16,11 @@
       "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
       "type": "string"
     },
+    "slug": {
+      "minLength": 1,
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+      "type": "string"
+    },
     "name": {
       "minLength": 1,
       "type": "string"
@@ -42,7 +47,6 @@
     },
     "group": {
       "minLength": 1,
-      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
       "type": "string"
     },
     "fields": {
@@ -477,6 +481,7 @@
     },
     "expose": {
       "additionalProperties": false,
+      "deprecated": true,
       "type": "object",
       "properties": {
         "fields": {
@@ -2003,6 +2008,10 @@
                                     {
                                       "const": "alt",
                                       "type": "string"
+                                    },
+                                    {
+                                      "const": "options",
+                                      "type": "string"
                                     }
                                   ]
                                 },
@@ -3270,6 +3279,14 @@
               "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$",
               "type": "string"
             },
+            "classes": {
+              "type": "array",
+              "items": {
+                "minLength": 1,
+                "pattern": "^\\S+$",
+                "type": "string"
+              }
+            },
             "tag": {
               "pattern": "^[A-Za-z][A-Za-z0-9-]*$",
               "type": "string"
@@ -4104,6 +4121,10 @@
                       },
                       {
                         "const": "alt",
+                        "type": "string"
+                      },
+                      {
+                        "const": "options",
                         "type": "string"
                       }
                     ]
@@ -4307,6 +4328,14 @@
               "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$",
               "type": "string"
             },
+            "classes": {
+              "type": "array",
+              "items": {
+                "minLength": 1,
+                "pattern": "^\\S+$",
+                "type": "string"
+              }
+            },
             "tag": {
               "pattern": "^[A-Za-z][A-Za-z0-9-]*$",
               "type": "string"
@@ -5141,6 +5170,10 @@
                       },
                       {
                         "const": "alt",
+                        "type": "string"
+                      },
+                      {
+                        "const": "options",
                         "type": "string"
                       }
                     ]
@@ -5319,6 +5352,14 @@
               "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$",
               "type": "string"
             },
+            "classes": {
+              "type": "array",
+              "items": {
+                "minLength": 1,
+                "pattern": "^\\S+$",
+                "type": "string"
+              }
+            },
             "tag": {
               "pattern": "^[A-Za-z][A-Za-z0-9-]*$",
               "type": "string"
@@ -6153,6 +6194,10 @@
                       },
                       {
                         "const": "alt",
+                        "type": "string"
+                      },
+                      {
+                        "const": "options",
                         "type": "string"
                       }
                     ]
@@ -6333,6 +6378,14 @@
             "styleName": {
               "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$",
               "type": "string"
+            },
+            "classes": {
+              "type": "array",
+              "items": {
+                "minLength": 1,
+                "pattern": "^\\S+$",
+                "type": "string"
+              }
             },
             "layout": {
               "additionalProperties": false,
@@ -7277,6 +7330,7 @@
             },
             "expose": {
               "additionalProperties": false,
+              "deprecated": true,
               "type": "object",
               "properties": {
                 "fields": {
@@ -7318,6 +7372,9 @@
               "type": "string"
             },
             "styleName": {
+              "not": {}
+            },
+            "classes": {
               "not": {}
             },
             "tag": {
@@ -7368,6 +7425,9 @@
               "type": "string"
             },
             "styleName": {
+              "not": {}
+            },
+            "classes": {
               "not": {}
             },
             "tag": {

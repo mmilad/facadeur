@@ -100,6 +100,14 @@ function slotsForFrameTag(tag: string | undefined): BindingSlot[] {
   switch (normalized) {
     case 'input':
       return appendVisibilityStyleAndCustom([...attributeSlots([...INPUT_ATTRIBUTES])], true);
+    case 'select':
+      return appendVisibilityStyleAndCustom(
+        [
+          { id: 'options', label: 'Options', target: 'options' },
+          ...attributeSlots(['value', 'name', 'disabled', 'required', 'multiple']),
+        ],
+        true,
+      );
     case 'textarea':
       return appendVisibilityStyleAndCustom([...attributeSlots([...TEXTAREA_ATTRIBUTES])], true);
     case 'button':
@@ -127,7 +135,13 @@ export function slotsForNode(nodeType: 'frame' | 'text' | 'image', tag?: string)
 }
 
 function isNamelessTarget(target: BindingTarget): boolean {
-  return target === 'text' || target === 'visible' || target === 'src' || target === 'alt';
+  return (
+    target === 'text' ||
+    target === 'visible' ||
+    target === 'src' ||
+    target === 'alt' ||
+    target === 'options'
+  );
 }
 
 export function slotForBinding(binding: Binding, slots: BindingSlot[]): BindingSlot {

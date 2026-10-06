@@ -30,6 +30,7 @@ import {
   syncVariants,
 } from './presentation';
 import type { RenderContext, RenderedNode } from './types';
+import { syncSelectOptions } from './select-options';
 import { expandStructuralChildren } from './structural-children';
 import { repeatedDataScope, scopeForInstance } from './repeat-scope';
 import { mountedScope } from './mounted-scope';
@@ -170,7 +171,9 @@ function paintInstance(
   const bound = applyBindings(el, root.type === 'instance' ? undefined : root.bindings, scope);
   markStyleOwner(el, ownerDocumentId, node.id, definition.id, root.id);
   addClass(el, localClassName(ctx, ownerDocumentId, node.id));
+  el.classList.add(...(node.classes ?? []));
   addClass(el, localClassName(ctx, definition.id, root.id));
+  el.classList.add(...(root.classes ?? []));
   let text: string | null = null;
   if (root.type === 'text') text = bound.text ?? root.text ?? null;
   else if (root.type === 'frame' && bound.text) text = bound.text;
@@ -226,6 +229,7 @@ function paintInstance(
     el.dataset.empty = 'true';
   } else delete el.dataset.empty;
   syncLeadText(el, text);
+  syncSelectOptions(el, root.type === 'instance' ? undefined : root.bindings, scope);
 }
 
 function paintElement(
@@ -282,6 +286,7 @@ function paintElement(
     el.dataset.empty = 'true';
   } else delete el.dataset.empty;
   syncLeadText(el, text);
+  syncSelectOptions(el, node.bindings, ctx.scope);
 }
 
 function paintUnknown(

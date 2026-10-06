@@ -17,6 +17,12 @@ export function renderInstance(
   localClass: string | undefined,
   structuralProps?: string,
 ): ElementNode {
+  if (node.classes?.length) {
+    const utilityClasses = quote(node.classes.join(' '));
+    localClass = localClass
+      ? `[${localClass}, ${utilityClasses}].filter(Boolean).join(' ')`
+      : utilityClasses;
+  }
   const target = catalog.get(node.component);
   if (!target) {
     return {

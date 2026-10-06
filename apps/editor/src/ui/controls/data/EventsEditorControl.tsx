@@ -1,5 +1,5 @@
 import { eventDataSchema, type EventDefinition, type SchemaCatalog } from '@facadeur/core';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { eventDataSelection } from '../../../domain/events.js';
 import type { LibrarySchema } from '../../../domain/schema/schema-library.js';
 import type { SchemaTypeSelection } from '../../../domain/schema/schema-use.js';
@@ -15,6 +15,7 @@ export function EventsEditorControl({
   onDefineEvent,
   onRemoveEvent,
   onInvalid,
+  renderContent,
 }: {
   events: EventDefinition[];
   eventOrigins?: Record<string, string>;
@@ -23,45 +24,71 @@ export function EventsEditorControl({
   onDefineEvent: (event: EventDefinition, previousName?: string) => void;
   onRemoveEvent: (name: string) => void;
   onInvalid?: (message: string) => void;
+  renderContent?: (event: EventDefinition) => ReactNode;
 }) {
+  const [addedName, setAddedName] = useState<string | null>(null);
   return (
     <Stack gap={12}>
       {events.length === 0 ? (
-        <p className="meta">No events yet. Events can be bound to native events on child nodes.</p>
+        <p className="meta">
+          No events yet. Add an event to define its name, data and native target.
+        </p>
       ) : null}
       {events.map((event) => (
         <EventDefinitionCard
           key={event.name}
           event={event}
+          defaultOpen={event.name === addedName}
           originalName={eventOrigins[event.name] ?? event.name}
           schemas={schemas}
           schemaCatalog={schemaCatalog}
-          onDefineEvent={onDefineEvent}
+          onDefineEvent={(next, previousName) => {
+            if (previousName && next.name !== previousName) setAddedName(next.name);
+            onDefineEvent(next, previousName);
+          }}
           onRemoveEvent={onRemoveEvent}
           onInvalid={onInvalid}
+          content={renderContent?.(event)}
         />
       ))}
-      <AddEventForm schemas={schemas} onDefineEvent={onDefineEvent} onInvalid={onInvalid} />
+      <button
+        type="button"
+        className="text-button"
+        name="open-add-event"
+        onClick={() => {
+          const names = new Set(events.map((event) => event.name));
+          let name = 'event';
+          for (let index = 2; names.has(name); index++) name = `event${index}`;
+          onDefineEvent({ name });
+          setAddedName(name);
+        }}
+      >
+        Add event
+      </button>
     </Stack>
   );
 }
 
 function EventDefinitionCard({
   event,
+  defaultOpen,
   originalName,
   schemas,
   schemaCatalog,
   onDefineEvent,
   onRemoveEvent,
   onInvalid,
+  content,
 }: {
   event: EventDefinition;
+  defaultOpen: boolean;
   originalName: string;
   schemas: LibrarySchema[];
   schemaCatalog?: SchemaCatalog;
   onDefineEvent: (event: EventDefinition, previousName?: string) => void;
   onRemoveEvent: (name: string) => void;
   onInvalid?: (message: string) => void;
+  content?: ReactNode;
 }) {
   const dataUse = eventDataSelection(event);
   const dataSchema = eventDataSchema(event, schemaCatalog);
@@ -72,7 +99,7 @@ function EventDefinitionCard({
   }
 
   return (
-    <Section title={event.name} collapsible defaultOpen={false}>
+    <Section title={event.name} collapsible defaultOpen={defaultOpen} appearance="accordion">
       <Stack gap={8}>
         <Field label="Name">
           <TextInput
@@ -101,7 +128,16 @@ function EventDefinitionCard({
           onChange={defineData}
           helperText="Event data is local to this component and is assembled by each node binding."
         />
-        <EventCallbackPreview event={event} schema={dataSchema} />
+        {content}
+        <Section
+          title="Callback preview"
+          collapsible
+          defaultOpen={false}
+          appearance="accordion"
+          keepMounted
+        >
+          <EventCallbackPreview event={event} schema={dataSchema} />
+        </Section>
         <button
           type="button"
           className="text-button"
@@ -127,77 +163,5 @@ function EventCallbackPreview({ event, schema }: { event: EventDefinition; schem
         {`${callback}?: (event: ComponentEvent<${dataType}, '${event.name}'>) => void\n\nComponentEvent fields:\n  eventName: '${event.name}'\n  event: Event\n  native: string\n  data: ${schema ? dataType : 'undefined'}\n\nEvent data schema:\n${schema ? JSON.stringify(schema, null, 2) : 'undefined'}`}
       </pre>
     </section>
-  );
-}
-
-function AddEventForm({
-  schemas,
-  onDefineEvent,
-  onInvalid,
-}: {
-  schemas: LibrarySchema[];
-  onDefineEvent: (event: EventDefinition, previousName?: string) => void;
-  onInvalid?: (message: string) => void;
-}) {
-  const [name, setName] = useState('');
-  const [data, setData] = useState<SchemaTypeSelection | null>(null);
-  const [open, setOpen] = useState(false);
-
-  if (!open) {
-    return (
-      <button
-        type="button"
-        className="text-button"
-        name="open-add-event"
-        onClick={() => setOpen(true)}
-      >
-        Add event
-      </button>
-    );
-  }
-
-  return (
-    <Section
-      title="Add event"
-      action={
-        <button type="button" className="text-button" onClick={() => setOpen(false)}>
-          Cancel
-        </button>
-      }
-    >
-      <Stack gap={8}>
-        <Field label="Name">
-          <TextInput name="new-event-name" value={name} placeholder="commit" onChange={setName} />
-        </Field>
-        <SchemaTypeSelector
-          name="new-event-data"
-          value={data}
-          schemas={schemas}
-          onChange={setData}
-          helperText="Event data is assembled by node bindings."
-        />
-        <button
-          type="button"
-          className="text-button"
-          name="add-event"
-          onClick={() => {
-            try {
-              const eventName = name.trim();
-              if (!/^[A-Za-z][A-Za-z0-9_-]*$/.test(eventName)) {
-                throw new Error('Event names start with a letter and use letters, numbers, _ or -');
-              }
-              onDefineEvent({ name: eventName, ...(data ? { data } : {}) });
-              setName('');
-              setData(null);
-              setOpen(false);
-            } catch (error) {
-              onInvalid?.(error instanceof Error ? error.message : 'Invalid event');
-            }
-          }}
-        >
-          Add event
-        </button>
-      </Stack>
-    </Section>
   );
 }

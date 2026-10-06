@@ -55,10 +55,16 @@ export function validateCatalog(
 ): DocumentFile[] {
   const documents = files.map((file) => validateDocumentFile(file));
   const byId = new Map<string, DocumentFile>();
+  const identifiers = new Set<string>();
   for (const document of documents) {
     if (byId.has(document.id)) {
       throw new DocumentError('duplicate-id', `Duplicate document id "${document.id}"`);
     }
+    const identifier = document.slug ?? document.id;
+    if (identifiers.has(identifier)) {
+      throw new DocumentError('duplicate-id', 'Duplicate document identifier "' + identifier + '"');
+    }
+    identifiers.add(identifier);
     byId.set(document.id, document);
   }
   const owners = documents.filter((document) => document.schemaCatalog !== undefined);

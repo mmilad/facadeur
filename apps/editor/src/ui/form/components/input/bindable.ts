@@ -16,7 +16,7 @@ export function useBindable<T>(props: BindableProps<T>, fallback: T) {
   const prefix = usePathPrefix();
   const generatedId = useId();
   const path = props.name ? resolvePath(prefix, props.name) : '';
-  const bound = form && props.name;
+  const bound = form && props.name !== undefined;
 
   const value = bound ? ((getPath(form.value, path) as T) ?? fallback) : (props.value ?? fallback);
   const disabled = (bound ? form.disabled : false) || props.disabled || false;

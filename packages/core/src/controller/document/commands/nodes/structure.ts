@@ -1,3 +1,4 @@
+import { classList } from '../../../../document/class-list.js';
 import { DocumentError } from '../../../../document/errors.js';
 import {
   collectSubtree,
@@ -253,6 +254,7 @@ function materialize(draft: InsertNode, seen: Set<string>, nextId: () => string)
   if (draft.type === 'repeater' || draft.type === 'switch') {
     if (
       draft.styleName !== undefined ||
+      draft.classes !== undefined ||
       draft.tag !== undefined ||
       draft.attributes !== undefined ||
       draft.displayOn !== undefined ||
@@ -346,6 +348,7 @@ function materialize(draft: InsertNode, seen: Set<string>, nextId: () => string)
     type: 'instance',
     ...(draft.name !== undefined ? { name: requireName(draft.name) } : {}),
     ...(draft.styleName !== undefined ? { styleName: requireStyleName(draft.styleName) } : {}),
+    ...(draft.classes !== undefined ? { classes: classList(draft.classes) } : {}),
     ...(draft.displayOn ? { displayOn: { ...draft.displayOn } } : {}),
     ...(draft.layout ? { layout: cleanCommandLayout(draft.layout) } : {}),
     component: draft.component,
@@ -442,6 +445,7 @@ function elementBase(
   eventBindings?: EventBinding[];
   style?: Record<string, string>;
   styleName?: string;
+  classes?: string[];
 } {
   if (draft.attributes) assertAttributes(draft.attributes);
   if (draft.displayOn) assertDisplayOn(draft.displayOn);
@@ -454,6 +458,7 @@ function elementBase(
     id,
     ...(draft.name !== undefined ? { name: requireName(draft.name) } : {}),
     ...(draft.styleName !== undefined ? { styleName: requireStyleName(draft.styleName) } : {}),
+    ...(draft.classes !== undefined ? { classes: classList(draft.classes) } : {}),
     ...(draft.tag !== undefined ? { tag: requireTag(draft.tag) } : {}),
     ...(draft.attributes ? { attributes: { ...draft.attributes } } : {}),
     ...(draft.displayOn ? { displayOn: { ...draft.displayOn } } : {}),

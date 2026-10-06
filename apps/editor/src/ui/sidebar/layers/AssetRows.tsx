@@ -60,7 +60,7 @@ export function AssetRows({
             }}
           >
             <span className="asset-name">{asset.name}</span>
-            <span className="asset-id">{asset.id}</span>
+            <span className="asset-id">{asset.slug ?? asset.id}</span>
           </button>
           {canHaveVariants && hasVariants ? (
             <button

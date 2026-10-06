@@ -14,7 +14,7 @@ import {
 } from '../../../../domain/viewport/viewport-edit.js';
 import { Field, Select } from '../../../form/index.js';
 import { NodeClassStyleRow } from './NodeClassStyleRow.js';
-import { StyleNameEditor } from './StyleNameEditor.js';
+import { ClassNamesEditor } from './ClassNamesEditor.js';
 import { StyleRuleRow } from './StyleRuleRow.js';
 import './styles-panel.css';
 
@@ -86,21 +86,19 @@ export function StylesPanel({ session, snap }: { session: EditorSession; snap: E
     <div className="styles-panel" data-testid="styles-panel">
       {selectedNodeId && selectedClass ? (
         <section className="styles-class-name-section" aria-label="Selected CSS class">
-          <h3>Selected class</h3>
-          <StyleNameEditor
+          <h3>CSS classes</h3>
+          <ClassNamesEditor
             session={session}
             snap={snap}
             nodeId={selectedNodeId}
             className={selectedClass}
           />
           {activeVariant ? (
-            <p className="meta">
-              Class names are shared across variants. Switch to Base to rename.
-            </p>
+            <p className="meta">CSS classes are shared across variants. Switch to Base to edit.</p>
           ) : null}
         </section>
       ) : (
-        <p className="meta">Select a local layer to edit its readable class name.</p>
+        <p className="meta">Select a local layer to edit its CSS classes.</p>
       )}
 
       <div className="styles-edit-context">

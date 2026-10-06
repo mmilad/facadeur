@@ -33,6 +33,8 @@ export function EventBindingsEditorControl({
   onChangeBindings,
   validateBindings,
   allowIncomplete = false,
+  defaultNativeEvent = 'change',
+  embedded = false,
   onInvalid,
 }: {
   bindings: EventBinding[];
@@ -42,6 +44,8 @@ export function EventBindingsEditorControl({
   onChangeBindings: (bindings: EventBinding[]) => void;
   validateBindings?: (bindings: EventBinding[]) => string | null;
   allowIncomplete?: boolean;
+  defaultNativeEvent?: string;
+  embedded?: boolean;
   onInvalid?: (message: string) => void;
 }) {
   const [draftBindings, setDraftBindings] = useState<EventBinding[] | null>(null);
@@ -75,23 +79,29 @@ export function EventBindingsEditorControl({
           schemaCatalog={schemaCatalog}
           onChangeBindings={applyBindings}
           onInvalid={onInvalid}
+          embedded={embedded}
         />
       ))}
-      <button
-        type="button"
-        className="text-button"
-        name="add-event-binding"
-        disabled={events.length === 0}
-        onClick={() => {
-          const event = events[0];
-          if (event) {
-            const binding: EventBinding = { event: event.name, name: 'change' };
-            applyBindings([...workingBindings, withDefaultMappings(event, binding, schemaCatalog)]);
-          }
-        }}
-      >
-        Add event binding
-      </button>
+      {!embedded ? (
+        <button
+          type="button"
+          className="text-button"
+          name="add-event-binding"
+          disabled={events.length === 0}
+          onClick={() => {
+            const event = events[0];
+            if (event) {
+              const binding: EventBinding = { event: event.name, name: defaultNativeEvent };
+              applyBindings([
+                ...workingBindings,
+                withDefaultMappings(event, binding, schemaCatalog),
+              ]);
+            }
+          }}
+        >
+          Add event binding
+        </button>
+      ) : null}
       {draftBindings ? (
         <p className="meta" role="status">
           Finish the required data mappings in this draft to save the binding.
@@ -110,6 +120,7 @@ function EventBindingRow({
   schemaCatalog,
   onChangeBindings,
   onInvalid,
+  embedded,
 }: {
   binding: EventBinding;
   index: number;
@@ -119,6 +130,7 @@ function EventBindingRow({
   schemaCatalog?: SchemaCatalog;
   onChangeBindings: (bindings: EventBinding[]) => void;
   onInvalid?: (message: string) => void;
+  embedded: boolean;
 }) {
   const definition = events.find((event) => event.name === binding.event);
   const schema = definition ? eventDataSchema(definition, schemaCatalog) : undefined;
@@ -157,14 +169,16 @@ function EventBindingRow({
 
   return (
     <Stack gap={8} className="binding-row">
-      <Field label="Event">
-        <Select
-          name={`event-binding-event-${index}`}
-          value={binding.event}
-          options={events.map((event) => ({ value: event.name, label: event.name }))}
-          onCommit={changeEvent}
-        />
-      </Field>
+      {!embedded ? (
+        <Field label="Event">
+          <Select
+            name={`event-binding-event-${index}`}
+            value={binding.event}
+            options={events.map((event) => ({ value: event.name, label: event.name }))}
+            onCommit={changeEvent}
+          />
+        </Field>
+      ) : null}
       <Field label="Native event">
         <Select
           name={`event-binding-name-${index}`}
@@ -243,13 +257,13 @@ function EventBindingRow({
         </p>
       ) : null}
       <button type="button" className="text-button" onClick={() => commit(null)}>
-        Remove event binding
+        {embedded ? 'Remove target' : 'Remove event binding'}
       </button>
     </Stack>
   );
 }
 
-function withDefaultMappings(
+export function withDefaultMappings(
   event: EventDefinition,
   binding: EventBinding,
   catalog?: SchemaCatalog,

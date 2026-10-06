@@ -103,7 +103,9 @@ export function localContractFieldsFor(
     }
     return fields;
   }
-  if (!use.direct) return new Map();
+  if (!use.direct) {
+    return new Map((document.fields ?? []).map((field) => [field.name, field]));
+  }
   if (use.direct.kind === 'type') {
     const field = definitionFromSchema('value', { type: use.direct.type }, schemaCatalog);
     return field ? new Map([[field.name, field]]) : new Map();

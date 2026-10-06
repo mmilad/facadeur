@@ -9,7 +9,7 @@ import {
   validateDocumentFile,
   type DocumentFile,
 } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
+import { starterCatalog } from './starter-catalog.js';
 import type { ProjectStorage } from '../../contracts/management.js';
 import { reconcileLegacySchemaSnapshot } from '../../schema/reconcile.js';
 import type { SchemaLibraryState } from '../../schema/types.js';
@@ -133,7 +133,7 @@ async function readSource(source: string, storage?: ProjectStorage) {
   return readFile(filename, 'utf8');
 }
 
-/** Create an isolated project directory with the canonical design document. */
+/** Create an isolated project directory with editable atoms and a starter section. */
 export async function initializeProjectFiles(storage: ProjectStorage) {
   if (!storage.id || !storage.directory)
     throw new DomainError('invalid-input', 'Invalid project storage');
@@ -141,23 +141,7 @@ export async function initializeProjectFiles(storage: ProjectStorage) {
   // resulting directory again in assertStorageDirectory.
   await assertTrustedPath(storageDirectory(storage), true);
   const directory = await assertStorageDirectory(storage, true);
-  const design = { ...createProjectTemplateDocument(), schemaCatalog: { schemas: [] } };
-  const starter: DocumentFile = {
-    version: 1,
-    id: 'new-section',
-    name: 'New section',
-    kind: 'section',
-    root: {
-      id: 'root',
-      name: 'Frame',
-      type: 'frame',
-      children: [{ id: 'heading', type: 'text', text: 'Start building here' }],
-    },
-  };
-  for (const [source, document] of [
-    ['project-template.json', design],
-    ['new-section.json', starter],
-  ] as const) {
+  for (const { source, document } of starterCatalog()) {
     const filename = sourcePath(source, storage);
     try {
       await assertTrustedPath(filename);
@@ -168,6 +152,51 @@ export async function initializeProjectFiles(storage: ProjectStorage) {
     }
   }
   return { ...storage, directory };
+}
+
+/** Apply the form-atom catalog upgrade once; keep existing definitions and recovered drafts. */
+async function upgradeStarterAtoms(
+  storage: ProjectStorage,
+  files: Array<{ source: string; hash: string | null; document: DocumentFile }>,
+  unsavedIds: readonly string[],
+) {
+  const marker = path.join(storageDirectory(storage), '.facadeur', 'starter-version.json');
+  try {
+    await assertTrustedPath(marker);
+    const saved = JSON.parse(await readFile(marker, 'utf8')) as { version?: number };
+    if ((saved.version ?? 0) >= 3) return;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+  }
+  for (const { source, document } of starterCatalog()) {
+    if (document.group !== 'form') continue;
+    if (
+      files.some(
+        (entry) =>
+          entry.source === source ||
+          entry.document.id === document.id ||
+          (entry.document.slug ?? entry.document.id) === document.id,
+      )
+    )
+      continue;
+    const content = JSON.stringify(document, null, 2) + '\n';
+    await atomicWrite(sourcePath(source, storage), content);
+    files.push({ source, document, hash: hash(content) });
+  }
+  for (const entry of files) {
+    const document = entry.document;
+    if (document.kind !== 'atom' || document.group || unsavedIds.includes(document.id)) continue;
+    if (
+      document.root.type !== 'frame' ||
+      !['input', 'textarea', 'select'].includes(document.root.tag?.toLowerCase() ?? '')
+    )
+      continue;
+    document.group = 'form';
+    const content = JSON.stringify(document, null, 2) + '\n';
+    await atomicWrite(sourcePath(entry.source, storage), content);
+    entry.hash = hash(content);
+  }
+  await atomicWrite(marker, JSON.stringify({ version: 3 }) + '\n');
 }
 
 /** Read only exported JSON; no CRDT history or second runtime owns the project. */
@@ -197,6 +226,8 @@ export async function readProjectFiles(storage?: ProjectStorage): Promise<Projec
     else files.push({ document, source, hash: null });
     unsavedDocumentIds.push(document.id);
   }
+  if (storage && storage.id !== 'default')
+    await upgradeStarterAtoms(storage, files, unsavedDocumentIds);
   const designEntry = files.find((entry) => entry.source === 'project-template.json');
   if (!designEntry) throw new DomainError('invalid-input', 'Missing project-template.json');
   const documents = files.filter((entry) => entry !== designEntry).map((entry) => entry.document);

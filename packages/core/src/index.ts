@@ -234,3 +234,5 @@ export {
   assertValueMatches,
   type ValidateOptions,
 } from './controller/validation/index.js';
+
+export { fieldDataSchema } from './controller/validation/field-data-schema.js';

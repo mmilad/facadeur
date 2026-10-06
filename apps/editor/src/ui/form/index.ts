@@ -3,7 +3,14 @@ export type { FormChangeMeta, FormDensity, FormProps, FieldBinding } from './typ
 export type { SelectOption } from './types/options.js';
 export * from './schema/index.js';
 
-export { Stack, Inline, Grid, Section, Divider } from './components/layout/index.js';
+export {
+  Stack,
+  Inline,
+  Grid,
+  Section,
+  Divider,
+  DisclosureButton,
+} from './components/layout/index.js';
 export {
   TextInput,
   TextArea,
@@ -14,6 +21,7 @@ export {
 export {
   Select,
   Combobox,
+  ClassListInput,
   SegmentedControl,
   Checkbox,
   Toggle,

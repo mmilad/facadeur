@@ -1,6 +1,17 @@
 import { expect, it } from 'vitest';
 import type { Command } from '@facadeur/core';
 import { assertCommand } from '../src/project/validation';
+it('validates editable document metadata before dispatching to Core', () => {
+  expect(() =>
+    assertCommand({ type: 'setDocumentMetadata', name: 'Button', slug: 'action' }),
+  ).not.toThrow();
+  expect(() =>
+    assertCommand({ type: 'setDocumentMetadata', name: 'Button' } as unknown as Command),
+  ).toThrow('requires slug');
+  expect(() =>
+    assertCommand({ type: 'setDocumentMetadata', name: 'Button', slug: 42 } as unknown as Command),
+  ).toThrow('must be a string');
+});
 it('validates each nested batch command before execution', () => {
   expect(() =>
     assertCommand({

@@ -26,7 +26,7 @@ Every project request checks the session and current organisation membership on 
 
 ## Storage and explicit saves
 
-Use Node.js 22.13 or later for built-in SQLite support. `FACADEUR_MANAGEMENT_DIR` sets the metadata/storage directory, defaulting to `.facadeur` under the editor process's working directory (`apps/editor/.facadeur` with `pnpm dev`). It contains `management.sqlite` and `projects/<projectId>/`. New projects start with independent design settings and a starter section. Their recovery file is scoped to the project directory.
+Use Node.js 22.13 or later for built-in SQLite support. `FACADEUR_MANAGEMENT_DIR` sets the metadata/storage directory, defaulting to `.facadeur` under the editor process's working directory (`apps/editor/.facadeur` with `pnpm dev`). It contains `management.sqlite` and `projects/<projectId>/`. New projects start with independent design settings, editable copies of Button, Link, Input, Textarea, Select, Checkbox and Radio, and a starter section. Input controls start in the Form group. Existing managed projects receive the additional atoms once, preserving edited definitions, custom groups and recovered drafts. Their recovery file is scoped to the project directory.
 
 Databases from the earlier auth implementation migrate membership references from `user` to
 `mock_users` automatically. Existing identities are matched by normalized email; membership IDs,
@@ -41,3 +41,8 @@ Editing stays in the browser until Save. Export JSON remains a browser download.
 During the Yjs removal, 13 unsaved documents (including new-atom) were recovered into ignored `.facadeur/editor-recovery.json`. GET overlays these drafts onto unchanged source files and marks them unsaved. Save removes only the successfully exported draft from recovery. `.facadeur/yjs-retirement-snapshot.json` preserves the full prior catalog; original durable Yjs data is untouched. A conflicting source is reported instead of silently overriding either version.
 
 Discarding an in-memory session does not delete source files or recovered drafts. The former server and sync adapter remain outside the editor runtime as reference code; see [the legacy API](project-api-yjs-legacy.md).
+Radio group and Checkbox group components also start under Form. Their options arrays contain
+label, value and disabled fields, with an optional checked flag for initial selection; labeled
+option components compose the existing single-input atoms. The editor uses structured rows for
+declared arrays and objects in content, overrides and schema defaults, with advanced JSON kept
+as an optional fallback.

@@ -184,6 +184,8 @@ function schemaForLegacyField(field: FieldDefinition): JsonSchema {
 // whose absent payload would otherwise be interpreted as a reset/no-op.
 const required: Record<Command['type'], readonly string[]> = {
   batch: ['commands'],
+  setDocumentMetadata: ['name', 'slug'],
+  setDocumentGroup: ['group'],
   insert: ['parentId', 'node'],
   remove: ['nodeId'],
   move: ['nodeId', 'parentId', 'index'],
@@ -248,7 +250,17 @@ function assertNestedCommand(value: unknown, depth: number): void {
     }
     for (const item of command.commands) assertNestedCommand(item, depth + 1);
   }
-  for (const key of ['nodeId', 'parentId', 'name', 'path', 'prop', 'property', 'id', 'label']) {
+  for (const key of [
+    'nodeId',
+    'parentId',
+    'name',
+    'path',
+    'prop',
+    'property',
+    'id',
+    'label',
+    'slug',
+  ]) {
     if (
       Object.hasOwn(command, key) &&
       typeof (command as unknown as Record<string, unknown>)[key] !== 'string'

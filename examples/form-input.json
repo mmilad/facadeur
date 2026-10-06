@@ -142,5 +142,6 @@
       "type": "dimension",
       "value": "{radius.sm}"
     }
-  }
+  },
+  "group": "form"
 }
