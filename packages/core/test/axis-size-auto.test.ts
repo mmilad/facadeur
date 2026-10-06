@@ -54,4 +54,8 @@ it('retains size validation and rejects a fixed size on auto', () => {
   expect(() => parseLayout({ width: { mode: 'auto', size: 100 } })).toThrow(/auto cannot set size/);
   expect(() => parseLayout({ height: { mode: 'auto', min: 0 } })).toThrow(/positive number/);
   expect(() => parseLayout({ width: { mode: 'fixed' } })).toThrow(/needs a size/);
+  expect(parseLayout({ margin: { top: 'auto' } })).toEqual({ margin: { top: 'auto' } });
+  expect(parseLayout({ margin: 'auto' })).toEqual({ margin: 'auto' });
+  expect(() => parseLayout({ margin: { top: '16px' } })).toThrow(/token reference/);
+  expect(() => parseLayout({ padding: { top: 'auto' } })).toThrow(/token reference/);
 });

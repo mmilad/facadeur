@@ -82,6 +82,17 @@ it.each([false, true])(
       name: 'New studio',
     });
     expect(result.snapshot.organisations).toHaveLength(2);
+    expect(result.snapshot.projects.some((project) => project.organisationId === 'legacy-org')).toBe(
+      false,
+    );
+    expect(
+      result.snapshot.projects.some(
+        (project) =>
+          project.organisationId ===
+          result.snapshot.organisations.find((organisation) => organisation.name === 'New studio')
+            ?.id,
+      ),
+    ).toBe(true);
     const created = await apiController.workspace.command(user, {
       type: 'createProject',
       organisationId: 'legacy-org',

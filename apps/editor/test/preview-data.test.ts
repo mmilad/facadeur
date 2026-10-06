@@ -35,7 +35,7 @@ describe('preview data', () => {
     const migrated = migratePreviewData(source);
 
     expect(source.fields?.[0]).toHaveProperty('default', 'Legacy label');
-    expect(migrated.fields?.[0]).not.toHaveProperty('default');
+    expect(migrated.fields?.[0]).toHaveProperty('default', 'Legacy label');
     expect(migrated.previewData).toEqual({
       fields: { label: 'Legacy label' },
       variants: { compact: { label: 'Compact label' } },

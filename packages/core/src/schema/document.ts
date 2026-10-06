@@ -40,6 +40,8 @@ import {
   layoutOverrideSchema,
   layoutSchema,
   sizeValueSchema,
+  marginBoxSchema,
+  marginSchema,
   spacingBoxSchema,
   spacingSchema,
   tokenPathSchema,
@@ -107,6 +109,8 @@ export {
   variantAxisSchema,
   tokenRefSchema,
   tokenPathSchema,
+  marginBoxSchema,
+  marginSchema,
   spacingBoxSchema,
   spacingSchema,
   sizeValueSchema,
@@ -224,6 +228,8 @@ export type AxisSize = Static<typeof axisSizeSchema>;
 export type SizeValue = Static<typeof sizeValueSchema>;
 export type Spacing = Static<typeof spacingSchema>;
 export type SpacingBox = Static<typeof spacingBoxSchema>;
+export type Margin = Static<typeof marginSchema>;
+export type MarginBox = Static<typeof marginBoxSchema>;
 export type StyleDeclarations = Record<string, string>;
 export type StyleStates = Static<typeof styleStatesSchema>;
 export type StyleLayer = Static<typeof styleLayerSchema>;

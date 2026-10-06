@@ -79,16 +79,30 @@ export function validateCatalog(
   };
   const catalogOptions = catalogValidateOptions(byId);
   for (const document of documents) {
-    const flat = toFlat(document);
-    validateDefinitions(flat, resolverContext);
-    validateLibraries(flat, catalogOptions);
-    validateTree(flat, catalogOptions);
-    validateExposedContracts(document, byId, schemaCatalog);
-    validateDataContracts(flat, resolverContext);
-    validateVariantContracts(document, byId, resolverContext);
-    validateInstanceOverrides(flat, byId, resolverContext);
+    try {
+      const flat = toFlat(document);
+      validateDefinitions(flat, resolverContext);
+      validateLibraries(flat, catalogOptions);
+      validateTree(flat, catalogOptions);
+      validateExposedContracts(document, byId, schemaCatalog);
+      validateDataContracts(flat, resolverContext);
+      validateVariantContracts(document, byId, resolverContext);
+      validateInstanceOverrides(flat, byId, resolverContext);
+    } catch (error) {
+      annotateCatalogValidationError(document.id, error);
+    }
   }
   return documents;
+}
+
+function annotateCatalogValidationError(documentId: string, error: unknown): never {
+  if (error instanceof DocumentError) {
+    const prefix = `Document "${documentId}": `;
+    if (!error.message.startsWith(prefix)) {
+      throw new DocumentError(error.code, prefix + error.message);
+    }
+  }
+  throw error;
 }
 
 function validateSchemaCatalogUse(

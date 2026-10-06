@@ -1,20 +1,15 @@
 import { validateDocumentFile, type DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import button from '../../../../../examples/button.json';
-import input from '../../../../../examples/form-input.json';
 import link from '../../../../../examples/link.json';
+import image from '../../../../../examples/atoms/image.json';
+import textHeading from '../../../../../examples/atoms/text-heading.json';
+import textBody from '../../../../../examples/atoms/text-body.json';
+import contentCard from '../../../../../examples/components/content-card.json';
+import fullbleedTeaser from '../../../../../examples/components/fullbleed-teaser.json';
 
-import textarea from '../../../../../examples/atoms/form-textarea.json';
-import select from '../../../../../examples/atoms/form-native-select.json';
-import checkbox from '../../../../../examples/atoms/form-checkbox.json';
-import radio from '../../../../../examples/atoms/form-radio.json';
-import radioOption from '../../../../../examples/components/form-radio-option.json';
-import radioGroup from '../../../../../examples/components/form-radio-group.json';
-import checkboxOption from '../../../../../examples/components/form-checkbox-option.json';
-import checkboxGroup from '../../../../../examples/components/form-checkbox-group.json';
-
-const atoms = [button, input, link, textarea, select, checkbox, radio];
-const components = [radioOption, radioGroup, checkboxOption, checkboxGroup];
+const atoms = [button, link, image, textHeading, textBody];
+const components = [contentCard, fullbleedTeaser];
 
 /** Each project receives its own editable copies of the built-in atom definitions. */
 export function starterCatalog() {

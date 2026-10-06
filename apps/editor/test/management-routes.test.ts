@@ -77,15 +77,12 @@ describe('self-hosted management backend', () => {
     expect((await signedIn.json()).user.email).toBe('owner@example.test');
     const createdOrg = await command(ownerCookie, { type: 'createOrganisation', name: 'Studio' });
     expect(createdOrg.status).toBe(200);
-    const orgId = (await createdOrg.json()).snapshot.organisations[0].id as string;
-
-    const createdProject = await command(ownerCookie, {
-      type: 'createProject',
-      organisationId: orgId,
-      name: 'Landing page',
-    });
-    expect(createdProject.status).toBe(200);
-    const projectId = (await createdProject.json()).projectId as string;
+    const createdOrgBody = await createdOrg.json();
+    const orgId = createdOrgBody.snapshot.organisations[0].id as string;
+    const projectId = createdOrgBody.projectId as string;
+    expect(createdOrgBody.snapshot.projects).toEqual([
+      expect.objectContaining({ name: 'Default', organisationId: orgId }),
+    ]);
     const genericProject = await genericProjectGet(
       request(`/api/projects/${projectId}`, ownerCookie),
       { params: Promise.resolve({ projectId }) },

@@ -330,7 +330,9 @@ describe('component contracts', () => {
       },
     };
 
-    expect(() => validateCatalog([owner, target])).toThrow(/may be undefined/);
+    expect(() => validateCatalog([owner, target])).toThrow(
+      /Document "optional-owner".*may be undefined/,
+    );
   });
 
   it('requires every required instance field and allows static preview overrides alongside bindings', () => {

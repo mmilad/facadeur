@@ -4,10 +4,13 @@ import type {
   AxisSize,
   Layout,
   LayoutOverride,
+  Margin,
   SizeValue,
   Spacing,
   SpacingBox,
 } from '../../schema/document.js';
+
+const MARGIN_SIDE_KEYWORDS = new Set(['auto']);
 
 const TOKEN_REF = /^\{[a-z][a-z0-9]*(?:\.[a-z0-9]+)+\}$/;
 const BREAKPOINT_ID = /^[a-z][a-z0-9]*$/;
@@ -88,7 +91,7 @@ function parseOverride(value: Record<string, unknown>, label: string) {
   }
   if (value.gap !== undefined) layout.gap = parseTokenRef(value.gap, `${label} gap`);
   if (value.padding !== undefined) layout.padding = parseSpacing(value.padding, `${label} padding`);
-  if (value.margin !== undefined) layout.margin = parseSpacing(value.margin, `${label} margin`);
+  if (value.margin !== undefined) layout.margin = parseMargin(value.margin, `${label} margin`);
   if (value.justify !== undefined) {
     if (typeof value.justify !== 'string' || !JUSTIFY.has(value.justify)) {
       throw new DocumentError('schema', `${label} justify is invalid`);
@@ -195,6 +198,29 @@ function parseSpacing(value: unknown, label: string) {
   return box;
 }
 
+function parseMargin(value: unknown, label: string) {
+  if (typeof value === 'string') return parseMarginSide(value, label);
+  if (!isRecord(value)) {
+    throw new DocumentError('schema', `${label} must be a token, auto, or a box`);
+  }
+  const box: NonNullable<Extract<Margin, object>> = {};
+  for (const side of ['top', 'right', 'bottom', 'left'] as const) {
+    if (value[side] !== undefined) box[side] = parseMarginSide(value[side], `${label} ${side}`);
+  }
+  if (!Object.keys(box).length) throw new DocumentError('schema', `${label} box is empty`);
+  for (const key of Object.keys(value)) {
+    if (key !== 'top' && key !== 'right' && key !== 'bottom' && key !== 'left') {
+      throw new DocumentError('schema', `${label} has unknown side "${key}"`);
+    }
+  }
+  return box;
+}
+
+function parseMarginSide(value: unknown, label: string) {
+  if (typeof value === 'string' && MARGIN_SIDE_KEYWORDS.has(value)) return value;
+  return parseTokenRef(value, label);
+}
+
 function parseTokenRef(value: unknown, label: string) {
   if (typeof value !== 'string' || !TOKEN_REF.test(value)) {
     throw new DocumentError('schema', `${label} must be a token reference like {space.4}`);
@@ -205,7 +231,7 @@ function parseTokenRef(value: unknown, label: string) {
 function refsInOverride(layout: LayoutOverride) {
   const refs: string[] = [];
   if (layout.gap) refs.push(tokenPath(layout.gap));
-  refs.push(...spacingPaths(layout.padding), ...spacingPaths(layout.margin));
+  refs.push(...spacingPaths(layout.padding), ...marginPaths(layout.margin));
   refs.push(...axisPaths(layout.width), ...axisPaths(layout.height));
   return refs;
 }
@@ -216,6 +242,16 @@ function spacingPaths(spacing: Spacing | undefined) {
   return (['top', 'right', 'bottom', 'left'] as const).flatMap((side) => {
     const value = spacing[side];
     return value ? [tokenPath(value)] : [];
+  });
+}
+
+function marginPaths(margin: Margin | undefined) {
+  if (!margin) return [];
+  if (typeof margin === 'string') return margin === 'auto' ? [] : [tokenPath(margin)];
+  return (['top', 'right', 'bottom', 'left'] as const).flatMap((side) => {
+    const value = margin[side];
+    if (!value || value === 'auto') return [];
+    return [tokenPath(value)];
   });
 }
 

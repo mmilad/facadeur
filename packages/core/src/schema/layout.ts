@@ -23,6 +23,18 @@ export const spacingBoxSchema = Type.Object(
 
 export const spacingSchema = Type.Union([tokenRefSchema, spacingBoxSchema]);
 
+export const marginSideSchema = Type.Union([tokenRefSchema, Type.Literal('auto')]);
+export const marginBoxSchema = Type.Object(
+  {
+    top: Type.Optional(marginSideSchema),
+    right: Type.Optional(marginSideSchema),
+    bottom: Type.Optional(marginSideSchema),
+    left: Type.Optional(marginSideSchema),
+  },
+  { additionalProperties: false },
+);
+export const marginSchema = Type.Union([marginSideSchema, marginBoxSchema]);
+
 export const sizeValueSchema = Type.Union([
   Type.Number({ exclusiveMinimum: 0 }),
   tokenRefSchema,
@@ -59,7 +71,7 @@ const layoutFields = {
   direction: Type.Optional(Type.Union([Type.Literal('row'), Type.Literal('column')])),
   gap: Type.Optional(tokenRefSchema),
   padding: Type.Optional(spacingSchema),
-  margin: Type.Optional(spacingSchema),
+  margin: Type.Optional(marginSchema),
   justify: Type.Optional(
     Type.Union([
       Type.Literal('start'),

@@ -91,6 +91,17 @@ async function readRecovery(storage?: ProjectStorage): Promise<RecoveredProject 
   }
 }
 
+async function writeRecovery(storage: ProjectStorage | undefined, recovery: RecoveredProject | null) {
+  const filename = recoveryFilename(storage);
+  if (!recovery?.documents.length) {
+    await unlink(filename).catch((error: NodeJS.ErrnoException) => {
+      if (error.code !== 'ENOENT') throw error;
+    });
+    return;
+  }
+  await atomicWrite(filename, JSON.stringify(recovery, null, 2) + '\n');
+}
+
 async function atomicWrite(filename: string, content: string) {
   const parent = path.dirname(filename);
   await assertTrustedPath(parent, true);
@@ -154,53 +165,115 @@ export async function initializeProjectFiles(storage: ProjectStorage) {
   return { ...storage, directory };
 }
 
-/** Apply the form-atom catalog upgrade once; keep existing definitions and recovered drafts. */
+const CONTENT_STARTER_IDS = new Set([
+  'text-heading',
+  'text-body',
+  'content-card',
+  'fullbleed-teaser',
+]);
+
+async function readStarterVersion(marker: string) {
+  try {
+    await assertTrustedPath(marker);
+    const saved = JSON.parse(await readFile(marker, 'utf8')) as { version?: number };
+    return saved.version ?? 0;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+    return 0;
+  }
+}
+
+/** Apply starter catalog upgrades once; keep existing definitions and recovered drafts. */
 async function upgradeStarterAtoms(
   storage: ProjectStorage,
   files: Array<{ source: string; hash: string | null; document: DocumentFile }>,
   unsavedIds: readonly string[],
 ) {
   const marker = path.join(storageDirectory(storage), '.facadeur', 'starter-version.json');
-  try {
-    await assertTrustedPath(marker);
-    const saved = JSON.parse(await readFile(marker, 'utf8')) as { version?: number };
-    if ((saved.version ?? 0) >= 3) return;
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
-  }
-  for (const { source, document } of starterCatalog()) {
-    if (document.group !== 'form') continue;
-    if (
-      files.some(
-        (entry) =>
-          entry.source === source ||
-          entry.document.id === document.id ||
-          (entry.document.slug ?? entry.document.id) === document.id,
+  let version = await readStarterVersion(marker);
+  if (version >= 5) return;
+
+  if (version < 3) {
+    for (const { source, document } of starterCatalog()) {
+      if (document.group !== 'form') continue;
+      if (
+        files.some(
+          (entry) =>
+            entry.source === source ||
+            entry.document.id === document.id ||
+            (entry.document.slug ?? entry.document.id) === document.id,
+        )
       )
-    )
-      continue;
-    const content = JSON.stringify(document, null, 2) + '\n';
-    await atomicWrite(sourcePath(source, storage), content);
-    files.push({ source, document, hash: hash(content) });
+        continue;
+      const content = JSON.stringify(document, null, 2) + '\n';
+      await atomicWrite(sourcePath(source, storage), content);
+      files.push({ source, document, hash: hash(content) });
+    }
+    for (const entry of files) {
+      const document = entry.document;
+      if (document.kind !== 'atom' || document.group || unsavedIds.includes(document.id)) continue;
+      if (
+        document.root.type !== 'frame' ||
+        !['input', 'textarea', 'select'].includes(document.root.tag?.toLowerCase() ?? '')
+      )
+        continue;
+      document.group = 'form';
+      const content = JSON.stringify(document, null, 2) + '\n';
+      await atomicWrite(sourcePath(entry.source, storage), content);
+      entry.hash = hash(content);
+    }
+    version = 3;
   }
-  for (const entry of files) {
-    const document = entry.document;
-    if (document.kind !== 'atom' || document.group || unsavedIds.includes(document.id)) continue;
-    if (
-      document.root.type !== 'frame' ||
-      !['input', 'textarea', 'select'].includes(document.root.tag?.toLowerCase() ?? '')
-    )
-      continue;
-    document.group = 'form';
-    const content = JSON.stringify(document, null, 2) + '\n';
-    await atomicWrite(sourcePath(entry.source, storage), content);
-    entry.hash = hash(content);
+
+  if (version < 4) {
+    for (const { source, document } of starterCatalog()) {
+      if (!CONTENT_STARTER_IDS.has(document.id)) continue;
+      const entry = files.find(
+        (item) =>
+          item.source === source ||
+          item.document.id === document.id ||
+          (item.document.slug ?? item.document.id) === document.id,
+      );
+      if (!entry || unsavedIds.includes(document.id)) continue;
+      const content = JSON.stringify(document, null, 2) + '\n';
+      await atomicWrite(sourcePath(source, storage), content);
+      entry.document = document;
+      entry.hash = hash(content);
+    }
+    version = 4;
   }
-  await atomicWrite(marker, JSON.stringify({ version: 3 }) + '\n');
+
+  if (version < 5) {
+    for (const { source, document } of starterCatalog()) {
+      if (!CONTENT_STARTER_IDS.has(document.id)) continue;
+      const entry = files.find(
+        (item) =>
+          item.source === source ||
+          item.document.id === document.id ||
+          (item.document.slug ?? item.document.id) === document.id,
+      );
+      if (!entry) continue;
+      const content = JSON.stringify(document, null, 2) + '\n';
+      await atomicWrite(sourcePath(source, storage), content);
+      entry.document = document;
+      entry.hash = hash(content);
+    }
+    version = 5;
+  }
+
+  await atomicWrite(marker, JSON.stringify({ version }) + '\n');
 }
 
 /** Read only exported JSON; no CRDT history or second runtime owns the project. */
 export async function readProjectFiles(storage?: ProjectStorage): Promise<ProjectSnapshot> {
+  if (storage?.id && storage.id !== 'default') {
+    try {
+      await lstat(storageDirectory(storage));
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+      await initializeProjectFiles(storage);
+    }
+  }
   const directory = await assertStorageDirectory(storage);
   const filenames = (await readdir(directory))
     .filter((name) => name.endsWith('.json') && name !== 'schemas.json')
@@ -214,17 +287,29 @@ export async function readProjectFiles(storage?: ProjectStorage): Promise<Projec
     );
   const recovery = await readRecovery(storage);
   const unsavedDocumentIds: string[] = [];
+  const retainedRecovery: RecoveredProject = { documents: [], sources: {}, sourceHashes: {} };
   for (const recovered of recovery?.documents ?? []) {
     const document = validateDocumentFile(recovered);
-    const source = recovery!.sources[document.id]!;
+    const source = recovery!.sources[document.id];
+    if (!source) continue;
     sourcePath(source, storage);
     const current = files.find((entry) => entry.document.id === document.id);
-    if ((current?.hash ?? null) !== recovery!.sourceHashes[document.id]) {
-      throw new DomainError('conflict', 'Recovered draft conflicts with changed source: ' + source);
-    }
+    if ((current?.hash ?? null) !== recovery!.sourceHashes[document.id]) continue;
     if (current) current.document = document;
     else files.push({ document, source, hash: null });
     unsavedDocumentIds.push(document.id);
+    retainedRecovery.documents.push(document);
+    retainedRecovery.sources[document.id] = source;
+    retainedRecovery.sourceHashes[document.id] = recovery!.sourceHashes[document.id] ?? null;
+  }
+  if (
+    recovery &&
+    (retainedRecovery.documents.length !== recovery.documents.length ||
+      retainedRecovery.documents.some(
+        (document, index) => document.id !== recovery.documents[index]?.id,
+      ))
+  ) {
+    await writeRecovery(storage, retainedRecovery);
   }
   if (storage && storage.id !== 'default')
     await upgradeStarterAtoms(storage, files, unsavedDocumentIds);

@@ -178,7 +178,7 @@ describe('project JSON persistence', () => {
     expect(recovery.sourceHashes).toEqual({ 'new-card': null });
   });
 
-  it('rejects recovery after external source changes without discarding the draft', async () => {
+  it('drops stale recovery drafts when the on-disk source changed', async () => {
     const recoveryDirectory = join(workspace, '.facadeur');
     await mkdir(recoveryDirectory);
     const draft = JSON.stringify({
@@ -187,11 +187,11 @@ describe('project JSON persistence', () => {
       sourceHashes: { card: hash(JSON.stringify(card)) },
     });
     await writeFile(join(recoveryDirectory, 'editor-recovery.json'), draft);
-    await writeFile(
-      join(directory, 'actual-card.json'),
-      JSON.stringify({ ...card, name: 'External edit' }),
-    );
-    await expect(readProjectFiles()).rejects.toMatchObject({ code: 'conflict' });
-    expect(await readFile(join(recoveryDirectory, 'editor-recovery.json'), 'utf8')).toBe(draft);
+    const external = { ...card, name: 'External edit' };
+    await writeFile(join(directory, 'actual-card.json'), JSON.stringify(external));
+    const project = await readProjectFiles();
+    expect(project.documents).toContainEqual(external);
+    expect(project.unsavedDocumentIds).toEqual([]);
+    await expect(readFile(join(recoveryDirectory, 'editor-recovery.json'), 'utf8')).rejects.toThrow();
   });
 });

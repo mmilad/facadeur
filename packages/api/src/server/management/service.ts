@@ -1,4 +1,5 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
+import type { DatabaseSync } from 'node:sqlite';
 import type {
   ManagementCommand,
   ManagementResult,
@@ -20,6 +21,21 @@ const nameValue = (value: unknown, label: string) => {
   return value.trim();
 };
 const roles = ['owner', 'admin', 'editor', 'viewer'] as const;
+const defaultProjectName = 'Default';
+
+async function insertManagedProject(
+  db: DatabaseSync,
+  organisationId: string,
+  name: string,
+): Promise<string> {
+  const projectId = id();
+  const directory = managementProjectDirectory(projectId);
+  await initializeProjectFiles({ id: projectId, directory });
+  db.prepare(
+    'INSERT INTO management_projects (id,organisation_id,name,storage_directory,created_at) VALUES (?,?,?,?,?)',
+  ).run(projectId, organisationId, name, directory, now());
+  return projectId;
+}
 
 export async function workspaceSnapshot(user: AuthUser | null): Promise<ManagementSnapshot> {
   if (!user) throw new DomainError('unauthenticated', 'Sign in required');
@@ -162,17 +178,19 @@ export async function runManagementCommand(
   switch (command.type) {
     case 'createOrganisation': {
       const name = nameValue(command.name, 'Organisation name');
+      let organisationId = '';
       transaction(db, () => {
-        const orgId = id();
+        organisationId = id();
         db.prepare('INSERT INTO organisations (id,name,created_at) VALUES (?,?,?)').run(
-          orgId,
+          organisationId,
           name,
           now(),
         );
         db.prepare(
           'INSERT INTO organisation_members (id,organisation_id,user_id,role,created_at) VALUES (?,?,?,?,?)',
-        ).run(id(), orgId, user.id, 'owner', now());
+        ).run(id(), organisationId, user.id, 'owner', now());
       });
+      projectId = await insertManagedProject(db, organisationId, defaultProjectName);
       break;
     }
     case 'renameOrganisation': {
@@ -203,13 +221,7 @@ export async function runManagementCommand(
     case 'createProject': {
       const name = nameValue(command.name, 'Project name');
       requireOrganisationRole(db, user.id, command.organisationId, ['owner', 'admin']);
-      projectId = id();
-      const directory = managementProjectDirectory(projectId);
-      const storage = { id: projectId, directory };
-      await initializeProjectFiles(storage);
-      db.prepare(
-        'INSERT INTO management_projects (id,organisation_id,name,storage_directory,created_at) VALUES (?,?,?,?,?)',
-      ).run(projectId, command.organisationId, name, directory, now());
+      projectId = await insertManagedProject(db, command.organisationId, name);
       break;
     }
     case 'renameProject': {

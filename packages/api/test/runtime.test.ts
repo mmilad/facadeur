@@ -29,4 +29,8 @@ it('retries database startup after a broken file is repaired and closes the fail
     name: 'Studio',
   });
   expect(result.snapshot.organisations[0]?.name).toBe('Studio');
+  expect(result.snapshot.projects).toEqual([
+    expect.objectContaining({ name: 'Default' }),
+  ]);
+  expect(result.projectId).toBeTruthy();
 });

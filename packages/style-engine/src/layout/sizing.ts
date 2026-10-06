@@ -1,16 +1,24 @@
-import type { AxisSize, SizeValue, Spacing } from '@facadeur/core';
+import type { AxisSize, Margin, SizeValue, Spacing } from '@facadeur/core';
 import type { SubstituteContext } from '../css/types';
 import { substituteRefs } from '../css/values';
 export function spacingDeclarations(
   property: 'padding' | 'margin',
-  value: Spacing,
+  value: Spacing | Margin,
   context?: SubstituteContext,
 ): [string, string][] {
-  if (typeof value === 'string') return [[property, substituteRefs(value, context)]];
+  if (typeof value === 'string') {
+    return [[property, formatSpacingSide(value, context)]];
+  }
   return (['top', 'right', 'bottom', 'left'] as const).flatMap((side) => {
     const item = value[side];
-    return item ? [[`${property}-${side}`, substituteRefs(item, context)] as [string, string]] : [];
+    return item
+      ? [[`${property}-${side}`, formatSpacingSide(item, context)] as [string, string]]
+      : [];
   });
+}
+
+function formatSpacingSide(value: string, context?: SubstituteContext) {
+  return value === 'auto' ? 'auto' : substituteRefs(value, context);
 }
 
 export function axisDeclarations(

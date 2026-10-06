@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "id": "image",
+  "name": "Image",
+  "kind": "atom",
+  "group": "media",
+  "fields": [
+    {
+      "name": "src",
+      "type": "image",
+      "required": true
+    },
+    {
+      "name": "alt",
+      "type": "text"
+    },
+    {
+      "name": "aspectRatio",
+      "type": "text"
+    }
+  ],
+  "previewData": {
+    "fields": {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='450'%3E%3Crect fill='%23dbeafe' width='800' height='450'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%232563eb' font-family='system-ui' font-size='28'%3EImage%3C/text%3E%3C/svg%3E",
+      "alt": "Placeholder illustration",
+      "aspectRatio": "16 / 9"
+    }
+  },
+  "tokenInterface": {
+    "reads": ["radius.md", "space.0"]
+  },
+  "styles": {
+    "declarations": {
+      "display": "block",
+      "objectFit": "cover",
+      "width": "100%",
+      "maxWidth": "100%"
+    }
+  },
+  "root": {
+    "id": "root",
+    "name": "Image",
+    "type": "image",
+    "tag": "img",
+    "layout": {
+      "width": {
+        "mode": "fill"
+      },
+      "height": {
+        "mode": "hug"
+      }
+    },
+    "bindings": [
+      {
+        "field": "src",
+        "target": "src"
+      },
+      {
+        "field": "alt",
+        "target": "alt"
+      },
+      {
+        "field": "aspectRatio",
+        "target": "style",
+        "name": "aspect-ratio"
+      }
+    ]
+  }
+}

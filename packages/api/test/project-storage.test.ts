@@ -52,34 +52,31 @@ afterEach(async () => {
 
 describe('project storage isolation', () => {
   it('upgrades older starter catalogs once while preserving edits and custom groups', async () => {
-    for (const id of ['form-textarea', 'form-native-select', 'form-checkbox', 'form-radio']) {
+    for (const id of ['content-card', 'fullbleed-teaser']) {
       await unlink(join(first.directory, `${id}.json`));
     }
-    const input = JSON.parse(
-      await readFile(join(first.directory, 'form-input.json'), 'utf8'),
+    const imageAtom = JSON.parse(
+      await readFile(join(first.directory, 'image.json'), 'utf8'),
     ) as DocumentFile;
-    delete input.group;
-    input.name = 'Edited input';
-    await writeFile(join(first.directory, 'form-input.json'), JSON.stringify(input));
+    delete imageAtom.group;
+    imageAtom.name = 'Edited image';
+    await writeFile(join(first.directory, 'image.json'), JSON.stringify(imageAtom));
     const button = JSON.parse(
       await readFile(join(first.directory, 'button.json'), 'utf8'),
     ) as DocumentFile;
     button.group = 'My actions';
     await writeFile(join(first.directory, 'button.json'), JSON.stringify(button));
     const snapshot = await readProjectFiles(first);
-    expect(snapshot.documents.find((document) => document.id === input.id)).toEqual({
-      ...input,
-      group: 'form',
-    });
+    expect(snapshot.documents.find((document) => document.id === imageAtom.id)).toEqual(imageAtom);
     expect(snapshot.documents.find((document) => document.id === button.id)).toEqual(button);
     expect(
       snapshot.documents.filter(
-        (document) => document.group === 'form' && document.kind === 'atom',
+        (document) => document.group === 'content' && document.kind === 'atom',
       ),
-    ).toHaveLength(5);
-    await unlink(join(first.directory, 'form-textarea.json'));
+    ).toHaveLength(2);
+    await unlink(join(first.directory, 'text-body.json'));
     expect(
-      (await readProjectFiles(first)).documents.some((document) => document.id === 'form-textarea'),
+      (await readProjectFiles(first)).documents.some((document) => document.id === 'text-body'),
     ).toBe(false);
   });
   it('loads and saves documents with the same id independently', async () => {
@@ -186,13 +183,11 @@ describe('project storage isolation', () => {
         .sort(),
     ).toEqual([
       'button',
-      'form-checkbox',
-      'form-input',
-      'form-native-select',
-      'form-radio',
-      'form-textarea',
+      'image',
       'link',
       'shared-card',
+      'text-body',
+      'text-heading',
     ]);
     const button = snapshot.documents.find((document) => document.id === 'button')!;
     await writeFile(
@@ -211,5 +206,67 @@ describe('project storage isolation', () => {
     expect(
       (await readProjectFiles(second)).documents.find((document) => document.id === 'button')?.name,
     ).toBe('Button');
+  });
+
+  it('refreshes content starter documents when upgrading the starter catalog', async () => {
+    const cardPath = join(first.directory, 'content-card.json');
+    const card = JSON.parse(await readFile(cardPath, 'utf8')) as DocumentFile;
+    const body = card.fields?.find((field) => field.name === 'body');
+    if (body) delete body.default;
+    await writeFile(cardPath, JSON.stringify(card));
+    const starterMarkerDir = join(first.directory, '.facadeur');
+    await mkdir(starterMarkerDir, { recursive: true });
+    await writeFile(
+      join(starterMarkerDir, 'starter-version.json'),
+      JSON.stringify({ version: 3 }),
+    );
+
+    const snapshot = await readProjectFiles(first);
+    expect(
+      snapshot.documents
+        .find((document) => document.id === 'content-card')
+        ?.fields?.find((field) => field.name === 'body')?.default,
+    ).toBe('');
+    expect(
+      snapshot.documents
+        .find((document) => document.id === 'text-body')
+        ?.fields?.find((field) => field.name === 'text')?.default,
+    ).toBe('');
+  });
+
+  it('drops stale recovery drafts when starter sources change on disk', async () => {
+    const recoveryDir = join(first.directory, '.facadeur');
+    await mkdir(recoveryDir, { recursive: true });
+    const cardPath = join(first.directory, 'card.json');
+    const original = await readFile(cardPath, 'utf8');
+    await writeFile(
+      join(recoveryDir, 'editor-recovery.json'),
+      JSON.stringify({
+        documents: [{ ...card('Recovered draft') }],
+        sources: { 'shared-card': 'card.json' },
+        sourceHashes: { 'shared-card': hash(original) },
+      }),
+    );
+    await writeFile(cardPath, JSON.stringify(card('Changed on disk')));
+
+    const snapshot = await readProjectFiles(first);
+    expect(snapshot.documents.find((document) => document.id === 'shared-card')).toEqual(
+      card('Changed on disk'),
+    );
+    expect(snapshot.unsavedDocumentIds).not.toContain('shared-card');
+  });
+
+  it('materializes starter files when a managed project directory is missing on disk', async () => {
+    const directory = join(root, 'missing-on-disk');
+    const storage = { id: 'missing-on-disk', directory };
+    const snapshot = await readProjectFiles(storage);
+    expect(snapshot.id).toBe('missing-on-disk');
+    expect(snapshot.design.id).toBe('project-template');
+    expect(
+      snapshot.documents
+        .filter((document) => document.kind === 'atom')
+        .map((document) => document.id)
+        .sort(),
+    ).toEqual(['button', 'image', 'link', 'text-body', 'text-heading']);
   });
 });

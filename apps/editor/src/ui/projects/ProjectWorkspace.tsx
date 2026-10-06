@@ -67,7 +67,7 @@ export function ProjectWorkspace() {
         })
         .catch((failure: unknown) => {
           if (abort.signal.aborted) return;
-          logProjectFailure(failure, { phase: 'load' });
+          logProjectFailure(failure, { phase: 'load', projectId: projectId ?? undefined });
           setError(failure instanceof Error ? failure.message : 'Could not open project');
         })
         .finally(() => {

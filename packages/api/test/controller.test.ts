@@ -25,12 +25,11 @@ describe('application controller with data-only inputs', () => {
       type: 'createOrganisation',
       name: 'Studio',
     });
-    const created = await apiController.workspace.command(user, {
-      type: 'createProject',
-      organisationId: organisation.snapshot.organisations[0]!.id,
-      name: 'Website',
-    });
-    const project = await apiController.projects.load(user, created.projectId!);
+    expect(organisation.projectId).toBeTruthy();
+    expect(organisation.snapshot.projects).toEqual([
+      expect.objectContaining({ name: 'Default', organisationId: organisation.snapshot.organisations[0]!.id }),
+    ]);
+    const project = await apiController.projects.load(user, organisation.projectId!);
     expect(project.access).toEqual({ role: 'owner', canWrite: true });
     const document = project.documents[0]!;
     const input = {

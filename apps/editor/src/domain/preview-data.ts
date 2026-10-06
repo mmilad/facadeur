@@ -20,7 +20,6 @@ export function migratePreviewData(document: DocumentFile): DocumentFile {
     if (!Object.prototype.hasOwnProperty.call(fields, field.name)) {
       fields[field.name] = structuredClone(field.default);
     }
-    delete field.default;
   }
 
   const variants = { ...(preview.variants ?? {}) };
