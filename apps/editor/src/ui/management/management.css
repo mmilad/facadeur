@@ -1,0 +1,418 @@
+.management-page {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: clamp(22px, 4vw, 48px);
+  background: var(--paper);
+}
+
+.management-header,
+.management-section-heading,
+.management-actions,
+.management-project-row,
+.management-member-row,
+.project-workspace-bar,
+.project-workspace-context,
+.project-workspace-actions {
+  display: flex;
+  align-items: center;
+}
+
+.management-header,
+.management-section-heading,
+.management-project-row,
+.management-member-row,
+.project-workspace-bar {
+  justify-content: space-between;
+}
+
+.management-header {
+  gap: 20px;
+  max-width: 1040px;
+  margin: 0 auto 26px;
+}
+
+.management-header h1,
+.management-auth-card h1 {
+  margin: 2px 0 5px;
+  font-family: var(--serif);
+  font-size: clamp(28px, 4vw, 38px);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+
+.management-eyebrow {
+  margin: 0;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.management-subtitle {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.management-panel,
+.management-callout,
+.management-invitation-link,
+.management-message {
+  max-width: 1040px;
+  margin: 0 auto 16px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--white);
+}
+
+.management-panel {
+  padding: 20px;
+  box-shadow: 0 4px 18px rgb(57 40 24 / 3%);
+}
+
+.management-section-heading {
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.management-section-heading h2,
+.management-callout h2 {
+  margin: 2px 0 0;
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.management-org-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.management-org-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 155px;
+  padding: 10px 13px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--sidebar);
+  text-align: left;
+  cursor: pointer;
+}
+
+.management-org-choice.active {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.management-org-name,
+.management-project-name strong {
+  font-weight: 650;
+}
+
+.management-org-meta,
+.management-archived {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.management-project-list,
+.management-member-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.management-project-row,
+.management-member-row {
+  gap: 14px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+
+.management-project-name,
+.management-member-identity {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.management-member-identity span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+}
+
+.management-actions,
+.project-workspace-actions {
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.management-inline-form {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.management-inline-form label:first-child {
+  flex: 1;
+  min-width: 160px;
+}
+
+.management-inline-form input,
+.management-inline-form select,
+.management-role-control select,
+.management-invitation-link input,
+.management-auth-form input {
+  width: 100%;
+  min-height: 38px;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--sidebar);
+}
+
+.management-inline-form select,
+.management-role-control select {
+  width: auto;
+  min-width: 100px;
+}
+
+.management-button {
+  min-height: 34px;
+  padding: 6px 11px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--white);
+  color: var(--ink);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.management-button:hover:not(:disabled) {
+  border-color: var(--ink);
+}
+
+.management-button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.management-button.primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fffaf3;
+}
+
+.management-button.subtle {
+  background: transparent;
+}
+
+.management-button.danger {
+  color: #8d2f20;
+}
+
+.management-empty {
+  margin: 8px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.management-role {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
+.management-invitations {
+  margin-top: 18px;
+}
+
+.management-invitations h3 {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.management-callout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 16px 20px;
+  background: #f4e9d8;
+}
+
+.management-callout p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.management-message {
+  padding: 10px 14px;
+  color: #38533d;
+  font-size: 13px;
+}
+
+.management-message.error {
+  color: #8d2f20;
+  background: #fff7f4;
+}
+
+.management-invitation-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+}
+
+.management-invitation-link label {
+  flex: none;
+  font-weight: 650;
+}
+
+.management-auth-page {
+  display: grid;
+  flex: 1;
+  min-height: 0;
+  place-items: center;
+  overflow: auto;
+  padding: 24px;
+  background: var(--paper);
+}
+
+.management-auth-card {
+  width: min(100%, 430px);
+  padding: 34px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--white);
+  box-shadow: 0 14px 40px rgb(57 40 24 / 8%);
+}
+
+.management-auth-form {
+  display: grid;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.management-auth-form label {
+  margin-top: 7px;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.management-auth-form label span {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.management-auth-form .management-button {
+  min-height: 40px;
+  margin-top: 10px;
+}
+
+.management-dialog-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: auto;
+  padding: 24px;
+  background: rgb(28 25 21 / 42%);
+}
+
+.management-dialog {
+  width: min(100%, 520px);
+  max-height: min(85vh, 760px);
+  overflow: auto;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--white);
+  box-shadow: 0 24px 70px rgb(28 25 21 / 24%);
+}
+
+.project-workspace-bar {
+  gap: 18px;
+  min-height: 46px;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.project-workspace-context {
+  min-width: 0;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.project-workspace-context strong {
+  overflow: hidden;
+  color: var(--ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-workspace-role {
+  margin-left: 4px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #eee5d9;
+  font-size: 10px;
+  text-transform: capitalize;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+@media (max-width: 640px) {
+  .management-panel {
+    padding: 15px;
+  }
+
+  .management-section-heading,
+  .management-callout,
+  .project-workspace-bar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .management-project-row,
+  .management-member-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .management-inline-form,
+  .management-invitation-link {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .project-workspace-bar {
+    gap: 7px;
+  }
+}

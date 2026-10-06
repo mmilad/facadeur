@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
-import { readProjectFiles, saveProjectFile } from '../src/domain/project/files.js';
+import { readProjectFiles, saveProjectFile } from '@facadeur/api/server';
 import { connectProject } from '../src/domain/project/client.js';
 
 const card: DocumentFile = {
@@ -88,7 +88,7 @@ describe('project JSON persistence', () => {
         source: saved.source,
         expectedHash: project.hashes.card!,
       }),
-    ).rejects.toMatchObject({ status: 409 });
+    ).rejects.toMatchObject({ code: 'conflict' });
     expect((await readProjectFiles()).documents).toEqual([edited]);
     expect((await readdir(directory)).filter((name) => name.endsWith('.tmp'))).toEqual([]);
   });
@@ -101,7 +101,7 @@ describe('project JSON persistence', () => {
         source: 'actual-card.json',
         expectedHash: null,
       }),
-    ).rejects.toMatchObject({ status: 409 });
+    ).rejects.toMatchObject({ code: 'conflict' });
     const saved = await saveProjectFile(added.id, {
       document: added,
       source: 'new-card.json',
@@ -118,7 +118,7 @@ describe('project JSON persistence', () => {
     const body = { document: card, source: 'actual-card.json', expectedHash: project.hashes.card! };
     await expect(
       saveProjectFile(card.id, { ...body, source: 'renamed.json' }),
-    ).rejects.toMatchObject({ status: 409 });
+    ).rejects.toMatchObject({ code: 'conflict' });
     await expect(
       saveProjectFile(card.id, {
         ...body,
@@ -139,7 +139,7 @@ describe('project JSON persistence', () => {
         source: '../outside.json',
         expectedHash: null,
       }),
-    ).rejects.toMatchObject({ status: 400 });
+    ).rejects.toMatchObject({ code: 'invalid-input' });
     expect(await readFile(join(directory, 'actual-card.json'), 'utf8')).toBe(JSON.stringify(card));
     expect(await readdir(directory)).toEqual(['actual-card.json', 'project-template.json']);
   });
@@ -191,7 +191,7 @@ describe('project JSON persistence', () => {
       join(directory, 'actual-card.json'),
       JSON.stringify({ ...card, name: 'External edit' }),
     );
-    await expect(readProjectFiles()).rejects.toMatchObject({ status: 409 });
+    await expect(readProjectFiles()).rejects.toMatchObject({ code: 'conflict' });
     expect(await readFile(join(recoveryDirectory, 'editor-recovery.json'), 'utf8')).toBe(draft);
   });
 });

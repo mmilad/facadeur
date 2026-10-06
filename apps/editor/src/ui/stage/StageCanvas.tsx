@@ -18,6 +18,7 @@ export function StageCanvas({
   chromeRevision,
   activeVariantName,
   tool,
+  readOnly = false,
 }: {
   session: EditorSession;
   openId: string;
@@ -29,6 +30,7 @@ export function StageCanvas({
   chromeRevision: number;
   activeVariantName: string | null;
   tool: EditorTool;
+  readOnly?: boolean;
 }) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -81,7 +83,9 @@ export function StageCanvas({
       >
         {isInsertTool(tool)
           ? insertModeCue(tool)
-          : 'Scroll to zoom · drag the canvas to pan · F T I insert · double-click selects the next nested layer'}
+          : readOnly
+            ? 'Scroll to zoom · drag the canvas to pan'
+            : 'Scroll to zoom · drag the canvas to pan · F T I insert · double-click selects the next nested layer'}
       </p>
     </div>
   );

@@ -283,7 +283,7 @@ describe('editor session', () => {
   });
 
   it('migrates loaded defaults into preview metadata without marking the document dirty', async () => {
-    vi.spyOn(files, 'saveJsonFile').mockResolvedValue({ via: 'dev' });
+    vi.spyOn(files, 'saveJsonFile').mockResolvedValue({ via: 'download' });
     const editor = session();
     editor.loadDocument({
       ...variantComponent,
@@ -333,7 +333,7 @@ describe('editor session', () => {
   });
 
   it('clears dirty after a successful save', async () => {
-    vi.spyOn(files, 'saveJsonFile').mockResolvedValue({ via: 'dev' });
+    vi.spyOn(files, 'saveJsonFile').mockResolvedValue({ via: 'download' });
     const editor = session();
     editor.openAsset('specimen-section');
     editor.execute({ type: 'setProp', nodeId: 'heading', prop: 'text', value: 'Saved text' });

@@ -47,6 +47,12 @@ importers:
 
   apps/editor:
     dependencies:
+      '@facadeur/api':
+        specifier: workspace:*
+        version: link:../../packages/api
+      '@facadeur/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
       '@facadeur/codegen':
         specifier: workspace:*
         version: link:../../packages/codegen
@@ -121,6 +127,35 @@ importers:
       tsx:
         specifier: ^4.20.5
         version: 4.23.15
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+
+  packages/api:
+    dependencies:
+      '@facadeur/core':
+        specifier: workspace:*
+        version: link:../core
+      '@facadeur/tokens':
+        specifier: workspace:*
+        version: link:../tokens
+    devDependencies:
+      '@types/node':
+        specifier: ^22.19.0
+        version: 22.20.4
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+
+  packages/api-client:
+    dependencies:
+      '@facadeur/api':
+        specifier: workspace:*
+        version: link:../api
+    devDependencies:
+      '@types/node':
+        specifier: ^22.19.0
+        version: 22.20.4
       typescript:
         specifier: ^5.9.2
         version: 5.9.3

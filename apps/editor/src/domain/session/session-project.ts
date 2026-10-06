@@ -9,7 +9,7 @@ import {
   type DocumentFile,
 } from '@facadeur/core';
 import { migratePreviewData } from '../preview-data.js';
-import { validateProjectDesign } from '../project/design-validation.js';
+import { validateProjectDesign } from '@facadeur/api/schema';
 import type { EditorSessionOptions } from './types.js';
 
 /** The controller owns live data; renderer stores are views over that same state. */

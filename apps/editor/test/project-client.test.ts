@@ -74,6 +74,73 @@ describe('local project JSON client', () => {
     expect(fetch.mock.calls[0]![0]).toBe('/api/projects/default');
   });
 
+  it('loads and saves using the selected project identity', async () => {
+    const project = { ...snapshot(), id: 'another-project' };
+    const fetch = vi.fn().mockResolvedValueOnce(Response.json(project));
+    vi.stubGlobal('fetch', fetch);
+    const loaded = await loadProject(undefined, project.id);
+    const connection = connect(loaded);
+    expect(fetch.mock.calls[0]![0]).toBe('/api/projects/another-project');
+    expect(connection.hasPendingChanges()).toBe(false);
+    connection.session.execute({
+      type: 'setProp',
+      nodeId: 'root',
+      prop: 'text',
+      value: 'Edited project',
+    });
+    expect(connection.hasPendingChanges()).toBe(true);
+    fetch.mockImplementationOnce((_url: string, options: RequestInit) => {
+      const body = JSON.parse(options.body as string);
+      return Promise.resolve(
+        Response.json({ document: body.document, source: body.source, hash: 'saved' }),
+      );
+    });
+    await connection.saveAllChanges();
+    expect(fetch.mock.calls[1]![0]).toBe('/api/projects/another-project/documents/card/save');
+    expect(connection.hasPendingChanges()).toBe(false);
+    fetch.mockResolvedValueOnce(Response.json(snapshot()));
+    await expect(loadProject(undefined, 'another-project')).rejects.toThrow(
+      'Invalid project catalog',
+    );
+  });
+
+  it('explicitly saves recovered drafts before leaving, while preserving failed saves', async () => {
+    const project = snapshot();
+    project.unsavedDocumentIds = [card.id];
+    const connection = connect(project);
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json({ error: 'Source conflict' }, { status: 409 }));
+    vi.stubGlobal('fetch', fetch);
+    expect(connection.hasPendingChanges()).toBe(true);
+    await expect(connection.saveAllChanges()).rejects.toThrow('Source conflict');
+    expect(connection.hasPendingChanges()).toBe(true);
+    fetch.mockImplementationOnce((_url: string, options: RequestInit) => {
+      const body = JSON.parse(options.body as string);
+      return Promise.resolve(
+        Response.json({ document: body.document, source: body.source, hash: 'saved' }),
+      );
+    });
+    await connection.saveAllChanges();
+    expect(connection.hasPendingChanges()).toBe(false);
+    expect(connection.session.getSnapshot().documentDirty).toBe(false);
+  });
+
+  it('does not write a view-only project even if its local controller changes', async () => {
+    const connection = connect({ ...snapshot(), access: { role: 'viewer', canWrite: false } });
+    const fetch = vi.fn();
+    vi.stubGlobal('fetch', fetch);
+    connection.session.execute({
+      type: 'setProp',
+      nodeId: 'root',
+      prop: 'text',
+      value: 'Local edit',
+    });
+    expect(connection.hasPendingChanges()).toBe(false);
+    await expect(connection.saveAllChanges()).rejects.toThrow('viewing this project only');
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it('saves the captured snapshot and keeps edits made during the request dirty', async () => {
     const { session } = connect();
     const fetch = vi.fn();

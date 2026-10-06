@@ -1,5 +1,144 @@
 # facadeur – Plan
 
+### Management/API pre-commit review
+
+- [x] Review the staged organisation/project implementation and correct verified defects before
+      committing. Keep API controllers/data, HTTP adapters/SDK and editor state under their current
+      owners. Evidence: a rejected runtime startup promise is retained globally; HTTP transport maps
+      unexpected persistence failures to 400 and exposes internal messages; the previous project
+      stays interactive while replacement loading can destroy its newly dirty session. Fix runtime
+      retry/connection cleanup, distinguish malformed inputs and validation from server failures,
+      and pause editing during project replacement. Preserve wire successes, role restrictions,
+      stored data, migrations and unsaved-leave behavior. Add focused regressions, run workspace
+      tests/typecheck and scoped lint/build, then commit only the reviewed staged scope. Inspect the
+      maintained-source detector after committing; retain cohesive modules and record justified
+      independent candidates in the existing refactoring backlog.
+
+Result: failed database initialization closes its connection and clears the cached startup promise
+so repair/retry succeeds. HTTP body parsing reports malformed JSON as 400; save validation uses
+domain input errors, while unexpected backend errors return a generic 500 and stay in server logs.
+Pause the previous editor during replacement loading and resume it if loading fails, retaining its
+session. Added runtime, HTTP transport and switching regressions. Validation: 1,104 tests in 196
+files pass; workspace types, editor build, scoped lint/format and diff checks pass. Build output
+configuration is restored; existing SQLite/CSS notices remain. No API ownership/SQL leakage or
+size candidates in the affected management/API domains.
+
+### Legacy identity database compatibility
+
+- [x] Fix organisation creation against an existing management database. Evidence: the local
+      `organisation_members.user_id` foreign key still targets the previous auth table `user`,
+      while current sessions resolve `mock_users`. `CREATE TABLE IF NOT EXISTS` cannot change
+      that constraint. Add a private management migration before serving controller calls;
+      preserve legacy accounts, membership IDs/roles, organisations, projects and sessions.
+      Reconcile legacy identities by email with existing mock accounts and rebuild only the
+      membership table transactionally. Keep SQL in API and routes unchanged. Validate legacy
+      fixtures, repeat initialization and organisation creation with a current session, plus
+      focused controller/route regressions and source checks.
+
+Result: migrate legacy users into mock identity storage, reconcile existing mock accounts by
+normalized email, and transactionally rebuild membership foreign keys while retaining IDs/roles.
+Check retained connections too, so development hot reloads run the migration. Refuse a migration
+that would omit membership rows. Legacy auth tables remain intact. Ten focused migration,
+controller, storage and route tests pass; API types, scoped lint/format and candidate scan pass.
+Apply to the local database after a SQLite snapshot backup; foreign-key check reports no violations.
+
+### Controller and transport separation
+
+- [x] Correct the API boundary: application controllers receive authenticated actor/data,
+      return typed results and throw domain error codes. SQL and business validation stay in API;
+      requests, paths, cookies, origin checks, JSON parsing and HTTP responses stay in Next adapters.
+      Move the HTTP SDK to `packages/api-client`, dependent on API contracts, so transport does
+      not leak into the controller package. Keep Core document commands and editor UI unchanged.
+      Evidence: server/http.ts dispatches URLs; session/access/service accept Request; file errors
+      construct Response and domain errors embed HTTP status. Remove that dispatch rather than
+      moving it to another domain file. Preserve sessions, database, files, permissions and wire
+      payloads. Validate direct controller operations and Next-route/client integration separately,
+      plus source types, scoped lint/format, build and scans for transport/SQL ownership.
+
+Result: `apiController` accepts an actor and typed inputs and returns data. Domain errors carry
+semantic codes; Next adapters choose HTTP statuses, parse bodies/parameters and own cookies and
+origin checks. Remove the pathname dispatcher and move the HTTP SDK into `packages/api-client`.
+The editor now consumes that SDK and the routes call the data-only controller. Keep management
+commands together as one cohesive domain responsibility; the scanner reports no size candidates.
+Direct controller tests cover persistence, membership, invitations, archives and last-owner rules;
+route tests cover session cookies, origin and status translation. No SQL remains in app source,
+and no HTTP objects or dispatch remain in API source. Source types, scoped lint/format and the
+editor build pass. Database/storage locations and endpoint payloads are preserved.
+Final regression run: 1,096 tests pass across 192 files. Existing SQLite/CSS build notices remain.
+
+### Isolated API ownership
+
+Historical extraction below; the controller/transport separation above supersedes its
+combined client and Request/Response handler boundary.
+
+Consumer follow-through: login, workspace commands and project load/save use the shared typed
+client; all active Next routes forward to the package handler. Remove the unused retired examples
+HTTP fallback from browser file export (it always returns 410), preserving file handles, pickers
+and downloads. Project sessions continue to save only through the authorized project API. Validate
+existing save/export and API integration tests and confirm no direct fetch remains in editor code.
+Browser verification against isolated existing data confirms API-backed sign-out/sign-in, workspace
+loading, project opening and document saving. The save returned 200 and the editor cleared its dirty
+state. Retired dev-save test mocks now describe the supported download export instead.
+
+- [x] Extract the new organisation/project backend into `packages/api` before further features.
+  - Evidence: editor management/access/session modules contain SQL, transactions and role rules;
+    project/files.ts owns server persistence; three clients duplicate transport/error handling.
+  - Action: `@facadeur/api` owns typed contracts and a browser-safe client;
+    `@facadeur/api/server` owns HTTP handling, identity, authorization, SQLite and JSON storage.
+    Next is a thin adapter; editor owns React sessions, navigation, prompts and presentation.
+    Extract portable legacy schema reconciliation from browser storage/session migration so the
+    package never imports editor internals. Keep browser migration command/Undo wiring in editor.
+  - Contracts: preserve endpoints, mock cookie/session behavior, roles, archives, invitations,
+    database schema/location, examples claim, recovery files, hashes, atomic saves and codegen.
+    Core remains independent of SQLite/HTTP and API depends only on owning package public APIs.
+  - Validation: relocated backend/persistence tests, API client/HTTP integration, existing editor
+    migration/client/UI regressions, source types, scoped lint/format, build and candidate scan.
+
+Result: `packages/api` owns all new SQL, sessions, access rules, commands and file persistence.
+The editor shares one typed transport client and its Next routes only forward Request/Response.
+Portable schema reconciliation is extracted; browser recovery/Undo wiring stays in the editor.
+Backend tests now live in the owning package, with a client-to-handler integration test that
+round-trips a saved document without editor imports. No SQL remains in apps source and the API
+package imports neither apps nor Next. Database schema, locations and wire contracts are preserved.
+Validation: 1,094 tests pass, source types, scoped lint/format and editor build pass; no affected
+size candidates. Existing SQLite/CSS build notices remain. User edits and staging are preserved.
+
+### Organisation and project management
+
+- [x] Add organisation/project management following the
+      [scoped plan](organisation-project-plan.md). Shared accounts, membership and roles are
+      requested; the user subsequently chose mock authentication for this first implementation.
+      Refactor hardcoded default-project loading/saving into an explicit
+      selected-project boundary; keep management outside document commands and schemas.
+      Preserve source hashes, atomic saves, recovered drafts, current examples and user staging.
+      Keep the 488-line session assembly as wiring; do not add discovery or membership ownership.
+
+Implementation scope: an isolated mock identity/session adapter and SQLite management metadata in the
+existing Next app. Extract project storage resolution from the file adapter's hardcoded default
+directory; pass trusted ProjectStorage and serialize saves per directory. Preserve source hashes,
+atomic writes, schema validation and recovered drafts. Authorize generic and legacy project routes
+before resolving storage. Organisation/account management owns discovery, roles and invitations;
+Core retains one project's document commands. Register examples only through an explicit claim
+by the initial server administrator. Validate real sessions, organisation/project isolation,
+role/last-owner/invitation checks, source conflicts, switching, scoped UI tests and browser flows.
+
+UI review: the new 569-line ManagementHome combined page loading/command state with organisation
+project/member/invitation controls. Extract OrganisationWorkspace and its private form/row controls;
+keep the page loader and account/invitation entry together. Preserve command payloads, role-aware
+actions and navigation props; validate management UI behavior and editor types after extraction.
+Backend review: SQLite schema/connection initialization initially sat in the mock identity adapter.
+Move that persistence ownership to management/server/database.ts and let identity/access/command
+services consume it, so replacing mocked identity does not replace organisation/project storage.
+Preserve route contracts, session lookup and metadata, with role/persistence/route regressions.
+
+Result (2026-10-06): durable SQLite organisations, projects, memberships and expiring invitation
+links; recoverable archive/restore; explicitly claimed existing examples; project-aware URLs,
+catalogs, recovered drafts and saves; development mock sign-in/sign-out; server-enforced roles
+on generic and legacy routes; viewer-only preview/code; and Save/Discard/Keep editing before
+leaving an edited project. Source workspace types, scoped ESLint/Prettier, affected-path scanner,
+editor production build and all 1,091 tests pass. Browser checks confirm saved text survives
+reopening and invitations give viewer-only access. Real production authentication remains deferred.
+
 ### Typed event envelopes and event data contracts
 
 - [x] Implement the [event contract plan](event-contract-plan.md): derive public callbacks from

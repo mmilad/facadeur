@@ -15,6 +15,8 @@ const nextConfig: NextConfig = {
     : {}),
   outputFileTracingRoot: repoRoot,
   transpilePackages: [
+    '@facadeur/api',
+    '@facadeur/api-client',
     '@facadeur/core',
     '@facadeur/renderer-dom',
     '@facadeur/style-engine',

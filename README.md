@@ -13,8 +13,15 @@ pnpm install
 pnpm dev
 ```
 
-Open http://localhost:3001 (Next.js). `pnpm dev` starts only the editor; its Next routes
-load and save project JSON. The specimen page is open. From there you can:
+Use Node.js 22.13 or later. Open http://localhost:3001 (Next.js). `pnpm dev` starts only the
+editor. Sign in with any development email address, create an organisation, then create a
+project. The first account can choose **Add example projects** to open the existing examples
+and recovered drafts. Mock authentication is labelled in the UI and disabled in production.
+Invite another development account with a copied invitation link and choose admin, editor or
+viewer access. Organisation/project metadata is persisted in SQLite; document JSON stays
+project-local. See the [project API](docs/project-api.md) for storage configuration and roles.
+
+From an open project you can:
 
 - Browse the project tree in the left column: Design (Tokens, Schriften), then Atoms, Components, Sections, and Pages. Click an asset to open it on the stage. The layers list under the tree follows the open document. Search filters the tree. **Neu anlegen** adds an empty document of that kind. Drag a row onto the stage to insert an instance when nesting allows it. Nesting rules still apply when a command would break them.
 - Three frames sit side by side: mobile 375, tablet 768, desktop 1440. Each iframe is that wide, so real media queries change type size and, on desktop, the card row.
@@ -83,6 +90,8 @@ pnpm test
 apps/editor             Next.js + React shell (stage, layers, properties, assets, tokens, fonts)
 apps/server             retained legacy Yjs server; not started by pnpm dev
 packages/core           types, JSON Schema, flat model, commands, DocumentStore
+packages/api            data contracts and controllers (auth, roles, SQL, JSON storage)
+packages/api-client     typed HTTP SDK for the editor's API routes
 packages/store-yjs      retained legacy adapter; not used by the editor
 packages/tokens         DTCG parser, reference resolution, CSS custom properties, project template
 packages/style-engine   live CSSStyleRules, component style blocks, auto layout

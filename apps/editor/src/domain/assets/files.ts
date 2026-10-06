@@ -17,7 +17,7 @@ export interface OpenedJson {
   handle?: JsonFileHandle;
 }
 
-export type SaveVia = 'handle' | 'picker' | 'dev' | 'download';
+export type SaveVia = 'handle' | 'picker' | 'download';
 
 /** Nested document JSON, stable enough to diff in git. */
 export function documentToJson(doc: FlatDocument): string {
@@ -62,8 +62,8 @@ export async function openJsonFile(): Promise<OpenedJson | null> {
 }
 
 /**
- * Write a document. Prefers an existing handle, then a save picker, then the
- * Vite dev route, then a download.
+ * Export a document through an existing handle, a save picker or a download.
+ * Managed project persistence uses the typed project API instead.
  */
 export async function saveJsonFile(options: {
   filename: string;
@@ -87,24 +87,8 @@ export async function saveJsonFile(options: {
       if (isAbort(error)) throw error;
     }
   }
-  if (await saveThroughDevServer(options.filename, options.text)) {
-    return { via: 'dev' };
-  }
   download(options.filename, options.text);
   return { via: 'download' };
-}
-
-export async function saveThroughDevServer(filename: string, text: string): Promise<boolean> {
-  try {
-    const response = await fetch('/__facadeur/examples', {
-      method: 'PUT',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ filename, text }),
-    });
-    return response.ok;
-  } catch {
-    return false;
-  }
 }
 
 function jsonTypes(): { description: string; accept: Record<string, string[]> }[] {

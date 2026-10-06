@@ -1,60 +1,25 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { connectProject, loadProject } from '../domain/project/client.js';
-import { logProjectFailure } from '../domain/project/diagnostics.js';
-import { EditorShell } from '../ui/shell/EditorShell.js';
+import { useSearchParams } from 'next/navigation';
+import { authClient } from '../domain/auth/client.js';
+import { AuthScreen } from '../ui/management/AuthScreen.js';
+import { ProjectWorkspace } from '../ui/projects/ProjectWorkspace.js';
 
 export function EditorBootstrap() {
-  const [connection, setConnection] = useState<ReturnType<typeof connectProject> | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [attempt, setAttempt] = useState(0);
-  useEffect(() => {
-    const abort = new AbortController();
-    let active: ReturnType<typeof connectProject> | null = null;
-    let phase: 'load' | 'connect' = 'load';
-    setError(null);
-    setConnection(null);
-    void loadProject(abort.signal)
-      .then((project) => {
-        if (abort.signal.aborted) return;
-        phase = 'connect';
-        active = connectProject(project);
-        setConnection(active);
-      })
-      .catch((error: unknown) => {
-        if (!abort.signal.aborted) {
-          logProjectFailure(error, { phase });
-          setError(error instanceof Error ? error.message : 'Could not load the project');
-        }
-      });
-    return () => {
-      abort.abort();
-      active?.destroy();
-    };
-  }, [attempt]);
-  if (connection) return <ConnectedEditor connection={connection} />;
-  return (
-    <main className="schema-stage">
-      <h1>{error ? 'Project unavailable' : 'Loading project…'}</h1>
-      {error ? (
-        <>
-          <p role="alert">{error}</p>
-          <p>Check the browser console for details, then retry.</p>
-          <button type="button" onClick={() => setAttempt(attempt + 1)}>
-            Retry
-          </button>
-        </>
-      ) : null}
-    </main>
-  );
-}
-
-function ConnectedEditor({ connection }: { connection: ReturnType<typeof connectProject> }) {
-  return (
-    <EditorShell
-      session={connection.session}
-      persistPendingChanges={connection.persistPendingChanges}
-    />
-  );
+  const auth = authClient.useSession();
+  const params = useSearchParams();
+  if (auth.isPending)
+    return (
+      <main className="schema-stage">
+        <h1>Loading account…</h1>
+      </main>
+    );
+  if (!auth.data)
+    return (
+      <AuthScreen
+        onAuthenticated={() => void auth.refetch()}
+        invitationToken={params.get('invite') ?? undefined}
+      />
+    );
+  return <ProjectWorkspace key={auth.data.user.id} />;
 }

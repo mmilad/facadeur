@@ -22,10 +22,8 @@ export interface LibrarySchema {
 
 export type SchemaAssignment = string | ComponentSchemaUse;
 
-export interface SchemaLibraryState {
-  schemas: LibrarySchema[];
-  assignments: Record<string, SchemaAssignment>;
-}
+import type { SchemaLibraryState } from '@facadeur/api/schema';
+export type { SchemaLibraryState } from '@facadeur/api/schema';
 
 interface PersistedLibrary {
   seeded: boolean;

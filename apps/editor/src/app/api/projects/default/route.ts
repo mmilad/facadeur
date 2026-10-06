@@ -1,12 +1,13 @@
-import { readProjectFiles, projectFileError } from '../../../../domain/project/files.js';
-
+import { apiController } from '@facadeur/api/server';
+import { authenticatedActor, respond } from '../../transport.js';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
-  try {
-    return Response.json(await readProjectFiles());
-  } catch (error) {
-    return projectFileError(error);
-  }
+export function GET(request: Request) {
+  return respond(async () => {
+    const projectId = 'default';
+    return Response.json(
+      await apiController.projects.load(await authenticatedActor(request), projectId),
+    );
+  });
 }

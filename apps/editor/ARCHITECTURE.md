@@ -5,15 +5,20 @@ The editor lives in `apps/editor` (npm name `@facadeur/editor`). This note docum
 ## App shell (`src/app/`)
 
 - Next.js App Router entry: `layout.tsx`, `page.tsx`, `globals.css`
-- `EditorBootstrap.tsx` — client session bootstrap (specimen catalog + design template)
-- `api/projects/default/` — local JSON catalog and explicit saves, in the same Next process
-- `domain/project/files.ts` — filesystem validation, source-hash checks, atomic writes and recovery drafts
+- `EditorBootstrap.tsx` — account gate and selected project workspace
+- `api/auth/`, `api/workspace/`, `api/projects/` — thin Next hosting adapters for `@facadeur/api/server`
+- Routes own HTTP parsing, cookies, origin checks and responses; controllers receive typed data and a trusted actor
+- `packages/api` — backend ownership: mock identity, memberships, permissions, invitations,
+  SQLite and JSON persistence; no SQL or management business rules live in editor modules
 
 **Routing:** design-domain vs properties uses the `?surface=` query segment (`properties` default; `colors`, `fonts`, etc. for design domains). The iframe stage is unchanged on `/`.
 
 ## Domain (`src/domain/`)
 
-Session, editing commands, selection, viewports, style/token edit helpers, files I/O, frame host — no React.
+Session, editing commands, selection, viewports, style/token edit helpers and frame host.
+`domain/api.ts` supplies one typed `@facadeur/api-client` HTTP client. Project connection state and browser
+recovery migration remain here; HTTP transport, schema reconciliation and file persistence
+are consumed through package public APIs. Account hooks subscribe to API session changes.
 
 `session.project` owns live document state. Renderer stores are Core controller views;
 they hold history snapshots but no independent live document. Core changes publish after

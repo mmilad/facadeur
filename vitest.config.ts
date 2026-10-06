@@ -9,6 +9,10 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      '@facadeur/api-client': `${root}packages/api-client/src/index.ts`,
+      '@facadeur/api/server': `${root}packages/api/src/server/index.ts`,
+      '@facadeur/api/schema': `${root}packages/api/src/schema/index.ts`,
+      '@facadeur/api': `${root}packages/api/src/index.ts`,
       '@facadeur/core': `${root}packages/core/src/index.ts`,
       '@facadeur/store-yjs': `${root}packages/store-yjs/src/index.ts`,
       '@facadeur/renderer-dom': `${root}packages/renderer-dom/src/index.ts`,
