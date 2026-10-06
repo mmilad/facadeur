@@ -1,3 +1,4 @@
+import { schemaAtPath } from './schema-path.js';
 import { DocumentError } from '../../document/errors.js';
 import { type FlatDocument, toNested, type FlatNode } from '../../document/flat.js';
 import {
@@ -186,27 +187,6 @@ export function validateDataContracts(doc: FlatDocument, context: SchemaResolver
     ambientAliases,
     ...(context.schemaCatalog ? { schemaCatalog: context.schemaCatalog } : {}),
   });
-}
-
-function schemaAtPath(schema: JsonSchema, path: string): JsonSchema | undefined {
-  if (!path) return schema;
-  const [part, ...remaining] = path.split('.');
-  if (!part) return undefined;
-  const candidates: JsonSchema[] = [
-    ...(schema.properties?.[part] ? [schema.properties[part]!] : []),
-    ...[...(schema.allOf ?? []), ...(schema.oneOf ?? []), ...(schema.anyOf ?? [])].flatMap(
-      (branch) => {
-        const candidate: JsonSchema | undefined = schemaAtPath(branch, path);
-        return candidate ? [candidate] : [];
-      },
-    ),
-  ]
-    .map((candidate: JsonSchema) =>
-      remaining.length ? schemaAtPath(candidate, remaining.join('.')) : candidate,
-    )
-    .filter((candidate): candidate is JsonSchema => candidate !== undefined);
-  if (!candidates.length) return undefined;
-  return candidates.length === 1 ? candidates[0] : { anyOf: candidates };
 }
 
 function schemaAcceptsField(

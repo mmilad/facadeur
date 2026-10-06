@@ -664,6 +664,36 @@ Layer move follow-up (2026-10-05): a layer-drag regression verifies moving a sib
 
 ### Refactoring backlog: editor editing responsibilities
 
+- [ ] Extract the schema-library editor's private composition/root-kind transformations and
+      SchemaEditorPanel from `ui/stage/SchemaLibraryStage.tsx` (534 lines). Evidence: stage selection
+      and library CRUD coexist with independent JsonJoy editor state, composition controls and pure
+      schema transformations. Boundary: colocate the editor and transformation helpers in an
+      editor-owned schema-library feature directory; keep stage/session command wiring together.
+      Preserve catalog validation, rename/delete references, composition semantics, defaults and
+      Undo. Validate schema-composition, schema-library, schema-use UI tests and editor types.
+      Completion: stage orchestration no longer owns the editor's private transformation lifecycle.
+- [ ] Review extracting private schema compatibility helpers from Core validation's
+      `data-contracts.ts` (598 lines). Evidence: tree/scope traversal, event schema-path resolution,
+      field shape compatibility and display-condition assertions coexist. Keep the validation pass
+      and scope ownership together; only extract independently tested shape semantics into
+      private validation modules if that avoids cycles with structural schema derivation.
+      Preserve public Core exports, required/default rules and composed schema/event contracts.
+      Validate contracts, schema-use, structural-node and event/generator tests. Completion: shape
+      compatibility can be tested without tree traversal, with no new cross-package helper API.
+
+Post-commit review found a behavioral defect while inspecting the latter candidate: definitions
+and data-contracts duplicate schemaAtPath, traversing a nested composed path twice. Regressions
+confirmed valid oneOf/anyOf event mappings were rejected as undefined. Extract the actually shared
+path resolver into private validation/schema-path.ts and correct traversal once per branch;
+accepted/rejected nested mappings for allOf/oneOf/anyOf now pass, with no public export changes.
+This removes path resolution from the pending compatibility extraction. Retain the
+other detector signals as cohesive validation, command, inspector or session owners; the existing
+token-query candidate below remains the next independently justified editor split.
+
+Validation after the shared path correction: 1,107 tests in 196 files pass, workspace typecheck,
+scoped lint/format and diff checks pass. The detector retains four cohesive Core validation size
+signals and its 13-file domain concentration; no size-only reorganizations are warranted.
+
 - [ ] Review extracting token-reference queries from `apps/editor/src/domain/editing.ts` into a domain-owned token-reference module. Evidence: the 524-line file combines token catalog queries, insertion/drop geometry and node placement rules; this feature only changes its placement capabilities. Preserve existing token ordering/reference syntax and editing exports, then validate token-control and editing tests plus typecheck. Completion criterion: separate actual token-query ownership without moving geometry or creating a generic utility package. Deferred because this extraction is independent of structural elements.
 - Retained candidates: session assembly remains cohesive lifecycle wiring; the existing layout panel and CSS declaration editor are coherent interaction surfaces and do not need a size-only split for this task. The flat `domain/` directory mixes these domains, but existing subdirectories already own session, selection, schemas and edits; reorganize only with a concrete cross-domain ownership need.
 

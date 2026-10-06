@@ -997,6 +997,53 @@ describe('component contracts', () => {
     expect(() => validateCatalog([document])).not.toThrow();
   });
 
+  it.each(['allOf', 'oneOf', 'anyOf'] as const)(
+    'validates nested context event data through %s branches',
+    (composition) => {
+      const document: DocumentFile = {
+        version: 1,
+        id: 'nested-event',
+        name: 'Nested event',
+        kind: 'atom',
+        schemaCatalog: {
+          schemas: [
+            {
+              id: 'envelope',
+              name: 'Envelope',
+              schema: {
+                type: 'object',
+                [composition]: [
+                  {
+                    type: 'object',
+                    properties: {
+                      contact: { type: 'object', properties: { count: { type: 'number' } } },
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+        fields: [{ name: 'value', type: 'number', default: 0 }],
+        events: [{ name: 'commit', data: { direct: { kind: 'schema', schemaId: 'envelope' } } }],
+        root: {
+          id: 'root',
+          type: 'text',
+          eventBindings: [
+            {
+              event: 'commit',
+              name: 'change',
+              data: [{ path: 'contact.count', source: { kind: 'context', path: 'value' } }],
+            },
+          ],
+        },
+      };
+      expect(() => validateCatalog([document])).not.toThrow();
+      document.fields = [{ name: 'value', type: 'text', default: 'incorrect type' }];
+      expect(() => validateCatalog([document])).toThrow('incompatible with event data');
+    },
+  );
+
   it('normalizes legacy event payload mappings to typed native sources', () => {
     const event = {
       name: 'commit',
