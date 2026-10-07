@@ -25,6 +25,7 @@ export const HTML_TAG_OPTIONS = [
   'span',
   'textarea',
   'ul',
+  'video',
 ] as const;
 
 export const HTML_ATTRIBUTE_ENUMS: Record<string, readonly string[]> = {

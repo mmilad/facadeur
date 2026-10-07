@@ -5,7 +5,13 @@
   "description": "Nested facadeur document. Nodes are frame, text, image, or instance. Tokens are a DTCG tree. Fonts list families and their sources. A style block paints the component. Instances override fields and variants, and their containing document may add sparse root appearance rules.",
   "$id": "https://github.com/mmilad/facadeur/schema/document.schema.json",
   "type": "object",
-  "required": ["version", "id", "name", "kind", "root"],
+  "required": [
+    "version",
+    "id",
+    "name",
+    "kind",
+    "root"
+  ],
   "properties": {
     "version": {
       "const": 1,
@@ -55,7 +61,10 @@
         "$id": "T1",
         "additionalProperties": false,
         "type": "object",
-        "required": ["name", "type"],
+        "required": [
+          "name",
+          "type"
+        ],
         "properties": {
           "name": {
             "minLength": 1,
@@ -141,7 +150,9 @@
           "items": {
             "additionalProperties": false,
             "type": "object",
-            "required": ["type"],
+            "required": [
+              "type"
+            ],
             "properties": {
               "type": {
                 "anyOf": [
@@ -283,7 +294,9 @@
       "items": {
         "additionalProperties": false,
         "type": "object",
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "properties": {
           "name": {
             "minLength": 1,
@@ -348,7 +361,10 @@
                   {
                     "additionalProperties": false,
                     "type": "object",
-                    "required": ["kind", "type"],
+                    "required": [
+                      "kind",
+                      "type"
+                    ],
                     "properties": {
                       "kind": {
                         "const": "type",
@@ -387,7 +403,10 @@
                   {
                     "additionalProperties": false,
                     "type": "object",
-                    "required": ["kind", "schemaId"],
+                    "required": [
+                      "kind",
+                      "schemaId"
+                    ],
                     "properties": {
                       "kind": {
                         "const": "schema",
@@ -406,7 +425,10 @@
                 "items": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["name", "type"],
+                  "required": [
+                    "name",
+                    "type"
+                  ],
                   "properties": {
                     "name": {
                       "minLength": 1,
@@ -418,7 +440,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["kind", "type"],
+                          "required": [
+                            "kind",
+                            "type"
+                          ],
                           "properties": {
                             "kind": {
                               "const": "type",
@@ -457,7 +482,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["kind", "schemaId"],
+                          "required": [
+                            "kind",
+                            "schemaId"
+                          ],
                           "properties": {
                             "kind": {
                               "const": "schema",
@@ -513,7 +541,10 @@
           {
             "additionalProperties": false,
             "type": "object",
-            "required": ["name", "values"],
+            "required": [
+              "name",
+              "values"
+            ],
             "properties": {
               "name": {
                 "minLength": 1,
@@ -537,7 +568,9 @@
           {
             "additionalProperties": false,
             "type": "object",
-            "required": ["name"],
+            "required": [
+              "name"
+            ],
             "properties": {
               "name": {
                 "minLength": 1,
@@ -875,7 +908,11 @@
                         "items": {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["id", "selector", "bindings"],
+                          "required": [
+                            "id",
+                            "selector",
+                            "bindings"
+                          ],
                           "properties": {
                             "id": {
                               "minLength": 1,
@@ -1153,14 +1190,20 @@
                             "items": {
                               "additionalProperties": false,
                               "type": "object",
-                              "required": ["when", "variant"],
+                              "required": [
+                                "when",
+                                "variant"
+                              ],
                               "properties": {
                                 "when": {
                                   "anyOf": [
                                     {
                                       "additionalProperties": false,
                                       "type": "object",
-                                      "required": ["path", "equals"],
+                                      "required": [
+                                        "path",
+                                        "equals"
+                                      ],
                                       "properties": {
                                         "path": {
                                           "minLength": 1,
@@ -1192,7 +1235,10 @@
                                     {
                                       "additionalProperties": false,
                                       "type": "object",
-                                      "required": ["path", "truthy"],
+                                      "required": [
+                                        "path",
+                                        "truthy"
+                                      ],
                                       "properties": {
                                         "path": {
                                           "minLength": 1,
@@ -1217,7 +1263,9 @@
                           "repeat": {
                             "additionalProperties": false,
                             "type": "object",
-                            "required": ["path"],
+                            "required": [
+                              "path"
+                            ],
                             "properties": {
                               "path": {
                                 "minLength": 1,
@@ -1261,7 +1309,9 @@
                               "width": {
                                 "additionalProperties": false,
                                 "type": "object",
-                                "required": ["mode"],
+                                "required": [
+                                  "mode"
+                                ],
                                 "properties": {
                                   "mode": {
                                     "anyOf": [
@@ -1296,7 +1346,10 @@
                                       {
                                         "additionalProperties": false,
                                         "type": "object",
-                                        "required": ["unit", "value"],
+                                        "required": [
+                                          "unit",
+                                          "value"
+                                        ],
                                         "properties": {
                                           "unit": {
                                             "const": "%",
@@ -1324,7 +1377,10 @@
                                       {
                                         "additionalProperties": false,
                                         "type": "object",
-                                        "required": ["unit", "value"],
+                                        "required": [
+                                          "unit",
+                                          "value"
+                                        ],
                                         "properties": {
                                           "unit": {
                                             "const": "%",
@@ -1352,7 +1408,10 @@
                                       {
                                         "additionalProperties": false,
                                         "type": "object",
-                                        "required": ["unit", "value"],
+                                        "required": [
+                                          "unit",
+                                          "value"
+                                        ],
                                         "properties": {
                                           "unit": {
                                             "const": "%",
@@ -1372,7 +1431,9 @@
                               "height": {
                                 "additionalProperties": false,
                                 "type": "object",
-                                "required": ["mode"],
+                                "required": [
+                                  "mode"
+                                ],
                                 "properties": {
                                   "mode": {
                                     "anyOf": [
@@ -1407,7 +1468,10 @@
                                       {
                                         "additionalProperties": false,
                                         "type": "object",
-                                        "required": ["unit", "value"],
+                                        "required": [
+                                          "unit",
+                                          "value"
+                                        ],
                                         "properties": {
                                           "unit": {
                                             "const": "%",
@@ -1435,7 +1499,10 @@
                                       {
                                         "additionalProperties": false,
                                         "type": "object",
-                                        "required": ["unit", "value"],
+                                        "required": [
+                                          "unit",
+                                          "value"
+                                        ],
                                         "properties": {
                                           "unit": {
                                             "const": "%",
@@ -1463,7 +1530,10 @@
                                       {
                                         "additionalProperties": false,
                                         "type": "object",
-                                        "required": ["unit", "value"],
+                                        "required": [
+                                          "unit",
+                                          "value"
+                                        ],
                                         "properties": {
                                           "unit": {
                                             "const": "%",
@@ -1529,28 +1599,68 @@
                               "margin": {
                                 "anyOf": [
                                   {
-                                    "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                    "type": "string"
+                                    "anyOf": [
+                                      {
+                                        "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                        "type": "string"
+                                      },
+                                      {
+                                        "const": "auto",
+                                        "type": "string"
+                                      }
+                                    ]
                                   },
                                   {
                                     "additionalProperties": false,
                                     "type": "object",
                                     "properties": {
                                       "top": {
-                                        "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                        "type": "string"
+                                        "anyOf": [
+                                          {
+                                            "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                            "type": "string"
+                                          },
+                                          {
+                                            "const": "auto",
+                                            "type": "string"
+                                          }
+                                        ]
                                       },
                                       "right": {
-                                        "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                        "type": "string"
+                                        "anyOf": [
+                                          {
+                                            "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                            "type": "string"
+                                          },
+                                          {
+                                            "const": "auto",
+                                            "type": "string"
+                                          }
+                                        ]
                                       },
                                       "bottom": {
-                                        "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                        "type": "string"
+                                        "anyOf": [
+                                          {
+                                            "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                            "type": "string"
+                                          },
+                                          {
+                                            "const": "auto",
+                                            "type": "string"
+                                          }
+                                        ]
                                       },
                                       "left": {
-                                        "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                        "type": "string"
+                                        "anyOf": [
+                                          {
+                                            "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                            "type": "string"
+                                          },
+                                          {
+                                            "const": "auto",
+                                            "type": "string"
+                                          }
+                                        ]
                                       }
                                     }
                                   }
@@ -1627,7 +1737,9 @@
                                       "width": {
                                         "additionalProperties": false,
                                         "type": "object",
-                                        "required": ["mode"],
+                                        "required": [
+                                          "mode"
+                                        ],
                                         "properties": {
                                           "mode": {
                                             "anyOf": [
@@ -1662,7 +1774,10 @@
                                               {
                                                 "additionalProperties": false,
                                                 "type": "object",
-                                                "required": ["unit", "value"],
+                                                "required": [
+                                                  "unit",
+                                                  "value"
+                                                ],
                                                 "properties": {
                                                   "unit": {
                                                     "const": "%",
@@ -1690,7 +1805,10 @@
                                               {
                                                 "additionalProperties": false,
                                                 "type": "object",
-                                                "required": ["unit", "value"],
+                                                "required": [
+                                                  "unit",
+                                                  "value"
+                                                ],
                                                 "properties": {
                                                   "unit": {
                                                     "const": "%",
@@ -1718,7 +1836,10 @@
                                               {
                                                 "additionalProperties": false,
                                                 "type": "object",
-                                                "required": ["unit", "value"],
+                                                "required": [
+                                                  "unit",
+                                                  "value"
+                                                ],
                                                 "properties": {
                                                   "unit": {
                                                     "const": "%",
@@ -1738,7 +1859,9 @@
                                       "height": {
                                         "additionalProperties": false,
                                         "type": "object",
-                                        "required": ["mode"],
+                                        "required": [
+                                          "mode"
+                                        ],
                                         "properties": {
                                           "mode": {
                                             "anyOf": [
@@ -1773,7 +1896,10 @@
                                               {
                                                 "additionalProperties": false,
                                                 "type": "object",
-                                                "required": ["unit", "value"],
+                                                "required": [
+                                                  "unit",
+                                                  "value"
+                                                ],
                                                 "properties": {
                                                   "unit": {
                                                     "const": "%",
@@ -1801,7 +1927,10 @@
                                               {
                                                 "additionalProperties": false,
                                                 "type": "object",
-                                                "required": ["unit", "value"],
+                                                "required": [
+                                                  "unit",
+                                                  "value"
+                                                ],
                                                 "properties": {
                                                   "unit": {
                                                     "const": "%",
@@ -1829,7 +1958,10 @@
                                               {
                                                 "additionalProperties": false,
                                                 "type": "object",
-                                                "required": ["unit", "value"],
+                                                "required": [
+                                                  "unit",
+                                                  "value"
+                                                ],
                                                 "properties": {
                                                   "unit": {
                                                     "const": "%",
@@ -1895,28 +2027,68 @@
                                       "margin": {
                                         "anyOf": [
                                           {
-                                            "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                            "type": "string"
+                                            "anyOf": [
+                                              {
+                                                "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                                "type": "string"
+                                              },
+                                              {
+                                                "const": "auto",
+                                                "type": "string"
+                                              }
+                                            ]
                                           },
                                           {
                                             "additionalProperties": false,
                                             "type": "object",
                                             "properties": {
                                               "top": {
-                                                "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                                "type": "string"
+                                                "anyOf": [
+                                                  {
+                                                    "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                                    "type": "string"
+                                                  },
+                                                  {
+                                                    "const": "auto",
+                                                    "type": "string"
+                                                  }
+                                                ]
                                               },
                                               "right": {
-                                                "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                                "type": "string"
+                                                "anyOf": [
+                                                  {
+                                                    "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                                    "type": "string"
+                                                  },
+                                                  {
+                                                    "const": "auto",
+                                                    "type": "string"
+                                                  }
+                                                ]
                                               },
                                               "bottom": {
-                                                "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                                "type": "string"
+                                                "anyOf": [
+                                                  {
+                                                    "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                                    "type": "string"
+                                                  },
+                                                  {
+                                                    "const": "auto",
+                                                    "type": "string"
+                                                  }
+                                                ]
                                               },
                                               "left": {
-                                                "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                                "type": "string"
+                                                "anyOf": [
+                                                  {
+                                                    "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                                    "type": "string"
+                                                  },
+                                                  {
+                                                    "const": "auto",
+                                                    "type": "string"
+                                                  }
+                                                ]
                                               }
                                             }
                                           }
@@ -1976,7 +2148,10 @@
                             "items": {
                               "additionalProperties": false,
                               "type": "object",
-                              "required": ["field", "target"],
+                              "required": [
+                                "field",
+                                "target"
+                              ],
                               "properties": {
                                 "field": {
                                   "minLength": 1,
@@ -2027,7 +2202,10 @@
                             "items": {
                               "additionalProperties": false,
                               "type": "object",
-                              "required": ["event", "name"],
+                              "required": [
+                                "event",
+                                "name"
+                              ],
                               "properties": {
                                 "event": {
                                   "minLength": 1,
@@ -2064,7 +2242,10 @@
                                   "items": {
                                     "additionalProperties": false,
                                     "type": "object",
-                                    "required": ["path", "source"],
+                                    "required": [
+                                      "path",
+                                      "source"
+                                    ],
                                     "properties": {
                                       "path": {
                                         "pattern": "^(?:[A-Za-z_$][A-Za-z0-9_$-]*(?:\\.[A-Za-z_$][A-Za-z0-9_$-]*)*)?$",
@@ -2075,7 +2256,10 @@
                                           {
                                             "additionalProperties": false,
                                             "type": "object",
-                                            "required": ["kind", "path"],
+                                            "required": [
+                                              "kind",
+                                              "path"
+                                            ],
                                             "properties": {
                                               "kind": {
                                                 "const": "native",
@@ -2102,7 +2286,10 @@
                                           {
                                             "additionalProperties": false,
                                             "type": "object",
-                                            "required": ["kind", "path"],
+                                            "required": [
+                                              "kind",
+                                              "path"
+                                            ],
                                             "properties": {
                                               "kind": {
                                                 "const": "context",
@@ -2118,7 +2305,10 @@
                                           {
                                             "additionalProperties": false,
                                             "type": "object",
-                                            "required": ["kind", "value"],
+                                            "required": [
+                                              "kind",
+                                              "value"
+                                            ],
                                             "properties": {
                                               "kind": {
                                                 "const": "literal",
@@ -2167,7 +2357,10 @@
                               {
                                 "additionalProperties": false,
                                 "type": "object",
-                                "required": ["path", "equals"],
+                                "required": [
+                                  "path",
+                                  "equals"
+                                ],
                                 "properties": {
                                   "path": {
                                     "minLength": 1,
@@ -2199,7 +2392,10 @@
                               {
                                 "additionalProperties": false,
                                 "type": "object",
-                                "required": ["path", "truthy"],
+                                "required": [
+                                  "path",
+                                  "truthy"
+                                ],
                                 "properties": {
                                   "path": {
                                     "minLength": 1,
@@ -2240,7 +2436,10 @@
                     "items": {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": ["parent", "node"],
+                      "required": [
+                        "parent",
+                        "node"
+                      ],
                       "properties": {
                         "parent": {
                           "minLength": 1,
@@ -2271,7 +2470,10 @@
         "artboard": {
           "additionalProperties": false,
           "type": "object",
-          "required": ["width", "height"],
+          "required": [
+            "width",
+            "height"
+          ],
           "properties": {
             "width": {
               "exclusiveMinimum": 0,
@@ -2289,7 +2491,10 @@
           "items": {
             "additionalProperties": false,
             "type": "object",
-            "required": ["id", "minWidth"],
+            "required": [
+              "id",
+              "minWidth"
+            ],
             "properties": {
               "id": {
                 "pattern": "^[a-z][a-z0-9]*$",
@@ -2318,7 +2523,13 @@
       "items": {
         "additionalProperties": false,
         "type": "object",
-        "required": ["id", "family", "weights", "source", "fallbacks"],
+        "required": [
+          "id",
+          "family",
+          "weights",
+          "source",
+          "fallbacks"
+        ],
         "properties": {
           "id": {
             "pattern": "^[a-z][a-z0-9]*$",
@@ -2358,7 +2569,10 @@
               {
                 "additionalProperties": false,
                 "type": "object",
-                "required": ["type", "files"],
+                "required": [
+                  "type",
+                  "files"
+                ],
                 "properties": {
                   "type": {
                     "const": "file",
@@ -2370,7 +2584,11 @@
                     "items": {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": ["weight", "style", "url"],
+                      "required": [
+                        "weight",
+                        "style",
+                        "url"
+                      ],
                       "properties": {
                         "weight": {
                           "minimum": 1,
@@ -2405,7 +2623,10 @@
               {
                 "additionalProperties": false,
                 "type": "object",
-                "required": ["type", "family"],
+                "required": [
+                  "type",
+                  "family"
+                ],
                 "properties": {
                   "type": {
                     "const": "google",
@@ -2436,7 +2657,11 @@
       "items": {
         "additionalProperties": false,
         "type": "object",
-        "required": ["id", "name", "src"],
+        "required": [
+          "id",
+          "name",
+          "src"
+        ],
         "properties": {
           "id": {
             "minLength": 1,
@@ -2764,7 +2989,11 @@
           "items": {
             "additionalProperties": false,
             "type": "object",
-            "required": ["id", "selector", "bindings"],
+            "required": [
+              "id",
+              "selector",
+              "bindings"
+            ],
             "properties": {
               "id": {
                 "minLength": 1,
@@ -2961,7 +3190,11 @@
         "^[A-Za-z][A-Za-z0-9_-]*$": {
           "additionalProperties": false,
           "type": "object",
-          "required": ["path", "type", "value"],
+          "required": [
+            "path",
+            "type",
+            "value"
+          ],
           "properties": {
             "path": {
               "pattern": "^[a-z][a-z0-9]*(\\.[a-z0-9]+)+$",
@@ -3014,14 +3247,20 @@
     "schemaCatalog": {
       "additionalProperties": false,
       "type": "object",
-      "required": ["schemas"],
+      "required": [
+        "schemas"
+      ],
       "properties": {
         "schemas": {
           "type": "array",
           "items": {
             "additionalProperties": false,
             "type": "object",
-            "required": ["id", "name", "schema"],
+            "required": [
+              "id",
+              "name",
+              "schema"
+            ],
             "properties": {
               "id": {
                 "minLength": 1,
@@ -3129,7 +3368,10 @@
             {
               "additionalProperties": false,
               "type": "object",
-              "required": ["kind", "type"],
+              "required": [
+                "kind",
+                "type"
+              ],
               "properties": {
                 "kind": {
                   "const": "type",
@@ -3168,7 +3410,10 @@
             {
               "additionalProperties": false,
               "type": "object",
-              "required": ["kind", "schemaId"],
+              "required": [
+                "kind",
+                "schemaId"
+              ],
               "properties": {
                 "kind": {
                   "const": "schema",
@@ -3187,7 +3432,10 @@
           "items": {
             "additionalProperties": false,
             "type": "object",
-            "required": ["name", "type"],
+            "required": [
+              "name",
+              "type"
+            ],
             "properties": {
               "name": {
                 "minLength": 1,
@@ -3199,7 +3447,10 @@
                   {
                     "additionalProperties": false,
                     "type": "object",
-                    "required": ["kind", "type"],
+                    "required": [
+                      "kind",
+                      "type"
+                    ],
                     "properties": {
                       "kind": {
                         "const": "type",
@@ -3238,7 +3489,10 @@
                   {
                     "additionalProperties": false,
                     "type": "object",
-                    "required": ["kind", "schemaId"],
+                    "required": [
+                      "kind",
+                      "schemaId"
+                    ],
                     "properties": {
                       "kind": {
                         "const": "schema",
@@ -3264,7 +3518,10 @@
         {
           "additionalProperties": false,
           "type": "object",
-          "required": ["id", "type"],
+          "required": [
+            "id",
+            "type"
+          ],
           "properties": {
             "id": {
               "minLength": 1,
@@ -3304,7 +3561,10 @@
                 {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["path", "equals"],
+                  "required": [
+                    "path",
+                    "equals"
+                  ],
                   "properties": {
                     "path": {
                       "minLength": 1,
@@ -3336,7 +3596,10 @@
                 {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["path", "truthy"],
+                  "required": [
+                    "path",
+                    "truthy"
+                  ],
                   "properties": {
                     "path": {
                       "minLength": 1,
@@ -3375,7 +3638,9 @@
                 "width": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["mode"],
+                  "required": [
+                    "mode"
+                  ],
                   "properties": {
                     "mode": {
                       "anyOf": [
@@ -3410,7 +3675,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -3438,7 +3706,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -3466,7 +3737,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -3486,7 +3760,9 @@
                 "height": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["mode"],
+                  "required": [
+                    "mode"
+                  ],
                   "properties": {
                     "mode": {
                       "anyOf": [
@@ -3521,7 +3797,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -3549,7 +3828,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -3577,7 +3859,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -3643,28 +3928,68 @@
                 "margin": {
                   "anyOf": [
                     {
-                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                      "type": "string"
+                      "anyOf": [
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "const": "auto",
+                          "type": "string"
+                        }
+                      ]
                     },
                     {
                       "additionalProperties": false,
                       "type": "object",
                       "properties": {
                         "top": {
-                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                              "type": "string"
+                            },
+                            {
+                              "const": "auto",
+                              "type": "string"
+                            }
+                          ]
                         },
                         "right": {
-                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                              "type": "string"
+                            },
+                            {
+                              "const": "auto",
+                              "type": "string"
+                            }
+                          ]
                         },
                         "bottom": {
-                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                              "type": "string"
+                            },
+                            {
+                              "const": "auto",
+                              "type": "string"
+                            }
+                          ]
                         },
                         "left": {
-                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                              "type": "string"
+                            },
+                            {
+                              "const": "auto",
+                              "type": "string"
+                            }
+                          ]
                         }
                       }
                     }
@@ -3741,7 +4066,9 @@
                         "width": {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["mode"],
+                          "required": [
+                            "mode"
+                          ],
                           "properties": {
                             "mode": {
                               "anyOf": [
@@ -3776,7 +4103,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -3804,7 +4134,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -3832,7 +4165,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -3852,7 +4188,9 @@
                         "height": {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["mode"],
+                          "required": [
+                            "mode"
+                          ],
                           "properties": {
                             "mode": {
                               "anyOf": [
@@ -3887,7 +4225,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -3915,7 +4256,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -3943,7 +4287,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -4009,28 +4356,68 @@
                         "margin": {
                           "anyOf": [
                             {
-                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                              "type": "string"
+                              "anyOf": [
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "auto",
+                                  "type": "string"
+                                }
+                              ]
                             },
                             {
                               "additionalProperties": false,
                               "type": "object",
                               "properties": {
                                 "top": {
-                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                  "type": "string"
+                                  "anyOf": [
+                                    {
+                                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "auto",
+                                      "type": "string"
+                                    }
+                                  ]
                                 },
                                 "right": {
-                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                  "type": "string"
+                                  "anyOf": [
+                                    {
+                                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "auto",
+                                      "type": "string"
+                                    }
+                                  ]
                                 },
                                 "bottom": {
-                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                  "type": "string"
+                                  "anyOf": [
+                                    {
+                                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "auto",
+                                      "type": "string"
+                                    }
+                                  ]
                                 },
                                 "left": {
-                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                  "type": "string"
+                                  "anyOf": [
+                                    {
+                                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "auto",
+                                      "type": "string"
+                                    }
+                                  ]
                                 }
                               }
                             }
@@ -4090,7 +4477,10 @@
               "items": {
                 "additionalProperties": false,
                 "type": "object",
-                "required": ["field", "target"],
+                "required": [
+                  "field",
+                  "target"
+                ],
                 "properties": {
                   "field": {
                     "minLength": 1,
@@ -4141,7 +4531,10 @@
               "items": {
                 "additionalProperties": false,
                 "type": "object",
-                "required": ["event", "name"],
+                "required": [
+                  "event",
+                  "name"
+                ],
                 "properties": {
                   "event": {
                     "minLength": 1,
@@ -4178,7 +4571,10 @@
                     "items": {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": ["path", "source"],
+                      "required": [
+                        "path",
+                        "source"
+                      ],
                       "properties": {
                         "path": {
                           "pattern": "^(?:[A-Za-z_$][A-Za-z0-9_$-]*(?:\\.[A-Za-z_$][A-Za-z0-9_$-]*)*)?$",
@@ -4189,7 +4585,10 @@
                             {
                               "additionalProperties": false,
                               "type": "object",
-                              "required": ["kind", "path"],
+                              "required": [
+                                "kind",
+                                "path"
+                              ],
                               "properties": {
                                 "kind": {
                                   "const": "native",
@@ -4216,7 +4615,10 @@
                             {
                               "additionalProperties": false,
                               "type": "object",
-                              "required": ["kind", "path"],
+                              "required": [
+                                "kind",
+                                "path"
+                              ],
                               "properties": {
                                 "kind": {
                                   "const": "context",
@@ -4232,7 +4634,10 @@
                             {
                               "additionalProperties": false,
                               "type": "object",
-                              "required": ["kind", "value"],
+                              "required": [
+                                "kind",
+                                "value"
+                              ],
                               "properties": {
                                 "kind": {
                                   "const": "literal",
@@ -4283,7 +4688,9 @@
             "repeat": {
               "additionalProperties": false,
               "type": "object",
-              "required": ["path"],
+              "required": [
+                "path"
+              ],
               "properties": {
                 "path": {
                   "minLength": 1,
@@ -4313,7 +4720,10 @@
         {
           "additionalProperties": false,
           "type": "object",
-          "required": ["id", "type"],
+          "required": [
+            "id",
+            "type"
+          ],
           "properties": {
             "id": {
               "minLength": 1,
@@ -4353,7 +4763,10 @@
                 {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["path", "equals"],
+                  "required": [
+                    "path",
+                    "equals"
+                  ],
                   "properties": {
                     "path": {
                       "minLength": 1,
@@ -4385,7 +4798,10 @@
                 {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["path", "truthy"],
+                  "required": [
+                    "path",
+                    "truthy"
+                  ],
                   "properties": {
                     "path": {
                       "minLength": 1,
@@ -4424,7 +4840,9 @@
                 "width": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["mode"],
+                  "required": [
+                    "mode"
+                  ],
                   "properties": {
                     "mode": {
                       "anyOf": [
@@ -4459,7 +4877,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -4487,7 +4908,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -4515,7 +4939,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -4535,7 +4962,9 @@
                 "height": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["mode"],
+                  "required": [
+                    "mode"
+                  ],
                   "properties": {
                     "mode": {
                       "anyOf": [
@@ -4570,7 +4999,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -4598,7 +5030,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -4626,7 +5061,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -4692,28 +5130,68 @@
                 "margin": {
                   "anyOf": [
                     {
-                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                      "type": "string"
+                      "anyOf": [
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "const": "auto",
+                          "type": "string"
+                        }
+                      ]
                     },
                     {
                       "additionalProperties": false,
                       "type": "object",
                       "properties": {
                         "top": {
-                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                              "type": "string"
+                            },
+                            {
+                              "const": "auto",
+                              "type": "string"
+                            }
+                          ]
                         },
                         "right": {
-                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                              "type": "string"
+                            },
+                            {
+                              "const": "auto",
+                              "type": "string"
+                            }
+                          ]
                         },
                         "bottom": {
-                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                              "type": "string"
+                            },
+                            {
+                              "const": "auto",
+                              "type": "string"
+                            }
+                          ]
                         },
                         "left": {
-                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                              "type": "string"
+                            },
+                            {
+                              "const": "auto",
+                              "type": "string"
+                            }
+                          ]
                         }
                       }
                     }
@@ -4790,7 +5268,9 @@
                         "width": {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["mode"],
+                          "required": [
+                            "mode"
+                          ],
                           "properties": {
                             "mode": {
                               "anyOf": [
@@ -4825,7 +5305,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -4853,7 +5336,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -4881,7 +5367,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -4901,7 +5390,9 @@
                         "height": {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["mode"],
+                          "required": [
+                            "mode"
+                          ],
                           "properties": {
                             "mode": {
                               "anyOf": [
@@ -4936,7 +5427,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -4964,7 +5458,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -4992,7 +5489,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -5058,28 +5558,68 @@
                         "margin": {
                           "anyOf": [
                             {
-                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                              "type": "string"
+                              "anyOf": [
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "auto",
+                                  "type": "string"
+                                }
+                              ]
                             },
                             {
                               "additionalProperties": false,
                               "type": "object",
                               "properties": {
                                 "top": {
-                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                  "type": "string"
+                                  "anyOf": [
+                                    {
+                                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "auto",
+                                      "type": "string"
+                                    }
+                                  ]
                                 },
                                 "right": {
-                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                  "type": "string"
+                                  "anyOf": [
+                                    {
+                                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "auto",
+                                      "type": "string"
+                                    }
+                                  ]
                                 },
                                 "bottom": {
-                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                  "type": "string"
+                                  "anyOf": [
+                                    {
+                                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "auto",
+                                      "type": "string"
+                                    }
+                                  ]
                                 },
                                 "left": {
-                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                  "type": "string"
+                                  "anyOf": [
+                                    {
+                                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "auto",
+                                      "type": "string"
+                                    }
+                                  ]
                                 }
                               }
                             }
@@ -5139,7 +5679,10 @@
               "items": {
                 "additionalProperties": false,
                 "type": "object",
-                "required": ["field", "target"],
+                "required": [
+                  "field",
+                  "target"
+                ],
                 "properties": {
                   "field": {
                     "minLength": 1,
@@ -5190,7 +5733,10 @@
               "items": {
                 "additionalProperties": false,
                 "type": "object",
-                "required": ["event", "name"],
+                "required": [
+                  "event",
+                  "name"
+                ],
                 "properties": {
                   "event": {
                     "minLength": 1,
@@ -5227,7 +5773,10 @@
                     "items": {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": ["path", "source"],
+                      "required": [
+                        "path",
+                        "source"
+                      ],
                       "properties": {
                         "path": {
                           "pattern": "^(?:[A-Za-z_$][A-Za-z0-9_$-]*(?:\\.[A-Za-z_$][A-Za-z0-9_$-]*)*)?$",
@@ -5238,7 +5787,10 @@
                             {
                               "additionalProperties": false,
                               "type": "object",
-                              "required": ["kind", "path"],
+                              "required": [
+                                "kind",
+                                "path"
+                              ],
                               "properties": {
                                 "kind": {
                                   "const": "native",
@@ -5265,7 +5817,10 @@
                             {
                               "additionalProperties": false,
                               "type": "object",
-                              "required": ["kind", "path"],
+                              "required": [
+                                "kind",
+                                "path"
+                              ],
                               "properties": {
                                 "kind": {
                                   "const": "context",
@@ -5281,7 +5836,10 @@
                             {
                               "additionalProperties": false,
                               "type": "object",
-                              "required": ["kind", "value"],
+                              "required": [
+                                "kind",
+                                "value"
+                              ],
                               "properties": {
                                 "kind": {
                                   "const": "literal",
@@ -5337,7 +5895,10 @@
         {
           "additionalProperties": false,
           "type": "object",
-          "required": ["id", "type"],
+          "required": [
+            "id",
+            "type"
+          ],
           "properties": {
             "id": {
               "minLength": 1,
@@ -5377,7 +5938,10 @@
                 {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["path", "equals"],
+                  "required": [
+                    "path",
+                    "equals"
+                  ],
                   "properties": {
                     "path": {
                       "minLength": 1,
@@ -5409,7 +5973,10 @@
                 {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["path", "truthy"],
+                  "required": [
+                    "path",
+                    "truthy"
+                  ],
                   "properties": {
                     "path": {
                       "minLength": 1,
@@ -5448,7 +6015,9 @@
                 "width": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["mode"],
+                  "required": [
+                    "mode"
+                  ],
                   "properties": {
                     "mode": {
                       "anyOf": [
@@ -5483,7 +6052,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -5511,7 +6083,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -5539,7 +6114,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -5559,7 +6137,9 @@
                 "height": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["mode"],
+                  "required": [
+                    "mode"
+                  ],
                   "properties": {
                     "mode": {
                       "anyOf": [
@@ -5594,7 +6174,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -5622,7 +6205,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -5650,7 +6236,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -5716,28 +6305,68 @@
                 "margin": {
                   "anyOf": [
                     {
-                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                      "type": "string"
+                      "anyOf": [
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "const": "auto",
+                          "type": "string"
+                        }
+                      ]
                     },
                     {
                       "additionalProperties": false,
                       "type": "object",
                       "properties": {
                         "top": {
-                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                              "type": "string"
+                            },
+                            {
+                              "const": "auto",
+                              "type": "string"
+                            }
+                          ]
                         },
                         "right": {
-                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                              "type": "string"
+                            },
+                            {
+                              "const": "auto",
+                              "type": "string"
+                            }
+                          ]
                         },
                         "bottom": {
-                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                              "type": "string"
+                            },
+                            {
+                              "const": "auto",
+                              "type": "string"
+                            }
+                          ]
                         },
                         "left": {
-                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                              "type": "string"
+                            },
+                            {
+                              "const": "auto",
+                              "type": "string"
+                            }
+                          ]
                         }
                       }
                     }
@@ -5814,7 +6443,9 @@
                         "width": {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["mode"],
+                          "required": [
+                            "mode"
+                          ],
                           "properties": {
                             "mode": {
                               "anyOf": [
@@ -5849,7 +6480,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -5877,7 +6511,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -5905,7 +6542,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -5925,7 +6565,9 @@
                         "height": {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["mode"],
+                          "required": [
+                            "mode"
+                          ],
                           "properties": {
                             "mode": {
                               "anyOf": [
@@ -5960,7 +6602,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -5988,7 +6633,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -6016,7 +6664,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -6082,28 +6733,68 @@
                         "margin": {
                           "anyOf": [
                             {
-                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                              "type": "string"
+                              "anyOf": [
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "auto",
+                                  "type": "string"
+                                }
+                              ]
                             },
                             {
                               "additionalProperties": false,
                               "type": "object",
                               "properties": {
                                 "top": {
-                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                  "type": "string"
+                                  "anyOf": [
+                                    {
+                                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "auto",
+                                      "type": "string"
+                                    }
+                                  ]
                                 },
                                 "right": {
-                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                  "type": "string"
+                                  "anyOf": [
+                                    {
+                                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "auto",
+                                      "type": "string"
+                                    }
+                                  ]
                                 },
                                 "bottom": {
-                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                  "type": "string"
+                                  "anyOf": [
+                                    {
+                                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "auto",
+                                      "type": "string"
+                                    }
+                                  ]
                                 },
                                 "left": {
-                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                  "type": "string"
+                                  "anyOf": [
+                                    {
+                                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "auto",
+                                      "type": "string"
+                                    }
+                                  ]
                                 }
                               }
                             }
@@ -6163,7 +6854,10 @@
               "items": {
                 "additionalProperties": false,
                 "type": "object",
-                "required": ["field", "target"],
+                "required": [
+                  "field",
+                  "target"
+                ],
                 "properties": {
                   "field": {
                     "minLength": 1,
@@ -6214,7 +6908,10 @@
               "items": {
                 "additionalProperties": false,
                 "type": "object",
-                "required": ["event", "name"],
+                "required": [
+                  "event",
+                  "name"
+                ],
                 "properties": {
                   "event": {
                     "minLength": 1,
@@ -6251,7 +6948,10 @@
                     "items": {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": ["path", "source"],
+                      "required": [
+                        "path",
+                        "source"
+                      ],
                       "properties": {
                         "path": {
                           "pattern": "^(?:[A-Za-z_$][A-Za-z0-9_$-]*(?:\\.[A-Za-z_$][A-Za-z0-9_$-]*)*)?$",
@@ -6262,7 +6962,10 @@
                             {
                               "additionalProperties": false,
                               "type": "object",
-                              "required": ["kind", "path"],
+                              "required": [
+                                "kind",
+                                "path"
+                              ],
                               "properties": {
                                 "kind": {
                                   "const": "native",
@@ -6289,7 +6992,10 @@
                             {
                               "additionalProperties": false,
                               "type": "object",
-                              "required": ["kind", "path"],
+                              "required": [
+                                "kind",
+                                "path"
+                              ],
                               "properties": {
                                 "kind": {
                                   "const": "context",
@@ -6305,7 +7011,10 @@
                             {
                               "additionalProperties": false,
                               "type": "object",
-                              "required": ["kind", "value"],
+                              "required": [
+                                "kind",
+                                "value"
+                              ],
                               "properties": {
                                 "kind": {
                                   "const": "literal",
@@ -6364,7 +7073,11 @@
         {
           "additionalProperties": false,
           "type": "object",
-          "required": ["id", "type", "component"],
+          "required": [
+            "id",
+            "type",
+            "component"
+          ],
           "properties": {
             "id": {
               "minLength": 1,
@@ -6412,7 +7125,9 @@
                 "width": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["mode"],
+                  "required": [
+                    "mode"
+                  ],
                   "properties": {
                     "mode": {
                       "anyOf": [
@@ -6447,7 +7162,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -6475,7 +7193,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -6503,7 +7224,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -6523,7 +7247,9 @@
                 "height": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["mode"],
+                  "required": [
+                    "mode"
+                  ],
                   "properties": {
                     "mode": {
                       "anyOf": [
@@ -6558,7 +7284,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -6586,7 +7315,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -6614,7 +7346,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["unit", "value"],
+                          "required": [
+                            "unit",
+                            "value"
+                          ],
                           "properties": {
                             "unit": {
                               "const": "%",
@@ -6680,28 +7415,68 @@
                 "margin": {
                   "anyOf": [
                     {
-                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                      "type": "string"
+                      "anyOf": [
+                        {
+                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                          "type": "string"
+                        },
+                        {
+                          "const": "auto",
+                          "type": "string"
+                        }
+                      ]
                     },
                     {
                       "additionalProperties": false,
                       "type": "object",
                       "properties": {
                         "top": {
-                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                              "type": "string"
+                            },
+                            {
+                              "const": "auto",
+                              "type": "string"
+                            }
+                          ]
                         },
                         "right": {
-                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                              "type": "string"
+                            },
+                            {
+                              "const": "auto",
+                              "type": "string"
+                            }
+                          ]
                         },
                         "bottom": {
-                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                              "type": "string"
+                            },
+                            {
+                              "const": "auto",
+                              "type": "string"
+                            }
+                          ]
                         },
                         "left": {
-                          "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                              "type": "string"
+                            },
+                            {
+                              "const": "auto",
+                              "type": "string"
+                            }
+                          ]
                         }
                       }
                     }
@@ -6778,7 +7553,9 @@
                         "width": {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["mode"],
+                          "required": [
+                            "mode"
+                          ],
                           "properties": {
                             "mode": {
                               "anyOf": [
@@ -6813,7 +7590,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -6841,7 +7621,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -6869,7 +7652,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -6889,7 +7675,9 @@
                         "height": {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["mode"],
+                          "required": [
+                            "mode"
+                          ],
                           "properties": {
                             "mode": {
                               "anyOf": [
@@ -6924,7 +7712,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -6952,7 +7743,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -6980,7 +7774,10 @@
                                 {
                                   "additionalProperties": false,
                                   "type": "object",
-                                  "required": ["unit", "value"],
+                                  "required": [
+                                    "unit",
+                                    "value"
+                                  ],
                                   "properties": {
                                     "unit": {
                                       "const": "%",
@@ -7046,28 +7843,68 @@
                         "margin": {
                           "anyOf": [
                             {
-                              "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                              "type": "string"
+                              "anyOf": [
+                                {
+                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                  "type": "string"
+                                },
+                                {
+                                  "const": "auto",
+                                  "type": "string"
+                                }
+                              ]
                             },
                             {
                               "additionalProperties": false,
                               "type": "object",
                               "properties": {
                                 "top": {
-                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                  "type": "string"
+                                  "anyOf": [
+                                    {
+                                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "auto",
+                                      "type": "string"
+                                    }
+                                  ]
                                 },
                                 "right": {
-                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                  "type": "string"
+                                  "anyOf": [
+                                    {
+                                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "auto",
+                                      "type": "string"
+                                    }
+                                  ]
                                 },
                                 "bottom": {
-                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                  "type": "string"
+                                  "anyOf": [
+                                    {
+                                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "auto",
+                                      "type": "string"
+                                    }
+                                  ]
                                 },
                                 "left": {
-                                  "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
-                                  "type": "string"
+                                  "anyOf": [
+                                    {
+                                      "pattern": "^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$",
+                                      "type": "string"
+                                    },
+                                    {
+                                      "const": "auto",
+                                      "type": "string"
+                                    }
+                                  ]
                                 }
                               }
                             }
@@ -7127,7 +7964,10 @@
                 {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["path", "equals"],
+                  "required": [
+                    "path",
+                    "equals"
+                  ],
                   "properties": {
                     "path": {
                       "minLength": 1,
@@ -7159,7 +7999,10 @@
                 {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["path", "truthy"],
+                  "required": [
+                    "path",
+                    "truthy"
+                  ],
                   "properties": {
                     "path": {
                       "minLength": 1,
@@ -7267,14 +8110,20 @@
               "items": {
                 "additionalProperties": false,
                 "type": "object",
-                "required": ["when", "variant"],
+                "required": [
+                  "when",
+                  "variant"
+                ],
                 "properties": {
                   "when": {
                     "anyOf": [
                       {
                         "additionalProperties": false,
                         "type": "object",
-                        "required": ["path", "equals"],
+                        "required": [
+                          "path",
+                          "equals"
+                        ],
                         "properties": {
                           "path": {
                             "minLength": 1,
@@ -7306,7 +8155,10 @@
                       {
                         "additionalProperties": false,
                         "type": "object",
-                        "required": ["path", "truthy"],
+                        "required": [
+                          "path",
+                          "truthy"
+                        ],
                         "properties": {
                           "path": {
                             "minLength": 1,
@@ -7360,7 +8212,10 @@
         {
           "additionalProperties": false,
           "type": "object",
-          "required": ["id", "type"],
+          "required": [
+            "id",
+            "type"
+          ],
           "properties": {
             "id": {
               "minLength": 1,
@@ -7413,7 +8268,10 @@
         {
           "additionalProperties": false,
           "type": "object",
-          "required": ["id", "type"],
+          "required": [
+            "id",
+            "type"
+          ],
           "properties": {
             "id": {
               "minLength": 1,
@@ -7497,7 +8355,11 @@
       "additionalProperties": false,
       "properties": {
         "tier": {
-          "enum": ["primitive", "semantic", "component"]
+          "enum": [
+            "primitive",
+            "semantic",
+            "component"
+          ]
         },
         "breakpoints": {
           "type": "object",

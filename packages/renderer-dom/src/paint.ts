@@ -20,7 +20,7 @@ import {
 import {
   applyAttributes,
   applyBindings,
-  applyImage,
+  applyMediaNode,
   clearPresentation,
   elementFor,
   isHtmlElement,
@@ -177,7 +177,10 @@ function paintInstance(
   let text: string | null = null;
   if (root.type === 'text') text = bound.text ?? root.text ?? null;
   else if (root.type === 'frame' && bound.text) text = bound.text;
-  if (root.type === 'image') applyImage(el, bound.src ?? root.src, bound.alt ?? root.alt);
+  if (root.type === 'image') {
+    const tag = root.tag ?? 'img';
+    applyMediaNode(el, tag, bound.src ?? root.src, bound.alt ?? root.alt);
+  }
   el.hidden = bound.hidden;
 
   ctx.records.set(id, {
@@ -251,7 +254,10 @@ function paintElement(
   let text: string | null = null;
   if (node.type === 'text') text = bound.text ?? node.text ?? null;
   else if (node.type === 'frame' && bound.text) text = bound.text;
-  if (node.type === 'image') applyImage(el, bound.src ?? node.src, bound.alt ?? node.alt);
+  if (node.type === 'image') {
+    const tag = node.tag ?? 'img';
+    applyMediaNode(el, tag, bound.src ?? node.src, bound.alt ?? node.alt);
+  }
   el.hidden = bound.hidden;
 
   ctx.records.set(id, {

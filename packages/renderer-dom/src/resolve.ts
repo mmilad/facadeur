@@ -337,7 +337,10 @@ export function findCanvasChild(ctx: RenderContext, id: string): NestedNode | un
 
 export function tagFor(node: NestedNode, ctx: RenderContext): string {
   if (node.type !== 'instance') {
-    return node.tag ?? (node.type === 'text' ? 'span' : node.type === 'image' ? 'img' : 'div');
+    return (
+      node.tag ??
+      (node.type === 'text' ? 'span' : node.type === 'image' ? 'img' : 'div')
+    );
   }
   const definition = definitionForInstance(node, ctx);
   if (!definition || ctx.depth >= MAX_DEPTH || definition.root.type === 'instance') return 'div';

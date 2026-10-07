@@ -242,6 +242,18 @@ describe('Core schema-use contract resolution', () => {
     expect([...fields.keys()]).toEqual(['kind', 'src', 'ratio']);
   });
 
+  it('accepts direct schema references without undefined defaults keys', () => {
+    const file = toFlat(baseDocument);
+    const updated = applyCommand(file, {
+      type: 'setSchemaUse',
+      schemaUse: {
+        direct: { kind: 'schema', schemaId: 'image' },
+        defaults: undefined,
+      },
+    });
+    expect(updated.schemaUse).toEqual({ direct: { kind: 'schema', schemaId: 'image' } });
+  });
+
   it('roundtrips schema catalog/use and exposes new command updates', () => {
     const file = toFlat({ ...baseDocument, schemaCatalog });
     expect(toNested(file)).toMatchObject({ schemaCatalog, schemaUse: baseDocument.schemaUse });

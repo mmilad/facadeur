@@ -41,13 +41,12 @@
     {
       "id": "image",
       "name": "Image",
-      "description": "Image branch of Media. Alt is specific to images.",
+      "description": "Image source, alt text, and aspect ratio.",
       "schema": {
         "type": "object",
         "title": "Image",
-        "required": ["kind", "src"],
+        "required": ["src"],
         "properties": {
-          "kind": { "type": "string", "enum": ["image"], "title": "Media kind" },
           "src": { "type": "string", "title": "Source" },
           "alt": { "type": "string", "title": "Alt text" },
           "ratio": { "type": "string", "title": "Ratio" }
@@ -58,16 +57,34 @@
     {
       "id": "video",
       "name": "Video",
-      "description": "Video branch of Media. Poster is specific to videos.",
+      "description": "Video source, poster frame, and aspect ratio.",
       "schema": {
         "type": "object",
         "title": "Video",
-        "required": ["kind", "src"],
+        "required": ["src"],
         "properties": {
-          "kind": { "type": "string", "enum": ["video"], "title": "Media kind" },
           "src": { "type": "string", "title": "Source" },
           "poster": { "type": "string", "title": "Poster" },
           "ratio": { "type": "string", "title": "Ratio" }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "fullbleed-teaser",
+      "name": "Full-bleed teaser",
+      "description": "Hero image, copy, and call to action.",
+      "schema": {
+        "type": "object",
+        "title": "Full-bleed teaser",
+        "required": ["title", "imageSrc"],
+        "properties": {
+          "title": { "type": "string", "title": "Title" },
+          "body": { "type": "string", "title": "Body" },
+          "imageSrc": { "type": "string", "title": "Image source" },
+          "imageAlt": { "type": "string", "title": "Image alt" },
+          "ctaLabel": { "type": "string", "title": "CTA label" },
+          "ctaHref": { "type": "string", "title": "CTA href" }
         },
         "additionalProperties": false
       }

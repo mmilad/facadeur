@@ -188,6 +188,7 @@ describe('project storage isolation', () => {
       'shared-card',
       'text-body',
       'text-heading',
+      'video',
     ]);
     const button = snapshot.documents.find((document) => document.id === 'button')!;
     await writeFile(
@@ -267,6 +268,6 @@ describe('project storage isolation', () => {
         .filter((document) => document.kind === 'atom')
         .map((document) => document.id)
         .sort(),
-    ).toEqual(['button', 'image', 'link', 'text-body', 'text-heading']);
+    ).toEqual(['button', 'image', 'link', 'text-body', 'text-heading', 'video']);
   });
 });

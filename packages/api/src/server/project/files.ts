@@ -10,6 +10,7 @@ import {
   type DocumentFile,
 } from '@facadeur/core';
 import { starterCatalog } from './starter-catalog.js';
+import { starterSchemaLibrary } from './starter-schemas.js';
 import type { ProjectStorage } from '../../contracts/management.js';
 import { reconcileLegacySchemaSnapshot } from '../../schema/reconcile.js';
 import type { SchemaLibraryState } from '../../schema/types.js';
@@ -162,6 +163,14 @@ export async function initializeProjectFiles(storage: ProjectStorage) {
       await atomicWrite(filename, JSON.stringify(document, null, 2) + '\n');
     }
   }
+  const libraryFile = path.join(directory, 'schemas.json');
+  try {
+    await assertTrustedPath(libraryFile);
+    await lstat(libraryFile);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+    await atomicWrite(libraryFile, JSON.stringify(starterSchemaLibrary(), null, 2) + '\n');
+  }
   return { ...storage, directory };
 }
 
@@ -191,7 +200,7 @@ async function upgradeStarterAtoms(
 ) {
   const marker = path.join(storageDirectory(storage), '.facadeur', 'starter-version.json');
   let version = await readStarterVersion(marker);
-  if (version >= 5) return;
+  if (version >= 8) return;
 
   if (version < 3) {
     for (const { source, document } of starterCatalog()) {
@@ -259,6 +268,96 @@ async function upgradeStarterAtoms(
       entry.hash = hash(content);
     }
     version = 5;
+  }
+
+  if (version < 6) {
+    const designEntry = files.find((entry) => entry.source === 'project-template.json');
+    if (designEntry) {
+      designEntry.document = {
+        ...designEntry.document,
+        schemaCatalog: { schemas: structuredClone(starterSchemaLibrary().schemas) },
+      };
+      const content = JSON.stringify(designEntry.document, null, 2) + '\n';
+      await atomicWrite(sourcePath('project-template.json', storage), content);
+      designEntry.hash = hash(content);
+    }
+    const libraryFile = path.join(storageDirectory(storage), 'schemas.json');
+    await atomicWrite(
+      libraryFile,
+      JSON.stringify(starterSchemaLibrary(), null, 2) + '\n',
+    );
+    const imageStarter = starterCatalog().find((entry) => entry.document.id === 'image');
+    const imageEntry = files.find((entry) => entry.document.id === 'image');
+    if (
+      imageStarter &&
+      imageEntry &&
+      !unsavedIds.includes('image') &&
+      !imageEntry.document.schemaUse
+    ) {
+      imageEntry.document = validateDocumentFile(imageStarter.document);
+      const content = JSON.stringify(imageEntry.document, null, 2) + '\n';
+      await atomicWrite(sourcePath(imageStarter.source, storage), content);
+      imageEntry.hash = hash(content);
+    }
+    version = 6;
+  }
+
+  if (version < 7) {
+    for (const { source, document } of starterCatalog()) {
+      if (document.id !== 'video') continue;
+      if (
+        files.some(
+          (entry) =>
+            entry.source === source ||
+            entry.document.id === document.id ||
+            (entry.document.slug ?? entry.document.id) === document.id,
+        )
+      )
+        continue;
+      const content = JSON.stringify(document, null, 2) + '\n';
+      await atomicWrite(sourcePath(source, storage), content);
+      files.push({ source, document, hash: hash(content) });
+    }
+    version = 7;
+  }
+
+  if (version < 8) {
+    const designEntry = files.find((entry) => entry.source === 'project-template.json');
+    if (designEntry) {
+      const existing = designEntry.document.schemaCatalog?.schemas ?? [];
+      const byId = new Map(existing.map((schema) => [schema.id, schema]));
+      for (const schema of starterSchemaLibrary().schemas) {
+        byId.set(schema.id, structuredClone(schema));
+      }
+      designEntry.document = {
+        ...designEntry.document,
+        schemaCatalog: { schemas: [...byId.values()] },
+      };
+      const content = JSON.stringify(designEntry.document, null, 2) + '\n';
+      await atomicWrite(sourcePath('project-template.json', storage), content);
+      designEntry.hash = hash(content);
+    }
+    const libraryFile = path.join(storageDirectory(storage), 'schemas.json');
+    await atomicWrite(
+      libraryFile,
+      JSON.stringify(starterSchemaLibrary(), null, 2) + '\n',
+    );
+    const refreshIds = new Set(['fullbleed-teaser']);
+    for (const { source, document } of starterCatalog()) {
+      if (!refreshIds.has(document.id)) continue;
+      const entry = files.find(
+        (item) =>
+          item.source === source ||
+          item.document.id === document.id ||
+          (item.document.slug ?? item.document.id) === document.id,
+      );
+      if (!entry || unsavedIds.includes(document.id)) continue;
+      entry.document = validateDocumentFile(document);
+      const content = JSON.stringify(entry.document, null, 2) + '\n';
+      await atomicWrite(sourcePath(source, storage), content);
+      entry.hash = hash(content);
+    }
+    version = 8;
   }
 
   await atomicWrite(marker, JSON.stringify({ version }) + '\n');

@@ -90,7 +90,18 @@ function BindingRow({
 
   function commitSlot(slot: BindingSlot) {
     if (slot.id === 'attribute:custom' || slot.id === 'style:custom') {
-      commit(bindingFromSlot(binding.field, slot, binding.name?.trim() || 'name'));
+      const preserved = binding.name?.trim();
+      const matchesNamedSlot =
+        preserved &&
+        slots.some(
+          (item) =>
+            item.id !== 'attribute:custom' &&
+            item.id !== 'style:custom' &&
+            item.target === slot.target &&
+            item.name?.toLowerCase() === preserved.toLowerCase(),
+        );
+      const name = matchesNamedSlot ? 'name' : preserved || 'name';
+      commit(bindingFromSlot(binding.field, slot, name));
       return;
     }
     commit(bindingFromSlot(binding.field, slot));

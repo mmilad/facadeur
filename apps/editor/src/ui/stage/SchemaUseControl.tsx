@@ -17,7 +17,9 @@ export function SchemaUseControl({
 
   function commitSelection(next: SchemaTypeSelection | null) {
     const schemaUse: ComponentSchemaUse | null = next
-      ? { ...next, defaults: use?.defaults }
+      ? use?.defaults === undefined
+        ? next
+        : { ...next, defaults: use.defaults }
       : use?.defaults === undefined
         ? null
         : { defaults: use.defaults };

@@ -5,15 +5,20 @@ import link from '../../../../../examples/link.json';
 import image from '../../../../../examples/atoms/image.json';
 import textHeading from '../../../../../examples/atoms/text-heading.json';
 import textBody from '../../../../../examples/atoms/text-body.json';
+import video from '../../../../../examples/atoms/video.json';
 import contentCard from '../../../../../examples/components/content-card.json';
 import fullbleedTeaser from '../../../../../examples/components/fullbleed-teaser.json';
+import { starterSchemas } from './starter-schemas.js';
 
-const atoms = [button, link, image, textHeading, textBody];
+const atoms = [button, link, image, video, textHeading, textBody];
 const components = [contentCard, fullbleedTeaser];
 
 /** Each project receives its own editable copies of the built-in atom definitions. */
 export function starterCatalog() {
-  const design = { ...createProjectTemplateDocument(), schemaCatalog: { schemas: [] } };
+  const design = {
+    ...createProjectTemplateDocument(),
+    schemaCatalog: { schemas: structuredClone(starterSchemas) },
+  };
   const section: DocumentFile = {
     version: 1,
     id: 'new-section',

@@ -56,4 +56,26 @@ describe('bindings editor', () => {
       { field: 'label', target: 'attribute', name: 'name' },
     ]);
   });
+
+  it('keeps custom attribute selected when switching from a named attribute slot', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <BindingsEditorControl
+        nodeType="frame"
+        tag="div"
+        fields={[{ name: 'src', type: 'text' }]}
+        bindings={[{ field: 'src', target: 'attribute', name: 'tabindex' }]}
+        onChangeBindings={onChange}
+      />,
+    );
+
+    const slotSelect = document.querySelector('select[name="binding-slot-0"]') as HTMLSelectElement;
+    expect(slotSelect.value).toBe('tabindex');
+
+    await user.selectOptions(slotSelect, 'attribute:custom');
+    expect(onChange).toHaveBeenLastCalledWith([
+      { field: 'src', target: 'attribute', name: 'name' },
+    ]);
+  });
 });

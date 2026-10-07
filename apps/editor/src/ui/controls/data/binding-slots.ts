@@ -116,6 +116,16 @@ function slotsForFrameTag(tag: string | undefined): BindingSlot[] {
       return appendVisibilityStyleAndCustom([...attributeSlots([...ANCHOR_ATTRIBUTES])], true);
     case 'label':
       return appendVisibilityStyleAndCustom([...attributeSlots([...LABEL_ATTRIBUTES])], true);
+    case 'video':
+      return appendVisibilityStyleAndCustom(
+        [
+          attributeSlot('src'),
+          attributeSlot('poster'),
+          attributeSlot('controls'),
+          attributeSlot('loop'),
+        ],
+        true,
+      );
     default:
       return appendVisibilityStyleAndCustom(
         [...attributeSlots([...GENERIC_FRAME_ATTRIBUTES])],
@@ -129,6 +139,13 @@ export function slotsForNode(nodeType: 'frame' | 'text' | 'image', tag?: string)
     return [TEXT_SLOT, VISIBILITY_SLOT, ATTRIBUTE_CUSTOM_SLOT];
   }
   if (nodeType === 'image') {
+    const normalized = tag?.trim().toLowerCase() ?? '';
+    if (normalized === 'video') {
+      return appendVisibilityStyleAndCustom(
+        [SRC_SLOT, attributeSlot('poster'), attributeSlot('controls'), attributeSlot('loop')],
+        true,
+      );
+    }
     return [SRC_SLOT, ALT_SLOT, VISIBILITY_SLOT, ATTRIBUTE_CUSTOM_SLOT];
   }
   return slotsForFrameTag(tag);

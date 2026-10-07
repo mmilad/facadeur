@@ -109,6 +109,20 @@ export function applyImage(
   else el.removeAttribute('alt');
 }
 
+export function applyMediaNode(
+  el: HTMLElement,
+  tag: string,
+  src: string | undefined,
+  alt: string | undefined,
+): void {
+  if (tag.toLowerCase() === 'video') {
+    if (src !== undefined) el.setAttribute('src', src);
+    else el.removeAttribute('src');
+    return;
+  }
+  applyImage(el, src, alt);
+}
+
 export function applyBindings(
   el: HTMLElement,
   bindings: Binding[] | undefined,

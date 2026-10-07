@@ -43,6 +43,14 @@ describe('binding slots', () => {
     );
   });
 
+  it('offers video slots on image nodes tagged video', () => {
+    const slots = slotsForNode('image', 'video');
+    expect(slots.map((slot) => slot.id)).toEqual(
+      expect.arrayContaining(['src', 'poster', 'style:custom']),
+    );
+    expect(slots.some((slot) => slot.id === 'alt')).toBe(false);
+  });
+
   it('resolves attribute data-foo to the custom slot', () => {
     const slots = slotsForNode('frame', 'input');
     const binding = { field: 'meta', target: 'attribute' as const, name: 'data-foo' };

@@ -21,11 +21,20 @@ export function setSchemaUse(doc: FlatDocument, value: ComponentSchemaUse | null
     delete doc.schemaUse;
     return;
   }
-  if (!isJsonValue(value) || !isPlainObject(value)) {
+  const normalized = normalizeSchemaUse(value);
+  if (!isJsonValue(normalized) || !isPlainObject(normalized)) {
     throw new DocumentError('schema', 'Component schema use must be a JSON object');
   }
-  assertSchemaUse(value);
-  doc.schemaUse = structuredClone(value) as ComponentSchemaUse;
+  assertSchemaUse(normalized);
+  doc.schemaUse = structuredClone(normalized) as ComponentSchemaUse;
+}
+
+function normalizeSchemaUse(value: ComponentSchemaUse): Record<string, unknown> {
+  const next: Record<string, unknown> = {};
+  if (value.direct !== undefined) next.direct = value.direct;
+  if (value.fields !== undefined) next.fields = value.fields;
+  if (value.defaults !== undefined) next.defaults = value.defaults;
+  return next;
 }
 
 function assertSchemaCatalog(value: SchemaCatalog) {

@@ -21,7 +21,7 @@ export function NodeBindings({
           <h3>Bindings</h3>
           <BindingsEditorControl
             bindings={bindings}
-            fields={snap.document.fields}
+            fields={snap.documentScopeFields}
             nodeType={node.type}
             tag={node.tag ?? undefined}
             onChangeBindings={(next) => writeBindings(session, node, next)}

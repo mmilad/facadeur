@@ -76,6 +76,7 @@
         "id": "media",
         "type": "instance",
         "component": "image",
+        "forwardFields": false,
         "fieldBindings": {
           "src": "imageSrc",
           "alt": "imageAlt"
@@ -110,6 +111,7 @@
             "id": "title",
             "type": "instance",
             "component": "text-heading",
+            "forwardFields": false,
             "fieldBindings": {
               "text": "title"
             },
@@ -126,6 +128,7 @@
             "id": "body",
             "type": "instance",
             "component": "text-body",
+            "forwardFields": false,
             "fieldBindings": {
               "text": "body"
             },
