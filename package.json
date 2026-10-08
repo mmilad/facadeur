@@ -18,7 +18,7 @@
     "verify": "pnpm typecheck && pnpm lint && pnpm test",
     "schema": "tsx scripts/export-schema.ts",
     "codegen": "echo \"codegen disabled until new catalog examples exist\" && exit 1",
-    "storybook": "pnpm --dir dist/facadeur storybook"
+    "storybook": "pnpm --filter @facadeur/editor storybook"
   },
   "devDependencies": {
     "@sinclair/typebox": "^0.34.41",

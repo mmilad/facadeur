@@ -5,11 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --port 3001",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
     "build": "next build",
     "start": "next start --port 3001",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@facadeur/api": "workspace:*",
+    "@facadeur/api-client": "workspace:*",
     "@facadeur/codegen": "workspace:*",
     "@facadeur/core": "workspace:*",
     "@facadeur/renderer-dom": "workspace:*",
@@ -20,14 +24,14 @@
     "jsonjoy-builder": "1.0.4",
     "next": "^15.5.3",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "@facadeur/api": "workspace:*",
-    "@facadeur/api-client": "workspace:*"
+    "react-dom": "^19.1.1"
   },
   "devDependencies": {
+    "@storybook/nextjs-vite": "10.6.1",
     "@types/node": "^22.19.0",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
+    "storybook": "10.6.1",
     "typescript": "^5.9.2"
   }
 }
