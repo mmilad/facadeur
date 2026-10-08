@@ -257,6 +257,15 @@ describe('project storage isolation', () => {
     expect(snapshot.unsavedDocumentIds).not.toContain('shared-card');
   });
 
+  it('ignores catalog.json sidecar files when loading project documents', async () => {
+    await writeFile(
+      join(first.directory, 'catalog.json'),
+      JSON.stringify({ atoms: {}, components: {}, pages: {} }),
+    );
+
+    await expect(readProjectFiles(first)).resolves.toMatchObject({ id: 'project-one' });
+  });
+
   it('materializes starter files when a managed project directory is missing on disk', async () => {
     const directory = join(root, 'missing-on-disk');
     const storage = { id: 'missing-on-disk', directory };

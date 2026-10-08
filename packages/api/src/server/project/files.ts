@@ -41,6 +41,25 @@ const recoveryFilename = (storage?: ProjectStorage) =>
       : legacyProjectStorage().recoveryPath!;
 const hash = (content: string) => createHash('sha256').update(content).digest('hex');
 
+/** Sidecar JSON in the project directory; not authored document files. */
+const PROJECT_METADATA_JSON = new Set(['schemas.json', 'catalog.json']);
+
+function isProjectDocumentSource(name: string) {
+  return name.endsWith('.json') && !PROJECT_METADATA_JSON.has(name);
+}
+
+function validateProjectInput<T>(validate: () => T, source?: string) {
+  try {
+    return validate();
+  } catch (error) {
+    if (error instanceof DocumentError) {
+      const detail = source ? `${source}: ${error.message}` : error.message;
+      throw new DomainError('invalid-input', detail);
+    }
+    throw error;
+  }
+}
+
 interface RecoveredProject {
   documents: DocumentFile[];
   sources: Record<string, string>;
@@ -374,21 +393,26 @@ export async function readProjectFiles(storage?: ProjectStorage): Promise<Projec
     }
   }
   const directory = await assertStorageDirectory(storage);
-  const filenames = (await readdir(directory))
-    .filter((name) => name.endsWith('.json') && name !== 'schemas.json')
-    .sort();
+  const filenames = (await readdir(directory)).filter(isProjectDocumentSource).sort();
   const files: Array<{ source: string; hash: string | null; document: DocumentFile }> =
     await Promise.all(
       filenames.map(async (source) => {
         const text = await readSource(source, storage);
-        return { source, hash: hash(text), document: validateDocumentFile(JSON.parse(text)) };
+        return {
+          source,
+          hash: hash(text),
+          document: validateProjectInput(
+            () => validateDocumentFile(JSON.parse(text)),
+            source,
+          ),
+        };
       }),
     );
   const recovery = await readRecovery(storage);
   const unsavedDocumentIds: string[] = [];
   const retainedRecovery: RecoveredProject = { documents: [], sources: {}, sourceHashes: {} };
   for (const recovered of recovery?.documents ?? []) {
-    const document = validateDocumentFile(recovered);
+    const document = validateProjectInput(() => validateDocumentFile(recovered), 'editor-recovery');
     const source = recovery!.sources[document.id];
     if (!source) continue;
     sourcePath(source, storage);
@@ -425,12 +449,17 @@ export async function readProjectFiles(storage?: ProjectStorage): Promise<Projec
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
   }
   const reconciled = reconcileLegacySchemaSnapshot(designEntry.document, documents, library);
-  const design = validateDocumentFile(reconciled.design);
-  files.forEach((entry) => validateProjectDesign(entry.document));
+  const design = validateProjectInput(() => validateDocumentFile(reconciled.design), 'design');
+  files.forEach((entry) =>
+    validateProjectInput(() => validateProjectDesign(entry.document), entry.source),
+  );
   return {
     id: storageId(storage),
     design,
-    documents: validateCatalog(reconciled.documents, { schemaCatalog: design.schemaCatalog }),
+    documents: validateProjectInput(
+      () => validateCatalog(reconciled.documents, { schemaCatalog: design.schemaCatalog }),
+      'catalog',
+    ),
     sources: Object.fromEntries(files.map((entry) => [entry.document.id, entry.source])),
     hashes: Object.fromEntries(files.map((entry) => [entry.document.id, entry.hash])),
     unsavedDocumentIds,
@@ -439,13 +468,8 @@ export async function readProjectFiles(storage?: ProjectStorage): Promise<Projec
 
 const pendingSaves = new Map<string, Promise<unknown>>();
 
-function validateSaveInput<T>(validate: () => T) {
-  try {
-    return validate();
-  } catch (error) {
-    if (error instanceof DocumentError) throw new DomainError('invalid-input', error.message);
-    throw error;
-  }
+function validateSaveInput<T>(validate: () => T, source?: string) {
+  return validateProjectInput(validate, source);
 }
 
 /** Serialize saves per project, reject changed sources, and atomically replace one JSON file. */

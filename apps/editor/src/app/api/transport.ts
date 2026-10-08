@@ -1,3 +1,4 @@
+import { DocumentError } from '@facadeur/core';
 import { apiController, DomainError } from '@facadeur/api/server';
 import type { DomainErrorCode } from '@facadeur/api';
 
@@ -60,18 +61,18 @@ export async function respond(operation: () => Promise<Response>) {
     const status =
       error instanceof DomainError
         ? errorStatus[error.code]
-        : error instanceof HttpError
-          ? error.status
-          : 500;
+        : error instanceof DocumentError
+          ? 400
+          : error instanceof HttpError
+            ? error.status
+            : 500;
     if (status === 500) console.error('[facadeur:api]', error);
-    return Response.json(
-      {
-        error:
-          error instanceof DomainError || error instanceof HttpError
-            ? error.message
-            : 'API operation failed',
-      },
-      { status },
-    );
+    const message =
+      error instanceof DomainError || error instanceof HttpError
+        ? error.message
+        : error instanceof DocumentError
+          ? error.message
+          : 'API operation failed';
+    return Response.json({ error: message }, { status });
   }
 }
