@@ -1,4 +1,5 @@
 import React from 'react';
+import { Form as SharedForm } from '@facadeur/form';
 import { AddonPanel } from 'storybook/internal/components';
 import { useArgs, useParameter } from 'storybook/manager-api';
 import type {
@@ -172,6 +173,16 @@ function renderField(
     return renderRepeater(field, args[field.name], updateArgs);
   }
 
+  if (field.type === 'text') {
+    return (
+      <SharedForm
+        value={args}
+        fields={[field]}
+        onChange={(_, meta) => updateArgs({ [meta.path]: meta.next })}
+      />
+    );
+  }
+
   const value = args[field.name];
   const onChange = (nextValue: string | number | boolean) => {
     const updates: Args = { [field.name]: nextValue };
@@ -255,10 +266,10 @@ export function SchemaFormPanel({ active, parameterKey }: SchemaFormPanelProps) 
                 {renderField(field, args, updateArgs, config.fields)}
               </section>
             ) : (
-              <label key={field.name} style={fieldStyle}>
-                <span>{field.label}</span>
+              <section key={field.name} style={fieldStyle}>
+                {field.type === 'text' ? null : <strong>{field.label}</strong>}
                 {renderField(field, args, updateArgs, config.fields)}
-              </label>
+              </section>
             ),
           )}
         </div>

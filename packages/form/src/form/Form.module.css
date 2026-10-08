@@ -1,0 +1,7 @@
+.form {
+  display: grid;
+  gap: var(--eu-gap-compact, 6px);
+  color: var(--eu-fg, #2a241c);
+  font-size: var(--eu-font-size, 12px);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}

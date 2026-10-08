@@ -16,6 +16,7 @@
     "@facadeur/api-client": "workspace:*",
     "@facadeur/codegen": "workspace:*",
     "@facadeur/core": "workspace:*",
+    "@facadeur/form": "workspace:*",
     "@facadeur/renderer-dom": "workspace:*",
     "@facadeur/style-engine": "workspace:*",
     "@facadeur/tokens": "workspace:*",

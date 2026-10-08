@@ -1,0 +1,20 @@
+[01:15:03.668] [INFO] storybook v10.6.1
+[01:15:04.780] [DEBUG] Getting package.json info for D:/newProjects/facadeur/apps/editor/package.json...
+[01:15:05.584] [DEBUG] Could not determine @babel/preset-env version in use. In case of runtime errors with @babel/preset-env, you may need to set the babelRemoveBugfixes feature flag in your `main.ts` file.
+[01:15:06.003] [INFO] Starting...
+[01:15:06.023] [DEBUG] readDependencyManifest: could not resolve "@facadeur/form"
+[01:15:06.380] [ERROR] [38;2;241;97;97mError: Build failed with 1 error:
+.storybook/lib/schema-form/panel.tsx:2:35: ERROR: Could not resolve "@facadeur/form"[39m
+    at failureErrorWithLog (D:\newProjects\facadeur\node_modules\.pnpm\esbuild@0.28.2\node_modules\esbuild\lib\main.js:1752:15)
+    at D:\newProjects\facadeur\node_modules\.pnpm\esbuild@0.28.2\node_modules\esbuild\lib\main.js:1211:25
+    at runOnEndCallbacks (D:\newProjects\facadeur\node_modules\.pnpm\esbuild@0.28.2\node_modules\esbuild\lib\main.js:1592:45)
+    at buildResponseToResult (D:\newProjects\facadeur\node_modules\.pnpm\esbuild@0.28.2\node_modules\esbuild\lib\main.js:1209:7)
+    at D:\newProjects\facadeur\node_modules\.pnpm\esbuild@0.28.2\node_modules\esbuild\lib\main.js:1236:16
+    at responseCallbacks.<computed> (D:\newProjects\facadeur\node_modules\.pnpm\esbuild@0.28.2\node_modules\esbuild\lib\main.js:886:9)
+    at handleIncomingPacket (D:\newProjects\facadeur\node_modules\.pnpm\esbuild@0.28.2\node_modules\esbuild\lib\main.js:941:12)
+    at Socket.readFromStdout (D:\newProjects\facadeur\node_modules\.pnpm\esbuild@0.28.2\node_modules\esbuild\lib\main.js:864:7)
+    at Socket.emit (node:events:507:28)
+    at addChunk (node:internal/streams/readable:559:12)
+[01:15:06.381] [WARN] Broken build, fix the error above.
+You may need to refresh the browser.
+[01:15:18.426] [PROMPT] Would you like to send anonymous crash reports to improve Storybook and fix bugs faster? {"choice":true}

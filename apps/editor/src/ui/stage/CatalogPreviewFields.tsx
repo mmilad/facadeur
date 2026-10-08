@@ -1,6 +1,7 @@
 'use client';
 
 import type { FieldDefinition, FieldValue } from '@facadeur/core';
+import { Form as SharedForm } from '@facadeur/form';
 import { parseFieldValue } from '../../domain/field-values';
 import { fieldDisplayLabel } from '../controls/data/field-label';
 import { SchemaValueForm } from '../controls/data/SchemaValueForm';
@@ -19,7 +20,9 @@ export function CatalogPreviewFields({
 }) {
   if (!fields.length) {
     return (
-      <p className="inspector-empty">Add properties to the schema before entering preview defaults.</p>
+      <p className="inspector-empty">
+        Add properties to the schema before entering preview defaults.
+      </p>
     );
   }
 
@@ -90,6 +93,18 @@ function PreviewField({
           }}
         />
       </Field>
+    );
+  }
+
+  if (['text', 'richText', 'image', 'link', 'token'].includes(field.type)) {
+    const textValue = typeof value === 'string' ? value : '';
+    return (
+      <SharedForm
+        layout="horizontal"
+        value={{ [field.name]: textValue }}
+        fields={[{ name: field.name, label, type: 'text' }]}
+        onChange={(next) => onChange(next[field.name] || undefined)}
+      />
     );
   }
 

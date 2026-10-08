@@ -1,0 +1,22 @@
+.input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: var(--eu-control-height, 28px);
+  padding: 4px 8px;
+  border: 1px solid var(--eu-border, #b7aa9a);
+  border-radius: var(--eu-radius, 6px);
+  background: var(--eu-bg-elevated, #fffdf9);
+  color: var(--eu-fg, #2a241c);
+  font: inherit;
+}
+
+.input:focus-visible {
+  outline: none;
+  box-shadow: var(--eu-focus-ring, 0 0 0 2px #fffdf9, 0 0 0 4px #3d5a80);
+}
+
+.input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
