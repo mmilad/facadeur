@@ -39,6 +39,7 @@ export default defineConfig({
       'packages/core/test/catalog-design.test.ts',
       'packages/core/test/catalog-tree-ops.test.ts',
       'packages/core/test/prop-ref.test.ts',
+      'packages/core/test/design-props.test.ts',
       'packages/core/test/insert-image-node.test.ts',
       'apps/editor/test/catalog/asset-list.test.ts',
     ],

@@ -1,5 +1,6 @@
 import type { CoreController, NodeDefinitionModel, ProjectCatalogModel } from '@facadeur/core';
-import { catalogKindForDefinition } from '@facadeur/core';
+import type { DesignPropDefinition } from '@facadeur/domain';
+import { catalogKindForDefinition, createCatalogUuid } from '@facadeur/core';
 import type { FieldValue, JsonSchemaObject } from '@facadeur/domain';
 import type { EditorSession } from '../domain/session/types';
 import type { CatalogDefinitionKind, EditorCatalogPort } from '../domain/project/catalog-port';
@@ -65,7 +66,7 @@ export class AppService {
   async patchDefinition(uuid: string, patch: Partial<NodeDefinitionModel>) {
     const kind = catalogKindForDefinition(this.core.getSnapshot().catalog, uuid);
     if (!kind) throw new Error(`Unknown catalog definition "${uuid}"`);
-    this.core.replaceCatalog(await this.catalogPort.patchDefinition(kind, uuid, patch));
+    this.core.patchDefinition(kind, uuid, patch);
   }
 
   async deleteDefinition(uuid: string) {
@@ -84,6 +85,19 @@ export class AppService {
 
   async saveSchemas() {
     await this.persistCatalog();
+  }
+
+  upsertDesignProp(input: { uuid?: string; name: string; value: string }) {
+    const name = input.name.trim();
+    if (!name) throw new Error('Prop name is required');
+    const uuid = input.uuid ?? createCatalogUuid();
+    const prop: DesignPropDefinition = { uuid, name, value: input.value };
+    this.core.upsertDesignProp(prop);
+    return prop;
+  }
+
+  removeDesignProp(uuid: string) {
+    this.core.removeDesignProp(uuid);
   }
 
   /** Update definition-level preview defaults (`config.previewData.fields`). */

@@ -65,6 +65,8 @@ export {
   patchCatalogDefinitionRecord,
   removeCatalogSchema,
   upsertCatalogSchema,
+  upsertCatalogDesignProp,
+  removeCatalogDesignProp,
   type CatalogDesignCommand,
 } from './controller/project/catalog/index';
 export type { CoreControllerHost } from './types/index';

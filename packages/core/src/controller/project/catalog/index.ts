@@ -25,6 +25,7 @@ export {
   removeCatalogSchema,
   upsertCatalogSchema,
 } from './definition-ops';
+export { removeCatalogDesignProp, upsertCatalogDesignProp } from './props-ops';
 export {
   assertCatalogRefIntegrity,
   emptyProjectCatalog,

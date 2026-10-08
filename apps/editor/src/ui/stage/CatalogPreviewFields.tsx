@@ -97,7 +97,7 @@ function PreviewField({
     <Field label={label}>
       <TextInput
         value={value === undefined || value === null ? '' : String(value)}
-        onChange={(next) => {
+        onCommit={(next) => {
           try {
             onChange(parseFieldValue(field, next, { trimStrings: true }));
           } catch (failure) {

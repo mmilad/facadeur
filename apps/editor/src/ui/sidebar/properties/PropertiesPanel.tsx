@@ -41,7 +41,7 @@ export function PropertiesPanel({
           app={app}
           session={session}
           nodeUuid={nodeUuid}
-          formKey={`${nodeUuid}:${snap.generation}`}
+          formKey={`${snap.openId}:${nodeUuid}`}
         />
       </div>
     );

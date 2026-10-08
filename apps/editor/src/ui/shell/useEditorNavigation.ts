@@ -17,6 +17,8 @@ import {
 const surfaces = new Set<string>([
   ...EDITOR_VIEW_ITEMS.map((item) => item.id),
   ...DESIGN_DOMAIN_ITEMS.map((item) => item.id),
+  'schemas',
+  'props',
 ]);
 
 const isSurface = (value: string) => surfaces.has(value);

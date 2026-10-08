@@ -9,7 +9,11 @@ export function SettingsSections({
 }) {
   return (
     <nav className="design-settings-tabs" aria-label="Settings sections">
-      {[...SETTINGS_TOKEN_DOMAIN_ITEMS, { id: 'schemas' as const, label: 'Schemas' }].map(
+      {[
+        ...SETTINGS_TOKEN_DOMAIN_ITEMS,
+        { id: 'schemas' as const, label: 'Schemas' },
+        { id: 'props' as const, label: 'Props' },
+      ].map(
         (item) => (
           <button
             key={item.id}

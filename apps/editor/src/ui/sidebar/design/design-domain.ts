@@ -3,7 +3,7 @@ export type DesignDomain =
 
 export type EditorView = 'editor' | 'schemas' | 'schema' | 'code' | 'preview';
 
-export type EditorSurface = EditorView | DesignDomain;
+export type EditorSurface = EditorView | DesignDomain | 'schemas' | 'props';
 
 export const EDITOR_VIEW_ITEMS: { id: EditorView; label: string }[] = [
   { id: 'editor', label: 'Editor' },
@@ -45,7 +45,11 @@ export function isSettingsTokenDomain(surface: EditorSurface): surface is Settin
 }
 
 export function isEditorView(surface: EditorSurface): surface is EditorView {
-  return surface === 'schemas' || EDITOR_VIEW_ITEMS.some((item) => item.id === surface);
+  return (
+    surface === 'schemas' ||
+    surface === 'props' ||
+    EDITOR_VIEW_ITEMS.some((item) => item.id === surface)
+  );
 }
 
 export function isCatalogDocumentView(surface: EditorSurface): boolean {

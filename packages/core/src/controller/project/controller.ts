@@ -16,6 +16,7 @@ import {
   removeCatalogSchema,
   upsertCatalogSchema,
 } from './catalog/definition-ops';
+import { removeCatalogDesignProp, upsertCatalogDesignProp } from './catalog/props-ops';
 import {
   findDefinition,
   patchNodeData,
@@ -135,15 +136,25 @@ export class CoreController implements CoreControllerHost {
     this.publish();
   }
 
+  upsertDesignProp(prop: import('@facadeur/domain').DesignPropDefinition) {
+    this.catalog = validateProjectCatalog(
+      upsertCatalogDesignProp(this.catalog, prop),
+    ) as ProjectCatalog;
+    this.publish();
+  }
+
+  removeDesignProp(uuid: string) {
+    this.catalog = validateProjectCatalog(
+      removeCatalogDesignProp(this.catalog, uuid),
+    ) as ProjectCatalog;
+    this.publish();
+  }
+
   patchNodeField(field: string, value: unknown) {
     if (!this.openDefinitionId || !this.selectedNodeUuid) return;
-    this.catalog = patchNodeData(
-      this.catalog,
-      this.openDefinitionId,
-      this.selectedNodeUuid,
-      field,
-      value,
-    );
+    this.catalog = validateProjectCatalog(
+      patchNodeData(this.catalog, this.openDefinitionId, this.selectedNodeUuid, field, value),
+    ) as ProjectCatalog;
     this.publish();
   }
 

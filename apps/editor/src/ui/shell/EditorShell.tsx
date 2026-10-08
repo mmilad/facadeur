@@ -22,6 +22,7 @@ import {
 import { CatalogCodeStage } from '../stage/CatalogCodeStage';
 import { CatalogPreviewDataStage } from '../stage/CatalogPreviewDataStage';
 import { CatalogSchemaStage } from '../stage/CatalogSchemaStage';
+import { CatalogDesignPropsPanel } from '../sidebar/design/CatalogDesignPropsPanel';
 import { CatalogSchemasPanel } from '../sidebar/design/CatalogSchemasPanel';
 import { DesignDomainStage } from '../stage/DesignDomainStage';
 import { SettingsSections } from '../sidebar/design/SettingsSections';
@@ -71,7 +72,8 @@ export function EditorShell({
   }, [app]);
   const { surface, setSurface } = useEditorNavigation(session, snap);
   const designSurface = isDesignDomain(surface);
-  const settingsSurface = isSettingsTokenDomain(surface) || surface === 'schemas';
+  const settingsSurface =
+    isSettingsTokenDomain(surface) || surface === 'schemas' || surface === 'props';
   const editorCanvas = surface === 'editor';
   useEditorKeys(session, editorCanvas);
 
@@ -209,6 +211,13 @@ export function EditorShell({
         </aside>
         {surface === 'schemas' ? (
           <CatalogSchemasPanel
+            app={app}
+            session={session}
+            surface={surface}
+            onSelectSurface={setSurface}
+          />
+        ) : surface === 'props' ? (
+          <CatalogDesignPropsPanel
             app={app}
             session={session}
             surface={surface}

@@ -279,7 +279,6 @@ function PrefixScalarField({ config }: { config: FieldConfig }) {
           value={typeof raw === 'string' ? raw : raw == null ? '' : String(raw)}
           placeholder={config.placeholder}
           disabled={config.disabled}
-          onChange={(next) => form.emitChange(path, next)}
           onCommit={write}
         />
       )}
