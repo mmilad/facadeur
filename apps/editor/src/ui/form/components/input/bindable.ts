@@ -23,13 +23,17 @@ export function useBindable<T>(props: BindableProps<T>, fallback: T) {
   const invalid = props.invalid ?? false;
   const id = bound ? `${generatedId}-${props.name}` : generatedId;
 
+  const patchBound = (next: T) => {
+    form!.emitChange(path, next);
+  };
+
   const onLiveChange = (next: T) => {
-    if (bound) form.emitChange(path, next);
+    if (bound) patchBound(next);
     else props.onChange?.(next);
   };
 
   const onImmediateChange = (next: T) => {
-    if (bound) form.emitChange(path, next, { commit: true });
+    if (bound) patchBound(next);
     else {
       props.onChange?.(next);
       props.onCommit?.(next);
@@ -37,7 +41,7 @@ export function useBindable<T>(props: BindableProps<T>, fallback: T) {
   };
 
   const onCommitValue = (next: T) => {
-    if (bound) form.emitChange(path, next, { commit: true });
+    if (bound) patchBound(next);
     else if (props.onCommit) props.onCommit(next);
     else props.onChange?.(next);
   };

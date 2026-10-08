@@ -41,7 +41,7 @@ export function ArrayField<TItem>({
   const isDisabled = disabled ?? form?.disabled ?? false;
 
   function emit(next: TItem[]) {
-    if (bound) form.emitChange(path, next, { commit: true });
+    if (bound) form.emitChange(path, next);
     else onChange?.(next);
   }
 

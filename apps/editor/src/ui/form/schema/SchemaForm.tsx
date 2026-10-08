@@ -155,7 +155,7 @@ function PrefixScalarField({ config }: { config: FieldConfig }) {
   const raw = getPath(form.value, path);
 
   function write(next: unknown) {
-    form.emitChange(path, next, { commit: true });
+    form.emitChange(path, next);
   }
 
   return (

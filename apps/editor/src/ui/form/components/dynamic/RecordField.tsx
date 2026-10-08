@@ -42,7 +42,7 @@ export function RecordField({
   );
 
   function emit(next: Record<string, string>) {
-    if (bound) form.emitChange(path, next, { commit: true });
+    if (bound) form.emitChange(path, next);
     else onChange?.(next);
   }
 

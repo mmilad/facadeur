@@ -14,13 +14,13 @@ export function Form<T extends object>({
   children,
 }: FormProps<T>) {
   const emitChange = useCallback(
-    (path: string, next: unknown, options?: { commit?: boolean }) => {
+    (path: string, next: unknown) => {
       const previous = getPath(value, path);
       if (Object.is(previous, next)) return;
       const nextValue = setPath(value, path, next);
       const meta: FormChangeMeta = { path, previous, next };
       onChange(nextValue, meta);
-      if (options?.commit && onCommit) onCommit(nextValue, meta);
+      onCommit?.(nextValue, meta);
     },
     [value, onChange, onCommit],
   );

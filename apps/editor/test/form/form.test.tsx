@@ -86,7 +86,7 @@ describe('editor form kit', () => {
         </ArrayField>
       </TestForm>,
     );
-    await user.click(screen.getByRole('button', { name: 'Add row' }));
+    await user.click(screen.getByRole('button', { name: /add items item/i }));
     expect(screen.getByText('row')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Remove row' }));
     expect(screen.queryByText('row')).not.toBeInTheDocument();
@@ -113,16 +113,27 @@ describe('editor form kit', () => {
     expect(screen.queryByDisplayValue('padding')).not.toBeInTheDocument();
   });
 
-  it('commits toggles immediately when onCommit is provided', async () => {
+  it('patches toggles on change through the form', async () => {
     const user = userEvent.setup();
-    const onCommit = vi.fn();
-    render(
-      <TestForm initial={{ enabled: false }} onCommit={onCommit}>
-        <Toggle name="enabled" label="Enabled" />
-      </TestForm>,
-    );
+    const onChange = vi.fn();
+    function Stateful() {
+      const [value, setValue] = useState({ enabled: false });
+      return (
+        <Form
+          value={value}
+          onChange={(next, meta) => {
+            setValue(next);
+            onChange(next, meta);
+          }}
+        >
+          <Toggle name="enabled" label="Enabled" />
+        </Form>
+      );
+    }
+    render(<Stateful />);
     await user.click(screen.getByRole('switch'));
-    expect(onCommit).toHaveBeenCalled();
-    expect(onCommit.mock.calls[0]?.[0]).toEqual({ enabled: true });
+    expect(onChange).toHaveBeenCalled();
+    expect(onChange.mock.calls.at(-1)?.[0]).toEqual({ enabled: true });
+    expect(onChange.mock.calls.at(-1)?.[1]).toMatchObject({ path: 'enabled', next: true });
   });
 });
