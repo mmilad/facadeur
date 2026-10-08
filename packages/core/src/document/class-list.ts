@@ -1,4 +1,4 @@
-import { DocumentError } from './errors.js';
+import { DocumentError } from './errors';
 
 export function classList(value: unknown): string[] {
   if (

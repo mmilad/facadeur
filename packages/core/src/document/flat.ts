@@ -1,8 +1,8 @@
-import { classList } from './class-list.js';
-import { DocumentError } from './errors.js';
-import { cloneBreakpoints } from '../controller/style/breakpoints.js';
-import { cloneFonts } from '../controller/style/fonts.js';
-import { canonicalizeLayout } from '../controller/style/layout.js';
+import { classList } from './class-list';
+import { DocumentError } from './errors';
+import { cloneBreakpoints } from '../controller/style/breakpoints';
+import { cloneFonts } from '../controller/style/fonts';
+import { canonicalizeLayout } from '../controller/style/layout';
 import type {
   Binding,
   DisplayOn,
@@ -11,14 +11,14 @@ import type {
   EventBinding,
   Layout,
   NestedNode,
-} from '../schema/document.js';
-import { isVariantAxis, isVariantPreset } from '../schema/document.js';
-import { canonicalizeComponentTokens } from '../controller/style/tokens/component/contract.js';
+} from '../schema/document';
+import { isVariantAxis, isVariantPreset } from '../schema/document';
+import { canonicalizeComponentTokens } from '../controller/style/tokens/component/contract';
 import {
   canonicalizeStyleBlock,
   canonicalizeTokenInterface,
-} from '../controller/style/blocks/contract.js';
-import { canonicalizeTokenTree } from '../controller/style/tokens/global/tree.js';
+} from '../controller/style/blocks/contract';
+import { canonicalizeTokenTree } from '../controller/style/tokens/global/tree';
 import {
   cloneBinding,
   cloneChildFields,
@@ -30,14 +30,14 @@ import {
   cloneVariant,
   sortFieldValues,
   sortStringRecord,
-} from './flat/flat-clone.js';
+} from './flat/flat-clone';
 import type {
   FlatDocument,
   FlatNode,
   FlatNodeBase,
   InstanceNode,
   StructuralNode,
-} from './flat/flat-types.js';
+} from './flat/flat-types';
 
 export type {
   FlatNodeBase,
@@ -50,8 +50,8 @@ export type {
   StructuralNode,
   FlatNode,
   FlatDocument,
-} from './flat/flat-types.js';
-export { collectSubtree, findParent, isInsideSubtree } from './flat/flat-tree.js';
+} from './flat/flat-types';
+export { collectSubtree, findParent, isInsideSubtree } from './flat/flat-tree';
 
 export function toFlat(file: DocumentFile) {
   const nodes: Record<string, FlatNode> = {};

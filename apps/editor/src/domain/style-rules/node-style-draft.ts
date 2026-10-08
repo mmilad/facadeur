@@ -1,6 +1,6 @@
 import type { FlatDocument, StyleBlock, StyleChild } from '@facadeur/core';
-import type { StyleBreakpointRef, StyleEditTarget } from '../edits/style-edit.js';
-import { canonicalStyleProperty } from '../edits/style-edit.js';
+import type { StyleBreakpointRef, StyleEditTarget } from '../edits/style-edit';
+import { canonicalStyleProperty } from '../edits/style-edit';
 
 /** Return the class rule's effective declarations in the selected state/viewport context. */
 export function readNodeStyleDraft(

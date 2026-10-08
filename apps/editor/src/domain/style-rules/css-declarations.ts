@@ -1,4 +1,4 @@
-import { canonicalStyleProperty } from '../edits/style-edit.js';
+import { canonicalStyleProperty } from '../edits/style-edit';
 
 export type CssDeclarationsResult =
   | { ok: true; declarations: Record<string, string> }

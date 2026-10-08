@@ -1,5 +1,5 @@
 import { useId, useState } from 'react';
-import { ColorInput, Field, Popover, TextInput } from '../../form/index.js';
+import { ColorInput, Field, Popover, TextInput } from '../../form/index';
 import '../../form/form.css';
 import {
   useTokenPreview,
@@ -7,9 +7,9 @@ import {
   useTokenValueLabel,
   useTokenResolver,
   useTokenSearchValue,
-} from './TokenPreviewContext.js';
-import { tokenPath, tokenTitle } from '../token-presentation.js';
-import { matchesSearch } from '../../form/types/options.js';
+} from './TokenPreviewContext';
+import { tokenPath, tokenTitle } from '../token-presentation';
+import { matchesSearch } from '../../form/types/options';
 
 /** Token references are kept verbatim, including references not in the current catalog. */
 export function isTokenReference(value: string): boolean {

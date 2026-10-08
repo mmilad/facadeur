@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
-import { Field } from '../../../../form/index.js';
-import { LayoutChoiceIcon, LayoutIconChoice } from '../../../../controls/layout/icon-choice.js';
+import { Field } from '../../../../form/index';
+import { LayoutChoiceIcon, LayoutIconChoice } from '../../../../controls/layout/icon-choice';
 
 export interface GridItemProps {
   values: Record<string, string>;

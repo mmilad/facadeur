@@ -1,4 +1,4 @@
-import type { AuthUser } from './auth.js';
+import type { AuthUser } from './auth';
 
 export type OrganisationRole = 'owner' | 'admin' | 'editor' | 'viewer';
 

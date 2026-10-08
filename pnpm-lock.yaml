@@ -11,6 +11,9 @@ importers:
       '@eslint/js':
         specifier: ^9.36.0
         version: 9.39.5
+      '@sinclair/typebox':
+        specifier: ^0.34.41
+        version: 0.34.52
       '@testing-library/jest-dom':
         specifier: ^7.0.1
         version: 7.0.1(@testing-library/dom@10.4.2)(vitest@3.2.7(@types/node@22.20.4)(jsdom@26.1.0)(tsx@4.23.15))
@@ -190,6 +193,9 @@ importers:
 
   packages/core:
     dependencies:
+      '@facadeur/domain':
+        specifier: workspace:*
+        version: link:../domain
       '@sinclair/typebox':
         specifier: ^0.34.41
         version: 0.34.52
@@ -204,11 +210,20 @@ importers:
         specifier: ^5.9.2
         version: 5.9.3
 
+  packages/domain:
+    devDependencies:
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+
   packages/renderer-dom:
     dependencies:
       '@facadeur/core':
         specifier: workspace:*
         version: link:../core
+      '@facadeur/domain':
+        specifier: workspace:*
+        version: link:../domain
     devDependencies:
       typescript:
         specifier: ^5.9.2

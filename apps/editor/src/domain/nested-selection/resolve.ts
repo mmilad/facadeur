@@ -8,8 +8,8 @@ import {
   toFlat,
   toNested,
 } from '@facadeur/core';
-import type { NestedSelection } from './types.js';
-import { publicFieldsFor } from '../schema/component-contract.js';
+import type { NestedSelection } from './types';
+import { publicFieldsFor } from '../schema/component-contract';
 
 export const MAX_NESTED_DEPTH = 32;
 export function resolveNestedSelection(

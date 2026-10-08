@@ -1,6 +1,6 @@
 import { ID_PATTERN, type Expose } from '@facadeur/core';
 import { useState } from 'react';
-import { Field, Section, Select, Stack, TextInput } from '../../form/index.js';
+import { Field, Section, Select, Stack, TextInput } from '../../form/index';
 import '../../form/form.css';
 
 const EXPOSE_PATH = /^[A-Za-z][A-Za-z0-9_-]*(\.[A-Za-z][A-Za-z0-9_-]*)*$/;

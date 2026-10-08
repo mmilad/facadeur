@@ -1,5 +1,5 @@
 import { Type } from '@sinclair/typebox';
-import { idSchema } from './common.js';
+import { idSchema } from './common';
 
 /** JSON Schema supported by the shared schema catalog and component assignments. */
 export interface JsonSchema {

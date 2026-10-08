@@ -1,5 +1,5 @@
 import { apiController } from '@facadeur/api/server';
-import { authenticatedActor, respond } from '../../transport.js';
+import { authenticatedActor, respond } from '../../transport';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 

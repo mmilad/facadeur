@@ -1,6 +1,6 @@
 import { fieldDataSchema, type FieldDefinition, type FieldValue } from '@facadeur/core';
-import { fieldDisplayLabel } from '../controls/data/field-label.js';
-import { SchemaValueForm } from '../controls/data/SchemaValueForm.js';
+import { fieldDisplayLabel } from '../controls/data/field-label';
+import { SchemaValueForm } from '../controls/data/SchemaValueForm';
 
 export function JsonSchemaContractFieldEditor({
   field,

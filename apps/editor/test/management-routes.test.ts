@@ -5,15 +5,15 @@ import path from 'node:path';
 
 describe('self-hosted management backend', () => {
   let root = '';
-  let signIn: typeof import('../src/app/api/auth/sign-in/route.js').POST;
-  let signOut: typeof import('../src/app/api/auth/sign-out/route.js').POST;
-  let session: typeof import('../src/app/api/auth/session/route.js').GET;
-  let workspaceGet: typeof import('../src/app/api/workspace/route.js').GET;
-  let workspacePost: typeof import('../src/app/api/workspace/route.js').POST;
-  let genericProjectGet: typeof import('../src/app/api/projects/[projectId]/route.js').GET;
-  let genericProjectSave: typeof import('../src/app/api/projects/[projectId]/documents/[id]/save/route.js').POST;
-  let defaultProjectGet: typeof import('../src/app/api/projects/default/route.js').GET;
-  let defaultProjectSave: typeof import('../src/app/api/projects/default/documents/[id]/save/route.js').POST;
+  let signIn: typeof import('../src/app/api/auth/sign-in/route').POST;
+  let signOut: typeof import('../src/app/api/auth/sign-out/route').POST;
+  let session: typeof import('../src/app/api/auth/session/route').GET;
+  let workspaceGet: typeof import('../src/app/api/workspace/route').GET;
+  let workspacePost: typeof import('../src/app/api/workspace/route').POST;
+  let genericProjectGet: typeof import('../src/app/api/projects/[projectId]/route').GET;
+  let genericProjectSave: typeof import('../src/app/api/projects/[projectId]/documents/[id]/save/route').POST;
+  let defaultProjectGet: typeof import('../src/app/api/projects/default/route').GET;
+  let defaultProjectSave: typeof import('../src/app/api/projects/default/documents/[id]/save/route').POST;
 
   const request = (pathName: string, cookie?: string, body?: unknown) =>
     new Request(`http://localhost:3001${pathName}`, {
@@ -40,17 +40,17 @@ describe('self-hosted management backend', () => {
     process.env.FACADEUR_MANAGEMENT_DIR = path.join(root, '.facadeur');
     process.env.FACADEUR_PROJECT_DIR = path.join(root, 'examples');
     vi.resetModules();
-    ({ POST: signIn } = await import('../src/app/api/auth/sign-in/route.js'));
-    ({ POST: signOut } = await import('../src/app/api/auth/sign-out/route.js'));
-    ({ GET: session } = await import('../src/app/api/auth/session/route.js'));
+    ({ POST: signIn } = await import('../src/app/api/auth/sign-in/route'));
+    ({ POST: signOut } = await import('../src/app/api/auth/sign-out/route'));
+    ({ GET: session } = await import('../src/app/api/auth/session/route'));
     ({ GET: workspaceGet, POST: workspacePost } =
-      await import('../src/app/api/workspace/route.js'));
-    ({ GET: genericProjectGet } = await import('../src/app/api/projects/[projectId]/route.js'));
+      await import('../src/app/api/workspace/route'));
+    ({ GET: genericProjectGet } = await import('../src/app/api/projects/[projectId]/route'));
     ({ POST: genericProjectSave } =
-      await import('../src/app/api/projects/[projectId]/documents/[id]/save/route.js'));
-    ({ GET: defaultProjectGet } = await import('../src/app/api/projects/default/route.js'));
+      await import('../src/app/api/projects/[projectId]/documents/[id]/save/route'));
+    ({ GET: defaultProjectGet } = await import('../src/app/api/projects/default/route'));
     ({ POST: defaultProjectSave } =
-      await import('../src/app/api/projects/default/documents/[id]/save/route.js'));
+      await import('../src/app/api/projects/default/documents/[id]/save/route'));
     const files = await import('@facadeur/api/server');
     await files.initializeProjectFiles(files.legacyProjectStorage());
   });

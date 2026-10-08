@@ -48,6 +48,10 @@ export function isEditorView(surface: EditorSurface): surface is EditorView {
   return surface === 'schemas' || EDITOR_VIEW_ITEMS.some((item) => item.id === surface);
 }
 
+export function isCatalogDocumentView(surface: EditorSurface): boolean {
+  return surface === 'schema' || surface === 'code' || surface === 'preview';
+}
+
 export function designDomainLabel(domain: DesignDomain): string {
   return DESIGN_DOMAIN_ITEMS.find((item) => item.id === domain)?.label ?? domain;
 }

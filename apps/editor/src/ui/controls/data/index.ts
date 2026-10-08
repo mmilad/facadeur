@@ -1,15 +1,15 @@
-export { FieldsEditorControl } from './FieldsEditorControl.js';
-export { BindingsEditorControl } from './BindingsEditorControl.js';
-export { EventsEditorControl } from './EventsEditorControl.js';
-export { EventBindingsEditorControl } from './EventBindingsEditorControl.js';
-export { ExposeEditorControl } from './ExposeEditorControl.js';
+export { FieldsEditorControl } from './FieldsEditorControl';
+export { BindingsEditorControl } from './BindingsEditorControl';
+export { EventsEditorControl } from './EventsEditorControl';
+export { EventBindingsEditorControl } from './EventBindingsEditorControl';
+export { ExposeEditorControl } from './ExposeEditorControl';
 export {
   DataDirectivesEditorControl,
   DisplayConditionEditor,
   dataFieldsForNode,
   dataPathOptions,
   fieldPathOptions,
-} from './DataDirectivesEditorControl.js';
+} from './DataDirectivesEditorControl';
 export {
   BINDING_TARGET_LABEL,
   bindingFieldOptions,
@@ -19,10 +19,10 @@ export {
   normalizeBindingTargetChange,
   parseInstanceFieldValue,
   patchBindingAt,
-} from './value.js';
+} from './value';
 export {
   bindingFromSlot,
   type BindingSlot,
   slotForBinding,
   slotsForNode,
-} from './binding-slots.js';
+} from './binding-slots';

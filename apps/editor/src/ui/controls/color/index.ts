@@ -1,4 +1,4 @@
-export { ColorControl } from './ColorControl.js';
+export { ColorControl } from './ColorControl';
 export {
   customColorDraft,
   inferColorMode,
@@ -6,4 +6,4 @@ export {
   isColorTokenRef,
   KNOWN_COLOR_STYLE_PROPERTIES,
   type ColorControlMode,
-} from './value.js';
+} from './value';

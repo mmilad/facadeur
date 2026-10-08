@@ -1,24 +1,24 @@
 import { useState, type ReactNode } from 'react';
 import type { FlatNode } from '@facadeur/core';
-import { resolveSelectedInstance } from '../../../../domain/instance-variant-context.js';
-import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
+import { resolveSelectedInstance } from '../../../../domain/instance-variant-context';
+import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
 import {
   effectiveStyleDeclarations,
   styleStateNames,
   type StyleStateName,
-} from '../../../../domain/edits/style-edit.js';
+} from '../../../../domain/edits/style-edit';
 import {
   editorBreakpoints,
   viewportEditContext,
-} from '../../../../domain/viewport/viewport-edit.js';
-import { TokenPreviewProvider } from '../../../controls/fields/TokenPreviewContext.js';
-import type { StructuredDeclarationGroup } from '../../../controls/generic/CssDeclarationsControl.js';
-import { Field, Select } from '../../../form/index.js';
-import { LayoutPanel } from '../layout/LayoutPanel.js';
-import type { LayoutControlSectionContent } from '../../../controls/layout/index.js';
-import { DeclarationEditor } from './declarations/declaration-editor.js';
-import { StyleOverridesPanel } from './overrides/StyleOverridesPanel.js';
-import { NodeVariantStylesPanel } from './variants/NodeVariantStylesPanel.js';
+} from '../../../../domain/viewport/viewport-edit';
+import { TokenPreviewProvider } from '../../../controls/fields/TokenPreviewContext';
+import type { StructuredDeclarationGroup } from '../../../controls/generic/CssDeclarationsControl';
+import { Field, Select } from '../../../form/index';
+import { LayoutPanel } from '../layout/LayoutPanel';
+import type { LayoutControlSectionContent } from '../../../controls/layout/index';
+import { DeclarationEditor } from './declarations/declaration-editor';
+import { StyleOverridesPanel } from './overrides/StyleOverridesPanel';
+import { NodeVariantStylesPanel } from './variants/NodeVariantStylesPanel';
 
 export function StyleInspector({
   session,

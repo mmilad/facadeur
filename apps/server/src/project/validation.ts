@@ -14,7 +14,7 @@ import {
   type SchemaCatalog,
 } from '@facadeur/core';
 import { loadTokens } from '@facadeur/tokens';
-import { invalid, ProjectError } from './persistence.js';
+import { invalid, ProjectError } from './persistence';
 
 export function safeId(id: string): void {
   if (

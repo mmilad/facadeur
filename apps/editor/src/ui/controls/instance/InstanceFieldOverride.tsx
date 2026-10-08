@@ -1,9 +1,9 @@
 import { type FieldDefinition, type FieldValue } from '@facadeur/core';
-import { Field, Select, TextArea, TextInput, Toggle } from '../../form/index.js';
-import { fieldDisplayLabel } from '../data/field-label.js';
-import { parseInstanceFieldValue } from '../data/value.js';
-import { parseFieldValue } from '../../../domain/field-values.js';
-import { JsonSchemaContractFieldEditor } from '../../schema/JsonSchemaContractFieldEditor.js';
+import { Field, Select, TextArea, TextInput, Toggle } from '../../form/index';
+import { fieldDisplayLabel } from '../data/field-label';
+import { parseInstanceFieldValue } from '../data/value';
+import { parseFieldValue } from '../../../domain/field-values';
+import { JsonSchemaContractFieldEditor } from '../../schema/JsonSchemaContractFieldEditor';
 
 export function InstanceFieldOverride({
   field,

@@ -1,6 +1,6 @@
 import { useMemo, type ReactNode } from 'react';
 import { findParent, type FlatNode, type StyleBlock } from '@facadeur/core';
-import { layoutCapabilities } from '../../../../../domain/layout-capabilities.js';
+import { layoutCapabilities } from '../../../../../domain/layout-capabilities';
 import {
   colorTokenRefsForDocument,
   dimensionTokenRefsForDocument,
@@ -10,8 +10,8 @@ import {
   radiusTokenRefsForDocument,
   shadowTokenRefsForDocument,
   typographyTokenRefsForDocument,
-} from '../../../../../domain/editing.js';
-import type { EditorSession, EditorSnapshot } from '../../../../../domain/session.js';
+} from '../../../../../domain/editing';
+import type { EditorSession, EditorSnapshot } from '../../../../../domain/session';
 import {
   readStyleDeclarations,
   effectiveStyleDeclarations,
@@ -21,21 +21,21 @@ import {
   writeStyleDeclarations,
   writeStyleDeclaration,
   type StyleEditTarget,
-} from '../../../../../domain/edits/style-edit.js';
+} from '../../../../../domain/edits/style-edit';
 import {
   editorBreakpoints,
   viewportEditContext,
-} from '../../../../../domain/viewport/viewport-edit.js';
-import { CssDeclarationsControl } from '../../../../controls/generic/index.js';
-import { TokenValueLabelProvider } from '../../../../controls/fields/TokenPreviewContext.js';
-import type { StructuredDeclarationGroup } from '../../../../controls/generic/CssDeclarationsControl.js';
+} from '../../../../../domain/viewport/viewport-edit';
+import { CssDeclarationsControl } from '../../../../controls/generic/index';
+import { TokenValueLabelProvider } from '../../../../controls/fields/TokenPreviewContext';
+import type { StructuredDeclarationGroup } from '../../../../controls/generic/CssDeclarationsControl';
 import {
   projectFontRefs,
   projectFontWeightOptions,
   type TypographyCatalogs,
-} from '../../../../controls/typography/index.js';
-import { OverrideCue } from '../../ViewportEditBar.js';
-import { layoutStyleField, commitStyleFields } from '../../style-field.js';
+} from '../../../../controls/typography/index';
+import { OverrideCue } from '../../ViewportEditBar';
+import { layoutStyleField, commitStyleFields } from '../../style-field';
 
 export function DeclarationEditor({
   session,

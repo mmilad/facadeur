@@ -1,5 +1,5 @@
-import type { EditorSession } from './session.js';
-import { nextVariantIdentity, ownsVariantContract, variantLabelMap } from './edits/variant-edit.js';
+import type { EditorSession } from './session';
+import { nextVariantIdentity, ownsVariantContract, variantLabelMap } from './edits/variant-edit';
 
 /** Both creation entry points use the same persisted command and activation policy. */
 export function createNamedVariant(session: EditorSession, requestedLabel?: string): string | null {

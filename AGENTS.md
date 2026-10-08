@@ -25,6 +25,12 @@ For repeatable refactoring work, use `.agents/skills/refactor/SKILL.md`. It comb
 candidate detector, this checklist, and `docs/refactoring-guidelines.md`; size-based splitting
 remains a review decision, not an automatic action.
 
+## TypeScript module specifiers
+
+Use **extensionless relative imports** (`from './foo'`, `from '../bar'`). Root
+`tsconfig.base.json` sets `moduleResolution: "Bundler"`, so `.js` suffixes are not required.
+Keep `.js` only in external package paths (for example deep imports from `node_modules`).
+
 ## TypeScript return types and dependencies
 
 Prefer inferred return types for simple getters, forwarding functions, and internal helpers

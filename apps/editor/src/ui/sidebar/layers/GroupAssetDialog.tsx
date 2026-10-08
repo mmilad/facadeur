@@ -1,6 +1,6 @@
 import { useId, useState } from 'react';
-import { Field, Modal } from '../../form/index.js';
-import type { AssetSummary, EditorSession } from '../../../domain/session.js';
+import { Field, Modal } from '../../form/index';
+import type { AssetSummary, EditorSession } from '../../../domain/session';
 
 export function GroupAssetDialog({
   session,
@@ -23,12 +23,8 @@ export function GroupAssetDialog({
     }
     const group =
       groups.find((group) => group.toLowerCase() === name.trim().toLowerCase()) ?? name.trim();
-    session.executeDocument(asset.id, { type: 'setDocumentGroup', group });
-    if (session.project.document(asset.id).manifest.group !== group) {
-      setError(session.getSnapshot().notice?.text ?? 'Could not change group');
-      return;
-    }
-    onClose();
+    session.setNotice('Asset groups are not available for catalog entries yet.', 'info');
+    setError('Not available in catalog-only mode');
   }
   return (
     <Modal

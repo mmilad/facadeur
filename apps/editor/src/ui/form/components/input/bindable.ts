@@ -1,6 +1,6 @@
 import { useId } from 'react';
-import { getPath, resolvePath } from '../../schema/path.js';
-import { useOptionalFormContext, usePathPrefix } from '../../FormContext.js';
+import { getPath, resolvePath } from '../../schema/path';
+import { useOptionalFormContext, usePathPrefix } from '../../FormContext';
 
 type BindableProps<T> = {
   name?: string;

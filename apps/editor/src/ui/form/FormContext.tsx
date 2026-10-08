@@ -1,6 +1,7 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import type { FormContextValue, FormDensity } from './types/form.js';
-import { DEFAULT_DENSITY } from './const/index.js';
+import type { DesignPropOption } from '@facadeur/core';
+import type { FormContextValue, FormDensity } from './types/form';
+import { DEFAULT_DENSITY } from './const/index';
 
 const FormContext = createContext<FormContextValue | null>(null);
 const PathPrefixContext = createContext('');
@@ -9,12 +10,14 @@ export function FormProvider<T extends object>({
   value,
   disabled = false,
   density = DEFAULT_DENSITY,
+  designPropOptions = [],
   emitChange,
   children,
 }: {
   value: T;
   disabled?: boolean;
   density?: FormDensity;
+  designPropOptions?: readonly DesignPropOption[];
   emitChange: FormContextValue['emitChange'];
   children: ReactNode;
 }) {
@@ -25,9 +28,10 @@ export function FormProvider<T extends object>({
       disabled,
       density,
       pathPrefix,
+      designPropOptions,
       emitChange,
     }),
-    [value, disabled, density, pathPrefix, emitChange],
+    [value, disabled, density, pathPrefix, designPropOptions, emitChange],
   );
   return <FormContext.Provider value={ctx as FormContextValue}>{children}</FormContext.Provider>;
 }
@@ -52,4 +56,8 @@ export function useOptionalFormContext(): FormContextValue | null {
 
 export function usePathPrefix(): string {
   return useContext(PathPrefixContext);
+}
+
+export function useDesignPropOptions(): readonly DesignPropOption[] {
+  return useOptionalFormContext()?.designPropOptions ?? [];
 }

@@ -6,6 +6,7 @@ export type FormChangeMeta = {
   next: unknown;
 };
 
+import type { DesignPropOption } from '@facadeur/core';
 import type { ReactNode } from 'react';
 
 export type FormProps<T extends object> = {
@@ -14,6 +15,7 @@ export type FormProps<T extends object> = {
   onCommit?: (next: T, meta: FormChangeMeta) => void;
   disabled?: boolean;
   density?: FormDensity;
+  designPropOptions?: readonly DesignPropOption[];
   children: ReactNode;
 };
 
@@ -22,6 +24,7 @@ export type FormContextValue<T extends object = object> = {
   disabled: boolean;
   density: FormDensity;
   pathPrefix: string;
+  designPropOptions: readonly DesignPropOption[];
   emitChange: (path: string, next: unknown, options?: { commit?: boolean }) => void;
   registerCommitHandler?: (path: string, handler: () => void) => () => void;
 };

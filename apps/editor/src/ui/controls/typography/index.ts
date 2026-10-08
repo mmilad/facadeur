@@ -2,7 +2,7 @@ export {
   TypographyControl,
   TypographyStyleControl,
   type TypographyCatalogs,
-} from './TypographyControl.js';
+} from './TypographyControl';
 export {
   formatTypographyFieldValue,
   inferTypographyFieldMode,
@@ -16,4 +16,4 @@ export {
   TYPOGRAPHY_VALUE_KEYS,
   type TypographyFieldMode,
   type TypographyValue,
-} from './value.js';
+} from './value';

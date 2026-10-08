@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@facadeur/core": "workspace:*"
+    "@facadeur/core": "workspace:*",
+    "@facadeur/domain": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.2"

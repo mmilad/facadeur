@@ -1,15 +1,24 @@
 'use client';
 
-import { useMemo, useState, useSyncExternalStore } from 'react';
-import { readOnlySession } from '../../domain/project/read-only-session.js';
-import type { EditorSession } from '../../domain/session.js';
-import { CodeStage } from '../stage/CodeStage.js';
-import { StageCanvas } from '../stage/StageCanvas.js';
+import { useMemo, useSyncExternalStore } from 'react';
+import { createAppService } from '../../app-service';
+import { createInMemoryCatalogPort } from '../../domain/project/in-memory-catalog-port';
+import { readOnlySession } from '../../domain/project/read-only-session';
+import type { EditorSession } from '../../domain/session';
+import { StageCanvas } from '../stage/StageCanvas';
 
 export function ProjectViewer({ session }: { session: EditorSession }) {
   const viewer = useMemo(() => readOnlySession(session), [session]);
+  const app = useMemo(
+    () =>
+      createAppService({
+        core: viewer.core,
+        session: viewer,
+        catalogPort: createInMemoryCatalogPort(() => viewer.core.getSnapshot().catalog),
+      }),
+    [viewer],
+  );
   const snap = useSyncExternalStore(viewer.subscribe, viewer.getSnapshot, viewer.getSnapshot);
-  const [showCode, setShowCode] = useState(false);
   return (
     <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       <header className="topbar">
@@ -24,9 +33,6 @@ export function ProjectViewer({ session }: { session: EditorSession }) {
           </select>
         </label>
         <span className="meta">View only</span>
-        <button type="button" className="text-button" onClick={() => setShowCode(!showCode)}>
-          {showCode ? 'Preview' : 'Generated code'}
-        </button>
         <button type="button" className="text-button" onClick={() => viewer.fit()}>
           Fit preview
         </button>
@@ -36,23 +42,20 @@ export function ProjectViewer({ session }: { session: EditorSession }) {
           {snap.notice.text}
         </p>
       ) : null}
-      {showCode ? (
-        <CodeStage session={viewer} snap={snap} />
-      ) : (
-        <StageCanvas
-          session={viewer}
-          openId={snap.openId}
-          generation={snap.generation}
-          designRevision={snap.designRevision}
-          selectedRenderId={snap.selectedRenderId}
-          focusViewportId={snap.focusViewportId}
-          selectedViewportId={snap.selectedViewportId}
-          chromeRevision={snap.revision}
-          activeVariantName={snap.activeVariantName}
-          tool="select"
-          readOnly
-        />
-      )}
+      <StageCanvas
+        app={app}
+        session={viewer}
+        openId={snap.openId}
+        generation={snap.generation}
+        designRevision={snap.designRevision}
+        selectedRenderId={snap.selectedRenderId}
+        focusViewportId={snap.focusViewportId}
+        selectedViewportId={snap.selectedViewportId}
+        chromeRevision={snap.revision}
+        activeVariantName={snap.activeVariantName}
+        tool="select"
+        readOnly
+      />
     </main>
   );
 }

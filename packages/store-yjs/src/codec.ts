@@ -14,7 +14,7 @@ import {
   readComponentTokens,
   readVariantPresets,
   readVariants,
-} from './codec-decode.js';
+} from './codec-decode';
 import {
   syncEvents,
   syncFields,
@@ -24,14 +24,14 @@ import {
   syncNodes,
   syncSettings,
   syncVariants,
-} from './codec-encode.js';
+} from './codec-encode';
 import {
   optionalString,
   readJsonObject,
   stringValue,
   syncJsonArray,
   syncJsonObject,
-} from './codec-shared.js';
+} from './codec-shared';
 
 /** Write `next` into the Y.Doc, updating existing maps and child arrays in place. */
 export function patchDocument(doc: Y.Doc, next: FlatDocument): void {

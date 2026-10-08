@@ -7,17 +7,17 @@ import {
   type FlatDocument,
 } from '@facadeur/core';
 import type { ControllerDocumentStore } from '@facadeur/core';
-import { renderIdForNode } from '../selection/selection-model.js';
+import { renderIdForNode } from '../selection/selection-model';
 import {
   clearDocumentSaved,
   markDocumentSaved,
   type SavedJsonBaselines,
-} from '../assets/save-state.js';
-import { documentToJson, saveJsonFile, type JsonFileHandle } from '../assets/files.js';
-import { errorText, kindOf } from './kinds.js';
-import type { EditorNotice } from './types.js';
-import { migratePreviewData } from '../preview-data.js';
-import { logProjectFailure } from '../project/diagnostics.js';
+} from '../assets/save-state';
+import { documentToJson, saveJsonFile, type JsonFileHandle } from '../assets/files';
+import { errorText, kindOf } from './kinds';
+import type { EditorNotice } from './types';
+import { migratePreviewData } from '../preview-data';
+import { logProjectFailure } from '../project/diagnostics';
 
 export function bindPersistDocumentSave(options: {
   build: () => { filename: string; document: FlatDocument; id: string };

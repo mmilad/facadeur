@@ -4,12 +4,15 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./legacy": "./src/legacy/index.ts",
+    "./node-model": "./src/schema/node-model/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@facadeur/domain": "workspace:*",
     "@sinclair/typebox": "^0.34.41",
     "ajv": "^8.17.1"
   },

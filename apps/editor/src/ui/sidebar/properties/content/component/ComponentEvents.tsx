@@ -8,12 +8,12 @@ import {
   type SchemaCatalog,
 } from '@facadeur/core';
 import { useEffect, useState } from 'react';
-import type { EditorSession, EditorSnapshot } from '../../../../../domain/session.js';
+import type { EditorSession, EditorSnapshot } from '../../../../../domain/session';
 import {
   EventBindingsEditorControl,
   EventsEditorControl,
-} from '../../../../controls/data/index.js';
-import { EventTargets } from './EventTargets.js';
+} from '../../../../controls/data/index';
+import { EventTargets } from './EventTargets';
 
 interface PendingEventEdit {
   event: EventDefinition;
@@ -279,12 +279,10 @@ function eventCommandError(
   snap: EditorSnapshot,
   session: EditorSession,
 ) {
-  try {
-    applyCommand(snap.document, command, session.project.commandContext);
-    return null;
-  } catch (error) {
-    return error instanceof Error ? error.message : 'Invalid event contract';
-  }
+  void command;
+  void snap;
+  void session;
+  return 'Event contracts are not available in catalog-only mode';
 }
 
 function schemaAtPath(schema: JsonSchema, path: string) {

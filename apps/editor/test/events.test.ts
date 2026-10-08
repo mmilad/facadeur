@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { eventDataSelection } from '../src/domain/events.js';
+import { eventDataSelection } from '../src/domain/events';
 
 describe('event editor helpers', () => {
   it('adapts a legacy payload declaration to the shared field contract shape', () => {

@@ -1,6 +1,6 @@
 import { apiController } from '@facadeur/api/server';
 import type { ManagementCommand } from '@facadeur/api';
-import { assertSameOrigin, readJson, authenticatedActor, respond } from '../transport.js';
+import { assertSameOrigin, readJson, authenticatedActor, respond } from '../transport';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 

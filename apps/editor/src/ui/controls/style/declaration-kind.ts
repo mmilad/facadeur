@@ -1,6 +1,6 @@
-import { isColorStyleProperty } from '../color/value.js';
-import { isShadowStyleProperty } from '../shadow/value.js';
-import { isTypographyStyleProperty } from '../typography/value.js';
+import { isColorStyleProperty } from '../color/value';
+import { isShadowStyleProperty } from '../shadow/value';
+import { isTypographyStyleProperty } from '../typography/value';
 
 const SPACING_PROPERTY =
   /^(gap|rowGap|columnGap|padding|margin|paddingTop|paddingRight|paddingBottom|paddingLeft|paddingInline|paddingBlock|marginTop|marginRight|marginBottom|marginLeft|marginInline|marginBlock|row-gap|column-gap|padding-top|padding-right|padding-bottom|padding-left|padding-inline|padding-block|margin-top|margin-right|margin-bottom|margin-left|margin-inline|margin-block)$/i;

@@ -1,7 +1,7 @@
-import { publicFieldsFor } from '../schema/component-contract.js';
+import { publicFieldsFor } from '../schema/component-contract';
 import type { FieldValue, FlatDocument, FlatNode, SchemaCatalog } from '@facadeur/core';
 import { findParent } from '@facadeur/core';
-import type { NestedFieldContext, NestedSelection } from './types.js';
+import type { NestedFieldContext, NestedSelection } from './types';
 export function fieldContextForSelection(input: {
   document: FlatDocument;
   selectedNode: FlatNode | null;

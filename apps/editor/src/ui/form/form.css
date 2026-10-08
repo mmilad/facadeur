@@ -449,6 +449,17 @@
 }
 
 .eu-array-row,
+.eu-prop-bind {
+  flex: 1;
+  min-width: 0;
+  align-items: stretch;
+}
+
+.eu-prop-bind .eu-control {
+  flex: 1;
+  min-width: 0;
+}
+
 .eu-record-row {
   display: flex;
   gap: 6px;

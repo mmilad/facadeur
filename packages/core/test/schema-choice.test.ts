@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { matchingSchemaIndex, type JsonSchema } from '../src/index.js';
+import { matchingSchemaIndex, type JsonSchema } from '../src/index';
 
 const schemas: JsonSchema[] = [
   {

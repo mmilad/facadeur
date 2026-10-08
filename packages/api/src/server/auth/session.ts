@@ -1,8 +1,8 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
-import { getManagementDatabase } from '../management/database.js';
-import { DomainError } from '../../errors.js';
-import type { MockSignIn } from '../../contracts/auth.js';
-import type { AuthUser } from '../../contracts/auth.js';
+import { getManagementDatabase } from '../management/database';
+import { DomainError } from '../../errors';
+import type { MockSignIn } from '../../contracts/auth';
+import type { AuthUser } from '../../contracts/auth';
 
 function disabledInProduction() {
   return process.env.NODE_ENV === 'production';

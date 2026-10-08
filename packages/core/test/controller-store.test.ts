@@ -5,7 +5,7 @@ import {
   toFlat,
   type ControllerDocumentStore,
   type DocumentFile,
-} from '../src/index.js';
+} from '../src/index';
 
 const design: DocumentFile = {
   version: 1,

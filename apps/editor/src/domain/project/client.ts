@@ -1,14 +1,9 @@
-import {
-  toFlat,
-  toNested,
-  validateCatalog,
-  validateDocumentFile,
-  type FlatDocument,
-} from '@facadeur/core';
-import { createEditorSession } from '../session.js';
-import { reconcileLegacySchemaSnapshot } from '../schema/migrate-legacy-schema-library.js';
+import { CoreController, emptyProjectCatalog, validateProjectCatalog } from '@facadeur/core';
+import { createAppService } from '../../app-service';
+import { createCatalogPort } from './catalog-port';
+import { createEditorSession } from '../session';
 import type { ProjectSnapshot } from '@facadeur/api';
-import { api } from '../api.js';
+import { api } from '../api';
 export type { ProjectSnapshot } from '@facadeur/api';
 
 export async function loadProject(
@@ -16,82 +11,43 @@ export async function loadProject(
   projectId = 'default',
 ): Promise<ProjectSnapshot> {
   const project = await api.projects.load(projectId, { signal });
-  if (!project || project.id !== projectId || !project.sources || !project.hashes)
-    throw new Error('Invalid project catalog');
-  const reconciled = reconcileLegacySchemaSnapshot(
-    validateDocumentFile(project.design),
-    project.documents,
-  );
-  project.design = reconciled.design;
-  project.documents = validateCatalog(reconciled.documents, {
-    schemaCatalog: project.design.schemaCatalog,
-  });
+  if (!project || project.id !== projectId) throw new Error('Invalid project');
+  project.catalog = validateProjectCatalog(project.catalog ?? emptyProjectCatalog());
   return project;
 }
 
-/** Local JSON persistence; commands and live data belong exclusively to the controller. */
+/** Connect API catalog to {@link CoreController} and editor chrome session. */
 export function connectProject(project: ProjectSnapshot) {
-  const sources = { ...project.sources };
-  const hashes = { ...project.hashes };
-  let pending: Promise<unknown> = Promise.resolve();
-  const baselines = new Map<string, string>();
-  const recovered = new Set(project.unsavedDocumentIds ?? []);
-  const saveSnapshot = (id: string, document: FlatDocument) => {
-    if (project.access?.canWrite === false)
-      return Promise.reject(new Error('Your role allows viewing this project only.'));
-    const operation = pending.then(async () => {
-      const saved = await api.projects.save(project.id, id, {
-        document: toNested(document),
-        source: sources[id] ?? id + '.json',
-        expectedHash: hashes[id] ?? null,
-      });
-      sources[id] = saved.source;
-      hashes[id] = saved.hash;
-      const persisted = toFlat(validateDocumentFile(saved.document));
-      baselines.set(id, JSON.stringify(persisted));
-      recovered.delete(id);
-      return persisted;
-    });
-    pending = operation.catch(() => {});
-    return operation;
+  const core = new CoreController(project.catalog);
+  const catalogPort = createCatalogPort(project.id);
+  const session = createEditorSession({ core, catalogPort, projectId: project.id });
+  const app = createAppService({ core, session, catalogPort });
+  let catalogBaseline = JSON.stringify(core.getSnapshot().catalog);
+
+  const hasPendingChanges = () => {
+    if (project.access?.canWrite === false) return false;
+    return JSON.stringify(core.getSnapshot().catalog) !== catalogBaseline;
   };
-  const session = createEditorSession({
-    documents: project.documents,
-    design: project.design,
-    sources,
-    unsavedDocumentIds: project.unsavedDocumentIds,
-    saveDocument: saveSnapshot,
-  });
-  for (const document of session.project.documents)
-    baselines.set(document.id, JSON.stringify(document.manifest));
+
+  const saveAllChanges = async () => {
+    if (!hasPendingChanges()) return;
+    await app.persistCatalog();
+    catalogBaseline = JSON.stringify(core.getSnapshot().catalog);
+  };
+
+  const persistPendingChanges = async () => {
+    await saveAllChanges();
+  };
+
   return {
     session,
+    core,
+    app,
+    catalogPort,
     project,
-    hasPendingChanges() {
-      if (project.access?.canWrite === false) return false;
-      return session.project.documents.some(
-        (document) =>
-          recovered.has(document.id) ||
-          baselines.get(document.id) !== JSON.stringify(document.manifest),
-      );
-    },
-    async saveAllChanges() {
-      for (const document of session.project.documents) {
-        const snapshot = document.manifest;
-        if (!recovered.has(document.id) && baselines.get(document.id) === JSON.stringify(snapshot))
-          continue;
-        const saved = await saveSnapshot(document.id, snapshot);
-        session.markDocumentSaved(document.id, saved);
-      }
-    },
-    async persistPendingChanges() {
-      for (const document of session.project.documents) {
-        const snapshot = document.manifest;
-        if (baselines.get(document.id) === JSON.stringify(snapshot)) continue;
-        const saved = await saveSnapshot(document.id, snapshot);
-        session.markDocumentSaved(document.id, saved);
-      }
-    },
+    hasPendingChanges,
+    saveAllChanges,
+    persistPendingChanges,
     destroy: () => session.destroy(),
   };
 }

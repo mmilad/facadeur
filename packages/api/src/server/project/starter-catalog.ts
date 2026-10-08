@@ -1,17 +1,6 @@
-import { validateDocumentFile, type DocumentFile } from '@facadeur/core';
+import type { DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
-import button from '../../../../../examples/button.json';
-import link from '../../../../../examples/link.json';
-import image from '../../../../../examples/atoms/image.json';
-import textHeading from '../../../../../examples/atoms/text-heading.json';
-import textBody from '../../../../../examples/atoms/text-body.json';
-import video from '../../../../../examples/atoms/video.json';
-import contentCard from '../../../../../examples/components/content-card.json';
-import fullbleedTeaser from '../../../../../examples/components/fullbleed-teaser.json';
-import { starterSchemas } from './starter-schemas.js';
-
-const atoms = [button, link, image, video, textHeading, textBody];
-const components = [contentCard, fullbleedTeaser];
+import { starterSchemas } from './starter-schemas';
 
 /** Each project receives its own editable copies of the built-in atom definitions. */
 export function starterCatalog() {
@@ -34,9 +23,5 @@ export function starterCatalog() {
   return [
     { source: 'project-template.json', document: design },
     { source: 'new-section.json', document: section },
-    ...[...atoms, ...components].map((atom) => {
-      const document = validateDocumentFile(structuredClone(atom));
-      return { source: document.id + '.json', document };
-    }),
   ];
 }

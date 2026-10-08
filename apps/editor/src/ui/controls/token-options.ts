@@ -1,10 +1,10 @@
-import type { SelectOption } from '../form/types/options.js';
-import { tokenPath, tokenDisplayLabel, tokenTitle } from './token-presentation.js';
+import type { SelectOption } from '../form/types/options';
+import { tokenPath, tokenDisplayLabel, tokenTitle } from './token-presentation';
 import {
   useTokenLabel,
   useTokenResolver,
   useTokenSearchValue,
-} from './fields/TokenPreviewContext.js';
+} from './fields/TokenPreviewContext';
 
 function tokenGroup(path: string): string | undefined {
   const segments = path.split('.');

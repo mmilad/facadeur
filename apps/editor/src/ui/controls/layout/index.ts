@@ -2,7 +2,7 @@ export {
   LayoutControl,
   type LayoutControlSection,
   type LayoutControlSectionContent,
-} from './LayoutControl.js';
+} from './LayoutControl';
 export {
   layoutControlValue,
   shownLayoutField,
@@ -12,9 +12,9 @@ export {
   wrapLayoutPatch,
   freePositionPatch,
   type LayoutControlValue,
-} from './value.js';
-export { axisModePatch } from './axis-size-editor.js';
-export { boxWith } from './spacing-field.js';
+} from './value';
+export { axisModePatch } from './axis-size-editor';
+export { boxWith } from './spacing-field';
 export {
   displayMode,
   effectiveLayout,
@@ -25,4 +25,4 @@ export {
   type LayoutDisplayMode,
   type LayoutField,
   type LayoutPropertyCapability,
-} from '../../../domain/layout-capabilities.js';
+} from '../../../domain/layout-capabilities';

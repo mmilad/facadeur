@@ -1,10 +1,13 @@
 import { useEffect, type RefObject } from 'react';
-import type { SelectionController } from '../../../domain/selection/selection.js';
-import type { EditorSession } from '../../../domain/session.js';
-import type { StageController } from '../../../domain/viewport/stage.js';
-import { createViewportBoard, type ViewportBoard } from '../../../domain/viewport/viewports.js';
+import type { SelectionController } from '../../../domain/selection/selection';
+import type { AppService } from '../../../app-service';
+import type { EditorSession } from '../../../domain/session';
+import type { StageController } from '../../../domain/viewport/stage';
+import { createV2ViewportBoard } from '../../../domain/viewport/v2-board';
+import type { ViewportBoard } from '../../../domain/viewport/viewports';
 
 export function useStageViewportBoard({
+  app,
   session,
   openId,
   generation,
@@ -12,8 +15,6 @@ export function useStageViewportBoard({
   selectedRenderId,
   focusViewportId,
   selectedViewportId,
-  chromeRevision,
-  activeVariantName,
   stageRef,
   boardRef,
   selectionRef,
@@ -21,6 +22,7 @@ export function useStageViewportBoard({
   untouchedRef,
   fitRef,
 }: {
+  app: AppService;
   session: EditorSession;
   openId: string;
   generation: number;
@@ -41,28 +43,16 @@ export function useStageViewportBoard({
     const stageEl = stageRef.current;
     const stage = stageControllerRef.current;
     if (!stageEl || !stage) return;
-    const documents = session.boardDocuments();
-    const page = documents.find((document) => document.id === openId);
-    if (!page) return;
-    let board: ViewportBoard;
-    try {
-      board = createViewportBoard({
-        parent: stageEl,
-        documents,
-        page,
-        stores: session.boardStores(),
-        design: session.designInput(),
-        schemaCatalog: session.getSnapshot().design.schemaCatalog,
-        paintRoot: page.kind !== 'page',
-        variantName: activeVariantName,
-        onLayout: () => selectionRef.current?.reposition(),
-        getChrome: (id) => session.getSnapshot().viewportChrome[id],
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Could not open the stage';
-      session.setNotice(message, 'error');
-      return;
-    }
+    const coreSnap = app.getCoreSnapshot();
+    if (!coreSnap.openDefinition) return;
+    const buildConfig = app.core.node.element.buildOpenDefinition();
+    if (!buildConfig) return;
+    const board = createV2ViewportBoard({
+      parent: stageEl,
+      buildConfig,
+      title: coreSnap.openDefinition.name,
+      catalog: coreSnap.catalog,
+    });
     boardRef.current = board;
     stageEl.classList.remove('is-ready');
     const fit = () => {
@@ -74,46 +64,22 @@ export function useStageViewportBoard({
     fitRef.current = fit;
     untouchedRef.current = true;
     fit();
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (boardRef.current !== board || !untouchedRef.current) return;
-        fit();
-      });
-    });
-    void board.whenFontsReady().then(() => {
-      if (boardRef.current !== board) return;
-      if (untouchedRef.current) fit();
-      else selectionRef.current?.reposition();
-    });
     return () => {
-      if (boardRef.current === board) boardRef.current = null;
       board.destroy();
+      boardRef.current = null;
     };
   }, [
+    app,
     session,
     openId,
     generation,
     designRevision,
-    activeVariantName,
     stageRef,
     boardRef,
-    selectionRef,
     stageControllerRef,
     untouchedRef,
     fitRef,
   ]);
-
-  useEffect(() => {
-    const board = boardRef.current;
-    if (!board) return;
-    board.setDesign(session.designInput());
-  }, [session, designRevision, boardRef]);
-
-  useEffect(() => {
-    const board = boardRef.current;
-    if (!board) return;
-    board.applyChrome((id) => session.getSnapshot().viewportChrome[id]);
-  }, [session, chromeRevision, openId, boardRef]);
 
   useEffect(() => {
     selectionRef.current?.show(selectedRenderId, focusViewportId);

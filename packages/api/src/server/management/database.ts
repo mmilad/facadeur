@@ -1,7 +1,7 @@
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import { migrateLegacyIdentities } from './migrations.js';
+import { migrateLegacyIdentities } from './migrations';
 
 type Runtime = { database: DatabaseSync; directory: string };
 const runtimeKey = '__facadeurManagementRuntime';

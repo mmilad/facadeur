@@ -1,8 +1,8 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { DomainError, apiController } from '@facadeur/api/server';
-import { respond } from '../src/app/api/transport.js';
-import { POST as signIn } from '../src/app/api/auth/sign-in/route.js';
-import { POST as workspace } from '../src/app/api/workspace/route.js';
+import { respond } from '../src/app/api/transport';
+import { POST as signIn } from '../src/app/api/auth/sign-in/route';
+import { POST as workspace } from '../src/app/api/workspace/route';
 
 afterEach(() => vi.restoreAllMocks());
 

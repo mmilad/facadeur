@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { FieldValue } from '@facadeur/core';
-import { Field, Select } from '../../form/index.js';
+import { Field, Select } from '../../form/index';
 import {
   type ItemChoice,
   caseEnvelope,
@@ -10,8 +10,8 @@ import {
   makeCaseValue,
   schemaMatches,
   payloadForValue,
-} from './item-array-schema.js';
-import { SchemaValueForm } from './SchemaValueForm.js';
+} from './item-array-schema';
+import { SchemaValueForm } from './SchemaValueForm';
 
 export function SwitchCaseControl({
   label,

@@ -29,13 +29,38 @@ let examplePoolCache: Map<string, DocumentFile> | null = null;
 let allExamplesCache: DocumentFile[] | null = null;
 let schemaCatalogCache: SchemaCatalog | null = null;
 
-/** The checked-in example schema library used by both catalog and session fixtures. */
+const fallbackSchemaCatalog: SchemaCatalog = {
+  schemas: [
+    {
+      id: 'image',
+      name: 'Image',
+      schema: {
+        type: 'object',
+        title: 'Image',
+        required: ['src'],
+        properties: {
+          src: { type: 'string', title: 'Source' },
+          alt: { type: 'string', title: 'Alt text' },
+          ratio: { type: 'string', title: 'Ratio' },
+        },
+        additionalProperties: false,
+      },
+    },
+  ],
+};
+
+/** Schema library for tests (legacy examples/schemas.json removed during catalog reset). */
 export function exampleSchemaCatalog(): SchemaCatalog {
   if (!schemaCatalogCache) {
-    const source = JSON.parse(readFileSync(join(examplesDir, 'schemas.json'), 'utf8')) as {
-      schemas?: SchemaCatalog['schemas'];
-    };
-    schemaCatalogCache = { schemas: source.schemas ?? [] };
+    const schemasPath = join(examplesDir, 'schemas.json');
+    if (existsSync(schemasPath)) {
+      const source = JSON.parse(readFileSync(schemasPath, 'utf8')) as {
+        schemas?: SchemaCatalog['schemas'];
+      };
+      schemaCatalogCache = { schemas: source.schemas ?? [] };
+    } else {
+      schemaCatalogCache = fallbackSchemaCatalog;
+    }
   }
   return schemaCatalogCache;
 }

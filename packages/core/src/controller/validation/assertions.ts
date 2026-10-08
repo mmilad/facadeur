@@ -1,7 +1,7 @@
-import { DocumentError } from '../../document/errors.js';
-import { isPlainObject as isRecord } from '../../utils.js';
-import { type FlatNode } from '../../document/flat.js';
-import { ID_PATTERN } from '../../document/ids.js';
+import { DocumentError } from '../../document/errors';
+import { isPlainObject as isRecord } from '../../utils';
+import { type FlatNode } from '../../document/flat';
+import { ID_PATTERN } from '../../document/ids';
 import {
   fieldTypes,
   type Binding,
@@ -13,9 +13,9 @@ import {
   type FieldValue,
   type Repeat,
   type VariantPreset,
-} from '../../schema/document.js';
-import { parseLayout } from '../style/layout.js';
-import { matchesLegacyStructuralValue, matchesSchemaValue } from './json-schema-value.js';
+} from '../../schema/document';
+import { parseLayout } from '../style/layout';
+import { matchesLegacyStructuralValue, matchesSchemaValue } from './json-schema-value';
 
 const DATA_PATH = /^[A-Za-z_$][A-Za-z0-9_$-]*(\.[A-Za-z_$][A-Za-z0-9_$-]*)*$/;
 const EXPOSE_PATH = /^[A-Za-z][A-Za-z0-9_-]*(\.[A-Za-z][A-Za-z0-9_-]*)*$/;

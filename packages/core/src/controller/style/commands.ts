@@ -1,25 +1,25 @@
-import { DocumentError } from '../../document/errors.js';
-import { makeFlatNode, type FlatDocument } from '../../document/flat.js';
-import type { Breakpoint, FontFamily } from '../../schema/document.js';
-import type { CommandContext } from '../document/commands/types.js';
-import { setVariantStyleBlock } from '../variants/commands.js';
-import type { StyleCommand } from './types.js';
+import { DocumentError } from '../../document/errors';
+import { makeFlatNode, type FlatDocument } from '../../document/flat';
+import type { Breakpoint, FontFamily } from '../../schema/document';
+import type { CommandContext } from '../../legacy/flat/document/commands/types';
+import { setVariantStyleBlock } from '../../legacy/flat/variants/commands';
+import type { StyleCommand } from './types';
 import {
   removeGroupFromTree,
   removeTokenFromTree,
   setGroupInTree,
   setTokenInTree,
-} from './tokens/global/tree.js';
+} from './tokens/global/tree';
 import {
   removeComponentToken,
   renameComponentTokenPath,
   setComponentToken,
-} from './tokens/component/commands.js';
-import { adoptTokenReads } from './references/adopt.js';
-import { parseStyleBlock, parseTokenInterface } from './blocks/parse.js';
-import { assertStyleMap } from './blocks/contract.js';
-import { assertBreakpoints, cloneBreakpoints } from './breakpoints.js';
-import { assertFont, cloneFont } from './fonts.js';
+} from './tokens/component/commands';
+import { adoptTokenReads } from './references/adopt';
+import { parseStyleBlock, parseTokenInterface } from './blocks/parse';
+import { assertStyleMap } from './blocks/contract';
+import { assertBreakpoints, cloneBreakpoints } from './breakpoints';
+import { assertFont, cloneFont } from './fonts';
 
 /** Mutates only the working document supplied by pure command application; owns no project state. */
 export function applyStyleCommand(

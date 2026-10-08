@@ -1,0 +1,1 @@
+export { ConfigController } from './controller';

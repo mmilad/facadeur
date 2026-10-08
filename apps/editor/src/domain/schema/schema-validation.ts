@@ -1,4 +1,4 @@
-import type { JsonSchema, LibrarySchema } from './schema-library.js';
+import type { JsonSchema, LibrarySchema } from './schema-library';
 
 export interface SchemaValidationIssue {
   schemaId: string;

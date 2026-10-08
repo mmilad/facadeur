@@ -1,5 +1,35 @@
 # facadeur – Plan
 
+### Node model refactor (dom / style / schema / data / config)
+
+- [ ] Major reshape: replace `nestedNodeSchema` special cases with a uniform node (`dom`, `style`, `schema`, `data`, `config`). See [node-model-refactor.md](./node-model-refactor.md). **Phase 1:** legacy examples removed, v2 TypeBox in `packages/core/src/schema/node-model/`, starter project = design + empty section only, vitest narrowed. **Next:** API catalog seed, restore full test include, sidebar on v2. References: [example-framework](https://github.com/mmilad/example-framework), [style-controller](https://github.com/mmilad/style-controller).
+
+### `@facadeur/domain` + `CoreController`
+
+- [x] **`packages/domain`** — shared types/interfaces only (no runtime logic).
+- [x] **`packages/core/src/controller/{core,catalog,preview,node,element,config,schema,node-style}/`** + **`CoreController`**; preview → **`ElementBuildConfig`**; **`buildElement`** in renderer-dom (no tag-specific DOM hacks).
+- [x] Wire editor **`AppService`** → **`CoreController`**; **`CatalogPort`** in API adapter; drop duplicate editor catalog helpers.
+- [ ] Expand core commands/selection; editor keeps UI-only concerns (select chrome, insert/delete UX).
+
+### Deprecation inventory (safe to delete after Core wiring)
+
+Symbols are marked `@deprecated` in source; remove bottom-up once nothing imports them.
+
+| Area | Deprecated surface | Replacement |
+| --- | --- | --- |
+| `@facadeur/core` | `ProjectController`, `validateCatalog`, `validateTree`, `validateDocumentFile`, `compileDocumentValidator`, `documentFileSchema` | `CoreController`, `validateProjectCatalog`, node-model catalog |
+| `@facadeur/core` | `mergePreviewData` export alias | `mergePreviewFields` |
+| `@facadeur/renderer-dom` | `renderV2DefinitionRoot` | `renderDefinitionRoot` + `buildElement` |
+| Editor | `domain/catalog/v2-catalog.ts`, `domain/viewport/v2-board.ts` | `@facadeur/core` catalog + preview |
+| Editor | Session `v2OpenDefinition`, `selectedV2NodeUuid`, `patchV2NodeField`, `saveProjectCatalog` | `CoreController` snapshot + commands |
+| Editor | `AppService`, `AppServiceHost`, `app-service/controllers/*` | `CoreController` + thin React hooks |
+
+### Core package layout (2026-03)
+
+- **Product:** `packages/core/src/controller/project/` — `CoreController`, nested `catalog/`, `node/*`.
+- **Legacy flat docs:** `packages/core/src/legacy/flat/` — import `@facadeur/core/legacy`.
+- **Removed top-level** `controller/catalog`, `controller/core`, duplicate `controller/variants` / `src/store` (use legacy paths).
+
 ### Deprecate explicit public-contract aliases
 
 - [x] Mark the legacy `expose` mechanism as deprecated without removing its compatibility path.

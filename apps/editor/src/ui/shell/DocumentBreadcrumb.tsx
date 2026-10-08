@@ -1,4 +1,4 @@
-import type { EditorSession, EditorSnapshot } from '../../domain/session.js';
+import type { EditorSession, EditorSnapshot } from '../../domain/session';
 
 export function DocumentBreadcrumb({
   session,

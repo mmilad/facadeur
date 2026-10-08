@@ -1,7 +1,7 @@
 ﻿import type { ReactNode } from 'react';
 import type { FieldValue, JsonSchema } from '@facadeur/core';
-import { Field, NumberInput, Popover, Select, Stack, TextInput, Toggle } from '../../form/index.js';
-import { IconButton } from '../../form/components/shared/IconButton.js';
+import { Field, NumberInput, Popover, Select, Stack, TextInput, Toggle } from '../../form/index';
+import { IconButton } from '../../form/components/shared/IconButton';
 import {
   caseEnvelope,
   initialDraftForSchema,
@@ -12,7 +12,7 @@ import {
   schemaMatches,
   setAtPath,
   type ItemChoice,
-} from './item-array-schema.js';
+} from './item-array-schema';
 import './schema-value-form.css';
 
 export function StructuralSchemaValueForm({

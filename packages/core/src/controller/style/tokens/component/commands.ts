@@ -3,12 +3,12 @@ import {
   assertComponentTokenKind,
   parseComponentTokenBody,
   type ComponentToken,
-} from './contract.js';
-import { DocumentError } from '../../../../document/errors.js';
-import type { FlatDocument } from '../../../../document/flat.js';
-import { ID_PATTERN } from '../../../../document/ids.js';
-import { adoptTokenReads } from '../../references/adopt.js';
-import { rewriteLocalComponentTokenPath } from '../../references/rewrite.js';
+} from './contract';
+import { DocumentError } from '../../../../document/errors';
+import type { FlatDocument } from '../../../../document/flat';
+import { ID_PATTERN } from '../../../../document/ids';
+import { adoptTokenReads } from '../../references/adopt';
+import { rewriteLocalComponentTokenPath } from '../../references/rewrite';
 
 const TOKEN_PATH = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+)+$/;
 

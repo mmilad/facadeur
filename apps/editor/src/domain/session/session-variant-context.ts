@@ -12,8 +12,8 @@ import {
   type SchemaCatalog,
 } from '@facadeur/core';
 import type { ControllerDocumentStore } from '@facadeur/core';
-import { overlaySchemaDefaults } from '../schema/schema-defaults.js';
-import { publicFieldsFor } from '../schema/component-contract.js';
+import { overlaySchemaDefaults } from '../schema/schema-defaults';
+import { publicFieldsFor } from '../schema/component-contract';
 
 export function variantEditableCommand(command: Command): boolean {
   switch (command.type) {

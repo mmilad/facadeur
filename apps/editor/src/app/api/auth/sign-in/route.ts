@@ -1,6 +1,6 @@
 import { apiController } from '@facadeur/api/server';
 import type { MockSignIn } from '@facadeur/api';
-import { assertSameOrigin, readJson, respond, sessionCookie } from '../../transport.js';
+import { assertSameOrigin, readJson, respond, sessionCookie } from '../../transport';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 

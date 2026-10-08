@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ApiError, createApiClient } from '../src/index.js';
+import { ApiError, createApiClient } from '../src/index';
 
 describe('API client transport', () => {
   it('accepts anonymous sessions and preserves server error status and message', async () => {

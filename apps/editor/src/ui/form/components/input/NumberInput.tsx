@@ -1,6 +1,6 @@
 import type { InputHTMLAttributes } from 'react';
-import { useDraftCommit } from '../../hooks/useDraftCommit.js';
-import { useBindable } from './bindable.js';
+import { useDraftCommit } from '../../hooks/useDraftCommit';
+import { useBindable } from './bindable';
 
 function parseNumber(raw: string): number | null {
   if (raw.trim() === '') return null;

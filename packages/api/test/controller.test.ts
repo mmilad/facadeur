@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { apiController } from '../src/server/index.js';
+import { apiController } from '../src/server/index';
 
 let directory: string;
 beforeEach(async () => {

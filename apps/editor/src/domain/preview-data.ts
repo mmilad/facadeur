@@ -5,7 +5,7 @@ import {
   type FlatDocument,
   type PreviewData,
 } from '@facadeur/core';
-import { parseFieldValue } from './field-values.js';
+import { parseFieldValue } from './field-values';
 
 export type PreviewValueSource = 'variant' | 'base' | 'legacy' | 'missing';
 

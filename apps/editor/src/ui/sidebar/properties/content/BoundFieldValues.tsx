@@ -5,18 +5,18 @@ import {
   type FlatNode,
   type JsonSchema,
 } from '@facadeur/core';
-import { parsePreviewFieldValue, patchPreviewData } from '../../../../domain/preview-data.js';
-import { schemaFieldDefaultsFor } from '../../../../domain/schema/schema-defaults.js';
-import { structuralItemChoices } from '../../../../domain/schema/structural-item-choices.js';
-import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
-import { variantLabel } from '../../../../domain/edits/variant-edit.js';
-import { fieldDisplayLabel } from '../../../controls/data/field-label.js';
-import { TextControl } from '../../../controls/fields/index.js';
-import { Field, Select, Toggle } from '../../../form/index.js';
-import { boundFields } from './bound-fields.js';
-import { ItemArrayControl } from '../../../controls/data/ItemArrayControl.js';
-import { SwitchCaseControl } from '../../../controls/data/SwitchCaseControl.js';
-import { JsonSchemaContractFieldEditor } from '../../../schema/JsonSchemaContractFieldEditor.js';
+import { parsePreviewFieldValue, patchPreviewData } from '../../../../domain/preview-data';
+import { schemaFieldDefaultsFor } from '../../../../domain/schema/schema-defaults';
+import { structuralItemChoices } from '../../../../domain/schema/structural-item-choices';
+import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
+import { variantLabel } from '../../../../domain/edits/variant-edit';
+import { fieldDisplayLabel } from '../../../controls/data/field-label';
+import { TextControl } from '../../../controls/fields/index';
+import { Field, Select, Toggle } from '../../../form/index';
+import { boundFields } from './bound-fields';
+import { ItemArrayControl } from '../../../controls/data/ItemArrayControl';
+import { SwitchCaseControl } from '../../../controls/data/SwitchCaseControl';
+import { JsonSchemaContractFieldEditor } from '../../../schema/JsonSchemaContractFieldEditor';
 
 export function BoundFieldValues({
   session,

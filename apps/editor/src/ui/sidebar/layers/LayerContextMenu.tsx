@@ -2,16 +2,16 @@ import { useLayoutEffect, useState, type RefObject } from 'react';
 import {
   layerInsertEntriesForLayer,
   type LayerInsertEntry,
-} from '../../../domain/layer-insert-policy.js';
-import type { LayerItem } from '../../../domain/selection/selection-model.js';
-import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
+} from '../../../domain/layer-insert-policy';
+import type { LayerItem } from '../../../domain/selection/selection-model';
+import type { EditorSession, EditorSnapshot } from '../../../domain/session';
 import {
   canDeleteLayer,
   canInsertBelowLayer,
   canInsertInsideLayer,
   deleteLayer,
   insertLayerEntry,
-} from './layer-context-actions.js';
+} from './layer-context-actions';
 
 type InsertPlacement = 'inside' | 'below';
 

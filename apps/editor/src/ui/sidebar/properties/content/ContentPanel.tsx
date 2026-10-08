@@ -10,24 +10,24 @@ import {
   type FlatDocument,
   type FlatNode,
 } from '@facadeur/core';
-import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
+import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
 import {
   dataFieldsForNode,
   DataDirectivesEditorControl,
   DisplayConditionEditor,
   fieldPathOptions,
-} from '../../../controls/data/index.js';
-import { HtmlTagSelect } from '../../../controls/html/index.js';
-import { InstanceOverridesControl } from '../../../controls/instance/index.js';
-import { TextControl } from '../../../controls/fields/index.js';
+} from '../../../controls/data/index';
+import { HtmlTagSelect } from '../../../controls/html/index';
+import { InstanceOverridesControl } from '../../../controls/instance/index';
+import { TextControl } from '../../../controls/fields/index';
 import '../../../form/form.css';
-import { NodeAttributeFields } from './NodeAttributeFields.js';
-import { partitionNodeAttributes } from './preview-attribute-keys.js';
-import { PreviewOptionsDisclosure } from './PreviewOptionsDisclosure.js';
-import { NodeBindings } from './NodeBindings.js';
-import { BoundFieldValues } from './BoundFieldValues.js';
-import { ownsComponentFeatures } from './component/owns-component-features.js';
-import { VariantRulesEditor } from './VariantRulesEditor.js';
+import { NodeAttributeFields } from './NodeAttributeFields';
+import { partitionNodeAttributes } from './preview-attribute-keys';
+import { PreviewOptionsDisclosure } from './PreviewOptionsDisclosure';
+import { NodeBindings } from './NodeBindings';
+import { BoundFieldValues } from './BoundFieldValues';
+import { ownsComponentFeatures } from './component/owns-component-features';
+import { VariantRulesEditor } from './VariantRulesEditor';
 
 export function ContentPanel({
   session,

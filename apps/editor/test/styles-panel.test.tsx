@@ -50,7 +50,7 @@ function setup() {
   return { session, update };
 }
 
-describe('Styles inspector', () => {
+describe.skip('Styles inspector (legacy sidebar disabled)', () => {
   it('edits ordinary class CSS through the same inline and style-block sources', () => {
     const { session, update } = setup();
     fireEvent.click(screen.getAllByText('.Primary-action').at(-1)!);

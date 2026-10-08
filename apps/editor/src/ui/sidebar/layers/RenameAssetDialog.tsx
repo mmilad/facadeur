@@ -1,29 +1,34 @@
 import { useState } from 'react';
-import { Field, Modal, Stack } from '../../form/index.js';
-import type { AssetSummary, EditorSession } from '../../../domain/session.js';
+import { Field, Modal, Stack } from '../../form/index';
+import type { AppService } from '../../../app-service';
+import type { AssetSummary } from '../../../domain/session';
 
 export function RenameAssetDialog({
-  session,
+  app,
   asset,
   onClose,
 }: {
-  session: EditorSession;
+  app: AppService;
   asset: AssetSummary;
   onClose: () => void;
 }) {
   const [name, setName] = useState(asset.name);
-  const [slug, setSlug] = useState(asset.slug ?? asset.id);
   const [error, setError] = useState('');
-  function rename() {
-    session.executeDocument(asset.id, { type: 'setDocumentMetadata', name, slug });
-    const notice = session.getSnapshot().notice;
-    const updated = session.project.document(asset.id).manifest;
-    if (updated.name !== name.trim() || (updated.slug ?? updated.id) !== slug.trim()) {
-      setError(notice?.text ?? 'Rename failed');
+
+  async function rename() {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setError('Enter a name');
       return;
     }
-    onClose();
+    try {
+      await app.patchDefinition(asset.id, { name: trimmed });
+      onClose();
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : 'Rename failed');
+    }
   }
+
   return (
     <Modal
       open
@@ -33,36 +38,20 @@ export function RenameAssetDialog({
       }}
       footer={
         <>
-          <button type="button" className="eu-button" onClick={onClose}>
+          <button type="button" onClick={() => void rename()}>
+            Save
+          </button>{' '}
+          <button type="button" onClick={onClose}>
             Cancel
-          </button>
-          <button type="button" className="eu-button" onClick={rename}>
-            Rename
           </button>
         </>
       }
     >
       <Stack>
         <Field label="Name">
-          <input
-            className="eu-control"
-            aria-label="Asset name"
-            value={name}
-            onChange={(event) => setName(event.currentTarget.value)}
-          />
+          <input name="asset-name" value={name} onChange={(event) => setName(event.target.value)} />
         </Field>
-        <Field label="Identifier">
-          <input
-            className="eu-control"
-            aria-label="Asset identifier"
-            value={slug}
-            onChange={(event) => setSlug(event.currentTarget.value)}
-          />
-        </Field>
-        <p className="meta">
-          The identifier appears in the project list. Existing component references stay connected.
-        </p>
-        {error ? <p role="alert">{error}</p> : null}
+        {error ? <p className="notice notice-error">{error}</p> : null}
       </Stack>
     </Modal>
   );

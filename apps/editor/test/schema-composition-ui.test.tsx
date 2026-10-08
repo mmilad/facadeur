@@ -4,10 +4,10 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
-import type { EditorSession, EditorSnapshot } from '../src/domain/session.js';
-import type { LibrarySchema } from '../src/domain/schema/schema-library.js';
-import { schemaRefUri } from '../src/domain/schema/schema-library.js';
-import { SchemaLibraryStage } from '../src/ui/stage/SchemaLibraryStage.js';
+import type { EditorSession, EditorSnapshot } from '../src/domain/session';
+import type { LibrarySchema } from '../src/domain/schema/schema-library';
+import { schemaRefUri } from '../src/domain/schema/schema-library';
+import { SchemaLibraryStage } from '../src/ui/stage/SchemaLibraryStage';
 
 let root: Root | null = null;
 

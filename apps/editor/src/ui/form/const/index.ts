@@ -1,1 +1,1 @@
-export { DEFAULT_DENSITY, gapForDensity } from './density.js';
+export { DEFAULT_DENSITY, gapForDensity } from './density';

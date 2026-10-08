@@ -1,7 +1,7 @@
-import { DocumentError } from '../../../../document/errors.js';
-import { createId, ID_PATTERN } from '../../../../document/ids.js';
-import { isPlainObject } from '../../../../utils.js';
-import { tokenTypeSchema, type TokenType } from '../../../../schema/fonts.js';
+import { DocumentError } from '../../../../document/errors';
+import { createId, ID_PATTERN } from '../../../../document/ids';
+import { isPlainObject } from '../../../../utils';
+import { tokenTypeSchema, type TokenType } from '../../../../schema/fonts';
 import { Value } from '@sinclair/typebox/value';
 
 export interface ComponentToken {

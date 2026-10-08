@@ -12,11 +12,11 @@ import {
   type TokenTier,
   type TokenType,
 } from '@facadeur/core';
-import { tokenCustomProperty } from './names.js';
-import { collectProperties, type CssProperty } from './css-properties.js';
+import { tokenCustomProperty } from './names';
+import { collectProperties, type CssProperty } from './css-properties';
 
-export type { CssProperty } from './css-properties.js';
-export { fontStack, quoteFamily } from './css-properties.js';
+export type { CssProperty } from './css-properties';
+export { fontStack, quoteFamily } from './css-properties';
 
 type TypographyField = 'fontFamily' | 'fontSize' | 'fontWeight' | 'lineHeight' | 'letterSpacing';
 type Expectation = TokenType | 'lineHeight';

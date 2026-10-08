@@ -4,8 +4,8 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { AuthScreen } from '../src/ui/management/AuthScreen.js';
-import { ManagementHome } from '../src/ui/management/ManagementHome.js';
+import { AuthScreen } from '../src/ui/management/AuthScreen';
+import { ManagementHome } from '../src/ui/management/ManagementHome';
 import type { ManagementSnapshot } from '@facadeur/api';
 
 const ownerSnapshot: ManagementSnapshot = {

@@ -3,7 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import type { ProjectSnapshot } from '@facadeur/api';
-import { ProjectWorkspace } from '../src/ui/projects/ProjectWorkspace.js';
+import { ProjectWorkspace } from '../src/ui/projects/ProjectWorkspace';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 
 const routing = vi.hoisted(() => ({

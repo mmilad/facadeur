@@ -1,8 +1,8 @@
-import { DocumentError } from '../../document/errors.js';
-import type { FlatNode } from '../../document/flat.js';
-import type { FieldDefinition, FieldValue, JsonSchema, NestedNode } from '../../schema/document.js';
-import { matchingSchemaIndex, matchesSchemaValue, resolveJsonSchema } from './json-schema-value.js';
-import type { ContractDocument, SchemaResolverContext } from './types.js';
+import { DocumentError } from '../../document/errors';
+import type { FlatNode } from '../../document/flat';
+import type { FieldDefinition, FieldValue, JsonSchema, NestedNode } from '../../schema/document';
+import { matchingSchemaIndex, matchesSchemaValue, resolveJsonSchema } from './json-schema-value';
+import type { ContractDocument, SchemaResolverContext } from './types';
 
 export { matchesSchemaValue };
 

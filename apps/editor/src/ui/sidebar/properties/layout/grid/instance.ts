@@ -1,7 +1,7 @@
-import { resolveInstanceVariantContext } from '../../../../../domain/instance-variant-context.js';
-import type { EditorSession, EditorSnapshot } from '../../../../../domain/session.js';
-import { editorBreakpoints } from '../../../../../domain/viewport/viewport-edit.js';
-import { gridDeclarations } from './edits.js';
+import { resolveInstanceVariantContext } from '../../../../../domain/instance-variant-context';
+import type { EditorSession, EditorSnapshot } from '../../../../../domain/session';
+import { editorBreakpoints } from '../../../../../domain/viewport/viewport-edit';
+import { gridDeclarations } from './edits';
 
 /** Resolve appearance from the referenced master without changing its store. */
 export function gridInstance(

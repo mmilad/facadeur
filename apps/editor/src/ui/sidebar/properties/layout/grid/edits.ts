@@ -1,10 +1,10 @@
 import { applyCommand, type Breakpoint, type Command } from '@facadeur/core';
-import type { EditorSession, EditorSnapshot } from '../../../../../domain/session.js';
+import type { EditorSession, EditorSnapshot } from '../../../../../domain/session';
 import {
   canonicalStyleProperty,
   effectiveStyleDeclarations,
-} from '../../../../../domain/edits/style-edit.js';
-import { layoutStyleField } from '../style-field.js';
+} from '../../../../../domain/edits/style-edit';
+import { layoutStyleField } from '../style-field';
 
 export function gridDeclarations(
   snap: EditorSnapshot,

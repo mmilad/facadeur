@@ -1,6 +1,6 @@
-import type { EditorSession, EditorSnapshot } from '../../../../../domain/session.js';
-import { ExposeEditorControl } from '../../../../controls/data/index.js';
-import { ownsComponentFeatures } from './owns-component-features.js';
+import type { EditorSession, EditorSnapshot } from '../../../../../domain/session';
+import { ExposeEditorControl } from '../../../../controls/data/index';
+import { ownsComponentFeatures } from './owns-component-features';
 
 export function ComponentExpose({
   session,

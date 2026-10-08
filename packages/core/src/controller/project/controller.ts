@@ -1,181 +1,308 @@
-import { applyCommand, type Command, type CommandContext } from '../document/commands/index.js';
-import { DocumentError } from '../../document/errors.js';
-import { canonicalizeFlat, toNested, type FlatDocument } from '../../document/flat.js';
-import type { SchemaCatalog } from '../../schema/document.js';
-import { DocumentController } from '../document/controller.js';
-import type { DocumentControllerContext } from '../document/types.js';
-import { readTokenTree } from '../style/tokens/global/tree.js';
-import { StyleController } from '../style/controller.js';
-import type { GlobalTokenCommand } from '../style/types.js';
-import { resolveChildFieldDefinition } from '../validation/catalog.js';
-import type { DocumentCommandExecutor, ProjectChange, ProjectControllerOptions } from './types.js';
-import { notifyListeners } from './notifications.js';
+import type {
+  CatalogMapKey,
+  CatalogPort,
+  CoreSnapshot,
+  JsonSchemaObject,
+  NodeDefinition,
+  ProjectCatalog,
+} from '@facadeur/domain';
+import { DocumentError } from '../../document/errors';
+import type { CoreControllerHost } from '../../types/host';
+import { applyCatalogDesignCommand, type CatalogDesignCommand } from './catalog/design-commands';
+import {
+  createCatalogDefinition,
+  deleteCatalogDefinitionRecord,
+  patchCatalogDefinitionRecord,
+  removeCatalogSchema,
+  upsertCatalogSchema,
+} from './catalog/definition-ops';
+import {
+  findDefinition,
+  patchNodeData,
+  patchNodeDataRecord,
+  patchNodeDomAttributes,
+  patchNodeStyleRecord,
+  patchNodeTagName,
+} from './catalog/ops';
+import { insertCatalogNode, moveCatalogNode, removeCatalogNode } from './catalog/tree-ops';
+import type { InspectorFormChangeTarget } from './node/preview/inspector-view';
+import { emptyProjectCatalog, validateProjectCatalog } from './catalog/validate';
+import { NodeController } from './node/controller';
 
-/** Owns project documents and shared schema/token context; all mutations go through commands. */
-export class ProjectController {
-  private readonly manifests = new Map<string, FlatDocument>();
-  private readonly controllers = new Map<string, DocumentController>();
-  private readonly listeners = new Set<(change: ProjectChange) => void>();
-  private readonly executeCommand: DocumentCommandExecutor;
-  readonly designDocumentId: string;
-  readonly styles: StyleController;
-  private readonly resolverContext: DocumentControllerContext;
+/**
+ * Single source of truth for {@link ProjectCatalog} and catalog editing selection.
+ * Design tokens, fonts, and {@link ProjectCatalog.globalStyles} live on the catalog snapshot;
+ * node/schema preview flows go through {@link NodeController}.
+ */
+export class CoreController implements CoreControllerHost {
+  private catalog: ProjectCatalog;
+  private openDefinitionId: string | null = null;
+  private selectedNodeUuid: string | null = null;
+  private readonly listeners = new Set<() => void>();
+  readonly node: NodeController;
 
-  constructor(options: ProjectControllerOptions) {
-    this.designDocumentId = options.designDocumentId;
-    this.executeCommand = options.executeCommand ?? applyCommand;
-    const designDocument = () => this.requireDocument(this.designDocumentId);
-    this.resolverContext = {
-      documents: this.manifests,
-      get schemaCatalog() {
-        return designDocument().schemaCatalog;
-      },
-      get globalTokens() {
-        return designDocument().tokens;
-      },
-    };
-    this.replaceDocuments(options.documents);
-    this.styles = new StyleController({
-      designDocumentId: this.designDocumentId,
-      readDocument: (id) => this.document(id).manifest,
-      updateDocument: (id, command) => this.updateDocument(id, command),
-    });
+  constructor(catalog: ProjectCatalog = emptyProjectCatalog()) {
+    this.catalog = validateProjectCatalog(structuredClone(catalog)) as ProjectCatalog;
+    this.node = new NodeController(this);
   }
 
-  get designDocument() {
-    return structuredClone(this.requireDocument(this.designDocumentId));
-  }
-
-  get schemaCatalog() {
-    return this.designDocument.schemaCatalog;
-  }
-
-  get globalTokens() {
-    return this.designDocument.tokens;
-  }
-
-  get documents(): readonly DocumentController[] {
-    return [...this.controllers.values()];
-  }
-
-  /** Detached resolution snapshot for an external command/persistence adapter. */
-  get commandContext(): CommandContext {
-    return this.createCommandContext();
-  }
-
-  subscribe(listener: (change: ProjectChange) => void) {
+  subscribe(listener: () => void) {
     this.listeners.add(listener);
-    return () => {
-      this.listeners.delete(listener);
-    };
+    return () => this.listeners.delete(listener);
   }
 
-  /** Accept loaded data or history snapshots without creating a command. */
-  replaceDocument(source: FlatDocument, reason: 'load' | 'undo' | 'redo' = 'load') {
-    if (reason !== 'load') this.requireDocument(source.id);
-    const document = canonicalizeFlat(source);
-    this.manifests.set(document.id, document);
-    if (!this.controllers.has(document.id)) {
-      this.controllers.set(document.id, new DocumentController(document.id, this.resolverContext));
-    }
-    this.publish({ reason, documentId: document.id });
-    return this.document(document.id);
-  }
-
-  /** Accept authoritative hydration, Undo, or remote snapshots without executing commands. */
-  replaceDocuments(documents: readonly FlatDocument[]) {
-    const next = new Map<string, FlatDocument>();
-    for (const source of documents) {
-      const document = canonicalizeFlat(source);
-      if (next.has(document.id)) {
-        throw new DocumentError('duplicate-document', `Duplicate document "${document.id}"`);
-      }
-      next.set(document.id, document);
-    }
-    if (!next.has(this.designDocumentId)) {
-      throw new DocumentError(
-        'unknown-document',
-        `Project design document "${this.designDocumentId}" was not provided`,
-      );
-    }
-    const removed = [...this.manifests.keys()].filter((id) => !next.has(id));
-    this.manifests.clear();
-    for (const [id, document] of next) {
-      this.manifests.set(id, document);
-      if (!this.controllers.has(id)) {
-        this.controllers.set(id, new DocumentController(id, this.resolverContext));
-      }
-    }
-    for (const id of this.controllers.keys()) {
-      if (!next.has(id)) this.controllers.delete(id);
-    }
-    for (const id of removed) this.publish({ reason: 'remove', documentId: id });
-    for (const id of next.keys()) this.publish({ reason: 'load', documentId: id });
-  }
-
-  document(id: string) {
-    const controller = this.controllers.get(id);
-    if (!controller) throw new DocumentError('unknown-document', `Unknown document "${id}"`);
-    return controller;
-  }
-
-  /** Apply one core command, then replace the stored manifest while preserving controller identity. */
-  updateDocument(id: string, command: Command) {
-    const current = this.requireDocument(id);
-    const next = this.executeCommand(
-      structuredClone(current),
-      command,
-      this.createCommandContext(),
-    );
-    if (next.id !== id) {
-      throw new DocumentError(
-        'schema',
-        `A command changed document id from "${id}" to "${next.id}"`,
-      );
-    }
-    this.manifests.set(id, canonicalizeFlat(next));
-    this.publish({
-      reason: 'command',
-      documentId: id,
-      command,
-      previousDocument: structuredClone(current),
-    });
-    return this.document(id);
-  }
-
-  updateSchemas(schemaCatalog: SchemaCatalog | null) {
-    return this.updateDocument(this.designDocumentId, { type: 'setSchemaCatalog', schemaCatalog });
-  }
-
-  updateTokens(command: GlobalTokenCommand) {
-    return this.styles.updateGlobalTokens(command);
-  }
-
-  private createCommandContext(): CommandContext {
-    const context: DocumentControllerContext = {
-      documents: structuredClone(this.manifests),
-      schemaCatalog: this.schemaCatalog,
-      globalTokens: this.globalTokens,
-    };
-    const nestedDocuments = new Map(
-      [...context.documents].map(([id, document]) => [id, toNested(document)] as const),
-    );
+  getSnapshot(): CoreSnapshot {
+    const openDefinition = this.openDefinitionId
+      ? (findDefinition(this.catalog, this.openDefinitionId)?.definition ?? null)
+      : null;
     return {
-      resolveKind: (id) => context.documents.get(id)?.kind,
-      schemaResolverContext: context,
-      globalTokenPaths: new Set(readTokenTree(context.globalTokens ?? {}).tokens.keys()),
-      resolveChildField: (node, path, field) =>
-        resolveChildFieldDefinition(node, path, field, nestedDocuments, context.schemaCatalog),
+      catalog: structuredClone(this.catalog) as ProjectCatalog,
+      openDefinitionId: this.openDefinitionId,
+      openDefinition: openDefinition ? structuredClone(openDefinition) : null,
+      selectedNodeUuid: this.selectedNodeUuid,
     };
   }
 
-  private requireDocument(id: string) {
-    const document = this.manifests.get(id);
-    if (!document) throw new DocumentError('unknown-document', `Unknown document "${id}"`);
-    return document;
+  replaceCatalog(catalog: unknown) {
+    this.catalog = validateProjectCatalog(catalog) as ProjectCatalog;
+    if (this.openDefinitionId && !findDefinition(this.catalog, this.openDefinitionId)) {
+      this.openDefinitionId = null;
+      this.selectedNodeUuid = null;
+    }
+    this.publish();
   }
 
-  private publish(change: ProjectChange) {
-    notifyListeners(this.listeners, change);
+  openDefinition(uuid: string) {
+    const located = findDefinition(this.catalog, uuid);
+    if (!located) {
+      throw new DocumentError('schema', `Unknown catalog definition "${uuid}"`);
+    }
+    this.openDefinitionId = uuid;
+    this.selectedNodeUuid = located.definition.root.uuid;
+    this.publish();
+  }
+
+  closeDefinition() {
+    if (!this.openDefinitionId && !this.selectedNodeUuid) return;
+    this.openDefinitionId = null;
+    this.selectedNodeUuid = null;
+    this.publish();
+  }
+
+  applyDesignCommand(command: CatalogDesignCommand) {
+    this.catalog = applyCatalogDesignCommand(this.catalog, command);
+    this.publish();
+  }
+
+  createDefinition(kind: CatalogMapKey, definition: NodeDefinition) {
+    this.catalog = validateProjectCatalog(
+      createCatalogDefinition(this.catalog, kind, definition),
+    ) as ProjectCatalog;
+    this.publish();
+  }
+
+  patchDefinition(kind: CatalogMapKey, uuid: string, patch: Partial<NodeDefinition>) {
+    this.catalog = validateProjectCatalog(
+      patchCatalogDefinitionRecord(this.catalog, kind, uuid, patch),
+    ) as ProjectCatalog;
+    if (this.openDefinitionId === uuid) {
+      const located = findDefinition(this.catalog, uuid);
+      if (located) this.selectedNodeUuid = located.definition.root.uuid;
+    }
+    this.publish();
+  }
+
+  deleteDefinition(kind: CatalogMapKey, uuid: string) {
+    this.catalog = validateProjectCatalog(
+      deleteCatalogDefinitionRecord(this.catalog, kind, uuid),
+    ) as ProjectCatalog;
+    if (this.openDefinitionId === uuid) {
+      this.openDefinitionId = null;
+      this.selectedNodeUuid = null;
+    }
+    this.publish();
+  }
+
+  upsertSchema(uuid: string, schema: JsonSchemaObject) {
+    this.catalog = validateProjectCatalog(
+      upsertCatalogSchema(this.catalog, uuid, schema),
+    ) as ProjectCatalog;
+    this.publish();
+  }
+
+  removeSchema(uuid: string) {
+    this.catalog = validateProjectCatalog(removeCatalogSchema(this.catalog, uuid)) as ProjectCatalog;
+    this.publish();
+  }
+
+  patchNodeField(field: string, value: unknown) {
+    if (!this.openDefinitionId || !this.selectedNodeUuid) return;
+    this.catalog = patchNodeData(
+      this.catalog,
+      this.openDefinitionId,
+      this.selectedNodeUuid,
+      field,
+      value,
+    );
+    this.publish();
+  }
+
+  patchNodeDataRecord(nodeUuid: string, record: Readonly<Record<string, unknown>>) {
+    if (!this.openDefinitionId) return;
+    this.catalog = validateProjectCatalog(
+      patchNodeDataRecord(this.catalog, this.openDefinitionId, nodeUuid, record),
+    ) as ProjectCatalog;
+    this.publish();
+  }
+
+  patchNodeStyleRecord(nodeUuid: string, record: Readonly<Record<string, string>>) {
+    if (!this.openDefinitionId) return;
+    this.catalog = validateProjectCatalog(
+      patchNodeStyleRecord(this.catalog, this.openDefinitionId, nodeUuid, record),
+    ) as ProjectCatalog;
+    this.publish();
+  }
+
+  patchNodeClassList(nodeUuid: string, classes: readonly string[]) {
+    if (!this.openDefinitionId) return;
+    const value = classes.join(' ').trim();
+    this.catalog = validateProjectCatalog(
+      patchNodeDomAttributes(this.catalog, this.openDefinitionId, nodeUuid, {
+        class: value,
+      }),
+    ) as ProjectCatalog;
+    this.publish();
+  }
+
+  patchNodeTagName(nodeUuid: string, tagName: string) {
+    if (!this.openDefinitionId) return;
+    this.catalog = validateProjectCatalog(
+      patchNodeTagName(this.catalog, this.openDefinitionId, nodeUuid, tagName),
+    ) as ProjectCatalog;
+    this.publish();
+  }
+
+  patchDefinitionName(name: string) {
+    if (!this.openDefinitionId) return;
+    const located = findDefinition(this.catalog, this.openDefinitionId);
+    if (!located) return;
+    this.catalog = validateProjectCatalog(
+      patchCatalogDefinitionRecord(this.catalog, located.kind, this.openDefinitionId, { name }),
+    ) as ProjectCatalog;
+    this.publish();
+  }
+
+  patchDefinitionPreviewFields(fields: Readonly<Record<string, unknown>>) {
+    if (!this.openDefinitionId) return;
+    const located = findDefinition(this.catalog, this.openDefinitionId);
+    if (!located) return;
+    const definition = located.definition;
+    this.catalog = validateProjectCatalog(
+      patchCatalogDefinitionRecord(this.catalog, located.kind, this.openDefinitionId, {
+        config: {
+          ...definition.config,
+          previewData: { fields: fields as Record<string, import('@facadeur/domain').FieldValue> },
+        },
+      }),
+    ) as ProjectCatalog;
+    this.publish();
+  }
+
+  applyInspectorFormChange(target: InspectorFormChangeTarget) {
+    switch (target.kind) {
+      case 'definitionName': {
+        if (!target.value) return;
+        this.patchDefinitionName(target.value);
+        return;
+      }
+      case 'nodeTagName': {
+        if (!target.value) return;
+        this.patchNodeTagName(target.nodeUuid, target.value);
+        return;
+      }
+      case 'nodeClassList': {
+        this.patchNodeClassList(target.nodeUuid, target.value);
+        return;
+      }
+      case 'nodeStyle': {
+        this.patchNodeStyleRecord(target.nodeUuid, target.value);
+        return;
+      }
+      case 'nodeDataRecord': {
+        const record: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(target.value)) {
+          if (key.trim()) record[key.trim()] = value;
+        }
+        this.patchNodeDataRecord(target.nodeUuid, record);
+        return;
+      }
+      case 'previewField': {
+        if (!this.openDefinitionId) return;
+        const located = findDefinition(this.catalog, this.openDefinitionId);
+        if (!located) return;
+        const fields = {
+          ...(located.definition.config?.previewData?.fields ?? {}),
+        } as Record<string, import('@facadeur/domain').FieldValue>;
+        if (target.value === undefined || target.value === '') delete fields[target.field];
+        else fields[target.field] = target.value;
+        this.patchDefinitionPreviewFields(fields);
+        return;
+      }
+      case 'nodeSchemaField': {
+        this.selectedNodeUuid = target.nodeUuid;
+        this.patchNodeField(target.field, target.value ?? '');
+        return;
+      }
+      default:
+        return;
+    }
+  }
+
+  insertCatalogNode(parentUuid: string, index: number, node: import('@facadeur/domain').Node) {
+    if (!this.openDefinitionId) return;
+    this.catalog = validateProjectCatalog(
+      insertCatalogNode(this.catalog, this.openDefinitionId, parentUuid, index, node),
+    ) as ProjectCatalog;
+    this.selectedNodeUuid = node.uuid;
+    this.publish();
+  }
+
+  removeCatalogNode(nodeUuid: string) {
+    if (!this.openDefinitionId) return;
+    this.catalog = validateProjectCatalog(
+      removeCatalogNode(this.catalog, this.openDefinitionId, nodeUuid),
+    ) as ProjectCatalog;
+    if (this.selectedNodeUuid === nodeUuid) {
+      this.selectedNodeUuid = this.getSnapshot().openDefinition?.root.uuid ?? null;
+    }
+    this.publish();
+  }
+
+  moveCatalogNode(nodeUuid: string, parentUuid: string, index: number) {
+    if (!this.openDefinitionId) return;
+    this.catalog = validateProjectCatalog(
+      moveCatalogNode(this.catalog, this.openDefinitionId, nodeUuid, parentUuid, index),
+    ) as ProjectCatalog;
+    this.selectedNodeUuid = nodeUuid;
+    this.publish();
+  }
+
+  selectNode(uuid: string) {
+    if (!this.getSnapshot().openDefinition) return;
+    this.selectedNodeUuid = uuid;
+    this.publish();
+  }
+
+  async persist(port: CatalogPort) {
+    this.catalog = validateProjectCatalog(await port.save(this.catalog)) as ProjectCatalog;
+    this.publish();
+  }
+
+  async reload(port: CatalogPort) {
+    this.replaceCatalog(await port.load());
+  }
+
+  private publish() {
+    for (const listener of this.listeners) listener();
   }
 }

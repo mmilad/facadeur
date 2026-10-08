@@ -1,5 +1,5 @@
 import type { FieldDefinition, FieldValue, JsonSchema } from '@facadeur/core';
-import { fieldDisplayLabel } from './field-label.js';
+import { fieldDisplayLabel } from './field-label';
 export type PathOption = { value: string; label: string; field: FieldDefinition };
 export function fieldPathOptions(
   fields: FieldDefinition[],

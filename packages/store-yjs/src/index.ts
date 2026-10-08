@@ -4,4 +4,4 @@ export {
   createDocumentStore,
   readDocumentFromUpdate,
   type YjsDocumentStore,
-} from './store.js';
+} from './store';

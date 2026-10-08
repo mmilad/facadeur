@@ -1,21 +1,21 @@
-import type { EditorSession, EditorSnapshot } from '../../domain/session.js';
+import type { EditorSession, EditorSnapshot } from '../../domain/session';
 import { useMemo } from 'react';
 import { activeBreakpoints, renderDesignCss } from '@facadeur/tokens';
 import {
   FontsDomainPanel,
   IconsDomainPanel,
   TokensDomainPanel,
-} from '../sidebar/design/DesignPanels.js';
+} from '../sidebar/design/DesignPanels';
 import {
   designDomainLabel,
   isSettingsTokenDomain,
   type EditorSurface,
   type DesignDomain,
-} from '../sidebar/design/design-domain.js';
-import { ViewportsSettingsPanel } from '../sidebar/design/ViewportsSettingsPanel.js';
-import { SettingsSections } from '../sidebar/design/SettingsSections.js';
-import { TokenPreviewProvider } from '../controls/fields/TokenPreviewContext.js';
-import { viewportEditContext } from '../../domain/viewport/viewport-edit.js';
+} from '../sidebar/design/design-domain';
+import { ViewportsSettingsPanel } from '../sidebar/design/ViewportsSettingsPanel';
+import { SettingsSections } from '../sidebar/design/SettingsSections';
+import { TokenPreviewProvider } from '../controls/fields/TokenPreviewContext';
+import { viewportEditContext } from '../../domain/viewport/viewport-edit';
 import '../form/form.css';
 
 export function DesignDomainStage({

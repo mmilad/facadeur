@@ -1,4 +1,4 @@
-import type { LayerItem } from '../../../domain/selection/selection-model.js';
+import type { LayerItem } from '../../../domain/selection/selection-model';
 
 export function findLayerByAddress(root: LayerItem | null, address: string): LayerItem | null {
   if (!root) return null;

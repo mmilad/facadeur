@@ -20,9 +20,9 @@ import type {
   VariantPreset,
   VariantRule,
   Repeat,
-} from '../../schema/document.js';
-import type { ComponentTokenMap } from '../../controller/style/tokens/component/contract.js';
-import type { TokenTree } from '../../controller/style/tokens/types.js';
+} from '../../schema/document';
+import type { ComponentTokenMap } from '../../controller/style/tokens/component/contract';
+import type { TokenTree } from '../../controller/style/tokens/types';
 
 export interface FlatNodeBase {
   id: string;

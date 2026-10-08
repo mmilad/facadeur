@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react';
-import { PathPrefixProvider, useOptionalFormContext, usePathPrefix } from '../../FormContext.js';
-import { getPath, resolvePath } from '../../schema/path.js';
-import { IconButton } from '../shared/IconButton.js';
-import { Stack } from '../layout/Stack.js';
-import { Inline } from '../layout/Inline.js';
-import { Section } from '../layout/Section.js';
-import { fieldDisplayLabel } from '../../../controls/data/field-label.js';
+import { PathPrefixProvider, useOptionalFormContext, usePathPrefix } from '../../FormContext';
+import { getPath, resolvePath } from '../../schema/path';
+import { IconButton } from '../shared/IconButton';
+import { Stack } from '../layout/Stack';
+import { Inline } from '../layout/Inline';
+import { Section } from '../layout/Section';
+import { fieldDisplayLabel } from '../../../controls/data/field-label';
 
 export type ArrayFieldHelpers<TItem> = {
   remove: () => void;

@@ -26,10 +26,10 @@ import {
   sourceHash,
   type DurableProject,
   type ProjectState,
-} from './persistence.js';
-import { assertCommand, context, safeId, validate } from './validation.js';
+} from './persistence';
+import { assertCommand, context, safeId, validate } from './validation';
 
-export { ProjectError, type ProjectState } from './persistence.js';
+export { ProjectError, type ProjectState } from './persistence';
 
 export interface ProjectOptions {
   directory: string;

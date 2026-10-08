@@ -3,7 +3,7 @@ export type {
   NestedSelection,
   VirtualLayerItem,
   VirtualLayerOptions,
-} from './nested-selection/types.js';
-export { fieldContextForSelection } from './nested-selection/fields.js';
-export { virtualLayerTree } from './nested-selection/tree.js';
-export { resolveNestedSelection } from './nested-selection/resolve.js';
+} from './nested-selection/types';
+export { fieldContextForSelection } from './nested-selection/fields';
+export { virtualLayerTree } from './nested-selection/tree';
+export { resolveNestedSelection } from './nested-selection/resolve';

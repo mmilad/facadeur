@@ -1,18 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { editorBreakpoints } from '../../domain/viewport/viewport-edit.js';
+import { editorBreakpoints } from '../../domain/viewport/viewport-edit';
 import {
   EDITOR_NAVIGATION_PARAMS,
   hasEditorNavigationSelection,
   parseEditorNavigation,
   writeEditorNavigation,
-} from '../../domain/navigation/editor-navigation.js';
-import type { EditorSession, EditorSnapshot } from '../../domain/session.js';
+} from '../../domain/navigation/editor-navigation';
+import type { EditorSession, EditorSnapshot } from '../../domain/session';
 import {
   DESIGN_DOMAIN_ITEMS,
   EDITOR_VIEW_ITEMS,
   type EditorSurface,
-} from '../sidebar/design/design-domain.js';
+} from '../sidebar/design/design-domain';
 
 const surfaces = new Set<string>([
   ...EDITOR_VIEW_ITEMS.map((item) => item.id),

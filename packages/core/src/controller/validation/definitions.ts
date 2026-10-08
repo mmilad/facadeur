@@ -1,7 +1,7 @@
-import { assertSelectOptionsField } from './select-options.js';
-import { schemaAtPath } from './schema-path.js';
-import { DocumentError } from '../../document/errors.js';
-import { type FlatDocument } from '../../document/flat.js';
+import { assertSelectOptionsField } from './select-options';
+import { schemaAtPath } from './schema-path';
+import { DocumentError } from '../../document/errors';
+import { type FlatDocument } from '../../document/flat';
 import {
   type Binding,
   type EventBinding,
@@ -11,7 +11,7 @@ import {
   type JsonSchema,
   type VariantPreset,
   type SchemaCatalog,
-} from '../../schema/document.js';
+} from '../../schema/document';
 import {
   assertEventDefinition,
   assertExpose,
@@ -19,11 +19,11 @@ import {
   assertValueMatches,
   assertVariantAxis,
   assertVariantPreset,
-} from './assertions.js';
-import { eventDataMappings, eventDataSchema, localContractFieldsFor } from './schema-use.js';
-import { publicFieldsFor } from './catalog-exposed.js';
-import { matchesSchemaValue } from './json-schema-value.js';
-import type { SchemaResolverContext } from './types.js';
+} from './assertions';
+import { eventDataMappings, eventDataSchema, localContractFieldsFor } from './schema-use';
+import { publicFieldsFor } from './catalog-exposed';
+import { matchesSchemaValue } from './json-schema-value';
+import type { SchemaResolverContext } from './types';
 
 /** Pages do not own component properties; sections may expose data contracts. */
 export function assertDefinitionKind(

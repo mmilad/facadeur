@@ -1,3 +1,3 @@
-export { AuthScreen } from './AuthScreen.js';
-export { ManagementHome } from './ManagementHome.js';
-export { ProjectWorkspaceBar } from './ProjectWorkspaceBar.js';
+export { AuthScreen } from './AuthScreen';
+export { ManagementHome } from './ManagementHome';
+export { ProjectWorkspaceBar } from './ProjectWorkspaceBar';

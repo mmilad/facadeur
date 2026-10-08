@@ -7,9 +7,9 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 import { structuralNodeFields, type DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
-import { parsePreviewFieldValue } from '../src/domain/preview-data.js';
-import { createEditorSession, type EditorSession } from '../src/domain/session.js';
-import { App } from '../src/ui/shell/EditorShell.js';
+import { parsePreviewFieldValue } from '../src/domain/preview-data';
+import { createEditorSession, type EditorSession } from '../src/domain/session';
+import { App } from '../src/ui/shell/EditorShell';
 
 const documents: DocumentFile[] = [
   {

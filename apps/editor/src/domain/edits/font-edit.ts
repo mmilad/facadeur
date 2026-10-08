@@ -1,5 +1,5 @@
 import { assertFont, isFontFamilyRef, readTokenTree, type FontFamily } from '@facadeur/core';
-import { splitList } from '../definitions.js';
+import { splitList } from '../definitions';
 
 const FONT_ID = /^[a-z][a-z0-9]*$/;
 const FONT_REF_IN_TEXT = /\{font\.([a-z][a-z0-9]*)\}/g;

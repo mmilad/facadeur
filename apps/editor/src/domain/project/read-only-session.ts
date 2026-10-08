@@ -1,6 +1,6 @@
-import type { EditorSession } from '../session.js';
+import type { EditorSession } from '../session';
 
-/** Presentation guard; project routes independently enforce the current membership. */
+/** Presentation guard; catalog mutations still go through {@link EditorSession.core}. */
 export function readOnlySession(session: EditorSession): EditorSession {
   const refuse = () => session.setNotice('Your role allows viewing this project only.', 'info');
   return {

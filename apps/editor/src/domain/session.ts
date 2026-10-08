@@ -6,5 +6,5 @@ export type {
   EditorSnapshot,
   EditorSession,
   EditorSessionOptions,
-} from './session/types.js';
-export { createEditorSession } from './session/create-editor-session.js';
+} from './session/types';
+export { createEditorSession } from './session/create-editor-session';

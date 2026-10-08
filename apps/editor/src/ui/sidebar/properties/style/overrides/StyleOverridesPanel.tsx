@@ -7,18 +7,18 @@ import {
   fontWeightTokenRefsForDocument,
   numberTokenRefsForDocument,
   shadowTokenRefsForDocument,
-} from '../../../../../domain/editing.js';
-import type { EditorSession, EditorSnapshot } from '../../../../../domain/session.js';
-import { ColorControl, isColorStyleProperty } from '../../../../controls/color/index.js';
-import { TextControl } from '../../../../controls/fields/index.js';
-import { ShadowControl, isShadowStyleProperty } from '../../../../controls/shadow/index.js';
+} from '../../../../../domain/editing';
+import type { EditorSession, EditorSnapshot } from '../../../../../domain/session';
+import { ColorControl, isColorStyleProperty } from '../../../../controls/color/index';
+import { TextControl } from '../../../../controls/fields/index';
+import { ShadowControl, isShadowStyleProperty } from '../../../../controls/shadow/index';
 import {
   isTypographyStyleProperty,
   projectFontRefs,
   projectFontWeightOptions,
   TypographyStyleControl,
   type TypographyCatalogs,
-} from '../../../../controls/typography/index.js';
+} from '../../../../controls/typography/index';
 
 export function StyleOverridesPanel({
   session,

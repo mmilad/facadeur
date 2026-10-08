@@ -1,3 +1,3 @@
-export { Field } from './Field.js';
-export { InlineError } from './InlineError.js';
-export { HelpHint } from './HelpHint.js';
+export { Field } from './Field';
+export { InlineError } from './InlineError';
+export { HelpHint } from './HelpHint';

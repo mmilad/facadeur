@@ -1,2 +1,2 @@
-export { InstanceOverridesControl } from './InstanceOverridesControl.js';
-export { FieldBindingsEditorControl } from './FieldBindingsEditorControl.js';
+export { InstanceOverridesControl } from './InstanceOverridesControl';
+export { FieldBindingsEditorControl } from './FieldBindingsEditorControl';

@@ -5,8 +5,8 @@ import {
   resolveDocumentFieldScope,
   resolveTargetDocument,
   MAX_NESTED_DEPTH,
-} from './resolve.js';
-import type { VirtualLayerItem, VirtualLayerOptions } from './types.js';
+} from './resolve';
+import type { VirtualLayerItem, VirtualLayerOptions } from './types';
 export function virtualLayerTree(
   document: FlatDocument,
   options: VirtualLayerOptions = {},

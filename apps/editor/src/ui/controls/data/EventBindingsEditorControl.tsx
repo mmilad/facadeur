@@ -14,9 +14,9 @@ import {
   eventPayloadSourceLabel,
   NATIVE_EVENT_NAMES,
   type EventPayloadSource,
-} from '../../../domain/events.js';
-import { Field, Select, Stack, TextInput, type SelectOption } from '../../form/index.js';
-import { fieldPathOptions } from './field-paths.js';
+} from '../../../domain/events';
+import { Field, Select, Stack, TextInput, type SelectOption } from '../../form/index';
+import { fieldPathOptions } from './field-paths';
 import '../../form/form.css';
 
 const nativeSources: EventDataSource[] = [

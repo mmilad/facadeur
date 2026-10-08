@@ -1,11 +1,11 @@
 import { refsInText, type JsonValue } from '@facadeur/core';
-import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
+import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
 import {
   parseEditedValue,
   withTokenBreakpoint,
   withTokenValue,
-} from '../../../../domain/edits/token-edit.js';
-import { naturalTokenCompare } from './TokenTable.js';
+} from '../../../../domain/edits/token-edit';
+import { naturalTokenCompare } from './TokenTable';
 
 export interface TableToken {
   path: string;

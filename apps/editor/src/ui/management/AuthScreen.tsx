@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { authClient } from '../../domain/auth/client.js';
+import { authClient } from '../../domain/auth/client';
 import './management.css';
 
 export function AuthScreen({

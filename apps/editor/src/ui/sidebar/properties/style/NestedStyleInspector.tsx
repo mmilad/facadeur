@@ -1,19 +1,19 @@
 import { useState } from 'react';
 import { findParent, type FlatNode, type StyleBlock } from '@facadeur/core';
-import { nestedInstanceStyleTarget } from '../../../../domain/nested-selection/style-target.js';
-import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
+import { nestedInstanceStyleTarget } from '../../../../domain/nested-selection/style-target';
+import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
 import {
   effectiveStyleDeclarations,
   styleStateNames,
   type StyleStateName,
-} from '../../../../domain/edits/style-edit.js';
+} from '../../../../domain/edits/style-edit';
 import {
   editorBreakpoints,
   viewportEditContext,
-} from '../../../../domain/viewport/viewport-edit.js';
-import { Field, Select } from '../../../form/index.js';
-import { TokenPreviewProvider } from '../../../controls/fields/TokenPreviewContext.js';
-import { DeclarationEditor } from './declarations/declaration-editor.js';
+} from '../../../../domain/viewport/viewport-edit';
+import { Field, Select } from '../../../form/index';
+import { TokenPreviewProvider } from '../../../controls/fields/TokenPreviewContext';
+import { DeclarationEditor } from './declarations/declaration-editor';
 
 export function NestedStyleInspector({
   session,

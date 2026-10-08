@@ -1,10 +1,10 @@
 import { breakpointLabel } from '@facadeur/core';
-import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
+import type { EditorSession, EditorSnapshot } from '../../../domain/session';
 import {
   editorBreakpoints,
   overrideLabel,
   viewportEditContext,
-} from '../../../domain/viewport/viewport-edit.js';
+} from '../../../domain/viewport/viewport-edit';
 
 export function ViewportEditBar({
   session,

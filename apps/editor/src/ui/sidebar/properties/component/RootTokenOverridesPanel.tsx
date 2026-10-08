@@ -2,9 +2,9 @@ import { readTokenTree } from '@facadeur/core';
 import {
   rootTokenOverrideCommand,
   rootTokenTargets,
-} from '../../../../domain/root-token-overrides.js';
-import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
-import { TokenValueControl } from '../../../controls/fields/TokenValueControl.js';
+} from '../../../../domain/root-token-overrides';
+import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
+import { TokenValueControl } from '../../../controls/fields/TokenValueControl';
 
 export function RootTokenOverridesPanel({
   session,

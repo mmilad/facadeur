@@ -1,5 +1,5 @@
-import type { JsonValue } from '../../../utils.js';
-import type { TokenType } from '../../../schema/document.js';
+import type { JsonValue } from '../../../utils';
+import type { TokenType } from '../../../schema/document';
 
 export type TokenTier = 'primitive' | 'semantic' | 'component';
 

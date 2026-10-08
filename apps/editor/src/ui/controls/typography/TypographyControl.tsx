@@ -1,12 +1,12 @@
-import { TokenValueControl } from '../fields/TokenValueControl.js';
-import { Field, Stack, TextInput } from '../../form/index.js';
+import { TokenValueControl } from '../fields/TokenValueControl';
+import { Field, Stack, TextInput } from '../../form/index';
 import '../../form/form.css';
 import {
   formatTypographyFieldValue,
   parseTypographyFieldValue,
   TYPOGRAPHY_VALUE_KEYS,
   type TypographyValue,
-} from './value.js';
+} from './value';
 
 function assignTypographyField(
   target: TypographyValue,

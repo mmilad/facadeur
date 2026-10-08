@@ -2,13 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { authClient } from '../../domain/auth/client.js';
-import { connectProject, loadProject } from '../../domain/project/client.js';
-import { logProjectFailure } from '../../domain/project/diagnostics.js';
-import { ManagementHome } from '../management/ManagementHome.js';
-import { ProjectWorkspaceBar } from '../management/ProjectWorkspaceBar.js';
-import { EditorShell } from '../shell/EditorShell.js';
-import { ProjectViewer } from './ProjectViewer.js';
+import { authClient } from '../../domain/auth/client';
+import { connectProject, loadProject } from '../../domain/project/client';
+import { logProjectFailure } from '../../domain/project/diagnostics';
+import { ManagementHome } from '../management/ManagementHome';
+import { ProjectWorkspaceBar } from '../management/ProjectWorkspaceBar';
+import { EditorShell } from '../shell/EditorShell';
+import { ProjectViewer } from './ProjectViewer';
 
 type Connection = ReturnType<typeof connectProject>;
 interface PendingLeave {
@@ -152,6 +152,7 @@ export function ProjectWorkspace() {
           ) : (
             <EditorShell
               session={connection.session}
+              app={connection.app}
               persistPendingChanges={connection.persistPendingChanges}
             />
           )}

@@ -1,5 +1,5 @@
-import type { SelectOption } from '../../types/options.js';
-import { useBindable } from '../input/bindable.js';
+import type { SelectOption } from '../../types/options';
+import { useBindable } from '../input/bindable';
 
 export function SegmentedControl({
   name,

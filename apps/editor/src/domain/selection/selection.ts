@@ -1,5 +1,5 @@
-import { overlayBox, pointInFrame, type OverlayBox } from '../viewport/geometry.js';
-import type { ViewportFrame } from '../viewport/viewports.js';
+import { overlayBox, pointInFrame, type OverlayBox } from '../viewport/geometry';
+import type { ViewportFrame } from '../viewport/viewports';
 
 const HANDLES = ['nw', 'ne', 'sw', 'se'];
 
@@ -66,9 +66,12 @@ export function createSelection({
       const local = pointInFrame({ clientX, clientY, frame: rect, scale });
       if (!local) continue;
       const target = frame.host.contentDocument().elementFromPoint(local.x, local.y);
-      const node = isHtmlElement(target) ? target.closest('[data-id]') : null;
-      if (!isHtmlElement(node) || !node.dataset.id) return null;
-      return { id: node.dataset.id };
+      const node = isHtmlElement(target)
+        ? target.closest('[data-id], [data-facadeur-node-uuid]')
+        : null;
+      if (!isHtmlElement(node)) return null;
+      const id = renderedIdFromElement(node);
+      return id ? { id } : null;
     }
     return null;
   }
@@ -112,8 +115,8 @@ export function createSelection({
       box.classList.toggle('is-primary', primary);
       box.classList.toggle('is-secondary', !primary);
       box.dataset.focus = primary ? 'primary' : 'secondary';
-      const node = frame.host.contentDocument().querySelector(byId(id));
-      if (!isHtmlElement(node)) {
+      const node = queryRenderedNode(frame.host.contentDocument(), id);
+      if (!node) {
         box.hidden = true;
         return;
       }
@@ -132,8 +135,8 @@ export function createSelection({
       return;
     }
     const frame = frames().find((item) => item.host.id === hoverFrameId);
-    const node = frame?.host.contentDocument().querySelector(byId(hoverId));
-    if (!frame || !isHtmlElement(node)) {
+    const node = frame ? queryRenderedNode(frame.host.contentDocument(), hoverId) : null;
+    if (!frame || !node) {
       hover.hidden = true;
       return;
     }
@@ -220,4 +223,24 @@ export function dataIdSelector(id: string): string {
 
 function byId(id: string): string {
   return dataIdSelector(id);
+}
+
+function nodeUuidSelector(uuid: string): string {
+  const escaped = String(uuid).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  return `[data-facadeur-node-uuid="${escaped}"]`;
+}
+
+function queryRenderedNode(doc: Document, renderedId: string): HTMLElement | null {
+  if (renderedId.startsWith('v2:')) {
+    const node = doc.querySelector(nodeUuidSelector(renderedId.slice(3)));
+    return isHtmlElement(node) ? node : null;
+  }
+  const node = doc.querySelector(byId(renderedId));
+  return isHtmlElement(node) ? node : null;
+}
+
+function renderedIdFromElement(node: HTMLElement): string | null {
+  if (node.dataset.id) return node.dataset.id;
+  const uuid = node.dataset.facadeurNodeUuid;
+  return uuid ? `v2:${uuid}` : null;
 }

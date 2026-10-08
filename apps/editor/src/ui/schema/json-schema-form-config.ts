@@ -1,10 +1,10 @@
 import type { JsonSchema } from '@facadeur/core';
-import { fieldDisplayLabel } from '../controls/data/field-label.js';
-import type { FieldConfig, FieldGroupConfig } from '../form/schema/field-config.js';
+import { fieldDisplayLabel } from '../controls/data/field-label';
+import type { FieldConfig, FieldGroupConfig } from '../form/schema/field-config';
 import {
   initialDraftForSchema,
   initialValueForSchema,
-} from '../controls/data/item-array-schema.js';
+} from '../controls/data/item-array-schema';
 
 export function formFieldsForSchema(schema: JsonSchema, label: string): (FieldConfig | FieldGroupConfig)[] {
   const type = primaryType(schema);

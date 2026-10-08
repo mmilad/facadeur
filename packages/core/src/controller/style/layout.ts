@@ -1,5 +1,5 @@
-import { DocumentError } from '../../document/errors.js';
-import { isPlainObject as isRecord } from '../../utils.js';
+import { DocumentError } from '../../document/errors';
+import { isPlainObject as isRecord } from '../../utils';
 import type {
   AxisSize,
   Layout,
@@ -8,7 +8,7 @@ import type {
   SizeValue,
   Spacing,
   SpacingBox,
-} from '../../schema/document.js';
+} from '../../schema/document';
 
 const MARGIN_SIDE_KEYWORDS = new Set(['auto']);
 

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import type { AuthUser } from '@facadeur/api';
-import { api } from '../api.js';
+import { api } from '../api';
 
 const AUTH_CHANGE_EVENT = 'facadeur:auth-change';
 

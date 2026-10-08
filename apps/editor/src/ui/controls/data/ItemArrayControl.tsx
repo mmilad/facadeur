@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { type FieldValue } from '@facadeur/core';
-import { Field, Popover, Select, Stack } from '../../form/index.js';
-import { IconButton } from '../../form/components/shared/IconButton.js';
-import { SchemaValueForm } from './SchemaValueForm.js';
+import { Field, Popover, Select, Stack } from '../../form/index';
+import { IconButton } from '../../form/components/shared/IconButton';
+import { SchemaValueForm } from './SchemaValueForm';
 import './item-array.css';
 import {
   choiceForValue,
@@ -16,7 +16,7 @@ import {
   schemaMatches,
   setAtPath,
   type ItemChoice,
-} from './item-array-schema.js';
+} from './item-array-schema';
 
 type ItemArrayControlProps = {
   label: string;

@@ -1,11 +1,11 @@
 import { applyCommand, type Command, type VariantNodeOverride } from '@facadeur/core';
-import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
+import type { EditorSession, EditorSnapshot } from '../../../domain/session';
 import {
   canonicalStyleProperty,
   readStyleDeclarations,
   variantStyleBlock,
   writeStyleDeclaration,
-} from '../../../domain/edits/style-edit.js';
+} from '../../../domain/edits/style-edit';
 
 /** Match the existing node/base/variant/viewport cascade without moving unrelated declarations. */
 export function layoutStyleField(

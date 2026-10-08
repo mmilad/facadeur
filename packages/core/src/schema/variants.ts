@@ -5,7 +5,7 @@ import {
   idSchema,
   nodeTargetSchema,
   variantUnsetPathSchema,
-} from './common.js';
+} from './common';
 import {
   bindingSchema,
   displayOnSchema,
@@ -13,10 +13,10 @@ import {
   fieldValueSchema,
   repeatSchema,
   variantRuleSchema,
-} from './fields.js';
-import { layoutSchema } from './layout.js';
-import { nestedNodeSchema } from './nodes.js';
-import { styleBlockSchema } from './style.js';
+} from './fields';
+import { layoutSchema } from './layout';
+import { nestedNodeSchema } from './nodes';
+import { styleBlockSchema } from './style';
 
 export const variantAxisSchema = Type.Object(
   {

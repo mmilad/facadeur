@@ -1,6 +1,6 @@
-import { DocumentError } from '../../document/errors.js';
-import type { FieldDefinition } from '../../schema/document.js';
-import { isPlainObject } from '../../utils.js';
+import { DocumentError } from '../../document/errors';
+import type { FieldDefinition } from '../../schema/document';
+import { isPlainObject } from '../../utils';
 
 /** Native select options have a stable shape shared by preview and generated types. */
 export function assertSelectOptionsField(field: FieldDefinition) {

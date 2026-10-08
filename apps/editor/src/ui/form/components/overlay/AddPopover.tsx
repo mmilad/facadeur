@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { Popover } from './Popover.js';
+import { Popover } from './Popover';
 
 export function AddPopover({
   label,

@@ -1,7 +1,7 @@
 import type { InputHTMLAttributes } from 'react';
-import { IconButton } from '../shared/IconButton.js';
-import { useDraftCommit } from '../../hooks/useDraftCommit.js';
-import { useBindable } from './bindable.js';
+import { IconButton } from '../shared/IconButton';
+import { useDraftCommit } from '../../hooks/useDraftCommit';
+import { useBindable } from './bindable';
 
 export function SearchInput({
   name,

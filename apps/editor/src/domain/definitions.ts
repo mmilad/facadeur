@@ -5,7 +5,7 @@ import {
   type FieldValue,
   type VariantAxis,
 } from '@facadeur/core';
-import { parseFieldValue } from './field-values.js';
+import { parseFieldValue } from './field-values';
 
 /** Types the editor can create. `richText` stays in the schema for later. */
 export const creatableFieldTypes = [

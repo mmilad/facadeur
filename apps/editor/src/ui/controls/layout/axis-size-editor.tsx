@@ -1,6 +1,6 @@
 import type { AxisSize, SizeValue } from '@facadeur/core';
-import { Field, Grid, NumberInput, Section, Select, Stack } from '../../form/index.js';
-import { TokenValueControl } from '../fields/TokenValueControl.js';
+import { Field, Grid, NumberInput, Section, Select, Stack } from '../../form/index';
+import { TokenValueControl } from '../fields/TokenValueControl';
 
 const SIZE_MODES = [
   { value: '', label: 'Inherit' },

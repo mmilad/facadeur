@@ -5,7 +5,7 @@ import { createEditorSession } from '../src/domain/session';
 import {
   dataFieldsForNode,
   fieldPathOptions,
-} from '../src/ui/controls/data/DataDirectivesEditorControl.js';
+} from '../src/ui/controls/data/DataDirectivesEditorControl';
 import {
   fieldContextForSelection,
   resolveNestedSelection,

@@ -6,22 +6,22 @@ import {
   type StyleBlock,
   type StyleRule,
 } from '@facadeur/core';
-import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
+import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
 import {
   variantStyleBlock,
   type StyleBreakpointRef,
   type StyleStateName,
-} from '../../../../domain/edits/style-edit.js';
+} from '../../../../domain/edits/style-edit';
 import {
   ensureStyleRule,
   readStyleRuleFallback,
   readStyleRuleDeclarations,
   replaceStyleRuleDeclarations,
-} from '../../../../domain/style-rules/style-rule-edit.js';
+} from '../../../../domain/style-rules/style-rule-edit';
 import {
   formatCssDeclarations,
   parseCssDeclarations,
-} from '../../../../domain/style-rules/css-declarations.js';
+} from '../../../../domain/style-rules/css-declarations';
 
 export function StyleRuleRow({
   session,

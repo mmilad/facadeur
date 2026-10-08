@@ -1,5 +1,5 @@
-import { DocumentError } from '../../document/errors.js';
-import { type FlatDocument, toFlat } from '../../document/flat.js';
+import { DocumentError } from '../../document/errors';
+import { type FlatDocument, toFlat } from '../../document/flat';
 import {
   type DocumentFile,
   isVariantAxis,
@@ -7,17 +7,17 @@ import {
   type FieldValue,
   type NestedNode,
   type SchemaCatalog,
-} from '../../schema/document.js';
-import { resolveVariantDocument, variantPresets } from '../variants/resolve.js';
-import { assertValueMatches } from './assertions.js';
-import { validateDataContracts } from './data-contracts.js';
-import { validateDefinitions } from './definitions.js';
-import { exposedFields, validateExposedContracts } from './catalog-exposed.js';
-import type { SchemaResolverContext } from './types.js';
-import { readTokenTree } from '../style/tokens/global/tree.js';
-import { validateLibraries, validateTree } from './tree.js';
-import { type ValidateOptions } from './types.js';
-import { validateDocumentFile } from './schema.js';
+} from '../../schema/document';
+import { resolveVariantDocument, variantPresets } from '../../legacy/flat/variants/resolve';
+import { assertValueMatches } from './assertions';
+import { validateDataContracts } from './data-contracts';
+import { validateDefinitions } from './definitions';
+import { exposedFields, validateExposedContracts } from './catalog-exposed';
+import type { SchemaResolverContext } from './types';
+import { readTokenTree } from '../style/tokens/global/tree';
+import { validateLibraries, validateTree } from './tree';
+import { type ValidateOptions } from './types';
+import { validateDocumentFile } from './schema';
 
 function catalogValidateOptions(byId: Map<string, DocumentFile>): ValidateOptions {
   const globalTokenPaths = new Set<string>();
@@ -49,6 +49,9 @@ export interface ValidateCatalogOptions {
   schemaCatalog?: SchemaCatalog;
 }
 
+/**
+ * @deprecated Legacy document catalog validation. New projects should use `validateProjectCatalog`.
+ */
 export function validateCatalog(
   files: readonly unknown[],
   options: ValidateCatalogOptions = {},

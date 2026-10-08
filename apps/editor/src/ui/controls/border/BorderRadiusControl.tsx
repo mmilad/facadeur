@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Grid, Stack } from '../../form/index.js';
+import { Grid, Stack } from '../../form/index';
 import '../../form/form.css';
-import { TokenValueControl } from '../fields/TokenValueControl.js';
-import type { BorderRadiusValue } from './value.js';
-import { expandRadiusValue, uniformRadiusValue } from './value.js';
+import { TokenValueControl } from '../fields/TokenValueControl';
+import type { BorderRadiusValue } from './value';
+import { expandRadiusValue, uniformRadiusValue } from './value';
 
 export function BorderRadiusControl({
   namePrefix,

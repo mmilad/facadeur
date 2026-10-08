@@ -1,6 +1,6 @@
-import { isPlainObject as isRecord } from '../../../utils.js';
-import type { StyleBlock, StyleChild, StyleLayer } from '../../../schema/document.js';
-import { parseStyleBlock } from './parse.js';
+import { isPlainObject as isRecord } from '../../../utils';
+import type { StyleBlock, StyleChild, StyleLayer } from '../../../schema/document';
+import { parseStyleBlock } from './parse';
 
 /** Drop style rules targeting removed local node ids and their nested paths. */
 export function pruneStyleBlockNodes(

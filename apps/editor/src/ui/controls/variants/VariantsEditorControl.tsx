@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react';
 import type { VariantAxis } from '@facadeur/core';
 import { useState } from 'react';
-import { variantAxisFromDraft } from '../../../domain/definitions.js';
-import { Field, Section, Select, Stack, TextInput } from '../../form/index.js';
+import { variantAxisFromDraft } from '../../../domain/definitions';
+import { Field, Section, Select, Stack, TextInput } from '../../form/index';
 import '../../form/form.css';
-import { variantAxisFromValuesText, variantAxisWithDefault, variantValuesText } from './value.js';
+import { variantAxisFromValuesText, variantAxisWithDefault, variantValuesText } from './value';
 
 export function VariantsEditorControl({
   variants,

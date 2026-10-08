@@ -1,6 +1,6 @@
-import { Field, NumberInput, Stack, TextInput } from '../../../../form/index.js';
-import { LayoutChoiceIcon, LayoutIconChoice } from '../../../../controls/layout/icon-choice.js';
-import { TokenValueControl } from '../../../../controls/fields/TokenValueControl.js';
+import { Field, NumberInput, Stack, TextInput } from '../../../../form/index';
+import { LayoutChoiceIcon, LayoutIconChoice } from '../../../../controls/layout/icon-choice';
+import { TokenValueControl } from '../../../../controls/fields/TokenValueControl';
 import '../../../../form/form.css';
 
 export interface GridContainerProps {

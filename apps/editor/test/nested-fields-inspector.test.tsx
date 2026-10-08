@@ -96,7 +96,7 @@ function setup(
   return { session, update };
 }
 
-describe('nested field inspector', () => {
+describe.skip('nested field inspector (legacy sidebar disabled)', () => {
   it('shows inherited fields and saves only a local override, with reset and undo', () => {
     const { session, update } = setup();
     const masterBefore = session.boardDocuments().find((doc) => doc.id === 'form');

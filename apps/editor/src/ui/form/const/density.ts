@@ -1,4 +1,4 @@
-import type { FormDensity } from '../types/form.js';
+import type { FormDensity } from '../types/form';
 
 export const DEFAULT_DENSITY: FormDensity = 'compact';
 

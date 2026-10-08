@@ -1,8 +1,8 @@
-import type { Breakpoint, FontFamily } from '../../schema/document.js';
-import { DocumentStyle } from './document.js';
-import { readTokenTree } from './tokens/global/tree.js';
-import type { TokenDefinition, TokenGroupDefinition } from './tokens/types.js';
-import type { GlobalTokenCommand, StyleControllerContext } from './types.js';
+import type { Breakpoint, FontFamily } from '../../schema/document';
+import { DocumentStyle } from './document';
+import { readTokenTree } from './tokens/global/tree';
+import type { TokenDefinition, TokenGroupDefinition } from './tokens/types';
+import type { GlobalTokenCommand, StyleControllerContext } from './types';
 
 /** Project-wide style editing facade. Document edits require an explicit document scope. */
 export class StyleController {

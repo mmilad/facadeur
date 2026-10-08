@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Field, Stack } from '../../../../form/index.js';
+import { Field, Stack } from '../../../../form/index';
 import '../../../../form/form.css';
-import { parseGridAreas, renameGridArea, serializeGridAreas } from './areas.js';
+import { parseGridAreas, renameGridArea, serializeGridAreas } from './areas';
 import './grid-areas.css';
 
 export interface GridAreasProps {

@@ -1,20 +1,20 @@
 import { useEffect, useState } from 'react';
-import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
-import { variantStyleBlock, writeStyleDeclarations } from '../../../../domain/edits/style-edit.js';
+import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
+import { variantStyleBlock, writeStyleDeclarations } from '../../../../domain/edits/style-edit';
 import {
   editorBreakpoints,
   type ViewportEditContext,
-} from '../../../../domain/viewport/viewport-edit.js';
+} from '../../../../domain/viewport/viewport-edit';
 import {
   formatCssDeclarations,
   parseCssDeclarations,
-} from '../../../../domain/style-rules/css-declarations.js';
+} from '../../../../domain/style-rules/css-declarations';
 import {
   readNodeStyleDraft,
   readNodeStyleFallback,
   readOwnNodeStyleLayer,
-} from '../../../../domain/style-rules/node-style-draft.js';
-import { commitStyleFields } from '../style-field.js';
+} from '../../../../domain/style-rules/node-style-draft';
+import { commitStyleFields } from '../style-field';
 
 export function NodeClassStyleRow({
   session,

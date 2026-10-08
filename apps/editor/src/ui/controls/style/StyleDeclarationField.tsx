@@ -1,18 +1,18 @@
 import type { ReactNode } from 'react';
-import { Combobox, Field, Select } from '../../form/index.js';
-import { ColorControl } from '../color/index.js';
-import { ShadowControl } from '../shadow/index.js';
-import { TextControl } from '../fields/index.js';
-import { TypographyStyleControl, type TypographyCatalogs } from '../typography/index.js';
-import { useTokenOptions } from '../token-options.js';
-import { useTokenValueLabel } from '../fields/TokenPreviewContext.js';
-import { isTokenReference } from '../fields/TokenValueControl.js';
+import { Combobox, Field, Select } from '../../form/index';
+import { ColorControl } from '../color/index';
+import { ShadowControl } from '../shadow/index';
+import { TextControl } from '../fields/index';
+import { TypographyStyleControl, type TypographyCatalogs } from '../typography/index';
+import { useTokenOptions } from '../token-options';
+import { useTokenValueLabel } from '../fields/TokenPreviewContext';
+import { isTokenReference } from '../fields/TokenValueControl';
 import {
   enumOptionLabel,
   enumOptionsForProperty,
   styleDeclarationKind,
   stylePropertyLabel,
-} from './declaration-kind.js';
+} from './declaration-kind';
 
 export function StyleDeclarationField({
   property,

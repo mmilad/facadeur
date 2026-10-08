@@ -1,8 +1,8 @@
 import type { FieldDefinition, FieldValue, VariantAxis } from '@facadeur/core';
-import { Field, Select, Stack, Toggle } from '../../form/index.js';
+import { Field, Select, Stack, Toggle } from '../../form/index';
 import '../../form/form.css';
-import { InstanceFieldOverride } from './InstanceFieldOverride.js';
-import { FieldBindingsEditorControl } from './FieldBindingsEditorControl.js';
+import { InstanceFieldOverride } from './InstanceFieldOverride';
+import { FieldBindingsEditorControl } from './FieldBindingsEditorControl';
 
 export function InstanceOverridesControl({
   masterName,

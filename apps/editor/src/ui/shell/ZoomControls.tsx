@@ -1,5 +1,5 @@
-import { ZOOM_STEP_FACTOR } from '../../domain/viewport/stage.js';
-import type { EditorSession } from '../../domain/session.js';
+import { ZOOM_STEP_FACTOR } from '../../domain/viewport/stage';
+import type { EditorSession } from '../../domain/session';
 
 export function ZoomControls({ session, label }: { session: EditorSession; label: string }) {
   return (

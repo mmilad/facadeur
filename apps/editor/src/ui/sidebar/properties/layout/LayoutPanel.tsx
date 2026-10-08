@@ -6,41 +6,41 @@ import {
   type VariantPreset,
 } from '@facadeur/core';
 import type { ReactNode } from 'react';
-import { resolveSelectedInstance } from '../../../../domain/instance-variant-context.js';
-import { TokenValueLabelProvider } from '../../../controls/fields/TokenPreviewContext.js';
-import type { LayoutField } from '../../../../domain/layout-capabilities.js';
+import { resolveSelectedInstance } from '../../../../domain/instance-variant-context';
+import { TokenValueLabelProvider } from '../../../controls/fields/TokenPreviewContext';
+import type { LayoutField } from '../../../../domain/layout-capabilities';
 import {
   clearLayoutBreakpoint,
   dimensionTokenRefsForDocument,
   writeLayoutFields,
   type LayoutPatch,
-} from '../../../../domain/editing.js';
-import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
-import { canonicalStyleProperty } from '../../../../domain/edits/style-edit.js';
+} from '../../../../domain/editing';
+import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
+import { canonicalStyleProperty } from '../../../../domain/edits/style-edit';
 import {
   effectiveLayout as resolveLayout,
   layoutCapabilities,
-} from '../../../../domain/layout-capabilities.js';
+} from '../../../../domain/layout-capabilities';
 import {
   editorBreakpoints,
   viewportEditContext,
-} from '../../../../domain/viewport/viewport-edit.js';
+} from '../../../../domain/viewport/viewport-edit';
 import {
   LayoutControl,
   layoutControlValue,
   type LayoutControlSection,
   type LayoutControlSectionContent,
-} from '../../../controls/layout/index.js';
-import { OverrideCue } from '../ViewportEditBar.js';
-import { layoutStyleField } from './style-field.js';
-import { SelfAlignment } from './SelfAlignment.js';
-import { GridContainer } from './grid/GridContainer.js';
-import { GridItem } from './grid/GridItem.js';
-import { GridAreas } from './grid/GridAreas.js';
-import { parseGridAreas, renameGridArea } from './grid/areas.js';
-import { commitGridChanges, gridDeclarations } from './grid/edits.js';
-import { gridInstance } from './grid/instance.js';
-import { shownAxis, commitAxisCss } from './sizing.js';
+} from '../../../controls/layout/index';
+import { OverrideCue } from '../ViewportEditBar';
+import { layoutStyleField } from './style-field';
+import { SelfAlignment } from './SelfAlignment';
+import { GridContainer } from './grid/GridContainer';
+import { GridItem } from './grid/GridItem';
+import { GridAreas } from './grid/GridAreas';
+import { parseGridAreas, renameGridArea } from './grid/areas';
+import { commitGridChanges, gridDeclarations } from './grid/edits';
+import { gridInstance } from './grid/instance';
+import { shownAxis, commitAxisCss } from './sizing';
 
 export function LayoutPanel({
   session,

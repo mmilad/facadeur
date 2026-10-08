@@ -1,4 +1,4 @@
-import type { NestedSelection } from './types.js';
+import type { NestedSelection } from './types';
 
 /**
  * Nested appearance belongs to the owner document and is keyed by the local

@@ -1,7 +1,7 @@
 import * as Y from 'yjs';
 import { REMOTE_ORIGIN, type YjsDocumentStore } from '@facadeur/store-yjs';
-import { decodeBase64, encodeBase64 } from './encoding.js';
-export { decodeBase64, encodeBase64 } from './encoding.js';
+import { decodeBase64, encodeBase64 } from './encoding';
+export { decodeBase64, encodeBase64 } from './encoding';
 
 export interface ProjectSyncState {
   status: 'connecting' | 'synced' | 'offline' | 'error';

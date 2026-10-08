@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
-import { Field, TextInput } from '../../form/index.js';
+import type { EditorSession, EditorSnapshot } from '../../../domain/session';
+import { Field, TextInput } from '../../form/index';
 import './design-resources.css';
 
 export function IconsDomainPanel({

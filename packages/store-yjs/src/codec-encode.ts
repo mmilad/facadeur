@@ -25,7 +25,7 @@ import {
   syncJsonMap,
   syncJsonObject,
   syncScalar,
-} from './codec-shared.js';
+} from './codec-shared';
 
 export function syncMeta(meta: Y.Map<unknown>, doc: FlatDocument): void {
   syncScalar(meta, 'version', doc.version);

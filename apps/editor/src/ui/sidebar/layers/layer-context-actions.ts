@@ -4,14 +4,14 @@ import {
   placementAllowed,
   refusalMessage,
   type InsertTool,
-} from '../../../domain/editing.js';
+} from '../../../domain/editing';
 import {
   layerInsertEntriesForLayer,
   layerInsertTarget,
   type LayerInsertEntry,
-} from '../../../domain/layer-insert-policy.js';
-import type { LayerItem } from '../../../domain/selection/selection-model.js';
-import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
+} from '../../../domain/layer-insert-policy';
+import type { LayerItem } from '../../../domain/selection/selection-model';
+import type { EditorSession, EditorSnapshot } from '../../../domain/session';
 
 export function canEditLayerItem(item: LayerItem, snap: EditorSnapshot): boolean {
   return !item.virtual && item.documentId === snap.openId;

@@ -1,13 +1,15 @@
 import { useEffect, useRef } from 'react';
-import { insertModeCue, isInsertTool } from '../../domain/editing.js';
-import type { SelectionController } from '../../domain/selection/selection.js';
-import type { EditorSession, EditorTool } from '../../domain/session.js';
-import type { StageController } from '../../domain/viewport/stage.js';
-import type { ViewportBoard } from '../../domain/viewport/viewports.js';
-import { useStagePointer } from './canvas/useStagePointer.js';
-import { useStageViewportBoard } from './canvas/useStageViewportBoard.js';
+import { insertModeCue, isInsertTool } from '../../domain/editing';
+import type { SelectionController } from '../../domain/selection/selection';
+import type { AppService } from '../../app-service';
+import type { EditorSession, EditorTool } from '../../domain/session';
+import type { StageController } from '../../domain/viewport/stage';
+import type { ViewportBoard } from '../../domain/viewport/viewports';
+import { useStagePointer } from './canvas/useStagePointer';
+import { useStageViewportBoard } from './canvas/useStageViewportBoard';
 
 export function StageCanvas({
+  app,
   session,
   openId,
   generation,
@@ -20,6 +22,7 @@ export function StageCanvas({
   tool,
   readOnly = false,
 }: {
+  app: AppService;
   session: EditorSession;
   openId: string;
   generation: number;
@@ -52,6 +55,7 @@ export function StageCanvas({
   });
 
   useStageViewportBoard({
+    app,
     session,
     openId,
     generation,

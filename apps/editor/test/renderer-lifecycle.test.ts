@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
 import { createDomRenderer } from '@facadeur/renderer-dom';
-import { createTestDocumentStore } from './controller-store.js';
+import { createTestDocumentStore } from './controller-store';
 import { createStyleEngine } from '@facadeur/style-engine';
 
 const source: DocumentFile = {

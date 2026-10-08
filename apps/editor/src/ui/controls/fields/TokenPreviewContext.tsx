@@ -6,8 +6,8 @@ import {
   type FlatDocument,
 } from '@facadeur/core';
 import { loadTokens, tokenCustomProperty, fontCustomProperty } from '@facadeur/tokens';
-import { tokenDisplayLabel, tokenPath } from '../token-presentation.js';
-import { formatTokenValue } from '../../../domain/edits/token-edit.js';
+import { tokenDisplayLabel, tokenPath } from '../token-presentation';
+import { formatTokenValue } from '../../../domain/edits/token-edit';
 
 const TokenPreviewContext = createContext<(reference: string) => string | undefined>(
   () => undefined,

@@ -1,7 +1,7 @@
-import type { EditorSession, EditorSnapshot } from '../../domain/session.js';
-import type { ComponentSchemaUse, SchemaTypeSelection } from '../../domain/schema/schema-use.js';
-import { SchemaPreviewForm } from './SchemaPreviewForm.js';
-import { SchemaTypeSelector } from '../controls/data/SchemaTypeSelector.js';
+import type { EditorSession, EditorSnapshot } from '../../domain/session';
+import type { ComponentSchemaUse, SchemaTypeSelection } from '../../domain/schema/schema-use';
+import { SchemaPreviewForm } from './SchemaPreviewForm';
+import { SchemaTypeSelector } from '../controls/data/SchemaTypeSelector';
 
 export function SchemaUseControl({
   session,

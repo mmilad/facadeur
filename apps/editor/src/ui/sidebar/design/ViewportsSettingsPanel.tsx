@@ -1,8 +1,8 @@
 import { breakpointLabel, type Breakpoint } from '@facadeur/core';
 import { activeBreakpoints, configuredBreakpoints, isBreakpointEnabled } from '@facadeur/tokens';
-import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
-import { TextControl } from '../../controls/fields/index.js';
-import { IconButton } from '../../form/components/shared/IconButton.js';
+import type { EditorSession, EditorSnapshot } from '../../../domain/session';
+import { TextControl } from '../../controls/fields/index';
+import { IconButton } from '../../form/components/shared/IconButton';
 
 const BREAKPOINT_ID = /^[a-z][a-z0-9]*$/;
 

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { TokenValueControl } from '../../controls/fields/TokenValueControl.js';
-import { useTokenResolver, useTokenValueLabel } from '../../controls/fields/TokenPreviewContext.js';
-import { Checkbox, Field, Inline, Stack, TextArea } from '../../form/index.js';
+import { TokenValueControl } from '../../controls/fields/TokenValueControl';
+import { useTokenResolver, useTokenValueLabel } from '../../controls/fields/TokenPreviewContext';
+import { Checkbox, Field, Inline, Stack, TextArea } from '../../form/index';
 
 export interface DesignShadowValue {
   color: string;

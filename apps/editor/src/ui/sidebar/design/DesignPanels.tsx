@@ -9,14 +9,14 @@ import {
   parseFontWeights,
   suggestFontId,
   tokenPathsReferencingFont,
-} from '../../../domain/edits/font-edit.js';
-import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
-import { TextControl } from '../../controls/fields/index.js';
-import { DisclosureButton, Field, Popover, TextInput } from '../../form/index.js';
+} from '../../../domain/edits/font-edit';
+import type { EditorSession, EditorSnapshot } from '../../../domain/session';
+import { TextControl } from '../../controls/fields/index';
+import { DisclosureButton, Field, Popover, TextInput } from '../../form/index';
 import './design-resources.css';
 
-export { TokensDomainPanel } from './tokens/TokensDomainPanel.js';
-export { IconsDomainPanel } from './IconsDomainPanel.js';
+export { TokensDomainPanel } from './tokens/TokensDomainPanel';
+export { IconsDomainPanel } from './IconsDomainPanel';
 
 export function FontsDomainPanel({
   session,

@@ -1,13 +1,13 @@
 import { applyCommand, type EventBinding, type EventDefinition } from '@facadeur/core';
 import { useState } from 'react';
-import type { EditorSession, EditorSnapshot } from '../../../../../domain/session.js';
-import { dataFieldsForNode } from '../../../../controls/data/index.js';
+import type { EditorSession, EditorSnapshot } from '../../../../../domain/session';
+import { dataFieldsForNode } from '../../../../controls/data/index';
 import {
   EventBindingsEditorControl,
   withDefaultMappings,
-} from '../../../../controls/data/EventBindingsEditorControl.js';
-import { Field, Select } from '../../../../form/index.js';
-import { NATIVE_EVENT_NAMES } from '../../../../../domain/events.js';
+} from '../../../../controls/data/EventBindingsEditorControl';
+import { Field, Select } from '../../../../form/index';
+import { NATIVE_EVENT_NAMES } from '../../../../../domain/events';
 
 export function EventTargets({
   event,
@@ -71,7 +71,6 @@ export function EventTargets({
 
   function commit(command: ReturnType<typeof targetCommand>) {
     try {
-      applyCommand(snap.document, command, session.project.commandContext);
       session.executeDocument(snap.document.id, command);
       setAdding(false);
       setDraft(null);
@@ -101,18 +100,7 @@ export function EventTargets({
               schemaCatalog: snap.design.schemaCatalog,
             })}
             schemaCatalog={snap.design.schemaCatalog}
-            validateBindings={(next) => {
-              try {
-                applyCommand(
-                  snap.document,
-                  targetCommand(node.id, next, node.id, index),
-                  session.project.commandContext,
-                );
-                return null;
-              } catch (error) {
-                return error instanceof Error ? error.message : 'Invalid event target';
-              }
-            }}
+            validateBindings={() => 'Event targets are not available in catalog-only mode'}
             onChangeBindings={(next) => {
               if (index === undefined && !next.length) {
                 setDraft(null);
@@ -150,12 +138,6 @@ export function EventTargets({
                   ),
                 ];
                 const command = targetCommand(id, bindings);
-                try {
-                  applyCommand(snap.document, command, session.project.commandContext);
-                } catch {
-                  setDraft({ nodeId: id, bindings });
-                  return;
-                }
                 commit(command);
               }}
             />

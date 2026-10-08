@@ -1,9 +1,9 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { authClient } from '../domain/auth/client.js';
-import { AuthScreen } from '../ui/management/AuthScreen.js';
-import { ProjectWorkspace } from '../ui/projects/ProjectWorkspace.js';
+import { authClient } from '../domain/auth/client';
+import { AuthScreen } from '../ui/management/AuthScreen';
+import { ProjectWorkspace } from '../ui/projects/ProjectWorkspace';
 
 export function EditorBootstrap() {
   const auth = authClient.useSession();

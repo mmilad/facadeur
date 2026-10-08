@@ -1,8 +1,8 @@
-import { DocumentError } from '../../document/errors.js';
-import type { StyleBlock, TokenInterface } from '../../schema/document.js';
-import { collectTokenRefs } from './references/collect.js';
-import type { ComponentToken } from './tokens/component/contract.js';
-import type { DocumentStyleCommand, StyleControllerContext } from './types.js';
+import { DocumentError } from '../../document/errors';
+import type { StyleBlock, TokenInterface } from '../../schema/document';
+import { collectTokenRefs } from './references/collect';
+import type { ComponentToken } from './tokens/component/contract';
+import type { DocumentStyleCommand, StyleControllerContext } from './types';
 
 /** Live authored style view for one document; all edits use the project command executor. */
 export class DocumentStyle {

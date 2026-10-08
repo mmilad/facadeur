@@ -1,0 +1,1 @@
+export { CoreController } from './controller';

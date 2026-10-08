@@ -5,12 +5,12 @@ import type {
   ManagementResult,
   ManagementSnapshot,
   OrganisationRole,
-} from '../../contracts/management.js';
-import type { AuthUser } from '../../contracts/auth.js';
-import { DomainError } from '../../errors.js';
-import { getManagementDatabase, managementProjectDirectory } from './database.js';
-import { requireOrganisationRole } from './access.js';
-import { initializeProjectFiles, legacyProjectStorage } from '../project/files.js';
+} from '../../contracts/management';
+import type { AuthUser } from '../../contracts/auth';
+import { DomainError } from '../../errors';
+import { getManagementDatabase, managementProjectDirectory } from './database';
+import { requireOrganisationRole } from './access';
+import { initializeProjectFiles, legacyProjectStorage } from '../project/files';
 
 const now = () => new Date().toISOString();
 const id = () => randomUUID();

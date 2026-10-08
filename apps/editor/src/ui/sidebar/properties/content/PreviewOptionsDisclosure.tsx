@@ -1,6 +1,6 @@
 import type { FlatNode } from '@facadeur/core';
-import type { EditorSession } from '../../../../domain/session.js';
-import { NodeAttributeFields } from './NodeAttributeFields.js';
+import type { EditorSession } from '../../../../domain/session';
+import { NodeAttributeFields } from './NodeAttributeFields';
 
 export function PreviewOptionsDisclosure({
   session,

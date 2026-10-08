@@ -1,10 +1,10 @@
 import { eventDataSchema, type EventDefinition, type SchemaCatalog } from '@facadeur/core';
 import { useState, type ReactNode } from 'react';
-import { eventDataSelection } from '../../../domain/events.js';
-import type { LibrarySchema } from '../../../domain/schema/schema-library.js';
-import type { SchemaTypeSelection } from '../../../domain/schema/schema-use.js';
-import { Field, Section, Stack, TextInput } from '../../form/index.js';
-import { SchemaTypeSelector } from './SchemaTypeSelector.js';
+import { eventDataSelection } from '../../../domain/events';
+import type { LibrarySchema } from '../../../domain/schema/schema-library';
+import type { SchemaTypeSelection } from '../../../domain/schema/schema-use';
+import { Field, Section, Stack, TextInput } from '../../form/index';
+import { SchemaTypeSelector } from './SchemaTypeSelector';
 import '../../form/form.css';
 
 export function EventsEditorControl({

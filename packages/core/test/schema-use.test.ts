@@ -9,7 +9,7 @@ import {
   validateCatalog,
   type DocumentFile,
   type SchemaCatalog,
-} from '../src/index.js';
+} from '../src/index';
 
 const schemaCatalog: SchemaCatalog = {
   schemas: [

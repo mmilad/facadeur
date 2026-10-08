@@ -1,19 +1,24 @@
-import { getPath } from '../schema/path.js';
-import { useFormContext, usePathPrefix } from '../FormContext.js';
-import { Field } from '../components/feedback/Field.js';
-import { TextInput } from '../components/input/TextInput.js';
-import { TextArea } from '../components/input/TextArea.js';
-import { NumberInput } from '../components/input/NumberInput.js';
-import { SearchInput } from '../components/input/SearchInput.js';
-import { ColorInput } from '../components/input/ColorInput.js';
-import { Select } from '../components/selection/Select.js';
-import { Combobox } from '../components/selection/Combobox.js';
-import { Toggle } from '../components/selection/Toggle.js';
-import { Checkbox } from '../components/selection/Checkbox.js';
-import { ArrayField } from '../components/dynamic/ArrayField.js';
-import { RecordField } from '../components/dynamic/RecordField.js';
-import { Section } from '../components/layout/Section.js';
-import type { FieldConfig, FieldGroupConfig } from './field-config.js';
+import type { FieldValue } from '@facadeur/core';
+import { SchemaValueForm } from '../../controls/data/SchemaValueForm';
+import { ClassListInput } from '../components/selection/ClassListInput';
+import { getPath } from '../schema/path';
+import type { FieldDefinition } from '@facadeur/core';
+import { PropBindableInput } from '../components/input/PropBindableInput';
+import { useDesignPropOptions, useFormContext, usePathPrefix } from '../FormContext';
+import { Field } from '../components/feedback/Field';
+import { TextInput } from '../components/input/TextInput';
+import { TextArea } from '../components/input/TextArea';
+import { NumberInput } from '../components/input/NumberInput';
+import { SearchInput } from '../components/input/SearchInput';
+import { ColorInput } from '../components/input/ColorInput';
+import { Select } from '../components/selection/Select';
+import { Combobox } from '../components/selection/Combobox';
+import { Toggle } from '../components/selection/Toggle';
+import { Checkbox } from '../components/selection/Checkbox';
+import { ArrayField } from '../components/dynamic/ArrayField';
+import { RecordField } from '../components/dynamic/RecordField';
+import { Section } from '../components/layout/Section';
+import type { FieldConfig, FieldGroupConfig } from './field-config';
 
 export function SchemaForm({ fields }: { fields: (FieldConfig | FieldGroupConfig)[] }) {
   return (
@@ -34,6 +39,9 @@ export function SchemaForm({ fields }: { fields: (FieldConfig | FieldGroupConfig
 
 function SchemaField({ config }: { config: FieldConfig }) {
   const control = renderControl(config);
+  if (config.type === 'schemaField') {
+    return control;
+  }
   return (
     <Field label={config.label} hint={config.hint} required={config.required} error={undefined}>
       {control}
@@ -141,11 +149,98 @@ function renderControl(config: FieldConfig) {
       );
     case 'record':
       return (
-        <RecordField name={config.name} keyLabel={config.keyLabel} valueLabel={config.valueLabel} />
+        <RecordField
+          name={config.name}
+          keyLabel={config.keyLabel}
+          valueLabel={config.valueLabel}
+          propBindValues={config.propBindValues}
+        />
       );
+    case 'classList':
+      return <BoundClassList config={config} />;
+    case 'schemaField':
+      return <BoundSchemaField config={config} />;
     default:
       return null;
   }
+}
+
+function BoundClassList({ config }: { config: import('./field-config').ClassListFieldConfig }) {
+  const form = useFormContext();
+  const raw = getPath(form.value, config.name);
+  const value = Array.isArray(raw) ? raw.map(String) : [];
+  return (
+    <ClassListInput
+      label={config.label}
+      value={value}
+      suggestions={config.suggestions}
+      disabled={config.disabled}
+      onChange={(next) => form.emitChange(config.name, next, { commit: true })}
+    />
+  );
+}
+
+function BoundSchemaField({ config }: { config: import('./field-config').SchemaFieldConfig }) {
+  const form = useFormContext();
+  const designPropOptions = useDesignPropOptions();
+  const raw = getPath(form.value, config.name);
+  const schema = config.field.schema;
+  const propBindable =
+    config.propBindable === true && fieldSupportsPropBind(config.field, schema);
+
+  if (propBindable) {
+    const textValue =
+      raw === undefined || raw === null
+        ? ''
+        : typeof raw === 'string'
+          ? raw
+          : typeof raw === 'number' || typeof raw === 'boolean'
+            ? String(raw)
+            : JSON.stringify(raw);
+    return (
+      <Field label={config.label} hint={config.hint}>
+        <PropBindableInput
+          ariaLabel={config.label}
+          value={textValue}
+          disabled={config.disabled}
+          propOptions={designPropOptions}
+          kind={config.field.type === 'number' ? 'number' : 'text'}
+          showBindToggle={config.propBindable === true}
+          onCommit={(next) => form.emitChange(config.name, next, { commit: true })}
+        />
+      </Field>
+    );
+  }
+
+  if (!schema) {
+    return (
+      <PrefixScalarField
+        config={{
+          type: config.field.type === 'number' ? 'number' : 'text',
+          name: config.name,
+          label: config.label,
+        }}
+      />
+    );
+  }
+  return (
+    <SchemaValueForm
+      schema={schema}
+      value={raw as FieldValue | undefined}
+      label={config.label}
+      onChange={(next) => form.emitChange(config.name, next, { commit: true })}
+    />
+  );
+}
+
+function fieldSupportsPropBind(
+  field: FieldDefinition,
+  schema: FieldDefinition['schema'],
+): boolean {
+  if (field.type === 'boolean' || field.type === 'object' || field.type === 'array') return false;
+  if (!schema) return field.type === 'text' || field.type === 'number' || field.type === 'enum';
+  const type = Array.isArray(schema.type) ? schema.type[0] : schema.type;
+  return type === 'string' || type === 'number' || type === 'integer' || field.type === 'enum';
 }
 
 /** Bind primitive array entries directly at the row path (`tags.0`), not `tags.0.item`. */

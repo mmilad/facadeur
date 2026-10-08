@@ -1,5 +1,5 @@
 import Ajv from 'ajv';
-import type { JsonSchema, SchemaCatalog } from '../../schema/document.js';
+import type { JsonSchema, SchemaCatalog } from '../../schema/document';
 
 const ajv = new Ajv({ allErrors: true, strict: false });
 

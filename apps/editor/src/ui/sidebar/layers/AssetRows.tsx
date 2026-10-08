@@ -1,8 +1,8 @@
 import { defaultNestingRules, type DefaultKind } from '@facadeur/core';
 import type { DragEvent, MutableRefObject } from 'react';
-import { ownsVariantContract } from '../../../domain/edits/variant-edit.js';
-import { VariantActionButton } from '../../controls/variants/VariantActionButton.js';
-import type { AssetSummary, EditorSession, EditorSnapshot } from '../../../domain/session.js';
+import { ownsVariantContract } from '../../../domain/edits/variant-edit';
+import { VariantActionButton } from '../../controls/variants/VariantActionButton';
+import type { AssetSummary, EditorSession, EditorSnapshot } from '../../../domain/session';
 
 export function AssetRows({
   assets,
@@ -60,7 +60,6 @@ export function AssetRows({
             }}
           >
             <span className="asset-name">{asset.name}</span>
-            <span className="asset-id">{asset.slug ?? asset.id}</span>
           </button>
           {canHaveVariants && hasVariants ? (
             <button

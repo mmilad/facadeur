@@ -1,5 +1,5 @@
-export { BorderControl } from './BorderControl.js';
-export { BorderRadiusControl } from './BorderRadiusControl.js';
+export { BorderControl } from './BorderControl';
+export { BorderRadiusControl } from './BorderRadiusControl';
 export {
   borderDeclarationKeys,
   borderRadiusDeclarationKeys,
@@ -14,4 +14,4 @@ export {
   uniformRadiusValue,
   type BorderRadiusValue,
   type BorderValue,
-} from './value.js';
+} from './value';

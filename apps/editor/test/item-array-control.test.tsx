@@ -4,9 +4,9 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { useState } from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
 import type { FieldValue, JsonSchema } from '@facadeur/core';
-import { ItemArrayControl } from '../src/ui/controls/data/ItemArrayControl.js';
-import { SchemaValueForm } from '../src/ui/controls/data/SchemaValueForm.js';
-import type { ItemChoice } from '../src/ui/controls/data/item-array-schema.js';
+import { ItemArrayControl } from '../src/ui/controls/data/ItemArrayControl';
+import { SchemaValueForm } from '../src/ui/controls/data/SchemaValueForm';
+import type { ItemChoice } from '../src/ui/controls/data/item-array-schema';
 
 afterEach(cleanup);
 

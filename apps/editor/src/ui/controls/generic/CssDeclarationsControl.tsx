@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Fragment, useMemo, useState } from 'react';
-import type { ShownDeclaration } from '../../../domain/edits/style-edit.js';
-import type { LayoutCapabilities } from '../../../domain/layout-capabilities.js';
+import type { ShownDeclaration } from '../../../domain/edits/style-edit';
+import type { LayoutCapabilities } from '../../../domain/layout-capabilities';
 import {
   BorderControl,
   BorderRadiusControl,
@@ -11,11 +11,11 @@ import {
   readBorderRadius,
   serializeBorder,
   serializeBorderRadius,
-} from '../border/index.js';
-import { Field, Inline, Section, Stack, TextInput } from '../../form/index.js';
-import { StyleDeclarationField } from '../style/index.js';
-import { styleDeclarationGroup, type StyleDeclarationGroup } from '../style/declaration-kind.js';
-import type { TypographyCatalogs } from '../typography/index.js';
+} from '../border/index';
+import { Field, Inline, Section, Stack, TextInput } from '../../form/index';
+import { StyleDeclarationField } from '../style/index';
+import { styleDeclarationGroup, type StyleDeclarationGroup } from '../style/declaration-kind';
+import type { TypographyCatalogs } from '../typography/index';
 import '../../form/form.css';
 
 export type CssDeclarationEntry = ShownDeclaration & { placeholder?: string };

@@ -1,10 +1,10 @@
-import { DocumentError } from '../../document/errors.js';
-import { type FlatDocument, type FlatNode } from '../../document/flat.js';
-import { defaultNestingRules, type NestingRule } from '../../document/kinds.js';
-import { assertBreakpoints } from '../style/breakpoints.js';
-import { assertFonts } from '../style/fonts.js';
-import { assertStyleContract } from '../style/blocks/contract.js';
-import { readTokenTree } from '../style/tokens/global/tree.js';
+import { DocumentError } from '../../document/errors';
+import { type FlatDocument, type FlatNode } from '../../document/flat';
+import { defaultNestingRules, type NestingRule } from '../../document/kinds';
+import { assertBreakpoints } from '../style/breakpoints';
+import { assertFonts } from '../style/fonts';
+import { assertStyleContract } from '../style/blocks/contract';
+import { readTokenTree } from '../style/tokens/global/tree';
 import {
   assertAttributes,
   assertBindings,
@@ -14,12 +14,15 @@ import {
   assertExpose,
   assertRepeat,
   assertLayout,
-} from './assertions.js';
-import { ID_PATTERN } from '../../document/ids.js';
+} from './assertions';
+import { ID_PATTERN } from '../../document/ids';
 
-import type { ValidateOptions } from './types.js';
+import type { ValidateOptions } from './types';
 
-/** Tree shape: reachable nodes, no cycles, and the kind's nesting rule. */
+/**
+ * Tree shape: reachable nodes, no cycles, and the kind's nesting rule.
+ * @deprecated Prefer `validateProjectCatalog` and v2 node-model validation for new catalog work.
+ */
 export function validateTree(doc: FlatDocument, options: ValidateOptions = {}): void {
   const rules = (options.rules ?? defaultNestingRules) as Readonly<Record<string, NestingRule>>;
   const rule = rules[doc.kind];

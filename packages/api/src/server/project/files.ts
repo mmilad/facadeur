@@ -1,4 +1,4 @@
-import { DomainError } from '../../errors.js';
+import { DomainError } from '../../errors';
 import { createHash, randomUUID } from 'node:crypto';
 import { lstat, mkdir, readFile, readdir, realpath, rename, unlink, open } from 'node:fs/promises';
 import path from 'node:path';
@@ -7,15 +7,18 @@ import {
   DocumentError,
   validateCatalog,
   validateDocumentFile,
+  validateProjectCatalog,
   type DocumentFile,
+  type ProjectCatalogModel,
 } from '@facadeur/core';
-import { starterCatalog } from './starter-catalog.js';
-import { starterSchemaLibrary } from './starter-schemas.js';
-import type { ProjectStorage } from '../../contracts/management.js';
-import { reconcileLegacySchemaSnapshot } from '../../schema/reconcile.js';
-import type { SchemaLibraryState } from '../../schema/types.js';
-import type { ProjectSnapshot } from '../../contracts/project.js';
-import { validateProjectDesign } from '../../schema/design-validation.js';
+import { seedProjectCatalog } from './catalog-seed';
+import { starterCatalog } from './starter-catalog';
+import { starterSchemaLibrary } from './starter-schemas';
+import type { ProjectStorage } from '../../contracts/management';
+import { reconcileLegacySchemaSnapshot } from '../../schema/reconcile';
+import type { SchemaLibraryState } from '../../schema/types';
+import type { ProjectSnapshot } from '../../contracts/project';
+import { validateProjectDesign } from '../../schema/design-validation';
 
 const defaultDirectory = () =>
   path.resolve(process.env.FACADEUR_PROJECT_DIR ?? path.join(process.cwd(), '../../examples'));
@@ -30,7 +33,7 @@ export function legacyProjectStorage(): ProjectStorage {
   };
 }
 
-const storageDirectory = (storage?: ProjectStorage) =>
+export const storageDirectory = (storage?: ProjectStorage) =>
   path.resolve(storage?.directory ?? legacyProjectStorage().directory);
 const storageId = (storage?: ProjectStorage) => storage?.id ?? 'default';
 const recoveryFilename = (storage?: ProjectStorage) =>
@@ -103,7 +106,7 @@ async function writeRecovery(storage: ProjectStorage | undefined, recovery: Reco
   await atomicWrite(filename, JSON.stringify(recovery, null, 2) + '\n');
 }
 
-async function atomicWrite(filename: string, content: string) {
+export async function atomicWrite(filename: string, content: string) {
   const parent = path.dirname(filename);
   await assertTrustedPath(parent, true);
   await mkdir(parent, { recursive: true });
@@ -129,7 +132,8 @@ function sourcePath(source: string, storage?: ProjectStorage) {
     typeof source !== 'string' ||
     source !== path.basename(source) ||
     !/^[a-zA-Z0-9_-]+\.json$/.test(source) ||
-    source === 'schemas.json'
+    source === 'schemas.json' ||
+    source === 'catalog.json'
   ) {
     throw new DomainError('invalid-input', 'Invalid project source');
   }
@@ -171,7 +175,30 @@ export async function initializeProjectFiles(storage: ProjectStorage) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
     await atomicWrite(libraryFile, JSON.stringify(starterSchemaLibrary(), null, 2) + '\n');
   }
+  const catalogFile = path.join(directory, 'catalog.json');
+  try {
+    await assertTrustedPath(catalogFile);
+    await lstat(catalogFile);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+    await atomicWrite(catalogFile, JSON.stringify(seedProjectCatalog(), null, 2) + '\n');
+  }
   return { ...storage, directory };
+}
+
+async function loadProjectCatalogFromDirectory(directory: string): Promise<ProjectCatalogModel> {
+  const filename = path.join(directory, 'catalog.json');
+  try {
+    await assertTrustedPath(filename);
+    const text = await readFile(filename, 'utf8');
+    return validateProjectCatalog(JSON.parse(text));
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return seedProjectCatalog();
+    if (error instanceof DocumentError) {
+      throw new DomainError('invalid-input', error.message);
+    }
+    throw error;
+  }
 }
 
 const CONTENT_STARTER_IDS = new Set([
@@ -375,7 +402,7 @@ export async function readProjectFiles(storage?: ProjectStorage): Promise<Projec
   }
   const directory = await assertStorageDirectory(storage);
   const filenames = (await readdir(directory))
-    .filter((name) => name.endsWith('.json') && name !== 'schemas.json')
+    .filter((name) => name.endsWith('.json') && name !== 'schemas.json' && name !== 'catalog.json')
     .sort();
   const files: Array<{ source: string; hash: string | null; document: DocumentFile }> =
     await Promise.all(
@@ -427,10 +454,12 @@ export async function readProjectFiles(storage?: ProjectStorage): Promise<Projec
   const reconciled = reconcileLegacySchemaSnapshot(designEntry.document, documents, library);
   const design = validateDocumentFile(reconciled.design);
   files.forEach((entry) => validateProjectDesign(entry.document));
+  const catalog = await loadProjectCatalogFromDirectory(directory);
   return {
     id: storageId(storage),
     design,
     documents: validateCatalog(reconciled.documents, { schemaCatalog: design.schemaCatalog }),
+    catalog,
     sources: Object.fromEntries(files.map((entry) => [entry.document.id, entry.source])),
     hashes: Object.fromEntries(files.map((entry) => [entry.document.id, entry.hash])),
     unsavedDocumentIds,

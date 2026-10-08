@@ -1,22 +1,25 @@
 import type {
-  Command,
+  CatalogPort,
+  CatalogDesignCommand,
+  CoreController,
   DefaultKind,
   DocumentFile,
   DocumentStore,
   FlatDocument,
   FlatNode,
   FieldDefinition,
-  ProjectController,
+  NodeDefinitionModel,
+  ProjectCatalogModel,
 } from '@facadeur/core';
 import type { DesignInput } from '@facadeur/tokens';
-import type { JsonFileHandle } from '../assets/files.js';
-import type { LayerItem } from '../selection/selection-model.js';
-import type { NestedFieldContext, NestedSelection } from '../nested-selection.js';
-import type { ViewportChromeSettings } from '../viewport/viewport-chrome.js';
-import type { StyleEditMode } from '../viewport/viewport-edit.js';
-import type { DrillParent } from '../navigation/drill-navigation.js';
-import type { VariantSummary } from '../edits/variant-edit.js';
-import type { AutomaticFieldGroup } from '../schema/component-contract.js';
+import type { JsonFileHandle } from '../assets/files';
+import type { LayerItem } from '../selection/selection-model';
+import type { NestedFieldContext, NestedSelection } from '../nested-selection';
+import type { ViewportChromeSettings } from '../viewport/viewport-chrome';
+import type { StyleEditMode } from '../viewport/viewport-edit';
+import type { DrillParent } from '../navigation/drill-navigation';
+import type { VariantSummary } from '../edits/variant-edit';
+import type { AutomaticFieldGroup } from '../schema/component-contract';
 
 export type EditorTool = 'select' | 'frame' | 'text' | 'image';
 
@@ -43,99 +46,66 @@ export interface EditorSnapshot {
   assets: AssetSummary[];
   layers: LayerItem | null;
   document: FlatDocument;
-  /** The open document with the active named variant resolved for editing UI. */
   activeDocument: FlatDocument;
   design: FlatDocument;
   selectedNodeId: string | null;
   selectedRenderId: string | null;
   selectedNode: FlatNode | null;
-  /** Virtual selection inside a composed instance, without opening its master. */
   nestedSelection: NestedSelection | null;
-  /** Fields editable at the current selection; null for non-instance leaves. */
   fieldContext: NestedFieldContext | null;
-  /** Breakpoint id of the frame the user last clicked. Null until then. */
   focusViewportId: string | null;
-  /** When set, the right rail edits viewport chrome instead of node properties. */
   selectedViewportId: string | null;
-  /** Per-breakpoint editor chrome for the open document (session memory, not in DSL). */
   viewportChrome: Readonly<Record<string, ViewportChromeSettings>>;
-  /**
-   * Where style, layout, and token edits land.
-   * Stays on base until the user switches to the focused viewport's override.
-   */
   editTarget: StyleEditMode;
-  /** Definition of the selected instance, when that document is in the catalog. */
   componentTarget: FlatDocument | null;
-  /** Public fields of the selected component, including recursive expose paths. */
-  componentFields: import('@facadeur/core').FieldDefinition[];
-  /** Nested component contracts that can be forwarded into the open component. */
+  componentFields: FieldDefinition[];
   automaticFieldGroups: AutomaticFieldGroup[];
-  /** Fields available to bindings throughout the open document's data scope. */
   documentScopeFields: FieldDefinition[];
-  /** Public events of the selected component, including recursive expose paths. */
   componentEvents: import('@facadeur/core').EventDefinition[];
-  /** Default plus named component variants with resolved editor documents. */
-  componentVariants: import('../schema/component-contract.js').ComponentVariantContract[];
-  /** Session-only editing context. Null means the document's default variant. */
+  componentVariants: import('../schema/component-contract').ComponentVariantContract[];
   activeVariantName: string | null;
   canUndo: boolean;
   canRedo: boolean;
   notice: EditorNotice | null;
   zoomLabel: string;
-  /** Every document in the catalog, not only the current workspace. */
   catalog: AssetSummary[];
   tool: EditorTool;
   drag: EditorDrag | null;
-  /** Bumps when a store is added or replaced. The stage remounts. */
   generation: number;
-  /** Bumps when the design store changes. The stage calls setDesign. */
   designRevision: number;
   revision: number;
-  /** Open document differs from the last successful save (or was never saved). */
   documentDirty: boolean;
-  /** Design file differs from the last successful save (or was never saved). */
   designDirty: boolean;
-  /** Session drill-in parents shown in the top bar breadcrumb. */
   drillParents: readonly DrillParent[];
+  openDefinition: NodeDefinitionModel | null;
+  selectedCatalogNodeUuid: string | null;
 }
 
 export interface EditorSession {
-  /** Live Core project API. UI interactions normally retain the session's guarded command methods. */
-  readonly project: ProjectController;
-  /** Renderer-facing views over controller state. */
+  readonly core: CoreController;
   documentStores: () => DocumentStore[];
-  /** Mark the exact persisted snapshot, preserving edits made during an async save. */
   markDocumentSaved: (id: string, document: FlatDocument) => void;
   destroy: () => void;
   subscribe: (listener: () => void) => () => void;
   getSnapshot: () => EditorSnapshot;
   setWorkspace: (kind: DefaultKind) => void;
   openAsset: (id: string, focus?: 'root') => void;
-  /** Instance double-click drill: push parent and open the master document. */
   drillToMaster: (componentId: string) => void;
-  /** Open a breadcrumb parent and reselect its instance when possible. */
   navigateDrillParent: (index: number) => void;
   selectNode: (nodeId: string | null) => void;
   selectRendered: (renderedId: string | null) => void;
-  /** Set a field on the selected direct instance or nested child instance. */
   setNestedField: (field: string, value: import('@facadeur/core').FieldValue | null) => void;
-  /** Last clicked viewport frame. Does not change the selection or the edit target. */
   setFocusViewport: (breakpointId: string | null) => void;
-  /** Select a viewport row (Layers or stage). Clears the node selection. */
   selectViewport: (breakpointId: string | null) => void;
-  /** Update preview-only chrome for one breakpoint on the open document. */
   setViewportChrome: (breakpointId: string, patch: Partial<ViewportChromeSettings>) => void;
-  /** Base, or a min-width override for the focused viewport. */
   setEditTarget: (target: StyleEditMode) => void;
-  /** Selects a named variant for the current component without changing persisted JSON. */
   setActiveVariant: (name: string | null) => void;
   setTool: (tool: EditorTool) => void;
   beginDrag: (drag: EditorDrag) => void;
   endDrag: () => void;
-  execute: (command: Command) => void;
-  executeDesign: (command: Command) => void;
-  /** Execute a command against a project document without changing the editor selection. */
-  executeDocument: (documentId: string, command: Command) => void;
+  execute: (command: import('@facadeur/core').Command) => void;
+  executeDesign: (command: CatalogDesignCommand) => void;
+  executeDocument: (documentId: string, command: import('@facadeur/core').Command) => void;
   undo: () => void;
   redo: () => void;
   loadDocument: (file: DocumentFile, handle?: JsonFileHandle) => void;
@@ -152,18 +122,13 @@ export interface EditorSession {
   filenameFor: (id: string) => string;
   fileHandle: (id: string) => JsonFileHandle | undefined;
   rememberHandle: (id: string, handle: JsonFileHandle) => void;
-  /** Persist the open document. Returns true when bytes were written. */
   saveOpenDocument: () => Promise<boolean>;
-  /** Persist the design document. Returns true when bytes were written. */
   saveDesign: () => Promise<boolean>;
 }
 
 export interface EditorSessionOptions {
-  documents: readonly DocumentFile[];
-  design: DocumentFile;
-  /** Document id to filename, for the examples that are not `<id>.json`. */
-  sources?: Readonly<Record<string, string>>;
-  /** Recovered drafts have no saved baseline until explicitly persisted. */
-  unsavedDocumentIds?: readonly string[];
-  saveDocument?: (id: string, document: FlatDocument) => Promise<FlatDocument>;
+  core?: CoreController;
+  catalogPort?: CatalogPort;
+  projectId?: string;
+  projectCatalog?: ProjectCatalogModel;
 }

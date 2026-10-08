@@ -1,5 +1,5 @@
 import { breakpointLabel, type Breakpoint } from '@facadeur/core';
-import type { EditorSession } from '../../../domain/session.js';
+import type { EditorSession } from '../../../domain/session';
 
 /** Breakpoint tabs for the token list. The narrowest viewport writes the base layer. */
 export function ViewportTabs({

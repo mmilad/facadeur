@@ -5,7 +5,7 @@ import {
   readJson,
   authenticatedActor,
   respond,
-} from '../../../../../transport.js';
+} from '../../../../../transport';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 

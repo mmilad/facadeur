@@ -1,6 +1,6 @@
-import { Stack } from '../layout/Stack.js';
-import type { SelectOption } from '../../types/options.js';
-import { useBindable } from '../input/bindable.js';
+import { Stack } from '../layout/Stack';
+import type { SelectOption } from '../../types/options';
+import { useBindable } from '../input/bindable';
 
 export function RadioGroup({
   name,

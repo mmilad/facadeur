@@ -24,7 +24,7 @@ import {
   TextInput,
   Toggle,
   type FormChangeMeta,
-} from './ui/form/index.js';
+} from './ui/form/index';
 
 type DemoValue = {
   label: string;

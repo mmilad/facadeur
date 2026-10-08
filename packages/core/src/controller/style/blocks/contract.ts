@@ -2,7 +2,7 @@ import {
   assertComponentTokenDefault,
   assertComponentTokenKind,
   isLocalComponentTokenPath,
-} from '../tokens/component/contract.js';
+} from '../tokens/component/contract';
 import {
   defaultBreakpoints,
   isVariantAxis,
@@ -13,20 +13,20 @@ import {
   type StyleDeclarations,
   type StyleLayer,
   type TokenInterface,
-} from '../../../schema/document.js';
-import { DocumentError } from '../../../document/errors.js';
-import type { FlatDocument } from '../../../document/flat.js';
-import type { ValidateOptions } from '../../validation/types.js';
+} from '../../../schema/document';
+import { DocumentError } from '../../../document/errors';
+import type { FlatDocument } from '../../../document/flat';
+import type { ValidateOptions } from '../../validation/types';
 import {
   assertSpacingValue,
   BREAKPOINT_ID,
   CSS_PROPERTY,
   parseStyleBlock,
   parseTokenInterface,
-} from './parse.js';
-import { assertStyleSelector, selectorClassNames } from '../selectors.js';
-import { flatDocumentClassNames } from '../class-names.js';
-import { collectTokenRefs, refsInText } from '../references/collect.js';
+} from './parse';
+import { assertStyleSelector, selectorClassNames } from '../selectors';
+import { flatDocumentClassNames } from '../class-names';
+import { collectTokenRefs, refsInText } from '../references/collect';
 
 const TOKEN_PATH = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+)+$/;
 

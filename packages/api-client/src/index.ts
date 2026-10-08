@@ -9,6 +9,7 @@ import type {
   SaveDocumentRequest,
   SaveDocumentResult,
 } from '@facadeur/api';
+import type { NodeDefinitionModel, ProjectCatalogModel } from '@facadeur/core';
 
 export interface ApiClientOptions {
   /** Relative for same-origin browser requests, absolute for other consumers. */
@@ -81,6 +82,54 @@ export function createApiClient(options: ApiClientOptions = {}) {
             encodeURIComponent(documentId) +
             '/save',
           body,
+        ),
+      loadCatalog: (projectId: string, init: { signal?: AbortSignal } = {}) =>
+        request<ProjectCatalogModel>(
+          '/projects/' + encodeURIComponent(projectId) + '/catalog',
+          init,
+        ),
+      saveCatalog: (projectId: string, catalog: ProjectCatalogModel) =>
+        request<ProjectCatalogModel>('/projects/' + encodeURIComponent(projectId) + '/catalog', {
+          method: 'PUT',
+          body: JSON.stringify(catalog),
+        }),
+      createCatalogDefinition: (
+        projectId: string,
+        kind: 'atoms' | 'components' | 'pages',
+        definition: Omit<NodeDefinitionModel, 'uuid'> & { uuid?: string },
+      ) =>
+        post<ProjectCatalogModel>(
+          '/projects/' + encodeURIComponent(projectId) + '/catalog/' + kind,
+          definition,
+        ),
+      patchCatalogDefinition: (
+        projectId: string,
+        kind: 'atoms' | 'components' | 'pages',
+        uuid: string,
+        patch: Partial<NodeDefinitionModel>,
+      ) =>
+        request<ProjectCatalogModel>(
+          '/projects/' +
+            encodeURIComponent(projectId) +
+            '/catalog/' +
+            kind +
+            '/' +
+            encodeURIComponent(uuid),
+          { method: 'PATCH', body: JSON.stringify(patch) },
+        ),
+      deleteCatalogDefinition: (
+        projectId: string,
+        kind: 'atoms' | 'components' | 'pages',
+        uuid: string,
+      ) =>
+        request<ProjectCatalogModel>(
+          '/projects/' +
+            encodeURIComponent(projectId) +
+            '/catalog/' +
+            kind +
+            '/' +
+            encodeURIComponent(uuid),
+          { method: 'DELETE' },
         ),
     },
   };

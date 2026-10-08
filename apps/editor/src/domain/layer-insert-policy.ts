@@ -1,6 +1,6 @@
-import { layerInsertAt, placementAllowed, type InsertTool } from './editing.js';
-import type { LayerItem } from './selection/selection-model.js';
-import type { AssetSummary, EditorSnapshot } from './session/types.js';
+import { layerInsertAt, placementAllowed, type InsertTool } from './editing';
+import type { LayerItem } from './selection/selection-model';
+import type { AssetSummary, EditorSnapshot } from './session/types';
 
 /**
  * Preferred atom order in layer insert menus. Catalog atoms not listed here follow

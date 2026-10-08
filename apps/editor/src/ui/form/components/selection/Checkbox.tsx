@@ -1,5 +1,5 @@
 import type { InputHTMLAttributes } from 'react';
-import { useBindable } from '../input/bindable.js';
+import { useBindable } from '../input/bindable';
 
 export function Checkbox({
   name,

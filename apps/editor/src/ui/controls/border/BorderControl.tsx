@@ -1,8 +1,8 @@
-import { Field, Grid, Select, Stack } from '../../form/index.js';
+import { Field, Grid, Select, Stack } from '../../form/index';
 import '../../form/form.css';
-import { ColorControl } from '../color/index.js';
-import { TokenValueControl } from '../fields/TokenValueControl.js';
-import { BORDER_STYLE_OPTIONS, type BorderValue } from './value.js';
+import { ColorControl } from '../color/index';
+import { TokenValueControl } from '../fields/TokenValueControl';
+import { BORDER_STYLE_OPTIONS, type BorderValue } from './value';
 
 export function BorderControl({
   namePrefix,

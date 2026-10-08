@@ -1,6 +1,6 @@
-import { Field, Select } from '../../form/index.js';
+import { Field, Select } from '../../form/index';
 import '../../form/form.css';
-import { HTML_TAG_OPTIONS } from './value.js';
+import { HTML_TAG_OPTIONS } from './value';
 
 export function HtmlTagSelect({
   name,

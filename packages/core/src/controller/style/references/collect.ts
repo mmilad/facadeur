@@ -1,6 +1,6 @@
-import type { FlatDocument } from '../../../document/flat.js';
-import type { StyleBlock, StyleLayer } from '../../../schema/document.js';
-import { layoutTokenRefs } from '../layout.js';
+import type { FlatDocument } from '../../../document/flat';
+import type { StyleBlock, StyleLayer } from '../../../schema/document';
+import { layoutTokenRefs } from '../layout';
 
 const TOKEN_REF = /\{([a-z][a-z0-9]*(?:\.[a-z0-9]+)*)\}/g;
 

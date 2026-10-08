@@ -1,5 +1,5 @@
 import { apiController } from '@facadeur/api/server';
-import { assertSameOrigin, readSessionToken, respond, sessionCookie } from '../../transport.js';
+import { assertSameOrigin, readSessionToken, respond, sessionCookie } from '../../transport';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 

@@ -1,5 +1,5 @@
-import type { DocumentFile } from '@facadeur/core';
-import type { OrganisationRole } from './management.js';
+import type { DocumentFile, ProjectCatalogModel } from '@facadeur/core';
+import type { OrganisationRole } from './management';
 
 export interface ProjectAccess {
   role: OrganisationRole;
@@ -14,6 +14,7 @@ export interface ProjectSnapshot {
   access?: ProjectAccess;
   documents: DocumentFile[];
   design: DocumentFile;
+  catalog: ProjectCatalogModel;
   sources: Record<string, string>;
   hashes: Record<string, string | null>;
   unsavedDocumentIds?: string[];

@@ -1,23 +1,23 @@
-import { fieldDataSchema } from './field-data-schema.js';
-import { schemaAtPath } from './schema-path.js';
-import { DocumentError } from '../../document/errors.js';
-import { type FlatDocument, toNested, type FlatNode } from '../../document/flat.js';
+import { fieldDataSchema } from './field-data-schema';
+import { schemaAtPath } from './schema-path';
+import { DocumentError } from '../../document/errors';
+import { type FlatDocument, toNested, type FlatNode } from '../../document/flat';
 import {
   type FieldDefinition,
   type JsonSchema,
   type SchemaCatalog,
-} from '../../schema/document.js';
-import { variantPresets } from '../variants/resolve.js';
-import { assertValueMatches } from './assertions.js';
+} from '../../schema/document';
+import { variantPresets } from '../../legacy/flat/variants/resolve';
+import { assertValueMatches } from './assertions';
 import {
   componentDataSchema,
   publicFieldsFor,
   structuralChildSchemas,
   structuralScopeFields,
-} from './catalog-exposed.js';
-import type { SchemaResolverContext } from './types.js';
-import { eventDataMappings, eventDataSchema, localContractFieldsFor } from './schema-use.js';
-import { resolveJsonSchema } from './json-schema-value.js';
+} from './catalog-exposed';
+import type { SchemaResolverContext } from './types';
+import { eventDataMappings, eventDataSchema, localContractFieldsFor } from './schema-use';
+import { resolveJsonSchema } from './json-schema-value';
 
 interface DataScope {
   fields: ReadonlyMap<string, FieldDefinition>;

@@ -1,5 +1,5 @@
 import type { EventDefinition, FieldType } from '@facadeur/core';
-import type { SchemaTypeSelection } from './schema/schema-use.js';
+import type { SchemaTypeSelection } from './schema/schema-use';
 
 export type EventPayloadSource = 'value' | 'checked' | 'valueAsNumber';
 

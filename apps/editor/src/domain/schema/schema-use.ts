@@ -1,4 +1,4 @@
-import { resolveLibrarySchema } from './schema-validation.js';
+import { resolveLibrarySchema } from './schema-validation';
 import type { JsonSchema, NamedSchema } from '@facadeur/core';
 
 export const BASIC_SCHEMA_TYPES = [

@@ -4,5 +4,5 @@ export type {
   FormDensity,
   FormProps,
   FieldBinding,
-} from './form.js';
-export type { SelectOption } from './options.js';
+} from './form';
+export type { SelectOption } from './options';

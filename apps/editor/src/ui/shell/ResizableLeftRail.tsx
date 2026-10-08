@@ -4,7 +4,7 @@ import {
   LEFT_RAIL_SPLIT_HANDLE_PX,
   projectRatioFromPointer,
   useLeftRailSplit,
-} from './useLeftRailSplit.js';
+} from './useLeftRailSplit';
 
 export function ResizableLeftRail({ project, layers }: { project: ReactNode; layers: ReactNode }) {
   const { projectRatio, persistRatio, projectCollapsed, collapseProject, expandProject } =

@@ -1,5 +1,5 @@
 import { useCallback, useRef, type ReactNode } from 'react';
-import { useInspectorWidth } from './useInspectorWidth.js';
+import { useInspectorWidth } from './useInspectorWidth';
 
 export function ResizableInspector({ children }: { children: ReactNode }) {
   const { width, persist, minWidth, maxWidth } = useInspectorWidth();

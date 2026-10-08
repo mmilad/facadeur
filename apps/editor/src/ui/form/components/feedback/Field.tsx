@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import { InlineError } from './InlineError.js';
-import { HelpHint } from './HelpHint.js';
-import { Inline } from '../layout/Inline.js';
+import { InlineError } from './InlineError';
+import { HelpHint } from './HelpHint';
+import { Inline } from '../layout/Inline';
 
 export function Field({
   label,

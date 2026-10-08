@@ -1,9 +1,9 @@
 import {
   globalRefInComponentTokenDefault,
   isLocalComponentTokenPath,
-} from '../tokens/component/contract.js';
-import { collectTokenRefs } from './collect.js';
-import type { FlatDocument } from '../../../document/flat.js';
+} from '../tokens/component/contract';
+import { collectTokenRefs } from './collect';
+import type { FlatDocument } from '../../../document/flat';
 
 /** Token references a command introduces must be listed in `tokenInterface.reads`. */
 export function adoptTokenReads(doc: FlatDocument) {

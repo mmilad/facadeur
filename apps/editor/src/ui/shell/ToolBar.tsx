@@ -1,6 +1,6 @@
 import type { IconDefinition } from '@facadeur/core';
-import { refusalMessage, toolAllowed } from '../../domain/editing.js';
-import type { EditorSession, EditorTool } from '../../domain/session.js';
+import { refusalMessage, toolAllowed } from '../../domain/editing';
+import type { EditorSession, EditorTool } from '../../domain/session';
 
 const TOOLS = [
   ['select', 'Select', 'V'],

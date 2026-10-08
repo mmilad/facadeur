@@ -1,6 +1,6 @@
-import type { FlatDocument } from '../../../document/flat.js';
-import type { StyleBlock, StyleLayer } from '../../../schema/document.js';
-import { componentTokenPublicPath } from '../tokens/component/contract.js';
+import type { FlatDocument } from '../../../document/flat';
+import type { StyleBlock, StyleLayer } from '../../../schema/document';
+import { componentTokenPublicPath } from '../tokens/component/contract';
 
 const TOKEN_REF = /\{([a-z][a-z0-9]*(?:\.[a-z0-9]+)*)\}/g;
 

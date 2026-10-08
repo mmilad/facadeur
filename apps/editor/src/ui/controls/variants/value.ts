@@ -1,5 +1,5 @@
 import type { VariantAxis } from '@facadeur/core';
-import { variantAxisFromDraft } from '../../../domain/definitions.js';
+import { variantAxisFromDraft } from '../../../domain/definitions';
 
 export function variantValuesText(axis: VariantAxis): string {
   return axis.values.join(', ');

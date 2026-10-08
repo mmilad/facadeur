@@ -3,8 +3,8 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { apiController } from '../src/server/index.js';
-import { getManagementDatabase } from '../src/server/management/database.js';
+import { apiController } from '../src/server/index';
+import { getManagementDatabase } from '../src/server/management/database';
 
 let directory: string;
 function closeRuntime() {

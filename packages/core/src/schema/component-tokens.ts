@@ -1,7 +1,7 @@
 import { Type } from '@sinclair/typebox';
-import { ID_PATTERN } from '../document/ids.js';
-import { tokenPathSchema } from './layout.js';
-import { tokenTypeSchema } from './fonts.js';
+import { ID_PATTERN } from '../document/ids';
+import { tokenPathSchema } from './layout';
+import { tokenTypeSchema } from './fonts';
 
 export const componentTokenSchema = Type.Object(
   {

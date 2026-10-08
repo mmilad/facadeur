@@ -8,11 +8,11 @@ import {
   replaceFieldItems,
   replaceFieldOptions,
   retargetField,
-} from '../../../domain/definitions.js';
-import { Field, Section, Select, Stack, TextInput, Toggle } from '../../form/index.js';
+} from '../../../domain/definitions';
+import { Field, Section, Select, Stack, TextInput, Toggle } from '../../form/index';
 import '../../form/form.css';
-import { fieldDisplayLabel } from './field-label.js';
-import { fieldTypeOptions } from './value.js';
+import { fieldDisplayLabel } from './field-label';
+import { fieldTypeOptions } from './value';
 
 export function FieldsEditorControl({
   fields,

@@ -1,4 +1,4 @@
-import type { JsonSchema } from '../../schema/document.js';
+import type { JsonSchema } from '../../schema/document';
 
 /** Resolve a property path once per branch, preserving alternative destination contracts. */
 export function schemaAtPath(schema: JsonSchema, path: string): JsonSchema | undefined {

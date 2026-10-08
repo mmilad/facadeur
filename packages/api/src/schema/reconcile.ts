@@ -5,9 +5,9 @@ import type {
   JsonSchema,
   SchemaCatalog,
 } from '@facadeur/core';
-import type { SchemaLibraryState } from './types.js';
-import { BUILTIN_SCHEMAS } from './builtin-schemas.js';
-import { schemaUseFromAssignment } from './assignment.js';
+import type { SchemaLibraryState } from './types';
+import { BUILTIN_SCHEMAS } from './builtin-schemas';
+import { schemaUseFromAssignment } from './assignment';
 
 /** Reconcile an incoming JSON snapshot for validation; migration writes still happen later. */
 export function reconcileLegacySchemaSnapshot(

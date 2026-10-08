@@ -7,7 +7,7 @@ import {
   type FlatDocument,
   type FlatNode,
 } from '@facadeur/core';
-import type { EditorSnapshot } from './session/types.js';
+import type { EditorSnapshot } from './session/types';
 
 export type InstanceVariantSource = 'preset' | 'rule' | 'fixed' | 'default';
 

@@ -1,5 +1,5 @@
-import type { EditorSession, EditorSnapshot } from '../../../../../domain/session.js';
-import { DeclarationEditor } from './declaration-editor.js';
+import type { EditorSession, EditorSnapshot } from '../../../../../domain/session';
+import { DeclarationEditor } from './declaration-editor';
 
 export function StyleDeclarationsPanel({
   session,

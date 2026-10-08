@@ -15,7 +15,7 @@ import {
   pathFromComponentTokenLabel,
   previewComponentTokenCssVar,
   readComponentTokens,
-} from '../../../../domain/component-tokens.js';
+} from '../../../../domain/component-tokens';
 import {
   colorTokenRefs,
   dimensionTokenRefs,
@@ -24,28 +24,28 @@ import {
   numberTokenRefs,
   shadowTokenRefs,
   typographyTokenRefs,
-} from '../../../../domain/editing.js';
-import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
-import { ColorControl } from '../../../controls/color/index.js';
-import { TextControl } from '../../../controls/fields/index.js';
-import { TokenValueControl } from '../../../controls/fields/TokenValueControl.js';
+} from '../../../../domain/editing';
+import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
+import { ColorControl } from '../../../controls/color/index';
+import { TextControl } from '../../../controls/fields/index';
+import { TokenValueControl } from '../../../controls/fields/TokenValueControl';
 import {
   projectFontRefs,
   projectFontWeightOptions,
   type TypographyCatalogs,
-} from '../../../controls/typography/index.js';
-import { tokenLeafLabel } from '../../design/tokens/token-labels.js';
-import { DesignShadowEditor, type DesignShadowInput } from '../../design/DesignShadowEditor.js';
+} from '../../../controls/typography/index';
+import { tokenLeafLabel } from '../../design/tokens/token-labels';
+import { DesignShadowEditor, type DesignShadowInput } from '../../design/DesignShadowEditor';
 import {
   DesignTypographyEditor,
   type DesignTypographyValue,
-} from '../../design/DesignTypographyEditor.js';
-import { IconButton } from '../../../form/components/shared/IconButton.js';
-import { Field, Select } from '../../../form/index.js';
-import { TextInput } from '../../../form/components/input/TextInput.js';
-import { TokenAddAction } from '../../design/tokens/TokenAddAction.js';
+} from '../../design/DesignTypographyEditor';
+import { IconButton } from '../../../form/components/shared/IconButton';
+import { Field, Select } from '../../../form/index';
+import { TextInput } from '../../../form/components/input/TextInput';
+import { TokenAddAction } from '../../design/tokens/TokenAddAction';
 import '../../design/token-tables.css';
-import { RootTokenOverridesPanel } from './RootTokenOverridesPanel.js';
+import { RootTokenOverridesPanel } from './RootTokenOverridesPanel';
 
 const COMPONENT_TOKEN_TYPES: TokenType[] = [
   'color',

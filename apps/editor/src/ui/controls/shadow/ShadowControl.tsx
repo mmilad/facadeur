@@ -1,4 +1,4 @@
-import { TokenValueControl } from '../fields/TokenValueControl.js';
+import { TokenValueControl } from '../fields/TokenValueControl';
 
 export function ShadowControl({
   name,

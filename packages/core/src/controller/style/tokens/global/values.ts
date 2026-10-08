@@ -1,8 +1,8 @@
-import { DocumentError } from '../../../../document/errors.js';
-import { isPlainObject, type JsonValue } from '../../../../utils.js';
-import type { TokenType } from '../../../../schema/document.js';
+import { DocumentError } from '../../../../document/errors';
+import { isPlainObject, type JsonValue } from '../../../../utils';
+import type { TokenType } from '../../../../schema/document';
 
-import { tokenReference } from '../syntax.js';
+import { tokenReference } from '../syntax';
 const FONT_WEIGHT_KEYWORDS = new Set(['normal', 'bold', 'lighter', 'bolder']);
 const DIMENSION = /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:px|rem|em|%)$/;
 

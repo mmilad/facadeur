@@ -1,6 +1,6 @@
 import { type AxisSize, type Command, type SizeValue } from '@facadeur/core';
-import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
-import { commitStyleFields } from '../style-field.js';
+import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
+import { commitStyleFields } from '../style-field';
 
 function sizeValue(value: string | undefined): SizeValue | undefined {
   if (!value) return undefined;

@@ -8,18 +8,18 @@ import {
   type ContractResolverInput,
 } from '@facadeur/core';
 import { structuralScopeFields } from '@facadeur/core';
-import { Field, Section, Select, Stack, TextInput } from '../../form/index.js';
+import { Field, Section, Select, Stack, TextInput } from '../../form/index';
 import '../../form/form.css';
-import { DisplayConditionEditor } from './DisplayConditionEditor.js';
+import { DisplayConditionEditor } from './DisplayConditionEditor';
 import {
   fieldPathOptions,
   findField,
   isScalarField,
   withMissingOption,
   type PathOption,
-} from './field-paths.js';
-export { DisplayConditionEditor } from './DisplayConditionEditor.js';
-export { fieldPathOptions, type PathOption } from './field-paths.js';
+} from './field-paths';
+export { DisplayConditionEditor } from './DisplayConditionEditor';
+export { fieldPathOptions, type PathOption } from './field-paths';
 
 export type DataPathOption = Pick<PathOption, 'value' | 'label'>;
 

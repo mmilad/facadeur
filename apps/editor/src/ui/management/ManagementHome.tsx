@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ManagementCommand, ManagementSnapshot } from '@facadeur/api';
-import { api } from '../../domain/api.js';
-import { OrganisationWorkspace } from './OrganisationWorkspace.js';
+import { api } from '../../domain/api';
+import { OrganisationWorkspace } from './OrganisationWorkspace';
 import './management.css';
 
 export function ManagementHome({

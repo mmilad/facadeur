@@ -10,13 +10,13 @@ import {
   sameSlot,
   type Box,
   type InsertTool,
-} from '../../../domain/editing.js';
-import { overlayBox, pointInFrame, type OverlayBox } from '../../../domain/viewport/geometry.js';
-import { dataIdSelector, type SelectionController } from '../../../domain/selection/selection.js';
-import { documentChain, renderIdForNode } from '../../../domain/selection/selection-model.js';
-import type { EditorDrag, EditorSession, EditorSnapshot } from '../../../domain/session.js';
-import type { StageController } from '../../../domain/viewport/stage.js';
-import type { ViewportBoard, ViewportFrame } from '../../../domain/viewport/viewports.js';
+} from '../../../domain/editing';
+import { overlayBox, pointInFrame, type OverlayBox } from '../../../domain/viewport/geometry';
+import { dataIdSelector, type SelectionController } from '../../../domain/selection/selection';
+import { documentChain, renderIdForNode } from '../../../domain/selection/selection-model';
+import type { EditorDrag, EditorSession, EditorSnapshot } from '../../../domain/session';
+import type { StageController } from '../../../domain/viewport/stage';
+import type { ViewportBoard, ViewportFrame } from '../../../domain/viewport/viewports';
 
 export interface StageDrop {
   parentId: string;

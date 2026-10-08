@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { SchemaFieldUse, SchemaTypeSelection } from '../../../domain/schema/schema-use.js';
-import { parseTypeRef, typeRefValue } from '../../../domain/schema/schema-use.js';
-import type { LibrarySchema } from '../../../domain/schema/schema-library.js';
-import { Combobox, Field, SegmentedControl, Stack, TextInput } from '../../form/index.js';
-import { schemaTypeOptions } from './schema-type-options.js';
+import type { SchemaFieldUse, SchemaTypeSelection } from '../../../domain/schema/schema-use';
+import { parseTypeRef, typeRefValue } from '../../../domain/schema/schema-use';
+import type { LibrarySchema } from '../../../domain/schema/schema-library';
+import { Combobox, Field, SegmentedControl, Stack, TextInput } from '../../form/index';
+import { schemaTypeOptions } from './schema-type-options';
 
 type SchemaUseMode = 'direct' | 'fields';
 

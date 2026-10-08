@@ -3,7 +3,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
-import { createTestDocumentStore } from './controller-store.js';
+import { createTestDocumentStore } from './controller-store';
 import { createViewportBoard } from '../src/domain/viewport/viewports';
 
 const section: DocumentFile = {

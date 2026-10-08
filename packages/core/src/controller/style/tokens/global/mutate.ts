@@ -1,9 +1,9 @@
-import { DocumentError } from '../../../../document/errors.js';
-import { canonicalizeJson, isJsonValue, isPlainObject, type JsonValue } from '../../../../utils.js';
-import { tokenTypes } from '../../../../schema/document.js';
-import type { TokenDefinition, TokenGroupDefinition, TokenTree } from '../types.js';
+import { DocumentError } from '../../../../document/errors';
+import { canonicalizeJson, isJsonValue, isPlainObject, type JsonValue } from '../../../../utils';
+import { tokenTypes } from '../../../../schema/document';
+import type { TokenDefinition, TokenGroupDefinition, TokenTree } from '../types';
 
-import { TOKEN_SEGMENT } from '../syntax.js';
+import { TOKEN_SEGMENT } from '../syntax';
 
 export function assertPath(path: string) {
   if (!path) throw new DocumentError('token-schema', 'Token path must not be empty');

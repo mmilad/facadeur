@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createProjectServer } from './http.js';
-import { openProject } from './project/index.js';
+import { createProjectServer } from './http';
+import { openProject } from './project/index';
 
 const root = fileURLToPath(new URL('../../../', import.meta.url));
 const project = openProject({

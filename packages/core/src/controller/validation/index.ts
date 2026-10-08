@@ -2,7 +2,12 @@
  * Public validation boundary, re-exported by the Core package entry point.
  * Internal consumers import domain implementations and contracts directly.
  */
-export { compileDocumentValidator, validateDocumentFile } from './schema.js';
+export { compileDocumentValidator, validateDocumentFile } from './schema';
+export {
+  assertCatalogRefIntegrity,
+  emptyProjectCatalog,
+  validateProjectCatalog,
+} from '../project/catalog/validate';
 export {
   assertAttributes,
   assertBindings,
@@ -18,17 +23,17 @@ export {
   assertValueMatches,
   assertVariantAxis,
   assertVariantPreset,
-} from './assertions.js';
-export { assertDefinitionKind, validateDefinitions } from './definitions.js';
-export { validateLibraries, validateTree } from './tree.js';
-export { type ValidateOptions } from './types.js';
-export { matchingSchemaIndex } from './json-schema-value.js';
-export { eventDataMappings, eventDataSchema } from './schema-use.js';
+} from './assertions';
+export { assertDefinitionKind, validateDefinitions } from './definitions';
+export { validateLibraries, validateTree } from './tree';
+export { type ValidateOptions } from './types';
+export { matchingSchemaIndex } from './json-schema-value';
+export { eventDataMappings, eventDataSchema } from './schema-use';
 export {
   resolveChildFieldDefinition,
   validateCatalog,
   type ValidateCatalogOptions,
-} from './catalog.js';
+} from './catalog';
 export {
   automaticFieldGroupsFor,
   componentDataSchema,
@@ -42,19 +47,19 @@ export {
   structuralNodeFields,
   structuralNodeSchema,
   structuralScopeFields,
-} from './catalog-exposed.js';
+} from './catalog-exposed';
 export {
   type StructuralChildSchema,
   type StructuralInstance,
   type StructuralSelection,
   type StructuralNodeInput,
-} from './structural-nodes.js';
+} from './structural-nodes';
 export type {
   AutomaticFieldGroup,
   ContractCatalog,
   ContractDocument,
   ContractResolverInput,
   SchemaResolverContext,
-} from './types.js';
+} from './types';
 
-export { fieldDataSchema } from './field-data-schema.js';
+export { fieldDataSchema } from './field-data-schema';

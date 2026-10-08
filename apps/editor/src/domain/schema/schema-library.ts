@@ -1,17 +1,17 @@
 import { createId } from '@facadeur/core';
 import type { JsonSchema as CoreJsonSchema } from '@facadeur/core';
-import { BUILTIN_SCHEMAS, DEFAULT_SCHEMA_ASSIGNMENTS } from './builtin-schemas.js';
+import { BUILTIN_SCHEMAS, DEFAULT_SCHEMA_ASSIGNMENTS } from './builtin-schemas';
 import {
   type ComponentSchemaUse,
   isComponentSchemaUse,
   schemaUseFromAssignment,
-} from './schema-use.js';
+} from './schema-use';
 
 export type JsonSchema = CoreJsonSchema;
 
-export { resolveLibrarySchema, schemaRefUri, validateLibrarySchemas } from './schema-validation.js';
-export type { SchemaValidationIssue } from './schema-validation.js';
-import { validateLibrarySchemas } from './schema-validation.js';
+export { resolveLibrarySchema, schemaRefUri, validateLibrarySchemas } from './schema-validation';
+export type { SchemaValidationIssue } from './schema-validation';
+import { validateLibrarySchemas } from './schema-validation';
 
 export interface LibrarySchema {
   id: string;

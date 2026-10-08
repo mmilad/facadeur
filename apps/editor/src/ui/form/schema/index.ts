@@ -1,8 +1,8 @@
-export { getPath, setPath, parsePath, joinPath, formatKey, resolvePath } from './path.js';
+export { getPath, setPath, parsePath, joinPath, formatKey, resolvePath } from './path';
 export type {
   FieldConfig,
   FieldGroupConfig,
   ArrayFieldConfig,
   RecordFieldConfig,
-} from './field-config.js';
-export { SchemaForm } from './SchemaForm.js';
+} from './field-config';
+export { SchemaForm } from './SchemaForm';

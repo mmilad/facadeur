@@ -12,7 +12,7 @@ import {
   resolvedViewportChrome,
 } from '../src/domain/viewport/viewport-chrome';
 import { createViewportBoard } from '../src/domain/viewport/viewports';
-import { createTestDocumentStore } from './controller-store.js';
+import { createTestDocumentStore } from './controller-store';
 import {
   editorStandardCatalog,
   editorStandardDesign,

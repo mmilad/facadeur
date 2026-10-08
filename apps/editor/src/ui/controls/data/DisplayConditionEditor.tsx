@@ -1,6 +1,6 @@
 import type { DisplayOn, FieldDefinition, FieldValue } from '@facadeur/core';
-import { Field, NumberInput, Section, Select, TextInput } from '../../form/index.js';
-import { findField, isScalarField, withMissingOption, type PathOption } from './field-paths.js';
+import { Field, NumberInput, Section, Select, TextInput } from '../../form/index';
+import { findField, isScalarField, withMissingOption, type PathOption } from './field-paths';
 type DisplayMode = 'truthy' | 'equals';
 
 export function DisplayConditionEditor({

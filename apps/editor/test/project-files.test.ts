@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { readProjectFiles, saveProjectFile } from '@facadeur/api/server';
-import { connectProject } from '../src/domain/project/client.js';
+import { connectProject } from '../src/domain/project/client';
 
 const card: DocumentFile = {
   version: 1,

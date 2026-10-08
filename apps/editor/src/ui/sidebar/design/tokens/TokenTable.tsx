@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { previewDesignTokenCssVar } from '../../../../domain/component-tokens.js';
-import { matchesSearch } from '../../../form/types/options.js';
+import { previewDesignTokenCssVar } from '../../../../domain/component-tokens';
+import { matchesSearch } from '../../../form/types/options';
 
 export interface TokenTableItem {
   path: string;

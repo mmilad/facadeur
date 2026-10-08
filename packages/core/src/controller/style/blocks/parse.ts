@@ -1,5 +1,5 @@
-import { DocumentError } from '../../../document/errors.js';
-import { isPlainObject as isRecord } from '../../../utils.js';
+import { DocumentError } from '../../../document/errors';
+import { isPlainObject as isRecord } from '../../../utils';
 import type {
   StyleBlock,
   StyleChild,
@@ -8,8 +8,8 @@ import type {
   StyleRule,
   StyleStates,
   TokenInterface,
-} from '../../../schema/document.js';
-import { assertStyleSelector, selectorClassNames } from '../selectors.js';
+} from '../../../schema/document';
+import { assertStyleSelector, selectorClassNames } from '../selectors';
 
 export const CSS_PROPERTY = /^(--)?[A-Za-z_][\w-]*$/;
 const TOKEN_PATH = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+)+$/;

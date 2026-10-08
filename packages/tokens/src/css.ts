@@ -1,5 +1,5 @@
 import { fontStyles, type FontFamily, type FontStyle } from '@facadeur/core';
-import { loadTokens, quoteFamily, type DesignInput, type ResolvedDesign } from './resolve.js';
+import { loadTokens, quoteFamily, type DesignInput, type ResolvedDesign } from './resolve';
 
 export interface CssOptions {
   /** Selector for the custom properties. Defaults to `:root`. */

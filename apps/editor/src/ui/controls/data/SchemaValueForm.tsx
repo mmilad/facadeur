@@ -1,6 +1,6 @@
 import type { FieldValue, JsonSchema } from '@facadeur/core';
-import { JsonSchemaContractEditor } from '../../schema/JsonSchemaContractEditor.js';
-import { StructuralSchemaValueForm } from './StructuralSchemaValueForm.js';
+import { JsonSchemaContractEditor } from '../../schema/JsonSchemaContractEditor';
+import { StructuralSchemaValueForm } from './StructuralSchemaValueForm';
 
 function hasStructuralCases(schema: JsonSchema): boolean {
   const alternatives = schema.oneOf ?? schema.anyOf;

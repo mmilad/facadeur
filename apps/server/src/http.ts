@@ -2,7 +2,7 @@ import type { Command } from '@facadeur/core';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { WebSocket, WebSocketServer } from 'ws';
 import * as Y from 'yjs';
-import { ProjectError, type ProjectRepository } from './project/index.js';
+import { ProjectError, type ProjectRepository } from './project/index';
 
 const LIMIT = 10 * 1024 * 1024;
 

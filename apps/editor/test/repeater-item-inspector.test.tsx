@@ -12,8 +12,8 @@ import {
 } from '@facadeur/core';
 import { renderDocument } from '@facadeur/renderer-dom';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
-import { createEditorSession, type EditorSession } from '../src/domain/session.js';
-import { App } from '../src/ui/shell/EditorShell.js';
+import { createEditorSession, type EditorSession } from '../src/domain/session';
+import { App } from '../src/ui/shell/EditorShell';
 
 const schemaCatalog: SchemaCatalog = {
   schemas: [

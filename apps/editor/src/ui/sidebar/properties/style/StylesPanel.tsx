@@ -6,16 +6,16 @@ import {
   type StyleBlock,
   type StyleRule,
 } from '@facadeur/core';
-import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
-import type { StyleStateName } from '../../../../domain/edits/style-edit.js';
+import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
+import type { StyleStateName } from '../../../../domain/edits/style-edit';
 import {
   editorBreakpoints,
   viewportEditContext,
-} from '../../../../domain/viewport/viewport-edit.js';
-import { Field, Select } from '../../../form/index.js';
-import { NodeClassStyleRow } from './NodeClassStyleRow.js';
-import { ClassNamesEditor } from './ClassNamesEditor.js';
-import { StyleRuleRow } from './StyleRuleRow.js';
+} from '../../../../domain/viewport/viewport-edit';
+import { Field, Select } from '../../../form/index';
+import { NodeClassStyleRow } from './NodeClassStyleRow';
+import { ClassNamesEditor } from './ClassNamesEditor';
+import { StyleRuleRow } from './StyleRuleRow';
 import './styles-panel.css';
 
 export function StylesPanel({ session, snap }: { session: EditorSession; snap: EditorSnapshot }) {

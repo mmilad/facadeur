@@ -18,10 +18,10 @@ import {
 import { createDomRenderer, type DomRenderer } from '@facadeur/renderer-dom';
 import { createStyleEngine, type StyleEngine } from '@facadeur/style-engine';
 import { activeBreakpoints, type DesignInput } from '@facadeur/tokens';
-import { createFrameHost, type FrameHost } from './frame-host.js';
-import { overlaySchemaDefaults } from '../schema/schema-defaults.js';
-import { publicFieldsFor } from '../schema/component-contract.js';
-import { resolvedViewportChrome, type ViewportChromeSettings } from './viewport-chrome.js';
+import { createFrameHost, type FrameHost } from './frame-host';
+import { overlaySchemaDefaults } from '../schema/schema-defaults';
+import { publicFieldsFor } from '../schema/component-contract';
+import { resolvedViewportChrome, type ViewportChromeSettings } from './viewport-chrome';
 
 export interface ViewportFrame {
   breakpoint: Breakpoint;

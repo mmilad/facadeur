@@ -8,7 +8,7 @@ import {
   type TokenIndex,
   type TokenType,
 } from '@facadeur/core';
-import { fontCustomProperty, tokenCustomProperty, typographyCustomProperty } from './names.js';
+import { fontCustomProperty, tokenCustomProperty, typographyCustomProperty } from './names';
 
 export interface CssProperty {
   name: string;

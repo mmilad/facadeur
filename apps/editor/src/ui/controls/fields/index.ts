@@ -1,1 +1,1 @@
-export { TextControl } from './TextControl.js';
+export { TextControl } from './TextControl';

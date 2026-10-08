@@ -1,7 +1,7 @@
-import { DocumentError } from '../../../../document/errors.js';
-import { canonicalizeJson, isJsonValue, isPlainObject, type JsonValue } from '../../../../utils.js';
-import { tokenTypes, type TokenType } from '../../../../schema/document.js';
-import { TOKEN_SEGMENT } from '../syntax.js';
+import { DocumentError } from '../../../../document/errors';
+import { canonicalizeJson, isJsonValue, isPlainObject, type JsonValue } from '../../../../utils';
+import { tokenTypes, type TokenType } from '../../../../schema/document';
+import { TOKEN_SEGMENT } from '../syntax';
 const BREAKPOINT_ID = /^[a-z][a-z0-9]*$/;
 const RESERVED = new Set(['$value', '$type', '$description', '$deprecated', '$extensions']);
 const FACADEUR_KEYS = new Set(['tier', 'breakpoints', 'label']);

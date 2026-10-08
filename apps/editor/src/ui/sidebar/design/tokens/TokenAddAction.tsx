@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { Field, Popover, TextInput } from '../../../form/index.js';
+import { Field, Popover, TextInput } from '../../../form/index';
 
 /**
  * Compact token creation action shared by each token CRUD adapter.

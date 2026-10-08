@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
-import { useOptionalFormContext, usePathPrefix } from '../../FormContext.js';
-import { formatKey, getPath, resolvePath } from '../../schema/path.js';
-import { IconButton } from '../shared/IconButton.js';
-import { Stack } from '../layout/Stack.js';
-import { Inline } from '../layout/Inline.js';
-import { TextInput } from '../input/TextInput.js';
+import { useOptionalFormContext, usePathPrefix } from '../../FormContext';
+import { formatKey, getPath, resolvePath } from '../../schema/path';
+import { IconButton } from '../shared/IconButton';
+import { Stack } from '../layout/Stack';
+import { Inline } from '../layout/Inline';
+import { PropBindableInput } from '../input/PropBindableInput';
+import { TextInput } from '../input/TextInput';
+import { useDesignPropOptions } from '../../FormContext';
 
 type DraftRow = { id: string; key: string; value: string };
 
@@ -15,6 +17,7 @@ export function RecordField({
   onChange,
   keyLabel = 'Property',
   valueLabel = 'Value',
+  propBindValues = false,
 }: {
   name?: string;
   value?: Record<string, string>;
@@ -22,7 +25,10 @@ export function RecordField({
   onChange?: (value: Record<string, string>) => void;
   keyLabel?: string;
   valueLabel?: string;
+  propBindValues?: boolean;
 }) {
+  const designPropOptions = useDesignPropOptions();
+  const bindValues = propBindValues && designPropOptions.length > 0;
   const form = useOptionalFormContext();
   const prefix = usePathPrefix();
   const path = name ? resolvePath(prefix, name) : '';
@@ -107,16 +113,30 @@ export function RecordField({
                 onChange={(key) => updateRow(row, { key })}
                 onCommit={(key) => updateRow({ ...row, key }, {}, true)}
               />
-              <TextInput
-                aria-label={valueLabel}
-                value={row.value}
-                disabled={isDisabled}
-                onChange={(value) => updateRow(row, { value })}
-                onCommit={(value) => {
-                  const nextRow = { ...row, value };
-                  if (row.key.trim()) commitRow(nextRow);
-                }}
-              />
+              {bindValues ? (
+                <PropBindableInput
+                  ariaLabel={valueLabel}
+                  value={row.value}
+                  disabled={isDisabled}
+                  propOptions={designPropOptions}
+                  onCommit={(value) => {
+                    const nextRow = { ...row, value };
+                    if (row.key.trim()) commitRow(nextRow);
+                    else updateRow(row, { value });
+                  }}
+                />
+              ) : (
+                <TextInput
+                  aria-label={valueLabel}
+                  value={row.value}
+                  disabled={isDisabled}
+                  onChange={(value) => updateRow(row, { value })}
+                  onCommit={(value) => {
+                    const nextRow = { ...row, value };
+                    if (row.key.trim()) commitRow(nextRow);
+                  }}
+                />
+              )}
             </Inline>
           </div>
           <IconButton label="Remove property" disabled={isDisabled} onClick={() => removeRow(row)}>

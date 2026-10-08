@@ -4,16 +4,16 @@ import {
   assertTypographyTokenPath,
   createDefaultTypographyToken,
   tokenPathsReferencingTypography,
-} from '../../../../domain/edits/typography-edit.js';
-import { designTokenWithLabel } from '../../../../domain/edits/token-label.js';
+} from '../../../../domain/edits/typography-edit';
+import { designTokenWithLabel } from '../../../../domain/edits/token-label';
 import {
   documentsReferencingToken,
   pathFromDesignTokenLabel,
-} from '../../../../domain/component-tokens.js';
-import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
-import { IconButton } from '../../../form/components/shared/IconButton.js';
-import { TokenAddAction } from './TokenAddAction.js';
-import { useTokenLabel } from '../../../controls/fields/TokenPreviewContext.js';
+} from '../../../../domain/component-tokens';
+import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
+import { IconButton } from '../../../form/components/shared/IconButton';
+import { TokenAddAction } from './TokenAddAction';
+import { useTokenLabel } from '../../../controls/fields/TokenPreviewContext';
 
 export function TypographyTokenAddRow({
   session,

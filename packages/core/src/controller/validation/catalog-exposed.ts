@@ -1,13 +1,13 @@
-import { DocumentError } from '../../document/errors.js';
-import type { FlatNode } from '../../document/flat.js';
+import { DocumentError } from '../../document/errors';
+import type { FlatNode } from '../../document/flat';
 import type {
   DocumentFile,
   EventDefinition,
   FieldDefinition,
   NestedNode,
   SchemaCatalog,
-} from '../../schema/document.js';
-import { localContractFieldsFor } from './schema-use.js';
+} from '../../schema/document';
+import { localContractFieldsFor } from './schema-use';
 import {
   addStructuralField,
   componentDataSchemaInternalForTarget,
@@ -21,14 +21,14 @@ import {
   type StructuralChildSchema,
   type StructuralFieldResolver,
   type StructuralInstance,
-} from './structural-nodes.js';
+} from './structural-nodes';
 
 import type {
   ContractDocument,
   ContractResolverInput,
   SchemaResolverContext,
   AutomaticFieldGroup,
-} from './types.js';
+} from './types';
 
 export function validateExposedContracts(
   document: DocumentFile,

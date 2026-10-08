@@ -14,9 +14,9 @@ import {
   type SizeValue,
 } from '@facadeur/core';
 
-import { readComponentTokens } from './component-tokens.js';
+import { readComponentTokens } from './component-tokens';
 
-import type { EditorTool } from './session.js';
+import type { EditorTool } from './session';
 
 export type InsertTool = 'frame' | 'text' | 'image';
 

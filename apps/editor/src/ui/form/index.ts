@@ -1,7 +1,7 @@
-export { Form } from './Form.js';
-export type { FormChangeMeta, FormDensity, FormProps, FieldBinding } from './types/index.js';
-export type { SelectOption } from './types/options.js';
-export * from './schema/index.js';
+export { Form } from './Form';
+export type { FormChangeMeta, FormDensity, FormProps, FieldBinding } from './types/index';
+export type { SelectOption } from './types/options';
+export * from './schema/index';
 
 export {
   Stack,
@@ -10,14 +10,14 @@ export {
   Section,
   Divider,
   DisclosureButton,
-} from './components/layout/index.js';
+} from './components/layout/index';
 export {
   TextInput,
   TextArea,
   NumberInput,
   SearchInput,
   ColorInput,
-} from './components/input/index.js';
+} from './components/input/index';
 export {
   Select,
   Combobox,
@@ -26,7 +26,7 @@ export {
   Checkbox,
   Toggle,
   RadioGroup,
-} from './components/selection/index.js';
-export { Field, InlineError, HelpHint } from './components/feedback/index.js';
-export { Popover, Modal, AddPopover } from './components/overlay/index.js';
-export { ArrayField, RecordField, recordPathKey } from './components/dynamic/index.js';
+} from './components/selection/index';
+export { Field, InlineError, HelpHint } from './components/feedback/index';
+export { Popover, Modal, AddPopover } from './components/overlay/index';
+export { ArrayField, RecordField, recordPathKey } from './components/dynamic/index';

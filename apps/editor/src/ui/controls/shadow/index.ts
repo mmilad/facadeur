@@ -1,4 +1,4 @@
-export { ShadowControl } from './ShadowControl.js';
+export { ShadowControl } from './ShadowControl';
 export {
   customShadowDraft,
   inferShadowMode,
@@ -6,4 +6,4 @@ export {
   isShadowTokenRef,
   KNOWN_SHADOW_STYLE_PROPERTIES,
   type ShadowControlMode,
-} from './value.js';
+} from './value';

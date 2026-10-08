@@ -1,31 +1,31 @@
 import type { JsonValue } from '@facadeur/core';
-import { typographyTokenRefs } from '../../../../domain/editing.js';
-import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
-import { formatTokenValue } from '../../../../domain/edits/token-edit.js';
-import type { viewportEditContext } from '../../../../domain/viewport/viewport-edit.js';
-import { ColorControl } from '../../../controls/color/index.js';
-import { TextControl } from '../../../controls/fields/index.js';
-import { TokenValueControl } from '../../../controls/fields/TokenValueControl.js';
-import { useTokenResolver } from '../../../controls/fields/TokenPreviewContext.js';
-import type { TypographyCatalogs } from '../../../controls/typography/index.js';
-import { DesignShadowEditor, type DesignShadowInput } from '../DesignShadowEditor.js';
-import { DesignTypographyEditor, type DesignTypographyValue } from '../DesignTypographyEditor.js';
-import { OverrideCue } from '../../properties/ViewportEditBar.js';
-import { RemoveColorTokenButton } from './ColorsTokenCrud.js';
-import { RemoveRadiusTokenButton } from './RadiusTokenCrud.js';
-import { RemoveSpacingTokenButton } from './SpacingTokenCrud.js';
-import { RemoveShadowTokenButton } from './ShadowTokenCrud.js';
-import { RemoveTypographyTokenButton } from './TypographyTokenCrud.js';
+import { typographyTokenRefs } from '../../../../domain/editing';
+import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
+import { formatTokenValue } from '../../../../domain/edits/token-edit';
+import type { viewportEditContext } from '../../../../domain/viewport/viewport-edit';
+import { ColorControl } from '../../../controls/color/index';
+import { TextControl } from '../../../controls/fields/index';
+import { TokenValueControl } from '../../../controls/fields/TokenValueControl';
+import { useTokenResolver } from '../../../controls/fields/TokenPreviewContext';
+import type { TypographyCatalogs } from '../../../controls/typography/index';
+import { DesignShadowEditor, type DesignShadowInput } from '../DesignShadowEditor';
+import { DesignTypographyEditor, type DesignTypographyValue } from '../DesignTypographyEditor';
+import { OverrideCue } from '../../properties/ViewportEditBar';
+import { RemoveColorTokenButton } from './ColorsTokenCrud';
+import { RemoveRadiusTokenButton } from './RadiusTokenCrud';
+import { RemoveSpacingTokenButton } from './SpacingTokenCrud';
+import { RemoveShadowTokenButton } from './ShadowTokenCrud';
+import { RemoveTypographyTokenButton } from './TypographyTokenCrud';
 import {
   commitRawToken,
   commitToken,
   resetTokenBreakpoint,
   type TableToken,
-} from './token-breakpoint-helpers.js';
-import { tokenLeafLabel } from './token-labels.js';
-import { withTokenLabel } from '../../../../domain/edits/token-edit.js';
-import { previewDesignTokenCssVar } from '../../../../domain/component-tokens.js';
-import { TextInput } from '../../../form/components/input/TextInput.js';
+} from './token-breakpoint-helpers';
+import { tokenLeafLabel } from './token-labels';
+import { withTokenLabel } from '../../../../domain/edits/token-edit';
+import { previewDesignTokenCssVar } from '../../../../domain/component-tokens';
+import { TextInput } from '../../../form/components/input/TextInput';
 
 type ViewportContext = ReturnType<typeof viewportEditContext>;
 

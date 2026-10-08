@@ -5,7 +5,7 @@ import {
   writeStyleDeclarations,
   type StyleBreakpointRef,
   type StyleEditTarget,
-} from '../edits/style-edit.js';
+} from '../edits/style-edit';
 
 /** Read one rule's currently effective declarations without changing its owner document. */
 export function readStyleRuleDeclarations(

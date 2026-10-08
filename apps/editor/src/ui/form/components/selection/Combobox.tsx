@@ -1,8 +1,8 @@
 import * as Popover from '@radix-ui/react-popover';
 import { useMemo, useState, type ReactNode } from 'react';
-import type { SelectOption } from '../../types/options.js';
-import { matchesSearch } from '../../types/options.js';
-import { useBindable } from '../input/bindable.js';
+import type { SelectOption } from '../../types/options';
+import { matchesSearch } from '../../types/options';
+import { useBindable } from '../input/bindable';
 
 export function Combobox({
   name,

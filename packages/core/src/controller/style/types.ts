@@ -1,6 +1,6 @@
-import type { FlatDocument } from '../../document/flat.js';
-import type { Command } from '../document/commands/types.js';
-import type { DocumentController } from '../document/controller.js';
+import type { FlatDocument } from '../../document/flat';
+import type { Command } from '../../legacy/flat/document/commands/types';
+import type { DocumentController } from '../../legacy/flat/document/controller';
 
 export type GlobalTokenCommand = Extract<
   Command,

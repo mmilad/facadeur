@@ -1,15 +1,15 @@
 import type { Binding, FieldDefinition } from '@facadeur/core';
 import { useMemo } from 'react';
-import { Field, Select, Stack, TextInput } from '../../form/index.js';
+import { Field, Select, Stack, TextInput } from '../../form/index';
 import '../../form/form.css';
 import {
   bindingFromSlot,
   type BindingSlot,
   slotForBinding,
   slotsForNode,
-} from './binding-slots.js';
-import { fieldDisplayLabel } from './field-label.js';
-import { bindingFieldOptions, patchBindingAt } from './value.js';
+} from './binding-slots';
+import { fieldDisplayLabel } from './field-label';
+import { bindingFieldOptions, patchBindingAt } from './value';
 
 export function BindingsEditorControl({
   bindings,

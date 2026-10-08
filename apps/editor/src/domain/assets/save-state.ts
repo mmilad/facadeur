@@ -1,5 +1,5 @@
 import type { FlatDocument } from '@facadeur/core';
-import { documentToJson } from './files.js';
+import { documentToJson } from './files';
 
 /** Last successfully persisted JSON per document id (design uses its document id). */
 export type SavedJsonBaselines = Map<string, string>;

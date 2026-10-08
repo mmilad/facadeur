@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { gapForDensity } from '../../const/index.js';
-import { useOptionalFormContext } from '../../FormContext.js';
+import { gapForDensity } from '../../const/index';
+import { useOptionalFormContext } from '../../FormContext';
 
 export function Inline({
   children,

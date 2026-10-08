@@ -1,4 +1,4 @@
-import { SETTINGS_TOKEN_DOMAIN_ITEMS, type EditorSurface } from './design-domain.js';
+import { SETTINGS_TOKEN_DOMAIN_ITEMS, type EditorSurface } from './design-domain';
 
 export function SettingsSections({
   surface,

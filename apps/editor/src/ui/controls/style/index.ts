@@ -1,4 +1,4 @@
-export { StyleDeclarationField } from './StyleDeclarationField.js';
+export { StyleDeclarationField } from './StyleDeclarationField';
 export {
   CSS_ENUM_OPTIONS,
   enumOptionsForProperty,
@@ -6,4 +6,4 @@ export {
   styleDeclarationKind,
   stylePropertyLabel,
   type StyleDeclarationGroup,
-} from './declaration-kind.js';
+} from './declaration-kind';

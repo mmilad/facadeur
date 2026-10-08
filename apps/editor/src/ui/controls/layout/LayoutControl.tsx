@@ -1,23 +1,23 @@
 import type { AxisSize, LayoutOverride } from '@facadeur/core';
 import type { ReactNode } from 'react';
-import type { LayoutPatch } from '../../../domain/editing.js';
-import type { LayoutCapabilities, LayoutField } from '../../../domain/layout-capabilities.js';
-import { Combobox, Field, Grid, NumberInput, Section, Stack, Toggle } from '../../form/index.js';
+import type { LayoutPatch } from '../../../domain/editing';
+import type { LayoutCapabilities, LayoutField } from '../../../domain/layout-capabilities';
+import { Combobox, Field, Grid, NumberInput, Section, Stack, Toggle } from '../../form/index';
 import '../../form/form.css';
-import { useTokenOptions } from '../token-options.js';
-import { useTokenValueLabel } from '../fields/TokenPreviewContext.js';
-import { isTokenReference } from '../fields/TokenValueControl.js';
-import { AxisSizeEditor } from './axis-size-editor.js';
-import { LayoutChoiceIcon, LayoutIconChoice } from './icon-choice.js';
-import { SpacingControl } from '../spacing/index.js';
-import type { LayoutControlValue } from './value.js';
+import { useTokenOptions } from '../token-options';
+import { useTokenValueLabel } from '../fields/TokenPreviewContext';
+import { isTokenReference } from '../fields/TokenValueControl';
+import { AxisSizeEditor } from './axis-size-editor';
+import { LayoutChoiceIcon, LayoutIconChoice } from './icon-choice';
+import { SpacingControl } from '../spacing/index';
+import type { LayoutControlValue } from './value';
 import {
   alignLayoutPatch,
   directionPatch,
   freePositionPatch,
   justifyLayoutPatch,
   wrapLayoutPatch,
-} from './value.js';
+} from './value';
 
 const JUSTIFY_OPTIONS = [
   { value: '', label: 'Default' },

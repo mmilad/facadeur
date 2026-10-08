@@ -1,4 +1,4 @@
-import type { EditorSession } from '../../domain/session.js';
+import type { EditorSession } from '../../domain/session';
 
 /**
  * Title hints for the shortcuts already handled in EditorShell:

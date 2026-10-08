@@ -1,28 +1,28 @@
 import { useEffect, type RefObject } from 'react';
-import { writeLayoutFields } from '../../../domain/editing.js';
-import { isEditableTarget } from '../../../domain/keyboard.js';
+import { writeLayoutFields } from '../../../domain/editing';
+import { isEditableTarget } from '../../../domain/keyboard';
 import {
   dataIdSelector,
   createSelection,
   type SelectionController,
-} from '../../../domain/selection/selection.js';
+} from '../../../domain/selection/selection';
 import {
   documentChain,
   nodeIdForHit,
   renderIdForNode,
   resolveClick,
   type SelectMode,
-} from '../../../domain/selection/selection-model.js';
-import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
-import { createStage, type StageController } from '../../../domain/viewport/stage.js';
-import type { ViewportBoard } from '../../../domain/viewport/viewports.js';
+} from '../../../domain/selection/selection-model';
+import type { EditorSession, EditorSnapshot } from '../../../domain/session';
+import { createStage, type StageController } from '../../../domain/viewport/stage';
+import type { ViewportBoard } from '../../../domain/viewport/viewports';
 import {
   createStagePlacement,
   dragSubject,
   gestureSubject,
   type StageDrop,
   type StageGesture,
-} from './stage-pointer-placement.js';
+} from './stage-pointer-placement';
 
 export function useStagePointer({
   session,
@@ -108,6 +108,10 @@ export function useStagePointer({
       const snap = session.getSnapshot();
       const hit = selection.hitAt(event.clientX, event.clientY);
       if (hit) {
+        if (hit.id.startsWith('v2:')) {
+          session.selectNode(hit.id.slice(3));
+          return;
+        }
         const targetAddress = renderedAddressForClick(snap, hit.id, mode);
         if (targetAddress) {
           session.selectRendered(targetAddress);
@@ -180,6 +184,10 @@ export function useStagePointer({
         return;
       }
       const snap = session.getSnapshot();
+      if (hit.id.startsWith('v2:')) {
+        selection.hoverRendered(hit.id, frame.host.id);
+        return;
+      }
       const chain = documentChain(snap.document, hit.id, snap.paintRoot);
       const mode = event.ctrlKey || event.metaKey ? 'deepest' : 'context';
       const target = resolveClick({

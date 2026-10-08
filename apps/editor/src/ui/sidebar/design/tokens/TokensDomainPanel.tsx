@@ -8,39 +8,39 @@ import {
   fontWeightTokenRefs,
   numberTokenRefs,
   shadowTokenRefs,
-} from '../../../../domain/editing.js';
-import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
-import { formatTokenValue } from '../../../../domain/edits/token-edit.js';
-import { viewportEditContext } from '../../../../domain/viewport/viewport-edit.js';
+} from '../../../../domain/editing';
+import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
+import { formatTokenValue } from '../../../../domain/edits/token-edit';
+import { viewportEditContext } from '../../../../domain/viewport/viewport-edit';
 import {
   projectFontRefs,
   projectFontWeightOptions,
   type TypographyCatalogs,
-} from '../../../controls/typography/index.js';
-import type { DesignDomain } from '../design-domain.js';
-import { designDomainLabel, tokenMatchesDomain } from '../design-domain.js';
-import { ViewportTabs } from '../ViewportTabs.js';
-import { ColorTokenAddRow } from './ColorsTokenCrud.js';
-import { RadiusTokenAddRow } from './RadiusTokenCrud.js';
-import { SpacingTokenAddRow } from './SpacingTokenCrud.js';
-import { ShadowTokenAddRow } from './ShadowTokenCrud.js';
-import { TypographyTokenAddRow } from './TypographyTokenCrud.js';
+} from '../../../controls/typography/index';
+import type { DesignDomain } from '../design-domain';
+import { designDomainLabel, tokenMatchesDomain } from '../design-domain';
+import { ViewportTabs } from '../ViewportTabs';
+import { ColorTokenAddRow } from './ColorsTokenCrud';
+import { RadiusTokenAddRow } from './RadiusTokenCrud';
+import { SpacingTokenAddRow } from './SpacingTokenCrud';
+import { ShadowTokenAddRow } from './ShadowTokenCrud';
+import { TypographyTokenAddRow } from './TypographyTokenCrud';
 import {
   effectiveBreakpointValue,
   groupTokens,
   type TableToken,
-} from './token-breakpoint-helpers.js';
-import { TokenTableRow } from './token-table-row.js';
-import { tokenLeafLabel, tokenTitle } from './token-labels.js';
-import { tokenDisplayLabel } from '../../../controls/token-presentation.js';
-import { useTokenResolver } from '../../../controls/fields/TokenPreviewContext.js';
+} from './token-breakpoint-helpers';
+import { TokenTableRow } from './token-table-row';
+import { tokenLeafLabel, tokenTitle } from './token-labels';
+import { tokenDisplayLabel } from '../../../controls/token-presentation';
+import { useTokenResolver } from '../../../controls/fields/TokenPreviewContext';
 import {
   naturalTokenCompare,
   tokenMatchesQuery,
   TokenTable,
   TokenTableGroup,
   TokenTableToolbar,
-} from './TokenTable.js';
+} from './TokenTable';
 import '../token-tables.css';
 
 type TokenDomain = Exclude<DesignDomain, 'fonts' | 'icons' | 'viewports'>;

@@ -1,6 +1,6 @@
-import { Type } from '@sinclair/typebox';
-import { dataPathSchema, idSchema } from './common.js';
-import { schemaFieldUseSchema, schemaTypeRefSchema, type JsonSchema } from './contract.js';
+import { Kind, Type, TypeRegistry } from '@sinclair/typebox';
+import { dataPathSchema, idSchema } from './common';
+import { schemaFieldUseSchema, schemaTypeRefSchema, type JsonSchema } from './contract';
 
 export const fieldTypes = [
   'text',
@@ -29,7 +29,28 @@ export type BindingTarget = (typeof bindingTargets)[number];
 
 export type FieldValue = string | number | boolean | FieldValue[] | { [key: string]: FieldValue };
 
+export function isFieldValue(value: unknown): value is FieldValue {
+  if (value === null || value === undefined) return false;
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return true;
+  }
+  if (Array.isArray(value)) {
+    return value.every((entry) => isFieldValue(entry));
+  }
+  if (typeof value === 'object') {
+    return Object.values(value).every((entry) => isFieldValue(entry));
+  }
+  return false;
+}
+
+const FIELD_VALUE_KIND = 'FieldValue';
+if (!TypeRegistry.Has(FIELD_VALUE_KIND)) {
+  TypeRegistry.Set(FIELD_VALUE_KIND, (_schema, value) => isFieldValue(value));
+}
+
+/** JSON Schema export uses anyOf; runtime validation uses {@link TypeRegistry}. */
 export const fieldValueSchema = Type.Unsafe<FieldValue>({
+  [Kind]: FIELD_VALUE_KIND,
   anyOf: [
     { type: 'string' },
     { type: 'number' },

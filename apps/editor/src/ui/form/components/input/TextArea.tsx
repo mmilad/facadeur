@@ -1,6 +1,6 @@
 import type { TextareaHTMLAttributes } from 'react';
-import { useDraftCommit } from '../../hooks/useDraftCommit.js';
-import { useBindable } from './bindable.js';
+import { useDraftCommit } from '../../hooks/useDraftCommit';
+import { useBindable } from './bindable';
 
 export function TextArea({
   name,

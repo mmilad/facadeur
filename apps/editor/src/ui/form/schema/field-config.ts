@@ -1,4 +1,5 @@
-import type { SelectOption } from '../types/options.js';
+import type { FieldDefinition } from '@facadeur/core';
+import type { SelectOption } from '../types/options';
 
 export type FieldConfigBase = {
   name: string;
@@ -41,6 +42,18 @@ export type RecordFieldConfig = FieldConfigBase & {
   type: 'record';
   keyLabel?: string;
   valueLabel?: string;
+  propBindValues?: boolean;
+};
+
+export type ClassListFieldConfig = FieldConfigBase & {
+  type: 'classList';
+  suggestions: string[];
+};
+
+export type SchemaFieldConfig = FieldConfigBase & {
+  type: 'schemaField';
+  field: FieldDefinition;
+  propBindable?: boolean;
 };
 
 export type FieldConfig =
@@ -49,7 +62,9 @@ export type FieldConfig =
   | SelectFieldConfig
   | ToggleFieldConfig
   | ArrayFieldConfig
-  | RecordFieldConfig;
+  | RecordFieldConfig
+  | ClassListFieldConfig
+  | SchemaFieldConfig;
 
 export type FieldGroupConfig = {
   type: 'section';

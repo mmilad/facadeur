@@ -4,11 +4,11 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { validateCatalog, type DocumentFile } from '@facadeur/core';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
-import { createEditorSession } from '../src/domain/session.js';
+import { createEditorSession } from '../src/domain/session';
 import {
   migrateLegacySchemaLibrary,
   reconcileLegacySchemaSnapshot,
-} from '../src/domain/schema/migrate-legacy-schema-library.js';
+} from '../src/domain/schema/migrate-legacy-schema-library';
 import {
   assignLibrarySchema,
   createLibrarySchema,
@@ -16,7 +16,7 @@ import {
   reloadSchemaLibrary,
   resetSchemaLibrary,
   updateLibrarySchema,
-} from '../src/domain/schema/schema-library.js';
+} from '../src/domain/schema/schema-library';
 
 const input: DocumentFile = {
   version: 1,

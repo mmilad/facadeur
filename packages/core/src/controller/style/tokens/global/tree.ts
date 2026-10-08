@@ -1,6 +1,6 @@
-import { DocumentError } from '../../../../document/errors.js';
-import { canonicalizeJson, isJsonValue, isPlainObject, type JsonValue } from '../../../../utils.js';
-import type { TokenType } from '../../../../schema/document.js';
+import { DocumentError } from '../../../../document/errors';
+import { canonicalizeJson, isJsonValue, isPlainObject, type JsonValue } from '../../../../utils';
+import type { TokenType } from '../../../../schema/document';
 import {
   assertPath,
   cloneTree,
@@ -10,7 +10,7 @@ import {
   pruneEmpty,
   tokenNode,
   writeGroupMeta,
-} from './mutate.js';
+} from './mutate';
 import {
   childEntries,
   hasGroupBreakpoints,
@@ -21,8 +21,8 @@ import {
   readTier,
   readType,
   rejectUnknownReserved,
-} from './read.js';
-import { assertBreakpointValue, assertTokenValue } from './values.js';
+} from './read';
+import { assertBreakpointValue, assertTokenValue } from './values';
 import type {
   TokenTier,
   TokenTree,
@@ -31,11 +31,11 @@ import type {
   IndexedToken,
   IndexedGroup,
   TokenIndex,
-} from '../types.js';
+} from '../types';
 
-export { assertTokenValue } from './values.js';
+export { assertTokenValue } from './values';
 
-export { TOKEN_SEGMENT, tokenReference } from '../syntax.js';
+export { TOKEN_SEGMENT, tokenReference } from '../syntax';
 export type {
   TokenTier,
   TokenTree,
@@ -44,7 +44,7 @@ export type {
   IndexedToken,
   IndexedGroup,
   TokenIndex,
-} from '../types.js';
+} from '../types';
 
 export function canonicalizeTokenTree(tree: TokenTree | undefined) {
   const cloned = canonicalizeJson(tree ?? {}) as JsonValue;

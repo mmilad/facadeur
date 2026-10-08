@@ -1,6 +1,6 @@
 import { Type, type Static, type TSchema } from '@sinclair/typebox';
-import { defaultKinds } from '../document/kinds.js';
-import { childFieldPathSchema, idSchema, kindSchema } from './common.js';
+import { defaultKinds } from '../document/kinds';
+import { childFieldPathSchema, idSchema, kindSchema } from './common';
 import {
   bindingSchema,
   bindingTargetSchema,
@@ -19,7 +19,7 @@ import {
   type BindingTarget,
   type FieldType,
   type FieldValue,
-} from './fields.js';
+} from './fields';
 import {
   breakpointSchema,
   fontFaceFileSchema,
@@ -34,7 +34,7 @@ import {
   tokenTypes,
   withTokenDefs,
   type TokenType,
-} from './fonts.js';
+} from './fonts';
 import {
   axisSizeSchema,
   layoutOverrideSchema,
@@ -46,8 +46,8 @@ import {
   spacingSchema,
   tokenPathSchema,
   tokenRefSchema,
-} from './layout.js';
-import { nestedNodeSchema } from './nodes.js';
+} from './layout';
+import { nestedNodeSchema } from './nodes';
 import {
   styleBlockSchema,
   styleChildSchema,
@@ -55,8 +55,8 @@ import {
   styleRuleSchema,
   styleStatesSchema,
   tokenInterfaceSchema,
-} from './style.js';
-import { componentTokensSchema } from './component-tokens.js';
+} from './style';
+import { componentTokensSchema } from './component-tokens';
 import {
   basicSchemaTypes,
   componentSchemaUseSchema,
@@ -71,14 +71,14 @@ import {
   type SchemaCatalog,
   type SchemaFieldUse,
   type SchemaTypeRef,
-} from './contract.js';
+} from './contract';
 import {
   variantAxisSchema,
   variantInsertionSchema,
   variantNodeOverrideSchema,
   variantOverridesSchema,
   variantPresetSchema,
-} from './variants.js';
+} from './variants';
 
 export {
   fieldTypes,
@@ -184,6 +184,9 @@ function documentProperties<Kind extends TSchema>(kind: Kind) {
   };
 }
 
+/**
+ * @deprecated Flat nested-document envelope. Prefer node-model `ProjectCatalog` for new persistence.
+ */
 export const documentFileSchema = withTokenDefs(
   Type.Object(documentProperties(kindSchema), {
     ...documentSchemaMeta,

@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
-import { Popover } from '../overlay/Popover.js';
-import { IconButton } from '../shared/IconButton.js';
-import { Inline } from '../layout/Inline.js';
-import { Stack } from '../layout/Stack.js';
-import { useDraftCommit } from '../../hooks/useDraftCommit.js';
-import { useBindable } from './bindable.js';
+import { Popover } from '../overlay/Popover';
+import { IconButton } from '../shared/IconButton';
+import { Inline } from '../layout/Inline';
+import { Stack } from '../layout/Stack';
+import { useDraftCommit } from '../../hooks/useDraftCommit';
+import { useBindable } from './bindable';
 import {
   hexToRgba,
   normalizeColor,
@@ -13,7 +13,7 @@ import {
   rgbaToHex,
   supportsEyeDropper,
   type Rgba,
-} from './color.js';
+} from './color';
 
 export function ColorInput({
   name,

@@ -1,34 +1,36 @@
-import { defaultKinds, type DefaultKind } from '@facadeur/core';
+import type { DefaultKind } from '@facadeur/core';
+import type { AppService } from '../../../app-service';
+import { assetKindToCatalogMap, blankCatalogDefinition } from '../../../domain/catalog/blank-definition';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { AssetContextMenu } from './AssetContextMenu.js';
-import { blankAsset } from '../../../domain/assets/new-asset.js';
-import { ownsVariantContract } from '../../../domain/edits/variant-edit.js';
-import { createNamedVariant, renameNamedVariant } from '../../../domain/variant-actions.js';
-import { GroupAssetDialog } from './GroupAssetDialog.js';
-import { RenameAssetDialog } from './RenameAssetDialog.js';
-import { AssetRows } from './AssetRows.js';
-import type { AssetSummary, EditorSession, EditorSnapshot } from '../../../domain/session.js';
+import { AssetContextMenu } from './AssetContextMenu';
+import { GroupAssetDialog } from './GroupAssetDialog';
+import { RenameAssetDialog } from './RenameAssetDialog';
+import { AssetRows } from './AssetRows';
+import type { AssetSummary, EditorSession, EditorSnapshot } from '../../../domain/session';
 import {
   SIDEBAR_DESIGN_ITEMS,
   type DesignDomain,
   type EditorSurface,
-} from '../design/design-domain.js';
+} from '../design/design-domain';
 
-const KIND_LABEL: Record<DefaultKind, string> = {
+const TREE_KINDS = ['atom', 'component', 'page'] as const satisfies readonly DefaultKind[];
+
+const KIND_LABEL: Record<(typeof TREE_KINDS)[number], string> = {
   atom: 'Atoms',
   component: 'Components',
-  section: 'Sections',
   page: 'Pages',
 };
 
 export function ProjectTree({
+  app,
   session,
   snap,
   surface,
   onOpenAsset,
   onOpenDesignDomain,
 }: {
+  app: AppService;
   session: EditorSession;
   snap: EditorSnapshot;
   surface: EditorSurface;
@@ -54,12 +56,6 @@ export function ProjectTree({
     if (!openKind) return;
     setExpanded((prev) => (prev[openKind] === false ? { ...prev, [openKind]: true } : prev));
   }, [openKind, snap.openId]);
-
-  useEffect(() => {
-    const asset = snap.catalog.find((candidate) => candidate.id === snap.openId);
-    if (!asset || !ownsVariantContract(asset.kind) || !hasNamedVariants(asset)) return;
-    setExpandedVariants((prev) => (prev[asset.id] === true ? prev : { ...prev, [asset.id]: true }));
-  }, [snap.catalog, snap.openId]);
 
   useEffect(() => {
     activeRef.current?.scrollIntoView?.({ block: 'nearest' });
@@ -114,7 +110,7 @@ export function ProjectTree({
 
   const groups = useMemo(
     () =>
-      defaultKinds.map((kind) => {
+      TREE_KINDS.map((kind) => {
         const assets = snap.catalog.filter((asset) => asset.kind === kind);
         const labelHit = Boolean(needle) && KIND_LABEL[kind].toLowerCase().includes(needle);
         const directAssets = assets.filter((asset) => !asset.group);
@@ -161,20 +157,21 @@ export function ProjectTree({
     setExpanded((prev) => ({ ...prev, [id]: prev[id] === false }));
   }
 
-  function create(kind: DefaultKind) {
-    const file = blankAsset(kind, snap.catalog);
-    session.loadDocument(file);
-    if (session.getSnapshot().notice?.tone === 'error') return;
-    setQuery('');
-    setExpanded((prev) => ({ ...prev, [kind]: true }));
-    onOpenAsset(file.id);
+  async function create(kind: (typeof TREE_KINDS)[number]) {
+    const mapKind = assetKindToCatalogMap(kind);
+    if (!mapKind) return;
+    const definition = blankCatalogDefinition(kind, snap.catalog);
+    try {
+      await app.createDefinition(mapKind, definition);
+      setQuery('');
+      setExpanded((prev) => ({ ...prev, [kind]: true }));
+    } catch (failure) {
+      session.setNotice(failure instanceof Error ? failure.message : 'Could not create asset', 'error');
+    }
   }
 
-  function createVariant(assetId: string) {
-    const current = session.getSnapshot();
-    if (current.openId !== assetId) onOpenAsset(assetId);
-    if (!createNamedVariant(session)) return;
-    setExpandedVariants((prev) => ({ ...prev, [assetId]: true }));
+  function createVariant(_assetId: string) {
+    session.setNotice('Variants are not available for catalog definitions yet.', 'info');
     setAssetContextMenu(null);
   }
 
@@ -182,12 +179,7 @@ export function ProjectTree({
     setAssetContextMenu({ assetId, anchor: anchorEl.getBoundingClientRect() });
   }
 
-  function renameVariant(assetId: string, name: string, label: string) {
-    const asset = snap.catalog.find((candidate) => candidate.id === assetId);
-    if (!asset) return;
-    if (session.getSnapshot().openId !== assetId) onOpenAsset(assetId);
-    renameNamedVariant(session, name, label);
-  }
+  function renameVariant(_assetId: string, _name: string, _label: string) {}
 
   const contextAsset = assetContextMenu
     ? snap.catalog.find((candidate) => candidate.id === assetContextMenu.assetId)
@@ -231,7 +223,7 @@ export function ProjectTree({
               label={KIND_LABEL[group.kind]}
               open={isOpen(group.kind, needle, expanded)}
               onToggle={() => toggle(group.kind)}
-              onCreate={() => create(group.kind)}
+              onCreate={() => void create(group.kind)}
             >
               <AssetRows
                 assets={group.assets}
@@ -296,9 +288,16 @@ export function ProjectTree({
                 onOpenAsset(id);
                 setGroupAssetId(id);
               }}
-              onRemoveGroup={(id) => {
-                onOpenAsset(id);
-                session.executeDocument(id, { type: 'setDocumentGroup', group: null });
+              onRemoveGroup={() => {
+                session.setNotice('Asset groups are not available for catalog entries yet.', 'info');
+              }}
+              onDelete={(id) => {
+                void app.deleteDefinition(id).catch((failure) => {
+                  session.setNotice(
+                    failure instanceof Error ? failure.message : 'Could not delete asset',
+                    'error',
+                  );
+                });
               }}
               onClose={() => setAssetContextMenu(null)}
             />,
@@ -317,17 +316,13 @@ export function ProjectTree({
       {renameAssetId ? (
         <RenameAssetDialog
           key={renameAssetId}
-          session={session}
+          app={app}
           asset={snap.catalog.find((asset) => asset.id === renameAssetId)!}
           onClose={() => setRenameAssetId(null)}
         />
       ) : null}
     </section>
   );
-}
-
-function hasNamedVariants(asset: Pick<AssetSummary, 'variants'>): boolean {
-  return (asset.variants ?? []).some((variant) => !variant.isDefault);
 }
 
 function TreeGroup({

@@ -19,7 +19,7 @@ import {
 } from '@facadeur/core';
 import { loadTokens } from '@facadeur/tokens';
 import * as Y from 'yjs';
-import { ensureDocumentMaps, patchDocument, readDocument } from './codec.js';
+import { ensureDocumentMaps, patchDocument, readDocument } from './codec';
 
 /** Transaction origin for commands. Loading a document uses a different origin and is not undoable. */
 export const COMMAND_ORIGIN = 'facadeur';

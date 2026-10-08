@@ -1,6 +1,5 @@
 import { useLayoutEffect, type RefObject } from 'react';
-import { ownsVariantContract } from '../../../domain/edits/variant-edit.js';
-import type { AssetSummary } from '../../../domain/session.js';
+import type { AssetSummary } from '../../../domain/session';
 
 const MENU_MIN_WIDTH = 168;
 
@@ -12,6 +11,7 @@ export function AssetContextMenu({
   onRename,
   onGroup,
   onRemoveGroup,
+  onDelete,
   onClose,
 }: {
   asset: AssetSummary;
@@ -21,9 +21,10 @@ export function AssetContextMenu({
   onRename: (assetId: string) => void;
   onGroup: (assetId: string) => void;
   onRemoveGroup: (assetId: string) => void;
+  onDelete: (assetId: string) => void;
   onClose: () => void;
 }) {
-  const canHaveVariants = ownsVariantContract(asset.kind);
+  const canHaveVariants = false;
 
   const left = Math.min(Math.max(8, anchor.left), window.innerWidth - MENU_MIN_WIDTH - 8);
   const top = Math.min(anchor.bottom + 4, window.innerHeight - 8);
@@ -87,6 +88,16 @@ export function AssetContextMenu({
           Create variant
         </button>
       ) : null}
+      <button
+        type="button"
+        role="menuitem"
+        onClick={() => {
+          onDelete(asset.id);
+          onClose();
+        }}
+      >
+        Delete
+      </button>
     </div>
   );
 }

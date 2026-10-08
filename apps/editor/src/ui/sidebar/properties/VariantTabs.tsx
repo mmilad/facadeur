@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import type { EditorSession, EditorSnapshot } from '../../../domain/session.js';
-import { ownsVariantContract, variantSummaries } from '../../../domain/edits/variant-edit.js';
-import { createNamedVariant, renameNamedVariant } from '../../../domain/variant-actions.js';
-import { VariantActionButton } from '../../controls/variants/VariantActionButton.js';
-import { AddPopover, Field, TextInput } from '../../form/index.js';
+import type { EditorSession, EditorSnapshot } from '../../../domain/session';
+import { ownsVariantContract, variantSummaries } from '../../../domain/edits/variant-edit';
+import { createNamedVariant, renameNamedVariant } from '../../../domain/variant-actions';
+import { VariantActionButton } from '../../controls/variants/VariantActionButton';
+import { AddPopover, Field, TextInput } from '../../form/index';
 
 export function VariantTabs({ session, snap }: { session: EditorSession; snap: EditorSnapshot }) {
   const [newName, setNewName] = useState('');

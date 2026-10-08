@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
-import { Stack } from './Stack.js';
-import { DisclosureButton } from './DisclosureButton.js';
+import { Stack } from './Stack';
+import { DisclosureButton } from './DisclosureButton';
 
 export function Section({
   title,

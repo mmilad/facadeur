@@ -1,4 +1,4 @@
-export { renderDesignCss, renderResolvedCss, googleFontUrl, type CssOptions } from './css.js';
+export { renderDesignCss, renderResolvedCss, googleFontUrl, type CssOptions } from './css';
 export {
   createProjectTemplate,
   createProjectTemplateDocument,
@@ -8,8 +8,8 @@ export {
   starterAtomIds,
   starterFormIds,
   type ProjectTemplate,
-} from './defaults.js';
-export { fontCustomProperty, tokenCustomProperty, typographyCustomProperty } from './names.js';
+} from './defaults';
+export { fontCustomProperty, tokenCustomProperty, typographyCustomProperty } from './names';
 export {
   activeBreakpoints,
   configuredBreakpoints,
@@ -21,4 +21,4 @@ export {
   type DesignInput,
   type ParsedToken,
   type ResolvedDesign,
-} from './resolve.js';
+} from './resolve';

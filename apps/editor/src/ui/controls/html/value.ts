@@ -1,32 +1,6 @@
-export const HTML_TAG_OPTIONS = [
-  'a',
-  'article',
-  'aside',
-  'button',
-  'div',
-  'footer',
-  'form',
-  'h1',
-  'h2',
-  'h3',
-  'h4',
-  'h5',
-  'h6',
-  'header',
-  'img',
-  'input',
-  'label',
-  'li',
-  'main',
-  'nav',
-  'ol',
-  'p',
-  'section',
-  'span',
-  'textarea',
-  'ul',
-  'video',
-] as const;
+import { DEFAULT_HTML_TAG_OPTIONS } from '@facadeur/core';
+
+export const HTML_TAG_OPTIONS = DEFAULT_HTML_TAG_OPTIONS;
 
 export const HTML_ATTRIBUTE_ENUMS: Record<string, readonly string[]> = {
   type: ['button', 'submit', 'reset', 'checkbox', 'radio', 'text', 'email', 'password', 'search'],

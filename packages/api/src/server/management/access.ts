@@ -4,10 +4,10 @@ import type {
   OrganisationRole,
   OrganisationSummary,
   ProjectStorage,
-} from '../../contracts/management.js';
-import type { AuthUser } from '../../contracts/auth.js';
-import { DomainError } from '../../errors.js';
-import { getManagementDatabase } from './database.js';
+} from '../../contracts/management';
+import type { AuthUser } from '../../contracts/auth';
+import { DomainError } from '../../errors';
+import { getManagementDatabase } from './database';
 
 function projectStorage(input: {
   id: string;

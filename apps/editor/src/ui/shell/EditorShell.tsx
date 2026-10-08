@@ -1,72 +1,79 @@
 'use client';
 
 import { createId, findParent } from '@facadeur/core';
-import { placementAllowed, refusalMessage, toolAllowed } from '../../domain/editing.js';
-import dynamic from 'next/dynamic';
-import { useEffect, useSyncExternalStore } from 'react';
+import { placementAllowed, refusalMessage, toolAllowed } from '../../domain/editing';
+import { useEffect, useMemo, useSyncExternalStore } from 'react';
+import { createAppService, type AppService } from '../../app-service/index';
+import { createInMemoryCatalogPort } from '../../domain/project/in-memory-catalog-port';
 import {
   openJsonFile,
   parseDocumentText,
   documentToJson,
   download,
-} from '../../domain/assets/files.js';
-import { isEditableTarget } from '../../domain/keyboard.js';
-import { migrateLegacySchemaLibrary } from '../../domain/schema/migrate-legacy-schema-library.js';
-import { logProjectFailure } from '../../domain/project/diagnostics.js';
-import type { EditorSession } from '../../domain/session.js';
+} from '../../domain/assets/files';
+import { isEditableTarget } from '../../domain/keyboard';
+import type { EditorSession } from '../../domain/session';
 import {
   EDITOR_VIEW_ITEMS,
+  isCatalogDocumentView,
   isDesignDomain,
   isSettingsTokenDomain,
-} from '../sidebar/design/design-domain.js';
-import { CodeStage } from '../stage/CodeStage.js';
-import { DesignDomainStage } from '../stage/DesignDomainStage.js';
-import { PreviewDataStage } from '../stage/PreviewDataStage.js';
-import { SchemaStage } from '../stage/SchemaStage.js';
-import { SettingsSections } from '../sidebar/design/SettingsSections.js';
-
-const SchemaLibraryStage = dynamic(
-  () => import('../stage/SchemaLibraryStage.js').then((mod) => mod.SchemaLibraryStage),
-  { ssr: false },
-);
-import { LayersPanel } from '../sidebar/layers/LayersPanel.js';
-import { ProjectTree } from '../sidebar/layers/ProjectTree.js';
-import { RightRail } from '../sidebar/properties/RightRail.js';
-import { StageCanvas } from '../stage/StageCanvas.js';
-import { ResizableInspector } from './ResizableInspector.js';
-import { ResizableLeftRail } from './ResizableLeftRail.js';
-import { ToolBar } from './ToolBar.js';
-import { UnsavedIndicator } from './UnsavedIndicator.js';
-import { HistoryButtons } from './HistoryButtons.js';
-import { KindBadge } from './KindBadge.js';
-import { DocumentBreadcrumb } from './DocumentBreadcrumb.js';
-import { ZoomControls } from './ZoomControls.js';
-import { useEditorNavigation } from './useEditorNavigation.js';
+} from '../sidebar/design/design-domain';
+import { CatalogCodeStage } from '../stage/CatalogCodeStage';
+import { CatalogPreviewDataStage } from '../stage/CatalogPreviewDataStage';
+import { CatalogSchemaStage } from '../stage/CatalogSchemaStage';
+import { CatalogSchemasPanel } from '../sidebar/design/CatalogSchemasPanel';
+import { DesignDomainStage } from '../stage/DesignDomainStage';
+import { SettingsSections } from '../sidebar/design/SettingsSections';
+import { CatalogLayersPanel } from '../sidebar/layers/CatalogLayersPanel';
+import { ProjectTree } from '../sidebar/layers/ProjectTree';
+import { RightRail } from '../sidebar/properties/RightRail';
+import { StageCanvas } from '../stage/StageCanvas';
+import { ResizableInspector } from './ResizableInspector';
+import { ResizableLeftRail } from './ResizableLeftRail';
+import { ToolBar } from './ToolBar';
+import { UnsavedIndicator } from './UnsavedIndicator';
+import { KindBadge } from './KindBadge';
+import { DocumentBreadcrumb } from './DocumentBreadcrumb';
+import { ZoomControls } from './ZoomControls';
+import { useEditorNavigation } from './useEditorNavigation';
 
 export function EditorShell({
   session,
+  app: appProp,
   connectionStatus,
   persistPendingChanges,
 }: {
   session: EditorSession;
+  app?: AppService;
   connectionStatus?: string;
   persistPendingChanges?: () => Promise<void>;
 }) {
-  const snap = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
+  const app = useMemo(
+    () =>
+      appProp ??
+      createAppService({
+        core: session.core,
+        session,
+        catalogPort: createInMemoryCatalogPort(() => session.core.getSnapshot().catalog),
+      }),
+    [appProp, session],
+  );
+  const snap = useSyncExternalStore(
+    app.subscribe.bind(app),
+    app.getSnapshot.bind(app),
+    app.getSnapshot.bind(app),
+  );
   useEffect(() => {
-    if (!persistPendingChanges) return;
-    void migrateLegacySchemaLibrary(session, persistPendingChanges).catch((error: unknown) => {
-      logProjectFailure(error, { phase: 'save' });
-      session.setNotice(
-        error instanceof Error ? error.message : 'Could not migrate schema library',
-        'error',
-      );
-    });
-  }, [session, connectionStatus, persistPendingChanges]);
+    if (process.env.NODE_ENV === 'development') {
+      (globalThis as { __facadeurApp?: typeof app }).__facadeurApp = app;
+    }
+  }, [app]);
   const { surface, setSurface } = useEditorNavigation(session, snap);
   const designSurface = isDesignDomain(surface);
   const settingsSurface = isSettingsTokenDomain(surface) || surface === 'schemas';
-  useEditorKeys(session, surface === 'editor');
+  const editorCanvas = surface === 'editor';
+  useEditorKeys(session, editorCanvas);
 
   return (
     <div className="app">
@@ -74,7 +81,7 @@ export function EditorShell({
         <div className="brand">facadeur</div>
         <DocumentBreadcrumb session={session} snap={snap} />
         <KindBadge kind={snap.document.kind} />
-        {!designSurface && surface !== 'schemas' ? (
+        {editorCanvas ? (
           <ToolBar
             session={session}
             tool={snap.tool}
@@ -88,19 +95,13 @@ export function EditorShell({
             {connectionStatus}
           </span>
         ) : null}
-        <HistoryButtons session={session} canUndo={snap.canUndo} canRedo={snap.canRedo} />
-        {!designSurface && surface !== 'schemas' ? (
-          <ZoomControls session={session} label={snap.zoomLabel} />
-        ) : null}
-        {!designSurface && surface !== 'schemas' ? (
+        {editorCanvas ? <ZoomControls session={session} label={snap.zoomLabel} /> : null}
+        {editorCanvas ? (
           <button type="button" className="text-button" onClick={() => session.fit()}>
             Reset view
           </button>
         ) : null}
-        <UnsavedIndicator
-          documentDirty={!designSurface && snap.documentDirty}
-          designDirty={snap.designDirty}
-        />
+        <UnsavedIndicator documentDirty={false} designDirty={snap.designDirty} />
         <button type="button" className="text-button" onClick={() => void onOpen(session)}>
           Open
         </button>
@@ -109,20 +110,22 @@ export function EditorShell({
           className="text-button"
           onClick={() =>
             download(
-              session.filenameFor(designSurface ? snap.design.id : snap.openId),
-              documentToJson(designSurface ? snap.design : snap.document),
+              'catalog.json',
+              JSON.stringify(app.getCoreSnapshot().catalog, null, 2),
             )
           }
         >
-          Export JSON
+          Export catalog
         </button>
         <button
           type="button"
           className="text-button"
-          data-save={designSurface ? 'design' : 'document'}
-          onClick={() => void (designSurface ? session.saveDesign() : session.saveOpenDocument())}
+          data-save="catalog"
+          onClick={() =>
+            void (persistPendingChanges ? persistPendingChanges() : app.persistCatalog())
+          }
         >
-          {designSurface ? 'Save design' : 'Save'}
+          Save catalog
         </button>
       </header>
       {snap.notice ? (
@@ -170,6 +173,7 @@ export function EditorShell({
           {designSurface || surface === 'schemas' ? (
             <div className="design-project-navigation">
               <ProjectTree
+                app={app}
                 session={session}
                 snap={snap}
                 surface={surface}
@@ -184,6 +188,7 @@ export function EditorShell({
             <ResizableLeftRail
               project={
                 <ProjectTree
+                  app={app}
                   session={session}
                   snap={snap}
                   surface={surface}
@@ -194,35 +199,41 @@ export function EditorShell({
                   onOpenDesignDomain={(domain) => setSurface(domain)}
                 />
               }
-              layers={<LayersPanel session={session} snap={snap} />}
+              layers={
+                editorCanvas ? (
+                  <CatalogLayersPanel app={app} session={session} snap={snap} />
+                ) : null
+              }
             />
           )}
         </aside>
-        {isDesignDomain(surface) ? (
+        {surface === 'schemas' ? (
+          <CatalogSchemasPanel
+            app={app}
+            session={session}
+            surface={surface}
+            onSelectSurface={setSurface}
+          />
+        ) : isDesignDomain(surface) ? (
           <DesignDomainStage
             session={session}
             snap={snap}
             domain={surface}
             onSelectDomain={setSurface}
           />
-        ) : surface === 'schemas' ? (
-          <section className="design-domain-stage" aria-label="Settings">
-            <header className="design-domain-head">
-              <div className="design-domain-head-main">
-                <h1 className="design-domain-breadcrumb">Settings · Schemas</h1>
-                <SettingsSections surface={surface} onSelect={setSurface} />
-              </div>
-            </header>
-            <SchemaLibraryStage session={session} snap={snap} />
-          </section>
         ) : surface === 'schema' ? (
-          <SchemaStage session={session} snap={snap} onOpenSchemas={() => setSurface('schemas')} />
+          <CatalogSchemaStage
+            app={app}
+            session={session}
+            onOpenSchemas={() => setSurface('schemas')}
+          />
         ) : surface === 'code' ? (
-          <CodeStage session={session} snap={snap} />
+          <CatalogCodeStage app={app} generation={snap.generation} />
         ) : surface === 'preview' ? (
-          <PreviewDataStage session={session} snap={snap} />
+          <CatalogPreviewDataStage app={app} session={session} />
         ) : (
           <StageCanvas
+            app={app}
             session={session}
             openId={snap.openId}
             generation={snap.generation}
@@ -235,13 +246,9 @@ export function EditorShell({
             tool={snap.tool}
           />
         )}
-        {designSurface ||
-        surface === 'schemas' ||
-        surface === 'schema' ||
-        surface === 'code' ||
-        surface === 'preview' ? null : (
+        {designSurface || surface === 'schemas' || isCatalogDocumentView(surface) ? null : (
           <ResizableInspector>
-            <RightRail session={session} snap={snap} surface={surface} />
+            <RightRail app={app} session={session} snap={snap} surface={surface} />
           </ResizableInspector>
         )}
       </div>

@@ -37,7 +37,7 @@ import {
   readNumberArray,
   readStringArray,
   stringValue,
-} from './codec-shared.js';
+} from './codec-shared';
 
 export function readNode(map: Y.Map<unknown>): FlatNode {
   const type = map.get('type');

@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { publicFieldsFor, toFlat, type DocumentFile } from '@facadeur/core';
-import { structuralItemChoices } from '../src/domain/schema/structural-item-choices.js';
+import { structuralItemChoices } from '../src/domain/schema/structural-item-choices';
 
 it('offers all configured transitive component/section alternatives through a placed list', () => {
   const card: DocumentFile = {

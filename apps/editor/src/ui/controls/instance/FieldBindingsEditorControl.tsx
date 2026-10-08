@@ -1,8 +1,8 @@
 import type { FieldDefinition } from '@facadeur/core';
-import { Field, Section, Select, Stack } from '../../form/index.js';
+import { Field, Section, Select, Stack } from '../../form/index';
 import '../../form/form.css';
-import { dataPathOptions, type DataPathOption } from '../data/DataDirectivesEditorControl.js';
-import { fieldDisplayLabel } from '../data/field-label.js';
+import { dataPathOptions, type DataPathOption } from '../data/DataDirectivesEditorControl';
+import { fieldDisplayLabel } from '../data/field-label';
 
 export function FieldBindingsEditorControl({
   fields,

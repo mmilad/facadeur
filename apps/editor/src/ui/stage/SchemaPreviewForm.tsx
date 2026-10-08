@@ -4,20 +4,20 @@ import type {
   ComponentSchemaUse,
   NamedSchema,
   PreviewControl,
-} from '../../domain/schema/schema-use.js';
+} from '../../domain/schema/schema-use';
 import {
   getAt,
   matchingChoice,
   previewControlsForUse,
   retargetControl,
   setAt,
-} from '../../domain/schema/schema-use.js';
-import { Checkbox, Combobox, Field, NumberInput, Stack, TextInput } from '../form/index.js';
-import type { EditorSession } from '../../domain/session.js';
+} from '../../domain/schema/schema-use';
+import { Checkbox, Combobox, Field, NumberInput, Stack, TextInput } from '../form/index';
+import type { EditorSession } from '../../domain/session';
 import { fieldDataSchema } from '@facadeur/core';
-import { fieldDisplayLabel } from '../controls/data/field-label.js';
-import { SchemaValueForm } from '../controls/data/SchemaValueForm.js';
-import { isFieldValue } from '../controls/data/item-array-schema.js';
+import { fieldDisplayLabel } from '../controls/data/field-label';
+import { SchemaValueForm } from '../controls/data/SchemaValueForm';
+import { isFieldValue } from '../controls/data/item-array-schema';
 
 function joinPath(parent: string, name: string): string {
   return parent ? `${parent}.${name}` : name;

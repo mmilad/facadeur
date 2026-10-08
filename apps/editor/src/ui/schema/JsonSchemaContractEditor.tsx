@@ -2,15 +2,15 @@ import { matchesSchemaValue, type FieldValue, type JsonSchema } from '@facadeur/
 import { SchemaBuilderProvider } from 'jsonjoy-builder';
 import 'jsonjoy-builder/styles.css';
 import { useMemo } from 'react';
-import type { FieldConfig, FieldGroupConfig } from '../form/schema/field-config.js';
-import { Form, SchemaForm, TextArea } from '../form/index.js';
-import { fieldDisplayLabel } from '../controls/data/field-label.js';
+import type { FieldConfig, FieldGroupConfig } from '../form/schema/field-config';
+import { Form, SchemaForm, TextArea } from '../form/index';
+import { fieldDisplayLabel } from '../controls/data/field-label';
 import {
   initialDraftForSchema,
   initialValueForSchema,
   isFieldValue,
-} from '../controls/data/item-array-schema.js';
-import { formFieldsForSchema } from './json-schema-form-config.js';
+} from '../controls/data/item-array-schema';
+import { formFieldsForSchema } from './json-schema-form-config';
 import './json-schema-contract-editor.css';
 
 const CONTRACT_EDITOR_LABELS = {

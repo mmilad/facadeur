@@ -1,14 +1,14 @@
 import { useMemo, useState } from 'react';
-import { TokenValueControl } from '../../controls/fields/TokenValueControl.js';
-import { useTokenResolver, useTokenValueLabel } from '../../controls/fields/TokenPreviewContext.js';
+import { TokenValueControl } from '../../controls/fields/TokenValueControl';
+import { useTokenResolver, useTokenValueLabel } from '../../controls/fields/TokenPreviewContext';
 import {
   formatTypographyFieldValue,
   parseTypographyFieldValue,
   TYPOGRAPHY_VALUE_KEYS,
   type TypographyCatalogs,
   type TypographyValue,
-} from '../../controls/typography/index.js';
-import { Field, Inline, Stack } from '../../form/index.js';
+} from '../../controls/typography/index';
+import { Field, Inline, Stack } from '../../form/index';
 
 export type DesignTypographyValue = TypographyValue | string;
 export type DesignTypographyField = (typeof TYPOGRAPHY_VALUE_KEYS)[number];

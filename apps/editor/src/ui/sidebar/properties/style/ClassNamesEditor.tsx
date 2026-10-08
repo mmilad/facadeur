@@ -1,5 +1,5 @@
-import { ClassListInput, Field } from '../../../form/index.js';
-import type { EditorSession, EditorSnapshot } from '../../../../domain/session.js';
+import { ClassListInput, Field } from '../../../form/index';
+import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
 
 const UTILITY_CLASSES = [
   'block',
@@ -42,14 +42,7 @@ export function ClassNamesEditor({
   className: string;
 }) {
   const node = snap.activeDocument.nodes[nodeId] ?? snap.document.nodes[nodeId];
-  const suggestions = [
-    ...new Set([
-      ...UTILITY_CLASSES,
-      ...session.project.documents.flatMap((document) =>
-        Object.values(document.manifest.nodes).flatMap((item) => item.classes ?? []),
-      ),
-    ]),
-  ];
+  const suggestions = [...new Set([...UTILITY_CLASSES])];
   return (
     <div className="style-name-editor">
       <p className="meta">
