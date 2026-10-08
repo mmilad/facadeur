@@ -1,5 +1,12 @@
 # Tooling friction backlog
 
+## Resolved: Storybook build needs host filesystem access
+
+- **Reproduction:** Run `apps/editor/node_modules/.bin/storybook.CMD build --config-dir .storybook --output-dir storybook-static` from `apps/editor` in the restricted process.
+- **Evidence/impact:** Vite/SWC fails with `EPERM` while canonicalizing the Next.js path under `node_modules/.pnpm/next@.../node_modules/next/dist/compiled/react/index.js` or the editor `baseUrl`. The same command succeeds in the approved host context and completes the production build.
+- **Workaround:** Run the Storybook build in the approved host context; no dependency or config change is needed.
+- **Status (2026-10-09):** Confirmed with a successful Storybook 10.6.1 production build.
+
 ## Test runner blocked by filesystem sandbox
 
 - **Reproduction:** Run `pnpm exec vitest run apps/editor/test/schema-library.test.ts apps/editor/test/schema-composition-ui.test.tsx` in the restricted workspace process.

@@ -2,7 +2,9 @@
 
 import type { AppService } from '../../../app-service';
 import type { EditorSession } from '../../../domain/session';
-import { Form, SchemaForm, Stack } from '../../form/index';
+import { Form } from '../../form/Form';
+import { SchemaForm } from '../../form/schema/SchemaForm';
+import { Stack } from '../../form/components/layout/Stack';
 import { mapInspectorFormFields } from './map-inspector-form';
 
 export function CatalogNodeInspector({

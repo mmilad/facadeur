@@ -1,0 +1,11 @@
+import type { NodeDefinition as NodeDefinitionModel } from '@facadeur/domain';
+
+export const config: NodeDefinitionModel['config'] = {
+  previewData: {
+    fields: {
+      label: 'Property',
+      value: 'Background',
+      state: 'default',
+    },
+  },
+};

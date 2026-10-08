@@ -1,5 +1,60 @@
 # facadeur – Plan
 
+### Shared typed example catalog for the editor and Storybook
+
+- [x] Evidence: the `main` branch examples were removed during the node-model migration; API
+      defaults now seed only an Image atom, while Storybook needs realistic assets and layer trees.
+      Duplicating mock shapes across Stories would drift from `ProjectCatalog` and `NodeDefinition`.
+- Boundary: move the Storybook catalog fixture into a small `@facadeur/examples` package that
+  depends only on the domain contract. API project initialization and editor Storybook import
+  the same typed catalog; keep editor-session construction and selectable layer helpers local
+  to Storybook. Use the Core validator when creating the Storybook session.
+- Scope: prerequisite for the requested default project data and right-sidebar asset/layer stories.
+- Contracts: keep `ProjectCatalog`, `NodeDefinition`, UUIDs, schema refs, definition refs and node
+  trees as the sole shape; preserve Image seed IDs and API exports. Include Card, Button, Teaser,
+  Form and a page example from `main`; no legacy `DocumentFile` mock contract or duplicate seed.
+- Validation: Core `validateProjectCatalog`, Storybook runtime session with selected Card/layer,
+  API starter-catalog checks, Storybook build and the refactor-candidate detector.
+
+Result: `@facadeur/examples` now owns one typed catalog used by API project seeding and Storybook.
+It includes Button, Image, Card, Teaser, Sign-in form and a specimen page. The right-sidebar
+story selects an asset and one of its layers against a real editor session. Core catalog
+validation, API seed runtime checks, the Storybook build and the scoped refactor-candidate scan
+pass. API package typecheck could not be rerun because Corepack could not resolve
+`registry.npmjs.org` to fetch the pinned pnpm version.
+
+### Organize examples as complete node definition models
+
+- [x] Evidence: `packages/examples/src/catalog.ts` reconstructed definitions with helper functions
+      and only a small subset of the examples that exist on `main`; each example's schema, DOM, style,
+      and config are obscured in one large file. API and Storybook need full examples that compile
+      against the current NodeDefinitionModel contract.
+- Boundary: make `packages/examples/src/<example>/` the owner for each migrated example, with
+  `schema.ts`, `dom.ts`, `style.ts`, `config.ts`, and `index.ts`. Compose those pieces into a
+  complete `NodeDefinitionModel` and export the catalog through the package's public index.
+- Scope: prerequisite for a useful Storybook/default project catalog, with data migrated from
+  `main` into the current API model.
+- Contracts: use current `NodeDefinitionModel` / `ProjectCatalog` shapes and validation; keep
+  stable IDs for existing catalog consumers and keep API seeding and Storybook on the same source.
+- Validation: current Core catalog validation, examples typecheck, Storybook build/runtime check,
+  API package typecheck where tooling is available, refactor detector and diff review.
+- Review: if catalog assembly or a migrated example triggers detector review, split by actual
+  domain boundaries; retain a single large DOM module when it represents one complete example.
+- Split catalog design context into token, font, breakpoint, and schema modules because those
+  independently maintained records made the combined file exceed the detector's review size.
+
+Result: all 34 atom/component/page examples from `main` now live in per-example folders with
+`schema.ts`, `dom.ts`, `style.ts`, `config.ts`, and `index.ts`. Each definition satisfies the
+current `NodeDefinitionModel` alias from the domain contract; the package catalog composes those
+records and carries forward the project template's tokens, fonts, and breakpoints in separate
+catalog modules. Legacy
+variants become enum fields and preview defaults; layout, bindings, and base styles map into the
+current node tree. The old format's per-state/per-variant style overrides and artboard settings
+have no corresponding `NodeDefinitionModel` fields and are not represented. Core catalog
+validation, examples typecheck, Storybook production build, and the detector pass. API typecheck
+reaches the code but reports pre-existing errors in Core/API mutable catalog handling and legacy
+tests; none point into `@facadeur/examples`.
+
 ### Node model refactor (dom / style / schema / data / config)
 
 - [ ] Major reshape: replace `nestedNodeSchema` special cases with a uniform node (`dom`, `style`, `schema`, `data`, `config`). See [node-model-refactor.md](./node-model-refactor.md). **Phase 1:** legacy examples removed, v2 TypeBox in `packages/core/src/schema/node-model/`, starter project = design + empty section only, vitest narrowed. **Next:** API catalog seed, restore full test include, sidebar on v2. References: [example-framework](https://github.com/mmilad/example-framework), [style-controller](https://github.com/mmilad/style-controller).
@@ -15,14 +70,14 @@
 
 Symbols are marked `@deprecated` in source; remove bottom-up once nothing imports them.
 
-| Area | Deprecated surface | Replacement |
-| --- | --- | --- |
-| `@facadeur/core` | `ProjectController`, `validateCatalog`, `validateTree`, `validateDocumentFile`, `compileDocumentValidator`, `documentFileSchema` | `CoreController`, `validateProjectCatalog`, node-model catalog |
-| `@facadeur/core` | `mergePreviewData` export alias | `mergePreviewFields` |
-| `@facadeur/renderer-dom` | `renderV2DefinitionRoot` | `renderDefinitionRoot` + `buildElement` |
-| Editor | `domain/catalog/v2-catalog.ts`, `domain/viewport/v2-board.ts` | `@facadeur/core` catalog + preview |
-| Editor | Session `v2OpenDefinition`, `selectedV2NodeUuid`, `patchV2NodeField`, `saveProjectCatalog` | `CoreController` snapshot + commands |
-| Editor | `AppService`, `AppServiceHost`, `app-service/controllers/*` | `CoreController` + thin React hooks |
+| Area                     | Deprecated surface                                                                                                               | Replacement                                                    |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `@facadeur/core`         | `ProjectController`, `validateCatalog`, `validateTree`, `validateDocumentFile`, `compileDocumentValidator`, `documentFileSchema` | `CoreController`, `validateProjectCatalog`, node-model catalog |
+| `@facadeur/core`         | `mergePreviewData` export alias                                                                                                  | `mergePreviewFields`                                           |
+| `@facadeur/renderer-dom` | `renderV2DefinitionRoot`                                                                                                         | `renderDefinitionRoot` + `buildElement`                        |
+| Editor                   | `domain/catalog/v2-catalog.ts`, `domain/viewport/v2-board.ts`                                                                    | `@facadeur/core` catalog + preview                             |
+| Editor                   | Session `v2OpenDefinition`, `selectedV2NodeUuid`, `patchV2NodeField`, `saveProjectCatalog`                                       | `CoreController` snapshot + commands                           |
+| Editor                   | `AppService`, `AppServiceHost`, `app-service/controllers/*`                                                                      | `CoreController` + thin React hooks                            |
 
 ### Core package layout (2026-03)
 

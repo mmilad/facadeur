@@ -90,6 +90,9 @@ importers:
         specifier: ^19.1.1
         version: 19.3.0(react@19.3.0)
     devDependencies:
+      '@facadeur/examples':
+        specifier: workspace:*
+        version: link:../../packages/examples
       '@storybook/nextjs-vite':
         specifier: 10.6.1
         version: 10.6.1(@babel/core@7.29.7)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(next@15.5.26(@babel/core@7.29.7)(@types/node@22.20.4)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(rollup@4.63.5)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.0))(typescript@5.9.3)(vite@7.3.6(@types/node@22.20.4)(tsx@4.23.15))
@@ -145,6 +148,9 @@ importers:
       '@facadeur/core':
         specifier: workspace:*
         version: link:../core
+      '@facadeur/examples':
+        specifier: workspace:*
+        version: link:../examples
       '@facadeur/tokens':
         specifier: workspace:*
         version: link:../tokens
@@ -217,6 +223,16 @@ importers:
         version: 5.9.3
 
   packages/domain:
+    devDependencies:
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+
+  packages/examples:
+    dependencies:
+      '@facadeur/domain':
+        specifier: workspace:*
+        version: link:../domain
     devDependencies:
       typescript:
         specifier: ^5.9.2

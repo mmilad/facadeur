@@ -1,0 +1,19 @@
+import type { Node } from '@facadeur/domain';
+
+export const root: Node = {
+  uuid: '550e8400-e29b-41d4-a716-2f0386a6bf9c',
+  dom: {
+    tagName: 'div',
+    children: [
+      {
+        uuid: '550e8400-e29b-41d4-a716-c105e96fb7c6',
+        dom: {
+          tagName: 'div',
+        },
+        config: {
+          definitionRef: '550e8400-e29b-41d4-a716-2216f5ec662c',
+        },
+      },
+    ],
+  },
+};

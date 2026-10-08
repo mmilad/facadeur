@@ -1,0 +1,55 @@
+import type { Node } from '@facadeur/domain';
+
+export const styles = {
+  '550e8400-e29b-41d4-a716-64d9ed44892c': {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    gap: '{layout.gap}',
+    width: '100%',
+    height: 'auto',
+  },
+  '550e8400-e29b-41d4-a716-aa07dab0544c': {
+    width: 'auto',
+    height: 'auto',
+    color: '{color.textmuted}',
+    font: '{type.caption}',
+    fontWeight: '600',
+    margin: '{space.0}',
+  },
+  '550e8400-e29b-41d4-a716-96a4b1bd6698': {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: '{space.0}',
+    width: 'auto',
+    height: 'auto',
+    background: '{color.bg.muted}',
+    border: '1px solid {color.border}',
+    borderRadius: '{shape.radius}',
+    font: '{type.caption}',
+    paddingBlock: '{padding.y}',
+    paddingInline: '{padding.x}',
+  },
+  '550e8400-e29b-41d4-a716-95faca7338cc': {
+    width: 'auto',
+    height: 'auto',
+    color: '{color.textmuted}',
+    paddingBlock: '{padding.y}',
+    paddingInline: '{padding.x}',
+  },
+  '550e8400-e29b-41d4-a716-c4551fd94aa1': {
+    width: 'auto',
+    height: 'auto',
+    color: '{color.textmuted}',
+    paddingBlock: '{padding.y}',
+    paddingInline: '{padding.x}',
+  },
+  '550e8400-e29b-41d4-a716-5f3ab07637c4': {
+    width: 'auto',
+    height: 'auto',
+    color: '{color.textmuted}',
+    paddingBlock: '{padding.y}',
+    paddingInline: '{padding.x}',
+  },
+} satisfies Readonly<Record<string, NonNullable<Node['style']>>>;
