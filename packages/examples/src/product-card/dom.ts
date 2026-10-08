@@ -47,7 +47,7 @@ export const root: Node = {
                 definitionRef: '550e8400-e29b-41d4-a716-0000000003e9',
                 previewData: {
                   fields: {
-                    label: 'buttonLabel',
+                    label: 'Add to bag',
                   },
                 },
               },

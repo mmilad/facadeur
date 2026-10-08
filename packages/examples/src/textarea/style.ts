@@ -1,16 +1,6 @@
 import type { Node } from '@facadeur/domain';
 
 export const styles = {
-  '550e8400-e29b-41d4-a716-8f7fc3f2f8ee': {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'stretch',
-    gap: '{space.gap.xs}',
-    width: '100%',
-    height: 'auto',
-    color: '{color.text.secondary}',
-    font: '{type.label}',
-  },
   '550e8400-e29b-41d4-a716-ade185dfdbf3': {
     margin: '{space.0}',
   },
@@ -30,5 +20,15 @@ export const styles = {
     paddingInline: '{input.padding.x}',
     resize: 'vertical',
     textTransform: 'none',
+  },
+  '550e8400-e29b-41d4-a716-8f7fc3f2f8ee': {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    gap: '{space.gap.xs}',
+    width: '100%',
+    height: 'auto',
+    color: '{color.text.secondary}',
+    font: '{type.label}',
   },
 } satisfies Readonly<Record<string, NonNullable<Node['style']>>>;

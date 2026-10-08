@@ -3,8 +3,8 @@ import { applyStyles } from '../apply-styles';
 import { root } from './dom';
 import { config } from './config';
 import { styles } from './style';
-import { schema } from './schema';
-const schemaSource = { kind: 'ref', uuid: '550e8400-e29b-41d4-a716-000000000001' } as const;
+import { schemaUuid } from './schema';
+const schemaSource = { kind: 'ref', uuid: schemaUuid } as const;
 
 export const definition = {
   uuid: '550e8400-e29b-41d4-a716-000000000002',

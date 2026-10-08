@@ -1,4 +1,4 @@
-import type { ProjectCatalog } from "@facadeur/domain";
+import type { ProjectCatalog } from '@facadeur/domain';
 
 export const tokens = {
   color: {

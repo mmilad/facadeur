@@ -47,13 +47,34 @@ Result: all 34 atom/component/page examples from `main` now live in per-example 
 `schema.ts`, `dom.ts`, `style.ts`, `config.ts`, and `index.ts`. Each definition satisfies the
 current `NodeDefinitionModel` alias from the domain contract; the package catalog composes those
 records and carries forward the project template's tokens, fonts, and breakpoints in separate
-catalog modules. Legacy
-variants become enum fields and preview defaults; layout, bindings, and base styles map into the
+catalog modules. Legacy variants become enum fields and preview defaults; schema defaults, layout,
+bindings, and base styles map into the
 current node tree. The old format's per-state/per-variant style overrides and artboard settings
 have no corresponding `NodeDefinitionModel` fields and are not represented. Core catalog
-validation, examples typecheck, Storybook production build, and the detector pass. API typecheck
+validation, examples typecheck, and Storybook production build pass. API typecheck
 reaches the code but reports pre-existing errors in Core/API mutable catalog handling and legacy
-tests; none point into `@facadeur/examples`.
+tests; none point into `@facadeur/examples`. The detector's 542-line
+`form-controls-section/dom.ts` is retained as one cohesive example tree; it has no separate logic
+or unrelated responsibility.
+
+### Centralize catalog selection controls in Storybook
+
+- [x] Evidence: the right-sidebar story owned hand-written Asset and Layer selects, even though the
+      options and valid layer relationships come from the shared typed catalog.
+- Boundary: add an app-local `.storybook/controls/` library that owns catalog-derived selection
+  controls; stories provide the current selection and handle editor rendering.
+- Scope: prerequisite for editing and comparing inspector states against the shared examples.
+- Contracts: an asset change selects that definition's root; layer options belong to the selected
+  asset; use stable catalog UUIDs and keep Storybook support out of the editor runtime package.
+- Validation: Storybook build and a runtime check that selection resolves to a catalog definition
+  and one of its actual layers; rerun the scoped detector.
+
+Result: `.storybook/controls/` now provides one reusable Asset/Layer selector, grouped by atom,
+component, and page. Its resolver always keeps the selected layer inside the selected definition;
+changing assets resets selection to that definition's root. The right-sidebar story renders this
+library, while the editor and example package remain free of Storybook-specific controls. Storybook
+production build, catalog selection runtime checks, and API seed validation pass. The detector
+reports only the retained cohesive `form-controls-section/dom.ts` data module.
 
 ### Node model refactor (dom / style / schema / data / config)
 
@@ -994,3 +1015,26 @@ the existing single-input atoms. Options add an optional checked flag for initia
 Colocate their labeled-option components in the form examples; the existing repeater and
 instance data mappings render rows without adding generator-specific component behavior.
 Validate edits/add/remove, generated contracts/native controls, starter upgrades and source types.
+
+## Derive example references from definitions
+
+The manually maintained `EXAMPLE_CATALOG_IDS` duplicates node and schema UUIDs already owned
+by their typed definitions. Build catalog maps from imported definitions and derive external
+references from the exported definitions/schema identity. Preserve the API seed UUID exports
+and Storybook selection behavior. Validate examples and API consumers, Storybook build, and
+the scoped refactor detector; no persisted IDs change.
+
+## Move Storybook catalog presets into Controls
+
+The right-sidebar story currently renders asset/layer selectors inside the preview while the
+native Storybook Controls panel is empty. Move that selection into a story arg backed by presets
+generated from the typed example catalog. Each preset pairs one definition with one of its real
+layers, preserving valid selection and the preview's default state. Keep the preset builder in
+the Storybook controls library and remove the in-preview selector. Validate examples types,
+the scoped refactor detector, and a Storybook build.
+
+Result: the sidebar story now exposes one Preset select in Storybook's bottom Controls panel.
+Its options are generated from every catalog definition and its real layers, so selecting one
+previews that node in the inspector. The canvas selector is removed. Examples typecheck, scoped
+detector, diff check, and Storybook production build pass; Vite emitted existing client-directive,
+sourcemap, and chunk-size warnings during its successful build.

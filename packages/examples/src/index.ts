@@ -1,5 +1,4 @@
 export {
-  EXAMPLE_CATALOG_IDS,
   createExampleCatalog,
   exampleCatalog,
   exampleCatalogDefinitions,
@@ -8,3 +7,4 @@ export {
 export { definition as button } from './button';
 export { definition as card } from './card';
 export { definition as image } from './image';
+export { schemaUuid as imageSchemaUuid } from './image/schema';

@@ -1,4 +1,4 @@
-import type { ProjectCatalog } from "@facadeur/domain";
+import type { ProjectCatalog } from '@facadeur/domain';
 
 export const globalStyles = {
   breakpoints: [
@@ -34,4 +34,3 @@ export const globalStyles = {
     },
   ],
 } satisfies NonNullable<ProjectCatalog['globalStyles']>;
-

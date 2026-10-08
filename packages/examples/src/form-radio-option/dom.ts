@@ -14,10 +14,10 @@ export const root: Node = {
           definitionRef: '550e8400-e29b-41d4-a716-f031a6662752',
           previewData: {
             fields: {
-              value: 'value',
-              disabled: 'disabled',
-              checked: 'checked',
-              name: 'name',
+              value: 'option',
+              disabled: false,
+              checked: false,
+              name: 'choice',
             },
           },
         },

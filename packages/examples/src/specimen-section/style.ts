@@ -1,23 +1,6 @@
 import type { Node } from '@facadeur/domain';
 
 export const styles = {
-  '550e8400-e29b-41d4-a716-846b26a622a2': {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'stretch',
-    gap: '{space.stack.lg}',
-    padding: '{space.inset.lg}',
-    width: '100%',
-    height: 'auto',
-  },
-  '550e8400-e29b-41d4-a716-256030b02e78': {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'stretch',
-    gap: '{space.stack.md}',
-    width: '100%',
-    height: 'auto',
-  },
   '550e8400-e29b-41d4-a716-696c51aee4b3': {
     width: 'auto',
     height: 'auto',
@@ -42,11 +25,11 @@ export const styles = {
     font: '{type.body}',
     margin: '{space.0}',
   },
-  '550e8400-e29b-41d4-a716-6ca76aec5e2d': {
+  '550e8400-e29b-41d4-a716-256030b02e78': {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
-    gap: '{space.stack.sm}',
+    gap: '{space.stack.md}',
     width: '100%',
     height: 'auto',
   },
@@ -68,7 +51,7 @@ export const styles = {
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-e8250fd0aee3': {
+  '550e8400-e29b-41d4-a716-6ca76aec5e2d': {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
@@ -85,6 +68,14 @@ export const styles = {
     margin: '{space.0}',
     textTransform: 'uppercase',
   },
+  '550e8400-e29b-41d4-a716-44199525567c': {
+    width: '300px',
+    height: 'auto',
+  },
+  '550e8400-e29b-41d4-a716-47ac2e851072': {
+    width: '300px',
+    height: 'auto',
+  },
   '550e8400-e29b-41d4-a716-2720c9107cee': {
     display: 'flex',
     flexDirection: 'row',
@@ -94,15 +85,7 @@ export const styles = {
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-44199525567c': {
-    width: '300px',
-    height: 'auto',
-  },
-  '550e8400-e29b-41d4-a716-47ac2e851072': {
-    width: '300px',
-    height: 'auto',
-  },
-  '550e8400-e29b-41d4-a716-84683295900a': {
+  '550e8400-e29b-41d4-a716-e8250fd0aee3': {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
@@ -119,20 +102,6 @@ export const styles = {
     margin: '{space.0}',
     textTransform: 'uppercase',
   },
-  '550e8400-e29b-41d4-a716-be18a7bd56fe': {
-    display: 'grid',
-    flexDirection: 'column',
-    alignItems: 'stretch',
-    justifyContent: 'flex-start',
-    gap: '{space.gap.lg}',
-    height: 'auto',
-    'align-content': 'stretch',
-    'align-items': 'end',
-    'grid-template-columns': 'repeat(1, minmax(0, 1fr))',
-    'justify-content': 'stretch',
-    'justify-items': 'stretch',
-    'row-gap': '{radius.lg}',
-  },
   '550e8400-e29b-41d4-a716-bb6c728e7cef': {
     width: '100%',
     height: 'auto',
@@ -140,5 +109,34 @@ export const styles = {
   '550e8400-e29b-41d4-a716-f2a975940624': {
     height: 'auto',
     width: 'auto',
+  },
+  '550e8400-e29b-41d4-a716-be18a7bd56fe': {
+    display: 'grid',
+    flexDirection: 'column',
+    alignItems: 'end',
+    justifyContent: 'stretch',
+    gap: '{space.gap.lg}',
+    height: 'auto',
+    alignContent: 'stretch',
+    gridTemplateColumns: 'repeat(1, minmax(0, 1fr))',
+    justifyItems: 'stretch',
+    rowGap: '{radius.lg}',
+  },
+  '550e8400-e29b-41d4-a716-84683295900a': {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    gap: '{space.stack.sm}',
+    width: '100%',
+    height: 'auto',
+  },
+  '550e8400-e29b-41d4-a716-846b26a622a2': {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    gap: '{space.stack.lg}',
+    padding: '{space.inset.lg}',
+    width: '100%',
+    height: 'auto',
   },
 } satisfies Readonly<Record<string, NonNullable<Node['style']>>>;

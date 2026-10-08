@@ -26,7 +26,7 @@ export const root: Node = {
                     value: 'item.value',
                     disabled: 'item.disabled',
                     checked: 'item.checked',
-                    name: 'name',
+                    name: 'radio-choices',
                   },
                 },
               },
