@@ -1038,3 +1038,39 @@ Its options are generated from every catalog definition and its real layers, so 
 previews that node in the inspector. The canvas selector is removed. Examples typecheck, scoped
 detector, diff check, and Storybook production build pass; Vite emitted existing client-directive,
 sourcemap, and chunk-size warnings during its successful build.
+
+## Reusable dependent-select Storybook panel
+
+The catalog preset dropdown combines asset and layer in one static select, but the editor needs
+separate controls where the layer options react to the selected asset. Storybook's native
+argTypes controls cannot filter one select's options from another arg at runtime. Add a generic,
+app-local manager panel configured through story parameters with externally supplied options and
+arg names; changing an asset also selects its first valid layer. Keep catalog knowledge in the
+story and make the panel reusable without Facadeur imports. Validate by building Storybook and
+checking the scoped detector; no package dependency changes are expected.
+
+Result: `.storybook/lib/dependent-select/` now contains a generic panel, typed serializable
+configuration contract, registration helper, and copy/reuse README. The right-sidebar story passes
+catalog groups and layer options from the outside, and the two args render the chosen asset/layer.
+Changing Asset updates Layer to its first valid value. Storybook production build and the scoped
+detector pass; Vite reports its existing client-directive, sourcemap, and chunk-size warnings.
+The blank panel was caused by the manager's classic JSX transform requiring an explicit React
+import; the imports are now present. Runtime verification confirmed the Asset and Layer controls
+render and the Layer options change when Asset changes. The running Storybook manager bundle was
+stale, so the 6006 dev server needs a restart to load the fix.
+
+## Make the Storybook panel schema-driven
+
+The reusable panel currently owns a fixed two-select layout, which limits other stories from
+using it for ordinary fields or repeaters. Replace that fixed shape with an externally supplied
+serializable field schema, keeping dependent selects and adding text, number, boolean, and repeater
+fields with typed item fields. Preserve Storybook args as the only edited state and keep all
+Facadeur catalog data in the story. Validate with the Storybook build and scoped detector.
+
+Result: the manager panel now renders external field schemas for text, number, boolean, static or
+dependent select, and repeater fields. Repeater items accept their own typed controls and add,
+edit, and remove operations update story args. The right-sidebar story supplies catalog fields;
+its temporary repeater demo was removed after runtime verification, while generic repeater support
+remains available to other stories. Storybook production build and scoped detector pass. Runtime
+verification confirmed that Asset changes Layer options and repeater edits update story args and
+preview. The previous `dependent-select` library is replaced by `.storybook/lib/schema-form/`.

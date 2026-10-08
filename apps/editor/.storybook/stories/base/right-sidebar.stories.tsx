@@ -1,17 +1,46 @@
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { card, exampleCatalogDefinitions, exampleCatalogLayers } from '@facadeur/examples';
 import { ResizableInspector } from '../../../src/ui/shell/ResizableInspector';
 import { RightRail } from '../../../src/ui/sidebar/properties/RightRail';
 import { createStorybookEditor } from '../../fixtures/editor';
 import {
-  catalogPresetLabels,
-  catalogPresetOptions,
-  defaultCatalogPreset,
-  resolveCatalogPreset,
-} from '../../controls';
+  STORYBOOK_SCHEMA_FORM_PARAMETER,
+  type StorybookSchemaFormConfig,
+} from '../../lib/schema-form';
 
-function RightSidebarPreview({ preset }: { preset: string }) {
-  const { definition, layerUuid: selectedLayer } = resolveCatalogPreset(preset);
+const definitions = exampleCatalogDefinitions();
+const nameCounts = new Map<string, number>();
+for (const definition of definitions) {
+  nameCounts.set(definition.name, (nameCounts.get(definition.name) ?? 0) + 1);
+}
+const assetOptions = definitions.map((definition) => ({
+  value: definition.uuid,
+  label: `${definition.kind} · ${definition.name}${nameCounts.get(definition.name)! > 1 ? ` · ${definition.uuid.slice(-4)}` : ''}`,
+}));
+const layersByAsset = Object.fromEntries(
+  definitions.map((definition) => [
+    definition.uuid,
+    exampleCatalogLayers(definition).map(({ uuid, label }) => ({ value: uuid, label })),
+  ]),
+);
+const schemaForm = {
+  fields: [
+    { type: 'select', name: 'assetId', label: 'Asset', options: assetOptions },
+    {
+      type: 'select',
+      name: 'layerUuid',
+      label: 'Layer',
+      optionsFrom: { arg: 'assetId', values: layersByAsset },
+    },
+  ],
+} satisfies StorybookSchemaFormConfig;
+
+function RightSidebarPreview({ assetId, layerUuid }: { assetId: string; layerUuid: string }) {
+  const definition = definitions.find((item) => item.uuid === assetId) ?? card;
+  const selectedLayer = exampleCatalogLayers(definition).some(({ uuid }) => uuid === layerUuid)
+    ? layerUuid
+    : definition.root.uuid;
   const editor = useMemo(
     () => createStorybookEditor(definition.uuid, selectedLayer),
     [definition.uuid, selectedLayer],
@@ -36,14 +65,13 @@ function RightSidebarPreview({ preset }: { preset: string }) {
 const meta = {
   title: 'Base/Right Sidebar',
   component: RightSidebarPreview,
-  args: { preset: defaultCatalogPreset.id },
+  args: { assetId: card.uuid, layerUuid: card.root.uuid },
   argTypes: {
-    preset: {
-      control: { type: 'select' },
-      options: catalogPresetOptions,
-      labels: catalogPresetLabels,
-      description: 'Select an example asset and one of its layers.',
-    },
+    assetId: { control: false },
+    layerUuid: { control: false },
+  },
+  parameters: {
+    [STORYBOOK_SCHEMA_FORM_PARAMETER]: schemaForm,
   },
 } satisfies Meta<typeof RightSidebarPreview>;
 
