@@ -211,8 +211,6 @@ export function EditorShell({
             selectedRenderId={snap.selectedRenderId}
             focusViewportId={snap.focusViewportId}
             selectedViewportId={snap.selectedViewportId}
-            chromeRevision={snap.revision}
-            activeVariantName={snap.activeVariantName}
             tool={snap.tool}
           />
         )}

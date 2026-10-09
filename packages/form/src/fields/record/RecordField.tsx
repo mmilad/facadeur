@@ -18,8 +18,15 @@ export function RecordField({
   onChange,
 }: RecordFieldProps) {
   const [drafts, setDrafts] = useState<Draft[]>([]);
+  const draftsRef = useRef(drafts);
   const rowIds = useRef(new Map<string, string>());
   const nextDraftId = useRef(0);
+  function updateDrafts(update: (current: Draft[]) => Draft[]) {
+    const next = update(draftsRef.current);
+    draftsRef.current = next;
+    setDrafts(next);
+  }
+
   const rows = [
     ...Object.entries(value).map(([key, rowValue]) => {
       const id = rowIds.current.get(key) ?? key;
@@ -48,13 +55,13 @@ export function RecordField({
         key &&
         next.value !== '' &&
         !Object.prototype.hasOwnProperty.call(value, key) &&
-        !drafts.some((draft) => draft.id !== row.id && draft.key.trim() === key);
+        !draftsRef.current.some((draft) => draft.id !== row.id && draft.key.trim() === key);
       if (canCommit) {
         rowIds.current.set(key, row.id);
         onChange({ ...value, [key]: next.value });
-        setDrafts((current) => current.filter((item) => item.id !== row.id));
+        updateDrafts((current) => current.filter((item) => item.id !== row.id));
       } else {
-        setDrafts((current) => current.map((item) => (item.id === row.id ? next : item)));
+        updateDrafts((current) => current.map((item) => (item.id === row.id ? next : item)));
       }
     }
   }
@@ -63,10 +70,10 @@ export function RecordField({
     const key = row.key.trim();
     if (!key || row.value === '') return;
     if (Object.prototype.hasOwnProperty.call(value, key)) return;
-    if (drafts.some((draft) => draft.id !== row.id && draft.key.trim() === key)) return;
+    if (draftsRef.current.some((draft) => draft.id !== row.id && draft.key.trim() === key)) return;
     rowIds.current.set(key, row.id);
     onChange({ ...value, [key]: row.value });
-    setDrafts((current) => current.filter((item) => item.id !== row.id));
+    updateDrafts((current) => current.filter((item) => item.id !== row.id));
   }
 
   function remove(row: Row) {
@@ -75,7 +82,7 @@ export function RecordField({
       delete next[row.key];
       rowIds.current.delete(row.key);
       onChange(next);
-    } else setDrafts((current) => current.filter((item) => item.id !== row.id));
+    } else updateDrafts((current) => current.filter((item) => item.id !== row.id));
   }
 
   return (
@@ -105,7 +112,8 @@ export function RecordField({
               if (!row.isDraft) return;
               const nextTarget = event.relatedTarget;
               if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) return;
-              commit(row);
+              const latest = draftsRef.current.find((draft) => draft.id === row.id);
+              if (latest) commit({ ...latest, isDraft: true });
             }}
           >
             <div className={styles.inputs}>
@@ -146,7 +154,7 @@ export function RecordField({
         aria-label={`Add ${keyLabel}`}
         disabled={disabled}
         onClick={() =>
-          setDrafts((current) => [
+          updateDrafts((current) => [
             ...current,
             { id: `draft-${nextDraftId.current++}`, key: '', value: '' },
           ])

@@ -19,7 +19,7 @@ function layerNameForNode(node: NodeModel, root: boolean): string {
   return node.dom.tagName;
 }
 
-/** Layer tree for the open catalog definition (node uuids + `v2:` render addresses). */
+/** Layer tree for the open catalog definition (node UUID render addresses). */
 export function catalogLayerTree(
   definitionUuid: string,
   root: NodeModel,
@@ -27,7 +27,7 @@ export function catalogLayerTree(
 ): LayerItem {
   const visit = (node: NodeModel, isRoot = false): LayerItem => ({
     id: node.uuid,
-    address: `v2:${node.uuid}`,
+    address: `node:${node.uuid}`,
     documentId: definitionUuid,
     name: layerNameForNode(node, isRoot),
     tagName: tagNameForNode(node, catalog),

@@ -4,7 +4,7 @@ import type { SelectionController } from '../../domain/selection/selection';
 import type { AppService } from '../../app-service';
 import type { EditorSession, EditorTool } from '../../domain/session';
 import type { StageController } from '../../domain/viewport/stage';
-import type { ViewportBoard } from '../../domain/viewport/viewports';
+import type { ViewportBoard } from '../../domain/viewport/board';
 import { useStagePointer } from './canvas/useStagePointer';
 import { useStageViewportBoard } from './canvas/useStageViewportBoard';
 
@@ -17,8 +17,6 @@ export function StageCanvas({
   selectedRenderId,
   focusViewportId,
   selectedViewportId,
-  chromeRevision,
-  activeVariantName,
   tool,
   readOnly = false,
 }: {
@@ -30,8 +28,6 @@ export function StageCanvas({
   selectedRenderId: string | null;
   focusViewportId: string | null;
   selectedViewportId: string | null;
-  chromeRevision: number;
-  activeVariantName: string | null;
   tool: EditorTool;
   readOnly?: boolean;
 }) {
@@ -63,8 +59,6 @@ export function StageCanvas({
     selectedRenderId,
     focusViewportId,
     selectedViewportId,
-    chromeRevision,
-    activeVariantName,
     stageRef,
     boardRef,
     selectionRef,

@@ -1,4 +1,5 @@
 import type { ElementBuildConfig } from '@facadeur/domain';
+import { isVoidHtmlTag } from '@facadeur/core';
 
 export type ElementBuildOptions = {
   document?: Document;
@@ -11,7 +12,8 @@ export function buildElement(
 ): HTMLElement {
   const doc = options.document ?? window.document;
   const el = doc.createElement(config.tagName || 'div');
-  if (config.text) el.textContent = config.text;
+  const isVoid = isVoidHtmlTag(config.tagName);
+  if (!isVoid && config.text) el.textContent = config.text;
   if (config.attributes) {
     for (const [name, value] of Object.entries(config.attributes)) {
       if (value !== '') el.setAttribute(name, value);
@@ -34,7 +36,7 @@ export function buildElement(
       }
     }
   }
-  if (config.children) {
+  if (!isVoid && config.children) {
     for (const child of config.children) {
       el.appendChild(buildElement(child, options));
     }

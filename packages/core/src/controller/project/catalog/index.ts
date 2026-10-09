@@ -6,6 +6,7 @@ export {
   patchNodeDataRecord,
   patchNodeName,
   patchNodeDomAttributes,
+  patchNodeDomText,
   patchNodeStyleRecord,
   patchNodeTagName,
   resolveJsonSchemaForDefinition,

@@ -6,11 +6,10 @@ import type {
   NodeDefinition,
   ProjectCatalog,
 } from '@facadeur/domain';
-
-const LEAF_TAGS = new Set(['img', 'input', 'br', 'hr', 'meta', 'link']);
+import { isVoidHtmlTag } from '../../../document/html-tags';
 
 function nodeAcceptsChildren(tagName: string): boolean {
-  return !LEAF_TAGS.has(tagName.toLowerCase());
+  return !isVoidHtmlTag(tagName);
 }
 
 export function findDefinition(
@@ -117,6 +116,18 @@ export function patchNodeDomAttributes(
     }
     (node.dom as { attributes?: Record<string, string> }).attributes =
       Object.keys(merged).length > 0 ? merged : undefined;
+  });
+}
+
+export function patchNodeDomText(
+  catalog: ProjectCatalog,
+  definitionUuid: string,
+  nodeUuid: string,
+  text: string,
+): ProjectCatalog {
+  return mutateNode(catalog, definitionUuid, nodeUuid, (node) => {
+    if (text) (node.dom as { text?: string }).text = text;
+    else delete (node.dom as { text?: string }).text;
   });
 }
 

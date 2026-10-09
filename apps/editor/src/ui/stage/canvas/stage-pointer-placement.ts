@@ -16,7 +16,7 @@ import { dataIdSelector, type SelectionController } from '../../../domain/select
 import { documentChain, renderIdForNode } from '../../../domain/selection/selection-model';
 import type { EditorDrag, EditorSession, EditorSnapshot } from '../../../domain/session';
 import type { StageController } from '../../../domain/viewport/stage';
-import type { ViewportBoard, ViewportFrame } from '../../../domain/viewport/viewports';
+import type { ViewportBoard, ViewportFrame } from '../../../domain/viewport/board';
 
 export interface StageDrop {
   parentId: string;

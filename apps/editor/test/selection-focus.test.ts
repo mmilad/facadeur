@@ -2,11 +2,9 @@
  * @vitest-environment jsdom
  */
 import { describe, expect, it } from 'vitest';
-import type { DomRenderer } from '@facadeur/renderer-dom';
-import type { StyleEngine } from '@facadeur/style-engine';
 import { createFrameHost } from '../src/domain/viewport/frame-host';
 import { createSelection } from '../src/domain/selection/selection';
-import type { ViewportFrame } from '../src/domain/viewport/viewports';
+import type { ViewportFrame } from '../src/domain/viewport/board';
 
 function mountedFrame(id: string, minWidth: number): ViewportFrame {
   const host = createFrameHost({ id, width: minWidth });
@@ -15,13 +13,11 @@ function mountedFrame(id: string, minWidth: number): ViewportFrame {
   document.body.append(column);
   host.mount(column);
   const node = host.contentDocument().createElement('div');
-  node.dataset.id = 'heading';
+  node.dataset.facadeurNodeUuid = 'node-1';
   host.contentDocument().body.append(node);
   return {
     breakpoint: { id, minWidth },
     host,
-    renderer: { destroy() {} } as DomRenderer,
-    styles: { destroy() {} } as StyleEngine,
     column,
   };
 }
@@ -39,12 +35,12 @@ describe('selection focus', () => {
       frames: () => frames,
     });
 
-    selection.show('heading', null);
+    selection.show('node:node-1', null);
     let boxes = [...stage.querySelectorAll<HTMLElement>('.selection-box')];
     expect(boxes.map((box) => box.dataset.focus)).toEqual(['secondary', 'secondary']);
     expect(boxes.every((box) => box.hidden === false)).toBe(true);
 
-    selection.show('heading', 'tablet');
+    selection.show('node:node-1', 'tablet');
     boxes = [...stage.querySelectorAll<HTMLElement>('.selection-box')];
     expect(boxes).toHaveLength(2);
     expect(boxes[0]?.dataset.focus).toBe('secondary');
@@ -54,7 +50,7 @@ describe('selection focus', () => {
     expect(boxes[0]?.querySelector('.handle')).toBeTruthy();
     expect(boxes[1]?.querySelector('.handle')).toBeTruthy();
 
-    selection.show('heading', 'mobile');
+    selection.show('node:node-1', 'mobile');
     boxes = [...stage.querySelectorAll<HTMLElement>('.selection-box')];
     expect(boxes.map((box) => box.dataset.focus)).toEqual(['primary', 'secondary']);
 

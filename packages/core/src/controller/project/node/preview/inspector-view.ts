@@ -1,5 +1,5 @@
 import type { FieldValue, Node, NodeDefinition, ProjectCatalog } from '@facadeur/domain';
-import { htmlTagOptions } from '../../../../document/html-tags';
+import { htmlTagOptions, isVoidHtmlTag } from '../../../../document/html-tags';
 import { fieldsFromJsonSchema } from '../../../../schema/json-schema-fields';
 import type { FieldDefinition } from '../../../../schema/document';
 import { classListFromNode, findDefinition, findNodeByUuid } from '../../catalog/ops';
@@ -16,6 +16,7 @@ export type InspectorFormValue = {
   node: {
     name: string;
     tagName: string;
+    text: string;
     fieldExposureMode: 'flat' | 'grouped' | 'manual';
     fieldExposureGroupName: string;
     fieldExposureFields: Record<string, string>;
@@ -29,7 +30,7 @@ export type InspectorFormValue = {
 
 export type InspectorFormField =
   | { type: 'section'; title: string; fields: InspectorFormField[] }
-  | { type: 'text'; path: string; label: string; hint?: string }
+  | { type: 'text'; path: string; label: string; hint?: string; bindable?: boolean }
   | { type: 'select'; path: string; label: string; options: readonly string[] }
   | { type: 'classList'; path: string; label: string; suggestions: readonly string[] }
   | {
@@ -140,6 +141,11 @@ export function buildInspectorFormModel(
     node: {
       name: node.name ?? '',
       tagName: node.dom.tagName,
+      text:
+        node.dom.text ??
+        (typeof node.dom.properties?.textContent === 'string'
+          ? node.dom.properties.textContent
+          : ''),
       classList: classListFromNode(node),
       style: { ...(node.style ?? {}) },
       data: recordFromFieldValues(node.data ?? {}),
@@ -241,6 +247,14 @@ export function buildInspectorFormModel(
     });
   }
 
+  if (!isVoidHtmlTag(node.dom.tagName)) {
+    sections.push({
+      type: 'section',
+      title: 'Content',
+      fields: [{ type: 'text', path: 'node.text', label: 'Text content', bindable: true }],
+    });
+  }
+
   const previewSection = schemaFieldSections('previewData', 'Preview defaults', schemaFields);
   if (previewSection) sections.push(previewSection);
 
@@ -298,6 +312,7 @@ export type InspectorFormChangeTarget =
   | { kind: 'definitionFieldExposureMode'; mode: 'flat' | 'grouped' | 'manual' }
   | { kind: 'definitionFieldExposureFields'; value: Readonly<Record<string, string>> }
   | { kind: 'nodeTagName'; nodeUuid: string; value: string }
+  | { kind: 'nodeText'; nodeUuid: string; value: string }
   | { kind: 'nodeClassList'; nodeUuid: string; value: readonly string[] }
   | { kind: 'nodeStyle'; nodeUuid: string; value: Readonly<Record<string, string>> }
   | { kind: 'nodeDataRecord'; nodeUuid: string; value: Readonly<Record<string, string>> }
@@ -335,6 +350,9 @@ export function inspectorChangeTarget(
   }
   if (path === 'node.tagName') {
     return { kind: 'nodeTagName', nodeUuid, value: String(value ?? '').trim() };
+  }
+  if (path === 'node.text') {
+    return { kind: 'nodeText', nodeUuid, value: String(value ?? '') };
   }
   if (path === 'node.classList') {
     return {

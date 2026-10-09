@@ -36,4 +36,18 @@ describe('buildElement preview pipeline', () => {
     expect(element.getAttribute('src')).toContain('placehold.co');
     expect(element.getAttribute('alt')).toBe('Preview image');
   });
+
+  it('does not add text or children to void elements', () => {
+    const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>');
+    const element = buildElement(
+      {
+        tagName: 'img',
+        text: 'ignored text',
+        children: [{ tagName: 'span', text: 'ignored child' }],
+      },
+      { document: dom.window.document },
+    );
+
+    expect(element.childNodes).toHaveLength(0);
+  });
 });

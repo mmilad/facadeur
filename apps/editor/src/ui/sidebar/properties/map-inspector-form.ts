@@ -29,7 +29,7 @@ function mapInspectorField(
     ];
   }
   if (field.type === 'text') {
-    return [{ type: 'text', name: field.path, label: field.label, bindable: false }];
+    return [{ type: 'text', name: field.path, label: field.label, bindable: field.bindable }];
   }
   if (field.type === 'select') {
     return [

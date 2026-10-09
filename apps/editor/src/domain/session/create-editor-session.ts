@@ -102,15 +102,11 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     const coreSnap = core.getSnapshot();
     openId = id;
     workspace =
-      definition.kind === 'page'
-        ? 'page'
-        : definition.kind === 'component'
-          ? 'component'
-          : 'atom';
+      definition.kind === 'page' ? 'page' : definition.kind === 'component' ? 'component' : 'atom';
     tool = 'select';
     drag = null;
     selectedNodeId = coreSnap.selectedNodeUuid;
-    selectedRenderId = coreSnap.selectedNodeUuid ? `v2:${coreSnap.selectedNodeUuid}` : null;
+    selectedRenderId = coreSnap.selectedNodeUuid ? `node:${coreSnap.selectedNodeUuid}` : null;
     notice = null;
     generation += 1;
     publish();
@@ -121,7 +117,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     if (definition && findNodeByUuid(definition.root, nodeId)) {
       core.selectNode(nodeId);
       selectedNodeId = nodeId;
-      selectedRenderId = `v2:${nodeId}`;
+      selectedRenderId = `node:${nodeId}`;
       publish();
       return;
     }
@@ -275,6 +271,8 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
         designRevision,
         revision,
         catalogDirty: catalogDirty(),
+        focusViewportId,
+        selectedViewportId,
       }).design;
       return {
         tokens: design.tokens,

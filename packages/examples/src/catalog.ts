@@ -68,7 +68,7 @@ function nameForNode(node: Node): string {
   const tag = node.dom.tagName.toLowerCase();
   const attrs = node.dom.attributes ?? {};
   const classes = attrs.class?.split(/\s+/).filter(Boolean) ?? [];
-  const content = node.dom.properties?.textContent;
+  const content = node.dom.text ?? node.dom.properties?.textContent;
   const hint = [
     node.dom.data?.name,
     node.data?.name,

@@ -1339,3 +1339,48 @@ show only the node data section here as Component defaults, and use those compon
 labeled autocomplete suggestions for record values. Keep the values literal and preserve existing
 schema and node-data write paths. Validate editor/form typechecks, formatting, detector, and diff
 check; inspect Storybook if available.
+
+## Reconcile catalog previews in stable iframe roots
+
+`useStageViewportBoard` currently rebuilds the board for every `designRevision`, and the v2
+board replaces each iframe body with a fresh DOM tree. Add a portable Core predicate for HTML
+void elements and an editor-only React adapter for `ElementBuildConfig`; keep iframe/style-engine
+lifecycle separate and update stable React roots with `nodeUuid` keys. Preserve the generic DOM
+renderer and its public contract. Validate void-tag semantics, adapter behavior, form/editor types,
+Storybook, and the refactor detector.
+
+## Add bindable text content to catalog elements
+
+Give element text content its own `dom.text` value, separate from HTML attributes and arbitrary DOM
+properties. Resolve literal values and stable prop references through the existing preview pipeline;
+surface a bindable Text content control in the inspector; keep React responsible for text children.
+Bind the Card mock's eyebrow, title, and body nodes to their schema prop IDs. Preserve legacy
+`textContent` values as a read fallback while removing them from imperative React property writes.
+Validate catalog schema, binding resolution, inspector editing, React updates, and renderer parity.
+
+## Retire the duplicate viewport board
+
+The editor mounts the React catalog board, while `viewports.ts` still contains an unreferenced
+DOM-renderer board and its test suite. Keep iframe pass-through so stage pointer handling and its
+selection overlays remain authoritative. Make the React board the sole active board contract,
+remove the unused renderer path, and replace the versioned `v2:` selection address with a
+semantic `node:` address. Preserve frame hit-testing, layer selection, stable React updates, and
+viewport labels. Keep focused tests for React reconciliation and iframe pointer pass-through;
+retain independent FrameHost and viewport-chrome helper coverage.
+
+Result: the duplicate DOM-renderer board and its board-specific test file are removed. React board
+updates and iframe pass-through have one focused assertion; cross-breakpoint overlay selection now
+uses `node:<uuid>`. The scoped detector and diff check pass. Editor TypeScript reports no errors in
+the changed canvas/session modules, though the full check still reports existing workspace
+dependency errors. Vitest remains blocked in the sandbox by the documented `EPERM` realpath issue.
+
+Unrelated refactor review: `packages/renderer-dom/src/paint.ts` is 460 lines and
+`packages/renderer-dom/src` has 14 direct source files. Keep the current renderer task scoped to the
+text-content contract; review paint/responsibility boundaries and source-directory ownership in a
+separate plan item, preserving paint and renderer public contracts unless evidence justifies a
+boundary change.
+
+The text binding adds one mutation method to `packages/core/src/controller/project/controller.ts`
+(470 lines after the change). Retain it there: the class already owns the corresponding catalog
+node mutations and inspector dispatch; extracting only this operation would split the same
+responsibility without changing ownership or improving validation.

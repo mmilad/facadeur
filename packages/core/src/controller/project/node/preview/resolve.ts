@@ -69,12 +69,19 @@ function stringField(value: FieldValue | undefined): string | undefined {
   return undefined;
 }
 
-function textFromNode(node: Node, fields: Record<string, FieldValue>): string | undefined {
+function textFromNode(
+  node: Node,
+  fields: Record<string, FieldValue>,
+  ctx: PreviewResolveContext,
+): string | undefined {
   const fieldText = stringField(fields.text);
-  if (fieldText !== undefined) return fieldText;
-  const fromProperty = node.dom.properties?.textContent;
-  if (typeof fromProperty === 'string') return fromProperty;
-  return undefined;
+  const source =
+    fieldText ??
+    node.dom.text ??
+    (typeof node.dom.properties?.textContent === 'string'
+      ? node.dom.properties.textContent
+      : undefined);
+  return source === undefined ? undefined : resolveTemplateString(source, ctx);
 }
 
 /**
@@ -92,6 +99,7 @@ export function resolveDefinitionToElementBuildConfig(
     catalog,
     parentFields,
     new Set([definition.uuid]),
+    {},
   );
 }
 
@@ -101,6 +109,7 @@ function resolveNodeToElementBuildConfig(
   catalog: ProjectCatalog,
   parentFields: Record<string, FieldValue>,
   activeDefinitions: ReadonlySet<string>,
+  inheritedOverrides: Record<string, FieldValue>,
 ): ElementBuildConfig {
   const definitionRef = node.config?.definitionRef;
   if (definitionRef) {
@@ -125,12 +134,19 @@ function resolveNodeToElementBuildConfig(
         ...(node.config?.previewData?.fields as Record<string, FieldValue> | undefined),
         ...(node.data as Record<string, FieldValue> | undefined),
       };
+      const instanceOverrides = {
+        ...parentFields,
+        ...exposureValues,
+        ...(node.config?.previewData?.fields as Record<string, FieldValue> | undefined),
+        ...(node.data as Record<string, FieldValue> | undefined),
+      };
       const built = resolveNodeToElementBuildConfig(
         refDefinition.root,
         refDefinition,
         catalog,
         instanceFields,
         new Set(activeDefinitions).add(refDefinition.uuid),
+        instanceOverrides,
       );
       return { ...built, nodeUuid: node.uuid };
     }
@@ -150,26 +166,31 @@ function resolveNodeToElementBuildConfig(
       fields,
     ),
     overrides: {
-      ...parentFields,
+      ...inheritedOverrides,
       ...(node.data as Record<string, FieldValue> | undefined),
     },
   };
 
   const children = (node.dom.children ?? []).map((child) =>
-    resolveNodeToElementBuildConfig(child, definition, catalog, fields, activeDefinitions),
+    resolveNodeToElementBuildConfig(child, definition, catalog, fields, activeDefinitions, fields),
   );
 
-  const text = textFromNode(node, fields);
+  const text = textFromNode(node, fields, ctx);
   const attributes = resolveStringRecord(node.dom.attributes, ctx) ?? {};
   const style = resolveStringRecord(node.style, ctx);
+  const properties = node.dom.properties
+    ? Object.fromEntries(
+        Object.entries(node.dom.properties).filter(([name]) => name !== 'textContent'),
+      )
+    : undefined;
 
   return {
     tagName: node.dom.tagName,
-    ...(text ? { text } : {}),
+    ...(text !== undefined ? { text } : {}),
     attributes,
     ...(node.dom.data ? { dataset: { ...node.dom.data } } : {}),
     ...(style && Object.keys(style).length ? { style } : {}),
-    ...(node.dom.properties ? { properties: { ...node.dom.properties } } : {}),
+    ...(properties && Object.keys(properties).length ? { properties } : {}),
     ...(children.length ? { children } : {}),
     nodeUuid: node.uuid,
   };

@@ -14,6 +14,7 @@ export {
 export { DocumentError } from './document/errors';
 export { StyleController } from './controller/style/controller';
 export { CoreController } from './controller/project/index';
+export type { ElementBuildConfig } from '@facadeur/domain';
 export { NodeController } from './controller/project/node/index';
 export {
   PreviewController,
@@ -129,7 +130,12 @@ export {
   type TextNode,
 } from './document/flat';
 export { createCatalogUuid, createId, ID_PATTERN, TAG_PATTERN } from './document/ids';
-export { DEFAULT_HTML_TAG_OPTIONS, htmlTagOptions } from './document/html-tags';
+export {
+  DEFAULT_HTML_TAG_OPTIONS,
+  VOID_HTML_TAGS,
+  htmlTagOptions,
+  isVoidHtmlTag,
+} from './document/html-tags';
 export { canonicalizeLayout, layoutTokenRefs, parseLayout } from './controller/style/layout';
 export {
   assertStyleSelector,

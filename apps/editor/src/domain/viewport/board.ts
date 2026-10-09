@@ -1,20 +1,35 @@
-/** Catalog preview board: one iframe per active project breakpoint. */
-import { breakpointLabel, type ProjectCatalogModel } from '@facadeur/core';
-import { buildElement } from '@facadeur/renderer-dom';
-import type { DomRenderer } from '@facadeur/renderer-dom';
+/** Editor canvas: one iframe per active project breakpoint. */
+import {
+  breakpointLabel,
+  type Breakpoint,
+  type ElementBuildConfig,
+  type ProjectCatalogModel,
+} from '@facadeur/core';
+import { createElement } from 'react';
+import { createRoot } from 'react-dom/client';
+import type { Root } from 'react-dom/client';
 import { activeBreakpoints } from '@facadeur/tokens';
-import type { StyleEngine } from '@facadeur/style-engine';
-import { createFrameHost } from './frame-host';
-import type { ViewportBoard, ViewportFrame } from './viewports';
+import { createFrameHost, type FrameHost } from './frame-host';
+import { DynamicElement } from './dynamic-element';
 
-type ElementBuildConfig = Parameters<typeof buildElement>[0];
-
-function mountPreview(host: ReturnType<typeof createFrameHost>, buildConfig: ElementBuildConfig) {
-  const doc = host.contentDocument();
-  doc.body.replaceChildren(buildElement(buildConfig, { document: doc }));
+export interface ViewportFrame {
+  breakpoint: Breakpoint;
+  host: FrameHost;
+  /** Stage column element for this breakpoint. */
+  column: HTMLElement;
 }
 
-export function createV2ViewportBoard(options: {
+export interface ViewportBoard {
+  /** The row of frames. Fit the stage to this element. */
+  readonly element: HTMLElement;
+  frames(): readonly ViewportFrame[];
+  /** Update the mounted React tree while keeping each iframe and element alive. */
+  updateBuildConfig(config: ElementBuildConfig, title?: string): void;
+  syncHeights(): void;
+  destroy(): void;
+}
+
+export function createViewportBoard(options: {
   parent: HTMLElement;
   buildConfig: ElementBuildConfig;
   title: string;
@@ -22,11 +37,12 @@ export function createV2ViewportBoard(options: {
 }): ViewportBoard {
   const ownerDocument = options.parent.ownerDocument;
   const row = ownerDocument.createElement('div');
-  row.className = 'viewport-frames v2-board';
+  row.className = 'viewport-frames';
   options.parent.append(row);
 
   const breakpoints = activeBreakpoints(options.catalog.globalStyles?.breakpoints);
   const frames: ViewportFrame[] = [];
+  const roots: Root[] = [];
 
   for (const breakpoint of breakpoints) {
     const column = ownerDocument.createElement('section');
@@ -59,19 +75,16 @@ export function createV2ViewportBoard(options: {
       ownerDocument,
     });
     host.element.title = `${options.title} — ${breakpointLabel(breakpoint)}`;
-    host.element.style.pointerEvents = 'auto';
+    // Let pointer events reach the stage; selection overlays are painted above this iframe.
+    host.element.style.pointerEvents = 'none';
     body.append(screen);
     row.append(column);
     host.mount(screen);
-    mountPreview(host, options.buildConfig);
+    const root = createRoot(host.contentDocument().body);
+    root.render(createElement(DynamicElement, { config: options.buildConfig }));
+    roots.push(root);
 
-    frames.push({
-      breakpoint,
-      host,
-      column,
-      renderer: null as unknown as DomRenderer,
-      styles: null as unknown as StyleEngine,
-    });
+    frames.push({ breakpoint, host, column });
   }
 
   return {
@@ -79,16 +92,17 @@ export function createV2ViewportBoard(options: {
     frames() {
       return frames;
     },
-    setDesign() {},
+    updateBuildConfig(config, title = options.title) {
+      frames.forEach((frame, index) => {
+        frame.host.element.title = `${title} — ${breakpointLabel(frame.breakpoint)}`;
+        roots[index]?.render(createElement(DynamicElement, { config }));
+      });
+    },
     syncHeights() {
       for (const frame of frames) frame.host.syncHeight();
     },
-    whenFontsReady() {
-      return Promise.resolve();
-    },
-    applyChrome() {},
-    setVariant() {},
     destroy() {
+      for (const root of roots) root.unmount();
       for (const frame of frames) frame.host.destroy();
       row.remove();
     },

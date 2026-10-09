@@ -42,6 +42,8 @@ export default defineConfig({
       'packages/core/test/prop-ref.test.ts',
       'packages/core/test/design-props.test.ts',
       'packages/core/test/insert-image-node.test.ts',
+      'packages/core/test/html-tags.test.ts',
+      'apps/editor/test/dynamic-element.test.tsx',
       'apps/editor/test/catalog/asset-list.test.ts',
     ],
     passWithNoTests: true,

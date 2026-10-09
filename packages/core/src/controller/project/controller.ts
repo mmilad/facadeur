@@ -26,6 +26,7 @@ import {
   patchNodeFieldExposure,
   patchNodeName,
   patchNodeDomAttributes,
+  patchNodeDomText,
   patchNodeStyleRecord,
   patchNodeTagName,
 } from './catalog/ops';
@@ -213,6 +214,14 @@ export class CoreController implements CoreControllerHost {
     this.publish();
   }
 
+  patchNodeDomText(nodeUuid: string, text: string) {
+    if (!this.openDefinitionId) return;
+    this.catalog = validateProjectCatalog(
+      patchNodeDomText(this.catalog, this.openDefinitionId, nodeUuid, text),
+    ) as ProjectCatalog;
+    this.publish();
+  }
+
   patchNodeClassList(nodeUuid: string, classes: readonly string[]) {
     if (!this.openDefinitionId) return;
     const value = classes.join(' ').trim();
@@ -315,6 +324,10 @@ export class CoreController implements CoreControllerHost {
       case 'nodeTagName': {
         if (!target.value) return;
         this.patchNodeTagName(target.nodeUuid, target.value);
+        return;
+      }
+      case 'nodeText': {
+        this.patchNodeDomText(target.nodeUuid, target.value);
         return;
       }
       case 'nodeClassList': {

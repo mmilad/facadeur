@@ -25,9 +25,11 @@ export function CatalogNodeInspector({
   const isRoot = model.selectionKind === 'root';
   const headerFields =
     sectionFields(model, isRoot ? 'Asset' : 'Element', undefined, componentOptions)?.fields ?? [];
+  const contentSection = sectionFields(model, 'Content', undefined, componentOptions);
   const styleSection = sectionFields(model, 'Layout & style', undefined, componentOptions);
   const nodeDataSection = sectionFields(model, 'Properties', 'Node data', componentOptions);
   const propertySections: InspectorSection[] = [
+    ...(contentSection ? [contentSection] : []),
     {
       label: 'HTML attributes',
       fields: [

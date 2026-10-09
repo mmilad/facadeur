@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { FieldExposure, FieldValue, NodeDefinition, ProjectCatalog } from '@facadeur/domain';
 import { effectiveSchemaForDefinition } from '../src/controller/project/catalog/field-contract';
+import { CoreController } from '../src/controller/project/controller';
 import { buildInspectorFormModel } from '../src/controller/project/node/preview/inspector-view';
 import { resolveDefinitionToElementBuildConfig } from '../src/controller/project/node/preview/resolve';
 import { validateProjectCatalog } from '../src/controller/project/catalog/validate';
@@ -191,6 +192,61 @@ describe('catalog field exposure', () => {
       resolveDefinitionToElementBuildConfig(overrideCatalog.components[cardId]!, overrideCatalog)
         .children?.[0]?.attributes?.src,
     ).toBe('Parent supplied source');
+  });
+
+  it('resolves text content through stable component prop ids', () => {
+    const titlePropId = '10000000-0000-4000-8000-000000000007';
+    const definition: NodeDefinition = {
+      uuid: cardId,
+      name: 'Card',
+      kind: 'component',
+      schema: {
+        kind: 'inline',
+        schema: {
+          type: 'object',
+          properties: { title: { type: 'string', 'x-facadeur-prop-id': titlePropId } },
+          additionalProperties: false,
+        },
+      },
+      config: { previewData: { fields: { title: 'Bound title' } } },
+      root: {
+        uuid: '10000000-0000-4000-8000-000000000008',
+        dom: {
+          tagName: 'article',
+          children: [
+            {
+              uuid: '10000000-0000-4000-8000-000000000009',
+              dom: { tagName: 'h2', text: `{props:${titlePropId}}` },
+            },
+          ],
+        },
+      },
+    };
+    const catalog: ProjectCatalog = { atoms: {}, components: { [cardId]: definition }, pages: {} };
+    const model = buildInspectorFormModel(catalog, definition, definition.root.uuid)!;
+    const contentSection = model.fields.find(
+      (field) => field.type === 'section' && field.title === 'Content',
+    );
+
+    expect(contentSection).toMatchObject({
+      type: 'section',
+      fields: [{ type: 'text', path: 'node.text', bindable: true }],
+    });
+    expect(resolveDefinitionToElementBuildConfig(definition, catalog).children?.[0]?.text).toBe(
+      'Bound title',
+    );
+
+    const core = new CoreController(catalog);
+    core.openDefinition(cardId);
+    core.node.preview.applyFormChange(
+      'node.text',
+      `{props:${titlePropId}}`,
+      '10000000-0000-4000-8000-000000000009',
+    );
+    expect(core.getSnapshot().openDefinition?.root.dom.children?.[0]?.dom.text).toBe(
+      `{props:${titlePropId}}`,
+    );
+    expect(core.node.element.buildOpenDefinition()?.children?.[0]?.text).toBe('Bound title');
   });
 
   it('rejects recursive catalog composition', () => {

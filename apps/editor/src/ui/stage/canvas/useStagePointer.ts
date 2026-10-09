@@ -15,7 +15,7 @@ import {
 } from '../../../domain/selection/selection-model';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session';
 import { createStage, type StageController } from '../../../domain/viewport/stage';
-import type { ViewportBoard } from '../../../domain/viewport/viewports';
+import type { ViewportBoard } from '../../../domain/viewport/board';
 import {
   createStagePlacement,
   dragSubject,
@@ -108,8 +108,8 @@ export function useStagePointer({
       const snap = session.getSnapshot();
       const hit = selection.hitAt(event.clientX, event.clientY);
       if (hit) {
-        if (hit.id.startsWith('v2:')) {
-          session.selectNode(hit.id.slice(3));
+        if (hit.id.startsWith('node:')) {
+          session.selectNode(hit.id.slice('node:'.length));
           return;
         }
         const targetAddress = renderedAddressForClick(snap, hit.id, mode);
@@ -184,7 +184,7 @@ export function useStagePointer({
         return;
       }
       const snap = session.getSnapshot();
-      if (hit.id.startsWith('v2:')) {
+      if (hit.id.startsWith('node:')) {
         selection.hoverRendered(hit.id, frame.host.id);
         return;
       }

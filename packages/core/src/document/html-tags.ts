@@ -31,6 +31,30 @@ export const DEFAULT_HTML_TAG_OPTIONS = [
 
 export type DefaultHtmlTag = (typeof DEFAULT_HTML_TAG_OPTIONS)[number];
 
+/** HTML elements that cannot contain child nodes. */
+export const VOID_HTML_TAGS = [
+  'area',
+  'base',
+  'br',
+  'col',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'link',
+  'meta',
+  'param',
+  'source',
+  'track',
+  'wbr',
+] as const;
+
+const voidHtmlTagSet = new Set<string>(VOID_HTML_TAGS);
+
+export function isVoidHtmlTag(tagName: string): boolean {
+  return voidHtmlTagSet.has(tagName.toLowerCase());
+}
+
 export function htmlTagOptions(current?: string): readonly string[] {
   if (current && !DEFAULT_HTML_TAG_OPTIONS.includes(current as DefaultHtmlTag)) {
     return [current, ...DEFAULT_HTML_TAG_OPTIONS];

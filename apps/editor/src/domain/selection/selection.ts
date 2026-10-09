@@ -1,5 +1,5 @@
 import { overlayBox, pointInFrame, type OverlayBox } from '../viewport/geometry';
-import type { ViewportFrame } from '../viewport/viewports';
+import type { ViewportFrame } from '../viewport/board';
 
 const HANDLES = ['nw', 'ne', 'sw', 'se'];
 
@@ -231,8 +231,8 @@ function nodeUuidSelector(uuid: string): string {
 }
 
 function queryRenderedNode(doc: Document, renderedId: string): HTMLElement | null {
-  if (renderedId.startsWith('v2:')) {
-    const node = doc.querySelector(nodeUuidSelector(renderedId.slice(3)));
+  if (renderedId.startsWith('node:')) {
+    const node = doc.querySelector(nodeUuidSelector(renderedId.slice('node:'.length)));
     return isHtmlElement(node) ? node : null;
   }
   const node = doc.querySelector(byId(renderedId));
@@ -242,5 +242,5 @@ function queryRenderedNode(doc: Document, renderedId: string): HTMLElement | nul
 function renderedIdFromElement(node: HTMLElement): string | null {
   if (node.dataset.id) return node.dataset.id;
   const uuid = node.dataset.facadeurNodeUuid;
-  return uuid ? `v2:${uuid}` : null;
+  return uuid ? `node:${uuid}` : null;
 }
