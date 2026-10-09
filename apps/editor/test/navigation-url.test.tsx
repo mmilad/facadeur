@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { createEditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
 
 const routing = vi.hoisted(() => ({
   search: '',
@@ -172,10 +173,10 @@ describe('editor URL selection', () => {
   });
 
   it('restores viewport selection and switches the URL back to a layer selection', async () => {
-    routing.search = 'document=second&viewport=sm';
+    routing.search = "document=second&viewport=" + fixtureIds.catalog.breakpoints.tablet;
     const editor = session();
     const view = render(<App session={editor} />);
-    expect(editor.getSnapshot().selectedViewportId).toBe('sm');
+    expect(editor.getSnapshot().selectedViewportId).toBe(fixtureIds.catalog.breakpoints.tablet);
     expect(editor.getSnapshot().selectedNodeId).toBeNull();
     act(() => editor.selectNode('label'));
     await waitFor(() => expect(routing.replace).toHaveBeenCalled());

@@ -1,4 +1,5 @@
 import { Type } from '@sinclair/typebox';
+import { UUID_PATTERN } from '../document/ids';
 
 export const idSchema = Type.String({
   minLength: 1,
@@ -39,4 +40,4 @@ export const variantUnsetPathSchema = Type.String({
 
 export const stringMapSchema = Type.Record(Type.String({ minLength: 1 }), Type.String());
 
-export const breakpointIdSchema = Type.String({ pattern: '^[a-z][a-z0-9]*$' });
+export const breakpointIdSchema = Type.String({ format: 'uuid', pattern: UUID_PATTERN.source });

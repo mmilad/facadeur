@@ -9,6 +9,10 @@ it('keeps quoted commas, escaped quotes and functional arguments intact when add
   );
 });
 import type { DocumentFile } from '@facadeur/core';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
+
+const phoneBreakpointUuid = fixtureIds.catalog.breakpoints.phone;
+const wideBreakpointUuid = fixtureIds.catalog.breakpoints.wide;
 
 const document: DocumentFile = {
   version: 1,
@@ -22,8 +26,8 @@ const document: DocumentFile = {
   ],
   settings: {
     breakpoints: [
-      { id: 'phone', minWidth: 390 },
-      { id: 'wide', minWidth: 900 },
+      { uuid: phoneBreakpointUuid, label: 'Phone', minWidth: 390 },
+      { uuid: wideBreakpointUuid, label: 'Wide', minWidth: 900 },
     ],
   },
   styles: {
@@ -36,7 +40,10 @@ const document: DocumentFile = {
         states: { hover: { color: 'blue' } },
         variants: { tone: { accent: { declarations: { color: 'purple' } } } },
         breakpoints: {
-          wide: { declarations: { color: 'green' }, states: { hover: { color: 'teal' } } },
+          [wideBreakpointUuid]: {
+            declarations: { color: 'green' },
+            states: { hover: { color: 'teal' } },
+          },
         },
       },
       {

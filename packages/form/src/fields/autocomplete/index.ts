@@ -1,2 +1,2 @@
-export { AutocompleteField } from './AutocompleteField';
-export type { AutocompleteFieldProps, AutocompleteOption } from './types';
+export { AutocompleteSelectField } from './AutocompleteSelectField';
+export type { AutocompleteOption, AutocompleteSelectFieldProps } from './types';

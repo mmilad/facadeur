@@ -1,5 +1,5 @@
 import React from 'react';
-import { AutocompleteField } from '../autocomplete/AutocompleteField';
+import { TextField } from '../text';
 import type { ComboboxFieldProps } from './types';
 
 export function ComboboxField({
@@ -12,12 +12,12 @@ export function ComboboxField({
   onChange,
 }: ComboboxFieldProps) {
   return (
-    <AutocompleteField
+    <TextField
       id={id}
       name={name}
       label={label}
       value={value}
-      options={options.map((option) => ({ ...option, displayLabel: true }))}
+      suggestions={options}
       disabled={disabled}
       onChange={onChange}
     />

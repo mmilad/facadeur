@@ -20,16 +20,14 @@ import { type ValidateOptions } from './types';
 import { validateDocumentFile } from './schema';
 
 function catalogValidateOptions(byId: Map<string, DocumentFile>): ValidateOptions {
-  const globalTokenPaths = new Set<string>();
+  const globalTokenUuids = new Set<string>();
   for (const file of byId.values()) {
     if (!file.tokens || !Object.keys(file.tokens).length) continue;
-    for (const token of readTokenTree(file.tokens).tokens.values()) {
-      globalTokenPaths.add(token.path);
-    }
+    for (const uuid of readTokenTree(file.tokens).tokens.keys()) globalTokenUuids.add(uuid);
   }
   return {
     resolveKind: (componentId) => byId.get(componentId)?.kind,
-    globalTokenPaths,
+    globalTokenUuids,
     resolveComponentTokenPaths: (documentId) => {
       const tokens = byId.get(documentId)?.componentTokens;
       if (!tokens) return undefined;

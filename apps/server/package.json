@@ -16,6 +16,7 @@
     "yjs": "^13.6.27"
   },
   "devDependencies": {
+    "@facadeur/examples": "workspace:*",
     "@types/node": "^22.19.0",
     "@types/ws": "^8.18.1",
     "tsx": "^4.20.5",

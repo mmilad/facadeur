@@ -1,34 +1,37 @@
 import type { Node } from '@facadeur/domain';
+import { tokenIds as exampleTokenIds } from '../catalog/tokens/idList';
+import { ids as exampleFormFieldRowIds } from './idList';
+import { tokenRef } from '../references';
 
 export const styles = {
-  '550e8400-e29b-41d4-a716-97d18fb0ecd1': {
+  [exampleFormFieldRowIds.nodes.span1]: {
     width: '150px',
     height: 'auto',
-    color: '{color.text}',
+    color: tokenRef(exampleTokenIds.color.text.primary),
     fontWeight: '600',
   },
-  '550e8400-e29b-41d4-a716-2bbcdf8f1792': {
+  [exampleFormFieldRowIds.nodes.span2]: {
     width: '100px',
     height: 'auto',
-    color: '{color.textmuted}',
-    font: '{type.caption}',
+    color: tokenRef(exampleTokenIds.color.text.secondary),
+    font: tokenRef(exampleTokenIds.type.caption),
   },
-  '550e8400-e29b-41d4-a716-9f1924e8cee9': {
+  [exampleFormFieldRowIds.nodes.span3]: {
     width: '100%',
     height: 'auto',
-    color: '{color.textmuted}',
-    font: '{type.caption}',
+    color: tokenRef(exampleTokenIds.color.text.secondary),
+    font: tokenRef(exampleTokenIds.type.caption),
   },
-  '550e8400-e29b-41d4-a716-4c7812fe9f47': {
+  [exampleFormFieldRowIds.nodes.root]: {
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: '{space.3}',
+    gap: tokenRef(exampleTokenIds.space.scale.step3),
     width: '100%',
     height: 'auto',
-    background: '{color.surface}',
-    borderBottom: '1px solid {color.bordersubtle}',
-    font: '{type.body}',
+    background: tokenRef(exampleTokenIds.color.bg.canvas),
+    borderBottom: '1px solid ' + tokenRef(exampleTokenIds.color.border.default),
+    font: tokenRef(exampleTokenIds.type.body),
     paddingBlock: '{padding.y}',
     paddingInline: '{padding.x}',
   },

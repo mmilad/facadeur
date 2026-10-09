@@ -1,5 +1,221 @@
 # facadeur – Plan
 
+### Move design UI out of the sidebar tree
+
+- [x] Refactor: align design settings and shared design controls with their actual owners.
+  - Evidence: `DesignDomainStage` and `EditorShell` render several modules from
+    `ui/sidebar/design`; token table helpers and domain views are not Sidebar components. The
+    current `DesignPanels.tsx` also mixes the Fonts implementation with unrelated re-exports.
+  - Action: place reusable design-domain UI under `ui/design`, catalog-level settings panels and
+    settings navigation under `ui/settings`, and import each view directly. Keep actual inspector
+    panels under `ui/sidebar` and preserve shared design controls for both their current callers.
+  - Scope: current task; reorganize source ownership without changing rendering or behavior.
+  - Contracts: preserve exported component props, navigation domain types, token and viewport
+    behavior, form ownership, and the existing Sidebar inspector imports.
+  - Validation: import-path search, Prettier, `git diff --check`, and the refactoring detector
+    pass. Editor typecheck still reports existing workspace errors; the only diagnostics in moved
+    files are unresolved `@facadeur/domain` package imports, unrelated to their new paths.
+
+### Shared settings table frame
+
+- [x] Add UUID identity groundwork for DTCG token fixtures and editor-created tokens.
+  - Evidence: Core reads an optional token UUID but the published schema omits it; editor token
+    creators do not assign one; example tokens use a separate static path map; the example token
+    tree mixes color, radius, shadow, spacing, and typography definitions in one module.
+  - Action: define the shared UUID/reference metadata contract in Domain, align Core's typed and
+    runtime schema/parser contracts, split example token data by token family while keeping its
+    UUIDs static and completeness-checked, and route editor-created tokens through one identity
+    constructor.
+  - Scope: current task; do not generate example IDs dynamically or alter token values/paths.
+  - Contracts: external DTCG tokens may omit Facadeur UUID metadata; tokens created by the Editor
+    and all example fixtures have unique stable UUIDs; preserve all existing static example IDs,
+    token paths, values, and current token-reference serialization.
+  - Validation: Domain and Examples typechecks pass; the local TSX runtime load validates the
+    example token tree and stable reference lookup. Core and Editor typechecks still fail on
+    existing unrelated workspace errors; no diagnostics point to changed files. Prettier,
+    `git diff --check`, and the refactor detector pass. The core schema/parser now rejects
+    malformed and duplicate token UUIDs.
+
+- [x] Refine token settings rows: remove status column, right-align actions, and rename token paths safely.
+  - Evidence: Base repeats the same status on every row, action buttons leave unused trailing space,
+    and only the optional display label is currently editable.
+  - Action: remove status cells, align row actions at the table edge, and support changing the
+    canonical token path while preserving its UUID and rewriting existing references.
+  - Scope: global design-token settings and the core command needed for safe path changes.
+  - Contracts: preserve token values/metadata, stable UUIDs, and existing references across catalog
+    styles, token values, and open design documents.
+  - Validation: Prettier and `git diff --check` pass; the refactor detector found no size candidates.
+    Form typecheck passes. Core/editor typechecks still report existing errors in unrelated areas;
+    none point to the files changed for this item.
+
+### Unified design-token model
+
+- [ ] Replace path-keyed DTCG tokens with one UUID-keyed internal record contract.
+  - Evidence: token UUIDs currently live in `$extensions.facadeur.uuid` while lookup, edits,
+    references, and rendering still depend on DTCG paths. Color, spacing, radius, shadow, and
+    typography also have different fixture definitions; spacing and typography IDs are assigned
+    by a path map. Fonts and breakpoints use separate mutable string IDs. Earlier completed work
+    added identity groundwork and settings UI consistency, but did not unify this data model.
+  - Target contract: keep collections grouped by token family and key each family by UUID. Every
+    token record carries `uuid`, display `label`, organizational `group`, `valueType`, and `value`;
+    optional `extensions` hold explicitly namespaced metadata. Values may be literals, structured
+    values (such as shadow and typography), or `{token:uuid}` references. Font families are the
+    `font` family in the same contract, with source, weights, and fallbacks in their value. Do not
+    persist a CSS selector; generate it from family/group/label. Label/group edits may change the
+    generated CSS variable, but identity and UUID references remain stable; collisions must fail
+    validation. Breakpoints remain their own resource contract, with UUID identity and override
+    maps keyed by UUID.
+  - Scope: one sequenced migration spanning Domain/Core, persisted catalog reads, token resolution
+    and CSS output, Editor settings/commands, Example fixtures, and all token/font/breakpoint
+    references found by repository-wide search. Example fixture UUIDs are static. Newly authored
+    editor records receive UUIDs at creation. Do not include unrelated settings or Form changes.
+  - Migration decisions: the canonical stored/runtime model is UUID-keyed; DTCG is accepted only
+    by a one-time import/migration adapter for existing catalogs and is not used by runtime
+    consumers or emitted as the canonical format. Preserve existing UUIDs. For legacy records
+    without UUIDs, derive a deterministic UUID from family and old path/ID during migration, then
+    persist the canonical record. Rewrite path references and breakpoint override keys to UUIDs
+    in that same migration. Keep current value validation, undo ordering, and sparse responsive
+    behavior. Generated CSS selectors retain existing names where the old family/group/label can
+    express them; label/group renames intentionally change the generated name. Reject collisions.
+    `tokenInterface.sets` addresses global token overrides by UUID; exposed component-token
+    overrides continue to use their public component paths.
+  - Implementation phases: (1) finalize shared Domain contracts and canonical validation;
+    (2) add the one-way persisted-data migration and UUID reference rewrite; (3) convert Core
+    commands, resolvers, CSS generation, and breakpoint handling; (4) convert Editor CRUD,
+    settings, and reference option construction; (5) convert static Example records and remove
+    obsolete path-keyed runtime helpers. Each phase stays within this item and preserves existing
+    value semantics; if repository evidence uncovers an ambiguous business rule, pause and report
+    the exact callsite and decision instead of changing it implicitly.
+  - Decisions confirmed for this migration: keep existing persisted data readable through a
+    one-time migration, assign deterministic UUIDs only to legacy records that lack identity,
+    represent font families in the shared token envelope, use UUID token references, key
+    responsive overrides by breakpoint UUID, and reject generated-selector collisions. Preserve
+    the existing runtime semantics; do not use this model change to redesign value behavior.
+  - Fixture source: catalog integration tests consume `@facadeur/examples` through its public
+    `createExampleCatalog()` API so changes to canonical example data are validated by Core.
+    Keep only intentionally minimal invalid/legacy inputs inline; legacy style tests derive their
+    token and breakpoint IDs from that same example catalog instead of copying project fixtures.
+  - Validation: contract-level typechecks; round-trip fixtures for every value type; migration
+    checks preserving UUIDs, labels, groups, token/font references, breakpoint overrides, undo,
+    and CSS output; focused Editor/Storybook review; import-cycle review; Prettier,
+    `git diff --check`, and refactor detector rerun. Do not claim completion based only on the
+    settings table displaying UUIDs.
+
+- [x] Fix: clear the visible value in editor state when transforming without persisting an invalid empty token.
+  - Evidence: switching a validated color token to Text or another control should start empty, but
+    writing `''` into the token tree fails color validation.
+  - Action: have the transformable form report mode changes; let the token editor keep an empty
+    display draft and clear it when a replacement value is entered or selected.
+  - Scope: current task; keep mode-selection UI in Form and token-value draft policy in Editor.
+  - Contracts: choosing a mode clears the shown value; persisted token values remain schema-valid.
+  - Validation: Prettier, diff check, Form package typecheck, and detector rerun pass. Editor typecheck reports existing workspace errors outside the changed token files.
+
+- [x] Fix: render transform menu outside clipping settings tables.
+  - Evidence: `TransformableField` positions its menu inside the control with `position: absolute`,
+    while settings tables scroll with overflow and clip descendants.
+  - Action: position the menu relative to the viewport using the trigger bounds, so scrollable
+    tables cannot clip it and the Form package does not need a React DOM portal dependency.
+  - Scope: current task; preserve the shared field API and menu behavior.
+  - Contracts: preserve keyboard Escape behavior, nested options, and automatic close on choice.
+  - Validation: Prettier, `git diff --check`, the Form package typecheck, and detector rerun pass.
+
+- [x] Refactor: use the editor's transformable field in color token rows.
+  - Evidence: the color token settings row still uses the legacy `ColorControl` wrapper around
+    `TokenValueControl`, while the editor already provides `TransformableField` for text, color,
+    and selectable token values.
+  - Action: build color-token picker options from the current token data and pass them to the form
+    control; keep token labels, values, and commits owned by the editor.
+  - Scope: current task; migrate the Colors settings value cell only.
+  - Contracts: preserve raw color values, stable token references, preview resolution, token
+    labels, and breakpoint-aware commits.
+  - Validation: Prettier, `git diff --check`, and detector rerun pass. The editor typecheck has
+    no diagnostics in the changed files but exits with existing workspace errors elsewhere.
+
+- [x] Refactor: move transformable settings option generation into settings config.
+  - Evidence: `colorTransformOptions` builds editor-specific field configuration inside the token
+    row renderer, mixing settings setup with row content.
+  - Action: move the option builder to `ui/settings/config` and have token rows consume its config.
+  - Scope: current task; preserve the current color-token menu behavior.
+  - Contracts: preserve dynamic labels, descriptions, grouping, token references, and option order.
+  - Validation: Prettier, `git diff --check`, and detector rerun pass. The editor typecheck has
+    no diagnostics in the changed files but exits with existing workspace errors elsewhere.
+
+- [x] Refactor: route all table rows and cells through shared primitives.
+  - Evidence: `Table.tsx` repeats `<tr>`, `<th>`, and `<td>` structures across headers, groups,
+    data rows, and disclosures, leaving multiple places for spacing and classes to drift.
+  - Action: introduce small `TableRow` and `TableCell` renderers and use them for each table
+    section. Centralize base cell styles while retaining semantic header and group modifiers.
+  - Scope: current task; presentation consistency only.
+  - Contracts: preserve scopes, column widths, row data attributes, disclosures, and detail spans.
+  - Validation: Prettier, `git diff --check`, and detector rerun pass; the editor typecheck has no
+    diagnostics in the changed files but exits with existing workspace errors elsewhere.
+
+- [x] Refactor: make the table own consistent row, disclosure, detail, and group markup.
+  - Evidence: `Table` currently accepts raw React row markup, so Fonts and Tokens independently
+    render summary and detail rows despite sharing the outer table frame.
+  - Action: use typed rows with cells and optional disclosure details; reuse the row renderer for
+    flat rows and groups. Migrate Fonts, Tokens, and the Storybook examples without moving their
+    domain-specific values or controls into `Table`.
+  - Scope: current task; presentation-only normalization.
+  - Contracts: preserve column order, row labels, disclosure state, token operations, font edits,
+    and existing search behavior.
+  - Validation: Prettier, `git diff --check`, and refactoring detector pass. The editor typecheck
+    reports no diagnostics in the changed files but exits with existing errors elsewhere in the
+    workspace. Storybook visual verification is blocked because its server is disconnected.
+
+- [x] Build a shared table frame for resource and token settings.
+  - Evidence: Fonts and token settings both use searchable tables with counts, actions, columns,
+    and optional expanded detail rows, but currently duplicate their toolbar/table frame.
+  - Action: put the search toolbar, result count, configurable columns, empty state, and table
+    container in `apps/editor/src/ui/settings/Table.tsx`. Support flat rows and collapsible groups;
+    keep domain filtering, item summaries, detail editors, and mutations in consuming views.
+    Token-specific search and sorting helpers live under `ui/design/tokens`; the generic table
+    presentation remains under `ui/settings`.
+  - Scope: current task; migrate Fonts and token settings to the shell while preserving their
+    existing row content and interactions.
+  - Contracts: retain each view's search semantics, column order, group/row expansion, add/remove
+    behavior, viewport overrides, and existing form field ownership. Table groups own only shared
+    disclosure markup; each view supplies group labels, state, and rows. Table border, radius,
+    background, cell spacing, and header styling are shared across settings tables.
+  - Validation: Prettier and `git diff --check` pass; editor typecheck reports no diagnostics in
+    changed settings files but remains blocked by existing workspace/dependency type errors.
+    Storybook visual review remains unavailable because the current server is disconnected and
+    its restart fails during SWC path canonicalization on Windows. Refactor detector reports no
+    size candidates on changed paths.
+
+### Reuse packages/form fields in token settings
+
+- [x] Refactor: use existing public form fields for token search, labels, and value editing, and
+      align the token-specific Shadow and Typography controls.
+  - Evidence: token settings mixed package fields with editor-local inputs; compound controls also
+    needed consistent labels and sizing.
+  - Action: keep token tables, token-aware choices, previews, and compound domain behavior in the
+    editor. Reuse `TextField`, `SearchField`, `AutocompleteSelectField`, `TextArea`, and
+    `BooleanField` from `packages/form` where their existing contracts fit. Change other Settings
+    views individually after reviewing their behavior; do not replace raw elements app-wide.
+  - Scope: current task, limited to token settings.
+  - Contracts: preserve token IDs, raw values, token references, viewport overrides, editing,
+    selection/focus, and existing editor interactions. Token resolution and option construction
+    stay editor-owned.
+  - Validation: browser review covered Color, Shadow, and Typography token settings, including
+    expanded compound editors. Editor-wide typechecking has pre-existing workspace dependency/type
+    errors; no claim is made that all editor inputs use `packages/form`.
+
+### Form field validation
+
+- [ ] Define an optional validation pattern for form items and field wrappers when a concrete
+      consumer needs it.
+  - Evidence: reusable controls need a way to present validation feedback, while validation rules
+    belong to the consuming editor or form configuration.
+  - Action: keep validation out of the serialized/form field schema. Later, allow a form item or
+    wrapper to provide an optional validator and let the form layer present hints and errors.
+  - Scope: deferred; no new validation behavior in this task.
+  - Contracts: validator functions remain consumer-provided; do not persist functions or
+    validation state in form schema. Individual control props such as `TextAreaProps.invalid` are
+    presentation state, not schema fields.
+  - Validation: when implemented, verify optional validation, hint/error rendering, and accessible
+    invalid state without changing the schema contract.
+
 ### Catalog instance field exposure
 
 - [x] Make the effective field contract for a catalog definition include fields exposed by its
@@ -722,7 +938,7 @@ facadeur is a visual design-system editor. Atoms, components, sections, and page
 
 - `packages/core` – types, schema, validation, commands, and the `DocumentStore` interface.
 - `packages/store-yjs` – Yjs implementation of `DocumentStore` and conversion between the file format and Y document.
-- `packages/tokens` – DTCG parser, reference resolution, and CSS custom property output.
+- `packages/tokens` – canonical UUID-token resolution and CSS custom-property output; legacy DTCG conversion belongs to Core's read migration.
 - `packages/style-engine` – shared style compilation and live application through `CSSStyleRule`/`insertRule`; its controller is inspired by `style-controller` without importing it at runtime.
 - `packages/renderer-dom` – JSON-to-DOM rendering, stable `data-id` per node, and targeted updates.
 - `apps/editor` – Next.js + React app (canvas, panels, tools).
@@ -765,15 +981,20 @@ facadeur is a visual design-system editor. Atoms, components, sections, and page
 
 ### Tokens
 
-- Format: W3C DTCG (`$value`, `$type`). An entry is either a token or a token group. References look like `{color.blue.500}`.
-- Three levels: primitive, semantic, and component tokens.
+- Canonical format: grouped family maps (`color`, `space`, `radius`, `shadow`, `type`, `font`) keyed by UUID. Each record has `uuid`, `label`, `group`, `valueType`, and `value`; references use `{token:uuid}`.
+- The CSS custom-property selector is derived from family/group/label and is not stored as token identity. Renaming a label or group changes the generated selector while UUID references remain stable.
+- Responsive token values live in `breakpoints` maps keyed by breakpoint UUID. Font families are records in the `font` family; breakpoints are separate UUID resources.
+- Catalog integration tests source real token and breakpoint records from `@facadeur/examples` via `createExampleCatalog()`. Keep inline records only for deliberately invalid or minimal legacy-contract cases so example edits flow into tests directly.
+- Legacy W3C DTCG documents are converted at the Core read boundary. `$type`, `$value`, and `$extensions.facadeur` are migration input, not the canonical runtime format.
+- Keep `packages/core/src/controller/style/tokens/global/legacy-migration.ts` cohesive: it owns the single DTCG-to-canonical conversion boundary; splitting its traversal and normalization would divide one algorithm without creating a new owner. Preserve legacy input acceptance and canonical UUID output, and validate through Core migration/type checks.
+- Three levels: primitive, semantic, and component tokens. Tier metadata is namespaced under `extensions`.
 - In the editor, tokens become CSS custom properties on a root rule.
 - Components can read tokens and override them for nested children through CSS variable cascading. The schema declares which tokens a component reads and sets.
 - Themes/modes (dark mode, brands): **not now**; planned as a later improvement.
 
 ### Fonts
 
-- Dedicated area for font families, weights, sources (file or Google Fonts), and fallbacks.
+- Dedicated area for font-family token values, weights, sources (file or Google Fonts), and fallbacks. Their identity and shared record fields use the same token contract as other families.
 - The typography scale uses tokens with per-breakpoint values, producing real `@media` rules.
 
 ### Viewports
@@ -790,7 +1011,7 @@ facadeur is a visual design-system editor. Atoms, components, sections, and page
 
 ### Data model and local synchronization
 
-- **Flat in-memory model:** nodes are stored in a map by stable ID; children are ordered ID lists (`Y.Map` per node, `Y.Array` for children). Tokens, fonts, and settings are also maps in the Y document.
+- **Flat in-memory model:** nodes are stored in a map by stable ID; children are ordered ID lists (`Y.Map` per node, `Y.Array` for children). UUID-keyed token families and settings are also maps in the Y document; font tokens live in the `font` family.
 - **Readable file format:** nested, readable JSON is stored on disk (for Git and agents). It is converted to the flat model on load and back on save. The conversion is lossless and tested.
 - **Commands are the only way to change the document.** Each command runs as a Yjs transaction. UI components do not access the Y document directly.
 - **The editor communicates only with `DocumentStore`** to read, execute commands, and subscribe to changes. The renderer and style engine react to change events and update only affected content.
@@ -985,6 +1206,30 @@ references from the exported definitions/schema identity. Preserve the API seed 
 and Storybook selection behavior. Validate examples and API consumers, Storybook build, and
 the scoped refactor detector; no persisted IDs change.
 
+## Give every stable UUID one source
+
+- [x] Centralize static UUID declarations and use package-local `idList.ts` exports.
+  - Evidence: the initial scan found 1,323 UUID literal occurrences across TypeScript files,
+    representing 323 values; 750 occurrences were in `packages/examples/src`. Component node IDs,
+    global token IDs, and test references repeated the same UUID strings, including duplicate map
+    keys and record fields.
+  - Action: define node/schema identities beside each Example module, token identities beside the
+    token catalog, and breakpoint identities beside global styles. Import these IDs wherever the
+    same identity is referenced. Replace real fixture UUIDs in tests with public Example IDs and
+    keep intentionally synthetic test identities local/generated. Keep the Catalog UUID-keyed
+    shape unchanged.
+  - Scope: prerequisite refactor for reliable static Example data and UUID-based style references.
+  - Contracts: preserve every prior UUID value, serialized reference, map key, Catalog shape, and
+    runtime behavior. Examples remain independent of Core; Core imports only the Example ID
+    subpath for its stable default breakpoint identities. Do not generate Example IDs at runtime
+    or change Forms.
+  - Validation: `node scripts/check-uuid-uniqueness.mjs` confirms all 276 static UUIDs occur once
+    and are declared only in Example `idList.ts` files. Example and Core typechecks pass using the
+    local TypeScript compiler. The authoritative workspace install/typecheck remains blocked
+    because Corepack cannot fetch pinned pnpm 10.33.3 in this environment; see `docs/friction.md`.
+    The scoped detector was rerun; its remaining cohesive Example file and documented codegen
+    organization candidate were retained.
+
 ## Share the editor subnav with its Storybook story
 
 `EditorShell` currently owns the subnav markup inline, while the Header story omits it. Extract the
@@ -1105,6 +1350,15 @@ in the editor.
 Preserve the record string contract, CSS key suggestions, and existing autocomplete for other
 records. Validate form/editor types and focused Storybook interaction.
 
+Follow-up: the screenshot's `TokenValueControl` mixed direct-value editing and token selection in one
+clunky popover. Replace it with a selection-only autocomplete in `@facadeur/form` that shows each
+supplied option's label and example, and can only emit one of the supplied option values. Use it for
+transformable prop/token modes and token selection in `TokenValueControl`; keep direct text editing
+as a separate input where allowed. Replace the old general `AutocompleteField` with plain text
+inputs plus native datalist suggestions for editable fields such as records and comboboxes. Preserve
+stable prop/token references as stored values and keep option construction in the editor. Validate
+form/editor typechecks, selection-only value semantics, and the refactor detector.
+
 ## Backlog: split the form-controls section DOM fixture
 
 The refactor detector reports `packages/examples/src/form-controls-section/dom.ts` at 542 lines.
@@ -1132,3 +1386,24 @@ The text binding adds one mutation method to `packages/core/src/controller/proje
 (470 lines after the change). Retain it there: the class already owns the corresponding catalog
 node mutations and inspector dispatch; extracting only this operation would split the same
 responsibility without changing ownership or improving validation.
+
+## Keep catalog model types in domain
+
+- [x] Refactor: publish `NodeDefinitionModel` and `ProjectCatalogModel` from `@facadeur/domain`.
+  - Evidence: their structural definitions already live in `packages/domain/src/node.ts` and
+    `catalog.ts`, while `api-client` imports the names through `@facadeur/core`.
+  - Action: export the model aliases from Domain, keep Core's existing re-exports as compatible
+    forwarding exports, and point `api-client` directly at Domain.
+  - Scope: current package-boundary correction.
+  - Contracts: preserve both model shapes, Core public exports and API request/response behavior;
+    no runtime or persistence changes.
+  - Validation: domain, core, API and API-client typechecks pass; workspace typecheck reaches only
+    three unchanged Editor errors (`SchemaForm.placeholder`, nullable `FieldValue`, and missing
+    `jsonjoy-builder` declarations). Detector and diff check pass; no tests run.
+  - Result: aliases now live in Domain; Core forwards them for existing imports, the API contract
+    reads the catalog type from Domain, and `api-client` no longer directly depends on Core. No
+    model shape, runtime behavior or persisted data changed.
+
+- [ ] Backlog: review server module boundaries in `packages/api/src/server/project/files.ts` and
+  `management/service.ts`, flagged by the candidate detector. Keep this separate from the type
+  ownership change; preserve file persistence and management behavior if a future split is justified.

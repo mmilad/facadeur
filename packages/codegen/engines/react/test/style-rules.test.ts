@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { generateReact } from '../src/index';
 import type { DocumentFile } from '@facadeur/core';
+const testUuid3 = globalThis.crypto.randomUUID();
+const testUuid4 = globalThis.crypto.randomUUID();
 
 const fixture: DocumentFile = {
   version: 1,
@@ -14,8 +16,8 @@ const fixture: DocumentFile = {
   ],
   settings: {
     breakpoints: [
-      { id: 'phone', minWidth: 390 },
-      { id: 'wide', minWidth: 900 },
+      { uuid: testUuid3, label: 'Phone', minWidth: 390 },
+      { uuid: testUuid4, label: 'Wide', minWidth: 900 },
     ],
   },
   styles: {
@@ -28,7 +30,10 @@ const fixture: DocumentFile = {
         states: { hover: { color: 'blue' } },
         variants: { tone: { accent: { declarations: { color: 'purple' } } } },
         breakpoints: {
-          wide: { declarations: { color: 'green' }, states: { hover: { color: 'teal' } } },
+          [testUuid4]: {
+            declarations: { color: 'green' },
+            states: { hover: { color: 'teal' } },
+          },
         },
       },
       {

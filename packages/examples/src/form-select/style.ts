@@ -1,41 +1,44 @@
 import type { Node } from '@facadeur/domain';
+import { tokenIds as exampleTokenIds } from '../catalog/tokens/idList';
+import { ids as exampleFormSelectIds } from './idList';
+import { tokenRef } from '../references';
 
 export const styles = {
-  '550e8400-e29b-41d4-a716-4836151d3102': {
+  [exampleFormSelectIds.nodes.span1]: {
     width: 'auto',
     height: 'auto',
-    color: '{color.textmuted}',
-    font: '{type.caption}',
+    color: tokenRef(exampleTokenIds.color.text.secondary),
+    font: tokenRef(exampleTokenIds.type.caption),
     fontWeight: '600',
-    margin: '{space.0}',
+    margin: tokenRef(exampleTokenIds.space.scale.step0),
   },
-  '550e8400-e29b-41d4-a716-53a58fd11298': {
+  [exampleFormSelectIds.nodes.span2]: {
     width: 'auto',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-fc3f9316496d': {
+  [exampleFormSelectIds.nodes.img1]: {
     width: '16px',
     height: '16px',
     flex: '0 0 16px',
     marginInlineStart: '{layout.gap}',
     opacity: '0.72',
   },
-  '550e8400-e29b-41d4-a716-96cc520f2893': {
+  [exampleFormSelectIds.nodes.div1]: {
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
     height: 'auto',
-    background: '{color.surface}',
-    border: '1px solid {color.border}',
+    background: tokenRef(exampleTokenIds.color.bg.canvas),
+    border: '1px solid ' + tokenRef(exampleTokenIds.color.border.default),
     borderRadius: '{shape.radius}',
-    color: '{color.text}',
-    font: '{type.body}',
+    color: tokenRef(exampleTokenIds.color.text.primary),
+    font: tokenRef(exampleTokenIds.type.body),
     paddingBlock: '{input.padding.y}',
     paddingInline: '{padding.x}',
   },
-  '550e8400-e29b-41d4-a716-77565a320196': {
+  [exampleFormSelectIds.nodes.root]: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',

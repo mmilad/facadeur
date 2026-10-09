@@ -9,13 +9,14 @@ import {
   tokenPathsReferencingTypography,
 } from '../src/domain/edits/typography-edit';
 import { tokenMatchesDomain } from '../src/ui/sidebar/design/design-domain';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 describe('typography-edit', () => {
   it('creates a default typography token matching type.body at mobile', () => {
     expect(createDefaultTypographyToken()).toEqual({
       $type: 'typography',
       $value: {
-        fontFamily: '{font.sans}',
+        fontFamily: fixtureTokenRef(fixtureIds.tokens.font.inter),
         fontSize: '16px',
         fontWeight: 400,
         letterSpacing: '0',
@@ -47,7 +48,7 @@ describe('typography-edit', () => {
       ...tokens,
       type: {
         ...(tokens.type as object),
-        alias: { $type: 'typography', $value: '{type.body}' },
+        alias: { $type: 'typography', $value: fixtureTokenRef(fixtureIds.tokens.type.body) },
       },
     };
     const refs = tokenPathsReferencingTypography(design.tokens, 'type.body');

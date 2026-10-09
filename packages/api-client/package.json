@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@facadeur/api": "workspace:*"
+    "@facadeur/api": "workspace:*",
+    "@facadeur/domain": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.19.0",

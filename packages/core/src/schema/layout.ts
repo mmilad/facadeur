@@ -1,9 +1,12 @@
 import { Type } from '@sinclair/typebox';
 import { breakpointIdSchema } from './common';
+import { UUID_PATTERN } from '../document/ids';
 
-/** `{color.blue.500}` — a token reference stored in a style or layout value. */
+const UUID_SOURCE = UUID_PATTERN.source.slice(1, -1);
+
+/** `{token:uuid}` — a token reference stored in a style or layout value. */
 export const tokenRefSchema = Type.String({
-  pattern: '^\\{[a-z][a-z0-9]*(\\.[a-z0-9]+)+\\}$',
+  pattern: `^\\{token:${UUID_SOURCE}\\}$`,
 });
 
 /** `color.blue.500` — a token path, without braces. */

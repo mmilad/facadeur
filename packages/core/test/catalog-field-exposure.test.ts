@@ -5,10 +5,19 @@ import { CoreController } from '../src/controller/project/controller';
 import { buildInspectorFormModel } from '../src/controller/project/node/preview/inspector-view';
 import { resolveDefinitionToElementBuildConfig } from '../src/controller/project/node/preview/resolve';
 import { validateProjectCatalog } from '../src/controller/project/catalog/validate';
+const testUuid7 = globalThis.crypto.randomUUID();
+const testUuid8 = globalThis.crypto.randomUUID();
+const testUuid9 = globalThis.crypto.randomUUID();
+const testUuid10 = globalThis.crypto.randomUUID();
+const testUuid11 = globalThis.crypto.randomUUID();
+const testUuid12 = globalThis.crypto.randomUUID();
+const testUuid13 = globalThis.crypto.randomUUID();
+const testUuid14 = globalThis.crypto.randomUUID();
+const testUuid15 = globalThis.crypto.randomUUID();
 
-const imageId = '10000000-0000-4000-8000-000000000001';
-const cardId = '10000000-0000-4000-8000-000000000002';
-const imageNodeId = '10000000-0000-4000-8000-000000000003';
+const imageId = testUuid7;
+const cardId = testUuid8;
+const imageNodeId = testUuid9;
 
 function catalogWith(
   exposure: FieldExposure,
@@ -55,12 +64,12 @@ function catalogWith(
     },
     config: { previewData: { fields: previewData } },
     root: {
-      uuid: '10000000-0000-4000-8000-000000000004',
+      uuid: testUuid10,
       dom: {
         tagName: 'article',
         children: [
           {
-            uuid: '10000000-0000-4000-8000-000000000005',
+            uuid: testUuid11,
             name: 'hero-media',
             dom: { tagName: 'div' },
             config: {
@@ -161,7 +170,7 @@ describe('catalog field exposure', () => {
 
   it('resolves an atom prop binding unless a parent field is explicitly mapped over it', () => {
     const prop = {
-      uuid: '10000000-0000-4000-8000-000000000006',
+      uuid: testUuid12,
       name: 'Image source',
       value: 'bound-prop-src',
     };
@@ -195,7 +204,7 @@ describe('catalog field exposure', () => {
   });
 
   it('resolves text content through stable component prop ids', () => {
-    const titlePropId = '10000000-0000-4000-8000-000000000007';
+    const titlePropId = testUuid13;
     const definition: NodeDefinition = {
       uuid: cardId,
       name: 'Card',
@@ -210,12 +219,12 @@ describe('catalog field exposure', () => {
       },
       config: { previewData: { fields: { title: 'Bound title' } } },
       root: {
-        uuid: '10000000-0000-4000-8000-000000000008',
+        uuid: testUuid14,
         dom: {
           tagName: 'article',
           children: [
             {
-              uuid: '10000000-0000-4000-8000-000000000009',
+              uuid: testUuid15,
               dom: { tagName: 'h2', text: `{props:${titlePropId}}` },
             },
           ],
@@ -241,7 +250,7 @@ describe('catalog field exposure', () => {
     core.node.preview.applyFormChange(
       'node.text',
       `{props:${titlePropId}}`,
-      '10000000-0000-4000-8000-000000000009',
+      testUuid15,
     );
     expect(core.getSnapshot().openDefinition?.root.dom.children?.[0]?.dom.text).toBe(
       `{props:${titlePropId}}`,
@@ -254,7 +263,7 @@ describe('catalog field exposure', () => {
     const image = cyclic.atoms[imageId]!;
     (image.root.dom as { tagName: string; children?: (typeof image.root)[] }).children = [
       {
-        uuid: '10000000-0000-4000-8000-000000000006',
+        uuid: testUuid12,
         dom: { tagName: 'div' },
         config: { definitionRef: imageId },
       },

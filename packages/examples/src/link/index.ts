@@ -4,10 +4,11 @@ import { root } from './dom';
 import { config } from './config';
 import { styles } from './style';
 import { schema } from './schema';
+import { ids as exampleLinkIds } from './idList';
 const schemaSource = { kind: 'inline', schema } as const;
 
 export const definition = {
-  uuid: '550e8400-e29b-41d4-a716-9f7d1ebdd36d',
+  uuid: exampleLinkIds.definition,
   name: 'Link',
   kind: 'atom',
   schema: schemaSource,

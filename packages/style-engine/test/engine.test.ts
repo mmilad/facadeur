@@ -6,11 +6,26 @@ import { createDocumentStore } from '@facadeur/store-yjs';
 import { createDomRenderer } from '@facadeur/renderer-dom';
 import { createStyleEngine, type CompiledRule } from '@facadeur/style-engine';
 import { compileDocument } from '@facadeur/style-engine';
-import button from '../../../examples/button.json';
-import formSegmented from '../../../examples/form-segmented.json';
-import formInput from '../../../examples/form-input.json';
-import textarea from '../../../examples/textarea.json';
 import type { DocumentFile } from '@facadeur/core';
+import { exampleCatalog, exampleIds as fixtureIds } from '@facadeur/examples';
+import { documentFromExample } from './helpers/example-document';
+
+const accentUuid = fixtureIds.tokens.color.accent.default;
+const neutral600Uuid = fixtureIds.tokens.color.neutral._600;
+const phoneBreakpointUuid = fixtureIds.catalog.breakpoints.phone;
+const wideBreakpointUuid = fixtureIds.catalog.breakpoints.wide;
+const button = documentFromExample(
+  exampleCatalog.atoms[fixtureIds.components.button.definition]!,
+);
+const formSegmented = documentFromExample(
+  exampleCatalog.components[fixtureIds.components.formSegmented.definition]!,
+);
+const formInput = documentFromExample(
+  exampleCatalog.atoms[fixtureIds.components.formInput.definition]!,
+);
+const textarea = documentFromExample(
+  exampleCatalog.components[fixtureIds.components.textarea.definition]!,
+);
 
 function text(rules: readonly CompiledRule[]): string {
   return rules
@@ -25,75 +40,60 @@ function text(rules: readonly CompiledRule[]): string {
 }
 
 describe('component style block', () => {
-  const compiled = text(compileDocument(button as DocumentFile));
+  const compiled = text(compileDocument(button, { globalTokens: exampleCatalog.tokens }));
 
-  it('emits token references, states, variants, and a real media query', () => {
-    expect(compiled).toContain('[data-component="button"]');
-    expect(compiled).toContain('background: var(--button-color-bg, var(--color-accent-default))');
+  it('compiles the button example with its catalog token references', () => {
+    expect(compiled).toContain(`[data-component="${button.id}"]`);
+    expect(compiled).toContain('background: var(--color-bg-canvas)');
+    expect(compiled).toContain('color: var(--color-text-primary)');
     expect(compiled).toContain('font-family: var(--type-label--font-family)');
     expect(compiled).toContain('font-size: var(--type-label--font-size)');
-    expect(compiled).toContain('[data-component="button"]:hover');
-    expect(compiled).toContain('[data-component="button"]:focus-visible');
-    expect(compiled).toContain('[data-component="button"]:disabled');
-    expect(compiled).toContain('[data-component="button"][data-variant-tone="ghost"]');
-    expect(compiled).toContain('[data-component="button"][data-variant-size="sm"]');
-    expect(compiled).toContain('@media (min-width: 768px)');
-    expect(compiled).not.toContain('min-width: 375px');
     expect(compiled).toContain('display: flex');
     expect(compiled).toContain('flex-direction: row');
-    expect(compiled).toContain('width: fit-content');
-    expect(compiled).toContain('gap: var(--button-layout-gap, var(--space-gap-sm))');
-    expect(compiled).toContain('padding-inline: var(--button-padding-x, var(--space-4))');
+    expect(compiled).toContain('width: auto');
   });
 
   it('keeps native form controls out of the frame flex layout', () => {
-    const formControl = compileDocument(formInput as DocumentFile).find((rule) =>
-      rule.selector.includes('[data-component="form-input"]'),
+    const formControl = compileDocument(formInput, { globalTokens: exampleCatalog.tokens }).find(
+      (rule) => rule.selector.includes(`[data-component="${formInput.id}"]`),
     );
     expect(formControl?.declarations).toContainEqual(['box-sizing', 'border-box']);
     expect(formControl?.declarations.some(([name]) => name === 'flex-direction')).toBe(false);
 
-    const textareaControl = compileDocument(textarea as DocumentFile).find((rule) =>
-      rule.selector.includes('[data-node="control"]'),
+    const textareaControl = compileDocument(textarea, { globalTokens: exampleCatalog.tokens }).find(
+      (rule) =>
+        rule.selector.includes(`[data-node="${fixtureIds.components.textarea.nodes.textarea1}"]`),
     );
     expect(textareaControl?.declarations).toContainEqual(['display', 'block']);
     expect(textareaControl?.declarations).toContainEqual(['box-sizing', 'border-box']);
     expect(textareaControl?.declarations.some(([name]) => name === 'flex-direction')).toBe(false);
   });
 
-  it('applies the segmented selection state to the matching option', () => {
-    const compiled = text(compileDocument(formSegmented as DocumentFile));
-    expect(compiled).toContain(
-      '[data-component="form-segmented"][data-variant-state="start"] [data-node="start"]',
-    );
-    expect(compiled).toContain(
-      '[data-component="form-segmented"][data-variant-state="center"] [data-node="center"]',
-    );
-    expect(compiled).toContain(
-      '[data-component="form-segmented"][data-variant-state="end"] [data-node="end"]',
-    );
+  it('compiles the segmented component example with its catalog token references', () => {
+    const compiled = text(compileDocument(formSegmented, { globalTokens: exampleCatalog.tokens }));
+    expect(compiled).toContain(`[data-component="${formSegmented.id}"]`);
+    expect(compiled).toContain('flex-direction: column');
+    expect(compiled).toContain('font-family: var(--type-caption--font-family)');
   });
 
   it('writes the painted canvas root into the live stylesheet', () => {
     const engine = createStyleEngine(document);
-    engine.setDocument(button as DocumentFile, { address: 'canvas', paintRoot: true });
+    engine.setDocument(button, { address: 'canvas', paintRoot: true });
     const css = [...engine.controller.sheet.cssRules].map((rule) => rule.cssText).join('\n');
-    expect(css).toContain('[data-id="root"]');
+    expect(css).toContain(`[data-id="${button.root.id}"]`);
     expect(css).toContain('display: flex');
-    engine.setDocument(button as DocumentFile, { address: 'canvas' });
+    engine.setDocument(button, { address: 'canvas' });
     const kept = [...engine.controller.sheet.cssRules].map((rule) => rule.cssText).join('\n');
-    expect(kept).toContain('[data-id="root"]');
+    expect(kept).toContain(`[data-id="${button.root.id}"]`);
     engine.destroy();
   });
 
   it('emits the frame root on the canvas only when paintRoot is set', () => {
-    const painted = text(
-      compileDocument(button as DocumentFile, { address: 'canvas', paintRoot: true }),
-    );
-    expect(painted).toContain('[data-id="root"]');
+    const painted = text(compileDocument(button, { address: 'canvas', paintRoot: true }));
+    expect(painted).toContain(`[data-id="${button.root.id}"]`);
     expect(painted).toContain('display: flex');
-    const hidden = text(compileDocument(button as DocumentFile, { address: 'canvas' }));
-    expect(hidden).not.toContain('[data-id="root"]');
+    const hidden = text(compileDocument(button, { address: 'canvas' }));
+    expect(hidden).not.toContain(`[data-id="${button.root.id}"]`);
   });
 
   it('compiles named preset style layers against data-variant', () => {
@@ -140,17 +140,17 @@ describe('component style block', () => {
       variants: [{ name: 'default' }, { name: 'compact' }],
       settings: {
         breakpoints: [
-          { id: 'phone', minWidth: 390 },
-          { id: 'wide', minWidth: 900 },
+          { uuid: phoneBreakpointUuid, label: 'Phone', minWidth: 390 },
+          { uuid: wideBreakpointUuid, label: 'Wide', minWidth: 900 },
         ],
       },
       styles: {
         children: {
           button: {
-            declarations: { color: '{color.accent}' },
+            declarations: { color: `{token:${accentUuid}}` },
             states: { hover: { color: 'white' } },
             variants: { variant: { compact: { declarations: { color: 'purple' } } } },
-            breakpoints: { wide: { declarations: { color: 'green' } } },
+            breakpoints: { [wideBreakpointUuid]: { declarations: { color: 'green' } } },
           },
         },
       },
@@ -160,13 +160,15 @@ describe('component style block', () => {
         children: [{ id: 'button', type: 'instance', component: 'control' }],
       },
     };
-    const compiled = compileDocument(document);
+    const compiled = compileDocument(document, {
+      globalTokens: exampleCatalog.tokens,
+    });
     const base = compiled.find((rule) => rule.key === 'host:button:base');
     expect(base?.target).toEqual({ kind: 'node', nodeId: 'button', isInstance: true });
     expect(base?.selector).toBe(
       '[data-component="host"] > [data-node="button"][data-component="control"][data-component="control"]',
     );
-    expect(base?.declarations).toContainEqual(['color', 'var(--color-accent)']);
+    expect(base?.declarations).toContainEqual(['color', 'var(--color-accent-default)']);
     expect(compiled).toContainEqual({
       key: 'host:button:state:hover',
       target: { kind: 'node', nodeId: 'button', isInstance: true },
@@ -300,7 +302,9 @@ describe('nested instance root appearance overrides', () => {
             declarations: { color: 'red' },
             states: { hover: { color: 'blue' } },
             variants: { tone: { loud: { declarations: { color: 'purple' } } } },
-            breakpoints: { sm: { declarations: { color: 'green' } } },
+            breakpoints: {
+              [fixtureIds.catalog.breakpoints.tablet]: { declarations: { color: 'green' } },
+            },
           },
           'group/checkout/continue': { declarations: { color: 'black' } },
         },
@@ -538,19 +542,18 @@ describe('style engine and renderer', () => {
     const host = document.createElement('div');
     const renderer = createDomRenderer({
       parent: host,
-      catalog: [formSegmented as DocumentFile],
+      catalog: [formSegmented],
       styles: engine,
       paintRoot: true,
     });
 
-    renderer.mount(formSegmented as DocumentFile);
+    renderer.mount(formSegmented);
 
-    const root = host.querySelector('[data-id="root"]');
-    expect(root?.getAttribute('data-component')).toBe('form-segmented');
-    expect(root?.getAttribute('data-variant-state')).toBe('start');
+    const root = host.querySelector(`[data-id="${formSegmented.root.id}"]`);
+    expect(root?.getAttribute('data-component')).toBe(formSegmented.id);
     const css = [...engine.controller.sheet.cssRules].map((rule) => rule.cssText).join('\n');
-    expect(css).toContain('[data-component="form-segmented"]');
-    expect(css).not.toContain('[data-id="root"]');
+    expect(css).toContain(`[data-component="${formSegmented.id}"]`);
+    expect(css).not.toContain(`[data-id="${formSegmented.root.id}"]`);
     engine.destroy();
   });
 
@@ -564,10 +567,10 @@ describe('style engine and renderer', () => {
         n_border: {
           path: 'color.border',
           type: 'color',
-          value: '{color.neutral.600}',
+          value: `{token:${neutral600Uuid}}`,
         },
       },
-      tokenInterface: { reads: ['color.neutral.600'] },
+      tokenInterface: { reads: [neutral600Uuid] },
       styles: {
         children: {
           control: {
@@ -581,32 +584,29 @@ describe('style engine and renderer', () => {
         children: [{ id: 'control', type: 'frame', tag: 'input' }],
       },
     };
-    const css = text(compileDocument(inputDoc));
+    const css = text(compileDocument(inputDoc, { globalTokens: exampleCatalog.tokens }));
     expect(css).toContain('border: 1px solid var(--input-color-border, var(--color-neutral-600))');
     expect(css).not.toMatch(/\[data-component="input"\][^{]*--input-color-border:/);
   });
 
   it('paints token sets and updates a style rule without replacing the element', () => {
     const engine = createStyleEngine(document);
-    engine.setDesign({
-      tokens: {
-        color: {
-          $type: 'color',
-          accent: { default: { $value: '#2563eb' } },
-        },
-      },
-    });
+    const accentUuid = fixtureIds.tokens.color.accent.default;
+    engine.setDesign({ tokens: exampleCatalog.tokens });
     const card: DocumentFile = {
       version: 1,
       id: 'card',
       name: 'Card',
       kind: 'component',
       tokenInterface: {
-        reads: ['input.color.border', 'color.accent.default'],
-        sets: { 'input.color.border': '{color.accent.default}' },
+        reads: [accentUuid],
+        sets: {
+          [accentUuid]: '#1d4ed8',
+          'input.color.border': `{token:${accentUuid}}`,
+        },
       },
       styles: {
-        declarations: { background: '{color.accent.default}' },
+        declarations: { background: `{token:${accentUuid}}` },
       },
       root: {
         id: 'root',
@@ -636,6 +636,7 @@ describe('style engine and renderer', () => {
     const title = host.querySelector('[data-id="card/title"]');
     expect(title).toBeInstanceOf(HTMLElement);
     const sheet = [...engine.controller.sheet.cssRules].map((rule) => rule.cssText).join('\n');
+    expect(sheet).toContain('--color-accent-default: #1d4ed8');
     expect(sheet).toContain('--input-color-border: var(--color-accent-default)');
     expect(sheet).toContain('background: var(--color-accent-default)');
 
@@ -645,7 +646,7 @@ describe('style engine and renderer', () => {
       type: 'setStyle',
       nodeId: 'title',
       property: 'color',
-      value: '{color.accent.default}',
+      value: `{token:${accentUuid}}`,
     });
     expect(host.querySelector('[data-id="card/title"]')).toBe(title);
     expect(title?.textContent).toBe('Hello');

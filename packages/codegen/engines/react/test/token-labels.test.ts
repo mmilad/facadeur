@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { toFlat, toNested, type DocumentFile } from '@facadeur/core';
 import { generateReact } from '../src/index';
+const testUuid5 = globalThis.crypto.randomUUID();
+
+const brandUuid = testUuid5;
 
 describe('token label metadata', () => {
   it('keeps generated React and CSS identical when only saved labels change', () => {
@@ -14,31 +17,36 @@ describe('token label metadata', () => {
         n_surface: {
           path: 'color.surface',
           type: 'color',
-          value: '{color.brand.primary}',
+          value: `{token:${brandUuid}}`,
           label: 'Surface',
         },
       },
-      tokenInterface: { reads: ['color.brand.primary'] },
+      tokenInterface: { reads: [brandUuid] },
       styles: { declarations: { background: '{color.surface}' } },
     };
     const design = {
       tokens: {
         color: {
-          brand: {
-            primary: {
-              $type: 'color',
-              $value: '#123456',
-              $extensions: { facadeur: { label: 'Brand' } },
-            },
+          [brandUuid]: {
+            uuid: brandUuid,
+            label: 'Primary',
+            group: 'brand',
+            valueType: 'color',
+            value: '#123456',
           },
         },
+        space: {},
+        radius: {},
+        shadow: {},
+        type: {},
+        font: {},
       },
     };
     const before = generateReact({ documents: [document], design });
     const renamed = structuredClone(document);
     renamed.componentTokens!.n_surface!.label = 'Badge background';
     const renamedDesign = structuredClone(design);
-    renamedDesign.tokens.color.brand.primary.$extensions.facadeur.label = 'Accent';
+    renamedDesign.tokens.color[brandUuid].label = 'Accent';
 
     expect(generateReact({ documents: [renamed], design: renamedDesign })).toEqual(before);
     expect(toNested(toFlat(renamed)).styles).toEqual(document.styles);

@@ -1,10 +1,15 @@
-import type { FlatDocument, FlatNode, JsonValue } from '@facadeur/core';
+import {
+  migrateLegacyDesignLibraries,
+  migrateLegacyReferenceLocations,
+  type FlatDocument,
+  type FlatNode,
+  type JsonValue,
+} from '@facadeur/core';
 import * as Y from 'yjs';
 import {
   readEvents,
   readExpose,
   readFields,
-  readFonts,
   readIcons,
   readNode,
   readPreviewData,
@@ -18,7 +23,6 @@ import {
 import {
   syncEvents,
   syncFields,
-  syncFonts,
   syncIcons,
   syncMeta,
   syncNodes,
@@ -32,6 +36,7 @@ import {
   syncJsonArray,
   syncJsonObject,
 } from './codec-shared';
+import { readLegacyBreakpoints, readLegacyFonts } from './codec-legacy';
 
 /** Write `next` into the Y.Doc, updating existing maps and child arrays in place. */
 export function patchDocument(doc: Y.Doc, next: FlatDocument): void {
@@ -45,8 +50,14 @@ export function patchDocument(doc: Y.Doc, next: FlatDocument): void {
     (next.variantPresets ?? []) as unknown as JsonValue[],
   );
   syncNodes(doc.getMap<Y.Map<unknown>>('nodes'), next);
-  syncJsonObject(doc.getMap('tokens'), next.tokens);
-  syncFonts(doc.getMap('fonts'), next.fonts);
+  syncJsonObject(
+    doc.getMap('tokens'),
+    next.tokens as unknown as Record<string, JsonValue>,
+  );
+  const legacyFonts = doc.share.get('fonts');
+  if (legacyFonts instanceof Y.Map) {
+    for (const key of [...legacyFonts.keys()]) legacyFonts.delete(key);
+  }
   syncIcons(doc.getArray<Y.Map<unknown>>('icons'), next.icons ?? []);
   syncJsonObject(doc.getMap('styles'), (next.styles ?? {}) as Record<string, JsonValue>);
   syncJsonObject(
@@ -78,7 +89,7 @@ export function readDocument(doc: Y.Doc): FlatDocument {
   }
   const schemaCatalog = readJsonObject(doc.getMap('schemaCatalog'));
   const schemaUse = readJsonObject(doc.getMap('schemaUse'));
-  return {
+  const raw: FlatDocument = {
     version: 1,
     id: stringValue(meta.get('id')),
     name: stringValue(meta.get('name')),
@@ -93,8 +104,7 @@ export function readDocument(doc: Y.Doc): FlatDocument {
     variants: readVariants(doc.getArray<Y.Map<unknown>>('variants')),
     ...readVariantPresets(doc.getArray<unknown>('variantPresets')),
     settings: readSettings(doc.getMap('settings')),
-    tokens: readJsonObject(doc.getMap('tokens')),
-    fonts: readFonts(doc.getMap('fonts')),
+    tokens: readJsonObject(doc.getMap('tokens')) as unknown as FlatDocument['tokens'],
     icons: readIcons(doc.getArray<Y.Map<unknown>>('icons')),
     ...readStyleBlock(doc.getMap('styles')),
     ...readTokenInterface(doc.getMap('tokenInterface')),
@@ -112,6 +122,27 @@ export function readDocument(doc: Y.Doc): FlatDocument {
       : {}),
     nodes,
   };
+  const legacyFontMap = doc.share.get('fonts');
+  const legacyFonts = legacyFontMap instanceof Y.Map ? readLegacyFonts(legacyFontMap) : [];
+  const legacyBreakpoints = readLegacyBreakpoints(doc.getMap('settings'));
+  const migration = migrateLegacyDesignLibraries({
+    tokens: raw.tokens,
+    ...(legacyFonts.length ? { fonts: legacyFonts } : {}),
+    ...(legacyBreakpoints ? { breakpoints: legacyBreakpoints } : {}),
+  });
+  const migrated = migrateLegacyReferenceLocations(
+    raw,
+    migration.tokenIds,
+    migration.breakpointIds,
+  ) as FlatDocument;
+  return {
+    ...migrated,
+    ...(migration.tokens ? { tokens: migration.tokens } : {}),
+    settings: {
+      ...migrated.settings,
+      ...(migration.breakpoints ? { breakpoints: migration.breakpoints } : {}),
+    },
+  };
 }
 
 export function ensureDocumentMaps(doc: Y.Doc): void {
@@ -123,7 +154,6 @@ export function ensureDocumentMaps(doc: Y.Doc): void {
   doc.getArray('variantPresets');
   doc.getMap('nodes');
   doc.getMap('tokens');
-  doc.getMap('fonts');
   doc.getArray('icons');
   doc.getMap('styles');
   doc.getMap('tokenInterface');

@@ -62,6 +62,9 @@ importers:
       '@facadeur/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@facadeur/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
       '@facadeur/form':
         specifier: workspace:*
         version: link:../../packages/form
@@ -133,6 +136,9 @@ importers:
         specifier: ^13.6.27
         version: 13.6.33
     devDependencies:
+      '@facadeur/examples':
+        specifier: workspace:*
+        version: link:../../packages/examples
       '@types/node':
         specifier: ^22.19.0
         version: 22.20.4
@@ -151,6 +157,9 @@ importers:
       '@facadeur/core':
         specifier: workspace:*
         version: link:../core
+      '@facadeur/domain':
+        specifier: workspace:*
+        version: link:../domain
       '@facadeur/examples':
         specifier: workspace:*
         version: link:../examples
@@ -170,6 +179,9 @@ importers:
       '@facadeur/api':
         specifier: workspace:*
         version: link:../api
+      '@facadeur/domain':
+        specifier: workspace:*
+        version: link:../domain
     devDependencies:
       '@types/node':
         specifier: ^22.19.0
@@ -190,6 +202,9 @@ importers:
         specifier: workspace:*
         version: link:../tokens
     devDependencies:
+      '@facadeur/examples':
+        specifier: workspace:*
+        version: link:../examples
       '@types/node':
         specifier: ^22.19.0
         version: 22.20.4
@@ -211,6 +226,9 @@ importers:
       '@facadeur/domain':
         specifier: workspace:*
         version: link:../domain
+      '@facadeur/examples':
+        specifier: workspace:*
+        version: link:../examples
       '@sinclair/typebox':
         specifier: ^0.34.41
         version: 0.34.52
@@ -263,6 +281,9 @@ importers:
         specifier: workspace:*
         version: link:../domain
     devDependencies:
+      '@facadeur/examples':
+        specifier: workspace:*
+        version: link:../examples
       typescript:
         specifier: ^5.9.2
         version: 5.9.3
@@ -279,6 +300,9 @@ importers:
         specifier: ^13.6.27
         version: 13.6.33
     devDependencies:
+      '@facadeur/examples':
+        specifier: workspace:*
+        version: link:../examples
       typescript:
         specifier: ^5.9.2
         version: 5.9.3
@@ -292,6 +316,9 @@ importers:
         specifier: workspace:*
         version: link:../tokens
     devDependencies:
+      '@facadeur/examples':
+        specifier: workspace:*
+        version: link:../examples
       '@facadeur/renderer-dom':
         specifier: workspace:*
         version: link:../renderer-dom
@@ -307,6 +334,9 @@ importers:
       '@facadeur/core':
         specifier: workspace:*
         version: link:../core
+      '@facadeur/examples':
+        specifier: workspace:*
+        version: link:../examples
     devDependencies:
       typescript:
         specifier: ^5.9.2

@@ -4,10 +4,10 @@ import { buildElement } from './build-element';
 
 export function renderDefinitionRoot(
   definition: NodeDefinition,
-  _catalog: ProjectCatalog,
+  catalog: ProjectCatalog,
   document: Document = window.document,
 ) {
-  const config = definitionToElementBuildConfig(definition);
+  const config = definitionToElementBuildConfig(definition, catalog);
   return buildElement(config, { document });
 }
 

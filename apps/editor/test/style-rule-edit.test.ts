@@ -6,6 +6,7 @@ import {
   replaceStyleRuleDeclarations,
   writeStyleRuleDeclarations,
 } from '../src/domain/style-rules/style-rule-edit';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
 
 const rule: StyleRule = {
   id: 'selected',
@@ -13,7 +14,7 @@ const rule: StyleRule = {
   bindings: { root: 'root' },
   declarations: { color: 'black' },
   states: { hover: { color: 'blue' } },
-  breakpoints: { tablet: { declarations: { color: 'navy' } } },
+  breakpoints: { [fixtureIds.catalog.breakpoints.tablet]: { declarations: { color: 'navy' } } },
   variants: { tone: { loud: { declarations: { color: 'red' } } } },
 };
 
@@ -33,10 +34,10 @@ describe('sparse style rule editing', () => {
 
   it('clears a draft from only the current breakpoint layer', () => {
     const block: StyleBlock = { rules: [rule] };
-    expect(readStyleRuleLayerDeclarations(rule, { breakpointId: 'tablet' })).toEqual({
+    expect(readStyleRuleLayerDeclarations(rule, { breakpointId: fixtureIds.catalog.breakpoints.tablet })).toEqual({
       color: 'navy',
     });
-    const next = replaceStyleRuleDeclarations(block, 'selected', { breakpointId: 'tablet' }, {});
+    const next = replaceStyleRuleDeclarations(block, 'selected', { breakpointId: fixtureIds.catalog.breakpoints.tablet }, {});
     expect(next?.rules?.[0]?.breakpoints).toBeUndefined();
     expect(next?.rules?.[0]?.declarations).toEqual({ color: 'black' });
   });
@@ -46,15 +47,13 @@ describe('sparse style rule editing', () => {
       ...rule,
       declarations: { color: 'black', display: 'block' },
       states: { hover: { color: 'blue', opacity: '0.8' } },
-      breakpoints: {
-        tablet: { declarations: { color: 'navy', margin: '10px' } },
-        desktop: { states: { hover: { color: 'purple' } } },
+      breakpoints: { [fixtureIds.catalog.breakpoints.tablet]: { declarations: { color: 'navy', margin: '10px' } }, [fixtureIds.catalog.breakpoints.desktop]: { states: { hover: { color: 'purple' } } },
       },
     };
     expect(
-      readStyleRuleFallback(resolved, { breakpointId: 'desktop', state: 'hover' }, [
-        { id: 'tablet', minWidth: 700 },
-        { id: 'desktop', minWidth: 1100 },
+      readStyleRuleFallback(resolved, { breakpointId: fixtureIds.catalog.breakpoints.desktop, state: 'hover' }, [
+        { uuid: fixtureIds.catalog.breakpoints.tablet, label: 'Tablet', minWidth: 700 },
+        { uuid: fixtureIds.catalog.breakpoints.desktop, label: 'Desktop', minWidth: 1100 },
       ]),
     ).toEqual({ color: 'blue', display: 'block', margin: '10px', opacity: '0.8' });
   });

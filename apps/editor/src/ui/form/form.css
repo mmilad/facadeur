@@ -32,45 +32,12 @@
   flex: 1;
   min-width: 0;
 }
-.token-value-reference {
-  text-align: left;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.token-value[data-value-kind='token'] .token-value-reference {
-  color: var(--eu-accent);
-}
 .token-value-swatch {
   flex: none;
   width: 16px;
   height: 16px;
   border: 1px solid var(--eu-border);
   border-radius: 3px;
-}
-.token-value-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px;
-  width: 280px;
-}
-.token-value-options {
-  display: flex;
-  flex-direction: column;
-  max-height: 200px;
-  overflow: auto;
-}
-.token-value-options button {
-  text-align: left;
-  border: 0;
-  background: transparent;
-  color: var(--eu-fg);
-  font: inherit;
-}
-.token-value-options button[aria-pressed='true'] {
-  color: var(--eu-accent);
-  background: var(--eu-bg);
 }
 .inspector .eu-section {
   padding: 10px 0;

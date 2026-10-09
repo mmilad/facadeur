@@ -55,10 +55,10 @@ export function gridDeclarations(
   if (node?.type !== 'instance') applyGaps(node?.style);
   if (breakpointId) {
     const ordered = [...breakpoints].sort((left, right) => left.minWidth - right.minWidth);
-    const focused = ordered.find((item) => item.id === breakpointId);
+    const focused = ordered.find((item) => item.uuid === breakpointId);
     for (const breakpoint of ordered) {
       if (focused && breakpoint.minWidth > focused.minWidth) break;
-      applyGaps(owner.breakpoints?.[breakpoint.id]?.declarations);
+      applyGaps(owner.breakpoints?.[breakpoint.uuid]?.declarations);
     }
     if (!focused) applyGaps(owner.breakpoints?.[breakpointId]?.declarations);
   }

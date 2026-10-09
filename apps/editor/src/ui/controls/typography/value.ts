@@ -1,6 +1,6 @@
-import type { FontFamily } from '@facadeur/core';
+import { tokenReference, tokenReferenceValue, type FontFamily } from '@facadeur/core';
 
-const TOKEN_REF = /^\{[a-z0-9.]+\}$/;
+const LOCAL_TOKEN_REF = /^\{[a-z0-9.]+\}$/;
 
 export type TypographyValue = {
   fontFamily?: string | string[];
@@ -31,18 +31,21 @@ export const KNOWN_TYPOGRAPHY_STYLE_PROPERTIES = new Set([
 ]);
 
 export function isTokenRef(value: string): boolean {
-  return TOKEN_REF.test(value.trim());
+  const trimmed = value.trim();
+  return Boolean(tokenReference(trimmed) || LOCAL_TOKEN_REF.test(trimmed));
 }
 
-export function projectFontRefs(fonts: readonly Pick<FontFamily, 'id'>[]): string[] {
-  return fonts.map((font) => `{font.${font.id}}`).sort((left, right) => left.localeCompare(right));
+export function projectFontRefs(fonts: readonly Pick<FontFamily, 'uuid'>[]): string[] {
+  return fonts
+    .map((font) => tokenReferenceValue(font.uuid))
+    .sort((left, right) => left.localeCompare(right));
 }
 
 /** Weights declared on the project fonts. Typography picks one of these numbers. */
 export function projectFontWeightOptions(
-  fonts: readonly { weights: readonly number[] }[],
+  fonts: readonly Pick<FontFamily, 'value'>[],
 ): string[] {
-  return [...new Set(fonts.flatMap((font) => font.weights))]
+  return [...new Set(fonts.flatMap((font) => font.value.weights))]
     .sort((left, right) => left - right)
     .map(String);
 }

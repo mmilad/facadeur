@@ -1,4 +1,10 @@
-import type { DocumentFile, NestedNode, StyleBlock, StyleChild } from '@facadeur/core';
+import {
+  tokenReference,
+  type DocumentFile,
+  type NestedNode,
+  type StyleBlock,
+  type StyleChild,
+} from '@facadeur/core';
 import type { WalkState } from './types';
 import { expandDeclarations, substituteRefs } from '../css/values';
 import { mergeDeclarations } from '../css/declarations';
@@ -41,13 +47,13 @@ function emitNode(document: DocumentFile, node: NestedNode, state: WalkState): v
   const context = state.substituteContext;
   const base = mergeDeclarations([
     layoutDeclarations(node, state.parentDirection, context),
-    state.isRoot ? tokenSetDeclarations(document) : [],
+    state.isRoot ? tokenSetDeclarations(document, state.substituteContext) : [],
     expandDeclarations(layer?.declarations, context),
     node.type === 'instance' ? [] : expandDeclarations(node.style, context),
   ]);
   appendCompiledRule(state, `${document.id}:${node.id}:base`, selector, base, target);
 
-  const baseId = state.breakpoints[0]?.id;
+  const baseId = state.breakpoints[0]?.uuid;
   emitSparseStyleLayers(document.id, node.id, layer, selector, target, state, undefined, {
     forVariant: state.selectorForVariant,
   });
@@ -55,7 +61,7 @@ function emitNode(document: DocumentFile, node: NestedNode, state: WalkState): v
   if (node.type === 'instance' || node.layout?.breakpoints) {
     for (const [id, override] of Object.entries(node.layout?.breakpoints ?? {})) {
       if (id === baseId) continue;
-      const minWidth = state.breakpoints.find((breakpoint) => breakpoint.id === id)?.minWidth;
+      const minWidth = state.breakpoints.find((breakpoint) => breakpoint.uuid === id)?.minWidth;
       if (minWidth === undefined) continue;
       appendCompiledRule(
         state,
@@ -79,11 +85,17 @@ function styleLayerFor(
   return block.children?.[node.id];
 }
 
-function tokenSetDeclarations(document: DocumentFile): [string, string][] {
-  return Object.entries(document.tokenInterface?.sets ?? {}).map(([path, value]) => [
-    customProperty(path),
-    substituteRefs(value),
-  ]);
+function tokenSetDeclarations(
+  document: DocumentFile,
+  context: WalkState['substituteContext'],
+): [string, string][] {
+  return Object.entries(document.tokenInterface?.sets ?? {}).map(([target, value]) => {
+    const uuid = tokenReference(`{token:${target}}`);
+    const property = uuid
+      ? (context.globalTokenProperties?.[uuid] ?? `--token-${uuid}`)
+      : customProperty(target);
+    return [property, substituteRefs(value, context)];
+  });
 }
 
 function customProperty(path: string): string {

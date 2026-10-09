@@ -1,7 +1,9 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleFormRadioGroupIds } from './idList';
+import { ids as exampleFormRadioOptionIds } from '../form-radio-option/idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-56c34e4f5862',
+  uuid: exampleFormRadioGroupIds.nodes.root,
   dom: {
     tagName: 'div',
     attributes: {
@@ -9,17 +11,17 @@ export const root: Node = {
     },
     children: [
       {
-        uuid: '550e8400-e29b-41d4-a716-eb0094021680',
+        uuid: exampleFormRadioGroupIds.nodes.div1,
         dom: {
           tagName: 'div',
           children: [
             {
-              uuid: '550e8400-e29b-41d4-a716-f18da5d7f746',
+              uuid: exampleFormRadioGroupIds.nodes.div2,
               dom: {
                 tagName: 'div',
               },
               config: {
-                definitionRef: '550e8400-e29b-41d4-a716-6fbc62ed2b99',
+                definitionRef: exampleFormRadioOptionIds.definition,
                 previewData: {
                   fields: {
                     label: 'item.label',

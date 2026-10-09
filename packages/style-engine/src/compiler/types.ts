@@ -1,4 +1,4 @@
-import type { Breakpoint, DocumentFile, NestedNode, StyleRule } from '@facadeur/core';
+import type { Breakpoint, DesignTokenSet, DocumentFile, NestedNode, StyleRule } from '@facadeur/core';
 import type { SubstituteContext } from '../css/types';
 export interface CompiledRule {
   key: string;
@@ -32,6 +32,8 @@ export interface CompileOptions {
   paintRoot?: boolean;
   /** Used when the document does not list breakpoints. Defaults to mobile, tablet, desktop. */
   breakpoints?: readonly Breakpoint[];
+  /** UUID-keyed global token set used to resolve generated CSS property names. */
+  globalTokens?: DesignTokenSet;
   /** Catalog used to resolve nested style target paths. */
   catalog?: readonly DocumentFile[];
   /** Render a node target in the consumer's own selector language. */

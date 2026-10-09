@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { toFlat, type DocumentFile } from '@facadeur/core';
+import { toFlat, type DesignTokenSet, type DocumentFile } from '@facadeur/core';
 import specimenPage from '../../../examples/specimen-page.json';
 import specimenSection from '../../../examples/specimen-section.json';
 import {
@@ -23,6 +23,7 @@ import {
   toolAllowed,
   writeLayoutFields,
 } from '../src/domain/editing';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 const section = toFlat(specimenSection as DocumentFile);
 const page = toFlat(specimenPage as DocumentFile);
@@ -80,60 +81,178 @@ describe('editing', () => {
   it('writes layout fields on the base and on one breakpoint', () => {
     const base = writeLayoutFields(undefined, null, {
       direction: 'row',
-      gap: '{space.4}',
+      gap: fixtureTokenRef(fixtureIds.tokens.space.scale.step4),
       wrap: true,
     });
-    expect(base).toEqual({ direction: 'row', gap: '{space.4}', wrap: true });
-    const over = writeLayoutFields(base ?? undefined, 'tablet', { direction: 'column' });
-    expect(over?.breakpoints?.tablet).toEqual({ direction: 'column' });
+    expect(base).toEqual({
+      direction: 'row',
+      gap: fixtureTokenRef(fixtureIds.tokens.space.scale.step4),
+      wrap: true,
+    });
+    const over = writeLayoutFields(base ?? undefined, fixtureIds.catalog.breakpoints.tablet, {
+      direction: 'column',
+    });
+    expect(over?.breakpoints?.[fixtureIds.catalog.breakpoints.tablet]).toEqual({
+      direction: 'column',
+    });
     expect(over?.direction).toBe('row');
-    const cleared = writeLayoutFields(over ?? undefined, 'tablet', { direction: null });
+    const cleared = writeLayoutFields(over ?? undefined, fixtureIds.catalog.breakpoints.tablet, {
+      direction: null,
+    });
     expect(cleared?.breakpoints).toBeUndefined();
   });
 
   it('lists dimension tokens and no others', () => {
+    const spaceUuid = fixtureIds.tokens.space.scale.step4;
+    const colorUuid = testUuid22;
     const refs = dimensionTokenRefs({
-      space: { '4': { $type: 'dimension', $value: '16px' } },
-      color: { ink: { $type: 'color', $value: '#111111' } },
+      space: {
+        [spaceUuid]: {
+          uuid: spaceUuid,
+          label: '4',
+          group: '',
+          valueType: 'dimension',
+          value: '16px',
+        },
+      },
+      color: {
+        [colorUuid]: {
+          uuid: colorUuid,
+          label: 'Ink',
+          group: '',
+          valueType: 'color',
+          value: '#111111',
+        },
+      },
     });
-    expect(refs).toEqual(['{space.4}']);
+    expect(refs).toEqual([`{token:${spaceUuid}}`]);
   });
 
   it('lists color tokens and no others', () => {
+    const spaceUuid = fixtureIds.tokens.space.scale.step4;
+    const colorUuid = testUuid22;
     const refs = colorTokenRefs({
-      space: { '4': { $type: 'dimension', $value: '16px' } },
-      color: { ink: { $type: 'color', $value: '#111111' } },
+      space: {
+        [spaceUuid]: {
+          uuid: spaceUuid,
+          label: '4',
+          group: '',
+          valueType: 'dimension',
+          value: '16px',
+        },
+      },
+      color: {
+        [colorUuid]: {
+          uuid: colorUuid,
+          label: 'Ink',
+          group: '',
+          valueType: 'color',
+          value: '#111111',
+        },
+      },
     });
-    expect(refs).toEqual(['{color.ink}']);
+    expect(refs).toEqual([`{token:${colorUuid}}`]);
   });
 
   it('lists typed token refs for editors', () => {
-    const tree = {
-      space: { '4': { $type: 'dimension', $value: '16px' } },
-      color: { ink: { $type: 'color', $value: '#111111' } },
-      font: {
-        sans: { $type: 'fontFamily', $value: 'Inter' },
-        weight: { bold: { $type: 'fontWeight', $value: 700 } },
+    const spaceUuid = fixtureIds.tokens.space.scale.step4;
+    const colorUuid = testUuid22;
+    const fontUuid = fixtureIds.tokens.font.inter;
+    const shadowUuid = fixtureIds.tokens.shadow.md;
+    const shadowLargeUuid = fixtureIds.tokens.shadow.lg;
+    const bodyUuid = fixtureIds.tokens.type.body;
+    const boldUuid = testUuid23;
+    const ratioUuid = testUuid24;
+    const tree: DesignTokenSet = {
+      space: {
+        [spaceUuid]: {
+          uuid: spaceUuid,
+          label: '4',
+          group: '',
+          valueType: 'dimension',
+          value: '16px',
+        },
       },
-      shadow: { md: { $type: 'shadow', $value: '{shadow.lg}' } },
+      color: {
+        [colorUuid]: {
+          uuid: colorUuid,
+          label: 'Ink',
+          group: '',
+          valueType: 'color',
+          value: '#111111',
+        },
+      },
+      font: {
+        [fontUuid]: {
+          uuid: fontUuid,
+          label: 'Sans',
+          group: '',
+          valueType: 'fontFamily',
+          value: {
+            family: 'Inter',
+            weights: [400],
+            fallbacks: ['sans-serif'],
+            source: { type: 'google', family: 'Inter' },
+          },
+        },
+      },
+      shadow: {
+        [shadowUuid]: {
+          uuid: shadowUuid,
+          label: 'Md',
+          group: '',
+          valueType: 'shadow',
+          value: `{token:${shadowLargeUuid}}`,
+        },
+        [shadowLargeUuid]: {
+          uuid: shadowLargeUuid,
+          label: 'Lg',
+          group: '',
+          valueType: 'shadow',
+          value: {
+            offsetX: '0px',
+            offsetY: '8px',
+            blur: '24px',
+            spread: '0px',
+            color: '#000000',
+          },
+        },
+      },
       type: {
-        body: {
-          $type: 'typography',
-          $value: {
-            fontFamily: '{font.sans}',
+        [bodyUuid]: {
+          uuid: bodyUuid,
+          label: 'Body',
+          group: '',
+          valueType: 'typography',
+          value: {
+            fontFamily: `{token:${fontUuid}}`,
             fontSize: '16px',
             fontWeight: 400,
             lineHeight: 1.5,
           },
         },
+        [boldUuid]: {
+          uuid: boldUuid,
+          label: 'Bold',
+          group: 'weight',
+          valueType: 'fontWeight',
+          value: 700,
+        },
+        [ratioUuid]: {
+          uuid: ratioUuid,
+          label: 'Tight',
+          group: 'ratio',
+          valueType: 'number',
+          value: 1.25,
+        },
       },
-      ratio: { tight: { $type: 'number', $value: 1.25 } },
+      radius: {},
     };
-    expect(typographyTokenRefs(tree)).toEqual(['{type.body}']);
-    expect(shadowTokenRefs(tree)).toEqual(['{shadow.md}']);
-    expect(fontFamilyTokenRefs(tree)).toEqual(['{font.sans}']);
-    expect(fontWeightTokenRefs(tree)).toEqual(['{font.weight.bold}']);
-    expect(numberTokenRefs(tree)).toEqual(['{ratio.tight}']);
+    expect(typographyTokenRefs(tree)).toEqual([`{token:${bodyUuid}}`]);
+    expect(shadowTokenRefs(tree)).toEqual([`{token:${shadowUuid}}`, `{token:${shadowLargeUuid}}`]);
+    expect(fontFamilyTokenRefs(tree)).toEqual([`{token:${fontUuid}}`]);
+    expect(fontWeightTokenRefs(tree)).toEqual([`{token:${boldUuid}}`]);
+    expect(numberTokenRefs(tree)).toEqual([`{token:${ratioUuid}}`]);
   });
 
   it('describes insert mode for frame, text, and image tools', () => {

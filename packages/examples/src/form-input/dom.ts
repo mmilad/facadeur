@@ -1,7 +1,8 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleFormInputIds } from './idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-dc83518369e3',
+  uuid: exampleFormInputIds.nodes.root,
   data: {
     name: 'Input',
   },

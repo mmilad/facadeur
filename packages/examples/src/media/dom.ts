@@ -1,12 +1,13 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleMediaIds } from './idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-0b5017dc54b9',
+  uuid: exampleMediaIds.nodes.root,
   dom: {
     tagName: 'div',
     children: [
       {
-        uuid: '550e8400-e29b-41d4-a716-f4a255f00959',
+        uuid: exampleMediaIds.nodes.img1,
         dom: {
           tagName: 'img',
           attributes: {
@@ -16,7 +17,7 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-77bc276ee15b',
+        uuid: exampleMediaIds.nodes.video1,
         dom: {
           tagName: 'video',
           attributes: {

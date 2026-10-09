@@ -1,9 +1,10 @@
 import type { JsonSchemaObject } from '@facadeur/domain';
+import { ids as exampleCardIds } from './idList';
 
 export const propIds = {
-  eyebrow: '550e8400-e29b-41d4-a716-000000000201',
-  title: '550e8400-e29b-41d4-a716-000000000202',
-  body: '550e8400-e29b-41d4-a716-000000000203',
+  eyebrow: exampleCardIds.props.eyebrow,
+  title: exampleCardIds.props.title,
+  body: exampleCardIds.props.body,
 } as const;
 
 export const schema = {

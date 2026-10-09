@@ -10,6 +10,7 @@ import { readComponentTokens } from '../src/domain/component-tokens';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';
 import { editorStandardDesign, expandExampleCatalog } from './fixtures/example-catalog';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 const documents = expandExampleCatalog([button]);
 
@@ -50,11 +51,11 @@ describe('component tokens inspector', () => {
         type: 'setComponentToken',
         id,
         path: 'color.bg',
-        token: { type: 'color', value: '{color.accent.default}' },
+        token: { type: 'color', value: fixtureTokenRef(fixtureIds.tokens.color.accent.default) },
       });
     });
     expect(tokenValueByPath(session.getSnapshot().document, 'color.bg')).toBe(
-      '{color.accent.default}',
+      fixtureTokenRef(fixtureIds.tokens.color.accent.default),
     );
     expect(session.getSnapshot().notice?.tone).not.toBe('error');
 
@@ -95,12 +96,10 @@ describe('component tokens inspector', () => {
 
   it('selects a global reference by its saved label and preserves the reference', async () => {
     const design = structuredClone(editorStandardDesign());
-    const accentDefault = (
-      design.tokens as unknown as {
-        color: { accent: { default: { $value: string; $extensions?: object } } };
-      }
-    ).color.accent.default;
-    accentDefault.$extensions = { facadeur: { label: 'Warm' } };
+    const accentDefault = (design.tokens!.color as Record<string, { label: string }>)[
+      fixtureIds.tokens.color.accent.default
+    ]!;
+    accentDefault.label = 'Warm';
     const session = createEditorSession({ documents, design });
     session.openAsset('button', 'root');
     const id = listComponentTokens(
@@ -111,11 +110,13 @@ describe('component tokens inspector', () => {
         type: 'setComponentToken',
         id,
         path: 'color.bg',
-        token: { type: 'color', value: '{color.neutral.0}' },
+        token: { type: 'color', value: fixtureTokenRef(fixtureIds.tokens.color.neutral._0) },
       });
     });
 
-    expect(tokenValueByPath(session.getSnapshot().document, 'color.bg')).toBe('{color.neutral.0}');
+    expect(tokenValueByPath(session.getSnapshot().document, 'color.bg')).toBe(
+      fixtureTokenRef(fixtureIds.tokens.color.neutral._0),
+    );
     expect(session.getSnapshot().notice?.tone).not.toBe('error');
     host = document.createElement('div');
     document.body.append(host);
@@ -143,7 +144,7 @@ describe('component tokens inspector', () => {
 
     expect(tokenRow.querySelector('.token-value-reference')?.textContent?.trim()).toBe('◇ Warm');
     expect(tokenValueByPath(session.getSnapshot().document, 'color.bg')).toBe(
-      '{color.accent.default}',
+      fixtureTokenRef(fixtureIds.tokens.color.accent.default),
     );
   });
 });

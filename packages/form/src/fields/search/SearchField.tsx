@@ -8,11 +8,12 @@ export function SearchField({
   value,
   placeholder,
   disabled,
+  className,
   onChange,
 }: SearchFieldProps) {
   return (
     <input
-      className={styles.input}
+      className={[styles.input, className].filter(Boolean).join(' ')}
       id={id}
       name={name}
       type="search"

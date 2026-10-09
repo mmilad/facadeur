@@ -21,10 +21,7 @@ import {
   effectiveLayout as resolveLayout,
   layoutCapabilities,
 } from '../../../../domain/layout-capabilities';
-import {
-  editorBreakpoints,
-  viewportEditContext,
-} from '../../../../domain/viewport/viewport-edit';
+import { editorBreakpoints, viewportEditContext } from '../../../../domain/viewport/viewport-edit';
 import {
   LayoutControl,
   layoutControlValue,
@@ -71,10 +68,10 @@ export function LayoutPanel({
   const effectiveLayout = effectiveNode.layout ? structuredClone(effectiveNode.layout) : undefined;
   // A wider target inherits all preceding min-width layers, not just Base.
   if (effectiveLayout && breakpointId) {
-    const targetWidth = ctx.breakpoints.find((item) => item.id === breakpointId)?.minWidth ?? 0;
+    const targetWidth = ctx.breakpoints.find((item) => item.uuid === breakpointId)?.minWidth ?? 0;
     for (const breakpoint of ctx.breakpoints) {
-      if (breakpoint.id === ctx.base?.id || breakpoint.minWidth > targetWidth) continue;
-      Object.assign(effectiveLayout, effectiveNode.layout?.breakpoints?.[breakpoint.id]);
+      if (breakpoint.uuid === ctx.base?.uuid || breakpoint.minWidth > targetWidth) continue;
+      Object.assign(effectiveLayout, effectiveNode.layout?.breakpoints?.[breakpoint.uuid]);
     }
   }
   const controlValue = layoutControlValue({
@@ -206,13 +203,13 @@ export function LayoutPanel({
     }
     if (!cueViewport) return null;
     const override = variantEntry
-      ? ownLayout?.breakpoints?.[cueViewport.id]
-      : node.layout?.breakpoints?.[cueViewport.id];
+      ? ownLayout?.breakpoints?.[cueViewport.uuid]
+      : node.layout?.breakpoints?.[cueViewport.uuid];
     if (!override || override[key] === undefined) return null;
     return (
       <OverrideCue
         minWidth={cueViewport.minWidth}
-        onReset={() => commit({ [key]: null }, cueViewport.id)}
+        onReset={() => commit({ [key]: null }, cueViewport.uuid)}
       />
     );
   }
@@ -331,13 +328,13 @@ export function LayoutPanel({
     <div className="stack">
       {(!section || section === 'layout') &&
       cueViewport &&
-      (variantEntry ? ownLayout : node.layout)?.breakpoints?.[cueViewport.id] ? (
+      (variantEntry ? ownLayout : node.layout)?.breakpoints?.[cueViewport.uuid] ? (
         <button
           type="button"
           className="text-button"
           onClick={() =>
             variantEntry
-              ? commitVariantLayout(session, variantEntry, cueViewport.id, {
+              ? commitVariantLayout(session, variantEntry, cueViewport.uuid, {
                   direction: null,
                   gap: null,
                   padding: null,
@@ -355,11 +352,11 @@ export function LayoutPanel({
                   type: 'setProp',
                   nodeId: node.id,
                   prop: 'layout',
-                  value: clearLayoutBreakpoint(node.layout, cueViewport.id),
+                  value: clearLayoutBreakpoint(node.layout, cueViewport.uuid),
                 })
           }
         >
-          Reset layout {cueViewport.id}
+          Reset layout {cueViewport.uuid}
         </button>
       ) : null}
       <LayoutControl

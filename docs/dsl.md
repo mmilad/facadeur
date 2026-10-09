@@ -27,9 +27,8 @@ Examples live in `examples/`. The JSON Schema generated from `packages/core` is 
 | `fields`               | no       | Variable fields of an atom or component: `name`, `type`, `default`.                                                 |
 | `variants`             | no       | Variant axes: `name`, `values`, optional `default`.                                                                 |
 | `settings.artboard`    | no       | `{ "width", "height" }` in pixels. The page sheet. Not a node.                                                      |
-| `settings.breakpoints` | no       | Viewport widths. Default, when omitted: Phone 375 through Ultra 1760. See Breakpoints.                              |
-| `fonts`                | no       | Font families: id, CSS name, weights, source, fallbacks.                                                            |
-| `tokens`               | no       | W3C DTCG tree. A token has `$value`; a group does not.                                                              |
+| `settings.breakpoints` | no       | UUID-identified viewport widths. Default, when omitted: Phone 375 through Ultra 1760. See Breakpoints.              |
+| `tokens`               | no       | UUID-keyed token families. Each token record carries `uuid`, `label`, `group`, `valueType`, and `value`.            |
 | `styles`               | no       | Style block for this document: base, states, variants, breakpoints, children.                                       |
 | `tokenInterface`       | no       | `reads` and `sets`: tokens this document uses and overrides for descendants.                                        |
 | `componentTokens`      | no       | Local tokens owned by this atom, component, or section (not pages).                                                 |
@@ -64,8 +63,8 @@ A container. Children are nested in the file and stored as an ordered id list in
   "attributes": { "class": "hero" },
   "layout": {
     "direction": "column",
-    "gap": "{space.gap.md}",
-    "padding": "{space.inset.md}",
+    "gap": "{token:SPACE_GAP_UUID}",
+    "padding": "{token:SPACE_SCALE_4_UUID}",
     "width": { "mode": "fixed", "size": 480 }
   },
   "children": []
@@ -131,7 +130,9 @@ There are two related kinds of variants:
       "name": "compact",
       "overrides": {
         "fields": { "label": "More" },
-        "nodes": { "root": { "layout": { "gap": "{space.2}" } } },
+        "nodes": {
+          "root": { "layout": { "gap": "{token:SPACE_SCALE_2_UUID}" } }
+        },
         "removed": ["supporting-copy"]
       }
     }
@@ -149,12 +150,12 @@ Style overrides can be stored directly as the sparse `overrides.styles` block. T
     {
       "name": "compact",
       "overrides": {
-        "styles": { "declarations": { "padding": "{space.inset.sm}" } }
+        "styles": { "declarations": { "padding": "{token:SPACE_SCALE_2_UUID}" } }
       }
     }
   ],
   "styles": {
-    "declarations": { "padding": "{space.inset.md}" }
+    "declarations": { "padding": "{token:SPACE_SCALE_4_UUID}" }
   }
 }
 ```
@@ -173,7 +174,7 @@ Frames render as flexbox. The default direction is `column`, alignment is stretc
 | `fill`  | `flex: 1` on the parent's main axis, otherwise stretch. A component root with no parent direction uses `100%`. |
 | `fixed` | `size` is a pixel number, a token reference, or `{ "unit": "%", "value": 50 }`                                 |
 
-`min` and `max` use the same size value. `gap`, `padding`, and `margin` are token references (`{space.gap.md}`), or a box of `{ top, right, bottom, left }` for padding and margin. A raw length is rejected.
+`min` and `max` use the same size value. `gap`, `padding`, and `margin` are global token references (`{token:uuid}`), or a box of `{ top, right, bottom, left }` for padding and margin. A raw length is rejected.
 
 `breakpoints` overrides any of those fields per breakpoint id. The base breakpoint (smallest `minWidth`, Phone at 375 when the document lists none) is not a query. Larger breakpoints become `@media (min-width: Npx)`. Child fill/hug is compiled against the base direction.
 
@@ -226,9 +227,9 @@ document. Move and Wrap rebase local path prefixes, Remove prunes affected paths
 and Reset removes the sparse override. States, breakpoints and named owner variants
 use the same target path.
 
-Values may contain token references. `font: "{type.body}"` expands to the typography longhands (`font-family`, `font-size`, `font-weight`, `line-height`, `letter-spacing`). Spacing properties in the block are token references only.
+Values may contain global token references. `font: "{token:TYPOGRAPHY_BODY_UUID}"` expands to the typography longhands (`font-family`, `font-size`, `font-weight`, `line-height`, `letter-spacing`). Spacing properties in the block are token references only.
 
-`tokenInterface.reads` lists every **global** token path the style block and layout use. References to this document's own `componentTokens` use `{local.path}` in styles but are not listed in `reads`. Each component token default that is a single `{global.path}` reference is listed in `reads` (same adopt behavior as other commands). `tokenInterface.sets` maps a token path to a value and emits that custom property on the component root, so descendants inherit the override. A set key such as `input.color.border` targets another catalog document's component token when `input` is a document id; otherwise the key is treated as a global token path (for example `color.text.primary`). `{font.sans}` is a font family, not a read. Font weight on a type style is a number from that family's `weights` (400, 500, 600, 700), not its own token group. Any other braced path is a token and is a read.
+`tokenInterface.reads` lists every **global token UUID** the style block, layout, and component-token defaults use. Global references use `{token:uuid}`. References to this document's own `componentTokens` use `{local.path}` in styles but are not listed in `reads`. Each component-token default that references a global token is listed in `reads`. `tokenInterface.sets` maps either a global token UUID or a component-token public path to an override value. A UUID target resolves to the token's generated CSS custom property, so renaming its label or group does not break the override. A path such as `input.color.border` targets another catalog document's component token when `input` is a document id. Font tokens use the same `{token:uuid}` reference syntax; font weight on a typography token is a number from that font's `weights` (400, 500, 600, 700), not its own token group.
 
 `style` on a primitive node is still the `setStyle` map. It overrides the style block's base declaration for the same property. States, variants, and breakpoints stay above that.
 
@@ -243,30 +244,32 @@ DOM preview selectors (React codegen uses local CSS Module classes):
 
 ## Tokens
 
-`tokens` is a [W3C DTCG](https://tr.designtokens.org/format/) tree. An object with `$value` is a token. Any other object is a group. `$type` on a group is inherited by the tokens inside it; a token's own `$type` wins. The same rule applies to `$extensions.facadeur.tier` (`primitive`, `semantic`, or `component`). Tier is metadata for authors. It is not part of the CSS name.
+Code snippets use symbolic UUID placeholders such as `TYPOGRAPHY_BODY_UUID`; replace them with IDs declared in the relevant Example `idList.ts` file. `tokens` is grouped by family (`color`, `space`, `radius`, `shadow`, `type`, and `font`). Each family is a map keyed by a stable UUID. The map key must match the record's `uuid`; each record has a display `label`, organizational `group`, `valueType`, and `value`. Optional `extensions` hold namespaced metadata such as tier (`primitive`, `semantic`, or `component`). A reference is the whole string `{token:uuid}`. Changing a label or group does not change the token identity or its references.
 
-Child names match `[a-z0-9]+` (`blue`, `500`). A reference is the whole string `{color.blue.500}`. The dotted path is the stable id used by references and CSS names. Groups organize the tree; they are not part of the author-facing name. The editor shows a spaced label (`Body`, `Color text`) and keeps the path as the id. The stored value stays unresolved. `@facadeur/tokens` resolves it when building CSS, and the Yjs store rejects a command that introduces a cycle or a missing target.
+The CSS custom-property name is generated from the family, group, and label; it is not stored in the token record. The editor displays the label and keeps the UUID as identity. The stored value stays unresolved. `@facadeur/tokens` resolves references when building CSS, and Core rejects a command that introduces a cycle or a missing target. Legacy DTCG input is converted at the read boundary; `$type`, `$value`, and `$extensions.facadeur` are not the canonical document shape.
 
-Supported `$type` values: `color`, `dimension`, `number`, `fontFamily`, `fontWeight`, `shadow`, `typography`.
+Supported `valueType` values: `color`, `dimension`, `number`, `fontFamily`, `fontWeight`, `shadow`, `typography`.
 
-Per-breakpoint values live in `$extensions.facadeur.breakpoints`. `$value` is the base, which is the breakpoint with the smallest `minWidth`. That base is not wrapped in `@media` — its `minWidth` is the viewport width of the frame (375 for the default `xs` breakpoint), not a query threshold. Each larger breakpoint emits `@media (min-width: <px>)`.
+Responsive overrides live in each token's `breakpoints` map, keyed by breakpoint UUID. `value` is the base, associated with the configured breakpoint with the smallest `minWidth`. That base is not wrapped in `@media`; its `minWidth` is the viewport width of the frame, not a query threshold. Each larger breakpoint emits `@media (min-width: <px>)`.
 
 ```json
 {
   "type": {
-    "$type": "typography",
-    "body": {
-      "$value": {
-        "fontFamily": "{font.sans}",
+    "TYPOGRAPHY_BODY_UUID": {
+      "uuid": "TYPOGRAPHY_BODY_UUID",
+      "label": "Body",
+      "group": "",
+      "valueType": "typography",
+      "value": {
+        "fontFamily": "{token:FONT_INTER_UUID}",
         "fontSize": "16px",
         "fontWeight": 400,
         "lineHeight": 1.5,
         "letterSpacing": "0"
       },
-      "$extensions": {
-        "facadeur": {
-          "breakpoints": { "sm": { "fontSize": "17px" }, "xl": { "fontSize": "18px" } }
-        }
+      "breakpoints": {
+        "BREAKPOINT_TABLET_UUID": { "fontSize": "17px" },
+        "BREAKPOINT_WIDE_UUID": { "fontSize": "18px" }
       }
     }
   }
@@ -275,22 +278,20 @@ Per-breakpoint values live in `$extensions.facadeur.breakpoints`. `$value` is th
 
 ### CSS names
 
-| Source                          | Custom property                                      |
-| ------------------------------- | ---------------------------------------------------- |
-| Token `color.blue.500`          | `--color-blue-500`                                   |
-| Reference `{color.blue.500}`    | `var(--color-blue-500)`                              |
-| Font id `sans`                  | `--font-sans`                                        |
-| Typography field on `type.body` | `--type-body--font-size`, `--type-body--font-family` |
+| Source                                         | Custom property                                      |
+| ---------------------------------------------- | ---------------------------------------------------- |
+| Token with family/group/label `color.blue.500` | `--color-blue-500`                                   |
+| Reference `{token:uuid}`                       | `var(--generated-custom-property)`                   |
+| Font token with label `Inter`                  | `--font-inter`                                       |
+| Typography token `Body`                        | `--type-body--font-size`, `--type-body--font-family` |
 
-Segments are joined with a single hyphen, so each path has one name. A typography token expands to one property per field, and the field is separated with a double hyphen. A token path cannot contain `--`, so the field does not collide with another token. A shadow token is one property holding a `box-shadow` value. Declarations sit in a `:root` rule.
-
-`{font.sans}` points at the font with id `sans`, not at a DTCG token. A token must not occupy that same path.
+The generated name uses the family, group, and label, joined with hyphens. A typography token expands to one property per field, and the field is separated with a double hyphen. A shadow token is one property holding a `box-shadow` value. Declarations sit in a `:root` rule. The UUID reference remains stable if the generated name changes after a label or group edit.
 
 ### Component tokens
 
-Component files do not store local tokens in the design `tokens` tree. They use `componentTokens`: a flat map from a token path (`color.border`, `padding.x`, …) to `{ type, value }`. The default `value` is a literal with no `{…}`, or exactly one `{global.path}` reference. Local-to-local references in defaults are rejected.
+Component files do not store local tokens in the design `tokens` tree. They use `componentTokens`: a flat map from a token path (`color.border`, `padding.x`, …) to `{ type, value }`. The default `value` is a literal with no `{…}`, or exactly one `{token:uuid}` global reference. Local-to-local references in defaults are rejected.
 
-The public path is `<documentId>.<localPath>` (for example `input.color.border`). CSS uses the same hyphenation as global tokens (`--input-color-border`). In the owning document's compiled styles, `{color.border}` becomes `var(--input-color-border, <fallback>)` where the fallback is `var(--global-path)` when the default is a single global reference, otherwise the literal. The owning root rule does **not** assign `--input-color-border`; a parent's `tokenInterface.sets` entry emits that variable so inheritance wins and the fallback applies only when the variable is unset.
+The public path is `<documentId>.<localPath>` (for example `input.color.border`). CSS uses the same hyphenation as global tokens (`--input-color-border`). In the owning document's compiled styles, `{color.border}` becomes `var(--input-color-border, <fallback>)` where the fallback is `var(--generated-global-property)` when the default is a single `{token:uuid}` reference, otherwise the literal. The owning root rule does **not** assign `--input-color-border`; a parent's `tokenInterface.sets` entry emits that variable so inheritance wins and the fallback applies only when the variable is unset.
 
 At an atom, component, or section root, the editor's Tokens tab also lists exposed
 tokens from reachable descendant components. Editing them writes
@@ -300,19 +301,30 @@ and descendant overrides remain separate controls. No internal alias variable is
 needed. Root sets are base-document values; scoped state/breakpoint/instance
 overrides belong to the style block.
 
-Allowed kinds: atom, component, and section. Pages cannot define `componentTokens`. Commands: `setComponentToken`, `removeComponentToken`. Before `setComponentToken`, the editor should call `assertComponentTokenDefault(value, globalPaths)` with paths from the design document.
+Allowed kinds: atom, component, and section. Pages cannot define `componentTokens`. Commands: `setComponentToken`, `removeComponentToken`. Before `setComponentToken`, the editor should call `assertComponentTokenDefault(value, globalTokenUuids)` with UUIDs from the design document.
 
-## Fonts
+## Font tokens
 
 ```json
 {
-  "id": "sans",
-  "family": "Inter",
-  "weights": [400, 500, 600, 700],
-  "source": { "type": "google", "family": "Inter" },
-  "fallbacks": ["system-ui", "sans-serif"]
+  "font": {
+    "FONT_INTER_UUID": {
+      "uuid": "FONT_INTER_UUID",
+      "label": "Inter",
+      "group": "",
+      "valueType": "fontFamily",
+      "value": {
+        "family": "Inter",
+        "weights": [400, 500, 600, 700],
+        "source": { "type": "google", "family": "Inter" },
+        "fallbacks": ["system-ui", "sans-serif"]
+      }
+    }
+  }
 }
 ```
+
+Font family definitions use the same UUID-keyed record contract as other tokens. Typography tokens refer to them with `{token:uuid}`; font source details, weights, and fallbacks live in the token value.
 
 `source.type` is `google` or `file`. A file source lists `{ weight, style, url, format? }` and must cover every weight and style. `style` is `normal` or `italic`; omitted `styles` means `normal` only. The last fallback must be a CSS generic family (`sans-serif`, `system-ui`, `serif`, …). CSS output is an `@import` for Google Fonts or one `@font-face` per file, plus the `--font-<id>` stack.
 
@@ -345,22 +357,22 @@ A new project also starts with two atoms, listed by `starterAtomIds`: `button` a
 {
   id, name, kind, rootId,
   fields, variants, settings,
-  tokens, fonts, styles, tokenInterface, componentTokens,
+  tokens, styles, tokenInterface, componentTokens,
   nodes: {
     "<id>": { type, children: ["<child-id>", ...] }
   }
 }
 ```
 
-Only frames have `children`. Ids are unique inside one document. `toFlat` / `toNested` in `@facadeur/core` convert between the two shapes. The token tree is stored as nested maps in the Yjs `tokens` map. Fonts are a map keyed by id, with order kept beside them. Object keys inside the token tree are sorted on the way through memory so a command and a Yjs read-back compare equal. The file round-trip keeps every value.
+Only frames have `children`. Ids are unique inside one document. `toFlat` / `toNested` in `@facadeur/core` convert between the two shapes. Each token family is stored as a UUID-keyed map in the Yjs `tokens` map, including fonts. Object keys inside the token tree are sorted on the way through memory so a command and a Yjs read-back compare equal. The file round-trip keeps every value.
 
 ## Commands
 
 Documents change only through commands. Each command is one transaction in the Yjs store. Undo and redo walk those transactions.
 
-`insert`, `remove`, `move`, `wrap`, `setProp`, `setStyle`, `setField`, `setVariant`, `defineField`, `removeField`, `defineVariant`, `removeVariant`, `setToken`, `removeToken`, `setTokenGroup`, `removeTokenGroup`, `setFont`, `removeFont`, `setBreakpoints`, `setStyleBlock`, `setVariantStyleBlock`, `setTokenInterface`, `setComponentToken`, `removeComponentToken`. `wrap` puts the node in a new frame at the same index. A command that introduces a token reference (`insert`, layout, `setStyle`, `setStyleBlock`, `setVariantStyleBlock`) adds that path to `tokenInterface.reads` when it is global; local component token references are omitted. `setComponentToken` adds global paths from the default to `reads`. `removeField` also drops bindings that named the field. `removeVariant`, and `defineVariant` when a value disappears, drop the matching style-block layers on the root and on children. Sections and pages cannot define fields or variant axes.
+`insert`, `remove`, `move`, `wrap`, `setProp`, `setStyle`, `setField`, `setVariant`, `defineField`, `removeField`, `defineVariant`, `removeVariant`, `setToken`, `removeToken`, `setBreakpoints`, `setStyleBlock`, `setVariantStyleBlock`, `setTokenInterface`, `setComponentToken`, `removeComponentToken`, `renameComponentTokenPath`. `wrap` puts the node in a new frame at the same index. A command that introduces a token reference (`insert`, layout, `setStyle`, `setStyleBlock`, `setVariantStyleBlock`) adds its UUID to `tokenInterface.reads` when it is global; local component token references are omitted. `setComponentToken` adds any global UUID referenced by its default to `reads`. `removeField` also drops bindings that named the field. `removeVariant`, and `defineVariant` when a value disappears, drop the matching style-block layers on the root and on children. Sections and pages cannot define fields or variant axes.
 
-`setField` and `setVariant` apply to instances. `setStyle` writes a style map on a primitive node; it does not apply to instances. `setStyleBlock` replaces the document style block. `setVariantStyleBlock` replaces one named preset's sparse `overrides.styles` block and removes that preset's backwards-compatible reserved style layer. `setTokenInterface` replaces `reads` / `sets`. The style engine paints both. `move.index` is the index in the destination child list after the node has been taken out of its current parent. `setToken` replaces one token and creates missing groups along the path. `setBreakpoints` with an empty list clears the document's breakpoints, and CSS falls back to the defaults. The store resolves token references before it commits, so a cycle or a missing target never lands in the document.
+`setField` and `setVariant` apply to instances. `setStyle` writes a style map on a primitive node; it does not apply to instances. `setStyleBlock` replaces the document style block. `setVariantStyleBlock` replaces one named preset's sparse `overrides.styles` block and removes that preset's backwards-compatible reserved style layer. `setTokenInterface` replaces `reads` / `sets`. Global UUID set keys resolve to generated custom properties; component-token public-path keys set descendant component tokens. `move.index` is the index in the destination child list after the node has been taken out of its current parent. `setToken` replaces one UUID-identified record in a family map. `setBreakpoints` with an empty list clears the document's breakpoints, and CSS falls back to the defaults. The store resolves token references before it commits, so a cycle or a missing target never lands in the document.
 
 ## Ids in the DOM
 

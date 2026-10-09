@@ -1,19 +1,22 @@
 import type { Node } from '@facadeur/domain';
+import { tokenIds as exampleTokenIds } from '../catalog/tokens/idList';
+import { ids as exampleContentCardIds } from './idList';
+import { tokenRef } from '../references';
 
 export const styles = {
-  '550e8400-e29b-41d4-a716-7d669086c137': {
+  [exampleContentCardIds.nodes.div1]: {
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-b1d317d292af': {
+  [exampleContentCardIds.nodes.div3]: {
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-8bea6ada581a': {
+  [exampleContentCardIds.nodes.div4]: {
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-9b6904fdf010': {
+  [exampleContentCardIds.nodes.div2]: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
@@ -22,15 +25,15 @@ export const styles = {
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-711653adba3d': {
+  [exampleContentCardIds.nodes.root]: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
     width: '100%',
     height: 'auto',
     maxWidth: '360px',
-    background: '{color.bg}',
-    border: '1px solid {color.border}',
+    background: tokenRef(exampleTokenIds.color.bg.canvas),
+    border: '1px solid ' + tokenRef(exampleTokenIds.color.border.default),
     borderRadius: '{shape.radius}',
     boxShadow: '{elevation.shadow}',
     boxSizing: 'border-box',

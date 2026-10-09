@@ -1,7 +1,12 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleFullbleedTeaserIds } from './idList';
+import { ids as exampleImageIds } from '../image/idList';
+import { ids as exampleLinkIds } from '../link/idList';
+import { ids as exampleTextBodyIds } from '../text-body/idList';
+import { ids as exampleTextHeadingIds } from '../text-heading/idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-00000000006b',
+  uuid: exampleFullbleedTeaserIds.nodes.root,
   data: {
     name: 'Teaser',
   },
@@ -9,47 +14,47 @@ export const root: Node = {
     tagName: 'section',
     children: [
       {
-        uuid: '550e8400-e29b-41d4-a716-b5ddc99a5c38',
+        uuid: exampleFullbleedTeaserIds.nodes.div1,
         dom: {
           tagName: 'div',
         },
         config: {
-          definitionRef: '550e8400-e29b-41d4-a716-000000000002',
+          definitionRef: exampleImageIds.definition,
           fieldExposure: { mode: 'manual', fields: { src: 'imageSrc', alt: 'imageAlt' } },
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-1cc03f1f8f62',
+        uuid: exampleFullbleedTeaserIds.nodes.div2,
         dom: {
           tagName: 'div',
           children: [
             {
-              uuid: '550e8400-e29b-41d4-a716-8b704bf6eabf',
+              uuid: exampleFullbleedTeaserIds.nodes.div3,
               dom: {
                 tagName: 'div',
               },
               config: {
-                definitionRef: '550e8400-e29b-41d4-a716-dacc33ed3990',
+                definitionRef: exampleTextHeadingIds.definition,
                 fieldExposure: { mode: 'manual', fields: { text: 'title' } },
               },
             },
             {
-              uuid: '550e8400-e29b-41d4-a716-abdaf56d3194',
+              uuid: exampleFullbleedTeaserIds.nodes.div4,
               dom: {
                 tagName: 'div',
               },
               config: {
-                definitionRef: '550e8400-e29b-41d4-a716-b51f086c1669',
+                definitionRef: exampleTextBodyIds.definition,
                 fieldExposure: { mode: 'manual', fields: { text: 'body' } },
               },
             },
             {
-              uuid: '550e8400-e29b-41d4-a716-03b8b9a838a4',
+              uuid: exampleFullbleedTeaserIds.nodes.div5,
               dom: {
                 tagName: 'div',
               },
               config: {
-                definitionRef: '550e8400-e29b-41d4-a716-9f7d1ebdd36d',
+                definitionRef: exampleLinkIds.definition,
                 fieldExposure: {
                   mode: 'manual',
                   fields: { label: 'ctaLabel', href: 'ctaHref' },

@@ -5,118 +5,73 @@ import {
   toNested,
   validateCatalog,
   validateDocumentFile,
-  type DocumentFile,
 } from '@facadeur/core';
 import { createProjectTemplateDocument, loadTokens } from '@facadeur/tokens';
-import templateFile from '../../../examples/project-template.json';
+import { fontToken, tokenIds } from './fixtures';
 
-describe('document round-trip', () => {
+describe('canonical design-token serialization', () => {
   const file = createProjectTemplateDocument();
 
-  it('validates and survives flat, nested, and Yjs without dropping tokens or fonts', () => {
+  it('validates and round-trips UUID token maps through nested, flat, and catalog forms', () => {
     const validated = validateDocumentFile(file);
+
     expect(toNested(toFlat(validated))).toEqual(file);
     expect(validateCatalog([file])[0]).toEqual(file);
-    expect(templateFile).toEqual(file);
     expect(loadTokens(toFlat(file)).properties.length).toBeGreaterThan(0);
+    for (const family of Object.values(file.tokens ?? {})) {
+      for (const [uuid, token] of Object.entries(family)) expect(token.uuid).toBe(uuid);
+    }
   });
 
-  it('edits tokens and fonts through commands', () => {
-    let doc = toFlat(file);
-    doc = applyCommand(doc, {
+  it('adds and removes tokens by UUID while preserving their editable data', () => {
+    let document = toFlat(file);
+    const blue = document.tokens.color[tokenIds.blue500];
+    expect(blue).toBeDefined();
+    document = applyCommand(document, {
       type: 'setToken',
-      path: 'color.blue.500',
-      token: { $value: '#0000ff', $description: 'Changed' },
+      family: 'color',
+      token: { ...blue!, value: '#0000ff' },
     });
-    expect(doc.tokens).toMatchObject({
-      color: { blue: { '500': { $value: '#0000ff', $description: 'Changed' } } },
+    expect(document.tokens.color[tokenIds.blue500]).toMatchObject({
+      uuid: tokenIds.blue500,
+      group: 'blue',
+      label: '500',
+      value: '#0000ff',
     });
-    doc = applyCommand(doc, {
-      type: 'setFont',
-      font: {
-        id: 'mono',
-        family: 'JetBrains Mono',
-        weights: [400],
-        source: { type: 'google', family: 'JetBrains Mono' },
-        fallbacks: ['ui-monospace', 'monospace'],
-      },
+
+    const exampleFont = document.tokens.font[tokenIds.font];
+    expect(exampleFont).toBeDefined();
+    document = applyCommand(document, {
+      type: 'removeToken',
+      family: 'font',
+      uuid: tokenIds.font,
     });
-    expect(doc.fonts.map((font) => font.id)).toEqual(['sans', 'mono']);
-    doc = applyCommand(doc, {
-      type: 'setBreakpoints',
-      breakpoints: [
-        { id: 'phone', minWidth: 390 },
-        { id: 'desk', minWidth: 1280 },
-      ],
+    expect(document.tokens.font[tokenIds.font]).toBeUndefined();
+    document = applyCommand(document, {
+      type: 'setToken',
+      family: 'font',
+      token: exampleFont!,
     });
-    expect(toNested(doc).settings?.breakpoints).toEqual([
-      { id: 'phone', minWidth: 390 },
-      { id: 'desk', minWidth: 1280 },
-    ]);
-    expect(toFlat(toNested(doc))).toEqual(doc);
+    expect(document.tokens.font[tokenIds.font]).toEqual(fontToken);
+    document = applyCommand(document, {
+      type: 'removeToken',
+      family: 'font',
+      uuid: tokenIds.font,
+    });
+    expect(document.tokens.font[tokenIds.font]).toBeUndefined();
   });
 
-  it('round-trips a file font and a group $type through the nested file', () => {
-    const document: DocumentFile = {
-      version: 1,
-      id: 'theme',
-      name: 'Theme',
-      kind: 'atom',
-      settings: {
-        breakpoints: [
-          { id: 'mobile', minWidth: 375 },
-          { id: 'tablet', minWidth: 768 },
-        ],
-      },
-      fonts: [
-        {
-          id: 'sans',
-          family: 'Inter',
-          weights: [400, 700],
-          styles: ['normal', 'italic'],
-          source: {
-            type: 'file',
-            files: [
-              { weight: 400, style: 'normal', url: 'inter-400.woff2', format: 'woff2' },
-              { weight: 400, style: 'italic', url: 'inter-400-italic.woff2', format: 'woff2' },
-              { weight: 700, style: 'normal', url: 'inter-700.woff2', format: 'woff2' },
-              { weight: 700, style: 'italic', url: 'inter-700-italic.woff2', format: 'woff2' },
-            ],
-          },
-          fallbacks: ['sans-serif'],
-        },
-      ],
-      tokens: {
-        color: {
-          $description: 'Palette',
-          $type: 'color',
-          ink: { $value: '#111111' },
-        },
-        type: {
-          $type: 'typography',
-          body: {
-            $extensions: { facadeur: { breakpoints: { tablet: { fontSize: '18px' } } } },
-            $value: {
-              fontFamily: '{font.sans}',
-              fontSize: '16px',
-              fontWeight: 400,
-              letterSpacing: '0',
-              lineHeight: 1.5,
-            },
-          },
-        },
-      },
-      root: { id: 'root', type: 'frame', tag: 'div' },
-    };
-    expect(toNested(toFlat(document))).toEqual(document);
-    const next = applyCommand(toFlat(document), {
+  it('round-trips font tokens and UUID breakpoint overrides in nested documents', () => {
+    const next = file;
+
+    expect(toNested(toFlat(next))).toEqual(next);
+    expect('fonts' in next).toBe(false);
+    const fontRemoved = applyCommand(toFlat(next), {
       type: 'removeToken',
-      path: 'color.ink',
+      family: 'font',
+      uuid: tokenIds.font,
     });
-    expect(next.tokens.color).toMatchObject({ $type: 'color', $description: 'Palette' });
-    expect(next.tokens.color).not.toHaveProperty('ink');
-    const removed = applyCommand(next, { type: 'removeFont', id: 'sans' });
-    expect(removed.fonts).toEqual([]);
-    expect(toNested(removed).fonts).toBeUndefined();
+    expect(toNested(fontRemoved).tokens?.font[tokenIds.font]).toBeUndefined();
+    expect(toNested(toFlat(next)).tokens?.type[tokenIds.typography]?.breakpoints).toBeDefined();
   });
 });

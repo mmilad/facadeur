@@ -3,6 +3,7 @@ import type { DocumentFile } from '@facadeur/core';
 import { createEditorSession } from '../src/domain/session';
 import { commitGridChanges } from '../src/ui/sidebar/properties/layout/grid/edits';
 import { editorStandardDesign, expandExampleCatalog } from './fixtures/example-catalog';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 const file: DocumentFile = {
   version: 1,
@@ -12,8 +13,8 @@ const file: DocumentFile = {
   variants: [{ name: 'compact' }],
   settings: {
     breakpoints: [
-      { id: 'phone', minWidth: 375 },
-      { id: 'tablet', minWidth: 768 },
+      { uuid: fixtureIds.catalog.breakpoints.phone, label: 'Phone', minWidth: 375 },
+      { uuid: fixtureIds.catalog.breakpoints.tablet, label: 'Tablet', minWidth: 768 },
     ],
   },
   root: {
@@ -57,16 +58,33 @@ it('builds multiple sparse viewport style owners without overwriting earlier edi
   session.openAsset('grid-edits', 'root');
   session.setActiveVariant('compact');
   const before = structuredClone(session.getSnapshot().document);
-  commitGridChanges(session, session.getSnapshot(), 'tablet', [
-    { nodeId: 'root', patch: { 'grid-template-areas': '"content"', 'row-gap': '{space.gap.md}' } },
+  commitGridChanges(session, session.getSnapshot(), fixtureIds.catalog.breakpoints.tablet, [
+    {
+      nodeId: 'root',
+      patch: {
+        'grid-template-areas': '"content"',
+        'row-gap': fixtureTokenRef(fixtureIds.tokens.space.gap.md),
+      },
+    },
     { nodeId: 'child', patch: { 'grid-area': 'content' } },
   ]);
   const block = session.getSnapshot().document.variantPresets?.[0]?.overrides?.styles;
   expect(block).toEqual({
     breakpoints: {
-      tablet: { declarations: { 'grid-template-areas': '"content"', 'row-gap': '{space.gap.md}' } },
+      [fixtureIds.catalog.breakpoints.tablet]: {
+        declarations: {
+          'grid-template-areas': '"content"',
+          'row-gap': fixtureTokenRef(fixtureIds.tokens.space.gap.md),
+        },
+      },
     },
-    children: { child: { breakpoints: { tablet: { declarations: { 'grid-area': 'content' } } } } },
+    children: {
+      child: {
+        breakpoints: {
+          [fixtureIds.catalog.breakpoints.tablet]: { declarations: { 'grid-area': 'content' } },
+        },
+      },
+    },
   });
   expect(session.getSnapshot().document.nodes).toEqual(before.nodes);
   session.undo();

@@ -205,10 +205,10 @@ export function useStagePointer({
       if (event.button !== 0) return;
       const frame = selection.frameAt(event.clientX, event.clientY);
       if (frame && claimsPan(event)) {
-        session.selectViewport(frame.breakpoint.id);
+        session.selectViewport(frame.breakpoint.uuid);
         return;
       }
-      if (frame) session.setFocusViewport(frame.breakpoint.id);
+      if (frame) session.setFocusViewport(frame.breakpoint.uuid);
       if (claimsPan(event)) return;
       const snap = session.getSnapshot();
       const hit = selection.hitAt(event.clientX, event.clientY);

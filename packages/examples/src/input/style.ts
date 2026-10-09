@@ -1,17 +1,20 @@
 import type { Node } from '@facadeur/domain';
+import { tokenIds as exampleTokenIds } from '../catalog/tokens/idList';
+import { ids as exampleInputIds } from './idList';
+import { tokenRef } from '../references';
 
 export const styles = {
-  '550e8400-e29b-41d4-a716-2222780064fe': {
-    margin: '{space.0}',
+  [exampleInputIds.nodes.span1]: {
+    margin: tokenRef(exampleTokenIds.space.scale.step0),
   },
-  '550e8400-e29b-41d4-a716-e7e9046fa872': {
+  [exampleInputIds.nodes.root]: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
-    gap: '{space.gap.xs}',
+    gap: tokenRef(exampleTokenIds.space.gap.xs),
     width: '100%',
     height: 'auto',
-    color: '{color.text.secondary}',
-    font: '{type.label}',
+    color: tokenRef(exampleTokenIds.color.text.secondary),
+    font: tokenRef(exampleTokenIds.type.label),
   },
 } satisfies Readonly<Record<string, NonNullable<Node['style']>>>;

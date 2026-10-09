@@ -1,141 +1,144 @@
 import type { Node } from '@facadeur/domain';
+import { tokenIds as exampleTokenIds } from '../catalog/tokens/idList';
+import { ids as exampleSpecimenSectionIds } from './idList';
+import { tokenRef } from '../references';
 
 export const styles = {
-  '550e8400-e29b-41d4-a716-696c51aee4b3': {
+  [exampleSpecimenSectionIds.nodes.p1]: {
     width: 'auto',
     height: 'auto',
-    color: '{color.accent.default}',
-    font: '{type.caption}',
+    color: tokenRef(exampleTokenIds.color.accent.default),
+    font: tokenRef(exampleTokenIds.type.caption),
     letterSpacing: '0.18em',
-    margin: '{space.0}',
+    margin: tokenRef(exampleTokenIds.space.scale.step0),
     textTransform: 'uppercase',
   },
-  '550e8400-e29b-41d4-a716-15b0c28fb1f5': {
+  [exampleSpecimenSectionIds.nodes.h11]: {
     width: 'auto',
     height: 'auto',
-    color: '{color.text.primary}',
-    font: '{type.display}',
-    margin: '{space.0}',
+    color: tokenRef(exampleTokenIds.color.text.primary),
+    font: tokenRef(exampleTokenIds.type.display),
+    margin: tokenRef(exampleTokenIds.space.scale.step0),
   },
-  '550e8400-e29b-41d4-a716-1f2640ee02da': {
+  [exampleSpecimenSectionIds.nodes.p2]: {
     width: '100%',
     height: 'auto',
     maxWidth: '640px',
-    color: '{color.text.secondary}',
-    font: '{type.body}',
-    margin: '{space.0}',
+    color: tokenRef(exampleTokenIds.color.text.secondary),
+    font: tokenRef(exampleTokenIds.type.body),
+    margin: tokenRef(exampleTokenIds.space.scale.step0),
   },
-  '550e8400-e29b-41d4-a716-256030b02e78': {
+  [exampleSpecimenSectionIds.nodes.div1]: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
-    gap: '{space.stack.md}',
+    gap: tokenRef(exampleTokenIds.space.stack.md),
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-89cb179fe85c': {
+  [exampleSpecimenSectionIds.nodes.p3]: {
     width: 'auto',
     height: 'auto',
-    color: '{color.text.secondary}',
-    font: '{type.caption}',
+    color: tokenRef(exampleTokenIds.color.text.secondary),
+    font: tokenRef(exampleTokenIds.type.caption),
     letterSpacing: '0.16em',
-    margin: '{space.0}',
+    margin: tokenRef(exampleTokenIds.space.scale.step0),
     textTransform: 'uppercase',
   },
-  '550e8400-e29b-41d4-a716-fbd29e8bee02': {
+  [exampleSpecimenSectionIds.nodes.div3]: {
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
-    gap: '{space.gap.sm}',
+    gap: tokenRef(exampleTokenIds.space.gap.sm),
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-6ca76aec5e2d': {
+  [exampleSpecimenSectionIds.nodes.div2]: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
-    gap: '{space.stack.sm}',
+    gap: tokenRef(exampleTokenIds.space.stack.sm),
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-d0bfdebd4dc1': {
+  [exampleSpecimenSectionIds.nodes.p4]: {
     width: 'auto',
     height: 'auto',
-    color: '{color.text.secondary}',
-    font: '{type.caption}',
+    color: tokenRef(exampleTokenIds.color.text.secondary),
+    font: tokenRef(exampleTokenIds.type.caption),
     letterSpacing: '0.16em',
-    margin: '{space.0}',
+    margin: tokenRef(exampleTokenIds.space.scale.step0),
     textTransform: 'uppercase',
   },
-  '550e8400-e29b-41d4-a716-44199525567c': {
+  [exampleSpecimenSectionIds.nodes.div10]: {
     width: '300px',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-47ac2e851072': {
+  [exampleSpecimenSectionIds.nodes.div11]: {
     width: '300px',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-2720c9107cee': {
+  [exampleSpecimenSectionIds.nodes.div9]: {
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'flex-start',
     flexWrap: 'wrap',
-    gap: '{space.gap.md}',
+    gap: tokenRef(exampleTokenIds.space.gap.md),
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-e8250fd0aee3': {
+  [exampleSpecimenSectionIds.nodes.div8]: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
-    gap: '{space.stack.sm}',
+    gap: tokenRef(exampleTokenIds.space.stack.sm),
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-a4c53f283135': {
+  [exampleSpecimenSectionIds.nodes.p5]: {
     width: 'auto',
     height: 'auto',
-    color: '{color.text.secondary}',
-    font: '{type.caption}',
+    color: tokenRef(exampleTokenIds.color.text.secondary),
+    font: tokenRef(exampleTokenIds.type.caption),
     letterSpacing: '0.16em',
-    margin: '{space.0}',
+    margin: tokenRef(exampleTokenIds.space.scale.step0),
     textTransform: 'uppercase',
   },
-  '550e8400-e29b-41d4-a716-bb6c728e7cef': {
+  [exampleSpecimenSectionIds.nodes.div14]: {
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-f2a975940624': {
+  [exampleSpecimenSectionIds.nodes.div15]: {
     height: 'auto',
     width: 'auto',
   },
-  '550e8400-e29b-41d4-a716-be18a7bd56fe': {
+  [exampleSpecimenSectionIds.nodes.div13]: {
     display: 'grid',
     flexDirection: 'column',
     alignItems: 'end',
     justifyContent: 'stretch',
-    gap: '{space.gap.lg}',
+    gap: tokenRef(exampleTokenIds.space.gap.lg),
     height: 'auto',
     alignContent: 'stretch',
     gridTemplateColumns: 'repeat(1, minmax(0, 1fr))',
     justifyItems: 'stretch',
-    rowGap: '{radius.lg}',
+    rowGap: tokenRef(exampleTokenIds.radius.lg),
   },
-  '550e8400-e29b-41d4-a716-84683295900a': {
+  [exampleSpecimenSectionIds.nodes.div12]: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
-    gap: '{space.stack.sm}',
+    gap: tokenRef(exampleTokenIds.space.stack.sm),
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-846b26a622a2': {
+  [exampleSpecimenSectionIds.nodes.root]: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
-    gap: '{space.stack.lg}',
-    padding: '{space.inset.lg}',
+    gap: tokenRef(exampleTokenIds.space.stack.lg),
+    padding: tokenRef(exampleTokenIds.space.inset.lg),
     width: '100%',
     height: 'auto',
   },

@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { fn } from 'storybook/test';
-import { card } from '@facadeur/examples';
+import { card, exampleCatalog } from '@facadeur/examples';
 import type { InspectorFieldChangedEvent } from '../../../src/app-service';
 import { EditorShell } from '../../../src/ui/shell/EditorShell';
 import { createStorybookEditor } from '../../fixtures/editor';
@@ -16,6 +16,13 @@ function EditorAppPreview({
 }) {
   const editor = useMemo(() => createStorybookEditor(card.uuid, card.root.uuid), []);
   const navigation = useStorybookNavigation(onNavigation);
+  console.log('EditorAppPreview', exampleCatalog);
+  useEffect(() => {
+    Object.assign(window, { __facadeurExampleCatalog: exampleCatalog });
+    return () => {
+      Reflect.deleteProperty(window, '__facadeurExampleCatalog');
+    };
+  }, []);
 
   useEffect(() => editor.app.inspector.subscribe(onInspectorChange), [editor, onInspectorChange]);
 

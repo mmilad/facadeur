@@ -1,7 +1,8 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleButtonIds } from './idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-000000000065',
+  uuid: exampleButtonIds.nodes.root,
   dom: {
     tagName: 'button',
     attributes: {

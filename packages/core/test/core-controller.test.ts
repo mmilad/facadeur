@@ -6,10 +6,13 @@ import {
   inspectorInputsForNode,
   type InspectorFormField,
 } from '../src/index';
+const testUuid17 = globalThis.crypto.randomUUID();
+const testUuid18 = globalThis.crypto.randomUUID();
+const testUuid19 = globalThis.crypto.randomUUID();
 
-const schemaUuid = '550e8400-e29b-41d4-a716-446655440001';
-const atomUuid = '550e8400-e29b-41d4-a716-446655440002';
-const rootUuid = '550e8400-e29b-41d4-a716-446655440003';
+const schemaUuid = testUuid17;
+const atomUuid = testUuid18;
+const rootUuid = testUuid19;
 
 const catalog = {
   atoms: {

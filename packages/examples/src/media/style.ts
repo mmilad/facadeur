@@ -1,10 +1,11 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleMediaIds } from './idList';
 
 export const styles = {
-  '550e8400-e29b-41d4-a716-f4a255f00959': {
+  [exampleMediaIds.nodes.img1]: {
     aspectRatio: '16 / 9',
   },
-  '550e8400-e29b-41d4-a716-77bc276ee15b': {
+  [exampleMediaIds.nodes.video1]: {
     aspectRatio: '16 / 9',
   },
 } satisfies Readonly<Record<string, NonNullable<Node['style']>>>;

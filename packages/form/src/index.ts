@@ -2,16 +2,12 @@ export { Form } from './form';
 export type { FormChangeMeta, FormProps } from './form';
 export { LayoutField } from './fields/layout';
 export type { LayoutFieldConfig, LayoutFieldProps } from './fields/layout';
-export { AutocompleteField } from './fields/autocomplete';
-export type { AutocompleteFieldProps, AutocompleteOption } from './fields/autocomplete';
+export { AutocompleteSelectField } from './fields/autocomplete';
+export type { AutocompleteOption, AutocompleteSelectFieldProps } from './fields/autocomplete';
 export { ChipsField } from './fields/chips';
 export type { ChipsFieldConfig, ChipsFieldProps } from './fields/chips';
 export { RecordField } from './fields/record';
-export type {
-  RecordFieldConfig,
-  RecordFieldProps,
-  RecordFieldSuggestions,
-} from './fields/record';
+export type { RecordFieldConfig, RecordFieldProps, RecordFieldSuggestions } from './fields/record';
 export type { FormFieldConfig } from './field';
 export { TransformableField } from './fields/transformable';
 export type {
@@ -35,8 +31,8 @@ export type { RepeaterFieldConfig } from './fields/repeater';
 export { SelectField } from './fields/select';
 export type { SelectFieldConfig, SelectOption } from './fields/select';
 export { SearchField } from './fields/search';
-export type { SearchFieldConfig } from './fields/search';
+export type { SearchFieldConfig, SearchFieldProps } from './fields/search';
 export { TextArea } from './fields/textarea';
-export type { TextAreaFieldConfig } from './fields/textarea';
+export type { TextAreaFieldConfig, TextAreaProps } from './fields/textarea';
 export { TextField } from './fields/text';
-export type { TextFieldConfig } from './fields/text';
+export type { TextFieldConfig, TextFieldProps } from './fields/text';

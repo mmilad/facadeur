@@ -9,6 +9,7 @@ import {
 import type { CompileOptions, CompiledRule } from './types';
 import type { SubstituteContext } from '../css/types';
 import { expandDeclarations } from '../css/values';
+import { globalTokenSubstitutions } from '../css/values';
 import { nestedStyleTargetSelector, resolveNestedStyleTarget } from '../selectors/nested-target';
 import { withVariant } from '../selectors/variants';
 import { compileAuthoredRules } from './authored-rules';
@@ -42,6 +43,7 @@ function compileSingleDocument(
     options.paintRoot === true || !(address === 'canvas' && document.root.type === 'frame');
   const substituteContext: SubstituteContext = {
     documentId: document.id,
+    ...globalTokenSubstitutions(options.globalTokens),
     ...(document.componentTokens
       ? { componentTokens: componentTokensByPath(document.componentTokens) }
       : {}),

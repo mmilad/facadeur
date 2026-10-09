@@ -11,7 +11,7 @@ import {
   assertComponentTokenPath,
   assertComponentTokenPathAvailable,
   defaultComponentToken,
-  globalTokenPaths,
+  globalTokenUuids,
   pathFromComponentTokenLabel,
   previewComponentTokenCssVar,
   readComponentTokens,
@@ -24,6 +24,7 @@ import {
   numberTokenRefs,
   shadowTokenRefs,
   typographyTokenRefs,
+  fontFamilies,
 } from '../../../../domain/editing';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
 import { ColorControl } from '../../../controls/color/index';
@@ -34,17 +35,17 @@ import {
   projectFontWeightOptions,
   type TypographyCatalogs,
 } from '../../../controls/typography/index';
-import { tokenLeafLabel } from '../../design/tokens/token-labels';
-import { DesignShadowEditor, type DesignShadowInput } from '../../design/DesignShadowEditor';
+import { tokenLeafLabel } from '../../../design/tokens/token-labels';
+import { DesignShadowEditor, type DesignShadowInput } from '../../../design/DesignShadowEditor';
 import {
   DesignTypographyEditor,
   type DesignTypographyValue,
-} from '../../design/DesignTypographyEditor';
+} from '../../../design/DesignTypographyEditor';
 import { IconButton } from '../../../form/components/shared/IconButton';
 import { Field, Select } from '../../../form/index';
 import { TextInput } from '../../../form/components/input/TextInput';
-import { TokenAddAction } from '../../design/tokens/TokenAddAction';
-import '../../design/token-tables.css';
+import { TokenAddAction } from '../../../design/tokens/TokenAddAction';
+import '../../../design/token-tables.css';
 import { RootTokenOverridesPanel } from './RootTokenOverridesPanel';
 
 const COMPONENT_TOKEN_TYPES: TokenType[] = [
@@ -66,29 +67,30 @@ export function ComponentTokensPanel({
 }) {
   const doc = snap.document;
   const entries = useMemo(() => listComponentTokens(readComponentTokens(doc)), [doc]);
-  const globalPaths = useMemo(() => globalTokenPaths(snap.design.tokens), [snap.design.tokens]);
+  const globalUuids = useMemo(() => globalTokenUuids(snap.design.tokens), [snap.design.tokens]);
   const globalColorTokens = useMemo(() => colorTokenRefs(snap.design.tokens), [snap.design.tokens]);
   const globalShadowTokens = useMemo(
     () => shadowTokenRefs(snap.design.tokens),
     [snap.design.tokens],
   );
+  const fonts = useMemo(() => fontFamilies(snap.design.tokens), [snap.design.tokens]);
   const typographyCatalogs = useMemo<TypographyCatalogs>(
     () => ({
-      fontRefs: projectFontRefs(snap.design.fonts),
+      fontRefs: projectFontRefs(fonts),
       fontFamilyTokens: fontFamilyTokenRefs(snap.design.tokens),
-      fontWeights: projectFontWeightOptions(snap.design.fonts),
+      fontWeights: projectFontWeightOptions(fonts),
       fontWeightTokens: fontWeightTokenRefs(snap.design.tokens),
       dimensionTokens: dimensionTokenRefs(snap.design.tokens),
       numberTokens: numberTokenRefs(snap.design.tokens),
     }),
-    [snap.design.fonts, snap.design.tokens],
+    [fonts, snap.design.tokens],
   );
 
   const localPaths = useMemo(() => new Set(entries.map((entry) => entry.path)), [entries]);
 
   function commitToken(entry: ListedComponentToken, token: Omit<ComponentToken, 'path'>) {
     try {
-      assertComponentTokenDefault(token.value, globalPaths);
+      assertComponentTokenDefault(token.value, globalUuids);
       session.execute({
         type: 'setComponentToken',
         id: entry.id,
@@ -116,9 +118,9 @@ export function ComponentTokensPanel({
             try {
               const path = pathFromComponentTokenLabel(label, type, localPaths);
               assertComponentTokenPath(path);
-              assertComponentTokenPathAvailable(path, globalPaths, localPaths);
+              assertComponentTokenPathAvailable(path, localPaths);
               const token = defaultComponentToken(type);
-              assertComponentTokenDefault(token.value, globalPaths);
+              assertComponentTokenDefault(token.value, globalUuids);
               const trimmedLabel = label.trim();
               session.execute({
                 type: 'setComponentToken',

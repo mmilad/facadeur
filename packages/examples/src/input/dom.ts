@@ -1,12 +1,14 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleFormInputIds } from '../form-input/idList';
+import { ids as exampleInputIds } from './idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-e7e9046fa872',
+  uuid: exampleInputIds.nodes.root,
   dom: {
     tagName: 'label',
     children: [
       {
-        uuid: '550e8400-e29b-41d4-a716-2222780064fe',
+        uuid: exampleInputIds.nodes.span1,
         dom: {
           tagName: 'span',
           properties: {
@@ -15,12 +17,12 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-c4505aaf2c98',
+        uuid: exampleInputIds.nodes.div1,
         dom: {
           tagName: 'div',
         },
         config: {
-          definitionRef: '550e8400-e29b-41d4-a716-fddc99563a28',
+          definitionRef: exampleFormInputIds.definition,
           previewData: {
             fields: {
               disabled: false,

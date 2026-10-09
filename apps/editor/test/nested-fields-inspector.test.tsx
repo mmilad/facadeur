@@ -9,6 +9,7 @@ import { createEditorSession } from '../src/domain/session';
 import { editorBreakpoints, viewportEditContext } from '../src/domain/viewport/viewport-edit';
 import { PropertiesPanel } from '../src/ui/sidebar/properties/PropertiesPanel';
 import { RightRail } from '../src/ui/sidebar/properties/RightRail';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
 
 const documents: DocumentFile[] = [
   {
@@ -49,8 +50,8 @@ const documents: DocumentFile[] = [
     kind: 'section',
     settings: {
       breakpoints: [
-        { id: 'mobile', minWidth: 375 },
-        { id: 'tablet', minWidth: 768 },
+        { uuid: fixtureIds.catalog.breakpoints.phone, label: 'Phone', minWidth: 375 },
+        { uuid: fixtureIds.catalog.breakpoints.tablet, label: 'Tablet', minWidth: 768 },
       ],
     },
     root: {
@@ -180,7 +181,7 @@ describe.skip('nested field inspector (legacy sidebar disabled)', () => {
     ).find((breakpoint) => breakpoint.minWidth === 768);
     if (!tablet) throw new Error('Expected a tablet breakpoint');
     act(() => {
-      session.setFocusViewport(tablet.id);
+      session.setFocusViewport(tablet.uuid);
     });
     update();
     fireEvent.click(screen.getByRole('button', { name: /768/ }));
@@ -194,7 +195,7 @@ describe.skip('nested field inspector (legacy sidebar disabled)', () => {
         focusId: session.getSnapshot().focusViewportId,
         editTarget: session.getSnapshot().editTarget,
       }).writingBreakpointId,
-    ).toBe(tablet.id);
+    ).toBe(tablet.uuid);
     fireEvent.change(screen.getByRole('textbox', { name: 'Opacity' }), {
       target: { value: '0.2' },
     });

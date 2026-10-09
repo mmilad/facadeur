@@ -1,12 +1,13 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleFormSelectIds } from './idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-77565a320196',
+  uuid: exampleFormSelectIds.nodes.root,
   dom: {
     tagName: 'label',
     children: [
       {
-        uuid: '550e8400-e29b-41d4-a716-4836151d3102',
+        uuid: exampleFormSelectIds.nodes.span1,
         dom: {
           tagName: 'span',
           properties: {
@@ -15,12 +16,12 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-96cc520f2893',
+        uuid: exampleFormSelectIds.nodes.div1,
         dom: {
           tagName: 'div',
           children: [
             {
-              uuid: '550e8400-e29b-41d4-a716-53a58fd11298',
+              uuid: exampleFormSelectIds.nodes.span2,
               dom: {
                 tagName: 'span',
                 properties: {
@@ -29,7 +30,7 @@ export const root: Node = {
               },
             },
             {
-              uuid: '550e8400-e29b-41d4-a716-fc3f9316496d',
+              uuid: exampleFormSelectIds.nodes.img1,
               dom: {
                 tagName: 'img',
                 attributes: {

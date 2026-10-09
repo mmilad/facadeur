@@ -5,9 +5,9 @@ import {
   readTokenTree,
   tokenReference,
   type Breakpoint,
+  type DesignTokenValue,
   type FontFamily,
   type IndexedToken,
-  type JsonValue,
   type TokenIndex,
   type TokenTier,
   type TokenType,
@@ -23,7 +23,6 @@ type Expectation = TokenType | 'lineHeight';
 
 export interface DesignInput {
   tokens?: unknown;
-  fonts?: readonly FontFamily[];
   breakpoints?: readonly Breakpoint[];
 }
 
@@ -33,10 +32,9 @@ export interface ParsedToken {
   name: string;
   type: TokenType;
   tier?: TokenTier;
-  /** Unresolved DTCG value. */
-  value: JsonValue;
-  description?: string;
-  breakpoints: Record<string, JsonValue>;
+  /** Unresolved token value, including stable UUID references. */
+  value: DesignTokenValue;
+  breakpoints: Record<string, DesignTokenValue>;
 }
 
 export interface ResolvedDesign {
@@ -50,23 +48,22 @@ export interface ResolvedDesign {
   breakpoints: Breakpoint[];
 }
 
-/** Parse a DTCG tree, inherit group `$type`, and resolve references. */
+/** Index canonical token records and resolve their UUID references. */
 export function loadTokens(input: DesignInput = {}): ResolvedDesign {
   const index = readTokenTree(input.tokens ?? {});
-  const fonts = [...(input.fonts ?? [])];
+  const fonts = [...index.tokens.values()].filter(isFontFamilyToken);
   const breakpoints = activeBreakpoints(input.breakpoints);
-  assertFontPaths(index, fonts);
   assertBreakpointKeys(index, breakpoints);
   const stack = new Set<string>();
   const done = new Set<string>();
-  for (const path of [...index.tokens.keys()].sort()) {
-    resolveToken(path, index, fonts, stack, done);
+  for (const uuid of [...index.tokens.keys()].sort()) {
+    resolveToken(uuid, index, stack, done);
   }
   return {
     tokens: [...index.tokens.values()]
       .sort((left, right) => left.path.localeCompare(right.path))
       .map(toParsed),
-    properties: collectProperties(index, fonts, breakpoints),
+    properties: collectProperties(index, breakpoints),
     fonts,
     breakpoints,
   };
@@ -83,7 +80,7 @@ export function configuredBreakpoints(
   const source = breakpoints?.length ? breakpoints : defaultBreakpoints;
   return source
     .map(normalizeBreakpoint)
-    .sort((left, right) => left.minWidth - right.minWidth || left.id.localeCompare(right.id));
+    .sort((left, right) => left.minWidth - right.minWidth || left.uuid.localeCompare(right.uuid));
 }
 
 /** Viewports shown in the editor, on the stage, and in compiled design CSS. */
@@ -93,39 +90,17 @@ export function activeBreakpoints(breakpoints: readonly Breakpoint[] | undefined
 
 function normalizeBreakpoint(item: Breakpoint): Breakpoint {
   return {
-    id: item.id,
+    uuid: item.uuid,
     minWidth: item.minWidth,
-    ...(item.label ? { label: item.label } : {}),
+    label: item.label,
     ...(item.enabled === false ? { enabled: false } : {}),
   };
-}
-
-function assertFontPaths(index: TokenIndex, fonts: readonly FontFamily[]): void {
-  const ids = new Set<string>();
-  for (const font of fonts) {
-    if (ids.has(font.id)) {
-      throw new DocumentError('schema', `Duplicate font "${font.id}"`);
-    }
-    ids.add(font.id);
-    const path = `font.${font.id}`;
-    const occupied =
-      index.tokens.has(path) ||
-      index.groups.has(path) ||
-      [...index.tokens.keys()].some((key) => key.startsWith(`${path}.`)) ||
-      [...index.groups.keys()].some((key) => key.startsWith(`${path}.`));
-    if (occupied) {
-      throw new DocumentError(
-        'token-schema',
-        `Font "${font.id}" collides with token path "${path}"`,
-      );
-    }
-  }
 }
 
 function assertBreakpointKeys(index: TokenIndex, breakpoints: readonly Breakpoint[]): void {
   const base = breakpoints[0];
   if (!base) throw new DocumentError('schema', 'Breakpoints must not be empty');
-  const known = new Set(breakpoints.map((item) => item.id));
+  const known = new Set(breakpoints.map((item) => item.uuid));
   for (const token of index.tokens.values()) {
     for (const id of Object.keys(token.breakpoints)) {
       if (!known.has(id)) {
@@ -134,10 +109,10 @@ function assertBreakpointKeys(index: TokenIndex, breakpoints: readonly Breakpoin
           `Token "${token.path}" uses unknown breakpoint "${id}" (expected ${[...known].join(', ')})`,
         );
       }
-      if (id === base.id) {
+      if (id === base.uuid) {
         throw new DocumentError(
           'token-schema',
-          `Token "${token.path}" repeats the base breakpoint "${id}" in $extensions. Put that value in $value`,
+          `Token "${token.path}" repeats the base breakpoint "${id}". Put that value in value`,
         );
       }
     }
@@ -145,60 +120,58 @@ function assertBreakpointKeys(index: TokenIndex, breakpoints: readonly Breakpoin
 }
 
 function resolveToken(
-  path: string,
+  uuid: string,
   index: TokenIndex,
-  fonts: readonly FontFamily[],
   stack: Set<string>,
   done: Set<string>,
 ): void {
-  if (done.has(path)) return;
-  if (stack.has(path)) {
+  if (done.has(uuid)) return;
+  if (stack.has(uuid)) {
     throw new DocumentError(
       'token-cycle',
-      `Cycle in token references: ${[...stack, path].join(' → ')}`,
+      `Cycle in token references: ${[...stack, uuid].join(' → ')}`,
     );
   }
-  const token = index.tokens.get(path);
+  const token = index.tokens.get(uuid);
   if (!token) {
-    throw new DocumentError('token-missing', `Missing token "{${path}}"`);
+    throw new DocumentError('token-missing', `Missing token "{token:${uuid}}"`);
   }
-  stack.add(path);
-  walkValue(token.value, token.type, token.path, undefined, index, fonts, stack, done);
+  stack.add(uuid);
+  walkValue(token.value, token.type, token.path, undefined, index, stack, done);
   for (const [breakpoint, value] of Object.entries(token.breakpoints)) {
     if (token.type === 'typography' && isPlainObject(value)) {
-      walkTypography(value, token.path, index, fonts, stack, done);
+      walkTypography(value, token.path, index, stack, done);
       continue;
     }
-    walkValue(value, token.type, token.path, breakpoint, index, fonts, stack, done);
+    walkValue(value, token.type, token.path, breakpoint, index, stack, done);
   }
-  stack.delete(path);
-  done.add(path);
+  stack.delete(uuid);
+  done.add(uuid);
 }
 
 function walkValue(
-  value: JsonValue,
+  value: DesignTokenValue,
   expected: Expectation,
   from: string,
   field: string | undefined,
   index: TokenIndex,
-  fonts: readonly FontFamily[],
   stack: Set<string>,
   done: Set<string>,
 ): void {
   const ref = tokenReference(value);
   if (ref) {
-    followReference(ref, expected, from, field, index, fonts, stack, done);
+    followReference(ref, expected, from, field, index, stack, done);
     return;
   }
   if (expected === 'typography' && isPlainObject(value)) {
-    walkTypography(value, from, index, fonts, stack, done);
+    walkTypography(value, from, index, stack, done);
     return;
   }
-  if (expected === 'shadow') walkShadow(value, from, index, fonts, stack, done);
+  if (expected === 'shadow') walkShadow(value, from, index, stack, done);
   if (expected === 'fontFamily' && Array.isArray(value)) {
     for (const item of value) {
       if (isJson(item)) {
-        walkValue(item, 'fontFamily', from, 'fontFamily', index, fonts, stack, done);
+        walkValue(item, 'fontFamily', from, 'fontFamily', index, stack, done);
       }
     }
   }
@@ -208,7 +181,6 @@ function walkTypography(
   value: Record<string, unknown>,
   from: string,
   index: TokenIndex,
-  fonts: readonly FontFamily[],
   stack: Set<string>,
   done: Set<string>,
 ): void {
@@ -223,15 +195,14 @@ function walkTypography(
     if (!(field in value)) continue;
     const item = value[field];
     if (!isJson(item)) continue;
-    walkValue(item, expected, from, field, index, fonts, stack, done);
+    walkValue(item, expected, from, field, index, stack, done);
   }
 }
 
 function walkShadow(
-  value: JsonValue,
+  value: DesignTokenValue,
   from: string,
   index: TokenIndex,
-  fonts: readonly FontFamily[],
   stack: Set<string>,
   done: Set<string>,
 ): void {
@@ -243,7 +214,7 @@ function walkShadow(
       const entry = item[field];
       if (!isJson(entry)) continue;
       const expected = field === 'color' ? 'color' : 'dimension';
-      walkValue(entry, expected, from, field, index, fonts, stack, done);
+      walkValue(entry, expected, from, field, index, stack, done);
     }
   }
 }
@@ -254,26 +225,15 @@ function followReference(
   from: string,
   field: string | undefined,
   index: TokenIndex,
-  fonts: readonly FontFamily[],
   stack: Set<string>,
   done: Set<string>,
 ): void {
-  const fontId = fontIdFromPath(ref);
-  if (fontId && !index.tokens.has(ref)) {
-    if (!fonts.some((font) => font.id === fontId)) {
-      throw missingReference(ref, from, field);
-    }
-    if (!accepts(expected, 'fontFamily')) {
-      throw typeMismatch(from, field, ref, 'fontFamily', expected);
-    }
-    return;
-  }
   const target = index.tokens.get(ref);
   if (!target) throw missingReference(ref, from, field);
   if (!accepts(expected, target.type)) {
     throw typeMismatch(from, field, ref, target.type, expected);
   }
-  resolveToken(ref, index, fonts, stack, done);
+  resolveToken(ref, index, stack, done);
 }
 
 function accepts(expected: Expectation, actual: TokenType): boolean {
@@ -303,12 +263,6 @@ function typeMismatch(
   );
 }
 
-function fontIdFromPath(path: string): string | undefined {
-  const [head, id, extra] = path.split('.');
-  if (head !== 'font' || !id || extra !== undefined) return undefined;
-  return id;
-}
-
 function toParsed(token: IndexedToken): ParsedToken {
   const parsed: ParsedToken = {
     path: token.path,
@@ -318,14 +272,17 @@ function toParsed(token: IndexedToken): ParsedToken {
     breakpoints: token.breakpoints,
   };
   if (token.tier) parsed.tier = token.tier;
-  if (token.description !== undefined) parsed.description = token.description;
   return parsed;
 }
 
-function isJson(value: unknown): value is JsonValue {
+function isJson(value: unknown): value is DesignTokenValue {
   if (value === null) return true;
   if (typeof value === 'string' || typeof value === 'boolean') return true;
   if (typeof value === 'number') return Number.isFinite(value);
   if (Array.isArray(value)) return true;
   return isPlainObject(value);
+}
+
+function isFontFamilyToken(token: IndexedToken): token is IndexedToken & FontFamily {
+  return token.family === 'font' && token.valueType === 'fontFamily';
 }

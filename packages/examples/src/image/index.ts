@@ -4,10 +4,11 @@ import { root } from './dom';
 import { config } from './config';
 import { styles } from './style';
 import { schemaUuid } from './schema';
+import { ids as exampleImageIds } from './idList';
 const schemaSource = { kind: 'ref', uuid: schemaUuid } as const;
 
 export const definition = {
-  uuid: '550e8400-e29b-41d4-a716-000000000002',
+  uuid: exampleImageIds.definition,
   name: 'Image',
   kind: 'atom',
   schema: schemaSource,

@@ -7,6 +7,8 @@ import {
   type DocumentFile,
   type SchemaCatalog,
 } from '../src/index';
+const testUuid20 = globalThis.crypto.randomUUID();
+const testUuid21 = globalThis.crypto.randomUUID();
 
 const schemaCatalog: SchemaCatalog = {
   schemas: [
@@ -69,14 +71,21 @@ describe('ProjectController', () => {
         return applyCommand(document, command, context);
       },
     });
+    const tokenUuid = testUuid20;
     project.updateTokens({
       type: 'setToken',
-      path: 'color.primary',
-      token: { $value: '#123456', $type: 'color' },
+      family: 'color',
+      token: {
+        uuid: tokenUuid,
+        label: 'Primary',
+        group: '',
+        valueType: 'color',
+        value: '#123456',
+      },
     });
     project.updateDocument(formInput.id, { type: 'setPreviewData', previewData: null });
     const context = contexts.at(-1)!;
-    expect(context.globalTokenPaths).toEqual(new Set(['color.primary']));
+    expect(context.globalTokenUuids).toEqual(new Set([tokenUuid]));
     expect(context.schemaResolverContext?.schemaCatalog).toEqual(schemaCatalog);
     const node = { id: 'nested', type: 'instance' as const, component: formInput.id };
     if (node.type !== 'instance') throw new Error('Expected instance fixture');
@@ -224,14 +233,21 @@ describe('ProjectController', () => {
       documents: [design, input, formInput].map(toFlat),
     });
 
+    const tokenUuid = testUuid21;
     project.updateTokens({
       type: 'setToken',
-      path: 'color.text.primary',
-      token: { $value: '#000000', $type: 'color' },
+      family: 'color',
+      token: {
+        uuid: tokenUuid,
+        label: 'Primary',
+        group: 'text',
+        valueType: 'color',
+        value: '#000000',
+      },
     });
 
     expect(project.globalTokens).toMatchObject({
-      color: { text: { primary: { $value: '#000000', $type: 'color' } } },
+      color: { [tokenUuid]: { uuid: tokenUuid, label: 'Primary', group: 'text', value: '#000000' } },
     });
     expect(project.document(input.id).globalTokens).toEqual(project.globalTokens);
   });

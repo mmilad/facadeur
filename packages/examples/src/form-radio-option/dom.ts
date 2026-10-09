@@ -1,17 +1,19 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleFormRadioIds } from '../form-radio/idList';
+import { ids as exampleFormRadioOptionIds } from './idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-2620dd1e25d5',
+  uuid: exampleFormRadioOptionIds.nodes.root,
   dom: {
     tagName: 'label',
     children: [
       {
-        uuid: '550e8400-e29b-41d4-a716-dda552506ce3',
+        uuid: exampleFormRadioOptionIds.nodes.div1,
         dom: {
           tagName: 'div',
         },
         config: {
-          definitionRef: '550e8400-e29b-41d4-a716-f031a6662752',
+          definitionRef: exampleFormRadioIds.definition,
           previewData: {
             fields: {
               value: 'option',
@@ -23,7 +25,7 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-2c2977bea9a5',
+        uuid: exampleFormRadioOptionIds.nodes.span1,
         dom: {
           tagName: 'span',
           properties: {

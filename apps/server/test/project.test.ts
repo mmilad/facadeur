@@ -16,11 +16,13 @@ import { toNested, type Command, type DocumentFile, type SchemaCatalog } from '@
 import { createDocumentStore } from '@facadeur/store-yjs';
 import * as Y from 'yjs';
 import { openProject, ProjectError, type ProjectRepository } from '../src/project/index';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 const exampleDirectory = fileURLToPath(new URL('../../../examples/', import.meta.url));
 const exampleSchemas = JSON.parse(
   readFileSync(join(exampleDirectory, 'schemas.json'), 'utf8'),
 ) as SchemaCatalog;
+const invalidTokenUuid = globalThis.crypto.randomUUID();
 const temporary: string[] = [];
 const repositories: ProjectRepository[] = [];
 
@@ -351,8 +353,14 @@ describe('durable project repository', () => {
           'project-template',
           {
             type: 'setToken',
-            path: 'invalid',
-            token: { $type: 'color', $value: '{does.not.exist}' },
+            family: 'color',
+            token: {
+              uuid: invalidTokenUuid,
+              label: 'Invalid',
+              group: '',
+              valueType: 'color',
+              value: fixtureTokenRef(fixtureIds.components.image.schema),
+            },
           },
           0,
         ),

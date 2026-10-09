@@ -2,13 +2,13 @@ import {
   isPlainObject,
   tokenReference,
   type Breakpoint,
+  type DesignTokenValue,
   type FontFamily,
   type IndexedToken,
-  type JsonValue,
   type TokenIndex,
   type TokenType,
 } from '@facadeur/core';
-import { fontCustomProperty, tokenCustomProperty, typographyCustomProperty } from './names';
+import { tokenCustomProperty, typographyCustomProperty } from './names';
 
 export interface CssProperty {
   name: string;
@@ -46,7 +46,6 @@ const GENERIC_FAMILIES = new Set([
 
 export function collectProperties(
   index: TokenIndex,
-  fonts: readonly FontFamily[],
   breakpoints: readonly Breakpoint[],
 ): CssProperty[] {
   const props = new Map<string, CssProperty>();
@@ -60,18 +59,21 @@ export function collectProperties(
     else property.breakpoints[breakpoint] = value;
   };
 
-  for (const font of fonts) add(fontCustomProperty(font.id), undefined, fontStack(font));
+  const fonts = [...index.tokens.values()].filter(isFontFamilyToken);
+  for (const font of fonts) {
+    add(tokenCustomProperty(font.path), undefined, fontStack(font));
+  }
 
-  const baseId = breakpoints[0]?.id;
+  const baseId = breakpoints[0]?.uuid;
   for (const token of [...index.tokens.values()].sort((left, right) =>
     left.path.localeCompare(right.path),
   )) {
     emitToken(token, undefined, token.value, false, add, index);
     for (const breakpoint of breakpoints) {
-      if (breakpoint.id === baseId) continue;
-      const override = token.breakpoints[breakpoint.id];
+      if (breakpoint.uuid === baseId) continue;
+      const override = token.breakpoints[breakpoint.uuid];
       if (override === undefined) continue;
-      emitToken(token, breakpoint.id, override, true, add, index);
+      emitToken(token, breakpoint.uuid, override, true, add, index);
     }
   }
   return [...props.values()].sort((left, right) => left.name.localeCompare(right.name));
@@ -79,7 +81,7 @@ export function collectProperties(
 
 /** CSS `font-family` stack: quoted family name, then fallbacks. Generics stay bare. */
 export function fontStack(font: FontFamily): string {
-  return [font.family, ...font.fallbacks].map((name) => quoteFamily(name)).join(', ');
+  return [font.value.family, ...font.value.fallbacks].map((name) => quoteFamily(name)).join(', ');
 }
 
 export function quoteFamily(name: string): string {
@@ -91,7 +93,7 @@ export function quoteFamily(name: string): string {
 function emitToken(
   token: IndexedToken,
   breakpoint: string | undefined,
-  value: JsonValue,
+  value: DesignTokenValue,
   partial: boolean,
   add: (name: string, breakpoint: string | undefined, value: string) => void,
   index: TokenIndex,
@@ -106,7 +108,7 @@ function emitToken(
 function emitTypography(
   path: string,
   breakpoint: string | undefined,
-  value: JsonValue,
+  value: DesignTokenValue,
   partial: boolean,
   add: (name: string, breakpoint: string | undefined, value: string) => void,
   index: TokenIndex,
@@ -119,7 +121,7 @@ function emitTypography(
       add(
         typographyCustomProperty(path, field),
         breakpoint,
-        `var(${typographyCustomProperty(ref, field)})`,
+        `var(${typographyCustomProperty(target.path, field)})`,
       );
     }
     return;
@@ -151,7 +153,7 @@ function typographyFields(
   return TYPOGRAPHY_FIELDS.filter((field) => field in value);
 }
 
-function cssField(field: TypographyField, value: JsonValue, index: TokenIndex): string {
+function cssField(field: TypographyField, value: DesignTokenValue, index: TokenIndex): string {
   if (tokenReference(value)) return cssReference(String(value), index);
   switch (field) {
     case 'fontFamily':
@@ -170,9 +172,9 @@ function cssField(field: TypographyField, value: JsonValue, index: TokenIndex): 
   }
 }
 
-function cssValue(type: TokenType, value: JsonValue, index: TokenIndex): string {
+function cssValue(type: TokenType, value: DesignTokenValue, index: TokenIndex): string {
   const ref = tokenReference(value);
-  if (ref) return cssReference(`{${ref}}`, index);
+  if (ref) return cssReference(`{token:${ref}}`, index);
   switch (type) {
     case 'color':
     case 'dimension':
@@ -196,12 +198,11 @@ function cssValue(type: TokenType, value: JsonValue, index: TokenIndex): string 
 function cssReference(value: string, index: TokenIndex): string {
   const ref = tokenReference(value);
   if (!ref) return value;
-  const fontId = fontIdFromPath(ref);
-  if (fontId && !index.tokens.has(ref)) return `var(${fontCustomProperty(fontId)})`;
-  return `var(${tokenCustomProperty(ref)})`;
+  const target = index.tokens.get(ref);
+  return target ? `var(${tokenCustomProperty(target.path)})` : `var(--token-${ref})`;
 }
 
-function cssFontFamily(value: JsonValue, index: TokenIndex): string {
+function cssFontFamily(value: DesignTokenValue, index: TokenIndex): string {
   if (typeof value === 'string') {
     if (tokenReference(value)) return cssReference(value, index);
     return quoteFamily(value);
@@ -213,7 +214,7 @@ function cssFontFamily(value: JsonValue, index: TokenIndex): string {
     .join(', ');
 }
 
-function cssShadow(value: JsonValue, index: TokenIndex): string {
+function cssShadow(value: DesignTokenValue, index: TokenIndex): string {
   const list = Array.isArray(value) ? value : [value];
   return list
     .filter((item) => isPlainObject(item))
@@ -229,16 +230,14 @@ function cssShadow(value: JsonValue, index: TokenIndex): string {
     .join(', ');
 }
 
-function fontIdFromPath(path: string): string | undefined {
-  const [head, id, extra] = path.split('.');
-  if (head !== 'font' || !id || extra !== undefined) return undefined;
-  return id;
-}
-
-function isJson(value: unknown): value is JsonValue {
+function isJson(value: unknown): value is DesignTokenValue {
   if (value === null) return true;
   if (typeof value === 'string' || typeof value === 'boolean') return true;
   if (typeof value === 'number') return Number.isFinite(value);
   if (Array.isArray(value)) return true;
   return isPlainObject(value);
+}
+
+function isFontFamilyToken(token: IndexedToken): token is IndexedToken & FontFamily {
+  return token.family === 'font' && token.valueType === 'fontFamily';
 }

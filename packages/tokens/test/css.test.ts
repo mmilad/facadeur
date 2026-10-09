@@ -1,199 +1,164 @@
 import { describe, expect, it } from 'vitest';
 import { createProjectTemplate, loadTokens, renderDesignCss } from '@facadeur/tokens';
+import type { FontFamilyDefinition } from '@facadeur/core';
+import {
+  breakpointIds,
+  colorTokens,
+  fontToken,
+  space4Token,
+  testBreakpoints,
+  testTokens,
+  tokenIds,
+  tokenSet,
+} from './fixtures';
+const testUuid38 = globalThis.crypto.randomUUID();
+const testUuid39 = globalThis.crypto.randomUUID();
 
-describe('CSS output', () => {
-  it('emits a root rule with stable names and var() for references', () => {
+describe('CSS output from UUID-keyed tokens', () => {
+  it('emits derived selectors and resolves UUID references', () => {
     const css = renderDesignCss({
-      tokens: {
+      tokens: tokenSet({
         color: {
-          $type: 'color',
-          blue: { '500': { $value: '#2563eb' } },
-          accent: { $value: '{color.blue.500}' },
+          [tokenIds.blue500]: colorTokens[tokenIds.blue500]!,
+          [tokenIds.accent]: colorTokens[tokenIds.accent]!,
         },
-        space: { $type: 'dimension', '4': { $value: '16px' } },
-      },
+        space: { [tokenIds.space4]: space4Token },
+      }),
+      breakpoints: testBreakpoints,
     });
-    expect(css).toBe(`:root {
-  --color-accent: var(--color-blue-500);
-  --color-blue-500: #2563eb;
-  --space-4: 16px;
-}
-`);
-  });
 
-  it('emits media queries for every breakpoint except the smallest', () => {
-    const css = renderDesignCss({
-      breakpoints: [
-        { id: 'desktop', minWidth: 1440 },
-        { id: 'mobile', minWidth: 375 },
-        { id: 'tablet', minWidth: 768 },
-      ],
-      tokens: {
-        font: {
-          size: {
-            body: {
-              $type: 'dimension',
-              $value: '16px',
-              $extensions: {
-                facadeur: { breakpoints: { tablet: '17px', desktop: '18px' } },
-              },
-            },
-          },
-        },
-      },
-    });
-    expect(css).not.toContain('min-width: 375px');
-    expect(css).toBe(`:root {
-  --font-size-body: 16px;
-}
-
-@media (min-width: 768px) {
-  :root {
-    --font-size-body: 17px;
-  }
-}
-
-@media (min-width: 1440px) {
-  :root {
-    --font-size-body: 18px;
-  }
-}
-`);
-  });
-
-  it('expands typography and only repeats fields that change per breakpoint', () => {
-    const css = renderDesignCss({
-      fonts: [
-        {
-          id: 'sans',
-          family: 'Inter',
-          weights: [400, 700],
-          source: { type: 'google', family: 'Inter' },
-          fallbacks: ['system-ui', 'sans-serif'],
-        },
-      ],
-      tokens: {
-        type: {
-          $type: 'typography',
-          body: {
-            $value: {
-              fontFamily: '{font.sans}',
-              fontSize: '16px',
-              fontWeight: 400,
-              lineHeight: 1.5,
-              letterSpacing: '0',
-            },
-            $extensions: {
-              facadeur: { breakpoints: { sm: { fontSize: '17px' } } },
-            },
-          },
-        },
-      },
-    });
-    expect(css).toContain(
-      '@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap");',
+    expect(css).toBe(
+      [
+        ':root {',
+        '  --color-accent-default: var(--color-blue-500);',
+        '  --color-blue-500: #2563eb;',
+        '  --space-4: 16px;',
+        '}',
+        '',
+      ].join('\n'),
     );
-    expect(css).toContain('--font-sans: "Inter", system-ui, sans-serif;');
+  });
+
+  it('uses breakpoint UUIDs for sparse typography changes', () => {
+    const design = loadTokens({ tokens: testTokens, breakpoints: testBreakpoints });
+    const css = renderDesignCss({ tokens: testTokens, breakpoints: testBreakpoints });
+
+    expect(css).toContain('--type-body--font-family: var(--font-inter);');
     expect(css).toContain('--type-body--font-size: 16px;');
-    expect(css).toContain('--type-body--line-height: 1.5;');
-    expect(css).toContain(`@media (min-width: 768px) {
-  :root {
-    --type-body--font-size: 17px;
-  }
-}`);
+    expect(css).toContain(
+      [
+        '@media (min-width: 768px) {',
+        '  :root {',
+        '    --type-body--font-size: 17px;',
+        '  }',
+        '}',
+      ].join('\n'),
+    );
+    expect(css).toContain(
+      [
+        '@media (min-width: 1440px) {',
+        '  :root {',
+        '    --type-body--font-size: 18px;',
+        '  }',
+        '}',
+      ].join('\n'),
+    );
     expect(css).not.toContain('min-width: 375px');
-    const media = css.split('@media')[1] ?? '';
-    expect(media).not.toContain('line-height');
-  });
-
-  it('emits @font-face for file sources and quotes the family', () => {
-    const css = renderDesignCss({
-      fonts: [
-        {
-          id: 'display',
-          family: 'Source Serif',
-          weights: [400],
-          styles: ['italic'],
-          source: {
-            type: 'file',
-            files: [
-              {
-                weight: 400,
-                style: 'italic',
-                url: 'fonts/source-serif-italic.woff2',
-                format: 'woff2',
-              },
-            ],
-          },
-          fallbacks: ['serif'],
-        },
+    expect(
+      design.properties.find((property) => property.name === '--type-body--font-size')?.breakpoints[
+        breakpointIds.tablet
       ],
-    });
-    expect(css).toContain(`@font-face {
-  font-family: "Source Serif";
-  font-style: italic;
-  font-weight: 400;
-  src: url("fonts/source-serif-italic.woff2") format("woff2");
-}`);
-    expect(css).toContain('--font-display: "Source Serif", serif;');
+    ).toBe('17px');
   });
 
-  it('rejects an unknown breakpoint and a repeat of the base breakpoint', () => {
-    expect(() =>
-      loadTokens({
-        tokens: {
-          space: {
-            $type: 'dimension',
-            md: {
-              $value: '16px',
-              $extensions: { facadeur: { breakpoints: { wide: '18px' } } },
+  it('emits file-backed font faces from a font-family token value', () => {
+    const fileFont: FontFamilyDefinition = {
+      ...fontToken,
+      uuid: testUuid38,
+      label: 'Source Serif',
+      value: {
+        family: 'Source Serif',
+        weights: [400],
+        styles: ['italic'],
+        source: {
+          type: 'file',
+          files: [
+            {
+              weight: 400,
+              style: 'italic',
+              url: 'fonts/source-serif-italic.woff2',
+              format: 'woff2',
             },
-          },
+          ],
         },
-      }),
-    ).toThrow(/unknown breakpoint "wide"/);
-    expect(() =>
-      loadTokens({
-        tokens: {
-          space: {
-            $type: 'dimension',
-            md: {
-              $value: '16px',
-              $extensions: { facadeur: { breakpoints: { xs: '14px' } } },
-            },
-          },
+        fallbacks: ['serif'],
+      },
+    };
+    const css = renderDesignCss({ tokens: tokenSet({ font: { [fileFont.uuid]: fileFont } }) });
+
+    expect(css).toContain(
+      [
+        '@font-face {',
+        '  font-family: "Source Serif";',
+        '  font-style: italic;',
+        '  font-weight: 400;',
+        '  src: url("fonts/source-serif-italic.woff2") format("woff2");',
+        '}',
+      ].join('\n'),
+    );
+    expect(css).toContain('--font-source-serif: "Source Serif", serif;');
+  });
+
+  it('rejects unknown and base breakpoint UUID overrides', () => {
+    const unknown = tokenSet({
+      space: {
+        [tokenIds.space4]: {
+          ...space4Token,
+          breakpoints: { [testUuid39]: '20px' },
         },
-      }),
-    ).toThrow(/base breakpoint "xs"/);
+      },
+    });
+    expect(() => loadTokens({ tokens: unknown, breakpoints: testBreakpoints })).toThrow(
+      /unknown breakpoint/,
+    );
+
+    const repeatedBase = tokenSet({
+      space: {
+        [tokenIds.space4]: {
+          ...space4Token,
+          breakpoints: { [breakpointIds.phone]: '14px' },
+        },
+      },
+    });
+    expect(() => loadTokens({ tokens: repeatedBase, breakpoints: testBreakpoints })).toThrow(
+      /repeats the base breakpoint/,
+    );
   });
 });
 
 describe('project template', () => {
   const template = createProjectTemplate();
 
-  it('resolves and publishes the spacing scale, a shadow, and the type scale', () => {
+  it('resolves shared font, spacing, shadow, and typography tokens', () => {
     const design = loadTokens(template);
     const css = renderDesignCss(template);
-    expect(css).toBe(`${renderDesignCss(template)}`);
+
     expect(design.properties.find((property) => property.name === '--space-4')?.value).toBe('16px');
     expect(design.properties.find((property) => property.name === '--space-gap-md')?.value).toBe(
       'var(--space-4)',
     );
-    expect(
-      design.properties.find((property) => property.name === '--shadow-md')?.value,
-    ).toBeTruthy();
+    expect(design.properties.find((property) => property.name === '--shadow-md')?.value).toBeTruthy();
     expect(design.properties.some((property) => property.name.startsWith('--button-'))).toBe(false);
     expect(css).toContain('--type-body--font-size: 16px;');
     expect(css).toContain('--type-body--font-size: 17px;');
     expect(css).toContain('--type-body--font-size: 18px;');
     expect(css).not.toContain('min-width: 375px');
-    expect(css.startsWith('@import url("https://fonts.googleapis.com/css2?family=Inter:')).toBe(
-      true,
-    );
+    expect(css.startsWith('@import url("https://fonts.googleapis.com/css2?family=Inter:')).toBe(true);
   });
 
-  it('keeps the template free of component-tier groups and preserves semantic primitives', () => {
+  it('keeps component-tier groups out and preserves semantic primitives', () => {
     const design = loadTokens(template);
+
     expect(design.tokens.some((token) => token.path.startsWith('button.'))).toBe(false);
     expect(design.tokens.some((token) => token.path.startsWith('card.'))).toBe(false);
     expect(design.tokens.some((token) => token.path.startsWith('editor.'))).toBe(false);

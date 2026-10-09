@@ -14,6 +14,7 @@ import {
   useTokenValueLabel,
 } from '../src/ui/controls/fields/TokenPreviewContext';
 import { expandExampleCatalog } from './fixtures/example-catalog';
+import { tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 function Labels({ reference }: { reference: string }) {
   return (
@@ -105,10 +106,10 @@ describe('instance token label ownership', () => {
     } as DocumentFile);
     const app = mount(
       <TokenPreviewProvider design={design} document={owner} breakpointId={null}>
-        <Labels reference="{color.brand}" />
+        <Labels reference={fixtureTokenRef(testUuid27)} />
         <TokenValueLabelProvider design={design} document={master}>
-          <Labels reference="{color.brand}" />
-          <ScopedControls reference="{color.brand}" />
+          <Labels reference={fixtureTokenRef(testUuid27)} />
+          <ScopedControls reference={fixtureTokenRef(testUuid27)} />
         </TokenValueLabelProvider>
       </TokenPreviewProvider>,
     );
@@ -174,8 +175,8 @@ describe('instance token label ownership', () => {
     } as DocumentFile);
     const app = mount(
       <TokenPreviewProvider design={design} document={legacyDocument} breakpointId={null}>
-        <Labels reference="{color.brand}" />
-        <Labels reference="{color.neutral}" />
+        <Labels reference={fixtureTokenRef(testUuid27)} />
+        <Labels reference={fixtureTokenRef(testUuid28)} />
       </TokenPreviewProvider>,
     );
     expect(
@@ -209,7 +210,7 @@ describe('instance token label ownership', () => {
       id: 'master',
       name: 'Master',
       kind: 'atom',
-      styles: { declarations: { color: '{color.brand}' } },
+      styles: { declarations: { color: fixtureTokenRef(testUuid27) } },
       root: { id: 'master-root', type: 'text', tag: 'input' },
       componentTokens: {
         masterBrand: {
@@ -256,7 +257,7 @@ describe('instance token label ownership', () => {
     act(() =>
       session.execute({
         type: 'setStyleBlock',
-        style: { children: { use: { declarations: { color: '{color.brand}' } } } },
+        style: { children: { use: { declarations: { color: fixtureTokenRef(testUuid27) } } } },
       }),
     );
     expect(colorValue()).toContain('Owner brand');

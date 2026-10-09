@@ -8,17 +8,24 @@ import {
   writeStyleDeclaration,
   writeStyleDeclarations,
 } from '../src/domain/edits/style-edit';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 const document = {
   rootId: 'root',
   styles: {
-    declarations: { color: 'black', padding: '{space.inset.sm}' },
+    declarations: { color: 'black', padding: fixtureTokenRef(fixtureIds.tokens.space.inset.sm) },
     states: { hover: { color: 'gray' } },
-    breakpoints: { tablet: { declarations: { padding: '{space.inset.md}' } } },
+    breakpoints: {
+      [fixtureIds.catalog.breakpoints.tablet]: {
+        declarations: { padding: fixtureTokenRef(fixtureIds.tokens.space.inset.md) },
+      },
+    },
     children: {
       label: {
         declarations: { fontSize: '16px' },
-        breakpoints: { tablet: { declarations: { fontSize: '18px' } } },
+        breakpoints: {
+          [fixtureIds.catalog.breakpoints.tablet]: { declarations: { fontSize: '18px' } },
+        },
       },
     },
   },
@@ -29,11 +36,15 @@ const document = {
         styles: {
           declarations: { color: 'navy' },
           states: { hover: { color: 'blue' } },
-          breakpoints: { tablet: { declarations: { padding: '16px' } } },
+          breakpoints: {
+            [fixtureIds.catalog.breakpoints.tablet]: { declarations: { padding: '16px' } },
+          },
           children: {
             label: {
               declarations: { fontSize: '20px' },
-              breakpoints: { tablet: { declarations: { fontSize: '22px' } } },
+              breakpoints: {
+                [fixtureIds.catalog.breakpoints.tablet]: { declarations: { fontSize: '22px' } },
+              },
             },
           },
         },
@@ -46,23 +57,31 @@ describe('style edit layers', () => {
   it('reads and writes a sparse named variant at breakpoint, state, and child layers', () => {
     const block = variantStyleBlock(document, 'compact');
     expect(
-      readStyleDeclarations(block, 'root', { nodeId: 'root', breakpointId: 'tablet' }),
+      readStyleDeclarations(block, 'root', {
+        nodeId: 'root',
+        breakpointId: fixtureIds.catalog.breakpoints.tablet,
+      }),
     ).toEqual({ padding: '16px' });
     expect(readStyleDeclarations(block, 'root', { nodeId: 'root', state: 'hover' })).toEqual({
       color: 'blue',
     });
     expect(
-      readStyleDeclarations(block, 'root', { nodeId: 'label', breakpointId: 'tablet' }),
+      readStyleDeclarations(block, 'root', {
+        nodeId: 'label',
+        breakpointId: fixtureIds.catalog.breakpoints.tablet,
+      }),
     ).toEqual({ fontSize: '22px' });
 
     const next = writeStyleDeclaration(
       block,
       'root',
-      { nodeId: 'label', breakpointId: 'tablet' },
+      { nodeId: 'label', breakpointId: fixtureIds.catalog.breakpoints.tablet },
       'fontSize',
       '24px',
     );
-    expect(next?.children?.label?.breakpoints?.tablet?.declarations).toEqual({ fontSize: '24px' });
+    expect(
+      next?.children?.label?.breakpoints?.[fixtureIds.catalog.breakpoints.tablet]?.declarations,
+    ).toEqual({ fontSize: '24px' });
     expect(next?.children?.label?.declarations).toEqual({ fontSize: '20px' });
   });
 
@@ -71,26 +90,34 @@ describe('style edit layers', () => {
     const next = writeStyleDeclaration(
       block,
       'root',
-      { nodeId: 'root', breakpointId: 'tablet' },
+      { nodeId: 'root', breakpointId: fixtureIds.catalog.breakpoints.tablet },
       'padding',
       null,
     );
     expect(next?.declarations).toEqual({ color: 'navy' });
     expect(next?.breakpoints).toBeUndefined();
-    expect(document.styles?.breakpoints?.tablet?.declarations).toEqual({
-      padding: '{space.inset.md}',
+    expect(
+      document.styles?.breakpoints?.[fixtureIds.catalog.breakpoints.tablet]?.declarations,
+    ).toEqual({
+      padding: fixtureTokenRef(fixtureIds.tokens.space.inset.md),
     });
   });
 
   it('compacts an empty sparse child and preserves sibling variant layers', () => {
     const block: StyleBlock = {
       variants: { tone: { loud: { declarations: { color: 'red' } } } },
-      children: { label: { breakpoints: { tablet: { declarations: { color: 'blue' } } } } },
+      children: {
+        label: {
+          breakpoints: {
+            [fixtureIds.catalog.breakpoints.tablet]: { declarations: { color: 'blue' } },
+          },
+        },
+      },
     };
     const next = writeStyleDeclaration(
       block,
       'root',
-      { nodeId: 'label', breakpointId: 'tablet' },
+      { nodeId: 'label', breakpointId: fixtureIds.catalog.breakpoints.tablet },
       'color',
       null,
     );
@@ -101,31 +128,33 @@ describe('style edit layers', () => {
     const next = writeStyleDeclarations(
       document.styles,
       'root',
-      { nodeId: 'root', breakpointId: 'tablet' },
+      { nodeId: 'root', breakpointId: fixtureIds.catalog.breakpoints.tablet },
       { padding: null, margin: '4px' },
     );
-    expect(next?.breakpoints?.tablet?.declarations).toEqual({ margin: '4px' });
-    expect(next?.declarations?.padding).toBe('{space.inset.sm}');
+    expect(next?.breakpoints?.[fixtureIds.catalog.breakpoints.tablet]?.declarations).toEqual({
+      margin: '4px',
+    });
+    expect(next?.declarations?.padding).toBe(fixtureTokenRef(fixtureIds.tokens.space.inset.sm));
   });
 
   it('cascades preceding breakpoints and normal declarations into state values', () => {
     expect(
       effectiveStyleDeclarations(document.styles, 'root', { nodeId: 'root', state: 'hover' }, [
-        { id: 'mobile', minWidth: 375 },
-        { id: 'tablet', minWidth: 768 },
+        { uuid: fixtureIds.catalog.breakpoints.phone, label: 'Phone', minWidth: 375 },
+        { uuid: fixtureIds.catalog.breakpoints.tablet, label: 'Tablet', minWidth: 768 },
       ]),
-    ).toEqual({ color: 'gray', padding: '{space.inset.sm}' });
+    ).toEqual({ color: 'gray', padding: fixtureTokenRef(fixtureIds.tokens.space.inset.sm) });
     expect(
       effectiveStyleDeclarations(
         document.styles,
         'root',
-        { nodeId: 'root', breakpointId: 'tablet', state: 'hover' },
+        { nodeId: 'root', breakpointId: fixtureIds.catalog.breakpoints.tablet, state: 'hover' },
         [
-          { id: 'mobile', minWidth: 375 },
-          { id: 'tablet', minWidth: 768 },
+          { uuid: fixtureIds.catalog.breakpoints.phone, label: 'Phone', minWidth: 375 },
+          { uuid: fixtureIds.catalog.breakpoints.tablet, label: 'Tablet', minWidth: 768 },
         ],
       ),
-    ).toEqual({ color: 'gray', padding: '{space.inset.md}' });
+    ).toEqual({ color: 'gray', padding: fixtureTokenRef(fixtureIds.tokens.space.inset.md) });
   });
 
   it('treats camel and kebab aliases as one sparse property while preserving storage', () => {
@@ -179,24 +208,36 @@ describe('style edit layers', () => {
     const block: StyleBlock = {
       declarations: { borderWidth: '1px', color: 'black' },
       breakpoints: {
-        tablet: {
-          declarations: { 'border-width': '2px', margin: '{space.gap.sm}' },
+        [fixtureIds.catalog.breakpoints.tablet]: {
+          declarations: {
+            'border-width': '2px',
+            margin: fixtureTokenRef(fixtureIds.tokens.space.gap.sm),
+          },
         },
       },
     };
     expect(
-      effectiveStyleDeclarations(block, 'root', { nodeId: 'root', breakpointId: 'tablet' }, [
-        { id: 'mobile', minWidth: 375 },
-        { id: 'tablet', minWidth: 768 },
-      ]),
-    ).toEqual({ 'border-width': '2px', color: 'black', margin: '{space.gap.sm}' });
+      effectiveStyleDeclarations(
+        block,
+        'root',
+        { nodeId: 'root', breakpointId: fixtureIds.catalog.breakpoints.tablet },
+        [
+          { uuid: fixtureIds.catalog.breakpoints.phone, label: 'Phone', minWidth: 375 },
+          { uuid: fixtureIds.catalog.breakpoints.tablet, label: 'Tablet', minWidth: 768 },
+        ],
+      ),
+    ).toEqual({
+      'border-width': '2px',
+      color: 'black',
+      margin: fixtureTokenRef(fixtureIds.tokens.space.gap.sm),
+    });
   });
 
   it('resets all aliases from one state breakpoint layer without touching base', () => {
     const block: StyleBlock = {
       declarations: { borderWidth: '1px', color: 'black' },
       breakpoints: {
-        tablet: {
+        [fixtureIds.catalog.breakpoints.tablet]: {
           states: {
             hover: { borderWidth: '2px', 'border-width': '3px' },
           },
@@ -206,7 +247,7 @@ describe('style edit layers', () => {
     const reset = writeStyleDeclaration(
       block,
       'root',
-      { nodeId: 'root', breakpointId: 'tablet', state: 'hover' },
+      { nodeId: 'root', breakpointId: fixtureIds.catalog.breakpoints.tablet, state: 'hover' },
       'border-width',
       null,
     );

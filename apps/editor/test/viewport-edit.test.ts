@@ -10,8 +10,14 @@ import { writeStyleDeclaration } from '../src/domain/edits/style-edit';
 import { withTokenBreakpoint } from '../src/domain/edits/token-edit';
 import { viewportEditContext } from '../src/domain/viewport/viewport-edit';
 import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 const documents = editorStandardCatalog();
+const phoneUuid = fixtureIds.catalog.breakpoints.phone;
+const tabletUuid = fixtureIds.catalog.breakpoints.tablet;
+const laptopUuid = fixtureIds.catalog.breakpoints.laptop;
+const desktopUuid = fixtureIds.catalog.breakpoints.desktop;
+const accentUuid = fixtureIds.tokens.color.accent.default;
 
 describe('viewport edit context', () => {
   it('keeps writes on Base until a wider viewport is the edit target', () => {
@@ -21,21 +27,21 @@ describe('viewport edit context', () => {
         .writingBreakpointId,
     ).toBeNull();
     expect(
-      viewportEditContext({ breakpoints, focusId: 'xs', editTarget: 'viewport' })
+      viewportEditContext({ breakpoints, focusId: phoneUuid, editTarget: 'viewport' })
         .writingBreakpointId,
     ).toBeNull();
     const focused = viewportEditContext({
       breakpoints,
-      focusId: 'sm',
+      focusId: tabletUuid,
       editTarget: 'base',
     });
-    expect(focused.focus).toEqual({ id: 'sm', label: 'Tablet', minWidth: 768 });
+    expect(focused.focus).toEqual({ uuid: tabletUuid, label: 'Tablet', minWidth: 768 });
     expect(focused.overrideViewport?.minWidth).toBe(768);
     expect(focused.writingBreakpointId).toBeNull();
     expect(
-      viewportEditContext({ breakpoints, focusId: 'sm', editTarget: 'viewport' })
+      viewportEditContext({ breakpoints, focusId: tabletUuid, editTarget: 'viewport' })
         .writingBreakpointId,
-    ).toBe('sm');
+    ).toBe(tabletUuid);
     expect(
       viewportEditContext({ breakpoints, focusId: 'missing', editTarget: 'viewport' }).focus,
     ).toBeNull();
@@ -49,9 +55,9 @@ describe('viewport edit context', () => {
     expect(editor.getSnapshot().focusViewportId).toBeNull();
     expect(editor.getSnapshot().editTarget).toBe('base');
     editor.openAsset('button', 'root');
-    editor.setFocusViewport('sm');
+    editor.setFocusViewport(tabletUuid);
     editor.selectNode('root');
-    expect(editor.getSnapshot().focusViewportId).toBe('sm');
+    expect(editor.getSnapshot().focusViewportId).toBe(tabletUuid);
     expect(editor.getSnapshot().editTarget).toBe('base');
     expect(editor.getSnapshot().selectedNodeId).toBe('root');
 
@@ -60,18 +66,18 @@ describe('viewport edit context', () => {
     const style = writeStyleDeclaration(
       before.styles,
       before.rootId,
-      { nodeId: before.rootId, breakpointId: 'sm' },
+      { nodeId: before.rootId, breakpointId: tabletUuid },
       'color',
       'blue',
     );
     editor.execute({ type: 'setStyleBlock', style });
     const after = editor.getSnapshot().document;
     expect(after.styles?.declarations).toEqual(before.styles?.declarations);
-    expect(after.styles?.breakpoints?.sm?.declarations).toMatchObject({
-      paddingInline: '{space.5}',
+    expect(after.styles?.breakpoints?.[tabletUuid]?.declarations).toMatchObject({
+      paddingInline: fixtureTokenRef(fixtureIds.tokens.space.scale.step5),
       color: 'blue',
     });
-    expect(after.styles?.breakpoints?.xl).toBeUndefined();
+    expect(after.styles?.breakpoints?.[desktopUuid]).toBeUndefined();
     const root = after.nodes.root;
     expect(root && 'style' in root ? root.style : undefined).toBeUndefined();
 
@@ -80,52 +86,48 @@ describe('viewport edit context', () => {
     const base = editor.getSnapshot().document;
     const styled = base.nodes.root;
     expect(styled && 'style' in styled ? styled.style : undefined).toEqual({ color: 'red' });
-    expect(base.styles?.breakpoints?.sm?.declarations?.color).toBe('blue');
-    expect(base.styles?.declarations?.color).toBe('{color.text}');
+    expect(base.styles?.breakpoints?.[tabletUuid]?.declarations?.color).toBe('blue');
+    expect(base.styles?.declarations?.color).toBe(fixtureTokenRef(testUuid36));
   });
 });
 
 function stored(token: TokenDefinition): TokenTree {
-  return JSON.parse(JSON.stringify({ color: { accent: token } })) as TokenTree;
+  return JSON.parse(
+    JSON.stringify({
+      color: { [accentUuid]: token },
+      space: {},
+      radius: {},
+      shadow: {},
+      type: {},
+      font: {},
+    }),
+  ) as TokenTree;
 }
 
 describe('token breakpoint edits', () => {
   it('sets one breakpoint and leaves $value and the others in place', () => {
-    const tree = {
-      color: {
-        accent: {
-          $type: 'color' as const,
-          $value: '#111111',
-          $extensions: {
-            facadeur: {
-              tier: 'semantic',
-              breakpoints: { desktop: '#222222' },
-            },
-          },
-        },
-      },
-    };
-    const next = withTokenBreakpoint(tree, 'color.accent', 'tablet', '#333333');
-    expect(next.$value).toBe('#111111');
-    expect(next.$extensions).toEqual({
-      facadeur: {
-        tier: 'semantic',
-        breakpoints: { desktop: '#222222', tablet: '#333333' },
-      },
+    const tree = stored({
+      uuid: accentUuid,
+      label: 'Default',
+      group: 'accent',
+      valueType: 'color',
+      value: '#111111',
+      extensions: { tier: 'semantic' },
+      breakpoints: { [desktopUuid]: '#222222' },
     });
-    const cleared = withTokenBreakpoint(stored(next), 'color.accent', 'tablet', null);
-    expect(cleared.$extensions).toEqual({
-      facadeur: {
-        tier: 'semantic',
-        breakpoints: { desktop: '#222222' },
-      },
-    });
-    const bare = withTokenBreakpoint(stored(cleared), 'color.accent', 'desktop', null);
-    expect(bare.$value).toBe('#111111');
-    expect(bare.$extensions).toEqual({ facadeur: { tier: 'semantic' } });
-    expect(readTokenTree(stored(next)).tokens.get('color.accent')?.breakpoints).toEqual({
-      desktop: '#222222',
-      tablet: '#333333',
+    const next = withTokenBreakpoint(tree, 'color', accentUuid, tabletUuid, '#333333');
+    expect(next.value).toBe('#111111');
+    expect(next.extensions).toEqual({ tier: 'semantic' });
+    expect(next.breakpoints).toEqual({ [desktopUuid]: '#222222', [tabletUuid]: '#333333' });
+
+    const cleared = withTokenBreakpoint(stored(next), 'color', accentUuid, tabletUuid, null);
+    expect(cleared.breakpoints).toEqual({ [desktopUuid]: '#222222' });
+    const bare = withTokenBreakpoint(stored(cleared), 'color', accentUuid, desktopUuid, null);
+    expect(bare.value).toBe('#111111');
+    expect(bare.extensions).toEqual({ tier: 'semantic' });
+    expect(readTokenTree(stored(next)).tokens.get(accentUuid)?.breakpoints).toEqual({
+      [desktopUuid]: '#222222',
+      [tabletUuid]: '#333333',
     });
   });
 });

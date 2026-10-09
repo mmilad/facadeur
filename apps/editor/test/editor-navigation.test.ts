@@ -4,6 +4,7 @@ import {
   parseEditorNavigation,
   writeEditorNavigation,
 } from '../src/domain/navigation/editor-navigation';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
 
 const isSurface = (value: string) => ['editor', 'schema', 'preview', 'colors'].includes(value);
 
@@ -11,14 +12,14 @@ describe('editor navigation URL helpers', () => {
   it('parses supported values and treats default variants as the base document', () => {
     const state = parseEditorNavigation(
       new URLSearchParams(
-        'document=card&variant=default&layer=hero&viewport=desktop&surface=schema',
+        "document=card&variant=default&layer=hero&viewport=" + fixtureIds.catalog.breakpoints.desktop + "&surface=schema",
       ),
       { isSurface },
     );
     expect(state).toEqual({
       documentId: 'card',
       layerId: 'hero',
-      viewportId: 'desktop',
+      viewportId: fixtureIds.catalog.breakpoints.desktop,
       surface: 'schema',
     });
     expect(hasEditorNavigationSelection(state)).toBe(true);

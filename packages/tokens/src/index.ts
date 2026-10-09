@@ -2,14 +2,12 @@ export { renderDesignCss, renderResolvedCss, googleFontUrl, type CssOptions } fr
 export {
   createProjectTemplate,
   createProjectTemplateDocument,
-  defaultFonts,
   defaultIcons,
-  defaultTokenTree,
   starterAtomIds,
   starterFormIds,
   type ProjectTemplate,
 } from './defaults';
-export { fontCustomProperty, tokenCustomProperty, typographyCustomProperty } from './names';
+export { tokenCustomProperty, typographyCustomProperty } from './names';
 export {
   activeBreakpoints,
   configuredBreakpoints,

@@ -48,9 +48,9 @@ export function assertStyleContract(doc: FlatDocument, options: ValidateOptions 
     : defaultBreakpoints;
   if (doc.componentTokens) {
     assertComponentTokenKind(doc.kind);
-    if (options.globalTokenPaths?.size) {
+    if (options.globalTokenUuids?.size) {
       for (const token of Object.values(doc.componentTokens)) {
-        assertComponentTokenDefault(token.value, options.globalTokenPaths);
+        assertComponentTokenDefault(token.value, options.globalTokenUuids);
       }
     }
   }
@@ -274,10 +274,10 @@ function assertDeclarationsSpacing(declarations: StyleDeclarations | undefined) 
 
 function assertBreakpoint(id: string, breakpoints: readonly Breakpoint[], label: string) {
   if (!BREAKPOINT_ID.test(id)) throw new DocumentError('schema', `Invalid breakpoint "${id}"`);
-  const known = breakpoints.some((breakpoint) => breakpoint.id === id);
+  const known = breakpoints.some((breakpoint) => breakpoint.uuid === id);
   if (!known) throw new DocumentError('schema', `${label} uses unknown breakpoint "${id}"`);
   const base = [...breakpoints].sort((left, right) => left.minWidth - right.minWidth)[0];
-  if (base && id === base.id) {
+  if (base && id === base.uuid) {
     throw new DocumentError(
       'schema',
       `${label} breakpoint "${id}" is the base layer and cannot be overridden`,
@@ -286,21 +286,31 @@ function assertBreakpoint(id: string, breakpoints: readonly Breakpoint[], label:
 }
 
 function assertTokenInterfacePaths(value: TokenInterface, options: ValidateOptions = {}) {
-  for (const path of value.reads ?? []) {
-    if (!TOKEN_PATH.test(path)) throw new DocumentError('schema', `Invalid token path "${path}"`);
+  for (const uuid of value.reads ?? []) {
+    if (!BREAKPOINT_ID.test(uuid))
+      throw new DocumentError('schema', `Invalid token UUID "${uuid}"`);
   }
-  for (const path of Object.keys(value.sets ?? {})) {
-    if (!TOKEN_PATH.test(path)) throw new DocumentError('schema', `Invalid token path "${path}"`);
-    const dot = path.indexOf('.');
-    if (dot === -1) continue;
-    const documentId = path.slice(0, dot);
-    const localPath = path.slice(dot + 1);
-    const componentPaths = options.resolveComponentTokenPaths?.(documentId);
-    if (componentPaths === undefined) continue;
-    if (!componentPaths.has(localPath)) {
+  for (const target of Object.keys(value.sets ?? {})) {
+    if (BREAKPOINT_ID.test(target)) {
+      if (options.globalTokenUuids && !options.globalTokenUuids.has(target)) {
+        throw new DocumentError('schema', `Set target "${target}" is not a global token UUID`);
+      }
+      continue;
+    }
+    if (!TOKEN_PATH.test(target)) {
       throw new DocumentError(
         'schema',
-        `Set path "${path}" is not a component token on "${documentId}"`,
+        `Invalid global-token UUID or component-token path "${target}"`,
+      );
+    }
+    const dot = target.indexOf('.');
+    const documentId = target.slice(0, dot);
+    const localPath = target.slice(dot + 1);
+    const componentPaths = options.resolveComponentTokenPaths?.(documentId);
+    if (options.resolveComponentTokenPaths && !componentPaths?.has(localPath)) {
+      throw new DocumentError(
+        'schema',
+        `Set path "${target}" is not a component token on "${documentId}"`,
       );
     }
   }

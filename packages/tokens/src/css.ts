@@ -6,7 +6,7 @@ export interface CssOptions {
   selector?: string;
 }
 
-/** Load tokens and fonts and emit one stylesheet. */
+/** Load the UUID-keyed token set and emit one stylesheet. */
 export function renderDesignCss(input: DesignInput = {}, options: CssOptions = {}): string {
   return renderResolvedCss(loadTokens(input), options.selector ?? ':root');
 }
@@ -14,21 +14,21 @@ export function renderDesignCss(input: DesignInput = {}, options: CssOptions = {
 export function renderResolvedCss(design: ResolvedDesign, selector = ':root'): string {
   const chunks: string[] = [];
   for (const font of design.fonts) {
-    if (font.source.type === 'google') chunks.push(`@import url("${googleFontUrl(font)}");`);
+    if (font.value.source.type === 'google') chunks.push(`@import url("${googleFontUrl(font)}");`);
   }
   for (const font of design.fonts) {
-    if (font.source.type === 'file') chunks.push(...fontFaceRules(font));
+    if (font.value.source.type === 'file') chunks.push(...fontFaceRules(font));
   }
   const base = design.properties
     .filter((property) => property.value !== '')
     .map((property) => [property.name, property.value] as [string, string]);
   if (base.length) chunks.push(rule(selector, base));
 
-  const baseId = design.breakpoints[0]?.id;
+  const baseId = design.breakpoints[0]?.uuid;
   for (const breakpoint of design.breakpoints) {
-    if (breakpoint.id === baseId) continue;
+    if (breakpoint.uuid === baseId) continue;
     const declarations = design.properties.flatMap((property) => {
-      const value = property.breakpoints[breakpoint.id];
+      const value = property.breakpoints[breakpoint.uuid];
       return value === undefined ? [] : [[property.name, value] as [string, string]];
     });
     if (!declarations.length) continue;
@@ -40,11 +40,11 @@ export function renderResolvedCss(design: ResolvedDesign, selector = ':root'): s
 }
 
 export function googleFontUrl(font: FontFamily): string {
-  if (font.source.type !== 'google') {
-    throw new Error(`Font "${font.id}" is not a Google font`);
+  if (font.value.source.type !== 'google') {
+    throw new Error(`Font "${font.uuid}" is not a Google font`);
   }
-  const family = encodeURIComponent(font.source.family).replace(/%20/g, '+');
-  const weights = [...font.weights].sort((left, right) => left - right);
+  const family = encodeURIComponent(font.value.source.family).replace(/%20/g, '+');
+  const weights = [...font.value.weights].sort((left, right) => left - right);
   const styles = fontStyles(font);
   const axis = styles.includes('italic')
     ? `ital,wght@${italicPairs(styles, weights).join(';')}`
@@ -63,12 +63,12 @@ function italicPairs(styles: readonly FontStyle[], weights: readonly number[]): 
 }
 
 function fontFaceRules(font: FontFamily): string[] {
-  if (font.source.type !== 'file') return [];
-  return font.source.files.map((file) => {
+  if (font.value.source.type !== 'file') return [];
+  return font.value.source.files.map((file) => {
     const format = file.format ? ` format("${escapeCss(file.format)}")` : '';
     return [
       '@font-face {',
-      `  font-family: ${quoteFamily(font.family)};`,
+      `  font-family: ${quoteFamily(font.value.family)};`,
       `  font-style: ${file.style};`,
       `  font-weight: ${file.weight};`,
       `  src: url("${escapeCss(file.url)}")${format};`,

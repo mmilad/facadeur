@@ -1,5 +1,6 @@
 import { Type } from '@sinclair/typebox';
-import { breakpointSchema, fontFamilySchema } from '../fonts';
+import { breakpointSchema } from '../fonts';
+import { designTokenSetSchema } from '../design-tokens';
 import { styleBlockSchema, tokenInterfaceSchema } from '../style';
 import { nodeDefinitionSchema } from './node-definition';
 import { uuidSchema } from './uuid';
@@ -30,13 +31,12 @@ export const projectCatalogSchema = Type.Object(
     components: definitionMapSchema,
     pages: definitionMapSchema,
     schemas: Type.Optional(Type.Record(uuidSchema, Type.Record(Type.String(), Type.Unknown()))),
-    /** Top-level DTCG groups; nested `$value` shape validated via `projectCatalogJsonSchema` + Ajv or `@facadeur/tokens`. */
-    tokens: Type.Optional(Type.Record(Type.String(), Type.Unknown())),
-    fonts: Type.Optional(Type.Array(fontFamilySchema, { minItems: 1 })),
+    /** Canonical UUID-keyed token families, including fonts. */
+    tokens: Type.Optional(designTokenSetSchema),
     props: Type.Optional(Type.Record(uuidSchema, designPropSchema)),
     globalStyles: Type.Optional(globalStylesSchema),
   },
   { additionalProperties: false },
 );
 
-export type { ProjectCatalog as ProjectCatalogModel } from '@facadeur/domain';
+export type { ProjectCatalogModel } from '@facadeur/domain';

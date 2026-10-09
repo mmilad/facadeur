@@ -4,10 +4,11 @@ import { root } from './dom';
 import { config } from './config';
 import { styles } from './style';
 import { schema } from './schema';
+import { ids as exampleFormTextInputIds } from './idList';
 const schemaSource = { kind: 'inline', schema } as const;
 
 export const definition = {
-  uuid: '550e8400-e29b-41d4-a716-5b0d897613d9',
+  uuid: exampleFormTextInputIds.definition,
   name: 'Text field',
   kind: 'component',
   schema: schemaSource,

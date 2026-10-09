@@ -48,7 +48,7 @@ function resolveNodeDeclarations(
     nodeId === document.rootId ? block : block?.children?.[nodeId];
   const ordered = [...breakpoints].sort((left, right) => left.minWidth - right.minWidth);
   const focus = target.breakpointId
-    ? ordered.find((item) => item.id === target.breakpointId)
+    ? ordered.find((item) => item.uuid === target.breakpointId)
     : undefined;
   const maxWidth = focus?.minWidth;
   const layers: { id: string | null; layer: StyleChild }[] = owner
@@ -57,10 +57,10 @@ function resolveNodeDeclarations(
   if (target.breakpointId && owner) {
     for (const breakpoint of ordered) {
       if (maxWidth !== undefined && breakpoint.minWidth > maxWidth) break;
-      const layer = owner.breakpoints?.[breakpoint.id];
-      if (layer) layers.push({ id: breakpoint.id, layer });
+      const layer = owner.breakpoints?.[breakpoint.uuid];
+      if (layer) layers.push({ id: breakpoint.uuid, layer });
     }
-    if (!focus && !ordered.some((item) => item.id === target.breakpointId)) {
+    if (!focus && !ordered.some((item) => item.uuid === target.breakpointId)) {
       const layer = owner.breakpoints?.[target.breakpointId];
       if (layer) layers.push({ id: target.breakpointId, layer });
     }

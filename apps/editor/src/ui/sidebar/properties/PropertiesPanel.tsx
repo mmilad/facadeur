@@ -2,7 +2,7 @@
 
 import type { AppService } from '../../../app-service';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session';
-import type { EditorSurface } from '../design/design-domain';
+import type { EditorSurface } from '../../design/design-domain';
 import { CatalogNodeInspector } from './CatalogNodeInspector';
 import { NestedFieldsPanel } from './content/NestedFieldsPanel';
 

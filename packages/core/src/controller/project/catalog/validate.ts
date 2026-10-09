@@ -6,6 +6,12 @@ import { findDefinition } from './ops';
 import { effectiveSchemaForDefinition } from './field-contract';
 import { matchesSchemaValue } from '../../validation/json-schema-value';
 import { ensureCatalogFieldIds } from './field-ids';
+import {
+  hasLegacyReferenceLocations,
+  migrateLegacyDesignLibraries,
+  migrateLegacyReferenceLocations,
+} from '../../style/tokens/global/legacy-migration';
+import { isPlainObject } from '../../../utils';
 
 function catalogSchemaErrorMessage(data: unknown): string {
   try {
@@ -20,6 +26,7 @@ function catalogSchemaErrorMessage(data: unknown): string {
 }
 
 export function validateProjectCatalog(data: unknown): ProjectCatalogModel {
+  data = migrateProjectDesignLibraries(data);
   const sanitized =
     data && typeof data === 'object' ? sanitizeProjectCatalog(data as ProjectCatalogModel) : data;
   const catalog =
@@ -39,6 +46,32 @@ export function validateProjectCatalog(data: unknown): ProjectCatalogModel {
   assertCatalogRefIntegrity(catalog as ProjectCatalogModel);
   assertEffectiveCatalogFields(catalog as ProjectCatalogModel);
   return catalog as ProjectCatalogModel;
+}
+
+function migrateProjectDesignLibraries(data: unknown) {
+  if (!isPlainObject(data)) return data;
+  const globalStyles = isPlainObject(data.globalStyles) ? data.globalStyles : undefined;
+  const migration = migrateLegacyDesignLibraries({
+    tokens: data.tokens,
+    fonts: data.fonts,
+    breakpoints: globalStyles?.breakpoints,
+  });
+  const hasLegacyLibraries =
+    migration.tokens !== undefined && (data.tokens === undefined || 'fonts' in data || migration.tokens !== data.tokens);
+  if (
+    !hasLegacyLibraries &&
+    !('fonts' in data) &&
+    migration.breakpoints === undefined &&
+    !hasLegacyReferenceLocations(data, migration.tokenIds, migration.breakpointIds)
+  ) return data;
+
+  const next = migrateLegacyReferenceLocations(data, migration.tokenIds, migration.breakpointIds) as Record<string, unknown>;
+  delete next.fonts;
+  if (migration.tokens) next.tokens = migration.tokens;
+  if (migration.breakpoints && globalStyles) {
+    next.globalStyles = { ...globalStyles, breakpoints: migration.breakpoints };
+  }
+  return next;
 }
 
 function assertEffectiveCatalogFields(catalog: ProjectCatalogModel) {

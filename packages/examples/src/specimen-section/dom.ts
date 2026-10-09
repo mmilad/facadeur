@@ -1,17 +1,22 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleButtonIds } from '../button/idList';
+import { ids as exampleCardIds } from '../card/idList';
+import { ids as exampleInputIds } from '../input/idList';
+import { ids as exampleSignInIds } from '../sign-in/idList';
+import { ids as exampleSpecimenSectionIds } from './idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-846b26a622a2',
+  uuid: exampleSpecimenSectionIds.nodes.root,
   dom: {
     tagName: 'div',
     children: [
       {
-        uuid: '550e8400-e29b-41d4-a716-256030b02e78',
+        uuid: exampleSpecimenSectionIds.nodes.div1,
         dom: {
           tagName: 'div',
           children: [
             {
-              uuid: '550e8400-e29b-41d4-a716-696c51aee4b3',
+              uuid: exampleSpecimenSectionIds.nodes.p1,
               dom: {
                 tagName: 'p',
                 properties: {
@@ -20,7 +25,7 @@ export const root: Node = {
               },
             },
             {
-              uuid: '550e8400-e29b-41d4-a716-15b0c28fb1f5',
+              uuid: exampleSpecimenSectionIds.nodes.h11,
               dom: {
                 tagName: 'h1',
                 properties: {
@@ -29,7 +34,7 @@ export const root: Node = {
               },
             },
             {
-              uuid: '550e8400-e29b-41d4-a716-1f2640ee02da',
+              uuid: exampleSpecimenSectionIds.nodes.p2,
               dom: {
                 tagName: 'p',
                 properties: {
@@ -42,12 +47,12 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-6ca76aec5e2d',
+        uuid: exampleSpecimenSectionIds.nodes.div2,
         dom: {
           tagName: 'div',
           children: [
             {
-              uuid: '550e8400-e29b-41d4-a716-89cb179fe85c',
+              uuid: exampleSpecimenSectionIds.nodes.p3,
               dom: {
                 tagName: 'p',
                 properties: {
@@ -56,17 +61,17 @@ export const root: Node = {
               },
             },
             {
-              uuid: '550e8400-e29b-41d4-a716-fbd29e8bee02',
+              uuid: exampleSpecimenSectionIds.nodes.div3,
               dom: {
                 tagName: 'div',
                 children: [
                   {
-                    uuid: '550e8400-e29b-41d4-a716-ab67034b6830',
+                    uuid: exampleSpecimenSectionIds.nodes.div4,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-0000000003e9',
+                      definitionRef: exampleButtonIds.definition,
                       previewData: {
                         fields: {
                           label: 'Primary',
@@ -75,12 +80,12 @@ export const root: Node = {
                     },
                   },
                   {
-                    uuid: '550e8400-e29b-41d4-a716-6c07dc262f1c',
+                    uuid: exampleSpecimenSectionIds.nodes.div5,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-0000000003e9',
+                      definitionRef: exampleButtonIds.definition,
                       previewData: {
                         fields: {
                           label: 'Secondary',
@@ -89,12 +94,12 @@ export const root: Node = {
                     },
                   },
                   {
-                    uuid: '550e8400-e29b-41d4-a716-4fbe2b8a37a7',
+                    uuid: exampleSpecimenSectionIds.nodes.div6,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-0000000003e9',
+                      definitionRef: exampleButtonIds.definition,
                       previewData: {
                         fields: {
                           label: 'Ghost',
@@ -103,12 +108,12 @@ export const root: Node = {
                     },
                   },
                   {
-                    uuid: '550e8400-e29b-41d4-a716-d64d9f6b904e',
+                    uuid: exampleSpecimenSectionIds.nodes.div7,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-0000000003e9',
+                      definitionRef: exampleButtonIds.definition,
                       previewData: {
                         fields: {
                           label: 'Small',
@@ -123,12 +128,12 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-e8250fd0aee3',
+        uuid: exampleSpecimenSectionIds.nodes.div8,
         dom: {
           tagName: 'div',
           children: [
             {
-              uuid: '550e8400-e29b-41d4-a716-d0bfdebd4dc1',
+              uuid: exampleSpecimenSectionIds.nodes.p4,
               dom: {
                 tagName: 'p',
                 properties: {
@@ -137,17 +142,17 @@ export const root: Node = {
               },
             },
             {
-              uuid: '550e8400-e29b-41d4-a716-2720c9107cee',
+              uuid: exampleSpecimenSectionIds.nodes.div9,
               dom: {
                 tagName: 'div',
                 children: [
                   {
-                    uuid: '550e8400-e29b-41d4-a716-44199525567c',
+                    uuid: exampleSpecimenSectionIds.nodes.div10,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-25e4cf782bd0',
+                      definitionRef: exampleInputIds.definition,
                       previewData: {
                         fields: {
                           label: 'Email',
@@ -158,12 +163,12 @@ export const root: Node = {
                     },
                   },
                   {
-                    uuid: '550e8400-e29b-41d4-a716-47ac2e851072',
+                    uuid: exampleSpecimenSectionIds.nodes.div11,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-25e4cf782bd0',
+                      definitionRef: exampleInputIds.definition,
                       previewData: {
                         fields: {
                           label: 'Search',
@@ -180,12 +185,12 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-84683295900a',
+        uuid: exampleSpecimenSectionIds.nodes.div12,
         dom: {
           tagName: 'div',
           children: [
             {
-              uuid: '550e8400-e29b-41d4-a716-a4c53f283135',
+              uuid: exampleSpecimenSectionIds.nodes.p5,
               dom: {
                 tagName: 'p',
                 properties: {
@@ -194,17 +199,17 @@ export const root: Node = {
               },
             },
             {
-              uuid: '550e8400-e29b-41d4-a716-be18a7bd56fe',
+              uuid: exampleSpecimenSectionIds.nodes.div13,
               dom: {
                 tagName: 'div',
                 children: [
                   {
-                    uuid: '550e8400-e29b-41d4-a716-bb6c728e7cef',
+                    uuid: exampleSpecimenSectionIds.nodes.div14,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-0000000003ea',
+                      definitionRef: exampleCardIds.definition,
                       previewData: {
                         fields: {
                           body: 'Props fill the template. Click the title, or click the card padding to select the card itself.',
@@ -215,12 +220,12 @@ export const root: Node = {
                     },
                   },
                   {
-                    uuid: '550e8400-e29b-41d4-a716-f2a975940624',
+                    uuid: exampleSpecimenSectionIds.nodes.div15,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-0000000003ec',
+                      definitionRef: exampleSignInIds.definition,
                     },
                   },
                 ],

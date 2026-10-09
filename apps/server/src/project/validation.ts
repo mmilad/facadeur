@@ -39,7 +39,6 @@ export function validate(files: DocumentFile[], fallbackSchemaCatalog?: SchemaCa
       safeId(file.id);
       loadTokens({
         tokens: file.tokens,
-        fonts: file.fonts,
         breakpoints: file.settings?.breakpoints,
       });
     }
@@ -93,7 +92,7 @@ export function context(
     resolveKind: (id) => catalog.get(id)?.kind,
     resolveChildField: (node, path, field) =>
       resolveChildFieldDefinition(node, path, field, catalog, schemaCatalog),
-    globalTokenPaths: new Set(readTokenTree(design?.tokens ?? {}).tokens.keys()),
+    globalTokenUuids: new Set(readTokenTree(design?.tokens ?? {}).tokens.keys()),
     resolveComponentTokenPaths: (id) => {
       const tokens = catalog.get(id)?.componentTokens;
       return tokens ? new Set(Object.values(tokens).map((token) => token.path)) : undefined;
@@ -208,12 +207,8 @@ const required: Record<Command['type'], readonly string[]> = {
   createVariantPreset: ['name', 'label'],
   setVariantStyleBlock: ['name', 'style'],
   removeVariantPreset: ['name'],
-  setToken: ['path', 'token'],
-  removeToken: ['path'],
-  setTokenGroup: ['path', 'group'],
-  removeTokenGroup: ['path'],
-  setFont: ['font'],
-  removeFont: ['id'],
+  setToken: ['family', 'token'],
+  removeToken: ['family', 'uuid'],
   setBreakpoints: ['breakpoints'],
   setStyleBlock: ['style'],
   setTokenInterface: ['tokenInterface'],
@@ -255,6 +250,8 @@ function assertNestedCommand(value: unknown, depth: number): void {
     'parentId',
     'name',
     'path',
+    'family',
+    'uuid',
     'prop',
     'property',
     'id',

@@ -8,6 +8,10 @@ import {
   type AxisSize,
   type DocumentFile,
 } from '../src/index';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
+
+const phoneBreakpointUuid = fixtureIds.catalog.breakpoints.phone;
+const tabletBreakpointUuid = fixtureIds.catalog.breakpoints.tablet;
 
 it('validates and round-trips explicit auto dimensions and sparse breakpoint constraints', () => {
   const source: DocumentFile = {
@@ -17,8 +21,8 @@ it('validates and round-trips explicit auto dimensions and sparse breakpoint con
     kind: 'component',
     settings: {
       breakpoints: [
-        { id: 'phone', minWidth: 375 },
-        { id: 'tablet', minWidth: 768 },
+        { uuid: phoneBreakpointUuid, label: 'Phone', minWidth: 375 },
+        { uuid: tabletBreakpointUuid, label: 'Tablet', minWidth: 768 },
       ],
     },
     root: {
@@ -27,7 +31,7 @@ it('validates and round-trips explicit auto dimensions and sparse breakpoint con
       layout: {
         width: { mode: 'auto', min: 10, max: { unit: '%', value: 90 } },
         height: { mode: 'auto', min: 20, max: 300 },
-        breakpoints: { tablet: { height: { mode: 'auto' } } },
+        breakpoints: { [tabletBreakpointUuid]: { height: { mode: 'auto' } } },
       },
     },
   };
@@ -38,8 +42,9 @@ it('validates and round-trips explicit auto dimensions and sparse breakpoint con
 });
 
 it('preserves auto min/max tokens in the layout parser', () => {
-  expect(parseLayout({ height: { mode: 'auto', min: '{space.2}', max: '{space.8}' } })).toEqual({
-    height: { mode: 'auto', min: '{space.2}', max: '{space.8}' },
+  const reference = fixtureTokenRef(fixtureIds.tokens.space.scale.step2);
+  expect(parseLayout({ height: { mode: 'auto', min: reference, max: reference } })).toEqual({
+    height: { mode: 'auto', min: reference, max: reference },
   });
 });
 

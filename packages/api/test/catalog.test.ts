@@ -14,6 +14,9 @@ import {
   seedProjectCatalog,
 } from '../src/server/project/catalog-seed';
 
+const extraDefinitionUuid = globalThis.crypto.randomUUID();
+const extraRootUuid = globalThis.crypto.randomUUID();
+
 describe('project catalog storage', () => {
   it('seeds and writes catalog on project init', async () => {
     const directory = await mkdtemp(path.join(tmpdir(), 'facadeur-catalog-'));
@@ -33,22 +36,21 @@ describe('project catalog storage', () => {
     try {
       const storage = { id: 'test-project', directory };
       await writeProjectCatalog(seedProjectCatalog(), storage);
-      const extraUuid = '550e8400-e29b-41d4-a716-446655440004';
       const catalog = await createCatalogDefinition(
         'atoms',
         {
-          uuid: extraUuid,
+          uuid: extraDefinitionUuid,
           name: 'Logo',
           kind: 'atom',
           schema: { kind: 'ref', uuid: IMAGE_SCHEMA_UUID },
           root: {
-            uuid: '550e8400-e29b-41d4-a716-446655440005',
+            uuid: extraRootUuid,
             dom: { tagName: 'img', attributes: { src: '', alt: '' } },
           },
         },
         storage,
       );
-      expect(catalog.atoms[extraUuid]?.name).toBe('Logo');
+      expect(catalog.atoms[extraDefinitionUuid]?.name).toBe('Logo');
       expect(catalog.atoms[IMAGE_ATOM_UUID]?.name).toBe('Image');
     } finally {
       await rm(directory, { recursive: true, force: true });

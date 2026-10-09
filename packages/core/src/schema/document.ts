@@ -1,4 +1,6 @@
 import { Type, type Static, type TSchema } from '@sinclair/typebox';
+import { exampleIds } from '@facadeur/examples/ids';
+import type { FontFamilyDefinition } from '@facadeur/domain';
 import { defaultKinds } from '../document/kinds';
 import { childFieldPathSchema, idSchema, kindSchema } from './common';
 import {
@@ -29,12 +31,13 @@ import {
   iconDefinitionSchema,
   previewDataSchema,
   settingsSchema,
-  tokenTreeSchema,
+} from './fonts';
+import {
+  designTokenSetSchema as tokenTreeSchema,
   tokenTypeSchema,
   tokenTypes,
-  withTokenDefs,
   type TokenType,
-} from './fonts';
+} from './design-tokens';
 import {
   axisSizeSchema,
   layoutOverrideSchema,
@@ -153,7 +156,7 @@ const documentSchemaMeta = {
   additionalProperties: false,
   title: 'Facadeur document',
   description:
-    'Nested facadeur document. Nodes are frame, text, image, or instance. Tokens are a DTCG tree. Fonts list families and their sources. A style block paints the component. Instances override fields and variants, and their containing document may add sparse root appearance rules.',
+    'Nested facadeur document. Nodes are frame, text, image, or instance. Design tokens use UUID-keyed family records. A style block paints the component. Instances override fields and variants, and their containing document may add sparse root appearance rules.',
 } as const;
 
 function documentProperties<Kind extends TSchema>(kind: Kind) {
@@ -172,7 +175,6 @@ function documentProperties<Kind extends TSchema>(kind: Kind) {
     expose: Type.Optional(exposeSchema),
     variants: Type.Optional(Type.Array(Type.Union([variantAxisSchema, variantPresetSchema]))),
     settings: Type.Optional(settingsSchema),
-    fonts: Type.Optional(Type.Array(fontFamilySchema, { minItems: 1 })),
     icons: Type.Optional(Type.Array(iconDefinitionSchema, { minItems: 1 })),
     tokens: Type.Optional(tokenTreeSchema),
     styles: Type.Optional(styleBlockSchema),
@@ -187,22 +189,18 @@ function documentProperties<Kind extends TSchema>(kind: Kind) {
 /**
  * @deprecated Flat nested-document envelope. Prefer node-model `ProjectCatalog` for new persistence.
  */
-export const documentFileSchema = withTokenDefs(
-  Type.Object(documentProperties(kindSchema), {
-    ...documentSchemaMeta,
-    $id: DOCUMENT_SCHEMA_ID,
-  }),
-);
+export const documentFileSchema = Type.Object(documentProperties(kindSchema), {
+  ...documentSchemaMeta,
+  $id: DOCUMENT_SCHEMA_ID,
+});
 
 /** JSON Schema for one nested document. Kinds default to atom, component, section, and page. */
 export function createDocumentSchema(options: DocumentSchemaOptions = {}) {
   if (!options.kinds && !options.schemaId) return documentFileSchema;
-  return withTokenDefs(
-    Type.Object(documentProperties(literalUnion(options.kinds ?? [...defaultKinds])), {
-      ...documentSchemaMeta,
-      $id: options.schemaId ?? DOCUMENT_SCHEMA_ID,
-    }),
-  );
+  return Type.Object(documentProperties(literalUnion(options.kinds ?? [...defaultKinds])), {
+    ...documentSchemaMeta,
+    $id: options.schemaId ?? DOCUMENT_SCHEMA_ID,
+  });
 }
 
 export type FieldDefinition = Static<typeof fieldDefinitionSchema>;
@@ -256,7 +254,8 @@ export type {
 export type FontStyle = Static<typeof fontStyleSchema>;
 export type FontFaceFile = Static<typeof fontFaceFileSchema>;
 export type FontSource = Static<typeof fontSourceSchema>;
-export type FontFamily = Static<typeof fontFamilySchema>;
+export type FontFamily = FontFamilyDefinition;
+export type FontFamilyValue = Static<typeof fontFamilySchema>;
 export type IconDefinition = Static<typeof iconDefinitionSchema>;
 export type Breakpoint = Static<typeof breakpointSchema>;
 
@@ -270,21 +269,17 @@ export function isVariantPreset(variant: VariantDefinition): variant is VariantP
 
 /** Viewports used when a document does not set its own breakpoints. */
 export const defaultBreakpoints: Breakpoint[] = [
-  { id: 'xs', label: 'Phone', minWidth: 375 },
-  { id: 'sm', label: 'Tablet', minWidth: 768 },
-  { id: 'md', label: 'Laptop', minWidth: 1024 },
-  { id: 'lg', label: 'Desktop', minWidth: 1200 },
-  { id: 'xl', label: 'Wide', minWidth: 1440 },
-  { id: 'xxl', label: 'Ultra', minWidth: 1760 },
+  { uuid: exampleIds.catalog.breakpoints.phone, label: 'Phone', minWidth: 375 },
+  { uuid: exampleIds.catalog.breakpoints.tablet, label: 'Tablet', minWidth: 768 },
+  { uuid: exampleIds.catalog.breakpoints.laptop, label: 'Laptop', minWidth: 1024 },
+  { uuid: exampleIds.catalog.breakpoints.desktop, label: 'Desktop', minWidth: 1200 },
+  { uuid: exampleIds.catalog.breakpoints.wide, label: 'Wide', minWidth: 1440 },
+  { uuid: exampleIds.catalog.breakpoints.ultra, label: 'Ultra', minWidth: 1760 },
 ];
 
-/** Name shown in the editor. A stored label wins; known defaults fill in when it is omitted. */
-export function breakpointLabel(breakpoint: Pick<Breakpoint, 'id' | 'label'>): string {
-  const label = breakpoint.label?.trim();
-  if (label) return label;
-  const known = defaultBreakpoints.find((item) => item.id === breakpoint.id)?.label;
-  if (known) return known;
-  return breakpoint.id.charAt(0).toUpperCase() + breakpoint.id.slice(1);
+/** Display name for a configured viewport. */
+export function breakpointLabel(breakpoint: Pick<Breakpoint, 'uuid' | 'label'>): string {
+  return breakpoint.label;
 }
 
 function literalUnion(values: readonly string[]): TSchema {

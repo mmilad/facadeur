@@ -1,7 +1,8 @@
 import type { Breakpoint, FontFamily } from '../../schema/document';
+import type { DesignTokenFamily } from '@facadeur/domain';
 import { DocumentStyle } from './document';
 import { readTokenTree } from './tokens/global/tree';
-import type { TokenDefinition, TokenGroupDefinition } from './tokens/types';
+import type { TokenDefinition } from './tokens/types';
 import type { GlobalTokenCommand, StyleControllerContext } from './types';
 
 /** Project-wide style editing facade. Document edits require an explicit document scope. */
@@ -19,7 +20,7 @@ export class StyleController {
   }
 
   get fonts() {
-    return this.context.readDocument(this.context.designDocumentId).fonts;
+    return Object.values(this.globalTokens.font) as FontFamily[];
   }
 
   get breakpoints() {
@@ -41,28 +42,20 @@ export class StyleController {
     return this.context.updateDocument(this.context.designDocumentId, command);
   }
 
-  setGlobalToken(path: string, token: TokenDefinition) {
-    return this.updateGlobalTokens({ type: 'setToken', path, token });
+  setGlobalToken(family: DesignTokenFamily, token: TokenDefinition) {
+    return this.updateGlobalTokens({ type: 'setToken', family, token });
   }
 
-  removeGlobalToken(path: string) {
-    return this.updateGlobalTokens({ type: 'removeToken', path });
-  }
-
-  setGlobalTokenGroup(path: string, group: TokenGroupDefinition) {
-    return this.updateGlobalTokens({ type: 'setTokenGroup', path, group });
-  }
-
-  removeGlobalTokenGroup(path: string) {
-    return this.updateGlobalTokens({ type: 'removeTokenGroup', path });
+  removeGlobalToken(family: DesignTokenFamily, uuid: string) {
+    return this.updateGlobalTokens({ type: 'removeToken', family, uuid });
   }
 
   setFont(font: FontFamily) {
-    return this.context.updateDocument(this.context.designDocumentId, { type: 'setFont', font });
+    return this.setGlobalToken('font', font);
   }
 
-  removeFont(id: string) {
-    return this.context.updateDocument(this.context.designDocumentId, { type: 'removeFont', id });
+  removeFont(uuid: string) {
+    return this.removeGlobalToken('font', uuid);
   }
 
   setBreakpoints(breakpoints: Breakpoint[]) {

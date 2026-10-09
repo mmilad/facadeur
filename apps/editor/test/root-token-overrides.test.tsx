@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { rootTokenOverrideCommand, rootTokenTargets } from '../src/domain/root-token-overrides';
 import { createEditorSession } from '../src/domain/session';
 import { RootTokenOverridesPanel } from '../src/ui/sidebar/properties/component/RootTokenOverridesPanel';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 const button: DocumentFile = {
   version: 1,
@@ -16,7 +17,7 @@ const button: DocumentFile = {
   componentTokens: {
     background: { path: 'color.bg', label: 'Background', type: 'color', value: '#123456' },
   },
-  styles: { declarations: { background: '{color.bg}' } },
+  styles: { declarations: { background: fixtureTokenRef(testUuid31) } },
   root: { id: 'root', type: 'frame', tag: 'button' },
 };
 const card: DocumentFile = {
@@ -44,6 +45,7 @@ const section: DocumentFile = {
     ],
   },
 };
+const ACCENT_DEFAULT_UUID = fixtureIds.tokens.color.accent.default;
 
 describe('root exposed token overrides', () => {
   it('collects only reachable descendant public tokens, once for repeated usages', () => {
@@ -87,29 +89,29 @@ describe('root exposed token overrides', () => {
     session.openAsset('section', 'root');
     session.execute({
       type: 'setTokenInterface',
-      tokenInterface: { sets: { 'color.text.primary': 'black' } },
+      tokenInterface: { sets: { [ACCENT_DEFAULT_UUID]: 'black' } },
     });
     session.execute(
       rootTokenOverrideCommand(
         session.getSnapshot().document,
         'button.color.bg',
-        '{color.accent.default}',
+        `{token:${ACCENT_DEFAULT_UUID}}`,
       ),
     );
     expect(session.getSnapshot().document.tokenInterface?.sets).toEqual({
-      'color.text.primary': 'black',
-      'button.color.bg': '{color.accent.default}',
+      [ACCENT_DEFAULT_UUID]: 'black',
+      'button.color.bg': `{token:${ACCENT_DEFAULT_UUID}}`,
     });
-    expect(session.getSnapshot().document.tokenInterface?.reads).toContain('color.accent.default');
+    expect(session.getSnapshot().document.tokenInterface?.reads).toContain(ACCENT_DEFAULT_UUID);
     session.execute(
       rootTokenOverrideCommand(session.getSnapshot().document, 'button.color.bg', null),
     );
     expect(session.getSnapshot().document.tokenInterface?.sets).toEqual({
-      'color.text.primary': 'black',
+      [ACCENT_DEFAULT_UUID]: 'black',
     });
     session.undo();
     expect(session.getSnapshot().document.tokenInterface?.sets?.['button.color.bg']).toBe(
-      '{color.accent.default}',
+      `{token:${ACCENT_DEFAULT_UUID}}`,
     );
     expect(
       session.boardDocuments().find((document) => document.id === 'button')?.componentTokens,

@@ -27,7 +27,6 @@ function rewriteLayer(layer: StyleLayer, oldPath: string, newPath: string) {
     }
   }
 }
-
 function rewriteStyleBlock(block: StyleBlock, oldPath: string, newPath: string) {
   rewriteLayer(block, oldPath, newPath);
   for (const layer of Object.values(block.variants ?? {})) {

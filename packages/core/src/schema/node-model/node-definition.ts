@@ -24,4 +24,4 @@ export const nodeDefinitionSchema = Type.Object(
   { additionalProperties: false },
 );
 
-export type { NodeDefinition as NodeDefinitionModel } from '@facadeur/domain';
+export type { NodeDefinitionModel } from '@facadeur/domain';

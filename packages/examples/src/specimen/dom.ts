@@ -1,17 +1,19 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleSpecimenIds } from './idList';
+import { ids as exampleSpecimenSectionIds } from '../specimen-section/idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-000000000070',
+  uuid: exampleSpecimenIds.nodes.root,
   dom: {
     tagName: 'div',
     children: [
       {
-        uuid: '550e8400-e29b-41d4-a716-1ac27299c806',
+        uuid: exampleSpecimenIds.nodes.div1,
         dom: {
           tagName: 'div',
         },
         config: {
-          definitionRef: '550e8400-e29b-41d4-a716-ed8046c36daa',
+          definitionRef: exampleSpecimenSectionIds.definition,
         },
       },
     ],

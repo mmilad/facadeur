@@ -9,7 +9,7 @@ import type {
   SaveDocumentRequest,
   SaveDocumentResult,
 } from '@facadeur/api';
-import type { NodeDefinitionModel, ProjectCatalogModel } from '@facadeur/core';
+import type { NodeDefinitionModel, ProjectCatalogModel } from '@facadeur/domain';
 
 export interface ApiClientOptions {
   /** Relative for same-origin browser requests, absolute for other consumers. */

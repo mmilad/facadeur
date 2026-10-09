@@ -25,7 +25,12 @@ export async function readProjectCatalog(storage?: ProjectStorage): Promise<Proj
   const filename = path.join(storageDirectory(storage), CATALOG_SOURCE);
   try {
     const text = await readFile(filename, 'utf8');
-    return validateProjectCatalog(JSON.parse(text));
+    const parsed = JSON.parse(text);
+    const catalog = validateProjectCatalog(parsed);
+    if (JSON.stringify(parsed) !== JSON.stringify(catalog)) {
+      await atomicWrite(filename, JSON.stringify(catalog, null, 2) + '\n');
+    }
+    return catalog;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       return seedProjectCatalog();
@@ -85,8 +90,10 @@ export async function createCatalogDefinition(
   if (catalog[kind][uuid]) {
     throw new DomainError('conflict', `Definition "${uuid}" already exists in ${kind}`);
   }
-  const next = structuredClone(catalog) as ProjectCatalogModel;
-  next[kind] = { ...next[kind], [uuid]: nextDef };
+  const next = {
+    ...catalog,
+    [kind]: { ...catalog[kind], [uuid]: nextDef },
+  };
   return writeProjectCatalog(next, storage);
 }
 
@@ -99,10 +106,12 @@ export async function patchCatalogDefinition(
   const catalog = await readProjectCatalog(storage);
   const existing = catalog[kind][uuid];
   if (!existing) throw new DomainError('invalid-input', `Unknown ${kind} definition "${uuid}"`);
-  const next = structuredClone(catalog) as ProjectCatalogModel;
-  next[kind] = {
-    ...next[kind],
-    [uuid]: { ...existing, ...patch, uuid },
+  const next = {
+    ...catalog,
+    [kind]: {
+      ...catalog[kind],
+      [uuid]: { ...existing, ...patch, uuid },
+    },
   };
   return writeProjectCatalog(next, storage);
 }
@@ -128,8 +137,7 @@ export async function deleteCatalogDefinition(
       throw new DomainError('conflict', `Definition "${uuid}" is still referenced by ${def.uuid}`);
     }
   }
-  const next = structuredClone(catalog) as ProjectCatalogModel;
-  const { [uuid]: _removed, ...rest } = next[kind];
-  next[kind] = rest;
+  const { [uuid]: _removed, ...rest } = catalog[kind];
+  const next = { ...catalog, [kind]: rest };
   return writeProjectCatalog(next, storage);
 }

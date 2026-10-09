@@ -1,245 +1,248 @@
 import type { Node } from '@facadeur/domain';
+import { tokenIds as exampleTokenIds } from '../catalog/tokens/idList';
+import { ids as exampleFormControlsSectionIds } from './idList';
+import { tokenRef } from '../references';
 
 export const styles = {
-  '550e8400-e29b-41d4-a716-80269a146dcc': {
+  [exampleFormControlsSectionIds.nodes.p1]: {
     width: 'auto',
     height: 'auto',
-    color: '{color.text.secondary}',
-    font: '{type.caption}',
+    color: tokenRef(exampleTokenIds.color.text.secondary),
+    font: tokenRef(exampleTokenIds.type.caption),
     fontWeight: '600',
     letterSpacing: '0.12em',
-    margin: '{space.0}',
+    margin: tokenRef(exampleTokenIds.space.scale.step0),
     textTransform: 'uppercase',
   },
-  '550e8400-e29b-41d4-a716-a5a5b8692ac7': {
+  [exampleFormControlsSectionIds.nodes.h11]: {
     width: 'auto',
     height: 'auto',
-    color: '{color.text.primary}',
-    font: '{type.title}',
-    margin: '{space.0}',
+    color: tokenRef(exampleTokenIds.color.text.primary),
+    font: tokenRef(exampleTokenIds.type.title),
+    margin: tokenRef(exampleTokenIds.space.scale.step0),
   },
-  '550e8400-e29b-41d4-a716-f2b8cc8c21ad': {
+  [exampleFormControlsSectionIds.nodes.p2]: {
     width: '100%',
     height: 'auto',
     maxWidth: '680px',
-    color: '{color.text.secondary}',
-    font: '{type.body}',
+    color: tokenRef(exampleTokenIds.color.text.secondary),
+    font: tokenRef(exampleTokenIds.type.body),
   },
-  '550e8400-e29b-41d4-a716-43207c0dd461': {
+  [exampleFormControlsSectionIds.nodes.header1]: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-start',
-    gap: '{space.4}',
+    gap: tokenRef(exampleTokenIds.space.scale.step4),
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-651400484f10': {
+  [exampleFormControlsSectionIds.nodes.h21]: {
     width: 'auto',
     height: 'auto',
-    color: '{color.text.primary}',
-    font: '{type.heading}',
-    margin: '{space.0}',
+    color: tokenRef(exampleTokenIds.color.text.primary),
+    font: tokenRef(exampleTokenIds.type.heading),
+    margin: tokenRef(exampleTokenIds.space.scale.step0),
   },
-  '550e8400-e29b-41d4-a716-c4883b98f72e': {
+  [exampleFormControlsSectionIds.nodes.div2]: {
     width: '250px',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-2bdc5b650ef6': {
+  [exampleFormControlsSectionIds.nodes.div3]: {
     width: '250px',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-361db59c8d50': {
+  [exampleFormControlsSectionIds.nodes.div1]: {
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'flex-start',
     flexWrap: 'wrap',
-    gap: '{space.gap.md}',
+    gap: tokenRef(exampleTokenIds.space.gap.md),
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-fd4f818e0979': {
+  [exampleFormControlsSectionIds.nodes.section1]: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
-    gap: '{space.gap.md}',
+    gap: tokenRef(exampleTokenIds.space.gap.md),
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-7e7e2149da7b': {
+  [exampleFormControlsSectionIds.nodes.h22]: {
     width: 'auto',
     height: 'auto',
-    color: '{color.text.primary}',
-    font: '{type.heading}',
-    margin: '{space.0}',
+    color: tokenRef(exampleTokenIds.color.text.primary),
+    font: tokenRef(exampleTokenIds.type.heading),
+    margin: tokenRef(exampleTokenIds.space.scale.step0),
   },
-  '550e8400-e29b-41d4-a716-e24d2274ea9b': {
+  [exampleFormControlsSectionIds.nodes.div5]: {
     width: '250px',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-87a144b7fc60': {
+  [exampleFormControlsSectionIds.nodes.div6]: {
     width: '250px',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-1f8ee1d5ffb5': {
+  [exampleFormControlsSectionIds.nodes.div7]: {
     width: '250px',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-b92066be3b26': {
+  [exampleFormControlsSectionIds.nodes.div8]: {
     width: '250px',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-bd900793cbe7': {
+  [exampleFormControlsSectionIds.nodes.div4]: {
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'flex-start',
     flexWrap: 'wrap',
-    gap: '{space.gap.md}',
+    gap: tokenRef(exampleTokenIds.space.gap.md),
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-6481df4e9979': {
+  [exampleFormControlsSectionIds.nodes.section2]: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
-    gap: '{space.gap.md}',
+    gap: tokenRef(exampleTokenIds.space.gap.md),
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-57dbc9b5a6f4': {
+  [exampleFormControlsSectionIds.nodes.h23]: {
     width: 'auto',
     height: 'auto',
-    color: '{color.text.primary}',
-    font: '{type.heading}',
-    margin: '{space.0}',
+    color: tokenRef(exampleTokenIds.color.text.primary),
+    font: tokenRef(exampleTokenIds.type.heading),
+    margin: tokenRef(exampleTokenIds.space.scale.step0),
   },
-  '550e8400-e29b-41d4-a716-05dd9039d109': {
+  [exampleFormControlsSectionIds.nodes.div10]: {
     width: '250px',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-71a4f36efca2': {
+  [exampleFormControlsSectionIds.nodes.div11]: {
     width: '250px',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-5291b3f89b45': {
+  [exampleFormControlsSectionIds.nodes.div12]: {
     width: '250px',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-660046e254aa': {
+  [exampleFormControlsSectionIds.nodes.div13]: {
     width: '270px',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-23fc6c60f37d': {
+  [exampleFormControlsSectionIds.nodes.div14]: {
     width: '180px',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-d44188855366': {
+  [exampleFormControlsSectionIds.nodes.div15]: {
     width: '180px',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-7e54bf99bd69': {
+  [exampleFormControlsSectionIds.nodes.div16]: {
     width: '180px',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-4fc06ca21d9e': {
+  [exampleFormControlsSectionIds.nodes.div9]: {
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'flex-start',
     flexWrap: 'wrap',
-    gap: '{space.gap.lg}',
+    gap: tokenRef(exampleTokenIds.space.gap.lg),
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-6510a1394894': {
+  [exampleFormControlsSectionIds.nodes.section3]: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
-    gap: '{space.gap.md}',
+    gap: tokenRef(exampleTokenIds.space.gap.md),
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-193e0fb22803': {
+  [exampleFormControlsSectionIds.nodes.h24]: {
     width: 'auto',
     height: 'auto',
-    color: '{color.text.primary}',
-    font: '{type.heading}',
-    margin: '{space.0}',
+    color: tokenRef(exampleTokenIds.color.text.primary),
+    font: tokenRef(exampleTokenIds.type.heading),
+    margin: tokenRef(exampleTokenIds.space.scale.step0),
   },
-  '550e8400-e29b-41d4-a716-7a555a28cf19': {
+  [exampleFormControlsSectionIds.nodes.p3]: {
     width: '100%',
     height: 'auto',
-    color: '{color.text.secondary}',
-    font: '{type.caption}',
-    margin: '{space.0}',
+    color: tokenRef(exampleTokenIds.color.text.secondary),
+    font: tokenRef(exampleTokenIds.type.caption),
+    margin: tokenRef(exampleTokenIds.space.scale.step0),
   },
-  '550e8400-e29b-41d4-a716-8201e3dd29e8': {
+  [exampleFormControlsSectionIds.nodes.span1]: {
     width: '150px',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-cc5f9aec8fcc': {
+  [exampleFormControlsSectionIds.nodes.span2]: {
     width: '100px',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-901a40affa58': {
+  [exampleFormControlsSectionIds.nodes.span3]: {
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-4d8c265fc6b4': {
+  [exampleFormControlsSectionIds.nodes.div18]: {
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: '{space.3}',
-    padding: '{space.2}',
+    gap: tokenRef(exampleTokenIds.space.scale.step3),
+    padding: tokenRef(exampleTokenIds.space.scale.step2),
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-ee20bb561fa2': {
+  [exampleFormControlsSectionIds.nodes.div17]: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
-    gap: '{space.0}',
+    gap: tokenRef(exampleTokenIds.space.scale.step0),
     width: '100%',
     height: 'auto',
-    border: '1px solid {color.bordersubtle}',
+    border: '1px solid ' + tokenRef(exampleTokenIds.color.border.default),
     borderRadius: '{shape.radius}',
   },
-  '550e8400-e29b-41d4-a716-fea978fe42d5': {
+  [exampleFormControlsSectionIds.nodes.div22]: {
     width: 'auto',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-8dd87b56aa44': {
+  [exampleFormControlsSectionIds.nodes.section4]: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
-    gap: '{space.gap.md}',
+    gap: tokenRef(exampleTokenIds.space.gap.md),
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-c6fd7caed91d': {
+  [exampleFormControlsSectionIds.nodes.h25]: {
     width: 'auto',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-af432fa6c60e': {
+  [exampleFormControlsSectionIds.nodes.div23]: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
-    gap: '{space.gap.md}',
+    gap: tokenRef(exampleTokenIds.space.gap.md),
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-512672ca1308': {
+  [exampleFormControlsSectionIds.nodes.section5]: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
-    gap: '{space.gap.md}',
+    gap: tokenRef(exampleTokenIds.space.gap.md),
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-9280c3526fdf': {
+  [exampleFormControlsSectionIds.nodes.root]: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
-    gap: '{space.8}',
-    padding: '{space.8}',
+    gap: tokenRef(exampleTokenIds.space.scale.step8),
+    padding: tokenRef(exampleTokenIds.space.scale.step8),
     width: '100%',
     height: 'auto',
   },

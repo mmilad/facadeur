@@ -1,8 +1,11 @@
+import { tokenReference } from '@facadeur/core';
+
 /** Token ids stay unchanged; only their author-facing presentation is normalized. */
 const namespaces = new Set(['color', 'space', 'radius', 'shadow', 'type', 'font']);
 
 export function tokenPath(reference: string): string {
   const value = reference.trim();
+  if (tokenReference(value)) return '';
   return /^\{[^{}]+\}$/.test(value) ? value.slice(1, -1) : value;
 }
 
@@ -25,6 +28,8 @@ export function tokenDisplayLabel(reference: string, label?: string): string {
   const parts = path.split('.');
   const savedLabel = label?.trim();
   if (savedLabel) return savedLabel;
+  const uuid = tokenReference(reference);
+  if (uuid) return `Token ${uuid.slice(0, 8)}`;
 
   const leaf = tokenLeafLabel(path);
   const group = parts.length > 1 ? tokenTitle(parts.slice(0, -1).join('.')) : '';

@@ -1,5 +1,4 @@
 import React, { useRef, useState } from 'react';
-import { AutocompleteField } from '../autocomplete/AutocompleteField';
 import { TextField } from '../text';
 import { TransformableField } from '../transformable';
 import styles from './RecordField.module.css';
@@ -113,11 +112,12 @@ export function RecordField({
           >
             <div className={styles.inputs}>
               {keyOptions.length ? (
-                <AutocompleteField
+                <TextField
                   id={index === 0 ? id : `${id}-${row.id}-key`}
+                    name={`${name}.${row.id}.key`}
                   label={keyLabel}
                   value={row.key}
-                  options={keyOptions}
+                  suggestions={keyOptions}
                   placeholder={keyLabel}
                   disabled={disabled}
                   onChange={(next) => update(row, { key: next })}
@@ -144,11 +144,12 @@ export function RecordField({
                   onChange={(next) => update(row, { value: next })}
                 />
               ) : (
-                <AutocompleteField
+                <TextField
                   id={`${id}-${row.id}-value`}
+                  name={`${name}.${row.id}.value`}
                   label={valueLabel}
                   value={row.value}
-                  options={valueOptions}
+                  suggestions={valueOptions}
                   placeholder={valueLabel}
                   disabled={disabled}
                   onChange={(next) => update(row, { value: next })}

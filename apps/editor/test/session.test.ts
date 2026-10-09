@@ -3,6 +3,8 @@ import * as files from '../src/domain/assets/files';
 import { readTokenTree, resolvePreviewData, type DocumentFile } from '@facadeur/core';
 import { createEditorSession } from '../src/domain/session';
 import { editorStandardDesign, expandExampleCatalog } from './fixtures/example-catalog';
+import { tokenAtPath } from './fixtures/token-tree';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
 
 const variantComponent: DocumentFile = {
   version: 1,
@@ -229,16 +231,19 @@ describe('editor session', () => {
 
     editor.executeDesign({
       type: 'setToken',
-      path: 'color.accent.default',
-      token: { $value: '#ff00aa' },
+      family: 'color',
+      token: {
+        ...tokenAtPath(editor.getSnapshot().design.tokens, 'color.accent.default')!,
+        value: '#ff00aa',
+      },
     });
     expect(
-      readTokenTree(editor.getSnapshot().design.tokens).tokens.get('color.accent.default')?.value,
+      readTokenTree(editor.getSnapshot().design.tokens).tokens.get(fixtureIds.tokens.color.accent.default)?.value,
     ).toBe('#ff00aa');
 
     editor.undo();
     expect(
-      readTokenTree(editor.getSnapshot().design.tokens).tokens.get('color.accent.default')?.value,
+      readTokenTree(editor.getSnapshot().design.tokens).tokens.get(fixtureIds.tokens.color.accent.default)?.value,
     ).not.toBe('#ff00aa');
     expect(editor.getSnapshot().document.nodes.heading).toMatchObject({ text: 'After' });
 
@@ -321,8 +326,11 @@ describe('editor session', () => {
 
     editor.executeDesign({
       type: 'setToken',
-      path: 'color.accent.default',
-      token: { $value: '#112233' },
+      family: 'color',
+      token: {
+        ...tokenAtPath(editor.getSnapshot().design.tokens, 'color.accent.default')!,
+        value: '#112233',
+      },
     });
     expect(editor.getSnapshot().documentDirty).toBe(true);
     expect(editor.getSnapshot().designDirty).toBe(true);
@@ -344,8 +352,11 @@ describe('editor session', () => {
 
     editor.executeDesign({
       type: 'setToken',
-      path: 'color.accent.default',
-      token: { $value: '#445566' },
+      family: 'color',
+      token: {
+        ...tokenAtPath(editor.getSnapshot().design.tokens, 'color.accent.default')!,
+        value: '#445566',
+      },
     });
     expect(editor.getSnapshot().designDirty).toBe(true);
     await editor.saveDesign();

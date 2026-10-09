@@ -119,8 +119,8 @@ export function useStageViewportBoard({
     const frames = boardRef.current?.frames() ?? [];
     for (const frame of frames) {
       const column = frame.column;
-      column.classList.toggle('is-focus', frame.breakpoint.id === focusViewportId);
-      column.classList.toggle('is-viewport-selected', frame.breakpoint.id === selectedViewportId);
+      column.classList.toggle('is-focus', frame.breakpoint.uuid === focusViewportId);
+      column.classList.toggle('is-viewport-selected', frame.breakpoint.uuid === selectedViewportId);
     }
   }, [
     selectedRenderId,

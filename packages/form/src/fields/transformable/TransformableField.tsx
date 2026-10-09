@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { AutocompleteField } from '../autocomplete/AutocompleteField';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { AutocompleteSelectField } from '../autocomplete/AutocompleteSelectField';
 import { ColorField } from '../color/ColorField';
 import { TextField } from '../text/TextField';
 import styles from './TransformableField.module.css';
@@ -17,17 +17,21 @@ export function TransformableField({
   placeholder,
   disabled,
   onChange,
+  onTransform,
 }: TransformableFieldProps) {
   const rootRef = useRef<HTMLDivElement>(null);
-  const [activePath, setActivePath] = useState<number[]>([0]);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [activePath, setActivePath] = useState<number[] | null>(null);
   const [open, setOpen] = useState(false);
   const [menuPath, setMenuPath] = useState<number[]>([]);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const options = normalizeOptions(fieldOptions);
   const leaves = locateLeaves(options);
   const matched = locateValue(options, value);
   const active =
+    (activePath ? leaves.find(({ path }) => samePath(path, activePath)) : undefined) ??
     matched ??
-    leaves.find(({ path }) => samePath(path, activePath)) ??
     leaves.find(({ option }) => option.type === 'text') ??
     leaves[0];
   const hasTransforms = leaves.some(({ option }) => option.type !== 'text');
@@ -36,22 +40,51 @@ export function TransformableField({
   useEffect(() => {
     if (!open) return;
     const onPointerDown = (event: PointerEvent) => {
-      if (event.target instanceof Node && !rootRef.current?.contains(event.target)) setOpen(false);
+      if (
+        event.target instanceof Node &&
+        !rootRef.current?.contains(event.target) &&
+        !menuRef.current?.contains(event.target)
+      ) {
+        setOpen(false);
+      }
     };
     document.addEventListener('pointerdown', onPointerDown);
     return () => document.removeEventListener('pointerdown', onPointerDown);
   }, [open]);
 
+  useLayoutEffect(() => {
+    if (!open) {
+      setMenuPosition(null);
+      return;
+    }
+    const updatePosition = () => {
+      const anchor = triggerRef.current?.getBoundingClientRect();
+      const menu = menuRef.current?.getBoundingClientRect();
+      if (!anchor || !menu) return;
+      const left = Math.max(
+        8,
+        Math.min(anchor.right - menu.width, window.innerWidth - menu.width - 8),
+      );
+      const below = anchor.bottom + 4;
+      const top =
+        below + menu.height <= window.innerHeight - 8
+          ? below
+          : Math.max(8, anchor.top - menu.height - 4);
+      setMenuPosition((current) =>
+        current?.top === top && current.left === left ? current : { top, left },
+      );
+    };
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [open, menuPath, menuOptions.length]);
+
   function choose(option: LeafOption, path: number[]) {
-    if (option.type === 'text' && matched?.option.type !== 'text' && matched) onChange('');
-    else if (
-      (option.type === 'prop' || option.type === 'token') &&
-      matched &&
-      matched.option.type !== 'text' &&
-      !samePath(matched.path, path)
-    ) {
-      onChange('');
-    } else if (option.type === 'color' && matched) onChange('#000000');
+    onTransform?.(option.type);
     setActivePath(path);
     setMenuPath([]);
     setOpen(false);
@@ -81,13 +114,13 @@ export function TransformableField({
 
   const control =
     active.option.type === 'prop' || active.option.type === 'token' ? (
-      <AutocompleteField
+      <AutocompleteSelectField
         id={id}
         name={name}
         label={label}
         value={value}
         options={active.option.items}
-        placeholder={placeholder}
+        placeholder={placeholder ?? 'Choose an option…'}
         disabled={disabled}
         onChange={onChange}
       />
@@ -111,10 +144,17 @@ export function TransformableField({
     );
 
   return (
-    <div className={styles.root} ref={rootRef}>
+    <div
+      className={styles.root}
+      ref={rootRef}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape' && open) setOpen(false);
+      }}
+    >
       <div className={styles.control}>{control}</div>
       {hasTransforms ? (
         <button
+          ref={triggerRef}
           className={styles.trigger}
           type="button"
           aria-label={`Transform ${label}`}
@@ -128,9 +168,15 @@ export function TransformableField({
       ) : null}
       {open ? (
         <div
+          ref={menuRef}
           className={styles.menu}
           role="menu"
           aria-label={`Transform ${label}`}
+          style={{
+            top: menuPosition?.top ?? 0,
+            left: menuPosition?.left ?? 0,
+            visibility: menuPosition ? 'visible' : 'hidden',
+          }}
           onKeyDown={(event) => {
             if (event.key === 'Escape') setOpen(false);
           }}

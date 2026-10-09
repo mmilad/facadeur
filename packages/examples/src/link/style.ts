@@ -1,14 +1,17 @@
 import type { Node } from '@facadeur/domain';
+import { tokenIds as exampleTokenIds } from '../catalog/tokens/idList';
+import { ids as exampleLinkIds } from './idList';
+import { tokenRef } from '../references';
 
 export const styles = {
-  '550e8400-e29b-41d4-a716-6427970761c0': {
+  [exampleLinkIds.nodes.root]: {
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     width: 'auto',
     height: 'auto',
-    color: '{color.accent.default}',
-    font: '{type.label}',
+    color: tokenRef(exampleTokenIds.color.accent.default),
+    font: tokenRef(exampleTokenIds.type.label),
     textDecoration: 'underline',
     textUnderlineOffset: '0.15em',
   },

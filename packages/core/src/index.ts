@@ -14,7 +14,19 @@ export {
 export { DocumentError } from './document/errors';
 export { StyleController } from './controller/style/controller';
 export { CoreController } from './controller/project/index';
-export type { ElementBuildConfig } from '@facadeur/domain';
+export type {
+  BreakpointUuid,
+  DesignTokenFamily,
+  DesignTokenFamilyMap,
+  DesignTokenRecord,
+  DesignTokenReference,
+  DesignTokenSet,
+  DesignTokenUuid,
+  DesignTokenValue,
+  DesignTokenValueType,
+  ElementBuildConfig,
+  FontFamilyDefinition,
+} from '@facadeur/domain';
 export { NodeController } from './controller/project/node/index';
 export {
   PreviewController,
@@ -205,12 +217,15 @@ export {
   type SchemaTypeRef,
   type FontFaceFile,
   type FontFamily,
+  type FontFamilyValue,
   type IconDefinition,
   type FontSource,
   type FontStyle,
   type AxisSize,
   type Layout,
   type LayoutOverride,
+  type Margin,
+  type MarginBox,
   type NestedNode,
   type SizeValue,
   type Spacing,
@@ -231,18 +246,23 @@ export {
   type VariantPreset,
 } from './schema/document';
 export {
+  canonicalizeTokenTree,
+  emptyTokenTree,
   readTokenTree,
-  removeGroupFromTree,
   removeTokenFromTree,
-  setGroupInTree,
   setTokenInTree,
 } from './controller/style/tokens/global/tree';
-export { tokenReference, TOKEN_SEGMENT } from './controller/style/tokens/syntax';
+export { tokenReference, tokenReferenceValue } from './controller/style/tokens/syntax';
+export {
+  migrateLegacyDesignLibraries,
+  migrateLegacyReferenceLocations,
+} from './controller/style/tokens/global/legacy-migration';
+export { tokenCssPropertyName } from './controller/style/tokens/global/selector';
 export {
   type IndexedGroup,
   type IndexedToken,
+  type IdentifiedTokenDefinition,
   type TokenDefinition,
-  type TokenGroupDefinition,
   type TokenIndex,
   type TokenTier,
   type TokenTree,
@@ -256,7 +276,6 @@ export {
 } from './controller/style/blocks/contract';
 export {
   collectTokenRefs,
-  isFontFamilyRef,
   refsInText,
 } from './controller/style/references/collect';
 export { omitVariantAxis, omitVariantValues } from './controller/style/blocks/edit';

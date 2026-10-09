@@ -7,6 +7,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BorderRadiusControl } from '../../src/ui/controls/border/index';
 import { SpacingControl } from '../../src/ui/controls/spacing/index';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 describe('structured control display modes', () => {
   afterEach(() => cleanup());
@@ -18,8 +19,11 @@ describe('structured control display modes', () => {
       <SpacingControl
         legend="Padding"
         namePrefix="padding"
-        spacing="{space.2}"
-        dimensionTokens={['{space.2}', '{space.4}']}
+        spacing={fixtureTokenRef(fixtureIds.tokens.space.scale.step2)}
+        dimensionTokens={[
+          fixtureTokenRef(fixtureIds.tokens.space.scale.step2),
+          fixtureTokenRef(fixtureIds.tokens.space.scale.step4),
+        ]}
         onCommit={onCommit}
       />,
     );
@@ -32,8 +36,14 @@ describe('structured control display modes', () => {
       <SpacingControl
         legend="Padding"
         namePrefix="padding"
-        spacing={{ top: '{space.2}', right: '{space.4}' }}
-        dimensionTokens={['{space.2}', '{space.4}']}
+        spacing={{
+          top: fixtureTokenRef(fixtureIds.tokens.space.scale.step2),
+          right: fixtureTokenRef(fixtureIds.tokens.space.scale.step4),
+        }}
+        dimensionTokens={[
+          fixtureTokenRef(fixtureIds.tokens.space.scale.step2),
+          fixtureTokenRef(fixtureIds.tokens.space.scale.step4),
+        ]}
         onCommit={onCommit}
       />,
     );
@@ -46,8 +56,11 @@ describe('structured control display modes', () => {
     render(
       <BorderRadiusControl
         namePrefix="radius"
-        value={{ mode: 'uniform', value: '{radius.md}' }}
-        radiusTokens={['{radius.md}', '{radius.lg}']}
+        value={{ mode: 'uniform', value: fixtureTokenRef(fixtureIds.tokens.radius.md) }}
+        radiusTokens={[
+          fixtureTokenRef(fixtureIds.tokens.radius.md),
+          fixtureTokenRef(fixtureIds.tokens.radius.lg),
+        ]}
         onCommit={onCommit}
       />,
     );

@@ -1,6 +1,9 @@
 import type { DefaultKind } from '@facadeur/core';
 import type { AppService } from '../../../app-service';
-import { assetKindToCatalogMap, blankCatalogDefinition } from '../../../domain/catalog/blank-definition';
+import {
+  assetKindToCatalogMap,
+  blankCatalogDefinition,
+} from '../../../domain/catalog/blank-definition';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { AssetContextMenu } from './AssetContextMenu';
@@ -12,7 +15,7 @@ import {
   SIDEBAR_DESIGN_ITEMS,
   type DesignDomain,
   type EditorSurface,
-} from '../design/design-domain';
+} from '../../design/design-domain';
 
 const TREE_KINDS = ['atom', 'component', 'page'] as const satisfies readonly DefaultKind[];
 
@@ -166,7 +169,10 @@ export function ProjectTree({
       setQuery('');
       setExpanded((prev) => ({ ...prev, [kind]: true }));
     } catch (failure) {
-      session.setNotice(failure instanceof Error ? failure.message : 'Could not create asset', 'error');
+      session.setNotice(
+        failure instanceof Error ? failure.message : 'Could not create asset',
+        'error',
+      );
     }
   }
 
@@ -289,7 +295,10 @@ export function ProjectTree({
                 setGroupAssetId(id);
               }}
               onRemoveGroup={() => {
-                session.setNotice('Asset groups are not available for catalog entries yet.', 'info');
+                session.setNotice(
+                  'Asset groups are not available for catalog entries yet.',
+                  'info',
+                );
               }}
               onDelete={(id) => {
                 void app.deleteDefinition(id).catch((failure) => {

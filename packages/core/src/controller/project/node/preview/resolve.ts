@@ -5,6 +5,7 @@ import { mergePreviewFields } from './merge';
 import { effectiveSchemaForDefinition } from '../../catalog/field-contract';
 import { componentPropsForSchema } from '../../catalog/field-ids';
 import { readTokenTree } from '../../../style/tokens/global/tree';
+import { tokenReference } from '../../../style/tokens/syntax';
 
 /** Merged field layers + catalog context for binding resolution. */
 export type PreviewResolveContext = {
@@ -87,19 +88,15 @@ function textFromNode(
 }
 
 function createTokenTextResolver(tokenTree: unknown) {
-  const tokensByPath = readTokenTree(tokenTree).tokens;
-  const pathsByUuid = new Map<string, string>();
-  for (const token of tokensByPath.values()) {
-    if (token.uuid) pathsByUuid.set(token.uuid, token.path);
-  }
+  const tokensByUuid = readTokenTree(tokenTree).tokens;
 
-  function resolvePath(path: string, activePaths: ReadonlySet<string>): string | undefined {
-    const token = tokensByPath.get(path);
-    if (!token || activePaths.has(path)) return undefined;
-    const nextActivePaths = new Set(activePaths).add(path);
+  function resolveUuid(uuid: string, activeUuids: ReadonlySet<string>): string | undefined {
+    const token = tokensByUuid.get(uuid);
+    if (!token || activeUuids.has(uuid)) return undefined;
+    const nextActiveUuids = new Set(activeUuids).add(uuid);
     if (typeof token.value === 'string') {
-      const alias = token.value.match(/^\{([^{}]+)\}$/)?.[1];
-      if (alias && tokensByPath.has(alias)) return resolvePath(alias, nextActivePaths);
+      const alias = tokenReference(token.value);
+      if (alias) return resolveUuid(alias, nextActiveUuids);
       return token.value;
     }
     if (typeof token.value === 'number' || typeof token.value === 'boolean') {
@@ -109,10 +106,9 @@ function createTokenTextResolver(tokenTree: unknown) {
   }
 
   return (value: string) => {
-    const uuid = value.match(/^\{token:([^{}]+)\}$/)?.[1];
+    const uuid = tokenReference(value);
     if (!uuid) return value;
-    const path = pathsByUuid.get(uuid);
-    return path ? (resolvePath(path, new Set()) ?? '') : '';
+    return resolveUuid(uuid, new Set()) ?? '';
   };
 }
 

@@ -8,8 +8,13 @@ import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';
 import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
 import { openSettingsDomain } from './settings-navigation';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
 
 const documents = editorStandardCatalog();
+const phoneUuid = fixtureIds.catalog.breakpoints.phone;
+const tabletUuid = fixtureIds.catalog.breakpoints.tablet;
+const wideUuid = fixtureIds.catalog.breakpoints.wide;
+const ultraUuid = fixtureIds.catalog.breakpoints.ultra;
 
 describe('design domain stage', () => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -44,10 +49,10 @@ describe('design domain stage', () => {
     expect(host!.textContent).not.toContain('space.4');
 
     await act(async () => {
-      session.setFocusViewport('sm');
+      session.setFocusViewport(tabletUuid);
       session.setEditTarget('viewport');
     });
-    expect(host!.querySelector('[data-viewport-tab="sm"]')?.getAttribute('aria-selected')).toBe(
+    expect(host!.querySelector(`[data-viewport-tab="${tabletUuid}"]`)?.getAttribute('aria-selected')).toBe(
       'true',
     );
   });
@@ -88,14 +93,14 @@ describe('design domain stage', () => {
     expect(host!.querySelector('[aria-label="Tools"]')).toBeNull();
     expect(host!.querySelector('[data-save="design"]')).not.toBeNull();
     expect(host!.querySelector('[data-save="document"]')).toBeNull();
-    const desktop = host!.querySelector('[data-viewport-tab="xl"]') as HTMLButtonElement;
+    const desktop = host!.querySelector(`[data-viewport-tab="${ultraUuid}"]`) as HTMLButtonElement;
     await act(async () => {
       desktop.click();
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'f', bubbles: true }));
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     });
     expect(session.getSnapshot().editTarget).toBe('viewport');
-    expect(session.getSnapshot().focusViewportId).toBe('xl');
+    expect(session.getSnapshot().focusViewportId).toBe(ultraUuid);
     expect(session.getSnapshot().selectedNodeId).toBe('root');
     expect(session.getSnapshot().tool).toBe('select');
     expect(session.getSnapshot().document).toEqual(before);
@@ -122,11 +127,11 @@ describe('design domain stage', () => {
       host!.querySelector('[data-settings-tab="viewports"]')?.getAttribute('aria-current'),
     ).toBe('page');
     const width = host!.querySelector(
-      'input[name="settings-breakpoint-width-xl"]',
+      `input[name="settings-breakpoint-width-${ultraUuid}"]`,
     ) as HTMLInputElement;
     expect(width).toBeInstanceOf(HTMLInputElement);
     const label = host!.querySelector(
-      'input[name="settings-breakpoint-label-xs"]',
+      `input[name="settings-breakpoint-label-${phoneUuid}"]`,
     ) as HTMLInputElement;
     expect(label.value).toBe('Phone');
     const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
@@ -139,20 +144,20 @@ describe('design domain stage', () => {
       label.blur();
     });
     expect(
-      session.getSnapshot().design.settings.breakpoints?.find((item) => item.id === 'xs')?.label,
+      session.getSnapshot().design.settings.breakpoints?.find((item) => item.uuid === phoneUuid)?.label,
     ).toBe('Mobile');
     await act(async () => {
       setter?.call(width, '1280');
       width.dispatchEvent(new Event('input', { bubbles: true }));
     });
     expect(
-      session.getSnapshot().design.settings.breakpoints?.find((item) => item.id === 'xl')?.minWidth,
+      session.getSnapshot().design.settings.breakpoints?.find((item) => item.uuid === ultraUuid)?.minWidth,
     ).toBe(1280);
 
     await openSettingsDomain(host!, 'typography', { alreadyOpen: true });
     expect(host!.querySelector('[aria-label="Viewports"]')).toBeInstanceOf(HTMLElement);
-    expect(host!.querySelector('[data-viewport-tab="xl"]')?.textContent).toContain('1280');
-    expect(host!.querySelector('[data-viewport-tab="xs"]')?.textContent).toContain('Mobile');
-    expect(host!.querySelector('[data-viewport-tab="xs"]')?.textContent).toContain('Base');
+    expect(host!.querySelector(`[data-viewport-tab="${ultraUuid}"]`)?.textContent).toContain('1280');
+    expect(host!.querySelector(`[data-viewport-tab="${phoneUuid}"]`)?.textContent).toContain('Mobile');
+    expect(host!.querySelector(`[data-viewport-tab="${phoneUuid}"]`)?.textContent).toContain('Base');
   });
 });

@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';
 import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
+import { tokenAtPath } from './fixtures/token-tree';
 import { openSettingsDomain } from './settings-navigation';
 
 const documents = editorStandardCatalog();
@@ -67,7 +68,7 @@ describe('colors domain panel', () => {
     await submitNewToken('Brand highlight');
 
     const indexed = readTokenTree(session.getSnapshot().design.tokens);
-    expect(indexed.tokens.get('color.brand.highlight')).toMatchObject({
+    expect(tokenAtPath(session.getSnapshot().design.tokens, 'color.brand.highlight')).toMatchObject({
       type: 'color',
       value: '#000000',
     });
@@ -87,9 +88,7 @@ describe('colors domain panel', () => {
       ).click();
     });
 
-    expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has('color.blue.500')).toBe(
-      true,
-    );
+    expect(tokenAtPath(session.getSnapshot().design.tokens, 'color.blue.500')).toBeDefined();
     expect(session.getSnapshot().notice?.tone).toBe('error');
     expect(session.getSnapshot().notice?.text).toMatch(/\{color\.blue\.500\}/);
   });
@@ -104,7 +103,7 @@ describe('colors domain panel', () => {
     await submitNewToken('   ');
 
     expect(
-      readTokenTree(session.getSnapshot().design.tokens).tokens.has('color.brand.highlight'),
+      tokenAtPath(session.getSnapshot().design.tokens, 'color.brand.highlight'),
     ).toBe(false);
     expect(session.getSnapshot().notice?.tone).toBe('error');
     expect(session.getSnapshot().notice?.text).toMatch(/label is required/i);
@@ -120,7 +119,7 @@ describe('colors domain panel', () => {
     await submitNewToken('Accent default');
 
     expect(
-      readTokenTree(session.getSnapshot().design.tokens).tokens.get('color.accent.default2'),
+      tokenAtPath(session.getSnapshot().design.tokens, 'color.accent.default2'),
     ).toMatchObject({ type: 'color' });
     expect(session.getSnapshot().notice?.tone).not.toBe('error');
   });

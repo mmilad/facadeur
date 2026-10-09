@@ -234,7 +234,13 @@ describe('local project JSON client', () => {
     expect(session.getSnapshot().documentDirty).toBe(true);
     await persistPendingChanges();
     expect(fetch).not.toHaveBeenCalled();
-    session.project.styles.setGlobalToken('color.primary', { $type: 'color', $value: '#123456' });
+    session.project.styles.setGlobalToken('color', {
+      uuid: testUuid30,
+      label: 'Primary',
+      group: '',
+      valueType: 'color',
+      value: '#123456',
+    });
     await persistPendingChanges();
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch.mock.calls[0]![0]).toContain('/project-template/save');

@@ -1,0 +1,213 @@
+.token-add-action {
+  flex: none;
+  padding-bottom: 1px;
+}
+
+.token-add-popover {
+  display: grid;
+  gap: 10px;
+  min-width: 240px;
+  padding: 4px;
+}
+
+.token-add-popover-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.token-table {
+  min-width: 720px;
+  table-layout: fixed;
+}
+
+.token-table-name {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.token-table-name strong,
+.token-table-name span,
+.token-table-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.token-table-name strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.token-table-name .token-table-label-input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  padding: 0;
+}
+
+.token-table-name .token-table-label-input:focus {
+  outline: 1px solid var(--color-accent, #a84b27);
+  outline-offset: 2px;
+}
+
+.token-table-value > .token-value-field {
+  display: block;
+  width: 100%;
+}
+
+.token-table-value > .token-value-field > label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.token-path-editor {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.token-path-editor > span {
+  flex: none;
+  display: block;
+  white-space: nowrap;
+}
+
+.token-path-editor .token-path-input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.token-path-editor .token-path-input:focus {
+  outline: 1px solid var(--color-accent, #a84b27);
+  outline-offset: 2px;
+}
+
+.token-table-value .eu-field {
+  margin-bottom: 0;
+  align-items: center;
+}
+
+.token-table-value .eu-field > .eu-inline {
+  display: none;
+}
+
+.token-table-value .field {
+  margin-bottom: 0;
+}
+
+.token-table-value .field > span:empty {
+  display: none;
+}
+
+.token-table-value .token-value {
+  width: 100%;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.token-table-value .token-value > .eu-control {
+  flex: 1 1 auto;
+  max-width: 100%;
+}
+
+.token-table-preview,
+.token-table-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.token-table-preview {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  overflow: hidden;
+  font-family: var(--mono);
+}
+
+.token-table-swatch {
+  display: inline-block;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--wash);
+}
+
+.token-table-dimension-bar {
+  display: inline-block;
+  height: 6px;
+  max-width: 88px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.token-table-type-sample {
+  display: inline-block;
+  color: var(--ink);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.token-table-preview-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.token-table-value > .eu-field {
+  margin: 0;
+}
+
+.token-table-value > .eu-field > .eu-field__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.token-table-value .stack {
+  gap: 4px !important;
+}
+
+.token-table-value .eu-field__hint {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.token-action-remove {
+  width: 26px;
+  height: 26px;
+  color: var(--muted);
+}
+
+.token-action-remove svg {
+  width: 14px;
+  height: 14px;
+}

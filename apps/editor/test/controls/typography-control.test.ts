@@ -12,23 +12,29 @@ import {
   styleDeclarationKind,
   stylePropertyLabel,
 } from '../../src/ui/controls/style/declaration-kind';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 describe('typography control value', () => {
   it('detects token references', () => {
-    expect(isTokenRef('{font.sans}')).toBe(true);
+    expect(isTokenRef(fixtureTokenRef(fixtureIds.tokens.font.inter))).toBe(true);
     expect(isTokenRef('16px')).toBe(false);
   });
 
   it('builds project font refs', () => {
-    expect(projectFontRefs([{ id: 'sans' }, { id: 'mono' }])).toEqual([
-      '{font.mono}',
-      '{font.sans}',
-    ]);
+    expect(projectFontRefs([{ uuid: fixtureIds.tokens.font.inter }, { uuid: testUuid16 }])).toEqual(
+      [fixtureTokenRef(fixtureIds.tokens.font.inter), fixtureTokenRef(testUuid16)],
+    );
   });
 
   it('infers field mode', () => {
-    expect(inferTypographyFieldMode('{font.sans}', ['{font.sans}'])).toBe('token');
-    expect(inferTypographyFieldMode('Inter', ['{font.sans}'])).toBe('custom');
+    expect(
+      inferTypographyFieldMode(fixtureTokenRef(fixtureIds.tokens.font.inter), [
+        fixtureTokenRef(fixtureIds.tokens.font.inter),
+      ]),
+    ).toBe('token');
+    expect(inferTypographyFieldMode('Inter', [fixtureTokenRef(fixtureIds.tokens.font.inter)])).toBe(
+      'custom',
+    );
   });
 
   it('maps typography style properties', () => {

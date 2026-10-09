@@ -1,11 +1,14 @@
 import type { Node } from '@facadeur/domain';
+import { tokenIds as exampleTokenIds } from '../catalog/tokens/idList';
+import { ids as exampleTextHeadingIds } from './idList';
+import { tokenRef } from '../references';
 
 export const styles = {
-  '550e8400-e29b-41d4-a716-eb189c95716c': {
+  [exampleTextHeadingIds.nodes.root]: {
     width: '100%',
     height: 'auto',
-    color: '{color.text.primary}',
-    font: '{type.title}',
-    margin: '{space.0}',
+    color: tokenRef(exampleTokenIds.color.text.primary),
+    font: tokenRef(exampleTokenIds.type.title),
+    margin: tokenRef(exampleTokenIds.space.scale.step0),
   },
 } satisfies Readonly<Record<string, NonNullable<Node['style']>>>;

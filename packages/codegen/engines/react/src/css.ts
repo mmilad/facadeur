@@ -1,4 +1,4 @@
-import { type Breakpoint, type DocumentFile } from '@facadeur/core';
+import { type Breakpoint, type DesignTokenSet, type DocumentFile } from '@facadeur/core';
 import { compileDocument, scopeStyleSelector, type CompiledRule } from '@facadeur/style-engine';
 import { renderDesignCss, type DesignInput } from '@facadeur/tokens';
 import type { LocalClassNames } from './component/types';
@@ -28,6 +28,7 @@ export function renderDocumentCss(
   breakpoints?: readonly Breakpoint[],
   catalog: readonly DocumentFile[] = [document],
   components?: ReadonlyMap<string, string>,
+  globalTokens?: DesignTokenSet,
 ): string {
   const rootClass = classNames.get(document.root.id);
   if (!rootClass) throw new Error(`Missing local CSS class for root of "${document.id}"`);
@@ -44,6 +45,7 @@ export function renderDocumentCss(
   const compiled = compileDocument(document, {
     address: 'instance',
     ...(breakpoints?.length ? { breakpoints } : {}),
+    ...(globalTokens ? { globalTokens } : {}),
     catalog,
     selectorForNode: ({ node, nodeId, isRoot, targetPath, variantScope }) => {
       const moduleScope = `.${rootClass}${variantScope ? `[data-variant="${cssString(variantScope)}"]` : ''}`;

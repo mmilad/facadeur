@@ -7,6 +7,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { EditorSession, EditorSnapshot } from '../src/domain/session';
 import { PreviewDataStage } from '../src/ui/stage/PreviewDataStage';
+import { tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 function snapshot(overrides: Partial<EditorSnapshot> = {}): EditorSnapshot {
   const document = {
@@ -20,7 +21,7 @@ function snapshot(overrides: Partial<EditorSnapshot> = {}): EditorSnapshot {
       { name: 'enabled', type: 'boolean' as const },
       { name: 'items', type: 'array' as const },
     ],
-    previewData: { fields: { background: '{color.unknown}', label: 'Base label' } },
+    previewData: { fields: { background: fixtureTokenRef(testUuid29), label: 'Base label' } },
     variantLabels: { default: 'Base' },
     variants: [],
     settings: {},
@@ -45,7 +46,7 @@ describe('PreviewDataStage', () => {
     const session = { execute } as unknown as EditorSession;
     render(<PreviewDataStage session={session} snap={snapshot()} />);
 
-    expect(screen.getByRole('textbox', { name: 'Background' })).toHaveValue('{color.unknown}');
+    expect(screen.getByRole('textbox', { name: 'Background' })).toHaveValue(fixtureTokenRef(testUuid29));
     expect(screen.getByRole('textbox', { name: 'Label' })).toHaveValue('Base label');
     expect(execute).not.toHaveBeenCalled();
   });
@@ -90,7 +91,7 @@ describe('PreviewDataStage', () => {
     expect(execute).toHaveBeenCalledWith({
       type: 'setPreviewData',
       previewData: {
-        fields: { background: '{color.unknown}', label: 'Base label' },
+        fields: { background: fixtureTokenRef(testUuid29), label: 'Base label' },
         variants: { compact: { label: 'Compact label' } },
       },
     });
@@ -106,7 +107,7 @@ describe('PreviewDataStage', () => {
           document: {
             ...snapshot().document,
             previewData: {
-              fields: { background: '{color.unknown}', label: 'Base label' },
+              fields: { background: fixtureTokenRef(testUuid29), label: 'Base label' },
               variants: { compact: { label: 'Compact label' } },
             },
           },
@@ -119,7 +120,7 @@ describe('PreviewDataStage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Reset to Base' }));
     expect(execute).toHaveBeenCalledWith({
       type: 'setPreviewData',
-      previewData: { fields: { background: '{color.unknown}', label: 'Base label' } },
+      previewData: { fields: { background: fixtureTokenRef(testUuid29), label: 'Base label' } },
     });
   });
 
@@ -140,7 +141,7 @@ describe('PreviewDataStage', () => {
           activeVariantName: null,
           document: {
             ...snapshot().document,
-            previewData: { fields: { background: '{color.unknown}' } },
+            previewData: { fields: { background: fixtureTokenRef(testUuid29) } },
           },
         })}
       />,
@@ -163,7 +164,7 @@ describe('PreviewDataStage', () => {
     fireEvent.click(within(baseLabelField!).getByRole('button', { name: 'Clear preview value' }));
     expect(baseExecute).toHaveBeenCalledWith({
       type: 'setPreviewData',
-      previewData: { fields: { background: '{color.unknown}' } },
+      previewData: { fields: { background: fixtureTokenRef(testUuid29) } },
     });
   });
 
@@ -210,7 +211,7 @@ describe('PreviewDataStage', () => {
     expect(execute).toHaveBeenCalledExactlyOnceWith({
       type: 'setPreviewData',
       previewData: {
-        fields: { background: '{color.unknown}', label: 'Base label' },
+        fields: { background: fixtureTokenRef(testUuid29), label: 'Base label' },
         variants: { compact: { items: [{ count: 0 }] } },
       },
     });

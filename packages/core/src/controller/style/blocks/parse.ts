@@ -1,4 +1,5 @@
 import { DocumentError } from '../../../document/errors';
+import { UUID_PATTERN } from '../../../document/ids';
 import { isPlainObject as isRecord } from '../../../utils';
 import type {
   StyleBlock,
@@ -10,10 +11,11 @@ import type {
   TokenInterface,
 } from '../../../schema/document';
 import { assertStyleSelector, selectorClassNames } from '../selectors';
+import { tokenReference } from '../tokens/syntax';
 
 export const CSS_PROPERTY = /^(--)?[A-Za-z_][\w-]*$/;
 const TOKEN_PATH = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+)+$/;
-export const BREAKPOINT_ID = /^[a-z][a-z0-9]*$/;
+export const BREAKPOINT_ID = UUID_PATTERN;
 const STATE_NAMES = ['hover', 'focus-visible', 'disabled'] as const;
 
 /**
@@ -25,7 +27,7 @@ const SPACING_PROPERTY =
 
 export function assertSpacingValue(property: string, value: string) {
   if (!SPACING_PROPERTY.test(toKebab(property))) return;
-  if (!/^\{[a-z][a-z0-9]*(?:\.[a-z0-9]+)+\}$/.test(value)) {
+  if (!tokenReference(value)) {
     throw new DocumentError(
       'schema',
       `${property} must be a spacing token reference, not "${value}"`,
@@ -132,8 +134,8 @@ export function parseTokenInterface(value: unknown): TokenInterface {
       throw new DocumentError('schema', 'tokenInterface.reads must be a non-empty array');
     }
     const reads = record.reads.map((item) => {
-      if (typeof item !== 'string' || !TOKEN_PATH.test(item)) {
-        throw new DocumentError('schema', `Invalid token path "${String(item)}" in reads`);
+      if (typeof item !== 'string' || !UUID_PATTERN.test(item)) {
+        throw new DocumentError('schema', `Invalid token UUID "${String(item)}" in reads`);
       }
       return item;
     });
@@ -148,8 +150,11 @@ export function parseTokenInterface(value: unknown): TokenInterface {
     }
     const sets: Record<string, string> = {};
     for (const path of Object.keys(record.sets).sort()) {
-      if (!TOKEN_PATH.test(path)) {
-        throw new DocumentError('schema', `Invalid token path "${path}" in sets`);
+      if (!UUID_PATTERN.test(path) && !TOKEN_PATH.test(path)) {
+        throw new DocumentError(
+          'schema',
+          `Invalid token UUID or component-token path "${path}" in sets`,
+        );
       }
       const item = record.sets[path];
       if (typeof item !== 'string' || item.length === 0) {

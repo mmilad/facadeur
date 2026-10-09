@@ -24,9 +24,9 @@ export interface ValidateOptions {
   rules?: Readonly<Record<string, NestingRule>>;
   /** When set, instance targets must resolve to a kind allowed by the nesting rule. */
   resolveKind?: (componentId: string) => string | undefined;
-  /** Paths of global DTCG tokens; validates component token defaults when set. */
-  globalTokenPaths?: ReadonlySet<string>;
-  /** Local component token paths for a catalog document id; validates tokenInterface.sets keys. */
+  /** Stable global token UUIDs; validates component token defaults when set. */
+  globalTokenUuids?: ReadonlySet<string>;
+  /** Resolve local tokens for path-keyed component targets; global set targets are UUIDs. */
   resolveComponentTokenPaths?: (documentId: string) => ReadonlySet<string> | undefined;
   /** When available, verifies nested style paths against rendered local instance roots. */
   resolveNestedStyleTarget?: (documentId: string, path: readonly string[]) => boolean | undefined;

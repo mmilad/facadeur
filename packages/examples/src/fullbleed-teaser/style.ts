@@ -1,23 +1,26 @@
 import type { Node } from '@facadeur/domain';
+import { tokenIds as exampleTokenIds } from '../catalog/tokens/idList';
+import { ids as exampleFullbleedTeaserIds } from './idList';
+import { tokenRef } from '../references';
 
 export const styles = {
-  '550e8400-e29b-41d4-a716-b5ddc99a5c38': {
+  [exampleFullbleedTeaserIds.nodes.div1]: {
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-8b704bf6eabf': {
+  [exampleFullbleedTeaserIds.nodes.div3]: {
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-abdaf56d3194': {
+  [exampleFullbleedTeaserIds.nodes.div4]: {
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-03b8b9a838a4': {
+  [exampleFullbleedTeaserIds.nodes.div5]: {
     width: 'auto',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-1cc03f1f8f62': {
+  [exampleFullbleedTeaserIds.nodes.div2]: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
@@ -27,13 +30,13 @@ export const styles = {
     height: '100%',
     inset: '0',
   },
-  '550e8400-e29b-41d4-a716-00000000006b': {
+  [exampleFullbleedTeaserIds.nodes.root]: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
     width: '100%',
     height: 'auto',
-    background: '{color.bg}',
+    background: tokenRef(exampleTokenIds.color.bg.canvas),
     boxSizing: 'border-box',
     overflow: 'hidden',
     minHeight: '1px',

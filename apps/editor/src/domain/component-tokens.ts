@@ -31,19 +31,15 @@ export function assertComponentTokenPath(path: string): void {
 
 export function assertComponentTokenPathAvailable(
   path: string,
-  globalPaths: ReadonlySet<string>,
   localPaths: ReadonlySet<string>,
 ): void {
   assertComponentTokenPath(path);
-  if (globalPaths.has(path)) {
-    throw new Error(`"${path}" is already a global design token`);
-  }
   if (localPaths.has(path)) {
     throw new Error(`Local token "${path}" already exists`);
   }
 }
 
-export function globalTokenPaths(designTokens: unknown): ReadonlySet<string> {
+export function globalTokenUuids(designTokens: unknown): ReadonlySet<string> {
   return new Set(readTokenTree(designTokens).tokens.keys());
 }
 
@@ -54,18 +50,18 @@ export function documentsReferencingToken(
     tokenInterface?: { reads?: string[] };
     componentTokens?: Record<string, Pick<ComponentToken, 'path' | 'value'>>;
   }[],
-  tokenPath: string,
+  tokenUuid: string,
 ): string[] {
   const hits: string[] = [];
   for (const doc of documents) {
     const locals = Object.values(doc.componentTokens ?? {})
-      .filter((token) => globalRefInComponentTokenDefault(token.value) === tokenPath)
+      .filter((token) => globalRefInComponentTokenDefault(token.value) === tokenUuid)
       .map((token) => componentTokenPublicPath(doc.id, token.path));
     if (locals.length) {
       hits.push(...locals);
       continue;
     }
-    if (doc.tokenInterface?.reads?.includes(tokenPath)) hits.push(doc.id);
+    if (doc.tokenInterface?.reads?.includes(tokenUuid)) hits.push(doc.id);
   }
   return hits.sort((left, right) => left.localeCompare(right));
 }

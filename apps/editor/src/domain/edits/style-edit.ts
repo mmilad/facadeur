@@ -69,7 +69,7 @@ export interface ShownDeclaration {
 }
 
 export interface StyleBreakpointRef {
-  id: string;
+  uuid: string;
   minWidth: number;
 }
 
@@ -171,14 +171,14 @@ export function effectiveStyleDeclarations(
   const layers: StyleLayer[] = [owner];
   if (target.breakpointId) {
     const ordered = [...breakpoints].sort((left, right) => left.minWidth - right.minWidth);
-    const focused = ordered.find((item) => item.id === target.breakpointId);
+    const focused = ordered.find((item) => item.uuid === target.breakpointId);
     const through = focused?.minWidth;
     for (const breakpoint of ordered) {
       if (through !== undefined && breakpoint.minWidth > through) break;
-      const layer = owner.breakpoints?.[breakpoint.id];
+      const layer = owner.breakpoints?.[breakpoint.uuid];
       if (layer) layers.push(layer);
     }
-    if (!focused && !ordered.some((item) => item.id === target.breakpointId)) {
+    if (!focused && !ordered.some((item) => item.uuid === target.breakpointId)) {
       const layer = owner.breakpoints?.[target.breakpointId];
       if (layer) layers.push(layer);
     }

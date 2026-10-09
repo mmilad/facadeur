@@ -41,7 +41,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   let catalogBaseline = JSON.stringify(core.getSnapshot().catalog);
   function defaultFocusViewportId() {
     const breakpoints = activeBreakpoints(core.getSnapshot().catalog.globalStyles?.breakpoints);
-    return breakpoints[0]?.id ?? null;
+    return breakpoints[0]?.uuid ?? null;
   }
   let focusViewportId: string | null = defaultFocusViewportId();
   let selectedViewportId: string | null = null;
@@ -142,7 +142,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     if (
       focusViewportId &&
       !activeBreakpoints(core.getSnapshot().catalog.globalStyles?.breakpoints).some(
-        (item) => item.id === focusViewportId,
+        (item) => item.uuid === focusViewportId,
       )
     ) {
       focusViewportId = defaultFocusViewportId();
@@ -276,7 +276,6 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       }).design;
       return {
         tokens: design.tokens,
-        fonts: design.fonts,
         breakpoints: design.settings?.breakpoints,
       };
     },

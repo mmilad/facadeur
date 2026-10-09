@@ -19,6 +19,7 @@ export type TransformableFieldProps = Omit<TransformableFieldConfig, 'type'> & {
   id: string;
   value: string;
   onChange: (next: string) => void;
+  onTransform?: (type: Exclude<TransformableFieldOption['type'], 'set'>) => void;
 };
 
 export type TransformableValueFieldConfig = Pick<

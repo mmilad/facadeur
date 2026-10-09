@@ -1,10 +1,12 @@
 import type { FlatDocument } from '../../../document/flat';
 import type { StyleBlock, StyleLayer } from '../../../schema/document';
 import { layoutTokenRefs } from '../layout';
+import { UUID_PATTERN } from '../../../document/ids';
 
-const TOKEN_REF = /\{([a-z][a-z0-9]*(?:\.[a-z0-9]+)*)\}/g;
+const UUID_SOURCE = UUID_PATTERN.source.slice(1, -1);
+const TOKEN_REF = new RegExp(`\\{token:(${UUID_SOURCE})\\}`, 'gi');
 
-/** Every DTCG path referenced by the style block and layout. Font-family refs are omitted. */
+/** Every stable token UUID referenced by the style block, layout, or typography. */
 export function collectTokenRefs(doc: Pick<FlatDocument, 'styles' | 'nodes' | 'variantPresets'>) {
   const refs = new Set<string>();
   if (doc.styles) collectBlockRefs(doc.styles, refs);
@@ -57,18 +59,12 @@ function collectLayerRefs(layer: StyleLayer, refs: Set<string>) {
   }
 }
 
-/** `{font.sans}` names a family. Any other reference is a token. */
+/** Collect UUIDs from canonical `{token:uuid}` references embedded in CSS values. */
 export function refsInText(value: string): string[] {
   const refs: string[] = [];
   for (const match of value.matchAll(TOKEN_REF)) {
-    const path = match[1];
-    if (!path || isFontFamilyRef(path)) continue;
-    refs.push(path);
+    const uuid = match[1];
+    if (uuid) refs.push(uuid);
   }
   return refs;
-}
-
-export function isFontFamilyRef(path: string): boolean {
-  const parts = path.split('.');
-  return parts.length === 2 && parts[0] === 'font';
 }

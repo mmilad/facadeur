@@ -1,12 +1,15 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleButtonIds } from '../button/idList';
+import { ids as exampleInputIds } from '../input/idList';
+import { ids as exampleSignInIds } from './idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-00000000006f',
+  uuid: exampleSignInIds.nodes.root,
   dom: {
     tagName: 'article',
     children: [
       {
-        uuid: '550e8400-e29b-41d4-a716-4bcf572af571',
+        uuid: exampleSignInIds.nodes.p1,
         dom: {
           tagName: 'p',
           properties: {
@@ -15,7 +18,7 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-cb765c804572',
+        uuid: exampleSignInIds.nodes.h21,
         dom: {
           tagName: 'h2',
           properties: {
@@ -24,7 +27,7 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-02b3fdbd0f6a',
+        uuid: exampleSignInIds.nodes.p2,
         dom: {
           tagName: 'p',
           properties: {
@@ -33,12 +36,12 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-568f83442f5f',
+        uuid: exampleSignInIds.nodes.div1,
         dom: {
           tagName: 'div',
         },
         config: {
-          definitionRef: '550e8400-e29b-41d4-a716-25e4cf782bd0',
+          definitionRef: exampleInputIds.definition,
           previewData: {
             fields: {
               label: 'Work email',
@@ -49,12 +52,12 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-8d8f838b7756',
+        uuid: exampleSignInIds.nodes.div2,
         dom: {
           tagName: 'div',
         },
         config: {
-          definitionRef: '550e8400-e29b-41d4-a716-0000000003e9',
+          definitionRef: exampleButtonIds.definition,
           previewData: {
             fields: {
               label: 'Continue',

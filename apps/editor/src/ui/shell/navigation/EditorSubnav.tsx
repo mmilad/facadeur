@@ -2,7 +2,7 @@ import {
   EDITOR_VIEW_ITEMS,
   isSettingsTokenDomain,
   type EditorSurface,
-} from '../../sidebar/design/design-domain';
+} from '../../design/design-domain';
 
 export function EditorSubnav({
   surface,

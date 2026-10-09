@@ -9,7 +9,9 @@ import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { withTokenBreakpoint } from '../src/domain/edits/token-edit';
 import { App } from '../src/ui/shell/EditorShell';
 import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
+import { tokenAtPath } from './fixtures/token-tree';
 import { openSettingsDomain } from './settings-navigation';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 const documents = editorStandardCatalog();
 
@@ -71,11 +73,10 @@ describe('typography domain panel', () => {
 
     await submitNewToken('Hero');
 
-    const indexed = readTokenTree(session.getSnapshot().design.tokens);
-    expect(indexed.tokens.get('type.hero')).toMatchObject({
+    expect(tokenAtPath(session.getSnapshot().design.tokens, 'type.hero')).toMatchObject({
       type: 'typography',
       value: {
-        fontFamily: '{font.sans}',
+        fontFamily: fixtureTokenRef(fixtureIds.tokens.font.inter),
         fontSize: '16px',
         fontWeight: 400,
         letterSpacing: '0',
@@ -89,11 +90,18 @@ describe('typography domain panel', () => {
   it('blocks removing a typography token that other tokens still reference', async () => {
     const design = editorStandardDesign();
     const tokens = design.tokens!;
+    const aliasUuid = testUuid35;
     design.tokens = {
       ...tokens,
       type: {
-        ...(tokens.type as object),
-        alias: { $type: 'typography', $value: '{type.body}' },
+        ...tokens.type,
+        [aliasUuid]: {
+          uuid: aliasUuid,
+          label: 'Alias',
+          group: '',
+          valueType: 'typography',
+          value: fixtureTokenRef(fixtureIds.tokens.type.body),
+        },
       },
     };
     const session = createEditorSession({ documents, design });
@@ -105,7 +113,7 @@ describe('typography domain panel', () => {
       ).click();
     });
 
-    expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has('type.body')).toBe(true);
+    expect(tokenAtPath(session.getSnapshot().design.tokens, 'type.body')).toBeDefined();
     expect(session.getSnapshot().notice?.tone).toBe('error');
     expect(session.getSnapshot().notice?.text).toMatch(/\{type\.body\}/);
   });
@@ -119,7 +127,7 @@ describe('typography domain panel', () => {
 
     await submitNewToken('   ');
 
-    expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has('type.hero')).toBe(false);
+    expect(tokenAtPath(session.getSnapshot().design.tokens, 'type.hero')).toBeUndefined();
     expect(session.getSnapshot().notice?.tone).toBe('error');
     expect(session.getSnapshot().notice?.text).toMatch(/label is required/i);
   });
@@ -133,9 +141,9 @@ describe('typography domain panel', () => {
 
     await submitNewToken('Body');
 
-    expect(
-      readTokenTree(session.getSnapshot().design.tokens).tokens.get('type.body2'),
-    ).toMatchObject({ type: 'typography' });
+    expect(tokenAtPath(session.getSnapshot().design.tokens, 'type.body2')).toMatchObject({
+      type: 'typography',
+    });
     expect(session.getSnapshot().notice?.tone).not.toBe('error');
   });
 
@@ -145,7 +153,7 @@ describe('typography domain panel', () => {
       design: editorStandardDesign(),
     });
     const tabletOverride = {
-      fontFamily: '{font.sans}',
+      fontFamily: fixtureTokenRef(fixtureIds.tokens.font.inter),
       fontSize: '20px',
       fontWeight: 500,
       lineHeight: 1.4,
@@ -153,23 +161,28 @@ describe('typography domain panel', () => {
     };
     session.executeDesign({
       type: 'setToken',
-      path: 'type.title',
+      family: 'type',
       token: withTokenBreakpoint(
         session.getSnapshot().design.tokens,
-        'type.title',
-        'sm',
+        'type',
+        fixtureIds.tokens.type.title,
+        fixtureIds.catalog.breakpoints.tablet,
         tabletOverride,
       ),
     });
     await openTypography(session);
     await act(async () => {
-      session.setFocusViewport('sm');
+      session.setFocusViewport(fixtureIds.catalog.breakpoints.tablet);
       session.setEditTarget('viewport');
     });
 
     expect(host!.textContent).toContain('Typography overrides at Tablet');
     const indexedBefore = readTokenTree(session.getSnapshot().design.tokens);
-    expect(indexedBefore.tokens.get('type.title')?.breakpoints.sm).toEqual(tabletOverride);
+    expect(
+      indexedBefore.tokens.get(fixtureIds.tokens.type.title)?.breakpoints[
+        fixtureIds.catalog.breakpoints.tablet
+      ],
+    ).toEqual(tabletOverride);
 
     const resetButton = host!.querySelector(
       'tr[data-token-path="type.title"] .override-cue button',
@@ -180,8 +193,12 @@ describe('typography domain panel', () => {
     });
 
     const indexedAfter = readTokenTree(session.getSnapshot().design.tokens);
-    expect(indexedAfter.tokens.get('type.title')?.breakpoints.sm).toBeUndefined();
-    expect(indexedAfter.tokens.get('type.title')?.value).toMatchObject({
+    expect(
+      indexedAfter.tokens.get(fixtureIds.tokens.type.title)?.breakpoints[
+        fixtureIds.catalog.breakpoints.tablet
+      ],
+    ).toBeUndefined();
+    expect(indexedAfter.tokens.get(fixtureIds.tokens.type.title)?.value).toMatchObject({
       fontSize: '24px',
     });
   });
@@ -195,11 +212,19 @@ describe('typography domain panel', () => {
 
     expect(host!.textContent).toContain('Body');
     expect(host!.textContent).not.toContain('font.weight');
-    expect(host!.querySelector('[data-viewport-tab="sm"]')).toBeInstanceOf(HTMLButtonElement);
-    expect(host!.querySelector('[data-viewport-tab="xl"]')).toBeInstanceOf(HTMLButtonElement);
+    expect(
+      host!.querySelector('[data-viewport-tab="' + fixtureIds.catalog.breakpoints.tablet + '"]'),
+    ).toBeInstanceOf(HTMLButtonElement);
+    expect(
+      host!.querySelector('[data-viewport-tab="' + fixtureIds.catalog.breakpoints.ultra + '"]'),
+    ).toBeInstanceOf(HTMLButtonElement);
 
     await act(async () => {
-      (host!.querySelector('[data-viewport-tab="sm"]') as HTMLButtonElement).click();
+      (
+        host!.querySelector(
+          '[data-viewport-tab="' + fixtureIds.catalog.breakpoints.tablet + '"]',
+        ) as HTMLButtonElement
+      ).click();
     });
     const tablet = host!.querySelector(
       'input[name="token-type.body-fontSize"]',
@@ -210,7 +235,8 @@ describe('typography domain panel', () => {
     await act(async () => setInput(tablet, '19px'));
 
     expect(
-      readTokenTree(session.getSnapshot().design.tokens).tokens.get('type.body')?.breakpoints.sm,
+      readTokenTree(session.getSnapshot().design.tokens).tokens.get(fixtureIds.tokens.type.body)
+        ?.breakpoints[fixtureIds.catalog.breakpoints.tablet],
     ).toEqual({ fontSize: '19px' });
   });
 });

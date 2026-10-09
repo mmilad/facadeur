@@ -16,6 +16,7 @@ import {
 } from './color';
 
 export function ColorInput({
+  id: idProp,
   name,
   value: valueProp,
   disabled,
@@ -23,6 +24,7 @@ export function ColorInput({
   onChange,
   onCommit,
 }: {
+  id?: string;
   name?: string;
   value?: string;
   disabled?: boolean;
@@ -38,6 +40,7 @@ export function ColorInput({
     onCommitValue,
     id,
   } = useBindable({ name, value: valueProp, disabled, invalid, onChange, onCommit }, '#000000FF');
+  const inputId = idProp ?? id;
   const normalized = normalizeColor(value);
   const rgba = useMemo(() => hexToRgba(normalized) ?? { r: 0, g: 0, b: 0, a: 1 }, [normalized]);
   const { draft, live, commit } = useDraftCommit(normalized, onLiveChange, onCommitValue);
@@ -71,11 +74,11 @@ export function ColorInput({
       >
         <div className="eu-color-panel">
           <Stack gap={8}>
-            <label className="eu-field__label" htmlFor={`${id}-hex`}>
+            <label className="eu-field__label" htmlFor={`${inputId}-hex`}>
               Hex
             </label>
             <input
-              id={`${id}-hex`}
+              id={`${inputId}-hex`}
               className="eu-control"
               value={hexDraft}
               disabled={isDisabled}
@@ -155,7 +158,7 @@ export function ColorInput({
         </div>
       </Popover>
       <input
-        id={id}
+        id={inputId}
         name={name}
         className="eu-control"
         value={draft}

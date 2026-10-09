@@ -4,10 +4,11 @@ import { root } from './dom';
 import { config } from './config';
 import { styles } from './style';
 import { schema } from './schema';
+import { ids as exampleVideoIds } from './idList';
 const schemaSource = { kind: 'inline', schema } as const;
 
 export const definition = {
-  uuid: '550e8400-e29b-41d4-a716-8ec79e32a4bf',
+  uuid: exampleVideoIds.definition,
   name: 'Video',
   kind: 'atom',
   schema: schemaSource,

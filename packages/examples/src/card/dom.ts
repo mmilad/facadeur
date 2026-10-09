@@ -1,14 +1,15 @@
 import type { Node } from '@facadeur/domain';
 import { componentPropRef } from '../references';
 import { propIds } from './schema';
+import { ids as exampleCardIds } from './idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-000000000067',
+  uuid: exampleCardIds.nodes.root,
   dom: {
     tagName: 'article',
     children: [
       {
-        uuid: '550e8400-e29b-41d4-a716-ca420a0f1a23',
+        uuid: exampleCardIds.nodes.eyebrow,
         name: 'eyebrow',
         dom: {
           tagName: 'p',
@@ -16,7 +17,7 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-d842df7ffcf0',
+        uuid: exampleCardIds.nodes.title,
         name: 'title',
         dom: {
           tagName: 'h2',
@@ -24,7 +25,7 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-8dad5919789d',
+        uuid: exampleCardIds.nodes.body,
         name: 'body',
         dom: {
           tagName: 'p',

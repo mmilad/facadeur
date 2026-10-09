@@ -7,8 +7,6 @@ import type {
   FieldValue,
   FlatDocument,
   FlatNode,
-  FontFamily,
-  FontSource,
   IconDefinition,
   JsonValue,
   Layout,
@@ -63,7 +61,7 @@ function syncBreakpoints(
     0,
     breakpoints.map((breakpoint) => {
       const map = new Y.Map<unknown>();
-      map.set('id', breakpoint.id);
+      map.set('uuid', breakpoint.uuid);
       map.set('minWidth', breakpoint.minWidth);
       if (breakpoint.label) map.set('label', breakpoint.label);
       if (breakpoint.enabled === false) map.set('enabled', false);
@@ -84,7 +82,7 @@ function sameBreakpoints(
     const breakpoint = breakpoints[index];
     return (
       breakpoint !== undefined &&
-      item.get('id') === breakpoint.id &&
+      item.get('uuid') === breakpoint.uuid &&
       item.get('minWidth') === breakpoint.minWidth &&
       (item.get('label') ?? undefined) === breakpoint.label &&
       (item.get('enabled') ?? undefined) === breakpoint.enabled
@@ -267,23 +265,6 @@ function writeNode(map: Y.Map<unknown>, node: FlatNode): void {
   }
 }
 
-export function syncFonts(fonts: Y.Map<unknown>, list: FontFamily[]): void {
-  const ids = new Set(list.map((font) => font.id));
-  for (const key of [...fonts.keys()]) {
-    if (key !== '$order' && !ids.has(key)) fonts.delete(key);
-  }
-  for (const font of list) {
-    const current = fonts.get(font.id);
-    const map = current instanceof Y.Map ? current : new Y.Map<unknown>();
-    if (!(current instanceof Y.Map)) fonts.set(font.id, map);
-    writeFont(map, font);
-  }
-  reconcile(
-    ensureArray<string>(fonts, '$order'),
-    list.map((font) => font.id),
-  );
-}
-
 export function syncIcons(list: Y.Array<Y.Map<unknown>>, icons: IconDefinition[]): void {
   const byId = new Map<string, Y.Map<unknown>>();
   for (const map of list.toArray()) {
@@ -299,37 +280,6 @@ export function syncIcons(list: Y.Array<Y.Map<unknown>>, icons: IconDefinition[]
     return map;
   });
   reconcile(list, desired);
-}
-
-function writeFont(map: Y.Map<unknown>, font: FontFamily): void {
-  syncScalar(map, 'id', font.id);
-  syncScalar(map, 'family', font.family);
-  syncJsonArray(ensureArray<unknown>(map, 'weights'), font.weights);
-  if (font.styles?.length) syncJsonArray(ensureArray<unknown>(map, 'styles'), font.styles);
-  else if (map.has('styles')) map.delete('styles');
-  writeSource(map, font.source);
-  syncJsonArray(ensureArray<unknown>(map, 'fallbacks'), font.fallbacks);
-}
-
-function writeSource(parent: Y.Map<unknown>, source: FontSource): void {
-  const map = ensureMap(parent, 'source');
-  syncScalar(map, 'type', source.type);
-  if (source.type === 'google') {
-    syncScalar(map, 'family', source.family);
-    if (map.has('files')) map.delete('files');
-    return;
-  }
-  if (map.has('family')) map.delete('family');
-  const files = source.files.map((file) => {
-    const item: Record<string, JsonValue> = {
-      weight: file.weight,
-      style: file.style,
-      url: file.url,
-    };
-    if (file.format !== undefined) item.format = file.format;
-    return item;
-  });
-  syncJsonArray(ensureArray<unknown>(map, 'files'), files);
 }
 
 function syncChildren(map: Y.Map<unknown>, children: string[]): void {

@@ -180,7 +180,6 @@ function propBindingOptions(model: InspectorModel): AutocompleteOption[] {
     label: option.name,
     description: previewDefaultForProp(model, option.name),
     group: option.kind === 'component' ? 'Component props' : 'Design props',
-    displayLabel: true,
   }));
 }
 

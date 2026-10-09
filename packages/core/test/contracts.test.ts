@@ -1001,7 +1001,7 @@ describe('component contracts', () => {
 
   it.each(['allOf', 'oneOf', 'anyOf'] as const)(
     'validates nested context event data through %s branches',
-    (composition) => {
+    (composition: 'allOf' | 'oneOf' | 'anyOf') => {
       const document: DocumentFile = {
         version: 1,
         id: 'nested-event',

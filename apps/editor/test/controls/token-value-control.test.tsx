@@ -6,6 +6,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { TokenValueControl } from '../../src/ui/controls/fields/TokenValueControl';
+import { tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 describe('token value control', () => {
   afterEach(() => cleanup());
@@ -16,8 +17,8 @@ describe('token value control', () => {
     render(
       <TokenValueControl
         label="Color"
-        value="{future.color.surface}"
-        tokens={['{color.brand}']}
+        value={fixtureTokenRef(testUuid10)}
+        tokens={[fixtureTokenRef(testUuid11)]}
         onCommit={onCommit}
       />,
     );
@@ -36,13 +37,13 @@ describe('token value control', () => {
     render(
       <TokenValueControl
         label="Color"
-        value="{color.brand}"
-        tokens={['{color.brand}', '{color.surface}']}
+        value={fixtureTokenRef(testUuid11)}
+        tokens={[fixtureTokenRef(testUuid11), fixtureTokenRef(testUuid12)]}
         onCommit={vi.fn()}
       />,
     );
 
-    const reference = screen.getByTitle('Token reference: {color.brand}');
+    const reference = screen.getByTitle("Token reference: " + fixtureTokenRef(testUuid11));
     await user.click(reference);
     const search = screen.getByRole('searchbox', { name: 'Tokens' });
     await user.type(search, 'surface');
@@ -59,7 +60,7 @@ describe('token value control', () => {
       <TokenValueControl
         label="Size"
         value="16px"
-        tokens={['{space.sm}', '{space.md}']}
+        tokens={[fixtureTokenRef(testUuid13), fixtureTokenRef(testUuid14)]}
         onCommit={onCommit}
       />,
     );
@@ -67,7 +68,7 @@ describe('token value control', () => {
     await user.click(screen.getByRole('button', { name: 'Choose Size or token' }));
     await user.click(screen.getByRole('button', { name: /◇ Md.*space.md/ }));
 
-    expect(onCommit).toHaveBeenCalledWith('{space.md}');
+    expect(onCommit).toHaveBeenCalledWith(fixtureTokenRef(testUuid14));
   });
 
   it('converts a token to an explicit raw value only when submitted', async () => {
@@ -76,8 +77,8 @@ describe('token value control', () => {
     render(
       <TokenValueControl
         label="Shadow"
-        value="{shadow.card}"
-        tokens={['{shadow.card}']}
+        value={fixtureTokenRef(testUuid15)}
+        tokens={[fixtureTokenRef(testUuid15)]}
         onCommit={onCommit}
       />,
     );

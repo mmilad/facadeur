@@ -11,7 +11,7 @@ import {
   DESIGN_DOMAIN_ITEMS,
   EDITOR_VIEW_ITEMS,
   type EditorSurface,
-} from '../../sidebar/design/design-domain';
+} from '../../design/design-domain';
 import type { EditorNavigationAdapter } from './navigation-adapter';
 
 const surfaces = new Set<string>([
@@ -108,7 +108,7 @@ export function useEditorNavigation(
       const viewportId = requested.viewportId;
       const breakpointExists = Boolean(
         viewportId &&
-        editorBreakpoints(next.document, next.design).some((item) => item.id === viewportId),
+        editorBreakpoints(next.document, next.design).some((item) => item.uuid === viewportId),
       );
       const wantedViewport = breakpointExists ? viewportId! : null;
       if (wantedViewport !== next.selectedViewportId) {

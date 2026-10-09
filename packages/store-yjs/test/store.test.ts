@@ -8,6 +8,7 @@ import {
 } from '@facadeur/core';
 import { COMMAND_ORIGIN, createDocumentStore } from '@facadeur/store-yjs';
 import * as Y from 'yjs';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 const initial: DocumentFile = {
   version: 1,
@@ -227,7 +228,7 @@ describe('Yjs document store', () => {
     const store = createDocumentStore(initial);
     expect(store.getDocument()).toEqual(toFlat(initial));
     expect(store.doc.getMap('tokens')).toBeInstanceOf(Y.Map);
-    expect(store.doc.getMap('fonts')).toBeInstanceOf(Y.Map);
+    expect(store.getDocument().tokens.font).toBeDefined();
     expect(store.canUndo()).toBe(false);
     store.undo();
     expect(store.getDocument()).toEqual(toFlat(initial));
@@ -240,19 +241,21 @@ describe('Yjs document store', () => {
       styles: {
         children: {
           control: {
-            declarations: { color: '{color.accent}' },
+            declarations: { color: fixtureTokenRef(fixtureIds.tokens.color.accent.default) },
             states: { hover: { color: 'white' } },
-            breakpoints: { tablet: { declarations: { color: 'green' } } },
+            breakpoints: {
+              [fixtureIds.catalog.breakpoints.tablet]: { declarations: { color: 'green' } },
+            },
           },
         },
       },
       settings: {
         breakpoints: [
-          { id: 'phone', minWidth: 390 },
-          { id: 'tablet', minWidth: 768 },
+          { uuid: fixtureIds.catalog.breakpoints.phone, label: 'Phone', minWidth: 390 },
+          { uuid: fixtureIds.catalog.breakpoints.tablet, label: 'Tablet', minWidth: 768 },
         ],
       },
-      tokenInterface: { reads: ['color.accent'] },
+      tokenInterface: { reads: [fixtureIds.tokens.color.accent.default] },
       root: {
         id: 'root',
         type: 'frame',

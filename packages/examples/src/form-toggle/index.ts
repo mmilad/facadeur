@@ -4,10 +4,11 @@ import { root } from './dom';
 import { config } from './config';
 import { styles } from './style';
 import { schema } from './schema';
+import { ids as exampleFormToggleIds } from './idList';
 const schemaSource = { kind: 'inline', schema } as const;
 
 export const definition = {
-  uuid: '550e8400-e29b-41d4-a716-f2a049c2b58c',
+  uuid: exampleFormToggleIds.definition,
   name: 'Toggle',
   kind: 'component',
   schema: schemaSource,

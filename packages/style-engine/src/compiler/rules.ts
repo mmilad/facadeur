@@ -79,10 +79,10 @@ export function emitSparseStyleLayers(
       }
     }
   }
-  const baseId = state.breakpoints[0]?.id;
+  const baseId = state.breakpoints[0]?.uuid;
   for (const [id, breakpoint] of Object.entries(layer.breakpoints ?? {})) {
     if (id === baseId) continue;
-    const minWidth = state.breakpoints.find((item) => item.id === id)?.minWidth;
+    const minWidth = state.breakpoints.find((item) => item.uuid === id)?.minWidth;
     if (minWidth === undefined) continue;
     appendCompiledRule(
       state,

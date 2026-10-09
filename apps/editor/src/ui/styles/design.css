@@ -167,6 +167,50 @@
   text-align: right;
 }
 
+.token-value-field {
+  display: grid;
+  grid-template-columns: minmax(88px, 112px) minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.token-value-field > label {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.token-value-field .token-value {
+  min-width: 0;
+}
+
+.design-token-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.design-shadow-layer .token-value-field {
+  grid-template-columns: minmax(88px, 112px) minmax(0, 1fr);
+}
+
+.design-shadow-inset {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.token-add-path-field {
+  display: grid;
+  gap: 4px;
+}
+
 .design-domain-breadcrumb {
   margin: 0;
   font-family: var(--serif);

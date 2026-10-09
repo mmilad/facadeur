@@ -1,7 +1,7 @@
 'use client';
 
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
-import type { EditorSurface } from '../../design/design-domain';
+import type { EditorSurface } from '../../../design/design-domain';
 
 export function NestedFieldsPanel({
   snap,

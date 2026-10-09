@@ -2,7 +2,6 @@ import { DocumentError } from '../../document/errors';
 import { type FlatDocument, type FlatNode } from '../../document/flat';
 import { defaultNestingRules, type NestingRule } from '../../document/kinds';
 import { assertBreakpoints } from '../style/breakpoints';
-import { assertFonts } from '../style/fonts';
 import { assertStyleContract } from '../style/blocks/contract';
 import { readTokenTree } from '../style/tokens/global/tree';
 import {
@@ -132,9 +131,8 @@ export function validateTree(doc: FlatDocument, options: ValidateOptions = {}): 
   }
 }
 
-/** Fonts, breakpoints, and the DTCG tree. Reference targets are resolved by `@facadeur/tokens`. */
+/** Token records and breakpoint contracts; reference targets are resolved by `@facadeur/tokens`. */
 export function validateLibraries(doc: FlatDocument, options: ValidateOptions = {}): void {
-  assertFonts(doc.fonts);
   assertBreakpoints(doc.settings.breakpoints);
   readTokenTree(doc.tokens);
   assertStyleContract(doc, options);

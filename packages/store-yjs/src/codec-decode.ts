@@ -11,9 +11,6 @@ import {
   type FieldValue,
   type FlatDocument,
   type FlatNode,
-  type FontFaceFile,
-  type FontFamily,
-  type FontSource,
   type IconDefinition,
   type Layout,
   type PreviewData,
@@ -24,17 +21,14 @@ import {
   type VariantPreset,
   type VariantRule,
 } from '@facadeur/core';
-import { isPlainObject } from '@facadeur/core';
 import * as Y from 'yjs';
 import {
   isBindingTarget,
-  isFontStyle,
   isVariantPresetJson,
   numberValue,
   optionalString,
   readJsonArray,
   readJsonObject,
-  readNumberArray,
   readStringArray,
   stringValue,
 } from './codec-shared';
@@ -215,16 +209,16 @@ export function readSettings(settings: Y.Map<unknown>): DocumentSettings {
   if (breakpoints instanceof Y.Array) {
     const list = breakpoints.toArray().flatMap((item) => {
       if (!(item instanceof Y.Map)) return [];
-      const id = item.get('id');
+      const uuid = item.get('uuid');
       const minWidth = item.get('minWidth');
       const label = item.get('label');
       const enabled = item.get('enabled');
-      if (typeof id !== 'string' || typeof minWidth !== 'number') return [];
+      if (typeof uuid !== 'string' || typeof minWidth !== 'number' || typeof label !== 'string') return [];
       return [
         {
-          id,
+          uuid,
           minWidth,
-          ...(typeof label === 'string' && label ? { label } : {}),
+          label,
           ...(enabled === false ? { enabled: false as const } : {}),
         },
       ];
@@ -243,49 +237,6 @@ export function readIcons(list: Y.Array<Y.Map<unknown>>): IconDefinition[] {
     const category = optionalString(map.get('category'));
     return [{ id, name, src, ...(category ? { category } : {}) }];
   });
-}
-
-export function readFonts(fonts: Y.Map<unknown>): FontFamily[] {
-  const orderValue = fonts.get('$order');
-  if (!(orderValue instanceof Y.Array)) return [];
-  const fontsOut: FontFamily[] = [];
-  for (const id of orderValue.toArray()) {
-    if (typeof id !== 'string') continue;
-    const map = fonts.get(id);
-    if (map instanceof Y.Map) fontsOut.push(readFont(map));
-  }
-  return fontsOut;
-}
-
-function readFont(map: Y.Map<unknown>): FontFamily {
-  const font: FontFamily = {
-    id: stringValue(map.get('id')),
-    family: stringValue(map.get('family')),
-    weights: readNumberArray(map.get('weights')),
-    source: readSource(map.get('source')),
-    fallbacks: readStringArray(map.get('fallbacks')),
-  };
-  const styles = readStringArray(map.get('styles'));
-  if (styles.length) font.styles = styles.filter(isFontStyle);
-  return font;
-}
-
-function readSource(value: unknown): FontSource {
-  if (!(value instanceof Y.Map)) return { type: 'google', family: '' };
-  if (value.get('type') === 'file') {
-    const files = readJsonArray(value.get('files')).flatMap((item) => {
-      if (!isPlainObject(item)) return [];
-      const weight = item.weight;
-      const style = item.style;
-      const url = item.url;
-      if (typeof weight !== 'number' || !isFontStyle(style) || typeof url !== 'string') return [];
-      const file: FontFaceFile = { weight, style, url };
-      if (typeof item.format === 'string') file.format = item.format;
-      return [file];
-    });
-    return { type: 'file', files };
-  }
-  return { type: 'google', family: stringValue(value.get('family')) };
 }
 
 export function readStyleBlock(map: Y.Map<unknown>): { styles?: StyleBlock } {

@@ -8,6 +8,7 @@ import { afterEach, expect, it } from 'vitest';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { LayoutPanel } from '../src/ui/sidebar/properties/layout/LayoutPanel';
 import { editorStandardDesign, expandExampleCatalog } from './fixtures/example-catalog';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
 
 afterEach(cleanup);
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -19,8 +20,8 @@ function fixture(): DocumentFile & { root: Extract<DocumentFile['root'], { type:
     kind: 'component',
     settings: {
       breakpoints: [
-        { id: 'phone', minWidth: 375 },
-        { id: 'tablet', minWidth: 768 },
+        { uuid: fixtureIds.catalog.breakpoints.phone, label: 'Phone', minWidth: 375 },
+        { uuid: fixtureIds.catalog.breakpoints.tablet, label: 'Tablet', minWidth: 768 },
       ],
     },
     variants: [{ name: 'compact' }],
@@ -30,7 +31,7 @@ function fixture(): DocumentFile & { root: Extract<DocumentFile['root'], { type:
       layout: {
         direction: 'column',
         align: 'start',
-        breakpoints: { tablet: { direction: 'row' } },
+        breakpoints: { [fixtureIds.catalog.breakpoints.tablet]: { direction: 'row' } },
       },
       children: [
         { id: 'title', type: 'text', text: 'Title' },
@@ -52,7 +53,7 @@ function setup(document = fixture(), variant = false, viewport = false) {
   session.selectNode('action');
   if (variant) session.setActiveVariant('compact');
   if (viewport) {
-    session.setFocusViewport('tablet');
+    session.setFocusViewport(fixtureIds.catalog.breakpoints.tablet);
     session.setEditTarget('viewport');
   }
   render(<Harness session={session} />);
@@ -99,7 +100,7 @@ it.each([false, true])(
       : document.styles;
     expect(style).toEqual({
       children: {
-        action: { breakpoints: { tablet: { declarations: { 'align-self': 'flex-end' } } } },
+        action: { breakpoints: { [fixtureIds.catalog.breakpoints.tablet]: { declarations: { 'align-self': 'flex-end' } } } },
       },
     });
     expect(document.nodes).toEqual(before);

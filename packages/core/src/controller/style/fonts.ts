@@ -1,7 +1,7 @@
 import { DocumentError } from '../../document/errors';
-import type { FontFaceFile, FontFamily, FontSource, FontStyle } from '../../schema/document';
+import type { FontFamily, FontFaceFile, FontStyle } from '../../schema/document';
+import { UUID_PATTERN } from '../../document/ids';
 
-/** CSS generic families. A font stack must end on one so it always resolves. */
 const GENERIC_FAMILIES = new Set([
   'serif',
   'sans-serif',
@@ -18,135 +18,91 @@ const GENERIC_FAMILIES = new Set([
   'fangsong',
 ]);
 
-const FONT_ID = /^[a-z][a-z0-9]*$/;
-
-export function cloneFont(font: FontFamily) {
-  const next: FontFamily = {
-    id: font.id,
-    family: font.family,
-    weights: [...font.weights],
-    source: cloneSource(font.source),
-    fallbacks: [...font.fallbacks],
-  };
-  if (font.styles?.length) next.styles = [...font.styles];
-  return next;
-}
-
-export function cloneFonts(fonts: readonly FontFamily[]) {
-  return fonts.map((font) => cloneFont(font));
+export function cloneFont(font: FontFamily): FontFamily {
+  return structuredClone(font);
 }
 
 export function assertFonts(fonts: readonly FontFamily[]): void {
-  const ids = new Set<string>();
+  const uuids = new Set<string>();
   for (const font of fonts) {
     assertFont(font);
-    if (ids.has(font.id)) {
-      throw new DocumentError('schema', `Duplicate font "${font.id}"`);
-    }
-    ids.add(font.id);
+    if (uuids.has(font.uuid)) throw new DocumentError('schema', `Duplicate font "${font.uuid}"`);
+    uuids.add(font.uuid);
   }
 }
 
 export function assertFont(font: FontFamily): void {
-  if (!FONT_ID.test(font.id)) {
-    throw new DocumentError('schema', `Invalid font id "${font.id}"`);
+  const fontLabel = `Font "${font.uuid}"`;
+  if (!UUID_PATTERN.test(font.uuid)) throw new DocumentError('schema', `${fontLabel} has an invalid UUID`);
+  if (font.valueType !== 'fontFamily') throw new DocumentError('schema', `${fontLabel} must use fontFamily valueType`);
+  if (!font.label.trim() || font.group.trim() !== font.group) {
+    throw new DocumentError('schema', `${fontLabel} needs a label and a trimmed group`);
   }
-  assertCssString(font.family, `Font "${font.id}" family`);
-  if (!font.weights.length) {
-    throw new DocumentError('schema', `Font "${font.id}" needs at least one weight`);
-  }
+  const value = font.value;
+  assertCssString(value.family, `${fontLabel} family`);
+  if (!value.weights.length) throw new DocumentError('schema', `${fontLabel} needs at least one weight`);
   const weights = new Set<number>();
-  for (const weight of font.weights) {
+  for (const weight of value.weights) {
     if (!Number.isInteger(weight) || weight < 1 || weight > 1000) {
-      throw new DocumentError('schema', `Font "${font.id}" has an invalid weight ${weight}`);
+      throw new DocumentError('schema', `${fontLabel} has an invalid weight ${weight}`);
     }
-    if (weights.has(weight)) {
-      throw new DocumentError('schema', `Font "${font.id}" repeats weight ${weight}`);
-    }
+    if (weights.has(weight)) throw new DocumentError('schema', `${fontLabel} repeats weight ${weight}`);
     weights.add(weight);
   }
-  const styles = font.styles?.length ? font.styles : (['normal'] as const);
+  const styles = value.styles?.length ? value.styles : (['normal'] as const);
   const seenStyles = new Set<string>();
   for (const style of styles) {
     if (style !== 'normal' && style !== 'italic') {
-      throw new DocumentError('schema', `Font "${font.id}" has an invalid style "${style}"`);
+      throw new DocumentError('schema', `${fontLabel} has an invalid style "${style}"`);
     }
-    if (seenStyles.has(style)) {
-      throw new DocumentError('schema', `Font "${font.id}" repeats style "${style}"`);
-    }
+    if (seenStyles.has(style)) throw new DocumentError('schema', `${fontLabel} repeats style "${style}"`);
     seenStyles.add(style);
   }
-  if (!font.fallbacks.length) {
-    throw new DocumentError('schema', `Font "${font.id}" needs at least one fallback`);
-  }
-  for (const fallback of font.fallbacks) {
-    assertCssString(fallback, `Font "${font.id}" fallback`);
-  }
-  const last = font.fallbacks[font.fallbacks.length - 1];
+  if (!value.fallbacks.length) throw new DocumentError('schema', `${fontLabel} needs at least one fallback`);
+  for (const fallback of value.fallbacks) assertCssString(fallback, `${fontLabel} fallback`);
+  const last = value.fallbacks[value.fallbacks.length - 1];
   if (!last || !GENERIC_FAMILIES.has(last.toLowerCase())) {
-    throw new DocumentError(
-      'schema',
-      `Font "${font.id}" must end its fallbacks with a generic family such as sans-serif`,
-    );
+    throw new DocumentError('schema', `${fontLabel} must end its fallbacks with a generic family such as sans-serif`);
   }
   assertSource(font, styles);
 }
 
 export function fontStyles(font: FontFamily): FontStyle[] {
-  return font.styles?.length ? [...font.styles] : ['normal'];
+  return font.value.styles?.length ? [...font.value.styles] : ['normal'];
 }
 
 function assertSource(font: FontFamily, styles: readonly FontStyle[]) {
-  const source = font.source;
+  const { source, weights } = font.value;
+  const fontLabel = `Font "${font.uuid}"`;
   if (source.type === 'google') {
-    assertCssString(source.family, `Font "${font.id}" Google family`);
+    assertCssString(source.family, `${fontLabel} Google family`);
     return;
   }
-  if (source.type !== 'file') {
-    throw new DocumentError('schema', `Font "${font.id}" has an unknown source`);
-  }
-  if (!source.files.length) {
-    throw new DocumentError('schema', `Font "${font.id}" needs at least one file`);
-  }
-  for (const file of source.files) assertFaceFile(font.id, file);
-  for (const weight of font.weights) {
+  if (source.type !== 'file') throw new DocumentError('schema', `${fontLabel} has an unknown source`);
+  if (!source.files.length) throw new DocumentError('schema', `${fontLabel} needs at least one file`);
+  for (const file of source.files) assertFaceFile(font.uuid, file);
+  for (const weight of weights) {
     for (const style of styles) {
-      const found = source.files.some((file) => file.weight === weight && file.style === style);
-      if (!found) {
-        throw new DocumentError(
-          'schema',
-          `Font "${font.id}" has no file for weight ${weight} ${style}`,
-        );
+      if (!source.files.some((file) => file.weight === weight && file.style === style)) {
+        throw new DocumentError('schema', `${fontLabel} has no file for weight ${weight} ${style}`);
       }
     }
   }
 }
 
-function assertFaceFile(id: string, file: FontFaceFile) {
+function assertFaceFile(uuid: string, file: FontFaceFile) {
   if (!Number.isInteger(file.weight) || file.weight < 1 || file.weight > 1000) {
-    throw new DocumentError('schema', `Font "${id}" has an invalid file weight`);
+    throw new DocumentError('schema', `Font "${uuid}" has an invalid file weight`);
   }
   if (file.style !== 'normal' && file.style !== 'italic') {
-    throw new DocumentError('schema', `Font "${id}" has an invalid file style`);
+    throw new DocumentError('schema', `Font "${uuid}" has an invalid file style`);
   }
-  assertCssString(file.url, `Font "${id}" file url`);
-  if (file.format !== undefined) assertCssString(file.format, `Font "${id}" file format`);
+  assertCssString(file.url, `Font "${uuid}" file url`);
+  if (file.format !== undefined) assertCssString(file.format, `Font "${uuid}" file format`);
 }
 
 function assertCssString(value: string, label: string) {
   if (typeof value !== 'string' || value.trim() === '' || /[\n\r";{}]/.test(value)) {
     throw new DocumentError('schema', `${label} must be a single CSS token`);
   }
-}
-
-function cloneSource(source: FontSource): FontSource {
-  if (source.type === 'google') return { type: 'google', family: source.family };
-  return {
-    type: 'file',
-    files: source.files.map((file) => {
-      const next: FontFaceFile = { weight: file.weight, style: file.style, url: file.url };
-      if (file.format !== undefined) next.format = file.format;
-      return next;
-    }),
-  };
 }

@@ -9,7 +9,9 @@ import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { withTokenBreakpoint } from '../src/domain/edits/token-edit';
 import { App } from '../src/ui/shell/EditorShell';
 import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
+import { tokenAtPath } from './fixtures/token-tree';
 import { openSettingsDomain } from './settings-navigation';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
 
 const documents = editorStandardCatalog();
 
@@ -67,8 +69,7 @@ describe('radius domain panel', () => {
 
     await submitNewToken('Corner xl');
 
-    const indexed = readTokenTree(session.getSnapshot().design.tokens);
-    expect(indexed.tokens.get('radius.corner.xl')).toMatchObject({
+    expect(tokenAtPath(session.getSnapshot().design.tokens, 'radius.corner.xl')).toMatchObject({
       type: 'dimension',
       value: '8px',
     });
@@ -86,7 +87,7 @@ describe('radius domain panel', () => {
       (host!.querySelector('button[name="remove-radius-radius.sm"]') as HTMLButtonElement).click();
     });
 
-    expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has('radius.sm')).toBe(true);
+    expect(tokenAtPath(session.getSnapshot().design.tokens, 'radius.sm')).toBeDefined();
     expect(session.getSnapshot().notice?.tone).toBe('error');
     expect(session.getSnapshot().notice?.text).toMatch(/\{radius\.sm\}/);
   });
@@ -100,7 +101,7 @@ describe('radius domain panel', () => {
 
     await submitNewToken('   ');
 
-    expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has('radius.corner.xl')).toBe(
+    expect(tokenAtPath(session.getSnapshot().design.tokens, 'radius.corner.xl')).toBe(
       false,
     );
     expect(session.getSnapshot().notice?.tone).toBe('error');
@@ -117,7 +118,7 @@ describe('radius domain panel', () => {
     await submitNewToken('Md');
 
     expect(
-      readTokenTree(session.getSnapshot().design.tokens).tokens.get('radius.md2'),
+      tokenAtPath(session.getSnapshot().design.tokens, 'radius.md2'),
     ).toMatchObject({ type: 'dimension' });
     expect(session.getSnapshot().notice?.tone).not.toBe('error');
   });
@@ -129,19 +130,25 @@ describe('radius domain panel', () => {
     });
     session.executeDesign({
       type: 'setToken',
-      path: 'radius.lg',
-      token: withTokenBreakpoint(session.getSnapshot().design.tokens, 'radius.lg', 'sm', '20px'),
+      family: 'radius',
+      token: withTokenBreakpoint(
+        session.getSnapshot().design.tokens,
+        'radius',
+        fixtureIds.tokens.radius.lg,
+        fixtureIds.catalog.breakpoints.tablet,
+        '20px',
+      ),
     });
 
     await openRadius(session);
     await act(async () => {
-      session.setFocusViewport('sm');
+      session.setFocusViewport(fixtureIds.catalog.breakpoints.tablet);
       session.setEditTarget('viewport');
     });
 
     expect(host!.textContent).toContain('Radius overrides at Tablet');
     const indexedBefore = readTokenTree(session.getSnapshot().design.tokens);
-    expect(indexedBefore.tokens.get('radius.lg')?.breakpoints.sm).toBe('20px');
+    expect(indexedBefore.tokens.get(fixtureIds.tokens.radius.lg)?.breakpoints[fixtureIds.catalog.breakpoints.tablet]).toBe('20px');
 
     const resetButton = host!.querySelector('tr[data-token-path="radius.lg"] .override-cue button');
     expect(resetButton).toBeInstanceOf(HTMLButtonElement);
@@ -150,7 +157,7 @@ describe('radius domain panel', () => {
     });
 
     const indexedAfter = readTokenTree(session.getSnapshot().design.tokens);
-    expect(indexedAfter.tokens.get('radius.lg')?.breakpoints.sm).toBeUndefined();
-    expect(indexedAfter.tokens.get('radius.lg')?.value).toBe('12px');
+    expect(indexedAfter.tokens.get(fixtureIds.tokens.radius.lg)?.breakpoints[fixtureIds.catalog.breakpoints.tablet]).toBeUndefined();
+    expect(indexedAfter.tokens.get(fixtureIds.tokens.radius.lg)?.value).toBe('12px');
   });
 });

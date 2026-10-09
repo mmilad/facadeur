@@ -60,7 +60,7 @@ function seedLegacyDatabase(existingMockAccount: boolean, missingLegacyUser = fa
 
 it.each([false, true])(
   'preserves legacy memberships and creates organisations (existing mock account: %s)',
-  async (existingMockAccount) => {
+  async (existingMockAccount: boolean) => {
     seedLegacyDatabase(existingMockAccount);
     const { user, token } = await apiController.auth.signIn({ email: 'owner@example.test' });
     expect(user.id).toBe(existingMockAccount ? 'current-owner' : 'legacy-owner');

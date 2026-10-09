@@ -1,17 +1,26 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleButtonIds } from '../button/idList';
+import { ids as exampleFormControlsSectionIds } from './idList';
+import { ids as exampleFormFieldRowIds } from '../form-field-row/idList';
+import { ids as exampleFormSegmentedIds } from '../form-segmented/idList';
+import { ids as exampleFormSelectIds } from '../form-select/idList';
+import { ids as exampleFormTextInputIds } from '../form-text-input/idList';
+import { ids as exampleFormToggleIds } from '../form-toggle/idList';
+import { ids as exampleInputIds } from '../input/idList';
+import { ids as exampleTextareaIds } from '../textarea/idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-9280c3526fdf',
+  uuid: exampleFormControlsSectionIds.nodes.root,
   dom: {
     tagName: 'main',
     children: [
       {
-        uuid: '550e8400-e29b-41d4-a716-43207c0dd461',
+        uuid: exampleFormControlsSectionIds.nodes.header1,
         dom: {
           tagName: 'header',
           children: [
             {
-              uuid: '550e8400-e29b-41d4-a716-80269a146dcc',
+              uuid: exampleFormControlsSectionIds.nodes.p1,
               dom: {
                 tagName: 'p',
                 properties: {
@@ -20,7 +29,7 @@ export const root: Node = {
               },
             },
             {
-              uuid: '550e8400-e29b-41d4-a716-a5a5b8692ac7',
+              uuid: exampleFormControlsSectionIds.nodes.h11,
               dom: {
                 tagName: 'h1',
                 properties: {
@@ -29,7 +38,7 @@ export const root: Node = {
               },
             },
             {
-              uuid: '550e8400-e29b-41d4-a716-f2b8cc8c21ad',
+              uuid: exampleFormControlsSectionIds.nodes.p2,
               dom: {
                 tagName: 'p',
                 properties: {
@@ -41,12 +50,12 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-fd4f818e0979',
+        uuid: exampleFormControlsSectionIds.nodes.section1,
         dom: {
           tagName: 'section',
           children: [
             {
-              uuid: '550e8400-e29b-41d4-a716-651400484f10',
+              uuid: exampleFormControlsSectionIds.nodes.h21,
               dom: {
                 tagName: 'h2',
                 properties: {
@@ -55,17 +64,17 @@ export const root: Node = {
               },
             },
             {
-              uuid: '550e8400-e29b-41d4-a716-361db59c8d50',
+              uuid: exampleFormControlsSectionIds.nodes.div1,
               dom: {
                 tagName: 'div',
                 children: [
                   {
-                    uuid: '550e8400-e29b-41d4-a716-c4883b98f72e',
+                    uuid: exampleFormControlsSectionIds.nodes.div2,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-25e4cf782bd0',
+                      definitionRef: exampleInputIds.definition,
                       previewData: {
                         fields: {
                           label: 'Input',
@@ -75,12 +84,12 @@ export const root: Node = {
                     },
                   },
                   {
-                    uuid: '550e8400-e29b-41d4-a716-2bdc5b650ef6',
+                    uuid: exampleFormControlsSectionIds.nodes.div3,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-938b3e6cebc9',
+                      definitionRef: exampleTextareaIds.definition,
                       previewData: {
                         fields: {
                           label: 'Textarea',
@@ -97,12 +106,12 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-6481df4e9979',
+        uuid: exampleFormControlsSectionIds.nodes.section2,
         dom: {
           tagName: 'section',
           children: [
             {
-              uuid: '550e8400-e29b-41d4-a716-7e7e2149da7b',
+              uuid: exampleFormControlsSectionIds.nodes.h22,
               dom: {
                 tagName: 'h2',
                 properties: {
@@ -111,17 +120,17 @@ export const root: Node = {
               },
             },
             {
-              uuid: '550e8400-e29b-41d4-a716-bd900793cbe7',
+              uuid: exampleFormControlsSectionIds.nodes.div4,
               dom: {
                 tagName: 'div',
                 children: [
                   {
-                    uuid: '550e8400-e29b-41d4-a716-e24d2274ea9b',
+                    uuid: exampleFormControlsSectionIds.nodes.div5,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-5b0d897613d9',
+                      definitionRef: exampleFormTextInputIds.definition,
                       previewData: {
                         fields: {
                           label: 'Label',
@@ -132,12 +141,12 @@ export const root: Node = {
                     },
                   },
                   {
-                    uuid: '550e8400-e29b-41d4-a716-87a144b7fc60',
+                    uuid: exampleFormControlsSectionIds.nodes.div6,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-5b0d897613d9',
+                      definitionRef: exampleFormTextInputIds.definition,
                       previewData: {
                         fields: {
                           label: 'Label',
@@ -150,12 +159,12 @@ export const root: Node = {
                     },
                   },
                   {
-                    uuid: '550e8400-e29b-41d4-a716-1f8ee1d5ffb5',
+                    uuid: exampleFormControlsSectionIds.nodes.div7,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-5b0d897613d9',
+                      definitionRef: exampleFormTextInputIds.definition,
                       previewData: {
                         fields: {
                           label: 'Label',
@@ -166,12 +175,12 @@ export const root: Node = {
                     },
                   },
                   {
-                    uuid: '550e8400-e29b-41d4-a716-b92066be3b26',
+                    uuid: exampleFormControlsSectionIds.nodes.div8,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-5b0d897613d9',
+                      definitionRef: exampleFormTextInputIds.definition,
                       previewData: {
                         fields: {
                           label: 'Label',
@@ -188,12 +197,12 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-6510a1394894',
+        uuid: exampleFormControlsSectionIds.nodes.section3,
         dom: {
           tagName: 'section',
           children: [
             {
-              uuid: '550e8400-e29b-41d4-a716-57dbc9b5a6f4',
+              uuid: exampleFormControlsSectionIds.nodes.h23,
               dom: {
                 tagName: 'h2',
                 properties: {
@@ -202,17 +211,17 @@ export const root: Node = {
               },
             },
             {
-              uuid: '550e8400-e29b-41d4-a716-4fc06ca21d9e',
+              uuid: exampleFormControlsSectionIds.nodes.div9,
               dom: {
                 tagName: 'div',
                 children: [
                   {
-                    uuid: '550e8400-e29b-41d4-a716-05dd9039d109',
+                    uuid: exampleFormControlsSectionIds.nodes.div10,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-f8e2f06df0c0',
+                      definitionRef: exampleFormSelectIds.definition,
                       previewData: {
                         fields: {
                           label: 'Token',
@@ -222,12 +231,12 @@ export const root: Node = {
                     },
                   },
                   {
-                    uuid: '550e8400-e29b-41d4-a716-71a4f36efca2',
+                    uuid: exampleFormControlsSectionIds.nodes.div11,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-f8e2f06df0c0',
+                      definitionRef: exampleFormSelectIds.definition,
                       previewData: {
                         fields: {
                           label: 'Property',
@@ -237,12 +246,12 @@ export const root: Node = {
                     },
                   },
                   {
-                    uuid: '550e8400-e29b-41d4-a716-5291b3f89b45',
+                    uuid: exampleFormControlsSectionIds.nodes.div12,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-f8e2f06df0c0',
+                      definitionRef: exampleFormSelectIds.definition,
                       previewData: {
                         fields: {
                           label: 'Breakpoint',
@@ -252,12 +261,12 @@ export const root: Node = {
                     },
                   },
                   {
-                    uuid: '550e8400-e29b-41d4-a716-660046e254aa',
+                    uuid: exampleFormControlsSectionIds.nodes.div13,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-7f116e554c91',
+                      definitionRef: exampleFormSegmentedIds.definition,
                       previewData: {
                         fields: {
                           label: 'Alignment',
@@ -266,12 +275,12 @@ export const root: Node = {
                     },
                   },
                   {
-                    uuid: '550e8400-e29b-41d4-a716-23fc6c60f37d',
+                    uuid: exampleFormControlsSectionIds.nodes.div14,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-f2a049c2b58c',
+                      definitionRef: exampleFormToggleIds.definition,
                       previewData: {
                         fields: {
                           label: 'Use token',
@@ -281,12 +290,12 @@ export const root: Node = {
                     },
                   },
                   {
-                    uuid: '550e8400-e29b-41d4-a716-d44188855366',
+                    uuid: exampleFormControlsSectionIds.nodes.div15,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-f2a049c2b58c',
+                      definitionRef: exampleFormToggleIds.definition,
                       previewData: {
                         fields: {
                           label: 'Use token',
@@ -296,12 +305,12 @@ export const root: Node = {
                     },
                   },
                   {
-                    uuid: '550e8400-e29b-41d4-a716-7e54bf99bd69',
+                    uuid: exampleFormControlsSectionIds.nodes.div16,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-f2a049c2b58c',
+                      definitionRef: exampleFormToggleIds.definition,
                       previewData: {
                         fields: {
                           label: 'Use token',
@@ -317,12 +326,12 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-8dd87b56aa44',
+        uuid: exampleFormControlsSectionIds.nodes.section4,
         dom: {
           tagName: 'section',
           children: [
             {
-              uuid: '550e8400-e29b-41d4-a716-193e0fb22803',
+              uuid: exampleFormControlsSectionIds.nodes.h24,
               dom: {
                 tagName: 'h2',
                 properties: {
@@ -331,7 +340,7 @@ export const root: Node = {
               },
             },
             {
-              uuid: '550e8400-e29b-41d4-a716-7a555a28cf19',
+              uuid: exampleFormControlsSectionIds.nodes.p3,
               dom: {
                 tagName: 'p',
                 properties: {
@@ -341,17 +350,17 @@ export const root: Node = {
               },
             },
             {
-              uuid: '550e8400-e29b-41d4-a716-ee20bb561fa2',
+              uuid: exampleFormControlsSectionIds.nodes.div17,
               dom: {
                 tagName: 'div',
                 children: [
                   {
-                    uuid: '550e8400-e29b-41d4-a716-4d8c265fc6b4',
+                    uuid: exampleFormControlsSectionIds.nodes.div18,
                     dom: {
                       tagName: 'div',
                       children: [
                         {
-                          uuid: '550e8400-e29b-41d4-a716-8201e3dd29e8',
+                          uuid: exampleFormControlsSectionIds.nodes.span1,
                           dom: {
                             tagName: 'span',
                             properties: {
@@ -360,7 +369,7 @@ export const root: Node = {
                           },
                         },
                         {
-                          uuid: '550e8400-e29b-41d4-a716-cc5f9aec8fcc',
+                          uuid: exampleFormControlsSectionIds.nodes.span2,
                           dom: {
                             tagName: 'span',
                             properties: {
@@ -369,7 +378,7 @@ export const root: Node = {
                           },
                         },
                         {
-                          uuid: '550e8400-e29b-41d4-a716-901a40affa58',
+                          uuid: exampleFormControlsSectionIds.nodes.span3,
                           dom: {
                             tagName: 'span',
                             properties: {
@@ -381,12 +390,12 @@ export const root: Node = {
                     },
                   },
                   {
-                    uuid: '550e8400-e29b-41d4-a716-19c3680a430b',
+                    uuid: exampleFormControlsSectionIds.nodes.div19,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-0ad56ad3cd47',
+                      definitionRef: exampleFormFieldRowIds.definition,
                       previewData: {
                         fields: {
                           name: 'label',
@@ -397,12 +406,12 @@ export const root: Node = {
                     },
                   },
                   {
-                    uuid: '550e8400-e29b-41d4-a716-4a4e8e443ef3',
+                    uuid: exampleFormControlsSectionIds.nodes.div20,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-0ad56ad3cd47',
+                      definitionRef: exampleFormFieldRowIds.definition,
                       previewData: {
                         fields: {
                           name: 'tone',
@@ -413,12 +422,12 @@ export const root: Node = {
                     },
                   },
                   {
-                    uuid: '550e8400-e29b-41d4-a716-fe1ffa36c96e',
+                    uuid: exampleFormControlsSectionIds.nodes.div21,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-0ad56ad3cd47',
+                      definitionRef: exampleFormFieldRowIds.definition,
                       previewData: {
                         fields: {
                           name: 'disabled',
@@ -432,12 +441,12 @@ export const root: Node = {
               },
             },
             {
-              uuid: '550e8400-e29b-41d4-a716-fea978fe42d5',
+              uuid: exampleFormControlsSectionIds.nodes.div22,
               dom: {
                 tagName: 'div',
               },
               config: {
-                definitionRef: '550e8400-e29b-41d4-a716-0000000003e9',
+                definitionRef: exampleButtonIds.definition,
                 previewData: {
                   fields: {
                     label: '+ Add field',
@@ -449,12 +458,12 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-512672ca1308',
+        uuid: exampleFormControlsSectionIds.nodes.section5,
         dom: {
           tagName: 'section',
           children: [
             {
-              uuid: '550e8400-e29b-41d4-a716-c6fd7caed91d',
+              uuid: exampleFormControlsSectionIds.nodes.h25,
               dom: {
                 tagName: 'h2',
                 properties: {
@@ -463,17 +472,17 @@ export const root: Node = {
               },
             },
             {
-              uuid: '550e8400-e29b-41d4-a716-af432fa6c60e',
+              uuid: exampleFormControlsSectionIds.nodes.div23,
               dom: {
                 tagName: 'div',
                 children: [
                   {
-                    uuid: '550e8400-e29b-41d4-a716-7556179df652',
+                    uuid: exampleFormControlsSectionIds.nodes.div24,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-5b0d897613d9',
+                      definitionRef: exampleFormTextInputIds.definition,
                       previewData: {
                         fields: {
                           label: 'field.label',
@@ -485,12 +494,12 @@ export const root: Node = {
                     },
                   },
                   {
-                    uuid: '550e8400-e29b-41d4-a716-f5f4f9411e01',
+                    uuid: exampleFormControlsSectionIds.nodes.div25,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-938b3e6cebc9',
+                      definitionRef: exampleTextareaIds.definition,
                       previewData: {
                         fields: {
                           label: 'field.label',
@@ -502,12 +511,12 @@ export const root: Node = {
                     },
                   },
                   {
-                    uuid: '550e8400-e29b-41d4-a716-0b0aa9b18bcf',
+                    uuid: exampleFormControlsSectionIds.nodes.div26,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-f8e2f06df0c0',
+                      definitionRef: exampleFormSelectIds.definition,
                       previewData: {
                         fields: {
                           label: 'field.label',
@@ -517,12 +526,12 @@ export const root: Node = {
                     },
                   },
                   {
-                    uuid: '550e8400-e29b-41d4-a716-84e342c1a0de',
+                    uuid: exampleFormControlsSectionIds.nodes.div27,
                     dom: {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-f2a049c2b58c',
+                      definitionRef: exampleFormToggleIds.definition,
                       previewData: {
                         fields: {
                           label: 'field.label',

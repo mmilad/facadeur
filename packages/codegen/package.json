@@ -16,6 +16,7 @@
     "@facadeur/tokens": "workspace:*"
   },
   "devDependencies": {
+    "@facadeur/examples": "workspace:*",
     "@types/node": "^22.19.0",
     "prettier": "^3.6.2",
     "typescript": "^5.9.2",

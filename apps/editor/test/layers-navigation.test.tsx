@@ -8,6 +8,7 @@ import { createProjectTemplateDocument } from '@facadeur/tokens';
 import button from '../../../examples/button.json';
 import { createEditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
 
 afterEach(cleanup);
 function setup() {
@@ -148,6 +149,6 @@ it('folds layer branches and reveals a descendant selected on the stage', async 
   act(() => session.selectNode('child'));
   expect(layers.getByRole('button', { name: 'instance child' })).toBeVisible();
   expect(layers.queryByText('Viewports')).not.toBeInTheDocument();
-  act(() => session.selectViewport('tablet'));
+  act(() => session.selectViewport(fixtureIds.catalog.breakpoints.tablet));
   expect(layers.queryByText('Viewports')).not.toBeInTheDocument();
 });

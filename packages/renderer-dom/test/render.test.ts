@@ -1,8 +1,6 @@
 /**
  * @vitest-environment jsdom
  */
-import { readFileSync, readdirSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   resolveVariantDocument,
@@ -22,22 +20,6 @@ import {
 } from '@facadeur/renderer-dom';
 import { resolveDocumentFields, resolveInstance } from '../src/resolve';
 import { renderedNode, renderedNodes } from './rendered-node';
-
-const examplesDir = resolve(process.cwd(), 'examples');
-
-function exampleSchemaCatalog(): SchemaCatalog {
-  const raw = JSON.parse(readFileSync(resolve(examplesDir, 'schemas.json'), 'utf8')) as {
-    schemas: SchemaCatalog['schemas'];
-  };
-  return { schemas: raw.schemas };
-}
-
-function examples(): DocumentFile[] {
-  const raw = readdirSync(examplesDir)
-    .filter((name) => name.endsWith('.json') && name !== 'schemas.json')
-    .map((name) => JSON.parse(readFileSync(resolve(examplesDir, name), 'utf8')) as unknown);
-  return validateCatalog(raw, { schemaCatalog: exampleSchemaCatalog() });
-}
 
 describe('renderer', () => {
   it('selects the first matching switch child and keeps the switch transparent', () => {
@@ -756,9 +738,23 @@ describe('renderer', () => {
   });
 
   it('expands instances, bindings, and variant data attributes', () => {
-    const documents = examples();
-    const button = documents.find((document) => document.id === 'button');
-    if (!button) throw new Error('missing button');
+    const button: DocumentFile = {
+      version: 1,
+      id: 'button',
+      name: 'Button',
+      kind: 'atom',
+      fields: [{ name: 'label', type: 'text' }],
+      variants: [
+        { name: 'tone', values: ['primary', 'ghost'], default: 'primary' },
+        { name: 'size', values: ['md', 'sm'], default: 'md' },
+      ],
+      root: {
+        id: 'root',
+        type: 'text',
+        tag: 'button',
+        bindings: [{ field: 'label', target: 'text' }],
+      },
+    };
     const host = document.createElement('div');
     const page: DocumentFile = {
       version: 1,
@@ -935,32 +931,6 @@ describe('renderer', () => {
     ).not.toHaveProperty('fields');
   });
 
-  it('paints the specimen page with nested instance ids', () => {
-    const documents = examples();
-    const page = documents.find((document) => document.id === 'specimen');
-    if (!page) throw new Error('missing page');
-    const host = document.createElement('div');
-    const records = renderDocument(page, documents, host, {
-      schemaCatalog: exampleSchemaCatalog(),
-    });
-    expect(renderedNode(host, 'specimen-section/intro/heading')?.textContent).toBe('Specimen');
-    expect(renderedNode(host, 'specimen-section/buttons/button-row/btn-primary')?.textContent).toBe(
-      'Primary',
-    );
-    expect(
-      renderedNode(host, 'specimen-section/cards/card-row/card-notes/title')?.textContent,
-    ).toBe('Field notes');
-    expect(
-      renderedNode(host, 'specimen-section/cards/card-row/card-signin/email/control')?.getAttribute(
-        'value',
-      ),
-    ).toBe('ada@atelier.test');
-    expect(records.get('specimen-section/cards/card-row/card-signin/continue')?.component).toBe(
-      'button',
-    );
-    expect(renderedNode(host, 'specimen-section')?.getAttribute('style')).toBeNull();
-  });
-
   it('skips event-handler attributes and shows an unknown component', () => {
     const page: DocumentFile = {
       version: 1,
@@ -995,15 +965,21 @@ describe('renderer', () => {
     document.body.append(iframe);
     const frameDocument = iframe.contentDocument;
     if (!frameDocument?.body) throw new Error('iframe has no document');
-    const documents = examples();
-    const page = documents.find((entry) => entry.id === 'specimen');
-    if (!page) throw new Error('missing page');
-    renderDocument(page, documents, frameDocument.body, {
-      schemaCatalog: exampleSchemaCatalog(),
-    });
-    const heading = renderedNode(frameDocument, 'specimen-section/intro/heading');
+    const page: DocumentFile = {
+      version: 1,
+      id: 'iframe-page',
+      name: 'Iframe page',
+      kind: 'page',
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [{ id: 'heading', type: 'text', tag: 'h1', text: 'Hosted in iframe' }],
+      },
+    };
+    renderDocument(page, [page], frameDocument.body);
+    const heading = renderedNode(frameDocument, 'heading');
     expect(heading?.ownerDocument).toBe(frameDocument);
-    expect(heading?.textContent).toBe('Specimen');
+    expect(heading?.textContent).toBe('Hosted in iframe');
     expect(document.body.contains(heading)).toBe(false);
     iframe.remove();
   });
@@ -1040,9 +1016,18 @@ describe('renderer', () => {
   });
 
   it('paints an atom root only when paintRoot is set', () => {
-    const documents = examples();
-    const button = documents.find((document) => document.id === 'button');
-    if (!button) throw new Error('missing button');
+    const button: DocumentFile = {
+      version: 1,
+      id: 'button',
+      name: 'Button',
+      kind: 'atom',
+      variants: [
+        { name: 'tone', values: ['primary'], default: 'primary' },
+        { name: 'size', values: ['md'], default: 'md' },
+      ],
+      root: { id: 'root', type: 'text', tag: 'button', text: 'Continue' },
+    };
+    const documents = [button];
     const hidden = document.createElement('div');
     renderDocument(button, documents, hidden);
     expect(renderedNode(hidden, 'root')).toBeNull();
@@ -1051,7 +1036,7 @@ describe('renderer', () => {
     renderDocument(button, documents, shown, { paintRoot: true });
     const root = renderedNode(shown, 'root');
     expect(root?.tagName).toBe('BUTTON');
-    expect(root?.textContent).toBe('');
+    expect(root?.textContent).toBe('Continue');
     expect(root?.getAttribute('data-component')).toBe('button');
     expect(root?.getAttribute('data-variant-tone')).toBe('primary');
     expect(root?.getAttribute('data-variant-size')).toBe('md');
@@ -1305,8 +1290,39 @@ describe('renderer', () => {
   });
 
   it('renders the data-driven media example with mutually exclusive branches', () => {
-    const media = examples().find((document) => document.id === 'media');
-    if (!media) throw new Error('missing media example');
+    const media: DocumentFile = {
+      version: 1,
+      id: 'media',
+      name: 'Media',
+      kind: 'component',
+      fields: [
+        { name: 'src', type: 'text' },
+        { name: 'alt', type: 'text' },
+        { name: 'kind', type: 'enum', options: ['image', 'video'] },
+      ],
+      root: {
+        id: 'root',
+        type: 'frame',
+        children: [
+          {
+            id: 'image',
+            type: 'image',
+            displayOn: { path: 'kind', equals: 'image' },
+            bindings: [
+              { field: 'src', target: 'src' },
+              { field: 'alt', target: 'alt' },
+            ],
+          },
+          {
+            id: 'video',
+            type: 'frame',
+            tag: 'video',
+            displayOn: { path: 'kind', equals: 'video' },
+            bindings: [{ field: 'src', target: 'src' }],
+          },
+        ],
+      },
+    };
     const host: DocumentFile = {
       version: 1,
       id: 'media-host',
@@ -1331,10 +1347,9 @@ describe('renderer', () => {
         ],
       },
     };
-    const schemaCatalog = exampleSchemaCatalog();
-    expect(() => validateCatalog([host, media], { schemaCatalog })).not.toThrow();
+    expect(() => validateCatalog([host, media])).not.toThrow();
     const element = document.createElement('div');
-    renderDocument(host, [host, media], element, { paintRoot: true, schemaCatalog });
+    renderDocument(host, [host, media], element, { paintRoot: true });
     expect(renderedNode(element, 'root/image/image')?.getAttribute('src')).toBe('/cover.png');
     expect(renderedNode(element, 'root/image/video')).toBeNull();
     expect(renderedNode(element, 'root/video/video')?.getAttribute('src')).toBe('/intro.mp4');

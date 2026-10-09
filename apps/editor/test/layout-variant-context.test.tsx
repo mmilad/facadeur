@@ -10,6 +10,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { LayoutPanel } from '../src/ui/sidebar/properties/layout/LayoutPanel';
 import { editorStandardDesign, expandExampleCatalog } from './fixtures/example-catalog';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 const layoutDocument: DocumentFile = {
   version: 1,
@@ -18,13 +19,18 @@ const layoutDocument: DocumentFile = {
   kind: 'component',
   settings: {
     breakpoints: [
-      { id: 'mobile', minWidth: 375 },
-      { id: 'tablet', minWidth: 768 },
-      { id: 'desktop', minWidth: 1440 },
+      { uuid: fixtureIds.catalog.breakpoints.phone, label: 'Phone', minWidth: 375 },
+      { uuid: fixtureIds.catalog.breakpoints.tablet, label: 'Tablet', minWidth: 768 },
+      { uuid: fixtureIds.catalog.breakpoints.desktop, label: 'Desktop', minWidth: 1440 },
     ],
   },
   tokenInterface: {
-    reads: ['space.gap.xs', 'space.gap.sm', 'space.gap.md', 'space.gap.lg'],
+    reads: [
+      fixtureIds.tokens.space.gap.xs,
+      fixtureIds.tokens.space.gap.sm,
+      fixtureIds.tokens.space.gap.md,
+      fixtureIds.tokens.space.gap.lg,
+    ],
   },
   variants: [
     { name: 'default' },
@@ -35,10 +41,15 @@ const layoutDocument: DocumentFile = {
           root: {
             layout: {
               direction: 'row',
-              gap: '{space.gap.sm}',
+              gap: fixtureTokenRef(fixtureIds.tokens.space.gap.sm),
               breakpoints: {
-                tablet: { direction: 'column', gap: '{space.gap.md}' },
-                desktop: { gap: '{space.gap.lg}' },
+                [fixtureIds.catalog.breakpoints.tablet]: {
+                  direction: 'column',
+                  gap: fixtureTokenRef(fixtureIds.tokens.space.gap.md),
+                },
+                [fixtureIds.catalog.breakpoints.desktop]: {
+                  gap: fixtureTokenRef(fixtureIds.tokens.space.gap.lg),
+                },
               },
             },
           },
@@ -51,14 +62,16 @@ const layoutDocument: DocumentFile = {
     type: 'frame',
     layout: {
       direction: 'column',
-      gap: '{space.gap.xs}',
+      gap: fixtureTokenRef(fixtureIds.tokens.space.gap.xs),
       position: 'absolute',
       x: 10,
       y: 20,
       wrap: true,
       breakpoints: {
-        tablet: {},
-        desktop: { gap: '{space.gap.lg}' },
+        [fixtureIds.catalog.breakpoints.tablet]: {},
+        [fixtureIds.catalog.breakpoints.desktop]: {
+          gap: fixtureTokenRef(fixtureIds.tokens.space.gap.lg),
+        },
       },
     },
     children: [],
@@ -149,7 +162,7 @@ describe('LayoutPanel variant and viewport context', () => {
   it.each([false, true])('writes a sparse tablet mode override (variant: %s)', async (variant) => {
     const session = setup();
     if (variant) chooseVariant(session);
-    session.setFocusViewport('tablet');
+    session.setFocusViewport(fixtureIds.catalog.breakpoints.tablet);
     session.setEditTarget('viewport');
     render(<LayoutHarness session={session} />);
     const before = structuredClone(session.getSnapshot().document);
@@ -159,7 +172,11 @@ describe('LayoutPanel variant and viewport context', () => {
     const styles = variant
       ? compactPreset(session)?.overrides?.styles
       : session.getSnapshot().document.styles;
-    expect(styles).toEqual({ breakpoints: { tablet: { declarations: { display: 'block' } } } });
+    expect(styles).toEqual({
+      breakpoints: {
+        [fixtureIds.catalog.breakpoints.tablet]: { declarations: { display: 'block' } },
+      },
+    });
     expect(session.getSnapshot().document.nodes).toEqual(before.nodes);
     if (variant) {
       expect(session.getSnapshot().document.styles).toEqual(before.styles);
@@ -175,7 +192,11 @@ describe('LayoutPanel variant and viewport context', () => {
       const document = structuredClone(layoutDocument);
       const styles = {
         declarations: { display: 'block', color: 'red' },
-        breakpoints: { tablet: { declarations: { display: 'flex', opacity: '0.5' } } },
+        breakpoints: {
+          [fixtureIds.catalog.breakpoints.tablet]: {
+            declarations: { display: 'flex', opacity: '0.5' },
+          },
+        },
       };
       if (variant) {
         const preset = document.variants![1]!;
@@ -205,13 +226,17 @@ describe('LayoutPanel variant and viewport context', () => {
   it('undoes a variant tablet mode edit in one step', async () => {
     const session = setup();
     chooseVariant(session);
-    session.setFocusViewport('tablet');
+    session.setFocusViewport(fixtureIds.catalog.breakpoints.tablet);
     session.setEditTarget('viewport');
     render(<LayoutHarness session={session} />);
     const before = structuredClone(session.getSnapshot().document);
 
     await userEvent.setup().click(screen.getByRole('button', { name: 'None' }));
-    expect(compactPreset(session)?.overrides?.styles?.breakpoints?.tablet).toEqual({
+    expect(
+      compactPreset(session)?.overrides?.styles?.breakpoints?.[
+        fixtureIds.catalog.breakpoints.tablet
+      ],
+    ).toEqual({
       declarations: { display: 'block' },
     });
     await act(async () => session.undo());
@@ -326,7 +351,7 @@ describe('LayoutPanel variant and viewport context', () => {
   it('shows inherited earlier breakpoint fields at a wider viewport', () => {
     const session = setup();
     chooseVariant(session);
-    session.setFocusViewport('desktop');
+    session.setFocusViewport(fixtureIds.catalog.breakpoints.desktop);
     session.setEditTarget('viewport');
     render(<LayoutHarness session={session} />);
 
@@ -336,7 +361,7 @@ describe('LayoutPanel variant and viewport context', () => {
 
   it('writes a sparse base breakpoint override with only the changed field', async () => {
     const session = setup();
-    session.setFocusViewport('tablet');
+    session.setFocusViewport(fixtureIds.catalog.breakpoints.tablet);
     session.setEditTarget('viewport');
     render(<LayoutHarness session={session} />);
 
@@ -344,7 +369,11 @@ describe('LayoutPanel variant and viewport context', () => {
       fireEvent.click(directionButton('row'));
     });
 
-    expect(session.getSnapshot().document.nodes.root?.layout?.breakpoints?.tablet).toEqual({
+    expect(
+      session.getSnapshot().document.nodes.root?.layout?.breakpoints?.[
+        fixtureIds.catalog.breakpoints.tablet
+      ],
+    ).toEqual({
       direction: 'row',
     });
   });
@@ -357,10 +386,15 @@ describe('LayoutPanel variant and viewport context', () => {
     await userEvent.setup().click(screen.getByRole('button', { name: 'Reset layout direction' }));
 
     expect(compactPreset(session)?.overrides?.nodes?.root?.layout).toEqual({
-      gap: '{space.gap.sm}',
+      gap: fixtureTokenRef(fixtureIds.tokens.space.gap.sm),
       breakpoints: {
-        tablet: { direction: 'column', gap: '{space.gap.md}' },
-        desktop: { gap: '{space.gap.lg}' },
+        [fixtureIds.catalog.breakpoints.tablet]: {
+          direction: 'column',
+          gap: fixtureTokenRef(fixtureIds.tokens.space.gap.md),
+        },
+        [fixtureIds.catalog.breakpoints.desktop]: {
+          gap: fixtureTokenRef(fixtureIds.tokens.space.gap.lg),
+        },
       },
     });
     expect(directionButton('column')).toHaveAttribute('aria-pressed', 'true');
@@ -369,15 +403,19 @@ describe('LayoutPanel variant and viewport context', () => {
   it('resets one breakpoint field while retaining other breakpoint overrides', async () => {
     const session = setup();
     chooseVariant(session);
-    session.setFocusViewport('tablet');
+    session.setFocusViewport(fixtureIds.catalog.breakpoints.tablet);
     session.setEditTarget('viewport');
     render(<LayoutHarness session={session} />);
 
     await userEvent.setup().click(screen.getByRole('button', { name: 'Reset layout direction' }));
 
     expect(compactPreset(session)?.overrides?.nodes?.root?.layout?.breakpoints).toEqual({
-      tablet: { gap: '{space.gap.md}' },
-      desktop: { gap: '{space.gap.lg}' },
+      [fixtureIds.catalog.breakpoints.tablet]: {
+        gap: fixtureTokenRef(fixtureIds.tokens.space.gap.md),
+      },
+      [fixtureIds.catalog.breakpoints.desktop]: {
+        gap: fixtureTokenRef(fixtureIds.tokens.space.gap.lg),
+      },
     });
   });
 

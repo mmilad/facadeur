@@ -11,13 +11,13 @@ export function insertDesign(
   const created: CSSRule[] = [];
   let index = 0;
   for (const font of design.fonts) {
-    if (font.source.type !== 'google') continue;
+    if (font.value.source.type !== 'google') continue;
     const rule = insertAt(sheet, `@import url("${cssString(googleFontUrl(font))}");`, index);
     created.push(rule);
     index += 1;
   }
   for (const font of design.fonts) {
-    if (font.source.type !== 'file') continue;
+    if (font.value.source.type !== 'file') continue;
     for (const text of fontFaceTexts(font)) {
       created.push(insertAt(sheet, text, index));
       index += 1;
@@ -30,11 +30,11 @@ export function insertDesign(
     created.push(insertAt(sheet, `${selector} {${declarationsText(base)}}`, index));
     index += 1;
   }
-  const baseId = design.breakpoints[0]?.id;
+  const baseId = design.breakpoints[0]?.uuid;
   for (const breakpoint of design.breakpoints) {
-    if (breakpoint.id === baseId) continue;
+    if (breakpoint.uuid === baseId) continue;
     const declarations = design.properties.flatMap((property) => {
-      const value = property.breakpoints[breakpoint.id];
+      const value = property.breakpoints[breakpoint.uuid];
       return value === undefined ? [] : [[property.name, value] as [string, string]];
     });
     if (!declarations.length) continue;
@@ -46,9 +46,9 @@ export function insertDesign(
 }
 
 function fontFaceTexts(font: FontFamily): string[] {
-  if (font.source.type !== 'file') return [];
-  return font.source.files.map((file) => {
+  if (font.value.source.type !== 'file') return [];
+  return font.value.source.files.map((file) => {
     const format = file.format ? ` format("${cssString(file.format)}")` : '';
-    return `@font-face { font-family: ${quoteFamily(font.family)}; font-style: ${file.style}; font-weight: ${file.weight}; src: url("${cssString(file.url)}")${format}; }`;
+    return `@font-face { font-family: ${quoteFamily(font.value.family)}; font-style: ${file.style}; font-weight: ${file.weight}; src: url("${cssString(file.url)}")${format}; }`;
   });
 }

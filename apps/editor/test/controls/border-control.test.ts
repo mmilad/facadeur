@@ -8,6 +8,7 @@ import {
   serializeBorderRadius,
   uniformRadiusValue,
 } from '../../src/ui/controls/border/value';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 describe('border control value', () => {
   it('parses border shorthand', () => {
@@ -19,42 +20,59 @@ describe('border control value', () => {
   });
 
   it('reads border from shorthand declarations', () => {
-    expect(readBorder({ border: '1px solid {color.border.default}' })).toEqual({
+    expect(
+      readBorder({
+        border: '1px solid ' + fixtureTokenRef(fixtureIds.tokens.color.border.default),
+      }),
+    ).toEqual({
       width: '1px',
       style: 'solid',
-      color: '{color.border.default}',
+      color: fixtureTokenRef(fixtureIds.tokens.color.border.default),
     });
   });
 
   it('merges longhands with a shorthand without dropping shorthand fields', () => {
-    expect(readBorder({ border: '1px solid red', borderColor: '{color.border.default}' })).toEqual({
+    expect(
+      readBorder({
+        border: '1px solid red',
+        borderColor: fixtureTokenRef(fixtureIds.tokens.color.border.default),
+      }),
+    ).toEqual({
       width: '1px',
       style: 'solid',
-      color: '{color.border.default}',
+      color: fixtureTokenRef(fixtureIds.tokens.color.border.default),
     });
   });
 
   it('serializes border to longhands when width and color are set', () => {
     expect(
-      serializeBorder({ width: '1px', style: 'solid', color: '{color.border.default}' }),
+      serializeBorder({
+        width: '1px',
+        style: 'solid',
+        color: fixtureTokenRef(fixtureIds.tokens.color.border.default),
+      }),
     ).toEqual({
       borderWidth: '1px',
       borderStyle: 'solid',
-      borderColor: '{color.border.default}',
+      borderColor: fixtureTokenRef(fixtureIds.tokens.color.border.default),
     });
   });
 
   it('reads uniform border radius', () => {
-    expect(readBorderRadius({ borderRadius: '{radius.full}' })).toEqual({
+    expect(
+      readBorderRadius({ borderRadius: fixtureTokenRef(fixtureIds.tokens.radius.full) }),
+    ).toEqual({
       mode: 'uniform',
-      value: '{radius.full}',
+      value: fixtureTokenRef(fixtureIds.tokens.radius.full),
     });
   });
 
   it('reads kebab-case border radius shorthand', () => {
-    expect(readBorderRadius({ 'border-radius': '{radius.full}' })).toEqual({
+    expect(
+      readBorderRadius({ 'border-radius': fixtureTokenRef(fixtureIds.tokens.radius.full) }),
+    ).toEqual({
       mode: 'uniform',
-      value: '{radius.full}',
+      value: fixtureTokenRef(fixtureIds.tokens.radius.full),
     });
   });
 
@@ -76,16 +94,16 @@ describe('border control value', () => {
   it('round-trips per-corner radius', () => {
     const corners = {
       mode: 'corners' as const,
-      topLeft: '{radius.sm}',
-      topRight: '{radius.md}',
-      bottomRight: '{radius.md}',
-      bottomLeft: '{radius.sm}',
+      topLeft: fixtureTokenRef(fixtureIds.tokens.radius.sm),
+      topRight: fixtureTokenRef(fixtureIds.tokens.radius.md),
+      bottomRight: fixtureTokenRef(fixtureIds.tokens.radius.md),
+      bottomLeft: fixtureTokenRef(fixtureIds.tokens.radius.sm),
     };
     expect(serializeBorderRadius(corners)).toEqual({
-      borderTopLeftRadius: '{radius.sm}',
-      borderTopRightRadius: '{radius.md}',
-      borderBottomRightRadius: '{radius.md}',
-      borderBottomLeftRadius: '{radius.sm}',
+      borderTopLeftRadius: fixtureTokenRef(fixtureIds.tokens.radius.sm),
+      borderTopRightRadius: fixtureTokenRef(fixtureIds.tokens.radius.md),
+      borderBottomRightRadius: fixtureTokenRef(fixtureIds.tokens.radius.md),
+      borderBottomLeftRadius: fixtureTokenRef(fixtureIds.tokens.radius.sm),
     });
     expect(readBorderRadius(serializeBorderRadius(corners))).toEqual(corners);
   });
@@ -94,19 +112,19 @@ describe('border control value', () => {
     expect(
       uniformRadiusValue({
         mode: 'corners',
-        topLeft: '{radius.sm}',
-        topRight: '{radius.sm}',
-        bottomRight: '{radius.sm}',
-        bottomLeft: '{radius.sm}',
+        topLeft: fixtureTokenRef(fixtureIds.tokens.radius.sm),
+        topRight: fixtureTokenRef(fixtureIds.tokens.radius.sm),
+        bottomRight: fixtureTokenRef(fixtureIds.tokens.radius.sm),
+        bottomLeft: fixtureTokenRef(fixtureIds.tokens.radius.sm),
       }),
-    ).toBe('{radius.sm}');
+    ).toBe(fixtureTokenRef(fixtureIds.tokens.radius.sm));
     expect(
       uniformRadiusValue({
         mode: 'corners',
-        topLeft: '{radius.sm}',
-        topRight: '{radius.md}',
-        bottomRight: '{radius.sm}',
-        bottomLeft: '{radius.sm}',
+        topLeft: fixtureTokenRef(fixtureIds.tokens.radius.sm),
+        topRight: fixtureTokenRef(fixtureIds.tokens.radius.md),
+        bottomRight: fixtureTokenRef(fixtureIds.tokens.radius.sm),
+        bottomLeft: fixtureTokenRef(fixtureIds.tokens.radius.sm),
       }),
     ).toBeNull();
   });
@@ -132,14 +150,14 @@ describe('border control value', () => {
     expect(
       serializeBorderRadius({
         mode: 'corners',
-        topLeft: '{radius.lg}',
-        topRight: '{radius.md}',
-        bottomRight: '{radius.md}',
-        bottomLeft: '{radius.md}',
+        topLeft: fixtureTokenRef(fixtureIds.tokens.radius.lg),
+        topRight: fixtureTokenRef(fixtureIds.tokens.radius.md),
+        bottomRight: fixtureTokenRef(fixtureIds.tokens.radius.md),
+        bottomLeft: fixtureTokenRef(fixtureIds.tokens.radius.md),
       }),
     ).toEqual({
-      borderRadius: '{radius.md}',
-      borderTopLeftRadius: '{radius.lg}',
+      borderRadius: fixtureTokenRef(fixtureIds.tokens.radius.md),
+      borderTopLeftRadius: fixtureTokenRef(fixtureIds.tokens.radius.lg),
     });
   });
 });

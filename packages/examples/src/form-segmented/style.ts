@@ -1,50 +1,53 @@
 import type { Node } from '@facadeur/domain';
+import { tokenIds as exampleTokenIds } from '../catalog/tokens/idList';
+import { ids as exampleFormSegmentedIds } from './idList';
+import { tokenRef } from '../references';
 
 export const styles = {
-  '550e8400-e29b-41d4-a716-aa07dab0544c': {
+  [exampleFormSegmentedIds.nodes.span1]: {
     width: 'auto',
     height: 'auto',
-    color: '{color.textmuted}',
-    font: '{type.caption}',
+    color: tokenRef(exampleTokenIds.color.text.secondary),
+    font: tokenRef(exampleTokenIds.type.caption),
     fontWeight: '600',
-    margin: '{space.0}',
+    margin: tokenRef(exampleTokenIds.space.scale.step0),
   },
-  '550e8400-e29b-41d4-a716-95faca7338cc': {
+  [exampleFormSegmentedIds.nodes.span2]: {
     width: 'auto',
     height: 'auto',
-    color: '{color.textmuted}',
+    color: tokenRef(exampleTokenIds.color.text.secondary),
     paddingBlock: '{padding.y}',
     paddingInline: '{padding.x}',
   },
-  '550e8400-e29b-41d4-a716-c4551fd94aa1': {
+  [exampleFormSegmentedIds.nodes.span3]: {
     width: 'auto',
     height: 'auto',
-    color: '{color.textmuted}',
+    color: tokenRef(exampleTokenIds.color.text.secondary),
     paddingBlock: '{padding.y}',
     paddingInline: '{padding.x}',
   },
-  '550e8400-e29b-41d4-a716-5f3ab07637c4': {
+  [exampleFormSegmentedIds.nodes.span4]: {
     width: 'auto',
     height: 'auto',
-    color: '{color.textmuted}',
+    color: tokenRef(exampleTokenIds.color.text.secondary),
     paddingBlock: '{padding.y}',
     paddingInline: '{padding.x}',
   },
-  '550e8400-e29b-41d4-a716-96a4b1bd6698': {
+  [exampleFormSegmentedIds.nodes.div1]: {
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: '{space.0}',
+    gap: tokenRef(exampleTokenIds.space.scale.step0),
     width: 'auto',
     height: 'auto',
-    background: '{color.bg.muted}',
-    border: '1px solid {color.border}',
+    background: tokenRef(exampleTokenIds.color.bg.muted),
+    border: '1px solid ' + tokenRef(exampleTokenIds.color.border.default),
     borderRadius: '{shape.radius}',
-    font: '{type.caption}',
+    font: tokenRef(exampleTokenIds.type.caption),
     paddingBlock: '{padding.y}',
     paddingInline: '{padding.x}',
   },
-  '550e8400-e29b-41d4-a716-64d9ed44892c': {
+  [exampleFormSegmentedIds.nodes.root]: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',

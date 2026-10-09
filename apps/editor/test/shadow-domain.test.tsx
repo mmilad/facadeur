@@ -9,7 +9,9 @@ import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { withTokenBreakpoint } from '../src/domain/edits/token-edit';
 import { App } from '../src/ui/shell/EditorShell';
 import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
+import { tokenAtPath } from './fixtures/token-tree';
 import { openSettingsDomain } from './settings-navigation';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
 
 const documents = editorStandardCatalog();
 
@@ -68,7 +70,7 @@ describe('shadow domain panel', () => {
     await submitNewToken('Elevated xl');
 
     const indexed = readTokenTree(session.getSnapshot().design.tokens);
-    expect(indexed.tokens.get('shadow.elevated.xl')).toMatchObject({
+    expect(tokenAtPath(session.getSnapshot().design.tokens, 'shadow.elevated.xl')).toMatchObject({
       type: 'shadow',
       value: {
         offsetX: '0px',
@@ -92,7 +94,7 @@ describe('shadow domain panel', () => {
       (host!.querySelector('button[name="remove-shadow-shadow.md"]') as HTMLButtonElement).click();
     });
 
-    expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has('shadow.md')).toBe(true);
+    expect(tokenAtPath(session.getSnapshot().design.tokens, 'shadow.md')).toBeDefined();
     expect(session.getSnapshot().notice?.tone).toBe('error');
     expect(session.getSnapshot().notice?.text).toMatch(/\{shadow\.md\}/);
   });
@@ -107,7 +109,7 @@ describe('shadow domain panel', () => {
     await submitNewToken('   ');
 
     expect(
-      readTokenTree(session.getSnapshot().design.tokens).tokens.has('shadow.elevated.xl'),
+      tokenAtPath(session.getSnapshot().design.tokens, 'shadow.elevated.xl'),
     ).toBe(false);
     expect(session.getSnapshot().notice?.tone).toBe('error');
     expect(session.getSnapshot().notice?.text).toMatch(/label is required/i);
@@ -123,7 +125,7 @@ describe('shadow domain panel', () => {
     await submitNewToken('Md');
 
     expect(
-      readTokenTree(session.getSnapshot().design.tokens).tokens.get('shadow.md2'),
+      tokenAtPath(session.getSnapshot().design.tokens, 'shadow.md2'),
     ).toMatchObject({ type: 'shadow' });
     expect(session.getSnapshot().notice?.tone).not.toBe('error');
   });
@@ -142,24 +144,29 @@ describe('shadow domain panel', () => {
     };
     session.executeDesign({
       type: 'setToken',
-      path: 'shadow.lg',
+      family: 'shadow',
       token: withTokenBreakpoint(
         session.getSnapshot().design.tokens,
-        'shadow.lg',
-        'sm',
+        'shadow',
+        fixtureIds.tokens.shadow.lg,
+        fixtureIds.catalog.breakpoints.tablet,
         smOverride,
       ),
     });
 
     await openShadow(session);
     await act(async () => {
-      session.setFocusViewport('sm');
+      session.setFocusViewport(fixtureIds.catalog.breakpoints.tablet);
       session.setEditTarget('viewport');
     });
 
     expect(host!.textContent).toContain('Shadow overrides at Tablet');
     const indexedBefore = readTokenTree(session.getSnapshot().design.tokens);
-    expect(indexedBefore.tokens.get('shadow.lg')?.breakpoints.sm).toEqual(smOverride);
+    expect(
+      indexedBefore.tokens.get(fixtureIds.tokens.shadow.lg)?.breakpoints[
+        fixtureIds.catalog.breakpoints.tablet
+      ],
+    ).toEqual(smOverride);
 
     const resetButton = host!.querySelector('tr[data-token-path="shadow.lg"] .override-cue button');
     expect(resetButton).toBeInstanceOf(HTMLButtonElement);
@@ -168,8 +175,12 @@ describe('shadow domain panel', () => {
     });
 
     const indexedAfter = readTokenTree(session.getSnapshot().design.tokens);
-    expect(indexedAfter.tokens.get('shadow.lg')?.breakpoints.sm).toBeUndefined();
-    expect(indexedAfter.tokens.get('shadow.lg')?.value).toMatchObject({
+    expect(
+      indexedAfter.tokens.get(fixtureIds.tokens.shadow.lg)?.breakpoints[
+        fixtureIds.catalog.breakpoints.tablet
+      ],
+    ).toBeUndefined();
+    expect(indexedAfter.tokens.get(fixtureIds.tokens.shadow.lg)?.value).toMatchObject({
       offsetY: '16px',
     });
   });

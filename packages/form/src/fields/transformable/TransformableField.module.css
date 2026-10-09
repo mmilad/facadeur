@@ -31,14 +31,14 @@
 }
 
 .menu {
-  position: absolute;
+  position: fixed;
   z-index: 1001;
-  top: calc(100% + 4px);
-  right: 0;
   display: flex;
   min-width: 190px;
   max-width: min(320px, calc(100vw - 24px));
+  max-height: min(360px, calc(100vh - 16px));
   flex-direction: column;
+  overflow: auto;
   padding: 4px;
   border: 1px solid var(--eu-border, #b7aa9a);
   border-radius: var(--eu-radius, 6px);

@@ -5,6 +5,7 @@ import {
   effectiveLayout,
   layoutCapabilities,
 } from '../src/domain/layout-capabilities';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
 
 function documentFixture(): FlatDocument {
   return {
@@ -24,7 +25,7 @@ function documentFixture(): FlatDocument {
         id: 'row',
         type: 'frame',
         children: ['item', 'absolute'],
-        layout: { direction: 'row', breakpoints: { tablet: { direction: 'column' } } },
+        layout: { direction: 'row', breakpoints: { [fixtureIds.catalog.breakpoints.tablet]: { direction: 'column' } } },
       },
       item: { id: 'item', type: 'text', layout: { width: { mode: 'fill' } } },
       absolute: {
@@ -46,9 +47,9 @@ function documentFixture(): FlatDocument {
 describe('layout capabilities', () => {
   it('resolves effective layout layers at the active breakpoint', () => {
     expect(
-      effectiveLayout(documentFixture().nodes.row?.layout, 'tablet', [
+      effectiveLayout(documentFixture().nodes.row?.layout, fixtureIds.catalog.breakpoints.tablet, [
         { id: 'base', minWidth: 0 },
-        { id: 'tablet', minWidth: 768 },
+        { uuid: fixtureIds.catalog.breakpoints.tablet, label: 'Tablet', minWidth: 768 },
       ]).direction,
     ).toBe('column');
   });
@@ -81,11 +82,11 @@ describe('layout capabilities', () => {
     const caps = layoutCapabilities({
       document: doc,
       nodeId: 'item',
-      breakpointId: 'tablet',
+      breakpointId: fixtureIds.catalog.breakpoints.tablet,
       variantName: 'compact',
       breakpoints: [
         { id: 'base', minWidth: 0 },
-        { id: 'tablet', minWidth: 768 },
+        { uuid: fixtureIds.catalog.breakpoints.tablet, label: 'Tablet', minWidth: 768 },
       ],
       styleDeclarations: {
         row: { display: 'grid' },

@@ -1,13 +1,12 @@
 import { DocumentError } from '../../document/errors';
+import { UUID_PATTERN } from '../../document/ids';
 import type { Breakpoint } from '../../schema/document';
-
-const BREAKPOINT_ID = /^[a-z][a-z0-9]*$/;
 
 export function cloneBreakpoints(breakpoints: readonly Breakpoint[]): Breakpoint[] {
   return breakpoints.map((breakpoint) => ({
-    id: breakpoint.id,
+    uuid: breakpoint.uuid,
     minWidth: breakpoint.minWidth,
-    ...(breakpoint.label ? { label: breakpoint.label } : {}),
+    label: breakpoint.label,
     ...(breakpoint.enabled === false ? { enabled: false } : {}),
   }));
 }
@@ -17,44 +16,43 @@ export function assertBreakpoints(breakpoints: readonly Breakpoint[] | undefined
   if (!breakpoints.length) {
     throw new DocumentError('schema', 'Breakpoints must not be empty');
   }
-  const ids = new Set<string>();
+  const uuids = new Set<string>();
   const widths = new Map<number, string>();
   const labels = new Map<string, string>();
   for (const breakpoint of breakpoints) {
-    if (!BREAKPOINT_ID.test(breakpoint.id)) {
-      throw new DocumentError('schema', `Invalid breakpoint id "${breakpoint.id}"`);
+    if (!UUID_PATTERN.test(breakpoint.uuid)) {
+      throw new DocumentError('schema', `Invalid breakpoint UUID "${breakpoint.uuid}"`);
     }
-    if (ids.has(breakpoint.id)) {
-      throw new DocumentError('schema', `Duplicate breakpoint "${breakpoint.id}"`);
+    if (uuids.has(breakpoint.uuid)) {
+      throw new DocumentError('schema', `Duplicate breakpoint "${breakpoint.uuid}"`);
     }
-    ids.add(breakpoint.id);
+    uuids.add(breakpoint.uuid);
     if (!Number.isInteger(breakpoint.minWidth) || breakpoint.minWidth < 1) {
       throw new DocumentError(
         'schema',
-        `Breakpoint "${breakpoint.id}" needs a positive integer min-width`,
+        `Breakpoint "${breakpoint.uuid}" needs a positive integer min-width`,
       );
     }
     const existing = widths.get(breakpoint.minWidth);
     if (existing) {
       throw new DocumentError(
         'schema',
-        `Breakpoints "${existing}" and "${breakpoint.id}" share the min-width ${breakpoint.minWidth}`,
+        `Breakpoints "${existing}" and "${breakpoint.uuid}" share the min-width ${breakpoint.minWidth}`,
       );
     }
-    widths.set(breakpoint.minWidth, breakpoint.id);
-    if (breakpoint.label === undefined) continue;
+    widths.set(breakpoint.minWidth, breakpoint.uuid);
     const label = breakpoint.label.trim();
     if (!label || label.length > 48) {
-      throw new DocumentError('schema', `Breakpoint "${breakpoint.id}" needs a short label`);
+      throw new DocumentError('schema', `Breakpoint "${breakpoint.uuid}" needs a short label`);
     }
     const existingLabel = labels.get(label);
     if (existingLabel) {
       throw new DocumentError(
         'schema',
-        `Breakpoints "${existingLabel}" and "${breakpoint.id}" share the label "${label}"`,
+        `Breakpoints "${existingLabel}" and "${breakpoint.uuid}" share the label "${label}"`,
       );
     }
-    labels.set(label, breakpoint.id);
+    labels.set(label, breakpoint.uuid);
   }
   const active = breakpoints.filter((item) => item.enabled !== false);
   if (!active.length) {

@@ -1,0 +1,130 @@
+.settings-table-toolbar {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.settings-table-context {
+  flex: none;
+  align-self: center;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.settings-table-search {
+  display: grid;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+}
+
+.settings-table-search > span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.settings-table-search input {
+  width: 100%;
+}
+
+.settings-table-count {
+  flex: none;
+  padding-bottom: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.settings-table-scroll {
+  min-width: 0;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--white);
+}
+
+.settings-table-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.settings-table-cell {
+  border-bottom: 1px solid var(--line);
+  padding: 7px 8px;
+  vertical-align: middle;
+  text-align: left;
+  font-size: 12px;
+}
+
+.settings-table-column-header {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.settings-table-group-cell {
+  border-bottom-color: var(--line);
+  padding: 12px 8px 4px;
+  background: var(--sidebar);
+}
+
+.settings-table-group-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.settings-table-row-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.settings-table-details > .settings-table-cell {
+  padding: 0 10px 12px;
+}
+
+.settings-table-details-content {
+  padding-top: 12px;
+}
+
+@media (max-width: 760px) {
+  .settings-table-toolbar {
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .settings-table-search {
+    order: 1;
+    flex-basis: 100%;
+  }
+
+  .settings-table-context {
+    flex: 1;
+  }
+
+  .settings-table-count {
+    padding-bottom: 0;
+  }
+}

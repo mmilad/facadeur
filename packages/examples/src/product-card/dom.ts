@@ -1,12 +1,14 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleButtonIds } from '../button/idList';
+import { ids as exampleProductCardIds } from './idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-c0a5800714f9',
+  uuid: exampleProductCardIds.nodes.root,
   dom: {
     tagName: 'article',
     children: [
       {
-        uuid: '550e8400-e29b-41d4-a716-2be787034eaa',
+        uuid: exampleProductCardIds.nodes.img1,
         dom: {
           tagName: 'img',
           attributes: {
@@ -16,12 +18,12 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-323107734940',
+        uuid: exampleProductCardIds.nodes.div1,
         dom: {
           tagName: 'div',
           children: [
             {
-              uuid: '550e8400-e29b-41d4-a716-d4bf52b891cb',
+              uuid: exampleProductCardIds.nodes.h21,
               dom: {
                 tagName: 'h2',
                 properties: {
@@ -30,7 +32,7 @@ export const root: Node = {
               },
             },
             {
-              uuid: '550e8400-e29b-41d4-a716-ba278b0f8976',
+              uuid: exampleProductCardIds.nodes.p1,
               dom: {
                 tagName: 'p',
                 properties: {
@@ -39,12 +41,12 @@ export const root: Node = {
               },
             },
             {
-              uuid: '550e8400-e29b-41d4-a716-2226d2a09f81',
+              uuid: exampleProductCardIds.nodes.div2,
               dom: {
                 tagName: 'div',
               },
               config: {
-                definitionRef: '550e8400-e29b-41d4-a716-0000000003e9',
+                definitionRef: exampleButtonIds.definition,
                 previewData: {
                   fields: {
                     label: 'Add to bag',

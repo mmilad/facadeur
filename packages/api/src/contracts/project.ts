@@ -1,4 +1,5 @@
-import type { DocumentFile, ProjectCatalogModel } from '@facadeur/core';
+import type { DocumentFile } from '@facadeur/core';
+import type { ProjectCatalogModel } from '@facadeur/domain';
 import type { OrganisationRole } from './management';
 
 export interface ProjectAccess {

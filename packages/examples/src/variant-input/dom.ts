@@ -1,12 +1,13 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleVariantInputIds } from './idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-1c2bd8104e2f',
+  uuid: exampleVariantInputIds.nodes.root,
   dom: {
     tagName: 'label',
     children: [
       {
-        uuid: '550e8400-e29b-41d4-a716-5e2d005c9f6f',
+        uuid: exampleVariantInputIds.nodes.span1,
         dom: {
           tagName: 'span',
           properties: {
@@ -15,7 +16,7 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-bea1b5583c3d',
+        uuid: exampleVariantInputIds.nodes.input1,
         dom: {
           tagName: 'input',
           attributes: {

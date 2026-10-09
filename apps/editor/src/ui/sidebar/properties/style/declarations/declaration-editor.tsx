@@ -10,6 +10,7 @@ import {
   radiusTokenRefsForDocument,
   shadowTokenRefsForDocument,
   typographyTokenRefsForDocument,
+  fontFamilies,
 } from '../../../../../domain/editing';
 import type { EditorSession, EditorSnapshot } from '../../../../../domain/session';
 import {
@@ -167,7 +168,7 @@ export function DeclarationEditor({
             snap.document.rootId,
             {
               ...target,
-              breakpointId: cueViewport.id,
+              breakpointId: cueViewport.uuid,
             },
           )
         : {};
@@ -202,10 +203,11 @@ export function DeclarationEditor({
 
   const catalogs = useMemo(() => {
     const doc = snap.document;
+    const fonts = fontFamilies(snap.design.tokens);
     const typographyCatalogs: TypographyCatalogs = {
-      fontRefs: projectFontRefs(snap.design.fonts),
+      fontRefs: projectFontRefs(fonts),
       fontFamilyTokens: fontFamilyTokenRefsForDocument(snap.design.tokens, doc),
-      fontWeights: projectFontWeightOptions(snap.design.fonts),
+      fontWeights: projectFontWeightOptions(fonts),
       fontWeightTokens: fontWeightTokenRefsForDocument(snap.design.tokens, doc),
       dimensionTokens: dimensionTokenRefsForDocument(snap.design.tokens, doc),
       numberTokens: numberTokenRefsForDocument(snap.design.tokens, doc),
@@ -221,7 +223,7 @@ export function DeclarationEditor({
         : dimensionTokenRefsForDocument(snap.design.tokens, doc),
       typographyCatalogs,
     };
-  }, [snap.design.fonts, snap.design.tokens, snap.document]);
+  }, [snap.design.tokens, snap.document]);
 
   return (
     <CssDeclarationsControl
@@ -327,7 +329,7 @@ export function DeclarationEditor({
           );
         }
         if (!cueViewport) return null;
-        const resetTarget = { ...target, breakpointId: cueViewport.id };
+        const resetTarget = { ...target, breakpointId: cueViewport.uuid };
         return (
           <OverrideCue
             minWidth={cueViewport.minWidth}

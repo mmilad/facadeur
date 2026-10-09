@@ -170,12 +170,12 @@ export function effectiveLayout(
 ): Layout {
   const result: Layout = { ...(layout ?? {}) };
   if (!breakpointId) return result;
-  const targetWidth = breakpoints.find((item) => item.id === breakpointId)?.minWidth;
+  const targetWidth = breakpoints.find((item) => item.uuid === breakpointId)?.minWidth;
   const layers = Object.entries(layout?.breakpoints ?? {})
     .map(([id, value]) => ({
       id,
       value,
-      width: breakpoints.find((item) => item.id === id)?.minWidth,
+      width: breakpoints.find((item) => item.uuid === id)?.minWidth,
     }))
     .filter(
       (item) =>

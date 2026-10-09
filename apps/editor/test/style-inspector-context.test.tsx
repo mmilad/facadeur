@@ -6,6 +6,7 @@ import type { DocumentFile } from '@facadeur/core';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';
 import { editorStandardDesign, expandExampleCatalog } from './fixtures/example-catalog';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
 
 const source: DocumentFile = {
   version: 1,
@@ -14,8 +15,8 @@ const source: DocumentFile = {
   kind: 'component',
   settings: {
     breakpoints: [
-      { id: 'mobile', minWidth: 375 },
-      { id: 'tablet', minWidth: 768 },
+      { uuid: fixtureIds.catalog.breakpoints.phone, label: 'Phone', minWidth: 375 },
+      { uuid: fixtureIds.catalog.breakpoints.tablet, label: 'Tablet', minWidth: 768 },
     ],
   },
   variants: [
@@ -31,7 +32,7 @@ const source: DocumentFile = {
             borderColor: 'red',
           },
           states: { hover: { opacity: '0.9' } },
-          breakpoints: { tablet: { declarations: { opacity: '0.8' } } },
+          breakpoints: { [fixtureIds.catalog.breakpoints.tablet]: { declarations: { opacity: '0.8' } } },
           children: { label: { declarations: { opacity: '0.55' } } },
         },
       },
@@ -40,8 +41,7 @@ const source: DocumentFile = {
   styles: {
     declarations: { opacity: '0.2' },
     states: { hover: { opacity: '0.3' } },
-    breakpoints: {
-      tablet: { declarations: { opacity: '0.4' }, states: { hover: { opacity: '0.7' } } },
+    breakpoints: { [fixtureIds.catalog.breakpoints.tablet]: { declarations: { opacity: '0.4' }, states: { hover: { opacity: '0.7' } } },
     },
     children: { label: { declarations: { opacity: '0.5' } } },
   },
@@ -103,7 +103,7 @@ describe('style inspector context', () => {
     ).toBe('0.6');
 
     act(() => {
-      session.setFocusViewport('tablet');
+      session.setFocusViewport(fixtureIds.catalog.breakpoints.tablet);
       session.setEditTarget('viewport');
     });
     expect(

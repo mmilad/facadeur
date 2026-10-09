@@ -166,7 +166,7 @@ export class ProjectController {
     return {
       resolveKind: (id) => context.documents.get(id)?.kind,
       schemaResolverContext: context,
-      globalTokenPaths: new Set(readTokenTree(context.globalTokens ?? {}).tokens.keys()),
+      globalTokenUuids: new Set(readTokenTree(context.globalTokens ?? {}).tokens.keys()),
       resolveChildField: (node, path, field) =>
         resolveChildFieldDefinition(node, path, field, nestedDocuments, context.schemaCatalog),
     };

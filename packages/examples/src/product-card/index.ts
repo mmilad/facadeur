@@ -4,10 +4,11 @@ import { root } from './dom';
 import { config } from './config';
 import { styles } from './style';
 import { schema } from './schema';
+import { ids as exampleProductCardIds } from './idList';
 const schemaSource = { kind: 'inline', schema } as const;
 
 export const definition = {
-  uuid: '550e8400-e29b-41d4-a716-37fd3453b6c0',
+  uuid: exampleProductCardIds.definition,
   name: 'Product Card',
   kind: 'component',
   schema: schemaSource,

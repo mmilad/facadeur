@@ -1,7 +1,7 @@
 import { DocumentError } from '../../../../document/errors';
-import { createId, ID_PATTERN } from '../../../../document/ids';
+import { createId, ID_PATTERN, UUID_PATTERN } from '../../../../document/ids';
 import { isPlainObject } from '../../../../utils';
-import { tokenTypeSchema, type TokenType } from '../../../../schema/fonts';
+import { tokenTypeSchema, type TokenType } from '../../../../schema/design-tokens';
 import { Value } from '@sinclair/typebox/value';
 
 export interface ComponentToken {
@@ -18,7 +18,8 @@ export interface ListedComponentToken extends ComponentToken {
 }
 
 const TOKEN_PATH = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+)+$/;
-const SINGLE_REF = /^\{([a-z][a-z0-9]*(?:\.[a-z0-9]+)*)\}$/;
+const UUID_SOURCE = UUID_PATTERN.source.slice(1, -1);
+const SINGLE_REF = new RegExp(`^\\{token:(${UUID_SOURCE})\\}$`, 'i');
 
 export function componentTokenPublicPath(documentId: string, localPath: string): string {
   if (!TOKEN_PATH.test(localPath)) {
@@ -27,21 +28,21 @@ export function componentTokenPublicPath(documentId: string, localPath: string):
   return `${documentId}.${localPath}`;
 }
 
-/** Validates a default before `setComponentToken`; `globalPaths` comes from the design token index. */
-export function assertComponentTokenDefault(value: string, globalPaths: ReadonlySet<string>): void {
+/** Validates a default before `setComponentToken`; global token identities are UUIDs. */
+export function assertComponentTokenDefault(value: string, globalUuids: ReadonlySet<string>): void {
   if (typeof value !== 'string' || value.length === 0) {
     throw new DocumentError('schema', 'Component token value must be a non-empty string');
   }
   const match = value.match(SINGLE_REF);
   if (match) {
     const ref = match[1];
-    if (!ref || !TOKEN_PATH.test(ref)) {
+    if (!ref || !UUID_PATTERN.test(ref)) {
       throw new DocumentError('schema', `Invalid token reference in component token default`);
     }
-    if (!globalPaths.has(ref)) {
+    if (!globalUuids.has(ref)) {
       throw new DocumentError(
         'schema',
-        `Unknown global token "{${ref}}" in component token default`,
+        `Unknown global token "{token:${ref}}" in component token default`,
       );
     }
     return;
@@ -49,7 +50,7 @@ export function assertComponentTokenDefault(value: string, globalPaths: Readonly
   if (value.includes('{') || value.includes('}')) {
     throw new DocumentError(
       'schema',
-      'Component token default must be a literal or a single {global.path} reference',
+      'Component token default must be a literal or a single {token:uuid} reference',
     );
   }
 }

@@ -1,7 +1,8 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleVideoIds } from './idList';
 
 export const styles = {
-  '550e8400-e29b-41d4-a716-9f29eeedf9d5': {
+  [exampleVideoIds.nodes.root]: {
     width: '100%',
     height: 'auto',
     display: 'block',

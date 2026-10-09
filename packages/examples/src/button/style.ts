@@ -1,7 +1,10 @@
 import type { Node } from '@facadeur/domain';
+import { tokenIds as exampleTokenIds } from '../catalog/tokens/idList';
+import { ids as exampleButtonIds } from './idList';
+import { tokenRef } from '../references';
 
 export const styles = {
-  '550e8400-e29b-41d4-a716-000000000065': {
+  [exampleButtonIds.nodes.root]: {
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
@@ -10,12 +13,12 @@ export const styles = {
     width: 'auto',
     height: 'auto',
     appearance: 'none',
-    background: '{color.bg}',
+    background: tokenRef(exampleTokenIds.color.bg.canvas),
     border: '1px solid transparent',
-    borderRadius: '{radius.full}',
-    color: '{color.text}',
+    borderRadius: tokenRef(exampleTokenIds.radius.full),
+    color: tokenRef(exampleTokenIds.color.text.primary),
     cursor: 'pointer',
-    font: '{type.label}',
+    font: tokenRef(exampleTokenIds.type.label),
     letterSpacing: '0.01em',
     lineHeight: '1',
     paddingBlock: '{padding.y}',

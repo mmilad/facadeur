@@ -4,10 +4,11 @@ import { root } from './dom';
 import { config } from './config';
 import { styles } from './style';
 import { schema } from './schema';
+import { ids as exampleFormSegmentedIds } from './idList';
 const schemaSource = { kind: 'inline', schema } as const;
 
 export const definition = {
-  uuid: '550e8400-e29b-41d4-a716-7f116e554c91',
+  uuid: exampleFormSegmentedIds.definition,
   name: 'Segmented control',
   kind: 'component',
   schema: schemaSource,

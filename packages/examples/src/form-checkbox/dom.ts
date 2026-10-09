@@ -1,7 +1,8 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleFormCheckboxIds } from './idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-60b63699ece2',
+  uuid: exampleFormCheckboxIds.nodes.root,
   data: {
     name: 'Checkbox',
   },

@@ -45,3 +45,5 @@ export interface NodeDefinition {
   readonly style?: { readonly kind: 'ref'; readonly uuid: Uuid };
   readonly config?: DefinitionConfig;
 }
+
+export type NodeDefinitionModel = NodeDefinition;

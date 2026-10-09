@@ -10,7 +10,9 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';
 import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
+import { tokenAtPath } from './fixtures/token-tree';
 import { openSettingsDomain } from './settings-navigation';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
 
 const documents = editorStandardCatalog();
 
@@ -283,8 +285,11 @@ describe('editor shell', () => {
     await act(async () => {
       session.executeDesign({
         type: 'setToken',
-        path: 'color.accent.default',
-        token: { $value: '#abcdef' },
+        family: 'color',
+        token: {
+          ...tokenAtPath(session.getSnapshot().design.tokens, 'color.accent.default')!,
+          value: '#abcdef',
+        },
       });
     });
     expect(host.querySelector('[data-unsaved="design"]')?.textContent).toContain('Design');
@@ -374,7 +379,7 @@ describe('editor shell', () => {
     });
     await act(async () => {
       session.openAsset('button', 'root');
-      session.setFocusViewport('sm');
+      session.setFocusViewport(fixtureIds.catalog.breakpoints.tablet);
     });
 
     expect(host.querySelector('button[name="edit-base"]')?.getAttribute('aria-pressed')).toBe(
@@ -413,8 +418,8 @@ describe('editor shell', () => {
     });
     const styles = session.getSnapshot().document.styles;
     expect(styles?.declarations?.paddingInline).toBe('{padding.x}');
-    expect(styles?.breakpoints?.sm).toBeUndefined();
-    expect(styles?.breakpoints?.xl).toBeUndefined();
+    expect(styles?.breakpoints?.[fixtureIds.catalog.breakpoints.tablet]).toBeUndefined();
+    expect(styles?.breakpoints?.[fixtureIds.catalog.breakpoints.ultra]).toBeUndefined();
   });
 
   it('shows a drill breadcrumb and clears it when opening from the tree', async () => {

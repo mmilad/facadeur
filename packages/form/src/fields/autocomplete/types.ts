@@ -3,11 +3,10 @@ export type AutocompleteOption = {
   label: string;
   description?: string;
   group?: string;
-  /** Show the option label in place of its stored reference in the closed control. */
-  displayLabel?: boolean;
+  keywords?: string;
 };
 
-export type AutocompleteFieldProps = {
+export type AutocompleteSelectFieldProps = {
   id: string;
   name?: string;
   label?: string;
@@ -16,4 +15,5 @@ export type AutocompleteFieldProps = {
   placeholder?: string;
   disabled?: boolean;
   onChange: (next: string) => void;
+  onClear?: () => void;
 };

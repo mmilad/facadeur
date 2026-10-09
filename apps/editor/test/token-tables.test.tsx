@@ -5,7 +5,6 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import {
   listComponentTokens,
-  readTokenTree,
   setTokenInTree,
   type JsonValue,
   type TokenTree,
@@ -16,7 +15,9 @@ import { withTokenLabel, withTokenValue } from '../src/domain/edits/token-edit';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';
 import { editorStandardDesign, expandExampleCatalog } from './fixtures/example-catalog';
+import { tokenAtPath } from './fixtures/token-tree';
 import { openSettingsDomain } from './settings-navigation';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 const documents = expandExampleCatalog([button]);
 
@@ -87,9 +88,7 @@ describe('design token tables', () => {
       (document.querySelector('button[name="add-color-submit"]') as HTMLButtonElement).click();
     });
 
-    expect(
-      readTokenTree(session.getSnapshot().design.tokens).tokens.has('color.brand.highlight'),
-    ).toBe(true);
+    expect(tokenAtPath(session.getSnapshot().design.tokens, 'color.brand.highlight')).toBe(true);
     expect(host!.querySelector('tr[data-token-path="color.brand.highlight"]')).toBeTruthy();
   });
 
@@ -100,8 +99,7 @@ describe('design token tables', () => {
       host!.querySelector<HTMLInputElement>(
         'tr[data-token-path="space.4"] .token-table-label-input',
       )!;
-    const labelOf = () =>
-      readTokenTree(session.getSnapshot().design.tokens).tokens.get('space.4')?.label;
+    const labelOf = () => tokenAtPath(session.getSnapshot().design.tokens, 'space.4')?.label;
     const input = inputFor();
 
     await act(async () => {
@@ -126,8 +124,8 @@ describe('design token tables', () => {
       const tokens = session.getSnapshot().design.tokens;
       session.executeDesign({
         type: 'setToken',
-        path: 'space.4',
-        token: withTokenLabel(tokens, 'space.4', 'Remote label'),
+        family: 'space',
+        token: withTokenLabel(tokens, 'space', fixtureIds.tokens.space.scale.step4, 'Remote label'),
       });
     });
     expect(inputFor().value).toBe('Remote label');
@@ -139,8 +137,8 @@ describe('design token tables', () => {
       const tokens = session.getSnapshot().design.tokens;
       session.executeDesign({
         type: 'setToken',
-        path: 'space.4',
-        token: withTokenLabel(tokens, 'space.4', '4'),
+        family: 'space',
+        token: withTokenLabel(tokens, 'space', fixtureIds.tokens.space.scale.step4, '4'),
       });
     });
     expect(inputFor().value).toBe('4');
@@ -208,21 +206,28 @@ describe('design token tables', () => {
   it('shows labels for token references in typography and shadow summaries', async () => {
     const design = structuredClone(editorStandardDesign());
     let tokens = (design.tokens ?? {}) as TokenTree;
-    tokens = setTokenInTree(tokens, 'space.4', withTokenLabel(tokens, 'space.4', 'Comfortable'));
-    const body = readTokenTree(tokens).tokens.get('type.body')?.value as Record<string, JsonValue>;
     tokens = setTokenInTree(
       tokens,
-      'type.body',
-      withTokenValue(tokens, 'type.body', { ...body, fontSize: '{space.4}' }),
+      'space',
+      withTokenLabel(tokens, 'space', fixtureIds.tokens.space.scale.step4, 'Comfortable'),
     );
-    const shadow = readTokenTree(tokens).tokens.get('shadow.md')?.value as Record<
-      string,
-      JsonValue
-    >;
+    const body = tokenAtPath(tokens, 'type.body')?.value as Record<string, JsonValue>;
     tokens = setTokenInTree(
       tokens,
-      'shadow.md',
-      withTokenValue(tokens, 'shadow.md', { ...shadow, offsetX: '{space.4}' }),
+      'type',
+      withTokenValue(tokens, 'type', fixtureIds.tokens.type.body, {
+        ...body,
+        fontSize: fixtureTokenRef(fixtureIds.tokens.space.scale.step4),
+      }),
+    );
+    const shadow = tokenAtPath(tokens, 'shadow.md')?.value as Record<string, JsonValue>;
+    tokens = setTokenInTree(
+      tokens,
+      'shadow',
+      withTokenValue(tokens, 'shadow', fixtureIds.tokens.shadow.md, {
+        ...shadow,
+        offsetX: fixtureTokenRef(fixtureIds.tokens.space.scale.step4),
+      }),
     );
     design.tokens = tokens;
     const session = createEditorSession({ documents, design });
@@ -232,11 +237,11 @@ describe('design token tables', () => {
       'tr[data-token-path="type.body"] .design-typography-editor summary .meta',
     );
     expect(typographySummary?.textContent).toContain('Comfortable');
-    expect(typographySummary?.textContent).not.toContain('{space.4}');
-    expect(
-      readTokenTree(session.getSnapshot().design.tokens).tokens.get('type.body')?.value,
-    ).toMatchObject({
-      fontSize: '{space.4}',
+    expect(typographySummary?.textContent).not.toContain(
+      fixtureTokenRef(fixtureIds.tokens.space.scale.step4),
+    );
+    expect(tokenAtPath(session.getSnapshot().design.tokens, 'type.body')?.value).toMatchObject({
+      fontSize: fixtureTokenRef(fixtureIds.tokens.space.scale.step4),
     });
 
     await act(async () => {
@@ -246,11 +251,11 @@ describe('design token tables', () => {
       'tr[data-token-path="shadow.md"] .design-shadow-editor summary .meta',
     );
     expect(shadowSummary?.textContent).toContain('Comfortable');
-    expect(shadowSummary?.textContent).not.toContain('{space.4}');
-    expect(
-      readTokenTree(session.getSnapshot().design.tokens).tokens.get('shadow.md')?.value,
-    ).toMatchObject({
-      offsetX: '{space.4}',
+    expect(shadowSummary?.textContent).not.toContain(
+      fixtureTokenRef(fixtureIds.tokens.space.scale.step4),
+    );
+    expect(tokenAtPath(session.getSnapshot().design.tokens, 'shadow.md')?.value).toMatchObject({
+      offsetX: fixtureTokenRef(fixtureIds.tokens.space.scale.step4),
     });
   });
 });

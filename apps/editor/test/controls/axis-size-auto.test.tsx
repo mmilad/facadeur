@@ -3,6 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { AxisSizeEditor, axisModePatch } from '../../src/ui/controls/layout/axis-size-editor';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 afterEach(cleanup);
 
@@ -146,7 +147,10 @@ it('keeps an omitted dimension as Inherit and selects Auto without creating a fi
 });
 
 it('preserves token and percent constraints across Auto and legacy modes', () => {
-  const constraints = { min: '{space.2}', max: { unit: '%' as const, value: 80 } };
+  const constraints = {
+    min: fixtureTokenRef(fixtureIds.tokens.space.scale.step2),
+    max: { unit: '%' as const, value: 80 },
+  };
   expect(axisModePatch('auto', { mode: 'fixed', size: 120, ...constraints })).toEqual({
     mode: 'auto',
     ...constraints,

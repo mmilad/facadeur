@@ -1,24 +1,27 @@
 import type { Node } from '@facadeur/domain';
+import { tokenIds as exampleTokenIds } from '../catalog/tokens/idList';
+import { ids as exampleSignInIds } from './idList';
+import { tokenRef } from '../references';
 
 export const styles = {
-  '550e8400-e29b-41d4-a716-4bcf572af571': {
-    color: '{color.accent.default}',
-    font: '{type.caption}',
+  [exampleSignInIds.nodes.p1]: {
+    color: tokenRef(exampleTokenIds.color.accent.default),
+    font: tokenRef(exampleTokenIds.type.caption),
     letterSpacing: '0.16em',
-    margin: '{space.0}',
+    margin: tokenRef(exampleTokenIds.space.scale.step0),
     textTransform: 'uppercase',
   },
-  '550e8400-e29b-41d4-a716-cb765c804572': {
-    color: '{color.text.primary}',
-    font: '{type.title}',
-    margin: '{space.0}',
+  [exampleSignInIds.nodes.h21]: {
+    color: tokenRef(exampleTokenIds.color.text.primary),
+    font: tokenRef(exampleTokenIds.type.title),
+    margin: tokenRef(exampleTokenIds.space.scale.step0),
   },
-  '550e8400-e29b-41d4-a716-02b3fdbd0f6a': {
-    color: '{color.text.secondary}',
-    font: '{type.body}',
-    margin: '{space.0}',
+  [exampleSignInIds.nodes.p2]: {
+    color: tokenRef(exampleTokenIds.color.text.secondary),
+    font: tokenRef(exampleTokenIds.type.body),
+    margin: tokenRef(exampleTokenIds.space.scale.step0),
   },
-  '550e8400-e29b-41d4-a716-00000000006f': {
+  [exampleSignInIds.nodes.root]: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
@@ -26,8 +29,8 @@ export const styles = {
     padding: '{layout.padding}',
     width: '100%',
     height: 'auto',
-    background: '{color.bg}',
-    border: '1px solid {color.border}',
+    background: tokenRef(exampleTokenIds.color.bg.canvas),
+    border: '1px solid ' + tokenRef(exampleTokenIds.color.border.default),
     borderRadius: '{shape.radius}',
     boxShadow: '{elevation.shadow}',
   },

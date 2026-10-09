@@ -47,7 +47,7 @@ export function createViewportBoard(options: {
   for (const breakpoint of breakpoints) {
     const column = ownerDocument.createElement('section');
     column.className = 'viewport-frame';
-    column.dataset.breakpoint = breakpoint.id;
+    column.dataset.breakpoint = breakpoint.uuid;
 
     const chrome = ownerDocument.createElement('div');
     chrome.className = 'viewport-chrome';
@@ -70,7 +70,7 @@ export function createViewportBoard(options: {
     column.append(chrome);
 
     const host = createFrameHost({
-      id: breakpoint.id,
+      id: breakpoint.uuid,
       width: breakpoint.minWidth,
       ownerDocument,
     });

@@ -1,7 +1,8 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleFormNativeSelectIds } from './idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-1daf448f5626',
+  uuid: exampleFormNativeSelectIds.nodes.root,
   data: {
     name: 'Select',
   },

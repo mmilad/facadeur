@@ -13,9 +13,10 @@ import {
   type DesignTypographyValue,
 } from '../src/ui/sidebar/design/DesignTypographyEditor';
 import type { TypographyCatalogs } from '../src/ui/controls/typography/index';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 const catalogs: TypographyCatalogs = {
-  fontRefs: ['{font.sans}'],
+  fontRefs: [fixtureTokenRef(fixtureIds.tokens.font.inter)],
   fontFamilyTokens: [],
   fontWeightTokens: [],
   dimensionTokens: [],
@@ -53,9 +54,9 @@ describe('complex design token editor UI', () => {
   it('commits only the changed typography field when an override is absent', () => {
     const commits: (DesignTypographyValue | null)[] = [];
     const base = {
-      fontFamily: '{font.sans}',
+      fontFamily: fixtureTokenRef(fixtureIds.tokens.font.inter),
       fontSize: '16px',
-      fontWeight: '{font.weight.regular}',
+      fontWeight: fixtureTokenRef(testUuid17),
       lineHeight: 1.5,
       letterSpacing: '0',
     };
@@ -64,7 +65,7 @@ describe('complex design token editor UI', () => {
         namePrefix="editor"
         value={base}
         baseValue={base}
-        breakpointId="tablet"
+        breakpointId={fixtureIds.catalog.breakpoints.tablet}
         catalogs={catalogs}
         onCommit={(next) => commits.push(next)}
       />,
@@ -77,9 +78,9 @@ describe('complex design token editor UI', () => {
   it('keeps partial overrides while editing inherited fields and resets one field', () => {
     const commits: (DesignTypographyValue | null)[] = [];
     const base = {
-      fontFamily: '{font.sans}',
+      fontFamily: fixtureTokenRef(fixtureIds.tokens.font.inter),
       fontSize: '16px',
-      fontWeight: '{font.weight.regular}',
+      fontWeight: fixtureTokenRef(testUuid17),
       lineHeight: 1.5,
       letterSpacing: '0',
     };
@@ -89,7 +90,7 @@ describe('complex design token editor UI', () => {
         value={{ ...base, fontSize: '20px' }}
         storedValue={{ fontSize: '20px' }}
         baseValue={base}
-        breakpointId="tablet"
+        breakpointId={fixtureIds.catalog.breakpoints.tablet}
         catalogs={catalogs}
         onCommit={(next) => commits.push(next)}
       />,
@@ -113,9 +114,9 @@ describe('complex design token editor UI', () => {
       <DesignTypographyEditor
         namePrefix="editor"
         value={{
-          fontFamily: '{font.sans}',
+          fontFamily: fixtureTokenRef(fixtureIds.tokens.font.inter),
           fontSize: '16px',
-          fontWeight: '{font.weight.regular}',
+          fontWeight: fixtureTokenRef(testUuid17),
           lineHeight: 1.5,
         }}
         catalogs={catalogs}
@@ -134,9 +135,9 @@ describe('complex design token editor UI', () => {
       <DesignTypographyEditor
         namePrefix="editor"
         value={{
-          fontFamily: '{font.sans}',
+          fontFamily: fixtureTokenRef(fixtureIds.tokens.font.inter),
           fontSize: '.5rem',
-          fontWeight: '{font.weight.regular}',
+          fontWeight: fixtureTokenRef(testUuid17),
           lineHeight: 'normal',
           letterSpacing: '1vw',
         }}
@@ -149,9 +150,9 @@ describe('complex design token editor UI', () => {
       setInput(host!.querySelector('input[name="editor-fontSize"]')!, 'clamp(1rem, 2vw, 2rem)'),
     );
     expect(commits.at(-1)).toEqual({
-      fontFamily: '{font.sans}',
+      fontFamily: fixtureTokenRef(fixtureIds.tokens.font.inter),
       fontSize: 'clamp(1rem, 2vw, 2rem)',
-      fontWeight: '{font.weight.regular}',
+      fontWeight: fixtureTokenRef(testUuid17),
       lineHeight: 'normal',
       letterSpacing: '1vw',
     });
@@ -163,14 +164,14 @@ describe('complex design token editor UI', () => {
       <DesignShadowEditor
         namePrefix="shadow"
         value={{
-          color: '{color.shadow}',
+          color: fixtureTokenRef(testUuid18),
           offsetX: '0px',
           offsetY: '2px',
           blur: '8px',
         }}
-        shadowTokens={['{shadow.md}']}
-        dimensionTokens={['{space.2}']}
-        colorTokens={['{color.shadow}']}
+        shadowTokens={[fixtureTokenRef(fixtureIds.tokens.shadow.md)]}
+        dimensionTokens={[fixtureTokenRef(fixtureIds.tokens.space.scale.step2)]}
+        colorTokens={[fixtureTokenRef(testUuid18)]}
         onCommit={(next) => commits.push(next)}
       />,
     );

@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { createProjectTemplateDocument } from '@facadeur/tokens';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { StyleInspector } from '../src/ui/sidebar/properties/style/StyleInspector';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
 
 afterEach(cleanup);
 function setup() {
@@ -84,13 +85,13 @@ describe('instance appearance editor', () => {
       target: { value: 'hover' },
     });
     act(() => {
-      session.setFocusViewport('sm');
+      session.setFocusViewport(fixtureIds.catalog.breakpoints.tablet);
       session.setEditTarget('viewport');
     });
     editOpacity('0.2');
     expect(
       session.getSnapshot().document.variantPresets?.[0]?.overrides?.styles?.children?.control
-        ?.breakpoints?.sm?.states?.hover?.opacity,
+        ?.breakpoints?.[fixtureIds.catalog.breakpoints.tablet]?.states?.hover?.opacity,
     ).toBe('0.2');
   });
 });

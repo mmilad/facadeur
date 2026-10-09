@@ -9,6 +9,7 @@ import type { DocumentFile } from '@facadeur/core';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';
 import { editorStandardDesign, expandExampleCatalog } from './fixtures/example-catalog';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
 
 const variantComponent: DocumentFile = {
   version: 1,
@@ -494,7 +495,7 @@ describe('properties inspector tabs', () => {
     });
 
     await act(async () => {
-      session.selectViewport('xs');
+      session.selectViewport(fixtureIds.catalog.breakpoints.phone);
     });
 
     expect(host.querySelector('button[name="property-tab-content"]')).toBeNull();
@@ -516,7 +517,7 @@ describe('properties inspector tabs', () => {
     });
 
     await act(async () => {
-      session.selectViewport('sm');
+      session.selectViewport(fixtureIds.catalog.breakpoints.tablet);
     });
 
     const context = host.querySelector('[data-testid="viewport-context"]');

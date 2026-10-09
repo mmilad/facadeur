@@ -7,6 +7,7 @@ import {
   fontWeightTokenRefsForDocument,
   numberTokenRefsForDocument,
   shadowTokenRefsForDocument,
+  fontFamilies,
 } from '../../../../../domain/editing';
 import type { EditorSession, EditorSnapshot } from '../../../../../domain/session';
 import { ColorControl, isColorStyleProperty } from '../../../../controls/color/index';
@@ -39,16 +40,17 @@ export function StyleOverridesPanel({
     () => shadowTokenRefsForDocument(snap.design.tokens, snap.document),
     [snap.design.tokens, snap.document],
   );
+  const fonts = useMemo(() => fontFamilies(snap.design.tokens), [snap.design.tokens]);
   const typographyCatalogs = useMemo<TypographyCatalogs>(
     () => ({
-      fontRefs: projectFontRefs(snap.design.fonts),
+      fontRefs: projectFontRefs(fonts),
       fontFamilyTokens: fontFamilyTokenRefsForDocument(snap.design.tokens, snap.document),
-      fontWeights: projectFontWeightOptions(snap.design.fonts),
+      fontWeights: projectFontWeightOptions(fonts),
       fontWeightTokens: fontWeightTokenRefsForDocument(snap.design.tokens, snap.document),
       dimensionTokens: dimensionTokenRefsForDocument(snap.design.tokens, snap.document),
       numberTokens: numberTokenRefsForDocument(snap.design.tokens, snap.document),
     }),
-    [snap.design.fonts, snap.design.tokens, snap.document],
+    [fonts, snap.design.tokens, snap.document],
   );
   const entries = Object.entries(node.style ?? {});
   const addingColor = isColorStyleProperty(property);

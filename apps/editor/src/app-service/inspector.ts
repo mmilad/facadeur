@@ -1,6 +1,7 @@
 import {
   findNodeByUuid,
   readTokenTree,
+  tokenReferenceValue,
   type CoreController,
   type CoreSnapshot,
   type InspectorFormModel,
@@ -18,7 +19,6 @@ export interface InspectorViewModel extends InspectorFormModel {
       label: string;
       description: string;
       group: string;
-      displayLabel: boolean;
     }[];
   };
   readonly formValue: Omit<InspectorFormModel['formValue'], 'node'> & {
@@ -113,11 +113,10 @@ type CatalogNode = CoreSnapshot['catalog']['atoms'][string]['root'];
 function collectProjectStyleSuggestions(catalog: CoreSnapshot['catalog']) {
   const valuesByKey = new Map<string, Set<string>>();
   const tokenOptions = [...readTokenTree(catalog.tokens ?? {}).tokens.values()].map((token) => ({
-    value: token.uuid ? `{token:${token.uuid}}` : `{${token.path}}`,
+    value: tokenReferenceValue(token.uuid),
     label: tokenCustomProperty(token.path),
     description: token.path,
     group: 'Design tokens',
-    displayLabel: true,
   }));
   const definitions = [
     ...Object.values(catalog.atoms),

@@ -1,12 +1,14 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleFormInputIds } from '../form-input/idList';
+import { ids as exampleFormTextInputIds } from './idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-21c869043041',
+  uuid: exampleFormTextInputIds.nodes.root,
   dom: {
     tagName: 'label',
     children: [
       {
-        uuid: '550e8400-e29b-41d4-a716-aeecf87c99ac',
+        uuid: exampleFormTextInputIds.nodes.span1,
         dom: {
           tagName: 'span',
           properties: {
@@ -15,12 +17,12 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-8ccf0e01bde2',
+        uuid: exampleFormTextInputIds.nodes.div1,
         dom: {
           tagName: 'div',
           children: [
             {
-              uuid: '550e8400-e29b-41d4-a716-13b4d4037dd8',
+              uuid: exampleFormTextInputIds.nodes.img1,
               dom: {
                 tagName: 'img',
                 attributes: {
@@ -29,19 +31,19 @@ export const root: Node = {
               },
             },
             {
-              uuid: '550e8400-e29b-41d4-a716-974f46964620',
+              uuid: exampleFormTextInputIds.nodes.div2,
               dom: {
                 tagName: 'div',
               },
               config: {
-                definitionRef: '550e8400-e29b-41d4-a716-fddc99563a28',
+                definitionRef: exampleFormInputIds.definition,
               },
             },
           ],
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-a8d593ad9fcf',
+        uuid: exampleFormTextInputIds.nodes.span2,
         dom: {
           tagName: 'span',
           properties: {

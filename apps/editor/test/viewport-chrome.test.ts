@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { defaultBreakpoints } from '@facadeur/core';
 import { resolvedViewportChrome } from '../src/domain/viewport/viewport-chrome';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
 
 describe('viewport chrome settings', () => {
   it('ignores legacy padding while preserving title and alignment', () => {
@@ -18,7 +19,7 @@ describe('viewport chrome settings', () => {
   });
 
   it('uses breakpoint label when title is blank', () => {
-    const breakpoint = { id: 'tablet', minWidth: 768 };
+    const breakpoint = { uuid: fixtureIds.catalog.breakpoints.tablet, label: 'Tablet', minWidth: 768 };
     expect(resolvedViewportChrome(breakpoint, { title: '' }).title).toBe('Tablet · 768');
   });
 });

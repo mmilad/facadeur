@@ -1,4 +1,4 @@
-import type { Breakpoint } from '@facadeur/core';
+import type { Breakpoint, DesignTokenSet } from '@facadeur/core';
 import { loadTokens } from '@facadeur/tokens';
 import type { CompileOptions, CompiledRule } from '../compiler/types';
 import { compileDocument } from '../compiler/compile';
@@ -14,6 +14,7 @@ export function createStyleEngine(
   const addresses = new Map<string, CompileOptions>();
   let designRules: CSSRule[] = [];
   let breakpoints: Breakpoint[] = [];
+  let globalTokens: DesignTokenSet | undefined;
 
   function sheet(): CSSStyleSheet {
     return controller.sheet;
@@ -28,6 +29,7 @@ export function createStyleEngine(
     setDesign(input = {}, options = {}) {
       const design = loadTokens(input);
       breakpoints = design.breakpoints;
+      globalTokens = input.tokens as DesignTokenSet | undefined;
       clearRules(sheet(), designRules);
       designRules = insertDesign(sheet(), design, options.selector ?? ':root');
     },
@@ -38,6 +40,7 @@ export function createStyleEngine(
         ...options,
         address: options.address ?? stored?.address ?? 'instance',
         breakpoints: options.breakpoints ?? stored?.breakpoints ?? breakpoints,
+        globalTokens: options.globalTokens ?? stored?.globalTokens ?? globalTokens,
         paintRoot: options.paintRoot ?? stored?.paintRoot,
         selectorForStyleRule: options.selectorForStyleRule ?? stored?.selectorForStyleRule,
       };

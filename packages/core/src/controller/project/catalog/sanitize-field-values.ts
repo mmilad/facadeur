@@ -35,33 +35,23 @@ export function sanitizeFieldValueRecord(
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
-function sanitizePreviewVariants(
-  variants: Readonly<Record<string, Readonly<Record<string, unknown>>>> | undefined,
-): Record<string, Record<string, FieldValue>> | undefined {
-  if (!variants) return undefined;
-  const out: Record<string, Record<string, FieldValue>> = {};
-  for (const [variantId, fields] of Object.entries(variants)) {
-    const sanitized = sanitizeFieldValueRecord(fields);
-    if (sanitized) out[variantId] = sanitized;
-  }
-  return Object.keys(out).length > 0 ? out : undefined;
-}
-
 function sanitizeNode(node: Node): Node {
   const data = sanitizeFieldValueRecord(node.data as Record<string, unknown> | undefined);
-  const dom = { ...node.dom };
-  if (dom.properties) {
-    const properties = sanitizeFieldValueRecord(dom.properties as Record<string, unknown>);
-    if (properties) dom.properties = properties;
-    else delete dom.properties;
-  }
-  if (dom.children?.length) {
-    dom.children = dom.children.map(sanitizeNode);
-  }
-  const next: Node = { ...node, dom };
-  if (data) next.data = data;
-  else delete (next as { data?: Record<string, FieldValue> }).data;
-  return next;
+  const properties = sanitizeFieldValueRecord(
+    node.dom.properties as Record<string, unknown> | undefined,
+  );
+  const children = node.dom.children?.map(sanitizeNode);
+  const { properties: _properties, children: _children, ...domBase } = node.dom;
+  const { data: _data, ...nodeBase } = node;
+  return {
+    ...nodeBase,
+    ...(data ? { data } : {}),
+    dom: {
+      ...domBase,
+      ...(properties ? { properties } : {}),
+      ...(children ? { children } : {}),
+    },
+  };
 }
 
 function sanitizeDefinition(definition: NodeDefinition): NodeDefinition {
@@ -70,20 +60,15 @@ function sanitizeDefinition(definition: NodeDefinition): NodeDefinition {
   if (!config?.previewData) {
     return root === definition.root ? definition : { ...definition, root };
   }
+  const { fields: _fields, ...previewDataExtras } = config.previewData as Readonly<
+    Record<string, unknown>
+  >;
   const fields = sanitizeFieldValueRecord(
     config.previewData.fields as Record<string, unknown> | undefined,
   );
-  const variants = sanitizePreviewVariants(
-    config.previewData.variants as
-      | Readonly<Record<string, Readonly<Record<string, unknown>>>>
-      | undefined,
-  );
   const previewData =
-    fields || variants
-      ? {
-          ...(fields ? { fields } : {}),
-          ...(variants ? { variants } : {}),
-        }
+    fields || Object.keys(previewDataExtras).length
+      ? { ...previewDataExtras, ...(fields ? { fields } : {}) }
       : undefined;
   const nextConfig = { ...config };
   if (previewData) nextConfig.previewData = previewData;

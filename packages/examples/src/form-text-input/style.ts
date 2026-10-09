@@ -1,48 +1,51 @@
 import type { Node } from '@facadeur/domain';
+import { tokenIds as exampleTokenIds } from '../catalog/tokens/idList';
+import { ids as exampleFormTextInputIds } from './idList';
+import { tokenRef } from '../references';
 
 export const styles = {
-  '550e8400-e29b-41d4-a716-aeecf87c99ac': {
+  [exampleFormTextInputIds.nodes.span1]: {
     width: 'auto',
     height: 'auto',
-    color: '{color.textmuted}',
-    font: '{type.caption}',
+    color: tokenRef(exampleTokenIds.color.text.secondary),
+    font: tokenRef(exampleTokenIds.type.caption),
     fontWeight: '600',
-    margin: '{space.0}',
+    margin: tokenRef(exampleTokenIds.space.scale.step0),
   },
-  '550e8400-e29b-41d4-a716-13b4d4037dd8': {
+  [exampleFormTextInputIds.nodes.img1]: {
     width: '16px',
     height: '16px',
     flex: '0 0 16px',
     marginInlineEnd: '{layout.gap}',
     opacity: '0.72',
   },
-  '550e8400-e29b-41d4-a716-8ccf0e01bde2': {
+  [exampleFormTextInputIds.nodes.div1]: {
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
     height: 'auto',
-    background: '{color.surface}',
-    border: '1px solid {color.border}',
+    background: tokenRef(exampleTokenIds.color.bg.canvas),
+    border: '1px solid ' + tokenRef(exampleTokenIds.color.border.default),
     borderRadius: '{shape.radius}',
     paddingBlock: '{input.padding.y}',
     paddingInline: '{input.padding.x}',
   },
-  '550e8400-e29b-41d4-a716-a8d593ad9fcf': {
+  [exampleFormTextInputIds.nodes.span2]: {
     width: 'auto',
     height: 'auto',
-    color: '{color.textmuted}',
-    font: '{type.caption}',
-    margin: '{space.0}',
+    color: tokenRef(exampleTokenIds.color.text.secondary),
+    font: tokenRef(exampleTokenIds.type.caption),
+    margin: tokenRef(exampleTokenIds.space.scale.step0),
   },
-  '550e8400-e29b-41d4-a716-21c869043041': {
+  [exampleFormTextInputIds.nodes.root]: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
     gap: '{layout.gap}',
     width: '100%',
     height: 'auto',
-    color: '{color.text}',
-    font: '{type.body}',
+    color: tokenRef(exampleTokenIds.color.text.primary),
+    font: tokenRef(exampleTokenIds.type.body),
   },
 } satisfies Readonly<Record<string, NonNullable<Node['style']>>>;

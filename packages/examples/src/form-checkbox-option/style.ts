@@ -1,9 +1,12 @@
 import type { Node } from '@facadeur/domain';
+import { tokenIds as exampleTokenIds } from '../catalog/tokens/idList';
+import { ids as exampleFormCheckboxOptionIds } from './idList';
+import { tokenRef } from '../references';
 
 export const styles = {
-  '550e8400-e29b-41d4-a716-24ba8a10ce72': {
+  [exampleFormCheckboxOptionIds.nodes.root]: {
     display: 'flex',
     alignItems: 'center',
-    gap: '{space.2}',
+    gap: tokenRef(exampleTokenIds.space.scale.step2),
   },
 } satisfies Readonly<Record<string, NonNullable<Node['style']>>>;

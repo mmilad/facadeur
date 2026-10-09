@@ -4,6 +4,7 @@ import {
   readNodeStyleDraft,
   readNodeStyleFallback,
 } from '../src/domain/style-rules/node-style-draft';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
 
 const document = {
   rootId: 'root',
@@ -15,9 +16,7 @@ const document = {
     children: {
       button: {
         declarations: { color: 'red' },
-        breakpoints: {
-          tablet: { declarations: { color: 'blue' } },
-          desktop: { declarations: { color: 'green' } },
+        breakpoints: { [fixtureIds.catalog.breakpoints.tablet]: { declarations: { color: 'blue' } }, [fixtureIds.catalog.breakpoints.desktop]: { declarations: { color: 'green' } },
         },
       },
     },
@@ -25,9 +24,9 @@ const document = {
 } as unknown as FlatDocument;
 
 const breakpoints = [
-  { id: 'mobile', minWidth: 0 },
-  { id: 'tablet', minWidth: 768 },
-  { id: 'desktop', minWidth: 1200 },
+  { uuid: fixtureIds.catalog.breakpoints.phone, label: 'Phone', minWidth: 0 },
+  { uuid: fixtureIds.catalog.breakpoints.tablet, label: 'Tablet', minWidth: 768 },
+  { uuid: fixtureIds.catalog.breakpoints.desktop, label: 'Desktop', minWidth: 1200 },
 ];
 
 describe('ordinary class CSS drafts', () => {
@@ -53,7 +52,7 @@ describe('ordinary class CSS drafts', () => {
       readNodeStyleDraft(
         document,
         'button',
-        { nodeId: 'button', breakpointId: 'tablet' },
+        { nodeId: 'button', breakpointId: fixtureIds.catalog.breakpoints.tablet },
         breakpoints,
       ),
     ).toEqual({ color: 'blue', 'letter-spacing': '2px' });
@@ -61,7 +60,7 @@ describe('ordinary class CSS drafts', () => {
       readNodeStyleFallback(
         document,
         'button',
-        { nodeId: 'button', breakpointId: 'tablet' },
+        { nodeId: 'button', breakpointId: fixtureIds.catalog.breakpoints.tablet },
         breakpoints,
       ),
     ).toEqual({ color: 'red', 'letter-spacing': '2px' });

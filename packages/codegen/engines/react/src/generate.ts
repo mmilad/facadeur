@@ -1,4 +1,5 @@
 import {
+  canonicalizeTokenTree,
   DocumentError,
   structuralNodeFields,
   type DocumentFile,
@@ -73,6 +74,8 @@ export function generateReact(options: GenerateReactOptions): GenerateReactOutpu
     }
   } while (changed);
   const breakpoints = options.design?.breakpoints;
+  const globalTokens =
+    options.design?.tokens === undefined ? undefined : canonicalizeTokenTree(options.design.tokens);
   const ui: GeneratedFile[] = [
     { path: 'styles/tokens.css', contents: renderTokenCss(options.design) },
     ...components.flatMap((component, index) =>
@@ -84,6 +87,7 @@ export function generateReact(options: GenerateReactOptions): GenerateReactOutpu
           breakpoints ? [...breakpoints] : undefined,
           selected,
           new Map([...catalog].map(([id, entry]) => [id, entry.component])),
+          globalTokens,
         ),
       ),
     ),
@@ -121,7 +125,6 @@ function visitInstances(node: DocumentFile['root'], visit: (id: string) => void)
 export function designFromDocument(document: DocumentFile): DesignInput {
   return {
     ...(document.tokens ? { tokens: document.tokens } : {}),
-    ...(document.fonts ? { fonts: document.fonts } : {}),
     ...(document.settings?.breakpoints ? { breakpoints: document.settings.breakpoints } : {}),
   };
 }

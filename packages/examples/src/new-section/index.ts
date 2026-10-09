@@ -4,10 +4,11 @@ import { root } from './dom';
 import { config } from './config';
 import { styles } from './style';
 import { schema } from './schema';
+import { ids as exampleNewSectionIds } from './idList';
 const schemaSource = { kind: 'inline', schema } as const;
 
 export const definition = {
-  uuid: '550e8400-e29b-41d4-a716-588a7f496fd2',
+  uuid: exampleNewSectionIds.definition,
   name: 'New section',
   kind: 'component',
   schema: schemaSource,

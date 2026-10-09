@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { readTokenTree, toNested, type DocumentFile } from '@facadeur/core';
 import * as Y from 'yjs';
 import { createDocumentStore } from '../src/index';
+const testUuid37 = globalThis.crypto.randomUUID();
+
+const brandUuid = testUuid37;
 
 describe('saved token labels', () => {
   it('preserves global and local labels through JSON, Yjs hydration and label Undo/Redo', () => {
@@ -13,12 +16,19 @@ describe('saved token labels', () => {
       root: { id: 'root', type: 'frame' },
       tokens: {
         color: {
-          brand: {
-            $type: 'color',
-            $value: '#123456',
-            $extensions: { facadeur: { label: 'Brand' } },
+          [brandUuid]: {
+            uuid: brandUuid,
+            label: 'Brand',
+            group: '',
+            valueType: 'color',
+            value: '#123456',
           },
         },
+        space: {},
+        radius: {},
+        shadow: {},
+        type: {},
+        font: {},
       },
       componentTokens: {
         n_surface: { path: 'color.surface', type: 'color', value: '#123456', label: 'Surface' },
@@ -28,7 +38,7 @@ describe('saved token labels', () => {
     const store = createDocumentStore(file);
     const hydrated = createDocumentStore(
       file,
-      { globalTokenPaths: new Set(['color.brand']) },
+      { globalTokenUuids: new Set([brandUuid]) },
       { update: Y.encodeStateAsUpdate(store.doc) },
     );
     try {
@@ -45,7 +55,7 @@ describe('saved token labels', () => {
       hydrated.redo();
       expect(hydrated.getDocument().componentTokens?.n_surface?.label).toBe('Background');
       expect(hydrated.getDocument().styles).toEqual(file.styles);
-      expect(readTokenTree(hydrated.getDocument().tokens).tokens.get('color.brand')?.label).toBe(
+      expect(readTokenTree(hydrated.getDocument().tokens).tokens.get(brandUuid)?.label).toBe(
         'Brand',
       );
     } finally {

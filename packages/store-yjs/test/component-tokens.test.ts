@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
 import { createDocumentStore } from '../src/index';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 describe('component tokens', () => {
   it('round-trips componentTokens through Yjs and undoes/redoes add and remove independently', () => {
@@ -11,10 +12,17 @@ describe('component tokens', () => {
       kind: 'atom',
       root: { id: 'root', type: 'frame', tag: 'span' },
     };
-    const token = { type: 'color' as const, value: '{color.bg.canvas}' };
+    const token = {
+      type: 'color' as const,
+      value: fixtureTokenRef(fixtureIds.tokens.color.bg.canvas),
+    };
     const id = 'n_yjstoken1';
     const store = createDocumentStore(file, {
-      globalTokenPaths: new Set(['color.accent.default', 'color.bg.canvas', 'color.neutral.600']),
+      globalTokenUuids: new Set([
+        fixtureIds.tokens.color.accent.default,
+        fixtureIds.tokens.color.bg.canvas,
+        fixtureIds.tokens.color.neutral._600,
+      ]),
     });
     try {
       expect(store.getDocument().componentTokens).toBeUndefined();

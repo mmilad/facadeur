@@ -1,7 +1,6 @@
 import type {
   DesignPropDefinition,
-  DesignTokenTree,
-  FontFamilyDefinition,
+  DesignTokenSet,
   GlobalStyles,
 } from './design-system';
 import type { JsonSchemaObject } from './schema-source';
@@ -15,14 +14,14 @@ export interface ProjectCatalog {
   readonly components: DefinitionMap;
   readonly pages: DefinitionMap;
   readonly schemas?: Readonly<Record<Uuid, JsonSchemaObject>>;
-  /** DTCG token tree (colors, dimensions, typography, …). Path ids; see {@link DesignTokenTree}. */
-  readonly tokens?: DesignTokenTree;
-  /** Font faces / Google families referenced by typography tokens and `{font.*}` paths. */
-  readonly fonts?: readonly FontFamilyDefinition[];
+  /** Canonical UUID-keyed design token families, including font families. */
+  readonly tokens?: DesignTokenSet;
   /** Semantic props for `{prop:uuid}` style references. Optional until the prop editor lands. */
   readonly props?: Readonly<Record<Uuid, DesignPropDefinition>>;
   /** Global CSS, token reads/sets, and breakpoints (legacy design file concerns). */
   readonly globalStyles?: GlobalStyles;
 }
+
+export type ProjectCatalogModel = ProjectCatalog;
 
 export type CatalogMapKey = 'atoms' | 'components' | 'pages';

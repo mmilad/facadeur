@@ -1,19 +1,17 @@
 import type { EditorSession, EditorSnapshot } from '../../domain/session';
 import { useMemo } from 'react';
 import { activeBreakpoints, renderDesignCss } from '@facadeur/tokens';
-import {
-  FontsDomainPanel,
-  IconsDomainPanel,
-  TokensDomainPanel,
-} from '../sidebar/design/DesignPanels';
+import { FontsDomainPanel } from '../design/FontsDomainPanel';
+import { IconsDomainPanel } from '../design/IconsDomainPanel';
+import { TokensDomainPanel } from '../design/tokens/TokensDomainPanel';
 import {
   designDomainLabel,
   isSettingsTokenDomain,
   type EditorSurface,
   type DesignDomain,
-} from '../sidebar/design/design-domain';
-import { ViewportsSettingsPanel } from '../sidebar/design/ViewportsSettingsPanel';
-import { SettingsSections } from '../sidebar/design/SettingsSections';
+} from '../design/design-domain';
+import { ViewportsSettingsPanel } from '../design/ViewportsSettingsPanel';
+import { SettingsSections } from '../settings/SettingsSections';
 import { TokenPreviewProvider } from '../controls/fields/TokenPreviewContext';
 import { viewportEditContext } from '../../domain/viewport/viewport-edit';
 import '../form/form.css';
@@ -38,12 +36,12 @@ export function DesignDomainStage({
     () =>
       renderDesignCss(
         {
-          tokens: {},
-          fonts: snap.design.fonts,
+          tokens: snap.design.tokens,
+          breakpoints: snap.design.settings.breakpoints,
         },
         { selector: '.design-domain-stage' },
       ),
-    [snap.design.fonts],
+    [snap.design.tokens, snap.design.settings.breakpoints],
   );
   const ctx = viewportEditContext({
     breakpoints: activeBreakpoints(snap.design.settings.breakpoints),

@@ -364,10 +364,6 @@ export function isStyleOnly(change: DocumentChange): boolean {
     case 'setTokenInterface':
     case 'setToken':
     case 'removeToken':
-    case 'setTokenGroup':
-    case 'removeTokenGroup':
-    case 'setFont':
-    case 'removeFont':
     case 'setBreakpoints':
       return true;
     case 'setProp':

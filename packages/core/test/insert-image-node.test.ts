@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Value } from '@sinclair/typebox/value';
-import { createProjectTemplate } from '@facadeur/tokens';
-import { IMAGE_ATOM_UUID, imageAtomDefinition, seedProjectCatalog } from '@facadeur/api/server';
+import { createExampleCatalog } from '@facadeur/examples';
 import { createCatalogUuid } from '../src/document/ids';
 import { sanitizeProjectCatalog } from '../src/controller/project/catalog/sanitize-field-values';
 import {
@@ -13,73 +12,55 @@ import {
 import { fieldValueSchema } from '../src/schema/fields';
 import { projectCatalogSchema } from '../src/schema/node-model/catalog';
 
-const imageSchemaUuid = '550e8400-e29b-41d4-a716-446655440001';
-
-describe('insert image node validation', () => {
-  it('validates catalog after inserting an img primitive', () => {
-    const defUuid = createCatalogUuid();
-    const rootUuid = createCatalogUuid();
-    const imgUuid = createCatalogUuid();
-    const catalog = validateProjectCatalog({
+function minimalComponentCatalog(data?: Record<string, unknown>) {
+  const definitionUuid = createCatalogUuid();
+  const rootUuid = createCatalogUuid();
+  return {
+    definitionUuid,
+    rootUuid,
+    catalog: {
       atoms: {},
       components: {
-        [defUuid]: {
-          uuid: defUuid,
-          name: 'Card',
-          kind: 'component',
-          schema: {
-            kind: 'inline',
-            schema: { type: 'object', properties: {} },
-          },
+        [definitionUuid]: {
+          uuid: definitionUuid,
+          name: 'Test component',
+          kind: 'component' as const,
+          schema: { kind: 'inline' as const, schema: { type: 'object' as const, properties: {} } },
           root: {
             uuid: rootUuid,
-            dom: { tagName: 'div', children: [] },
+            dom: { tagName: 'div' },
+            ...(data ? { data } : {}),
           },
         },
       },
       pages: {},
-      schemas: {
-        [imageSchemaUuid]: {
-          type: 'object',
-          properties: { src: { type: 'string' } },
-        },
-      },
-    });
+    },
+  };
+}
 
-    const imgNode = {
-      uuid: imgUuid,
+describe('insert image node validation', () => {
+  it('validates the example catalog after inserting an img primitive', () => {
+    const catalog = createExampleCatalog();
+    const card = Object.values(catalog.components).find((definition) => definition.name === 'Card');
+    if (!card) throw new Error('Example catalog is missing the Card component');
+
+    const next = insertCatalogNode(catalog, card.uuid, card.root.uuid, 0, {
+      uuid: createCatalogUuid(),
       dom: { tagName: 'img', attributes: { src: '', alt: '' } },
-    };
-    const next = insertCatalogNode(catalog, defUuid, rootUuid, 0, imgNode);
+    });
     expect(() => validateProjectCatalog(next)).not.toThrow();
   });
 
-  it('validates seeded catalog after CoreController inserts img', () => {
-    const template = createProjectTemplate();
-    const defUuid = createCatalogUuid();
-    const rootUuid = createCatalogUuid();
-    const catalog = validateProjectCatalog({
-      atoms: {},
-      components: {
-        [defUuid]: {
-          uuid: defUuid,
-          name: 'Card',
-          kind: 'component',
-          schema: { kind: 'inline', schema: { type: 'object', properties: {} } },
-          root: { uuid: rootUuid, dom: { tagName: 'div', children: [] } },
-        },
-      },
-      pages: {},
-      tokens: template.tokens,
-      fonts: template.fonts,
-      globalStyles: { breakpoints: template.breakpoints },
-    });
+  it('validates the example catalog after CoreController inserts img', () => {
+    const catalog = createExampleCatalog();
+    const card = Object.values(catalog.components).find((definition) => definition.name === 'Card');
+    if (!card) throw new Error('Example catalog is missing the Card component');
+
     const core = new CoreController(catalog);
-    core.openDefinition(defUuid);
-    const imgUuid = createCatalogUuid();
+    core.openDefinition(card.uuid);
     expect(() =>
-      core.insertCatalogNode(rootUuid, 0, {
-        uuid: imgUuid,
+      core.insertCatalogNode(card.root.uuid, 0, {
+        uuid: createCatalogUuid(),
         dom: { tagName: 'img', attributes: { src: '', alt: '' } },
       }),
     ).not.toThrow();
@@ -89,109 +70,45 @@ describe('insert image node validation', () => {
     expect(Value.Check(fieldValueSchema, null)).toBe(false);
   });
 
-  it('inserts img into API seed catalog', () => {
-    const catalog = validateProjectCatalog(seedProjectCatalog());
-    const pageOrComponent = Object.values(catalog.components)[0] ?? Object.values(catalog.atoms)[0];
-    expect(pageOrComponent).toBeDefined();
-    const rootUuid = pageOrComponent!.root.uuid;
-    const imgUuid = createCatalogUuid();
-    const next = insertCatalogNode(catalog, pageOrComponent!.uuid, rootUuid, 0, {
-      uuid: imgUuid,
-      dom: { tagName: 'img', attributes: { src: '', alt: '' } },
-    });
-    expect(() => validateProjectCatalog(next)).not.toThrow();
-  });
-
   it('validates node data without null', () => {
-    const defUuid = createCatalogUuid();
-    const rootUuid = createCatalogUuid();
-    const catalog = {
-      atoms: {},
-      components: {
-        [defUuid]: {
-          uuid: defUuid,
-          name: 'Card',
-          kind: 'component',
-          schema: { kind: 'inline', schema: { type: 'object', properties: {} } },
-          root: {
-            uuid: rootUuid,
-            dom: { tagName: 'div', children: [] },
-            data: { alt: 'ok' },
-          },
-        },
-      },
-      pages: {},
-    };
-    const errors = [...Value.Errors(projectCatalogSchema, catalog)];
-    expect(errors.map((e) => `${e.path} ${e.message}`).join('; ')).toBe('');
+    const { catalog } = minimalComponentCatalog({ alt: 'ok' });
+    expect([...Value.Errors(projectCatalogSchema, catalog)]).toEqual([]);
     expect(() => validateProjectCatalog(catalog)).not.toThrow();
   });
 
   it('sanitize removes null from node data', () => {
-    const defUuid = createCatalogUuid();
-    const rootUuid = createCatalogUuid();
-    const raw = {
-      atoms: {},
-      components: {
-        [defUuid]: {
-          uuid: defUuid,
-          name: 'Card',
-          kind: 'component',
-          schema: { kind: 'inline', schema: { type: 'object', properties: {} } },
-          root: {
-            uuid: rootUuid,
-            dom: { tagName: 'div', children: [] },
-            data: { src: null, alt: 'ok' },
-          },
-        },
-      },
-      pages: {},
-    };
-    const sanitized = sanitizeProjectCatalog(raw as never);
-    expect(sanitized.components[defUuid]?.root.data).toEqual({ alt: 'ok' });
-    expect(() => Value.Check(projectCatalogSchema, sanitized)).not.toThrow();
+    const { catalog, definitionUuid } = minimalComponentCatalog({ src: null, alt: 'ok' });
+    const sanitized = sanitizeProjectCatalog(catalog as never);
+    expect(sanitized.components[definitionUuid]?.root.data).toEqual({ alt: 'ok' });
+    expect(Value.Check(projectCatalogSchema, sanitized)).toBe(true);
   });
 
   it('strips null node data so insert validation succeeds', () => {
-    const defUuid = createCatalogUuid();
-    const rootUuid = createCatalogUuid();
-    const imgUuid = createCatalogUuid();
-    const catalog = validateProjectCatalog({
-      atoms: {},
-      components: {
-        [defUuid]: {
-          uuid: defUuid,
-          name: 'Card',
-          kind: 'component',
-          schema: { kind: 'inline', schema: { type: 'object', properties: {} } },
-          root: {
-            uuid: rootUuid,
-            dom: { tagName: 'div', children: [] },
-            data: { src: null, alt: 'ok' },
-          },
-        },
-      },
-      pages: {},
-    });
-    expect(catalog.components[defUuid]?.root.data).toEqual({ alt: 'ok' });
-    const next = insertCatalogNode(catalog, defUuid, rootUuid, 0, {
-      uuid: imgUuid,
+    const { catalog, definitionUuid, rootUuid } = minimalComponentCatalog({ src: null, alt: 'ok' });
+    const validCatalog = validateProjectCatalog(catalog);
+    expect(validCatalog.components[definitionUuid]?.root.data).toEqual({ alt: 'ok' });
+    const next = insertCatalogNode(validCatalog, definitionUuid, rootUuid, 0, {
+      uuid: createCatalogUuid(),
       dom: { tagName: 'img', attributes: { src: '', alt: '' } },
     });
     expect(() => validateProjectCatalog(next)).not.toThrow();
   });
 
-  it('renders catalog atom instances as images in preview config', () => {
-    const catalog = validateProjectCatalog(seedProjectCatalog());
+  it('renders example image atom instances as images in preview config', () => {
+    const catalog = createExampleCatalog();
+    const image = Object.values(catalog.atoms).find((definition) => definition.name === 'Image');
+    if (!image) throw new Error('Example catalog is missing the Image atom');
+
     const componentUuid = createCatalogUuid();
     const rootUuid = createCatalogUuid();
     const instanceUuid = createCatalogUuid();
     const withInstance = validateProjectCatalog({
       ...catalog,
       components: {
+        ...catalog.components,
         [componentUuid]: {
           uuid: componentUuid,
-          name: 'Card',
+          name: 'Image wrapper',
           kind: 'component',
           schema: { kind: 'inline', schema: { type: 'object', properties: {} } },
           root: {
@@ -202,7 +119,7 @@ describe('insert image node validation', () => {
                 {
                   uuid: instanceUuid,
                   dom: { tagName: 'div', children: [] },
-                  config: { definitionRef: IMAGE_ATOM_UUID },
+                  config: { definitionRef: image.uuid },
                 },
               ],
             },
@@ -216,7 +133,7 @@ describe('insert image node validation', () => {
     );
     const child = config.children?.[0];
     expect(child?.tagName).toBe('img');
-    expect(child?.attributes?.src).toContain('placehold.co');
+    expect(child?.attributes?.src).toContain('data:image/svg+xml');
     expect(child?.nodeUuid).toBe(instanceUuid);
   });
 });

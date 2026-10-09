@@ -1,16 +1,19 @@
 import type { Node } from '@facadeur/domain';
+import { tokenIds as exampleTokenIds } from '../catalog/tokens/idList';
+import { ids as exampleFormNativeSelectIds } from './idList';
+import { tokenRef } from '../references';
 
 export const styles = {
-  '550e8400-e29b-41d4-a716-1daf448f5626': {
+  [exampleFormNativeSelectIds.nodes.root]: {
     width: '100%',
     height: 'auto',
     appearance: 'none',
-    background: '{color.surfa}',
-    border: '1px solid {color.border}',
+    background: tokenRef(exampleTokenIds.color.bg.canvas),
+    border: '1px solid ' + tokenRef(exampleTokenIds.color.border.default),
     borderRadius: '{shape.radius}',
     boxSizing: 'border-box',
-    color: '{color.text}',
-    font: '{type.body}',
+    color: tokenRef(exampleTokenIds.color.text.primary),
+    font: tokenRef(exampleTokenIds.type.body),
     paddingBlock: '{input.padding.y}',
     paddingInline: '{input.padding.x}',
   },

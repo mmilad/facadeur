@@ -1,17 +1,19 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleFormCheckboxIds } from '../form-checkbox/idList';
+import { ids as exampleFormCheckboxOptionIds } from './idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-24ba8a10ce72',
+  uuid: exampleFormCheckboxOptionIds.nodes.root,
   dom: {
     tagName: 'label',
     children: [
       {
-        uuid: '550e8400-e29b-41d4-a716-ce12adf17782',
+        uuid: exampleFormCheckboxOptionIds.nodes.div1,
         dom: {
           tagName: 'div',
         },
         config: {
-          definitionRef: '550e8400-e29b-41d4-a716-420b18ee8a9d',
+          definitionRef: exampleFormCheckboxIds.definition,
           previewData: {
             fields: {
               value: 'option',
@@ -23,7 +25,7 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-36ea91b7ba0c',
+        uuid: exampleFormCheckboxOptionIds.nodes.span1,
         dom: {
           tagName: 'span',
           properties: {

@@ -2,7 +2,6 @@ import type { Node, NodeDefinition, ProjectCatalog } from '@facadeur/domain';
 import { definitions as atoms } from './catalog/atoms';
 import { definitions as components } from './catalog/components';
 import { definitions as pages } from './catalog/pages';
-import { fonts } from './catalog/fonts';
 import { globalStyles } from './catalog/global-styles';
 import { schemas } from './catalog/schemas';
 import { tokens } from './catalog/tokens';
@@ -13,7 +12,6 @@ export const exampleCatalog = {
   pages: nameDefinitions(pages),
   schemas,
   tokens,
-  fonts,
   globalStyles,
 } satisfies ProjectCatalog;
 

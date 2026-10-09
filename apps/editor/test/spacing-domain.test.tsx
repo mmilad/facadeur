@@ -9,7 +9,9 @@ import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { withTokenBreakpoint } from '../src/domain/edits/token-edit';
 import { App } from '../src/ui/shell/EditorShell';
 import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
+import { tokenAtPath } from './fixtures/token-tree';
 import { openSettingsDomain } from './settings-navigation';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
 
 const documents = editorStandardCatalog();
 
@@ -67,8 +69,7 @@ describe('spacing domain panel', () => {
 
     await submitNewToken('Gap xl');
 
-    const indexed = readTokenTree(session.getSnapshot().design.tokens);
-    expect(indexed.tokens.get('space.gap.xl')).toMatchObject({
+    expect(tokenAtPath(session.getSnapshot().design.tokens, 'space.gap.xl')).toMatchObject({
       type: 'dimension',
       value: '16px',
     });
@@ -86,7 +87,7 @@ describe('spacing domain panel', () => {
       (host!.querySelector('button[name="remove-spacing-space.4"]') as HTMLButtonElement).click();
     });
 
-    expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has('space.4')).toBe(true);
+    expect(tokenAtPath(session.getSnapshot().design.tokens, 'space.4')).toBeDefined();
     expect(session.getSnapshot().notice?.tone).toBe('error');
     expect(session.getSnapshot().notice?.text).toMatch(/\{space\.4\}/);
   });
@@ -100,9 +101,7 @@ describe('spacing domain panel', () => {
 
     await submitNewToken('   ');
 
-    expect(readTokenTree(session.getSnapshot().design.tokens).tokens.has('space.gap.xl')).toBe(
-      false,
-    );
+    expect(tokenAtPath(session.getSnapshot().design.tokens, 'space.gap.xl')).toBeUndefined();
     expect(session.getSnapshot().notice?.tone).toBe('error');
     expect(session.getSnapshot().notice?.text).toMatch(/label is required/i);
   });
@@ -117,7 +116,7 @@ describe('spacing domain panel', () => {
     await submitNewToken('Gap md');
 
     expect(
-      readTokenTree(session.getSnapshot().design.tokens).tokens.get('space.gap.md2'),
+      tokenAtPath(session.getSnapshot().design.tokens, 'space.gap.md2'),
     ).toMatchObject({ type: 'dimension' });
     expect(session.getSnapshot().notice?.tone).not.toBe('error');
   });
@@ -129,19 +128,29 @@ describe('spacing domain panel', () => {
     });
     session.executeDesign({
       type: 'setToken',
-      path: 'space.5',
-      token: withTokenBreakpoint(session.getSnapshot().design.tokens, 'space.5', 'sm', '28px'),
+      family: 'space',
+      token: withTokenBreakpoint(
+        session.getSnapshot().design.tokens,
+        'space',
+        fixtureIds.tokens.space.scale.step5,
+        fixtureIds.catalog.breakpoints.tablet,
+        '28px',
+      ),
     });
 
     await openSpacing(session);
     await act(async () => {
-      session.setFocusViewport('sm');
+      session.setFocusViewport(fixtureIds.catalog.breakpoints.tablet);
       session.setEditTarget('viewport');
     });
 
     expect(host!.textContent).toContain('Spacing overrides at Tablet');
     const indexedBefore = readTokenTree(session.getSnapshot().design.tokens);
-    expect(indexedBefore.tokens.get('space.5')?.breakpoints.sm).toBe('28px');
+    expect(
+      indexedBefore.tokens.get(fixtureIds.tokens.space.scale.step5)?.breakpoints[
+        fixtureIds.catalog.breakpoints.tablet
+      ],
+    ).toBe('28px');
 
     const resetButton = host!.querySelector('tr[data-token-path="space.5"] .override-cue button');
     expect(resetButton).toBeInstanceOf(HTMLButtonElement);
@@ -150,7 +159,11 @@ describe('spacing domain panel', () => {
     });
 
     const indexedAfter = readTokenTree(session.getSnapshot().design.tokens);
-    expect(indexedAfter.tokens.get('space.5')?.breakpoints.sm).toBeUndefined();
-    expect(indexedAfter.tokens.get('space.5')?.value).toBe('20px');
+    expect(
+      indexedAfter.tokens.get(fixtureIds.tokens.space.scale.step5)?.breakpoints[
+        fixtureIds.catalog.breakpoints.tablet
+      ],
+    ).toBeUndefined();
+    expect(indexedAfter.tokens.get(fixtureIds.tokens.space.scale.step5)?.value).toBe('20px');
   });
 });

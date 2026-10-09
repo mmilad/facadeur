@@ -1,8 +1,8 @@
-import { readTokenTree } from '@facadeur/core';
 import {
   rootTokenOverrideCommand,
   rootTokenTargets,
 } from '../../../../domain/root-token-overrides';
+import { tokenRefsByType } from '../../../../domain/editing';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
 import { TokenValueControl } from '../../../controls/fields/TokenValueControl';
 
@@ -20,7 +20,6 @@ export function RootTokenOverridesPanel({
     if (!known.has(path)) targets.push({ path, label: path, fallback: '' });
   }
   if (!targets.length) return null;
-  const globalTokens = [...readTokenTree(snap.design.tokens).tokens.values()];
   return (
     <section aria-label="Exposed component styles">
       <h3>Exposed component styles</h3>
@@ -36,9 +35,7 @@ export function RootTokenOverridesPanel({
               label={target.label}
               value={value ?? ''}
               placeholder={target.fallback || 'Inherited'}
-              tokens={globalTokens
-                .filter((token) => token.type === target.type)
-                .map((token) => `{${token.path}}`)}
+              tokens={tokenRefsByType(snap.design.tokens, target.type)}
               color={target.type === 'color'}
               onCommit={(next) => {
                 try {

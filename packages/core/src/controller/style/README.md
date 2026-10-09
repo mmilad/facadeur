@@ -7,8 +7,14 @@ state. The project retains validation, manifest replacement, and executor owners
 ```ts
 project.styles.globalTokens;
 project.styles.globalTokenIndex;
-project.styles.setGlobalToken('color.primary', { $type: 'color', $value: '#123456' });
-project.styles.setFont(font);
+project.styles.setGlobalToken('color', {
+  uuid: 'TOKEN_UUID', // replace with an assigned UUID
+  label: 'Primary',
+  group: 'brand',
+  valueType: 'color',
+  value: '#123456',
+});
+project.styles.setGlobalToken('font', font);
 project.styles.setBreakpoints(breakpoints);
 
 const document = project.styles.document('button');
@@ -18,7 +24,7 @@ document.tokenInterface;
 document.nodeStyle('label');
 document.variantStyle('compact');
 document.setStyleBlock(style);
-document.setNodeStyle('label', 'color', '{color.primary}');
+document.setNodeStyle('label', 'color', '{token:TOKEN_UUID}');
 document.setComponentToken(id, 'color.label', token);
 ```
 
@@ -31,11 +37,11 @@ the public pure `applyCommand` API remain available.
 
 ```text
 style/
-  controller.ts          Project facade: global tokens, fonts, breakpoints, document scopes
+  controller.ts          Project facade: token records, breakpoints, document scopes
   document.ts            Document facade: styles, component tokens, token interfaces
   types.ts               Command scopes and project integration contract
   commands.ts            Pure command dispatch and private mutation helpers
-  fonts.ts               Font sources, stacks, validation, and cloning
+  fonts.ts               Font-family token value validation and font styles
   breakpoints.ts         Breakpoint validation and cloning
   layout.ts              Layout parsing, normalization, and token references
   selectors.ts           Selector validation and transformation
@@ -45,13 +51,13 @@ style/
     contract.ts          Validate and canonicalize style contracts
     edit.ts              Prune/rebase nodes and variant axes in style blocks
   tokens/
-    types.ts             DTCG tree, token/group definitions, and indexes
-    syntax.ts            Token path segments and whole-value reference syntax
+    types.ts             UUID-keyed token records, groups, and indexes
+    syntax.ts            Stable UUID reference syntax
     global/
-      tree.ts            DTCG indexing/treewalk and public tree editing functions
-      read.ts            Parse inherited metadata and breakpoint values
-      mutate.ts          Validate paths, construct entries, edit groups, prune empty groups
+      tree.ts            UUID-key validation, token indexing, generated paths, and tree edits
+      selector.ts        Generate CSS custom-property names from derived token paths
       values.ts          Validate typed token values and responsive overrides
+      legacy-migration.ts One-time migration of path-keyed tokens and references
     component/
       contract.ts        Component-token parsing, paths, defaults, and compatibility
       commands.ts        Set/remove/rename component tokens
@@ -61,9 +67,10 @@ style/
     rewrite.ts           Rewrite local component-token references on rename
 ```
 
-DTCG traversal and style traversal remain separate because they implement different
-data contracts. Reference collection and rewriting retain their existing surfaces;
-aligning those surfaces is recorded separately in `docs/plan.md`.
+Global token identity and references use UUIDs. A token's CSS custom-property path is derived
+from its family, group, and label; it is not persisted as token identity. Component tokens keep
+their separate path-based contract. The legacy migration module is used only at document and
+catalog read boundaries.
 
 Serialization and validation import pure algorithms directly. They never import the
 live controllers or command dispatcher. Token evaluation/CSS output remains owned by

@@ -9,7 +9,6 @@ import type {
   Expose,
   FieldDefinition,
   FieldValue,
-  FontFamily,
   IconDefinition,
   Layout,
   PreviewData,
@@ -131,9 +130,8 @@ export interface FlatDocument {
   variants: VariantAxis[];
   variantPresets?: VariantPreset[];
   settings: DocumentSettings;
-  /** DTCG tree. Empty when the file omits tokens. References stay unresolved. */
+  /** UUID-keyed design token families. References stay unresolved until compiled. */
   tokens: TokenTree;
-  fonts: FontFamily[];
   icons?: IconDefinition[];
   /** Component style block: base, variants, states, breakpoints. */
   styles?: StyleBlock;

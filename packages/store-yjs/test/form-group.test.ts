@@ -1,20 +1,29 @@
 import { describe, expect, it } from 'vitest';
-import { toNested, validateDocumentFile } from '@facadeur/core';
+import { toNested, validateDocumentFile, type DocumentFile } from '@facadeur/core';
 import { createDocumentStore } from '@facadeur/store-yjs';
-import select from '../../../examples/atoms/form-native-select.json';
 
-describe('form group and options persistence', () => {
-  it('preserves options bindings and editable group names through reload and Undo', () => {
-    const store = createDocumentStore(validateDocumentFile(select));
+const initial: DocumentFile = {
+  version: 1,
+  id: 'group-persistence',
+  name: 'Group persistence',
+  kind: 'component',
+  group: 'form',
+  root: { id: 'root', type: 'frame', children: [] },
+};
+
+describe('document group persistence', () => {
+  it('preserves editable group names through reload, undo, and redo', () => {
+    const store = createDocumentStore(validateDocumentFile(initial));
     store.execute({ type: 'setDocumentGroup', group: 'Custom controls' });
     const saved = toNested(store.getDocument());
     expect(saved.group).toBe('Custom controls');
-    if (saved.root.type !== 'frame') throw new Error('Expected select frame');
-    expect(saved.root.bindings).toContainEqual({ target: 'options', field: 'options' });
-    expect(toNested(createDocumentStore(saved).getDocument())).toEqual(saved);
+    const reloaded = createDocumentStore(saved);
+    expect(toNested(reloaded.getDocument())).toEqual(saved);
+    reloaded.destroy();
     store.undo();
     expect(store.getDocument().group).toBe('form');
     store.redo();
     expect(store.getDocument().group).toBe('Custom controls');
+    store.destroy();
   });
 });

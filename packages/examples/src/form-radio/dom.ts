@@ -1,7 +1,8 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleFormRadioIds } from './idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-f4367359df0f',
+  uuid: exampleFormRadioIds.nodes.root,
   data: {
     name: 'Radio',
   },

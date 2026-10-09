@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
 import { createStyleEngine } from '@facadeur/style-engine';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
 
 function component(id: string): DocumentFile {
   return {
@@ -12,14 +13,14 @@ function component(id: string): DocumentFile {
     root: { id: 'root', type: 'frame' },
     settings: {
       breakpoints: [
-        { id: 'base', label: 'Base', minWidth: 0 },
-        { id: 'wide', label: 'Wide', minWidth: 800 },
+        { uuid: fixtureIds.catalog.breakpoints.phone, label: 'Base', minWidth: 0 },
+        { uuid: fixtureIds.catalog.breakpoints.wide, label: 'Wide', minWidth: 800 },
       ],
     },
     styles: {
       declarations: { color: 'red' },
       breakpoints: {
-        wide: { declarations: { color: 'blue' } },
+        [fixtureIds.catalog.breakpoints.wide]: { declarations: { color: 'blue' } },
       },
     },
   };

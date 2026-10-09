@@ -4,13 +4,14 @@ import {
   type DesignShadowValue,
 } from '../src/ui/sidebar/design/DesignShadowEditor';
 import { editTypographyField } from '../src/ui/sidebar/design/DesignTypographyEditor';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 describe('complex design token editor adapters', () => {
   it('keeps typography breakpoint edits sparse and preserves other overrides', () => {
     const base = {
-      fontFamily: '{font.sans}',
+      fontFamily: fixtureTokenRef(fixtureIds.tokens.font.inter),
       fontSize: '16px',
-      fontWeight: '{font.weight.regular}',
+      fontWeight: fixtureTokenRef(testUuid19),
       lineHeight: 1.5,
       letterSpacing: '0',
     };
@@ -21,21 +22,21 @@ describe('complex design token editor adapters', () => {
     expect(editTypographyField(stored, 'fontSize', '16px', { breakpoint: true, base })).toBeNull();
     expect(
       editTypographyField(
-        { fontSize: '20px', fontWeight: '{font.weight.bold}' },
+        { fontSize: '20px', fontWeight: fixtureTokenRef(testUuid20) },
         'fontSize',
         null,
         { breakpoint: true, base },
       ),
-    ).toEqual({ fontWeight: '{font.weight.bold}' });
+    ).toEqual({ fontWeight: fixtureTokenRef(testUuid20) });
   });
 
   it('keeps raw aliases and the array shape when editing structured shadows', () => {
     const shadows: DesignShadowValue[] = [
       {
-        color: '{color.shadow}',
+        color: fixtureTokenRef(testUuid21),
         offsetX: '0px',
         offsetY: '2px',
-        blur: '{space.4}',
+        blur: fixtureTokenRef(fixtureIds.tokens.space.scale.step4),
         spread: '0px',
       },
       {
@@ -48,19 +49,19 @@ describe('complex design token editor adapters', () => {
     const next = editShadowField(shadows, 1, 'offsetY', '6px');
     expect(Array.isArray(next)).toBe(true);
     expect(next).toEqual([shadows[0], { ...shadows[1], offsetY: '6px' }]);
-    expect((next as DesignShadowValue[])[0]?.color).toBe('{color.shadow}');
+    expect((next as DesignShadowValue[])[0]?.color).toBe(fixtureTokenRef(testUuid21));
   });
 
   it('allows resetting an optional inset without rewriting aliases', () => {
     const value: DesignShadowValue = {
-      color: '{color.shadow}',
+      color: fixtureTokenRef(testUuid21),
       offsetX: '0px',
       offsetY: '1px',
       blur: '2px',
       inset: true,
     };
     expect(editShadowField(value, 0, 'inset', false)).toEqual({
-      color: '{color.shadow}',
+      color: fixtureTokenRef(testUuid21),
       offsetX: '0px',
       offsetY: '1px',
       blur: '2px',

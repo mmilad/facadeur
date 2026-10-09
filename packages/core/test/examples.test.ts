@@ -1,107 +1,32 @@
-import { readdirSync, readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
   compileDocumentValidator,
-  documentJsonSchema,
-  publicFieldsFor,
-  toFlat,
-  toNested,
-  validateCatalog,
-  type SchemaCatalog,
+  validateProjectCatalog,
 } from '@facadeur/core';
-
-const examplesDir = fileURLToPath(new URL('../../../examples/', import.meta.url));
-const schemaPath = fileURLToPath(new URL('../../../schema/document.schema.json', import.meta.url));
-const exampleSchemaCatalog = JSON.parse(
-  readFileSync(`${examplesDir}schemas.json`, 'utf8'),
-) as SchemaCatalog;
+import { createExampleCatalog, exampleCatalogDefinitions } from '@facadeur/examples';
 
 describe('examples', () => {
-  const files = readdirSync(examplesDir)
-    .filter((name) => name.endsWith('.json') && name !== 'schemas.json')
-    .sort();
+  it('validates the canonical example catalog and its UUID keyed resources', () => {
+    const catalog = validateProjectCatalog(createExampleCatalog());
+    const definitions = exampleCatalogDefinitions();
 
-  it('validates every example and round-trips it', () => {
-    expect(files.length).toBeGreaterThan(0);
-    const raw = files.map(
-      (name) => JSON.parse(readFileSync(`${examplesDir}${name}`, 'utf8')) as unknown,
+    expect(Object.keys(catalog.atoms).length).toBeGreaterThan(0);
+    expect(Object.keys(catalog.components).length).toBeGreaterThan(0);
+    expect(Object.keys(catalog.pages).length).toBeGreaterThan(0);
+    expect(definitions).toHaveLength(
+      Object.keys(catalog.atoms).length +
+        Object.keys(catalog.components).length +
+        Object.keys(catalog.pages).length,
     );
-    const documents = validateCatalog(raw, { schemaCatalog: exampleSchemaCatalog });
-    for (const document of documents) {
-      expect(toNested(toFlat(document))).toEqual(document);
+    for (const family of ['color', 'space', 'radius', 'shadow', 'type', 'font'] as const) {
+      for (const [uuid, token] of Object.entries(catalog.tokens?.[family] ?? {})) {
+        expect(token.uuid).toBe(uuid);
+      }
     }
-    for (const id of ['button', 'link']) {
-      const atom = documents.find((document) => document.id === id);
-      expect(atom?.kind).toBe('atom');
-      expect(atom?.fields?.length).toBeGreaterThan(0);
-    }
-    for (const id of ['input', 'textarea']) {
-      const control = documents.find((document) => document.id === id);
-      expect(control?.kind).toBe('component');
-      expect(control?.group).toBe('form');
-    }
-    const input = documents.find((document) => document.id === 'input')!;
-    expect(input.schemaUse).toEqual({
-      fields: [{ name: 'label', type: { kind: 'type', type: 'string' } }],
-    });
-    expect(input.expose?.fields).toEqual({
-      value: 'control.value',
-      placeholder: 'control.placeholder',
-      name: 'control.name',
-    });
-    expect([
-      ...publicFieldsFor(
-        input,
-        new Map(documents.map((document) => [document.id, document])),
-      ).keys(),
-    ]).toEqual(['label', 'value', 'placeholder', 'name', 'disabled']);
-    const textarea = documents.find((document) => document.id === 'textarea');
-    expect(textarea?.fields?.length).toBeGreaterThan(0);
-    const link = documents.find((document) => document.id === 'link');
-    expect(link?.fields?.map((field) => field.name)).toEqual(['label', 'href']);
-    expect(textarea?.variants?.[0]?.name).toBe('resize');
-    const toggle = documents.find((document) => document.id === 'form-toggle');
-    expect(toggle?.styles?.children?.switch?.declarations?.borderRadius).toBe('{radius.full}');
-    expect(toggle?.styles?.children?.thumb?.declarations?.borderRadius).toBe('{radius.full}');
-    const media = documents.find((document) => document.id === 'media');
-    expect(media?.fields?.find((field) => field.name === 'src')?.required).toBe(true);
-    expect(media?.fields?.find((field) => field.name === 'alt')?.required).toBeUndefined();
-    expect(media?.root).toMatchObject({
-      children: [
-        { type: 'image', displayOn: { path: 'kind', equals: 'image' } },
-        { type: 'frame', tag: 'video', displayOn: { path: 'kind', equals: 'video' } },
-      ],
-    });
-    const page = documents.find((document) => document.id === 'specimen');
-    expect(page?.kind).toBe('page');
-    expect(page?.root).toMatchObject({
-      type: 'frame',
-      children: [{ type: 'instance', component: 'specimen-section' }],
-    });
-    const formSection = documents.find((document) => document.id === 'form-controls-section');
-    expect(formSection?.kind).toBe('component');
-    expect(formSection?.group).toBe('form');
-    expect(formSection?.fields?.find((field) => field.name === 'formFields')).toMatchObject({
-      type: 'array',
-      items: { type: 'object' },
-    });
-    const dataForm =
-      formSection?.root.type === 'frame'
-        ? formSection.root.children?.find((child) => child.id === 'data-driven-form')
-        : undefined;
-    const repeatedForm =
-      dataForm?.type === 'frame'
-        ? dataForm.children?.find((child) => child.id === 'data-form')
-        : undefined;
-    expect(repeatedForm).toMatchObject({
-      repeat: { path: 'formFields', as: 'field', key: 'id' },
-    });
-  });
-
-  it('exports JSON Schema that matches the committed file', () => {
-    const committed = JSON.parse(readFileSync(schemaPath, 'utf8')) as unknown;
-    expect(committed).toEqual(JSON.parse(JSON.stringify(documentJsonSchema())));
+    expect(catalog.globalStyles?.breakpoints?.length).toBeGreaterThan(0);
+    expect(catalog.globalStyles?.breakpoints?.every((breakpoint) => Boolean(breakpoint.uuid))).toBe(
+      true,
+    );
   });
 
   it('can describe a different kind list', () => {

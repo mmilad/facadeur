@@ -4,10 +4,11 @@ import { root } from './dom';
 import { config } from './config';
 import { styles } from './style';
 import { schema } from './schema';
+import { ids as exampleFormCheckboxIds } from './idList';
 const schemaSource = { kind: 'inline', schema } as const;
 
 export const definition = {
-  uuid: '550e8400-e29b-41d4-a716-420b18ee8a9d',
+  uuid: exampleFormCheckboxIds.definition,
   name: 'Checkbox',
   kind: 'atom',
   schema: schemaSource,

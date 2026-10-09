@@ -11,8 +11,14 @@ import {
   validateCatalog,
 } from '@facadeur/core';
 import type { DocumentFile } from '@facadeur/core';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
 
-const globals = new Set(['color.accent.default', 'color.bg.canvas', 'color.neutral.600']);
+const globalTokenUuids = {
+  accentDefault: fixtureIds.tokens.color.accent.default,
+  canvas: fixtureIds.tokens.color.bg.canvas,
+  neutral600: fixtureIds.tokens.color.neutral._600,
+};
+const globals = new Set(Object.values(globalTokenUuids));
 
 describe('component tokens', () => {
   it('round-trips componentTokens through flat and nested', () => {
@@ -25,11 +31,11 @@ describe('component tokens', () => {
         n_border1: {
           path: 'color.border',
           type: 'color',
-          value: '{color.neutral.600}',
+          value: `{token:${globalTokenUuids.neutral600}}`,
           label: 'Outline',
         },
       },
-      tokenInterface: { reads: ['color.neutral.600'] },
+      tokenInterface: { reads: [globalTokenUuids.neutral600] },
       root: { id: 'root', type: 'frame', tag: 'div' },
     };
     expect(toNested(toFlat(file))).toEqual(file);
@@ -42,7 +48,11 @@ describe('component tokens', () => {
       name: 'Input',
       kind: 'component',
       componentTokens: {
-        'color.border': { type: 'color', value: '{color.neutral.600}', label: 'Outline' },
+        'color.border': {
+          type: 'color',
+          value: `{token:${globalTokenUuids.neutral600}}`,
+          label: 'Outline',
+        },
       } as unknown as DocumentFile['componentTokens'],
       root: { id: 'root', type: 'frame', tag: 'div' },
     });
@@ -69,11 +79,11 @@ describe('component tokens', () => {
         type: 'setComponentToken',
         id,
         path: 'color.border',
-        token: { type: 'color', value: '{color.neutral.600}' },
+        token: { type: 'color', value: `{token:${globalTokenUuids.neutral600}}` },
       },
-      { globalTokenPaths: globals },
+      { globalTokenUuids: globals },
     );
-    expect(next.tokenInterface?.reads).toEqual(['color.neutral.600']);
+    expect(next.tokenInterface?.reads).toEqual([globalTokenUuids.neutral600]);
     expect(next.tokenInterface?.reads).not.toContain('color.border');
   });
 
@@ -88,11 +98,11 @@ describe('component tokens', () => {
         [id]: {
           path: 'color.border',
           type: 'color',
-          value: '{color.neutral.600}',
+          value: `{token:${globalTokenUuids.neutral600}}`,
         },
       },
       styles: { declarations: { borderColor: '{color.border}' } },
-      tokenInterface: { reads: ['color.neutral.600'] },
+      tokenInterface: { reads: [globalTokenUuids.neutral600] },
       root: { id: 'root', type: 'frame', tag: 'div' },
     });
     const next = applyCommand(
@@ -102,7 +112,7 @@ describe('component tokens', () => {
         id,
         path: 'color.outline',
       },
-      { globalTokenPaths: globals },
+      { globalTokenUuids: globals },
     );
     expect(next.componentTokens?.[id]?.path).toBe('color.outline');
     expect(next.styles?.declarations?.borderColor).toBe('{color.outline}');
@@ -123,9 +133,9 @@ describe('component tokens', () => {
           type: 'setComponentToken',
           id: createId(),
           path: 'color.bg',
-          token: { type: 'color', value: '{color.bg.canvas}' },
+          token: { type: 'color', value: `{token:${globalTokenUuids.canvas}}` },
         },
-        { globalTokenPaths: globals },
+        { globalTokenUuids: globals },
       ),
     ).toThrow(/Page documents cannot define component tokens/);
   });
@@ -137,7 +147,22 @@ describe('component tokens', () => {
         id: 'project-template',
         name: 'Design',
         kind: 'atom',
-        tokens: { color: { $type: 'color', accent: { default: { $value: '#00f' } } } },
+        tokens: {
+          color: {
+            [globalTokenUuids.accentDefault]: {
+              uuid: globalTokenUuids.accentDefault,
+              label: 'Default',
+              group: 'accent',
+              valueType: 'color',
+              value: '#00f',
+            },
+          },
+          space: {},
+          radius: {},
+          shadow: {},
+          type: {},
+          font: {},
+        },
         root: { id: 'root', type: 'frame', tag: 'div' },
       },
       {
@@ -149,10 +174,10 @@ describe('component tokens', () => {
           n_border: {
             path: 'color.border',
             type: 'color',
-            value: '{color.accent.default}',
+            value: `{token:${globalTokenUuids.accentDefault}}`,
           },
         },
-        tokenInterface: { reads: ['color.accent.default'] },
+        tokenInterface: { reads: [globalTokenUuids.accentDefault] },
         root: { id: 'root', type: 'frame', tag: 'div' },
       },
       {
@@ -161,8 +186,8 @@ describe('component tokens', () => {
         name: 'Parent',
         kind: 'component',
         tokenInterface: {
-          reads: ['color.accent.default'],
-          sets: { 'input.color.border': '{color.accent.default}' },
+          reads: [globalTokenUuids.accentDefault],
+          sets: { 'input.color.border': `{token:${globalTokenUuids.accentDefault}}` },
         },
         root: { id: 'root', type: 'frame', tag: 'div' },
       },

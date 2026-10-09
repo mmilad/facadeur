@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
 import { createDocumentStore, REMOTE_ORIGIN } from '@facadeur/store-yjs';
 import * as Y from 'yjs';
+import { tokenRef as fixtureTokenRef } from '@facadeur/examples';
+const testUuid35 = globalThis.crypto.randomUUID();
+const testUuid36 = globalThis.crypto.randomUUID();
 
 const initial: DocumentFile = {
   version: 1,
@@ -139,7 +142,16 @@ describe('shared Yjs document history', () => {
     other.destroy();
     for (const corrupt of [
       (doc: Y.Doc) => doc.getMap('meta').set('rootId', 'missing'),
-      (doc: Y.Doc) => doc.getMap('tokens').set('bad', { $type: 'color', $value: '{missing}' }),
+      (doc: Y.Doc) =>
+        doc.getMap('tokens').set('color', {
+          [testUuid35]: {
+            uuid: testUuid35,
+            label: 'Broken',
+            group: '',
+            valueType: 'color',
+            value: fixtureTokenRef(testUuid36),
+          },
+        }),
     ]) {
       const server = createDocumentStore(initial);
       corrupt(server.doc);

@@ -1,8 +1,11 @@
 import type { Node } from '@facadeur/domain';
+import { tokenIds as exampleTokenIds } from '../catalog/tokens/idList';
+import { ids as exampleFormCheckboxIds } from './idList';
+import { tokenRef } from '../references';
 
 export const styles = {
-  '550e8400-e29b-41d4-a716-60b63699ece2': {
-    accentColor: '{color.accent.default}',
+  [exampleFormCheckboxIds.nodes.root]: {
+    accentColor: tokenRef(exampleTokenIds.color.accent.default),
     width: '16px',
     height: '16px',
   },

@@ -1,198 +1,157 @@
 import { describe, expect, it } from 'vitest';
-import { DocumentError } from '@facadeur/core';
+import { DocumentError, tokenReferenceValue } from '@facadeur/core';
 import { activeBreakpoints, configuredBreakpoints, loadTokens } from '@facadeur/tokens';
+import {
+  breakpointIds,
+  colorTokens,
+  fontToken,
+  record,
+  space4Token,
+  testBreakpoints,
+  testTokens,
+  tokenIds,
+  tokenSet,
+} from './fixtures';
+const testUuid40 = globalThis.crypto.randomUUID();
 
-const colorGroup = {
-  color: {
-    $type: 'color',
-    blue: {
-      '500': { $value: '#2563eb', $description: 'Primary blue' },
-    },
-    accent: { $value: '{color.blue.500}' },
-  },
-};
+describe('UUID-keyed token resolution', () => {
+  it('derives CSS paths from family, group, and label while retaining UUID identity', () => {
+    const design = loadTokens({ tokens: testTokens, breakpoints: testBreakpoints });
 
-describe('DTCG parser', () => {
-  it('inherits $type from the nearest group and lets a token override it', () => {
-    const design = loadTokens({
-      tokens: {
-        space: {
-          $type: 'dimension',
-          sm: { $value: '8px' },
-          paint: { $type: 'color', $value: '#fff' },
-        },
-      },
-    });
-    expect(design.tokens.find((token) => token.path === 'space.sm')).toMatchObject({
-      type: 'dimension',
-      value: '8px',
-    });
-    expect(design.tokens.find((token) => token.path === 'space.paint')).toMatchObject({
+    expect(design.tokens.find((token) => token.path === 'color.blue.500')).toMatchObject({
+      name: '--color-blue-500',
       type: 'color',
+      value: '#2563eb',
     });
-  });
-
-  it('inherits tier from a group and lets a nested group override it', () => {
-    const design = loadTokens({ tokens: colorGroup });
-    expect(design.tokens.find((token) => token.path === 'color.blue.500')?.tier).toBeUndefined();
-    const tiered = loadTokens({
-      tokens: {
-        color: {
-          $type: 'color',
-          $extensions: { facadeur: { tier: 'primitive' } },
-          blue: { '500': { $value: '#2563eb' } },
-          bg: {
-            $extensions: { facadeur: { tier: 'semantic' } },
-            canvas: { $value: '{color.blue.500}' },
-          },
-        },
-      },
-    });
-    expect(tiered.tokens.find((token) => token.path === 'color.blue.500')?.tier).toBe('primitive');
-    expect(tiered.tokens.find((token) => token.path === 'color.bg.canvas')?.tier).toBe('semantic');
-  });
-
-  it('resolves a reference chain to var() and keeps the description', () => {
-    const design = loadTokens({
-      tokens: {
-        color: {
-          $type: 'color',
-          blue: { '500': { $value: '#2563eb' } },
-          mid: { $value: '{color.blue.500}' },
-          accent: { $value: '{color.mid}' },
-        },
-      },
-    });
-    const accent = design.properties.find((property) => property.name === '--color-accent');
-    expect(accent?.value).toBe('var(--color-mid)');
-    expect(design.tokens.find((token) => token.path === 'color.blue.500')?.description).toBe(
-      undefined,
+    expect(design.tokens.find((token) => token.path === 'color.accent.Default')?.tier).toBe(
+      'semantic',
     );
-    const described = loadTokens({ tokens: colorGroup });
-    expect(described.tokens.find((token) => token.path === 'color.blue.500')?.description).toBe(
-      'Primary blue',
-    );
+    expect(design.properties.find((property) => property.name === '--color-accent-default')?.value)
+      .toBe('var(--color-blue-500)');
+    expect(design.fonts).toEqual([fontToken]);
   });
 
-  it('resolves references inside shadow and typography composites', () => {
-    const design = loadTokens({
-      fonts: [
-        {
-          id: 'sans',
-          family: 'Inter',
-          weights: [400],
-          source: { type: 'google', family: 'Inter' },
-          fallbacks: ['sans-serif'],
-        },
-      ],
-      tokens: {
-        color: { $type: 'color', ink: { $value: '#111111' } },
-        shadow: {
-          $type: 'shadow',
-          card: {
-            $value: {
-              color: '{color.ink}',
-              offsetX: '0px',
-              offsetY: '4px',
-              blur: '12px',
-              spread: '0px',
-            },
-          },
-        },
-        type: {
-          $type: 'typography',
-          body: {
-            $value: {
-              fontFamily: '{font.sans}',
-              fontSize: '16px',
-              fontWeight: 400,
-              lineHeight: 1.5,
-            },
-          },
-        },
-      },
-    });
-    expect(design.properties.find((property) => property.name === '--shadow-card')?.value).toBe(
-      '0px 4px 12px 0px var(--color-ink)',
+  it('resolves UUID references inside shadow, typography, and font values', () => {
+    const design = loadTokens({ tokens: testTokens, breakpoints: testBreakpoints });
+
+    expect(design.properties.find((property) => property.name === '--shadow-lg')?.value).toBe(
+      '0px 16px 40px 0px #0f172a29',
     );
     expect(
       design.properties.find((property) => property.name === '--type-body--font-family')?.value,
-    ).toBe('var(--font-sans)');
+    ).toBe('var(--font-inter)');
+    expect(
+      design.properties.find((property) => property.name === '--type-body--font-size')?.breakpoints[
+        breakpointIds.tablet
+      ],
+    ).toBe('17px');
   });
 
-  it('reports a reference cycle with the path that closed it', () => {
+  it('reports a reference cycle by stable UUID', () => {
+    const tokens = tokenSet({
+      color: {
+        [tokenIds.cycleA]: record(
+          tokenIds.cycleA,
+          'A',
+          'cycle',
+          'color',
+          tokenReferenceValue(tokenIds.cycleB),
+        ),
+        [tokenIds.cycleB]: record(
+          tokenIds.cycleB,
+          'B',
+          'cycle',
+          'color',
+          tokenReferenceValue(tokenIds.cycleA),
+        ),
+      },
+    });
+
+    expect(() => loadTokens({ tokens })).toThrow(DocumentError);
+    expect(() => loadTokens({ tokens })).toThrow('Cycle in token references:');
+  });
+
+  it('rejects missing and mismatched UUID references', () => {
+    const missing = tokenSet({
+      color: {
+        [tokenIds.accent]: {
+          ...colorTokens[tokenIds.accent]!,
+          value: tokenReferenceValue(tokenIds.missing),
+        },
+      },
+    });
+    expect(() => loadTokens({ tokens: missing })).toThrow(/Missing token/);
+
+    const mismatch = tokenSet({
+      color: {
+        [tokenIds.accent]: {
+          ...colorTokens[tokenIds.accent]!,
+          value: tokenReferenceValue(tokenIds.space4),
+        },
+      },
+      space: {
+        [tokenIds.space4]: space4Token,
+      },
+    });
+    expect(() => loadTokens({ tokens: mismatch })).toThrow(/expects a color/);
+  });
+
+  it('requires UUID keys and complete records instead of interpreting DTCG paths', () => {
+    expect(() => loadTokens({ tokens: { color: { 'blue.500': {} } } })).toThrow(/must be a UUID/);
+    const { valueType, ...incompleteBlue500 } = colorTokens[tokenIds.blue500]!;
+    expect(valueType).toBe('color');
     expect(() =>
       loadTokens({
         tokens: {
           color: {
-            $type: 'color',
-            a: { $value: '{color.b}' },
-            b: { $value: '{color.a}' },
+            [tokenIds.blue500]: incompleteBlue500,
           },
         },
       }),
-    ).toThrow(DocumentError);
-    try {
-      loadTokens({
-        tokens: {
-          color: {
-            $type: 'color',
-            a: { $value: '{color.b}' },
-            b: { $value: '{color.a}' },
-          },
-        },
-      });
-    } catch (error) {
-      expect(error).toMatchObject({ code: 'token-cycle' });
-      expect((error as Error).message).toBe(
-        'Cycle in token references: color.a → color.b → color.a',
-      );
-    }
-  });
-
-  it('reports a missing reference with the token that asked for it', () => {
-    expect(() => loadTokens({ tokens: colorGroup })).not.toThrow();
-    expect(() =>
-      loadTokens({
-        tokens: {
-          color: { $type: 'color', accent: { $value: '{color.missing}' } },
-        },
-      }),
-    ).toThrow(/Missing token "\{color\.missing\}" referenced by "color\.accent"/);
-  });
-
-  it('rejects a token whose reference has the wrong type', () => {
-    expect(() =>
-      loadTokens({
-        tokens: {
-          color: { $type: 'color', ink: { $value: '#111111' } },
-          space: { $type: 'dimension', gap: { $value: '{color.ink}' } },
-        },
-      }),
-    ).toThrow(/expects a dimension/);
-  });
-
-  it('rejects a token with children, a missing type, and a bad name', () => {
-    expect(() =>
-      loadTokens({
-        tokens: { color: { $type: 'color', $value: '#fff', blue: { $value: '#00f' } } },
-      }),
-    ).toThrow(/cannot contain child/);
-    expect(() => loadTokens({ tokens: { ink: { $value: '#fff' } } })).toThrow(/has no \$type/);
-    expect(() =>
-      loadTokens({ tokens: { Color: { $type: 'color', ink: { $value: '#fff' } } } }),
-    ).toThrow(/invalid segment/);
+    ).toThrow(/unknown valueType/);
   });
 });
 
-describe('breakpoints', () => {
-  it('keeps disabled viewports in settings but omits them from active lists', () => {
+describe('breakpoint UUIDs', () => {
+  it('keeps disabled viewports configured but excludes them from active output', () => {
     const configured = configuredBreakpoints([
-      { id: 'xs', minWidth: 375 },
-      { id: 'sm', minWidth: 768, enabled: false },
-      { id: 'md', minWidth: 1024 },
+      testBreakpoints[0]!,
+      { ...testBreakpoints[1]!, enabled: false },
+      testBreakpoints[2]!,
     ]);
-    expect(configured.map((item) => item.id)).toEqual(['xs', 'sm', 'md']);
-    expect(activeBreakpoints(configured).map((item) => item.id)).toEqual(['xs', 'md']);
+
+    expect(configured.map((item) => item.uuid)).toEqual([
+      breakpointIds.phone,
+      breakpointIds.tablet,
+      breakpointIds.laptop,
+    ]);
+    expect(activeBreakpoints(configured).map((item) => item.uuid)).toEqual([
+      breakpointIds.phone,
+      breakpointIds.laptop,
+    ]);
+  });
+
+  it('rejects overrides keyed by an unknown UUID and duplicates of the base UUID', () => {
+    const unknown = tokenSet({
+      space: {
+        [tokenIds.space4]: { ...space4Token,
+          breakpoints: { [testUuid40]: '20px' },
+        },
+      },
+    });
+    expect(() => loadTokens({ tokens: unknown, breakpoints: testBreakpoints })).toThrow(
+      /unknown breakpoint/,
+    );
+
+    const repeatedBase = tokenSet({
+      space: {
+        [tokenIds.space4]: { ...space4Token,
+          breakpoints: { [breakpointIds.phone]: '12px' },
+        },
+      },
+    });
+    expect(() => loadTokens({ tokens: repeatedBase, breakpoints: testBreakpoints })).toThrow(
+      /repeats the base breakpoint/,
+    );
   });
 });

@@ -1,7 +1,8 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleImageIds } from './idList';
 
 export const styles = {
-  '550e8400-e29b-41d4-a716-000000000003': {
+  [exampleImageIds.nodes.root]: {
     width: '100%',
     height: 'auto',
     display: 'block',

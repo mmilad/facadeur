@@ -9,6 +9,7 @@ import {
   tokenPathsReferencingShadow,
 } from '../src/domain/edits/shadow-edit';
 import { tokenMatchesDomain } from '../src/ui/sidebar/design/design-domain';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 describe('shadow-edit', () => {
   it('creates a default shadow token matching shadow.sm', () => {
@@ -51,7 +52,7 @@ describe('shadow-edit', () => {
             color: '#000000',
           },
         },
-        card: { $type: 'shadow', $value: '{shadow.md}' },
+        card: { $type: 'shadow', $value: fixtureTokenRef(fixtureIds.tokens.shadow.md) },
       },
     };
     const refs = tokenPathsReferencingShadow(tree, 'shadow.md');

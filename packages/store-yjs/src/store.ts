@@ -72,6 +72,7 @@ export function createDocumentStore(
       // create competing maps/arrays with unrelated Yjs identities.
       Y.applyUpdate(doc, hydration.update, REMOTE_ORIGIN);
       assertHydratedDocument(doc, flat.id, options);
+      doc.transact(() => patchDocument(doc, canonicalizeFlat(readDocument(doc))), 'migration');
     } else {
       assertDesignResolvable(flat);
       doc.transact(() => {
@@ -97,7 +98,6 @@ export function createDocumentStore(
       doc.getArray('variantPresets'),
       doc.getMap('nodes'),
       doc.getMap('tokens'),
-      doc.getMap('fonts'),
       doc.getMap('styles'),
       doc.getMap('tokenInterface'),
       doc.getMap('componentTokens'),
@@ -216,7 +216,6 @@ function isFlat(value: DocumentFile | FlatDocument): value is FlatDocument {
 function assertDesignResolvable(doc: FlatDocument): void {
   loadTokens({
     tokens: doc.tokens,
-    fonts: doc.fonts,
     breakpoints: doc.settings.breakpoints,
   });
 }

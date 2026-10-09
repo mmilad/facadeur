@@ -1,12 +1,13 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleFormFieldRowIds } from './idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-4c7812fe9f47',
+  uuid: exampleFormFieldRowIds.nodes.root,
   dom: {
     tagName: 'div',
     children: [
       {
-        uuid: '550e8400-e29b-41d4-a716-97d18fb0ecd1',
+        uuid: exampleFormFieldRowIds.nodes.span1,
         dom: {
           tagName: 'span',
           properties: {
@@ -15,7 +16,7 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-2bbcdf8f1792',
+        uuid: exampleFormFieldRowIds.nodes.span2,
         dom: {
           tagName: 'span',
           properties: {
@@ -24,7 +25,7 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-9f1924e8cee9',
+        uuid: exampleFormFieldRowIds.nodes.span3,
         dom: {
           tagName: 'span',
           properties: {

@@ -3,16 +3,60 @@ import {
   applyCommand,
   DocumentError,
   resolveVariantDocument,
+  tokenReferenceValue,
   toFlat,
   toNested,
   validateCatalog,
 } from '@facadeur/core';
 import type { DocumentFile } from '@facadeur/core';
-import button from '../../../examples/button.json';
-import design from '../../../examples/project-template.json';
+import { createExampleCatalog } from '@facadeur/examples';
 
-const buttonFile = button as DocumentFile;
-const designFile = design as DocumentFile;
+const exampleCatalog = createExampleCatalog();
+const exampleColorToken = Object.values(exampleCatalog.tokens!.color).find(
+  (token) => token.group === 'accent' && token.label === 'Default',
+)!;
+const exampleTextToken = Object.values(exampleCatalog.tokens!.color).find(
+  (token) => token.group === 'text' && token.label === 'Primary',
+)!;
+const exampleSpacingToken = Object.values(exampleCatalog.tokens!.space).find(
+  (token) => token.group === 'gap' && token.label === 'Sm',
+)!;
+const breakpointUuid = (label: string) => {
+  const breakpoint = exampleCatalog.globalStyles?.breakpoints?.find(
+    (item) => item.label === label,
+  );
+  if (!breakpoint) throw new Error(`Example catalog is missing the ${label} breakpoint`);
+  return breakpoint.uuid;
+};
+const accentTokenUuid = exampleColorToken.uuid;
+const textPrimaryTokenUuid = exampleTextToken.uuid;
+const colorAccentUuid = exampleColorToken.uuid;
+const gapSmUuid = exampleSpacingToken.uuid;
+const tabletBreakpointUuid = breakpointUuid('Tablet');
+const phoneBreakpointUuid = breakpointUuid('Phone');
+const wideBreakpointUuid = breakpointUuid('Wide');
+
+const buttonFile: DocumentFile = {
+  version: 1,
+  id: 'button',
+  name: 'Button',
+  kind: 'component',
+  styles: {
+    states: { hover: { background: tokenReferenceValue(accentTokenUuid) } },
+  },
+  tokenInterface: { reads: [accentTokenUuid] },
+  root: { id: 'root', type: 'frame', layout: { gap: '{layout.gap}' } },
+};
+
+const designFile: DocumentFile = {
+  version: 1,
+  id: 'example-design',
+  name: 'Example design',
+  kind: 'atom',
+  tokens: exampleCatalog.tokens,
+  settings: { breakpoints: [...(exampleCatalog.globalStyles?.breakpoints ?? [])] },
+  root: { id: 'root', type: 'frame' },
+};
 
 describe('style block and auto layout', () => {
   it('round-trips a style block, token interface, and layout', () => {
@@ -20,7 +64,7 @@ describe('style block and auto layout', () => {
     const document = documents.find((item) => item.id === 'button');
     if (!document) throw new Error('missing button');
     expect(toNested(toFlat(document))).toEqual(document);
-    expect(document.styles?.states?.hover?.background).toBe('{color.accent.hover}');
+    expect(document.styles?.states?.hover?.background).toBe(`{token:${accentTokenUuid}}`);
     expect(document.root.layout?.gap).toBe('{layout.gap}');
   });
 
@@ -114,7 +158,7 @@ describe('style block and auto layout', () => {
         direction: 'row',
         gap: '{layout.gap}',
         width: { mode: 'fixed', size: { unit: '%', value: 50 } },
-        breakpoints: { sm: { gap: '{layout.gap}' } },
+        breakpoints: { [tabletBreakpointUuid]: { gap: '{layout.gap}' } },
       },
     });
     expect(next.nodes.root?.layout).toMatchObject({
@@ -133,7 +177,7 @@ describe('style block and auto layout', () => {
 
   it('requires reads to list every token the style block uses', () => {
     const doc = structuredClone(buttonFile);
-    doc.tokenInterface = { reads: ['space.gap.sm'] };
+    doc.tokenInterface = { reads: [gapSmUuid] };
     expect(() => validateCatalog([designFile, doc])).toThrow(/tokenInterface\.reads/);
   });
 
@@ -141,12 +185,12 @@ describe('style block and auto layout', () => {
     const next = applyCommand(toFlat(buttonFile), {
       type: 'setStyleBlock',
       style: {
-        declarations: { color: '{color.text.primary}' },
+        declarations: { color: `{token:${textPrimaryTokenUuid}}` },
         states: { disabled: { opacity: '0.4' } },
       },
     });
     expect(next.styles).toEqual({
-      declarations: { color: '{color.text.primary}' },
+      declarations: { color: `{token:${textPrimaryTokenUuid}}` },
       states: { disabled: { opacity: '0.4' } },
     });
   });
@@ -169,8 +213,8 @@ describe('style block and auto layout', () => {
       },
       settings: {
         breakpoints: [
-          { id: 'phone', minWidth: 390 },
-          { id: 'wide', minWidth: 900 },
+          { uuid: phoneBreakpointUuid, label: 'Phone', minWidth: 390 },
+          { uuid: wideBreakpointUuid, label: 'Wide', minWidth: 900 },
         ],
       },
       root: { id: 'root', type: 'frame', tag: 'button' },
@@ -183,18 +227,18 @@ describe('style block and auto layout', () => {
       variants: [{ name: 'default' }, { name: 'compact' }],
       settings: {
         breakpoints: [
-          { id: 'phone', minWidth: 390 },
-          { id: 'wide', minWidth: 900 },
+          { uuid: phoneBreakpointUuid, label: 'Phone', minWidth: 390 },
+          { uuid: wideBreakpointUuid, label: 'Wide', minWidth: 900 },
         ],
       },
-      tokenInterface: { reads: ['color.accent'] },
+      tokenInterface: { reads: [colorAccentUuid] },
       styles: {
         children: {
           submit: {
-            declarations: { color: '{color.accent}' },
+            declarations: { color: `{token:${colorAccentUuid}}` },
             states: { hover: { color: 'white' } },
             variants: { variant: { compact: { declarations: { color: 'purple' } } } },
-            breakpoints: { wide: { declarations: { color: 'green' } } },
+            breakpoints: { [wideBreakpointUuid]: { declarations: { color: 'green' } } },
           },
         },
       },
@@ -210,7 +254,7 @@ describe('style block and auto layout', () => {
     expect(resolveVariantDocument(host, 'compact').styles?.children?.submit).toMatchObject({
       declarations: { color: 'purple' },
       states: { hover: { color: 'white' } },
-      breakpoints: { wide: { declarations: { color: 'green' } } },
+      breakpoints: { [wideBreakpointUuid]: { declarations: { color: 'green' } } },
     });
 
     const edited = applyCommand(toFlat(host), {
@@ -220,7 +264,7 @@ describe('style block and auto layout', () => {
     expect(edited.styles?.children?.submit).toEqual({
       declarations: { color: 'orange' },
     });
-    expect(edited.tokenInterface?.reads).toContain('color.accent');
+    expect(edited.tokenInterface?.reads).toContain(colorAccentUuid);
 
     const reset = applyCommand(edited, { type: 'setStyleBlock', style: null });
     expect(reset.styles).toBeUndefined();

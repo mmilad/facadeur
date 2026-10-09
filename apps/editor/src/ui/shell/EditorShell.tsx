@@ -13,14 +13,14 @@ import {
 } from '../../domain/assets/files';
 import { isEditableTarget } from '../../domain/keyboard';
 import type { EditorSession } from '../../domain/session';
-import { isCatalogDocumentView, isDesignDomain } from '../sidebar/design/design-domain';
+import { isCatalogDocumentView, isDesignDomain } from '../design/design-domain';
 import { CatalogCodeStage } from '../stage/CatalogCodeStage';
 import { CatalogPreviewDataStage } from '../stage/CatalogPreviewDataStage';
 import { CatalogSchemaStage } from '../stage/CatalogSchemaStage';
-import { CatalogDesignPropsPanel } from '../sidebar/design/CatalogDesignPropsPanel';
-import { CatalogSchemasPanel } from '../sidebar/design/CatalogSchemasPanel';
+import { CatalogDesignPropsPanel } from '../settings/catalog/CatalogDesignPropsPanel';
+import { CatalogSchemasPanel } from '../settings/catalog/CatalogSchemasPanel';
 import { DesignDomainStage } from '../stage/DesignDomainStage';
-import { SettingsSections } from '../sidebar/design/SettingsSections';
+import { SettingsSections } from '../settings/SettingsSections';
 import { CatalogLayersPanel } from '../sidebar/layers/CatalogLayersPanel';
 import { ProjectTree } from '../sidebar/layers/ProjectTree';
 import { RightRail } from '../sidebar/properties/RightRail';

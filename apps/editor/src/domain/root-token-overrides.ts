@@ -2,6 +2,7 @@ import {
   componentTokenPublicPath,
   listComponentTokens,
   resolveVariantDocument,
+  tokenReference,
   variantPresets,
   type Command,
   type DocumentFile,
@@ -62,9 +63,8 @@ export function rootTokenOverrideCommand(
   if (value === null || !value.trim()) delete sets[path];
   else sets[path] = value.trim();
   const reads = new Set(document.tokenInterface?.reads ?? []);
-  for (const match of (value ?? '').matchAll(/\{([a-z][a-z0-9]*(?:\.[a-z0-9]+)+)\}/g)) {
-    if (!match[1]!.startsWith('font.')) reads.add(match[1]!);
-  }
+  const tokenUuid = tokenReference(value);
+  if (tokenUuid) reads.add(tokenUuid);
   const tokenInterface = {
     ...(reads.size ? { reads: [...reads].sort() } : {}),
     ...(Object.keys(sets).length ? { sets } : {}),

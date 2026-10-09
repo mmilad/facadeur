@@ -11,7 +11,8 @@ export function transformableFieldOptions({
 }): TransformableFieldOption[] {
   const tokenGroups = new Map<string, AutocompleteOption[]>();
   for (const token of tokens) {
-    const group = tokenGroup(token.label);
+    const group = tokenGroup(token);
+    if (!group) continue;
     const items = tokenGroups.get(group) ?? [];
     items.push(token);
     tokenGroups.set(group, items);
@@ -37,7 +38,8 @@ export function transformableFieldOptions({
   ];
 }
 
-function tokenGroup(label: string) {
-  const match = /^--fcdr-([^-]+)/.exec(label);
-  return match?.[1] ? `${match[1][0]!.toUpperCase()}${match[1].slice(1)} tokens` : 'Other tokens';
+function tokenGroup(token: AutocompleteOption) {
+  const root = token.description?.trim().split('.')[0];
+  if (!root) return undefined;
+  return `${root[0]!.toUpperCase()}${root.slice(1)} tokens`;
 }

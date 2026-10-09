@@ -12,6 +12,7 @@ import {
   variantStyleBlock,
   writeStyleDeclaration,
 } from '../src/domain/edits/style-edit';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 describe('component definitions', () => {
   it('builds a field and a variant axis from editor drafts', () => {
@@ -105,15 +106,19 @@ describe('component definitions', () => {
     const next = writeStyleDeclaration(
       {
         declarations: { color: 'red' },
-        breakpoints: { tablet: { declarations: { color: 'blue' } } },
+        breakpoints: {
+          [fixtureIds.catalog.breakpoints.tablet]: { declarations: { color: 'blue' } },
+        },
       },
       'root',
       { nodeId: 'root', axis: 'tone', value: 'ghost', state: 'hover' },
       'background',
-      '{color.bg.muted}',
+      fixtureTokenRef(fixtureIds.tokens.color.bg.muted),
     );
     expect(next?.declarations).toEqual({ color: 'red' });
-    expect(next?.breakpoints?.tablet?.declarations).toEqual({ color: 'blue' });
+    expect(next?.breakpoints?.[fixtureIds.catalog.breakpoints.tablet]?.declarations).toEqual({
+      color: 'blue',
+    });
     expect(
       readStyleDeclarations(next ?? undefined, 'root', {
         nodeId: 'root',
@@ -121,7 +126,7 @@ describe('component definitions', () => {
         value: 'ghost',
         state: 'hover',
       }),
-    ).toEqual({ background: '{color.bg.muted}' });
+    ).toEqual({ background: fixtureTokenRef(fixtureIds.tokens.color.bg.muted) });
     const cleared = writeStyleDeclaration(
       next ?? undefined,
       'root',
@@ -171,39 +176,50 @@ describe('component definitions', () => {
 
   it('writes one breakpoint override and leaves base and other breakpoints alone', () => {
     const source = {
-      declarations: { color: 'red', paddingInline: '{space.3}' },
+      declarations: {
+        color: 'red',
+        paddingInline: fixtureTokenRef(fixtureIds.tokens.space.scale.step3),
+      },
       breakpoints: {
-        tablet: { declarations: { paddingInline: '{space.5}' } },
-        desktop: { declarations: { color: 'black' } },
+        [fixtureIds.catalog.breakpoints.tablet]: {
+          declarations: { paddingInline: fixtureTokenRef(fixtureIds.tokens.space.scale.step5) },
+        },
+        [fixtureIds.catalog.breakpoints.desktop]: { declarations: { color: 'black' } },
       },
     };
     const next = writeStyleDeclaration(
       source,
       'root',
-      { nodeId: 'root', breakpointId: 'tablet' },
+      { nodeId: 'root', breakpointId: fixtureIds.catalog.breakpoints.tablet },
       'color',
       'blue',
     );
     expect(next?.declarations).toEqual(source.declarations);
-    expect(next?.breakpoints?.tablet?.declarations).toEqual({
-      paddingInline: '{space.5}',
+    expect(next?.breakpoints?.[fixtureIds.catalog.breakpoints.tablet]?.declarations).toEqual({
+      paddingInline: fixtureTokenRef(fixtureIds.tokens.space.scale.step5),
       color: 'blue',
     });
-    expect(next?.breakpoints?.desktop?.declarations).toEqual({ color: 'black' });
+    expect(next?.breakpoints?.[fixtureIds.catalog.breakpoints.desktop]?.declarations).toEqual({
+      color: 'black',
+    });
     expect(
       shownDeclarations(
         next?.declarations ?? {},
-        next?.breakpoints?.tablet?.declarations ?? {},
+        next?.breakpoints?.[fixtureIds.catalog.breakpoints.tablet]?.declarations ?? {},
         false,
       ),
     ).toEqual([
       { property: 'color', value: 'red', overridden: true },
-      { property: 'paddingInline', value: '{space.3}', overridden: true },
+      {
+        property: 'paddingInline',
+        value: fixtureTokenRef(fixtureIds.tokens.space.scale.step3),
+        overridden: true,
+      },
     ]);
     expect(
       shownDeclarations(
         next?.declarations ?? {},
-        next?.breakpoints?.tablet?.declarations ?? {},
+        next?.breakpoints?.[fixtureIds.catalog.breakpoints.tablet]?.declarations ?? {},
         true,
       ).find((item) => item.property === 'color'),
     ).toEqual({ property: 'color', value: 'blue', overridden: true });
@@ -211,58 +227,81 @@ describe('component definitions', () => {
     const cleared = writeStyleDeclaration(
       next ?? undefined,
       'root',
-      { nodeId: 'root', breakpointId: 'tablet' },
+      { nodeId: 'root', breakpointId: fixtureIds.catalog.breakpoints.tablet },
       'paddingInline',
       null,
     );
-    expect(cleared?.declarations?.paddingInline).toBe('{space.3}');
-    expect(cleared?.breakpoints?.tablet?.declarations).toEqual({ color: 'blue' });
+    expect(cleared?.declarations?.paddingInline).toBe(
+      fixtureTokenRef(fixtureIds.tokens.space.scale.step3),
+    );
+    expect(cleared?.breakpoints?.[fixtureIds.catalog.breakpoints.tablet]?.declarations).toEqual({
+      color: 'blue',
+    });
 
     const gone = writeStyleDeclaration(
       cleared ?? undefined,
       'root',
-      { nodeId: 'root', breakpointId: 'tablet' },
+      { nodeId: 'root', breakpointId: fixtureIds.catalog.breakpoints.tablet },
       'color',
       null,
     );
-    expect(gone?.breakpoints?.tablet).toBeUndefined();
-    expect(gone?.breakpoints?.desktop?.declarations).toEqual({ color: 'black' });
+    expect(gone?.breakpoints?.[fixtureIds.catalog.breakpoints.tablet]).toBeUndefined();
+    expect(gone?.breakpoints?.[fixtureIds.catalog.breakpoints.desktop]?.declarations).toEqual({
+      color: 'black',
+    });
     expect(gone?.declarations).toEqual(source.declarations);
   });
 
   it('keeps a variant edit off the breakpoint layer and writes child overrides beside the base', () => {
     const variant = writeStyleDeclaration(
-      { breakpoints: { tablet: { declarations: { color: 'blue' } } } },
+      {
+        breakpoints: {
+          [fixtureIds.catalog.breakpoints.tablet]: { declarations: { color: 'blue' } },
+        },
+      },
       'root',
-      { nodeId: 'root', axis: 'tone', value: 'ghost', breakpointId: 'tablet' },
+      {
+        nodeId: 'root',
+        axis: 'tone',
+        value: 'ghost',
+        breakpointId: fixtureIds.catalog.breakpoints.tablet,
+      },
       'color',
       'white',
     );
-    expect(variant?.breakpoints?.tablet?.declarations).toEqual({ color: 'blue' });
+    expect(variant?.breakpoints?.[fixtureIds.catalog.breakpoints.tablet]?.declarations).toEqual({
+      color: 'blue',
+    });
     expect(variant?.variants?.tone?.ghost?.declarations).toEqual({ color: 'white' });
 
     const child = writeStyleDeclaration(
       { declarations: { color: 'red' } },
       'root',
-      { nodeId: 'label', breakpointId: 'desktop' },
+      { nodeId: 'label', breakpointId: fixtureIds.catalog.breakpoints.desktop },
       'fontSize',
       '18px',
     );
     expect(child?.declarations).toEqual({ color: 'red' });
     expect(child?.children?.label?.declarations).toBeUndefined();
-    expect(child?.children?.label?.breakpoints?.desktop?.declarations).toEqual({
+    expect(
+      child?.children?.label?.breakpoints?.[fixtureIds.catalog.breakpoints.desktop]?.declarations,
+    ).toEqual({
       'font-size': '18px',
     });
 
     const hover = writeStyleDeclaration(
       { states: { hover: { color: 'red' } } },
       'root',
-      { nodeId: 'root', state: 'hover', breakpointId: 'tablet' },
+      { nodeId: 'root', state: 'hover', breakpointId: fixtureIds.catalog.breakpoints.tablet },
       'color',
       'blue',
     );
     expect(hover?.states?.hover).toEqual({ color: 'red' });
-    expect(hover?.breakpoints?.tablet?.states?.hover).toEqual({ color: 'blue' });
-    expect(hover?.breakpoints?.tablet?.declarations).toBeUndefined();
+    expect(hover?.breakpoints?.[fixtureIds.catalog.breakpoints.tablet]?.states?.hover).toEqual({
+      color: 'blue',
+    });
+    expect(
+      hover?.breakpoints?.[fixtureIds.catalog.breakpoints.tablet]?.declarations,
+    ).toBeUndefined();
   });
 });

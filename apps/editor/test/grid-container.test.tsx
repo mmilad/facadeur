@@ -3,13 +3,14 @@ import '@testing-library/jest-dom/vitest';
 import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { GridContainer } from '../src/ui/sidebar/properties/layout/grid/GridContainer';
+import { tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 afterEach(cleanup);
 
 function setup(values: Record<string, string> = {}, overridden?: (property: string) => boolean) {
   const onCommit = vi.fn();
   const onPatch = vi.fn();
-  const props = { values, dimensionTokens: ['{space.small}'], onCommit, onPatch, overridden };
+  const props = { values, dimensionTokens: [fixtureTokenRef(testUuid25)], onCommit, onPatch, overridden };
   const view = render(<GridContainer {...props} />);
   return { ...view, props, onCommit, onPatch };
 }
@@ -73,26 +74,26 @@ it('commits raw columns, custom and auto rows, token gaps and null resets indepe
     ['grid-template-columns', '[main] 10rem minmax(0, 2fr)'],
     ['grid-template-rows', 'min-content 1fr'],
     ['grid-template-rows', 'auto'],
-    ['column-gap', '{space.small}'],
-    ['row-gap', '{space.small}'],
+    ['column-gap', fixtureTokenRef(testUuid25)],
+    ['row-gap', fixtureTokenRef(testUuid25)],
     ['row-gap', null],
   ]);
 });
 
 it('preserves and selects dimension token references without rewriting them', () => {
-  const { container, onCommit } = setup({ 'column-gap': '{space.legacy}' });
+  const { container, onCommit } = setup({ 'column-gap': fixtureTokenRef(testUuid26) });
   expect(container.querySelector('button[name="grid-column-gap-token"]')).toHaveAttribute(
     'title',
-    'Token reference: {space.legacy}',
+    "Token reference: " + fixtureTokenRef(testUuid26),
   );
   fireEvent.click(container.querySelector('button[name="grid-column-gap-token"]')!);
   fireEvent.click(screen.getByRole('button', { name: /Small/ }));
-  expect(onCommit).toHaveBeenCalledExactlyOnceWith('column-gap', '{space.small}');
+  expect(onCommit).toHaveBeenCalledExactlyOnceWith('column-gap', fixtureTokenRef(testUuid25));
 });
 
 it.each([
   ['8px 16px', '8px', '16px'],
-  ['{space.small}', '{space.small}', '{space.small}'],
+  [fixtureTokenRef(testUuid25), fixtureTokenRef(testUuid25), fixtureTokenRef(testUuid25)],
   ['calc(8px + 2px) var(--column-gap, 16px)', 'calc(8px + 2px)', 'var(--column-gap, 16px)'],
   ['8px 16px 24px', '', ''],
   ['calc(8px + 2px', '', ''],

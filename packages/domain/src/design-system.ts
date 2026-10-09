@@ -1,40 +1,86 @@
 import type { Uuid } from './uuid';
 
-/**
- * W3C [DTCG](https://tr.designtokens.org/format/) token tree: nested groups and leaf tokens (`$value`).
- * Ids are **path-based** (`color.blue.500`), not catalog uuids. Typography composites, colors, and
- * spacing share this shape; `$type` on a group or token selects validation/resolution behavior.
- */
-export type DesignTokenTree = Readonly<Record<string, unknown>>;
+/** Stable identity for one design token, independent of its editable label or group. */
+export type DesignTokenUuid = Uuid;
+export type BreakpointUuid = Uuid;
+
+/** Editor-internal reference syntax persisted in catalog node values. */
+export type DesignTokenReference = `{token:${DesignTokenUuid}}`;
+
+export interface DesignTokenIdentity {
+  readonly uuid: DesignTokenUuid;
+}
+
+export type DesignTokenFamily = 'color' | 'space' | 'radius' | 'shadow' | 'type' | 'font';
+export type DesignTokenValueType =
+  'color' | 'dimension' | 'number' | 'fontFamily' | 'fontWeight' | 'shadow' | 'typography';
+
+export type DesignTokenValue =
+  | string
+  | number
+  | boolean
+  | null
+  | readonly DesignTokenValue[]
+  | { readonly [key: string]: DesignTokenValue };
+
+/** Shared persisted/runtime shape for every design token family. Empty group means family root. */
+export interface DesignTokenRecord<Value = DesignTokenValue> {
+  readonly uuid: DesignTokenUuid;
+  readonly label: string;
+  readonly group: string;
+  readonly valueType: DesignTokenValueType;
+  readonly value: Value;
+  readonly breakpoints?: Readonly<Record<DesignTokenUuid, DesignTokenValue>>;
+  readonly extensions?: Readonly<Record<string, DesignTokenValue>>;
+}
 
 export type FontStyle = 'normal' | 'italic';
 
-export interface FontFaceFile {
+export type FontFaceFile = Readonly<Record<string, DesignTokenValue>> & {
   readonly weight: number;
   readonly style: FontStyle;
   readonly url: string;
   readonly format?: string;
-}
+};
 
 export type FontSource =
-  | { readonly type: 'file'; readonly files: readonly FontFaceFile[] }
-  | { readonly type: 'google'; readonly family: string };
+  | (Readonly<Record<string, DesignTokenValue>> & {
+      readonly type: 'file';
+      readonly files: readonly FontFaceFile[];
+    })
+  | (Readonly<Record<string, DesignTokenValue>> & {
+      readonly type: 'google';
+      readonly family: string;
+    });
 
-/**
- * Loadable font family registry (`{font.sans}` in token strings). Not stored as DTCG tokens —
- * files, Google sources, and weight lists live here instead of `$value` leaves.
- */
-export interface FontFamilyDefinition {
-  readonly id: string;
+/** Font-specific payload carried by a token in the `font` family. */
+export type FontFamilyValue = Readonly<Record<string, DesignTokenValue>> & {
   readonly family: string;
   readonly weights: readonly number[];
   readonly styles?: readonly FontStyle[];
   readonly source: FontSource;
   readonly fallbacks: readonly string[];
+};
+
+export interface FontFamilyDefinition extends DesignTokenRecord<FontFamilyValue> {
+  readonly valueType: 'fontFamily';
 }
 
+export type DesignTokenFamilyMap = Readonly<Record<DesignTokenUuid, DesignTokenRecord>>;
+export type DesignTokenSet = Readonly<{
+  color: DesignTokenFamilyMap;
+  space: DesignTokenFamilyMap;
+  radius: DesignTokenFamilyMap;
+  shadow: DesignTokenFamilyMap;
+  type: DesignTokenFamilyMap;
+  font: Readonly<Record<DesignTokenUuid, FontFamilyDefinition>>;
+}>;
+
+/** Canonical UUID-keyed token collections. */
+export type DesignTokenTree = DesignTokenSet;
+
 /**
- * Semantic design prop (`{prop:uuid}` in node `style`). Maps a stable uuid to a token path or literal.
+ * Semantic design prop (`{prop:uuid}` in node `style`). Maps a stable uuid to a token reference or literal.
  * Distinct from component **data** props and from raw DTCG paths.
  */
 export interface DesignPropDefinition {
@@ -86,15 +132,17 @@ export interface GlobalStyleRule {
   readonly breakpoints?: LayerMap;
 }
 
-/** Which global token paths the compiled stylesheet reads or sets on the project root. */
+/** Global token references read by the document and values it sets on the component root. */
 export interface TokenInterface {
+  /** UUIDs referenced by styles, layout, component-token defaults, or set values. */
   readonly reads?: readonly string[];
+  /** Global token UUIDs or exposed component-token public paths mapped to override values. */
   readonly sets?: Readonly<Record<string, string>>;
 }
 
 export interface Breakpoint {
-  readonly id: string;
-  readonly label?: string;
+  readonly uuid: BreakpointUuid;
+  readonly label: string;
   readonly minWidth: number;
   readonly enabled?: boolean;
 }

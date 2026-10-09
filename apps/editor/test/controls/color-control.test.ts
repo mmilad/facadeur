@@ -5,17 +5,18 @@ import {
   isColorStyleProperty,
   isColorTokenRef,
 } from '../../src/ui/controls/color/value';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 describe('color control value', () => {
   it('detects token references', () => {
-    expect(isColorTokenRef('{color.accent.default}')).toBe(true);
+    expect(isColorTokenRef(fixtureTokenRef(fixtureIds.tokens.color.accent.default))).toBe(true);
     expect(isColorTokenRef('#AABBCC')).toBe(false);
     expect(isColorTokenRef(' red ')).toBe(false);
   });
 
   it('infers mode from value', () => {
     expect(inferColorMode('')).toBe('custom');
-    expect(inferColorMode('{color.ink}')).toBe('token');
+    expect(inferColorMode(fixtureTokenRef(testUuid4))).toBe('token');
     expect(inferColorMode('#112233')).toBe('custom');
   });
 
@@ -27,7 +28,7 @@ describe('color control value', () => {
   });
 
   it('strips token refs from custom color draft', () => {
-    expect(customColorDraft('{color.ink}')).toBe('');
+    expect(customColorDraft(fixtureTokenRef(testUuid4))).toBe('');
     expect(customColorDraft('#AABBCCFF')).toBe('#AABBCCFF');
   });
 });

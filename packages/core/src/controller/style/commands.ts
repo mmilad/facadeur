@@ -1,13 +1,11 @@
 import { DocumentError } from '../../document/errors';
 import { makeFlatNode, type FlatDocument } from '../../document/flat';
-import type { Breakpoint, FontFamily } from '../../schema/document';
+import type { Breakpoint } from '../../schema/document';
 import type { CommandContext } from '../../legacy/flat/document/commands/types';
 import { setVariantStyleBlock } from '../../legacy/flat/variants/commands';
 import type { StyleCommand } from './types';
 import {
-  removeGroupFromTree,
   removeTokenFromTree,
-  setGroupInTree,
   setTokenInTree,
 } from './tokens/global/tree';
 import {
@@ -19,7 +17,6 @@ import { adoptTokenReads } from './references/adopt';
 import { parseStyleBlock, parseTokenInterface } from './blocks/parse';
 import { assertStyleMap } from './blocks/contract';
 import { assertBreakpoints, cloneBreakpoints } from './breakpoints';
-import { assertFont, cloneFont } from './fonts';
 
 /** Mutates only the working document supplied by pure command application; owns no project state. */
 export function applyStyleCommand(
@@ -29,22 +26,10 @@ export function applyStyleCommand(
 ) {
   switch (command.type) {
     case 'setToken':
-      doc.tokens = setTokenInTree(doc.tokens, command.path, command.token);
+      doc.tokens = setTokenInTree(doc.tokens, command.family, command.token);
       break;
     case 'removeToken':
-      doc.tokens = removeTokenFromTree(doc.tokens, command.path);
-      break;
-    case 'setTokenGroup':
-      doc.tokens = setGroupInTree(doc.tokens, command.path, command.group);
-      break;
-    case 'removeTokenGroup':
-      doc.tokens = removeGroupFromTree(doc.tokens, command.path);
-      break;
-    case 'setFont':
-      setFont(doc, command.font);
-      break;
-    case 'removeFont':
-      removeFont(doc, command.id);
+      doc.tokens = removeTokenFromTree(doc.tokens, command.family, command.uuid);
       break;
     case 'setBreakpoints':
       setBreakpoints(doc, command.breakpoints);
@@ -71,7 +56,7 @@ export function applyStyleCommand(
         command.id,
         command.path,
         command.token,
-        requireGlobalTokenPaths(context, command.type),
+        requireGlobalTokenUuids(context, command.type),
       );
       break;
     case 'removeComponentToken':
@@ -82,7 +67,7 @@ export function applyStyleCommand(
         doc,
         command.id,
         command.path,
-        requireGlobalTokenPaths(context, command.type),
+        requireGlobalTokenUuids(context, command.type),
       );
       break;
     default: {
@@ -92,17 +77,17 @@ export function applyStyleCommand(
   }
 }
 
-function requireGlobalTokenPaths(
+function requireGlobalTokenUuids(
   context: CommandContext,
   command: 'setComponentToken' | 'renameComponentTokenPath',
 ) {
-  if (!context.globalTokenPaths) {
+  if (!context.globalTokenUuids) {
     throw new DocumentError(
       'schema',
-      `${command} requires globalTokenPaths in the command context`,
+      `${command} requires globalTokenUuids in the command context`,
     );
   }
-  return context.globalTokenPaths;
+  return context.globalTokenUuids;
 }
 
 const STYLE_PROPERTY = /^(--)?[A-Za-z_][\w-]*$/;
@@ -132,22 +117,6 @@ function setNodeStyle(doc: FlatDocument, command: Extract<StyleCommand, { type: 
   node.style = style;
   doc.nodes[node.id] = makeFlatNode(node);
   adoptTokenReads(doc);
-}
-
-function setFont(doc: FlatDocument, font: FontFamily) {
-  assertFont(font);
-  const next = cloneFont(font);
-  const index = doc.fonts.findIndex((item) => item.id === next.id);
-  if (index === -1) doc.fonts.push(next);
-  else doc.fonts[index] = next;
-}
-
-function removeFont(doc: FlatDocument, id: string) {
-  const index = doc.fonts.findIndex((item) => item.id === id);
-  if (index === -1) {
-    throw new DocumentError('schema', `Font "${id}" is not defined`);
-  }
-  doc.fonts.splice(index, 1);
 }
 
 function setBreakpoints(doc: FlatDocument, breakpoints: Breakpoint[]) {

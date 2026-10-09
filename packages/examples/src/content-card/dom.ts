@@ -1,7 +1,11 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleContentCardIds } from './idList';
+import { ids as exampleImageIds } from '../image/idList';
+import { ids as exampleTextBodyIds } from '../text-body/idList';
+import { ids as exampleTextHeadingIds } from '../text-heading/idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-711653adba3d',
+  uuid: exampleContentCardIds.nodes.root,
   data: {
     name: 'Card',
   },
@@ -9,37 +13,37 @@ export const root: Node = {
     tagName: 'article',
     children: [
       {
-        uuid: '550e8400-e29b-41d4-a716-7d669086c137',
+        uuid: exampleContentCardIds.nodes.div1,
         dom: {
           tagName: 'div',
         },
         config: {
-          definitionRef: '550e8400-e29b-41d4-a716-000000000002',
+          definitionRef: exampleImageIds.definition,
           fieldExposure: { mode: 'manual', fields: { src: 'imageSrc', alt: 'imageAlt' } },
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-9b6904fdf010',
+        uuid: exampleContentCardIds.nodes.div2,
         dom: {
           tagName: 'div',
           children: [
             {
-              uuid: '550e8400-e29b-41d4-a716-b1d317d292af',
+              uuid: exampleContentCardIds.nodes.div3,
               dom: {
                 tagName: 'div',
               },
               config: {
-                definitionRef: '550e8400-e29b-41d4-a716-dacc33ed3990',
+                definitionRef: exampleTextHeadingIds.definition,
                 fieldExposure: { mode: 'manual', fields: { text: 'title' } },
               },
             },
             {
-              uuid: '550e8400-e29b-41d4-a716-8bea6ada581a',
+              uuid: exampleContentCardIds.nodes.div4,
               dom: {
                 tagName: 'div',
               },
               config: {
-                definitionRef: '550e8400-e29b-41d4-a716-b51f086c1669',
+                definitionRef: exampleTextBodyIds.definition,
                 fieldExposure: { mode: 'manual', fields: { text: 'body' } },
               },
             },

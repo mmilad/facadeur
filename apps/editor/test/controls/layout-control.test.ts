@@ -9,6 +9,7 @@ import {
   layoutControlValue,
   wrapLayoutPatch,
 } from '../../src/ui/controls/layout/value';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 describe('layout control value', () => {
   it('merges base layout when editing a breakpoint', () => {
@@ -16,13 +17,13 @@ describe('layout control value', () => {
       nodeType: 'frame',
       layout: {
         direction: 'row',
-        gap: '{space.2}',
-        breakpoints: { tablet: { direction: 'column' } },
+        gap: fixtureTokenRef(fixtureIds.tokens.space.scale.step2),
+        breakpoints: { [fixtureIds.catalog.breakpoints.tablet]: { direction: 'column' } },
       },
-      writingBreakpointId: 'tablet',
+      writingBreakpointId: fixtureIds.catalog.breakpoints.tablet,
     });
     expect(value.direction).toBe('column');
-    expect(value.gap).toBe('{space.2}');
+    expect(value.gap).toBe(fixtureTokenRef(fixtureIds.tokens.space.scale.step2));
     expect(value.isFrame).toBe(true);
   });
 
@@ -50,11 +51,15 @@ describe('layout control patches', () => {
   });
 
   it('uses breakpoint-aware wrap and position clears', () => {
-    expect(wrapLayoutPatch(true, 'tablet')).toEqual({ wrap: true });
+    expect(wrapLayoutPatch(true, fixtureIds.catalog.breakpoints.tablet)).toEqual({ wrap: true });
     expect(wrapLayoutPatch(false, null)).toEqual({ wrap: null });
-    expect(wrapLayoutPatch(false, 'tablet')).toEqual({ wrap: false });
+    expect(wrapLayoutPatch(false, fixtureIds.catalog.breakpoints.tablet)).toEqual({ wrap: false });
     expect(freePositionPatch(false, null)).toEqual({ position: null, x: null, y: null });
-    expect(freePositionPatch(false, 'tablet')).toEqual({ position: 'auto', x: null, y: null });
+    expect(freePositionPatch(false, fixtureIds.catalog.breakpoints.tablet)).toEqual({
+      position: 'auto',
+      x: null,
+      y: null,
+    });
   });
 });
 
@@ -73,9 +78,20 @@ describe('axisModePatch', () => {
 
 describe('boxWith', () => {
   it('drops empty sides to null', () => {
-    expect(boxWith({ top: '{space.1}' }, 'top', null)).toBeNull();
-    expect(boxWith({ top: '{space.1}', left: '{space.2}' }, 'top', null)).toEqual({
-      left: '{space.2}',
+    expect(
+      boxWith({ top: fixtureTokenRef(fixtureIds.tokens.space.scale.step1) }, 'top', null),
+    ).toBeNull();
+    expect(
+      boxWith(
+        {
+          top: fixtureTokenRef(fixtureIds.tokens.space.scale.step1),
+          left: fixtureTokenRef(fixtureIds.tokens.space.scale.step2),
+        },
+        'top',
+        null,
+      ),
+    ).toEqual({
+      left: fixtureTokenRef(fixtureIds.tokens.space.scale.step2),
     });
   });
 });

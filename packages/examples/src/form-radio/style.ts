@@ -1,8 +1,11 @@
 import type { Node } from '@facadeur/domain';
+import { tokenIds as exampleTokenIds } from '../catalog/tokens/idList';
+import { ids as exampleFormRadioIds } from './idList';
+import { tokenRef } from '../references';
 
 export const styles = {
-  '550e8400-e29b-41d4-a716-f4367359df0f': {
-    accentColor: '{color.accent.default}',
+  [exampleFormRadioIds.nodes.root]: {
+    accentColor: tokenRef(exampleTokenIds.color.accent.default),
     width: '16px',
     height: '16px',
   },

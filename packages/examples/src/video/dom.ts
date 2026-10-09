@@ -1,7 +1,8 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleVideoIds } from './idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-9f29eeedf9d5',
+  uuid: exampleVideoIds.nodes.root,
   data: {
     name: 'Video',
   },

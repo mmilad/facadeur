@@ -13,6 +13,9 @@ export type TextAreaProps = {
   value: string;
   placeholder?: string;
   disabled?: boolean;
+  invalid?: boolean;
+  className?: string;
   rows?: number;
+  onCommit?: (next: string) => void;
   onChange: (next: string) => void;
 };

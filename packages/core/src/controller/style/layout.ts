@@ -9,11 +9,11 @@ import type {
   Spacing,
   SpacingBox,
 } from '../../schema/document';
+import { tokenReference } from './tokens/syntax';
 
 const MARGIN_SIDE_KEYWORDS = new Set(['auto']);
 
-const TOKEN_REF = /^\{[a-z][a-z0-9]*(?:\.[a-z0-9]+)+\}$/;
-const BREAKPOINT_ID = /^[a-z][a-z0-9]*$/;
+const BREAKPOINT_ID = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
 
 const JUSTIFY = new Set(['start', 'center', 'end', 'space-between']);
 const ALIGN = new Set(['start', 'center', 'end', 'stretch']);
@@ -222,8 +222,8 @@ function parseMarginSide(value: unknown, label: string) {
 }
 
 function parseTokenRef(value: unknown, label: string) {
-  if (typeof value !== 'string' || !TOKEN_REF.test(value)) {
-    throw new DocumentError('schema', `${label} must be a token reference like {space.4}`);
+  if (typeof value !== 'string' || !tokenReference(value)) {
+    throw new DocumentError('schema', `${label} must be a token reference like {token:uuid}`);
   }
   return value;
 }
@@ -263,5 +263,5 @@ function axisPaths(axis: AxisSize | undefined) {
 }
 
 function tokenPath(ref: string) {
-  return ref.slice(1, -1);
+  return tokenReference(ref) ?? '';
 }

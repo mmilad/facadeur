@@ -10,6 +10,7 @@ import { StyleInspector } from '../src/ui/sidebar/properties/style/StyleInspecto
 import { gridDeclarations } from '../src/ui/sidebar/properties/layout/grid/edits';
 import { shownAxis } from '../src/ui/sidebar/properties/layout/sizing';
 import { editorStandardDesign, expandExampleCatalog } from './fixtures/example-catalog';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 afterEach(cleanup);
@@ -32,8 +33,8 @@ it('preserves custom expressions and maps CSS auto and fixed bounds without inve
   });
 });
 const breakpoints = [
-  { id: 'phone', minWidth: 375 },
-  { id: 'tablet', minWidth: 768 },
+  { uuid: fixtureIds.catalog.breakpoints.phone, label: 'Phone', minWidth: 375 },
+  { uuid: fixtureIds.catalog.breakpoints.tablet, label: 'Tablet', minWidth: 768 },
 ];
 const master: DocumentFile = {
   version: 1,
@@ -76,7 +77,7 @@ it.each([
     session.selectNode('card');
     if (variant) session.setActiveVariant('compact');
     if (viewport) {
-      session.setFocusViewport('tablet');
+      session.setFocusViewport(fixtureIds.catalog.breakpoints.tablet);
       session.setEditTarget('viewport');
     }
     const { container } = render(<Harness session={session} />);
@@ -87,7 +88,7 @@ it.each([
     await userEvent.setup().selectOptions(height(), 'auto');
     expect(height()).toHaveValue('auto');
     expect(
-      gridDeclarations(session.getSnapshot(), 'card', viewport ? 'tablet' : null, breakpoints)
+      gridDeclarations(session.getSnapshot(), 'card', viewport ? fixtureIds.catalog.breakpoints.tablet : null, breakpoints)
         .height,
     ).toBe('auto');
     expect(

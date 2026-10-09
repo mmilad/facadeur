@@ -8,6 +8,12 @@ import {
   type FlatDocument,
   type InstanceNode,
 } from '@facadeur/core';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
+
+const testColorUuid = fixtureIds.tokens.color.accent.default;
+const testSpaceUuid = fixtureIds.tokens.space.scale.step2;
+const testColorRef = `{token:${testColorUuid}}`;
+const testSpaceRef = `{token:${testSpaceUuid}}`;
 
 function file(kind: DocumentFile['kind']): DocumentFile {
   return {
@@ -91,11 +97,11 @@ describe('applyCommand', () => {
         fields: { value: 'control.value', placeholder: 'control.placeholder' },
         events: { commit: 'control.commit' },
       },
-      tokenInterface: { reads: ['space.0'] },
+      tokenInterface: { reads: [testSpaceUuid] },
       styles: {
         children: {
           control: { declarations: { color: 'red' } },
-          label: { declarations: { margin: '{space.0}' } },
+          label: { declarations: { margin: testSpaceRef } },
         },
       },
       root: {
@@ -109,7 +115,7 @@ describe('applyCommand', () => {
     });
     doc = applyCommand(doc, { type: 'remove', nodeId: 'control' });
     expect(doc.nodes.control).toBeUndefined();
-    expect(doc.styles?.children).toEqual({ label: { declarations: { margin: '{space.0}' } } });
+    expect(doc.styles?.children).toEqual({ label: { declarations: { margin: testSpaceRef } } });
     expect(doc.expose).toBeUndefined();
   });
 
@@ -280,16 +286,16 @@ describe('applyCommand', () => {
     let doc = component();
     doc = applyCommand(doc, {
       type: 'setTokenInterface',
-      tokenInterface: { reads: ['color.ink'] },
+      tokenInterface: { reads: [testColorUuid] },
     });
     doc = applyCommand(doc, {
       type: 'setProp',
       nodeId: 'root',
       prop: 'layout',
-      value: { gap: '{space.4}', direction: 'row' },
+      value: { gap: testSpaceRef, direction: 'row' },
     });
-    expect(doc.nodes.root).toMatchObject({ layout: { gap: '{space.4}', direction: 'row' } });
-    expect(doc.tokenInterface?.reads).toEqual(['color.ink', 'space.4']);
+    expect(doc.nodes.root).toMatchObject({ layout: { gap: testSpaceRef, direction: 'row' } });
+    expect(doc.tokenInterface?.reads).toEqual([testColorUuid, testSpaceUuid]);
   });
 
   it('treats a same-parent move index as the position after removal', () => {
@@ -860,7 +866,7 @@ describe('applyCommand', () => {
     doc = applyCommand(doc, {
       type: 'setStyleBlock',
       style: {
-        declarations: { color: '{color.ink}' },
+        declarations: { color: testColorRef },
         variants: {
           tone: {
             loud: {
@@ -894,7 +900,7 @@ describe('applyCommand', () => {
     doc = applyCommand(doc, { type: 'removeVariant', name: 'tone' });
     expect(doc.variants).toEqual([]);
     expect(doc.styles?.variants).toBeUndefined();
-    expect(doc.styles?.declarations).toEqual({ color: '{color.ink}' });
+    expect(doc.styles?.declarations).toEqual({ color: testColorRef });
 
     expect(() =>
       applyCommand(toFlat(file('page')), {
@@ -914,7 +920,7 @@ describe('applyCommand', () => {
     let doc = component();
     doc = applyCommand(doc, {
       type: 'setTokenInterface',
-      tokenInterface: { reads: ['color.ink'] },
+      tokenInterface: { reads: [testColorUuid] },
     });
     doc = applyCommand(doc, {
       type: 'setVariantPreset',
@@ -934,17 +940,17 @@ describe('applyCommand', () => {
       type: 'setVariantStyleBlock',
       name: 'compact',
       style: {
-        declarations: { color: '{color.ink}' },
+        declarations: { color: testColorRef },
         children: { title: { states: { hover: { color: 'white' } } } },
       },
     });
 
     expect(doc.variantPresets).toMatchObject([
-      { name: 'compact', overrides: { styles: { declarations: { color: '{color.ink}' } } } },
+      { name: 'compact', overrides: { styles: { declarations: { color: testColorRef } } } },
     ]);
     expect(doc.styles?.variants?.variant?.compact).toBeUndefined();
     expect(doc.styles?.variants?.tone?.loud).toEqual({ declarations: { color: 'blue' } });
-    expect(doc.tokenInterface?.reads).toEqual(['color.ink']);
+    expect(doc.tokenInterface?.reads).toEqual([testColorUuid]);
 
     doc = applyCommand(doc, { type: 'setVariantStyleBlock', name: 'compact', style: null });
     expect(doc.variantPresets?.[0]?.overrides).toBeUndefined();

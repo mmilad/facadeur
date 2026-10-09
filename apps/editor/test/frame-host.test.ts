@@ -3,10 +3,11 @@
  */
 import { describe, expect, it } from 'vitest';
 import { createFrameHost } from '../src/domain/viewport/frame-host';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
 
 describe('FrameHost', () => {
   it('exposes a same-origin document only after mount, and only through the host', () => {
-    const host = createFrameHost({ id: 'mobile', width: 375 });
+    const host = createFrameHost({ id: fixtureIds.catalog.breakpoints.phone, width: 375 });
     expect(() => host.contentDocument()).toThrow(/no document/i);
     expect(host.element.style.width).toBe('375px');
     expect(host.element.style.pointerEvents).toBe('none');
@@ -50,7 +51,7 @@ describe('FrameHost', () => {
   });
 
   it('remeasures when a node is inserted after the first height sync', async () => {
-    const host = createFrameHost({ id: 'mobile', width: 375 });
+    const host = createFrameHost({ id: fixtureIds.catalog.breakpoints.phone, width: 375 });
     host.mount(document.body);
     host.syncHeight();
 

@@ -1,7 +1,6 @@
 import { classList } from './class-list';
 import { DocumentError } from './errors';
 import { cloneBreakpoints } from '../controller/style/breakpoints';
-import { cloneFonts } from '../controller/style/fonts';
 import { canonicalizeLayout } from '../controller/style/layout';
 import type {
   Binding,
@@ -75,7 +74,6 @@ export function toFlat(file: DocumentFile) {
       : {}),
     settings: file.settings ?? {},
     tokens: (file.tokens ?? {}) as FlatDocument['tokens'],
-    fonts: file.fonts ?? [],
     ...(file.icons?.length ? { icons: file.icons } : {}),
     ...(file.styles ? { styles: file.styles } : {}),
     ...(file.tokenInterface ? { tokenInterface: file.tokenInterface } : {}),
@@ -117,7 +115,6 @@ export function toNested(doc: FlatDocument): DocumentFile {
     }
     file.settings = settings;
   }
-  if (doc.fonts.length) file.fonts = cloneFonts(doc.fonts);
   if (doc.icons?.length) file.icons = doc.icons.map((icon) => ({ ...icon }));
   if (Object.keys(doc.tokens).length) file.tokens = canonicalizeTokenTree(doc.tokens);
   if (doc.styles) file.styles = doc.styles;
@@ -169,7 +166,6 @@ export function canonicalizeFlat(doc: FlatDocument): FlatDocument {
       : {}),
     settings,
     tokens: canonicalizeTokenTree(doc.tokens),
-    fonts: cloneFonts(doc.fonts),
     ...(doc.icons?.length ? { icons: doc.icons.map((icon) => ({ ...icon })) } : {}),
     ...(styles ? { styles } : {}),
     ...(tokenInterface ? { tokenInterface } : {}),

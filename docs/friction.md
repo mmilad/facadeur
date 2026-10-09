@@ -7,6 +7,7 @@
 - **Workaround:** Run the Storybook build in the approved host context; no dependency or config change is needed.
 - **Status (2026-10-09):** Confirmed with a successful Storybook 10.6.1 production build.
 - **Restricted-process recurrence (2026-10-09):** Running `storybook dev -p 6006` or `storybook build` through the local CLI builds the manager, then SWC panics with `EPERM` while canonicalizing `apps/editor` as `jsc.baseUrl`. Preview verification still requires the user's host pnpm environment.
+- **Update (2026-10-09):** `pnpm --filter @facadeur/editor exec storybook dev -p 6007` first attempts to download the pinned pnpm 10.33.3 through Corepack and fails with `ENOTFOUND registry.npmjs.org`. Invoking `apps/editor/node_modules/.bin/storybook.cmd dev -p 6007` bypasses that lookup but reaches the same SWC `EPERM` while canonicalizing `.` as `jsc.baseUrl`; the current browser tab did not reload the edited source. Use the user's host Storybook process for current-source visual verification.
 
 ## Test runner blocked by filesystem sandbox
 
@@ -35,6 +36,7 @@
 - **Impact:** Package typechecks and tests cannot start reliably from this process, so current validation is blocked before reaching project code.
 - **Fix:** Make the already-installed pnpm 10.33.3 executable available to the sandbox process, or run verification with the user's matching pnpm environment outside the restricted process. Do not change the project pin just to bypass sandbox PATH mismatch.
 - **Update (2026-10-09, inspector boundary):** `pnpm --filter @facadeur/core typecheck` and `pnpm --filter @facadeur/editor typecheck` both stop before reaching project code while Corepack tries to fetch the pinned pnpm 10.33.3 from `registry.npmjs.org` (`ENOTFOUND`). Direct local TypeScript invocations start but report the already-known workspace source/dependency-link errors; they report no diagnostics in the new inspector modules. The pinned pnpm lookup remains the blocker for authoritative workspace typechecks.
+- **Update (2026-10-09, form inputs):** Both filtered pnpm typecheck commands again stop at Corepack's attempt to fetch pnpm 10.33.3 (`getaddrinfo ENOTFOUND registry.npmjs.org`). Direct package TypeScript succeeds for `packages/form`; the editor TypeScript run reports the known workspace errors and no diagnostics in changed form/token files. The network/DNS cause and local-binary workaround remain unchanged.
 - **Update (2026-10-04, structural renderer):** `pnpm exec vitest run packages/renderer-dom/test/render.test.ts` stayed silent for over 30 seconds in the restricted process and had to be interrupted. The focused test run therefore needs the documented matching pnpm environment outside the sandbox; no test runner output was produced before interruption.
 
 ## Browser automation setup fails
@@ -54,6 +56,7 @@
 - **Fix:** Align the supplied modules layout and package-manager configuration with pnpm 10.33.3 so workspace link updates do not request a purge; verify an offline full install in a disposable checkout before changing the live dependency installation.
 
 - **Update (2026-10-06):** The same no-TTY purge request recurred after removing generated workspace packages. `pnpm install --frozen-lockfile --ignore-scripts --config.confirmModulesPurge=false` successfully rebuilds links without a terminal. A filtered install rebuilt only codegen links and left its workspace dependencies unresolved; run the full workspace install (or include dependency filters) before testing. Full installation restored all nine maintained workspace projects; source typechecks and 77 generator/preview tests then passed.
+- **Update (2026-10-10, renderer example tests):** The same Corepack DNS failure recurred when refreshing the new `@facadeur/examples` dependency for `packages/renderer-dom`; creating its documented local junction from this restricted process also failed with `Access denied`. A temporary TypeScript path mapping to the Example package entry point confirms the renderer package typechecks, but the real workspace link still needs the matching pnpm install outside this process.
 
 ## Resolved: codegen did not load the separate example schema library
 

@@ -1,6 +1,13 @@
 import { expect, it } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
 import { compileDocument } from '../src/index';
+import { exampleCatalog, exampleIds as fixtureIds } from '@facadeur/examples';
+
+const phoneBreakpointUuid = fixtureIds.catalog.breakpoints.phone;
+const tabletBreakpointUuid = fixtureIds.catalog.breakpoints.tablet;
+const laptopBreakpointUuid = fixtureIds.catalog.breakpoints.laptop;
+const spaceTwoUuid = fixtureIds.tokens.space.scale.step2;
+const spacingTokens = exampleCatalog.tokens;
 
 it.each(['instance', 'canvas'] as const)(
   'lets desktop CSS auto override inherited tablet layout Hug (%s)',
@@ -12,18 +19,18 @@ it.each(['instance', 'canvas'] as const)(
       kind: 'component',
       settings: {
         breakpoints: [
-          { id: 'phone', minWidth: 375 },
-          { id: 'tablet', minWidth: 768 },
-          { id: 'desktop', minWidth: 1024 },
+          { uuid: phoneBreakpointUuid, label: 'Phone', minWidth: 375 },
+          { uuid: tabletBreakpointUuid, label: 'Tablet', minWidth: 768 },
+          { uuid: laptopBreakpointUuid, label: 'Laptop', minWidth: 1024 },
         ],
       },
-      styles: { breakpoints: { desktop: { declarations: { height: 'auto' } } } },
+      styles: { breakpoints: { [laptopBreakpointUuid]: { declarations: { height: 'auto' } } } },
       root: {
         id: 'root',
         type: 'frame',
         layout: {
           height: { mode: 'fixed', size: 200 },
-          breakpoints: { tablet: { height: { mode: 'hug' } } },
+          breakpoints: { [tabletBreakpointUuid]: { height: { mode: 'hug' } } },
         },
       },
     };
@@ -65,15 +72,15 @@ it('retains style-before-layout precedence for rules at the same width', () => {
     kind: 'component',
     settings: {
       breakpoints: [
-        { id: 'phone', minWidth: 375 },
-        { id: 'tablet', minWidth: 768 },
+        { uuid: phoneBreakpointUuid, label: 'Phone', minWidth: 375 },
+        { uuid: tabletBreakpointUuid, label: 'Tablet', minWidth: 768 },
       ],
     },
-    styles: { breakpoints: { tablet: { declarations: { height: 'auto' } } } },
+    styles: { breakpoints: { [tabletBreakpointUuid]: { declarations: { height: 'auto' } } } },
     root: {
       id: 'root',
       type: 'frame',
-      layout: { breakpoints: { tablet: { height: { mode: 'hug' } } } },
+      layout: { breakpoints: { [tabletBreakpointUuid]: { height: { mode: 'hug' } } } },
     },
   };
   const heights = compileDocument(source)
@@ -103,13 +110,13 @@ it.each(['row', 'column'] as const)(
             text: 'Child',
             layout: {
               width: { mode: 'auto', min: 20, max: { unit: '%', value: 90 } },
-              height: { mode: 'auto', min: '{space.2}', max: 300 },
+              height: { mode: 'auto', min: `{token:${spaceTwoUuid}}`, max: 300 },
             },
           },
         ],
       },
     };
-    const declarations = compileDocument(source).find((rule) =>
+    const declarations = compileDocument(source, { globalTokens: spacingTokens }).find((rule) =>
       rule.selector.includes('[data-node="child"]'),
     )?.declarations;
     expect(declarations).toEqual(
@@ -134,14 +141,16 @@ it('emits height auto at a breakpoint while leaving omitted base sizing undeclar
     kind: 'component',
     settings: {
       breakpoints: [
-        { id: 'phone', minWidth: 375 },
-        { id: 'tablet', minWidth: 768 },
+        { uuid: phoneBreakpointUuid, label: 'Phone', minWidth: 375 },
+        { uuid: tabletBreakpointUuid, label: 'Tablet', minWidth: 768 },
       ],
     },
     root: {
       id: 'root',
       type: 'frame',
-      layout: { breakpoints: { tablet: { height: { mode: 'auto', min: 40, max: 200 } } } },
+      layout: {
+        breakpoints: { [tabletBreakpointUuid]: { height: { mode: 'auto', min: 40, max: 200 } } },
+      },
     },
   };
   const rules = compileDocument(source);

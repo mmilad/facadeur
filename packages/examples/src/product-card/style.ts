@@ -1,46 +1,49 @@
 import type { Node } from '@facadeur/domain';
+import { tokenIds as exampleTokenIds } from '../catalog/tokens/idList';
+import { ids as exampleProductCardIds } from './idList';
+import { tokenRef } from '../references';
 
 export const styles = {
-  '550e8400-e29b-41d4-a716-2be787034eaa': {
+  [exampleProductCardIds.nodes.img1]: {
     width: '100%',
     height: '240px',
     display: 'block',
     objectFit: 'cover',
   },
-  '550e8400-e29b-41d4-a716-d4bf52b891cb': {
-    color: '{color.text.primary}',
-    font: '{type.title}',
-    margin: '{space.0}',
+  [exampleProductCardIds.nodes.h21]: {
+    color: tokenRef(exampleTokenIds.color.text.primary),
+    font: tokenRef(exampleTokenIds.type.title),
+    margin: tokenRef(exampleTokenIds.space.scale.step0),
     overflowWrap: 'anywhere',
   },
-  '550e8400-e29b-41d4-a716-ba278b0f8976': {
-    color: '{color.text.secondary}',
-    font: '{type.body}',
-    margin: '{space.0}',
+  [exampleProductCardIds.nodes.p1]: {
+    color: tokenRef(exampleTokenIds.color.text.secondary),
+    font: tokenRef(exampleTokenIds.type.body),
+    margin: tokenRef(exampleTokenIds.space.scale.step0),
   },
-  '550e8400-e29b-41d4-a716-2226d2a09f81': {
+  [exampleProductCardIds.nodes.div2]: {
     width: '100%',
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-323107734940': {
+  [exampleProductCardIds.nodes.div1]: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
-    gap: '{space.gap.md}',
-    padding: '{space.inset.lg}',
+    gap: tokenRef(exampleTokenIds.space.gap.md),
+    padding: tokenRef(exampleTokenIds.space.inset.lg),
     height: 'auto',
   },
-  '550e8400-e29b-41d4-a716-c0a5800714f9': {
+  [exampleProductCardIds.nodes.root]: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
     width: '100%',
     height: 'auto',
     maxWidth: '360px',
-    background: '{color.bg.canvas}',
-    border: '1px solid {color.border.default}',
-    borderRadius: '{radius.lg}',
-    boxShadow: '{shadow.md}',
+    background: tokenRef(exampleTokenIds.color.bg.canvas),
+    border: '1px solid ' + tokenRef(exampleTokenIds.color.border.default),
+    borderRadius: tokenRef(exampleTokenIds.radius.lg),
+    boxShadow: tokenRef(exampleTokenIds.shadow.md),
     overflow: 'hidden',
     boxSizing: 'border-box',
   },

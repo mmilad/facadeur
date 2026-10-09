@@ -4,10 +4,11 @@ import { root } from './dom';
 import { config } from './config';
 import { styles } from './style';
 import { schema } from './schema';
+import { ids as exampleInputIds } from './idList';
 const schemaSource = { kind: 'inline', schema } as const;
 
 export const definition = {
-  uuid: '550e8400-e29b-41d4-a716-25e4cf782bd0',
+  uuid: exampleInputIds.definition,
   name: 'Input',
   kind: 'component',
   schema: schemaSource,

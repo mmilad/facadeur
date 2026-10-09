@@ -4,13 +4,10 @@ import type { DocumentController } from '../../legacy/flat/document/controller';
 
 export type GlobalTokenCommand = Extract<
   Command,
-  { type: 'setToken' | 'removeToken' | 'setTokenGroup' | 'removeTokenGroup' }
+  { type: 'setToken' | 'removeToken' }
 >;
 
-export type DesignLibraryCommand = Extract<
-  Command,
-  { type: 'setFont' | 'removeFont' | 'setBreakpoints' }
->;
+export type DesignLibraryCommand = Extract<Command, { type: 'setBreakpoints' }>;
 
 export type DocumentStyleCommand = Extract<
   Command,
@@ -22,7 +19,8 @@ export type DocumentStyleCommand = Extract<
       | 'setTokenInterface'
       | 'setComponentToken'
       | 'removeComponentToken'
-      | 'renameComponentTokenPath';
+      | 'renameComponentTokenPath'
+      ;
   }
 >;
 

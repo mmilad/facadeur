@@ -1,12 +1,13 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleFormSegmentedIds } from './idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-64d9ed44892c',
+  uuid: exampleFormSegmentedIds.nodes.root,
   dom: {
     tagName: 'div',
     children: [
       {
-        uuid: '550e8400-e29b-41d4-a716-aa07dab0544c',
+        uuid: exampleFormSegmentedIds.nodes.span1,
         dom: {
           tagName: 'span',
           properties: {
@@ -15,12 +16,12 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-96a4b1bd6698',
+        uuid: exampleFormSegmentedIds.nodes.div1,
         dom: {
           tagName: 'div',
           children: [
             {
-              uuid: '550e8400-e29b-41d4-a716-95faca7338cc',
+              uuid: exampleFormSegmentedIds.nodes.span2,
               dom: {
                 tagName: 'span',
                 properties: {
@@ -29,7 +30,7 @@ export const root: Node = {
               },
             },
             {
-              uuid: '550e8400-e29b-41d4-a716-c4551fd94aa1',
+              uuid: exampleFormSegmentedIds.nodes.span3,
               dom: {
                 tagName: 'span',
                 properties: {
@@ -38,7 +39,7 @@ export const root: Node = {
               },
             },
             {
-              uuid: '550e8400-e29b-41d4-a716-5f3ab07637c4',
+              uuid: exampleFormSegmentedIds.nodes.span4,
               dom: {
                 tagName: 'span',
                 properties: {

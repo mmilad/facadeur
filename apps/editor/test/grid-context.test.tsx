@@ -9,6 +9,7 @@ import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { LayoutPanel } from '../src/ui/sidebar/properties/layout/LayoutPanel';
 import { gridDeclarations } from '../src/ui/sidebar/properties/layout/grid/edits';
 import { editorStandardDesign, expandExampleCatalog } from './fixtures/example-catalog';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 afterEach(cleanup);
@@ -20,8 +21,8 @@ function fixture(): DocumentFile {
     kind: 'component',
     settings: {
       breakpoints: [
-        { id: 'phone', minWidth: 375 },
-        { id: 'tablet', minWidth: 768 },
+        { uuid: fixtureIds.catalog.breakpoints.phone, label: 'Phone', minWidth: 375 },
+        { uuid: fixtureIds.catalog.breakpoints.tablet, label: 'Tablet', minWidth: 768 },
       ],
     },
     variants: [{ name: 'compact' }],
@@ -40,7 +41,7 @@ function setup(variant = false, viewport = false, nodeId = 'root') {
   session.openAsset('grid-test', 'root');
   if (variant) session.setActiveVariant('compact');
   if (viewport) {
-    session.setFocusViewport('tablet');
+    session.setFocusViewport(fixtureIds.catalog.breakpoints.tablet);
     session.setEditTarget('viewport');
   }
   render(<Harness session={session} nodeId={nodeId} />);
@@ -61,7 +62,7 @@ it.each([false, true])(
     });
     session.openAsset('grid-test', 'root');
     if (variant) session.setActiveVariant('compact');
-    session.setFocusViewport('tablet');
+    session.setFocusViewport(fixtureIds.catalog.breakpoints.tablet);
     session.setEditTarget('viewport');
     render(<Harness session={session} nodeId="root" />);
     const before = structuredClone(session.getSnapshot().document);
@@ -71,10 +72,10 @@ it.each([false, true])(
     await user.click(screen.getByRole('button', { name: 'Rename action' }));
     const snap = session.getSnapshot();
     const breakpoints = file.settings!.breakpoints!;
-    expect(gridDeclarations(snap, 'root', 'tablet', breakpoints)['grid-template-areas']).toBe(
+    expect(gridDeclarations(snap, 'root', fixtureIds.catalog.breakpoints.tablet, breakpoints)['grid-template-areas']).toBe(
       '"content"',
     );
-    expect(gridDeclarations(snap, 'action', 'tablet', breakpoints)).toMatchObject({
+    expect(gridDeclarations(snap, 'action', fixtureIds.catalog.breakpoints.tablet, breakpoints)).toMatchObject({
       'grid-area': 'content',
       'grid-column-start': 'content',
       opacity: '0.5',
@@ -92,7 +93,7 @@ it.each([false, true])(
     await userEvent.setup().click(screen.getByRole('button', { name: 'Grid' }));
     const document = session.getSnapshot().document;
     const block = variant ? document.variantPresets?.[0]?.overrides?.styles : document.styles;
-    expect(block).toEqual({ breakpoints: { tablet: { declarations: { display: 'grid' } } } });
+    expect(block).toEqual({ breakpoints: { [fixtureIds.catalog.breakpoints.tablet]: { declarations: { display: 'grid' } } } });
     expect(document.nodes).toEqual(before.nodes);
     expect(screen.queryByRole('group', { name: 'Direction' })).not.toBeInTheDocument();
     await act(async () => session.undo());

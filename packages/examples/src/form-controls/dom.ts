@@ -1,17 +1,19 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleFormControlsIds } from './idList';
+import { ids as exampleFormControlsSectionIds } from '../form-controls-section/idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-2f0386a6bf9c',
+  uuid: exampleFormControlsIds.nodes.root,
   dom: {
     tagName: 'div',
     children: [
       {
-        uuid: '550e8400-e29b-41d4-a716-c105e96fb7c6',
+        uuid: exampleFormControlsIds.nodes.div1,
         dom: {
           tagName: 'div',
         },
         config: {
-          definitionRef: '550e8400-e29b-41d4-a716-2216f5ec662c',
+          definitionRef: exampleFormControlsSectionIds.definition,
         },
       },
     ],

@@ -3,6 +3,9 @@ import { generateReact } from '../src/index';
 import type { DocumentFile } from '@facadeur/core';
 import { JSDOM } from 'jsdom';
 import { generatedRuntime } from './generated-runtime';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
+const testUuid1 = globalThis.crypto.randomUUID();
+const testUuid2 = globalThis.crypto.randomUUID();
 
 describe('instance-root appearance codegen', () => {
   it('exports containing-document instance rules with states, variants, tokens, and breakpoints', () => {
@@ -14,18 +17,20 @@ describe('instance-root appearance codegen', () => {
       variants: [{ name: 'default' }, { name: 'compact' }],
       settings: {
         breakpoints: [
-          { id: 'phone', minWidth: 390 },
-          { id: 'wide', minWidth: 900 },
+          { uuid: testUuid1, label: 'Phone', minWidth: 390 },
+          { uuid: testUuid2, label: 'Wide', minWidth: 900 },
         ],
       },
-      tokenInterface: { reads: ['color.accent'] },
+      tokenInterface: { reads: [fixtureIds.tokens.color.accent.default] },
       styles: {
         children: {
           button: {
-            declarations: { color: '{color.accent}' },
+            declarations: { color: fixtureTokenRef(fixtureIds.tokens.color.accent.default) },
             states: { hover: { color: 'white' } },
             variants: { variant: { compact: { declarations: { color: 'purple' } } } },
-            breakpoints: { wide: { declarations: { color: 'green' } } },
+            breakpoints: {
+              [testUuid2]: { declarations: { color: 'green' } },
+            },
           },
         },
       },
@@ -36,11 +41,34 @@ describe('instance-root appearance codegen', () => {
       },
     };
     const css =
-      generateReact({ documents: [host] }).ui.find((file) => file.path.endsWith('style.module.css'))
-        ?.contents ?? '';
+      generateReact({
+        documents: [host],
+        design: {
+          tokens: {
+            color: {
+              [fixtureIds.tokens.color.accent.default]: {
+                uuid: fixtureIds.tokens.color.accent.default,
+                label: 'Default',
+                group: 'accent',
+                valueType: 'color',
+                value: '#2563eb',
+              },
+            },
+            space: {},
+            radius: {},
+            shadow: {},
+            type: {},
+            font: {},
+          },
+          breakpoints: [
+            { uuid: testUuid1, label: 'Phone', minWidth: 390 },
+            { uuid: testUuid2, label: 'Wide', minWidth: 900 },
+          ],
+        },
+      }).ui.find((file) => file.path.endsWith('style.module.css'))?.contents ?? '';
     expect(css).toContain('@layer facadeur.instances');
     expect(css).toContain('.root :global(.Host__button) {');
-    expect(css).toContain('color: var(--color-accent);');
+    expect(css).toContain('color: var(--color-accent-default);');
     expect(css).toContain('.root :global(.Host__button):hover');
     expect(css).toContain('.root[data-variant="compact"] :global(.Host__button)');
     expect(css).toContain('@media (min-width: 900px)');

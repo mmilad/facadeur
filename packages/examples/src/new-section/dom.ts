@@ -1,7 +1,10 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleCardIds } from '../card/idList';
+import { ids as exampleNewSectionIds } from './idList';
+import { ids as exampleTextareaIds } from '../textarea/idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-c1376195f619',
+  uuid: exampleNewSectionIds.nodes.root,
   data: {
     name: 'Frame',
   },
@@ -9,7 +12,7 @@ export const root: Node = {
     tagName: 'div',
     children: [
       {
-        uuid: '550e8400-e29b-41d4-a716-9169eacd7a70',
+        uuid: exampleNewSectionIds.nodes.div1,
         data: {
           name: 'Repeater',
         },
@@ -17,7 +20,7 @@ export const root: Node = {
           tagName: 'div',
           children: [
             {
-              uuid: '550e8400-e29b-41d4-a716-861d78684ad6',
+              uuid: exampleNewSectionIds.nodes.div2,
               data: {
                 name: 'Switch',
               },
@@ -25,7 +28,7 @@ export const root: Node = {
                 tagName: 'div',
                 children: [
                   {
-                    uuid: '550e8400-e29b-41d4-a716-04cce5527f8e',
+                    uuid: exampleNewSectionIds.nodes.div3,
                     data: {
                       name: 'Card',
                     },
@@ -33,11 +36,11 @@ export const root: Node = {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-0000000003ea',
+                      definitionRef: exampleCardIds.definition,
                     },
                   },
                   {
-                    uuid: '550e8400-e29b-41d4-a716-b8006f4fb316',
+                    uuid: exampleNewSectionIds.nodes.div4,
                     data: {
                       name: 'Textarea',
                     },
@@ -45,7 +48,7 @@ export const root: Node = {
                       tagName: 'div',
                     },
                     config: {
-                      definitionRef: '550e8400-e29b-41d4-a716-938b3e6cebc9',
+                      definitionRef: exampleTextareaIds.definition,
                     },
                   },
                 ],

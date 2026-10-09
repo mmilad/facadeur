@@ -1,12 +1,13 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleTextareaIds } from './idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-8f7fc3f2f8ee',
+  uuid: exampleTextareaIds.nodes.root,
   dom: {
     tagName: 'label',
     children: [
       {
-        uuid: '550e8400-e29b-41d4-a716-ade185dfdbf3',
+        uuid: exampleTextareaIds.nodes.span1,
         dom: {
           tagName: 'span',
           properties: {
@@ -15,7 +16,7 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-b9e0579593a3',
+        uuid: exampleTextareaIds.nodes.textarea1,
         dom: {
           tagName: 'textarea',
           attributes: {

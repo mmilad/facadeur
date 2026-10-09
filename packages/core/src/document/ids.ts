@@ -1,5 +1,6 @@
 export const ID_PATTERN = /^[A-Za-z][A-Za-z0-9_-]*$/;
 export const TAG_PATTERN = /^[A-Za-z][A-Za-z0-9-]*$/;
+export const UUID_PATTERN = /^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$/;
 
 const ID_ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789';
 

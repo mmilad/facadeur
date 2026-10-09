@@ -3,10 +3,13 @@ import {
   findParent,
   isInsideSubtree,
   readTokenTree,
+  tokenReferenceValue,
   type AxisSize,
   type ComponentToken,
   type DefaultKind,
   type FlatDocument,
+  type FontFamily,
+  type IndexedToken,
   type InsertNode,
   type Layout,
   type LayoutOverride,
@@ -64,28 +67,25 @@ export type LayoutPatch = {
 
 export type DropZone = 'before' | 'inside' | 'after';
 
-/** Dimension tokens as `{path}` references, for gap, padding, and margin. */
+/** Global dimension tokens as UUID references, for gap, padding, and margin. */
 export function dimensionTokenRefs(tree: unknown): string[] {
   return tokenRefsByType(tree, 'dimension');
 }
 
-/** Dimension tokens under `radius.*` for corner radii. */
+/** Global radius-family tokens as UUID references. */
 export function radiusTokenRefs(tree: unknown): string[] {
-  return dimensionTokenRefs(tree).filter((ref) => tokenPath(ref).startsWith('radius.'));
+  return [...readTokenTree(tree).tokens.values()]
+    .filter((token) => token.family === 'radius')
+    .map((token) => tokenReferenceValue(token.uuid))
+    .sort((left, right) => left.localeCompare(right));
 }
 
-function tokenPath(ref: string): string {
-  const trimmed = ref.trim();
-  if (trimmed.startsWith('{') && trimmed.endsWith('}')) return trimmed.slice(1, -1);
-  return trimmed;
-}
-
-/** Color tokens as `{path}` references for style and token editors. */
+/** Global color tokens as UUID references for style and token editors. */
 export function colorTokenRefs(tree: unknown): string[] {
   return tokenRefsByType(tree, 'color');
 }
 
-/** Typography composite tokens as `{path}` references. */
+/** Global typography tokens as UUID references. */
 export function typographyTokenRefs(tree: unknown): string[] {
   return tokenRefsByType(tree, 'typography');
 }
@@ -106,12 +106,20 @@ export function numberTokenRefs(tree: unknown): string[] {
   return tokenRefsByType(tree, 'number');
 }
 
-function tokenRefsByType(tree: unknown, type: string): string[] {
+export function tokenRefsByType(tree: unknown, type?: string): string[] {
   const index = readTokenTree(tree);
   return [...index.tokens.values()]
     .filter((token) => token.type === type)
-    .map((token) => `{${token.path}}`)
+    .map((token) => tokenReferenceValue(token.uuid))
     .sort((left, right) => left.localeCompare(right));
+}
+
+export function fontFamilies(tree: unknown): FontFamily[] {
+  return [...readTokenTree(tree).tokens.values()].filter(isFontFamily);
+}
+
+function isFontFamily(token: IndexedToken): token is IndexedToken & FontFamily {
+  return token.family === 'font' && token.valueType === 'fontFamily';
 }
 
 function componentTokenRefsByType(
@@ -161,7 +169,7 @@ export function dimensionTokenRefsForDocument(designTree: unknown, doc: FlatDocu
 export function radiusTokenRefsForDocument(designTree: unknown, doc: FlatDocument): string[] {
   const globalRadius = radiusTokenRefs(designTree);
   const localDimension = componentTokenRefsByType(readComponentTokens(doc), 'dimension').filter(
-    (ref) => tokenPath(ref).startsWith('radius.'),
+    (ref) => ref.startsWith('{radius.'),
   );
   const merged = mergeTokenRefLists(globalRadius, localDimension);
   return merged.length ? merged : dimensionTokenRefsForDocument(designTree, doc);

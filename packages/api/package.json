@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@facadeur/core": "workspace:*",
+    "@facadeur/domain": "workspace:*",
     "@facadeur/examples": "workspace:*",
     "@facadeur/tokens": "workspace:*"
   },

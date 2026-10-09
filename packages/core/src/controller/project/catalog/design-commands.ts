@@ -14,7 +14,7 @@ export function applyCatalogDesignCommand(
 ): ProjectCatalog {
   const slice = designSliceFromCatalog(catalog);
   const context: CommandContext = {
-    globalTokenPaths: new Set(readTokenTree(slice.tokens).tokens.keys()),
+    globalTokenUuids: new Set(readTokenTree(slice.tokens).tokens.keys()),
   };
   applyStyleCommand(slice, command, context);
   return validateProjectCatalog(mergeDesignSliceIntoCatalog(catalog, slice)) as ProjectCatalog;

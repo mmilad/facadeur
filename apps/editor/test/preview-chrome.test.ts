@@ -10,6 +10,7 @@ import {
   resolvedViewportChrome,
 } from '../src/domain/viewport/viewport-chrome';
 import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
 
 const documents = editorStandardCatalog();
 
@@ -26,7 +27,7 @@ describe('asset preview chrome', () => {
       documents,
       design: editorStandardDesign(),
     });
-    const breakpoint = { id: 'mobile', minWidth: 375 };
+    const breakpoint = { uuid: fixtureIds.catalog.breakpoints.phone, label: 'Phone', minWidth: 375 };
     expect(
       resolvedViewportChrome(breakpoint, undefined, editor.getSnapshot().document.kind)
         .innerPaddingPx,
@@ -41,7 +42,7 @@ describe('asset preview chrome', () => {
 
 describe('FrameHost preview chrome', () => {
   it('styles the iframe body and never serializes into exports', () => {
-    const host = createFrameHost({ id: 'mobile', width: 375 });
+    const host = createFrameHost({ id: fixtureIds.catalog.breakpoints.phone, width: 375 });
     host.mount(document.body);
     host.setPreviewChrome({ innerPaddingPx: 24, contentAlign: 'start' });
     expect(host.contentDocument().body.style.padding).toBe('0px');

@@ -1,6 +1,7 @@
 import { Type } from '@sinclair/typebox';
 import { breakpointIdSchema, idSchema } from './common';
-import { tokenPathSchema } from './layout';
+import { uuidSchema } from './node-model/uuid';
+import { UUID_PATTERN } from '../document/ids';
 
 const cssPropertySchema = Type.String({ pattern: '^(--)?[A-Za-z_][\\w-]*$' });
 const styleDeclarationsSchema = Type.Record(cssPropertySchema, Type.String());
@@ -28,6 +29,10 @@ const variantStyleSchema = Type.Record(
 );
 
 const breakpointStyleSchema = Type.Record(breakpointIdSchema, styleLayerSchema);
+const UUID_SOURCE = UUID_PATTERN.source.slice(1, -1);
+const tokenInterfaceSetKeySchema = Type.String({
+  pattern: `^(?:${UUID_SOURCE}|[a-z][a-z0-9]*(?:\\.[a-z0-9]+)+)$`,
+});
 const styleTargetSchema = Type.String({
   pattern: '^[A-Za-z][A-Za-z0-9_-]*(?:/[A-Za-z][A-Za-z0-9_-]*)*$',
 });
@@ -72,8 +77,8 @@ export const styleBlockSchema = Type.Object(
 
 export const tokenInterfaceSchema = Type.Object(
   {
-    reads: Type.Optional(Type.Array(tokenPathSchema, { minItems: 1 })),
-    sets: Type.Optional(Type.Record(tokenPathSchema, Type.String({ minLength: 1 }))),
+    reads: Type.Optional(Type.Array(uuidSchema, { minItems: 1 })),
+    sets: Type.Optional(Type.Record(tokenInterfaceSetKeySchema, Type.String({ minLength: 1 }))),
   },
   { additionalProperties: false },
 );

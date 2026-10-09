@@ -2,11 +2,9 @@ import type { AxisSize, LayoutOverride } from '@facadeur/core';
 import type { ReactNode } from 'react';
 import type { LayoutPatch } from '../../../domain/editing';
 import type { LayoutCapabilities, LayoutField } from '../../../domain/layout-capabilities';
-import { Combobox, Field, Grid, NumberInput, Section, Stack, Toggle } from '../../form/index';
+import { Field, Grid, NumberInput, Section, Stack, Toggle } from '../../form/index';
 import '../../form/form.css';
-import { useTokenOptions } from '../token-options';
-import { useTokenValueLabel } from '../fields/TokenPreviewContext';
-import { isTokenReference } from '../fields/TokenValueControl';
+import { TokenValueControl } from '../fields/TokenValueControl';
 import { AxisSizeEditor } from './axis-size-editor';
 import { LayoutChoiceIcon, LayoutIconChoice } from './icon-choice';
 import { SpacingControl } from '../spacing/index';
@@ -80,8 +78,6 @@ export function LayoutControl({
   const horizontal = value.direction === 'row';
   const mainAxisLabel = `Main axis (${horizontal ? 'Horizontal' : 'Vertical'})`;
   const crossAxisLabel = `Cross axis (${horizontal ? 'Vertical' : 'Horizontal'})`;
-  const tokenOptions = useTokenOptions();
-  const valueLabelFor = useTokenValueLabel();
   const margin = value.margin;
   const has = (field: LayoutField): boolean => {
     switch (field) {
@@ -210,19 +206,13 @@ export function LayoutControl({
           {show('gap')
             ? capability(
                 'gap',
-                <Field label="Gap">
-                  <Combobox
-                    name="layout-gap"
-                    value={value.gap ?? ''}
-                    currentLabel={
-                      value.gap && isTokenReference(value.gap)
-                        ? valueLabelFor(value.gap)
-                        : undefined
-                    }
-                    options={tokenOptions(dimensionTokens, value.gap)}
-                    onCommit={(gap) => onCommit({ gap: gap || null })}
-                  />
-                </Field>,
+                <TokenValueControl
+                  name="layout-gap"
+                  label="Gap"
+                  value={value.gap ?? ''}
+                  tokens={dimensionTokens}
+                  onCommit={(gap) => onCommit({ gap })}
+                />,
               )
             : null}
           {show('justify')

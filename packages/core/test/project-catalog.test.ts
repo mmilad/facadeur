@@ -2,12 +2,17 @@ import { describe, expect, it } from 'vitest';
 import {
   DocumentError,
   emptyProjectCatalog,
+  tokenReferenceValue,
   validateProjectCatalog,
 } from '../src/index';
+import { createExampleCatalog } from '@facadeur/examples';
+const testUuid25 = globalThis.crypto.randomUUID();
+const testUuid26 = globalThis.crypto.randomUUID();
+const testUuid27 = globalThis.crypto.randomUUID();
 
-const imageSchemaUuid = '550e8400-e29b-41d4-a716-446655440001';
-const imageAtomUuid = '550e8400-e29b-41d4-a716-446655440002';
-const rootNodeUuid = '550e8400-e29b-41d4-a716-446655440003';
+const imageSchemaUuid = testUuid25;
+const imageAtomUuid = testUuid26;
+const rootNodeUuid = testUuid27;
 
 describe('validateProjectCatalog', () => {
   it('accepts empty catalog', () => {
@@ -50,35 +55,29 @@ describe('validateProjectCatalog', () => {
     expect(catalog.atoms[imageAtomUuid]?.name).toBe('Image');
   });
 
-  it('accepts optional DTCG tokens and font registry', () => {
-    const catalog = validateProjectCatalog({
-      ...emptyProjectCatalog(),
-      tokens: {
-        color: {
-          brand: { $type: 'color', $value: '#336699' },
-        },
-      },
-      fonts: [
-        {
-          id: 'sans',
-          family: 'Inter',
-          weights: [400, 600],
-          source: { type: 'google', family: 'Inter' },
-          fallbacks: ['system-ui', 'sans-serif'],
-        },
-      ],
-    });
-    expect(catalog.tokens?.color).toBeTruthy();
-    expect(catalog.fonts).toHaveLength(1);
+  it('accepts the shared UUID-keyed token model, including font-family tokens', () => {
+    const catalog = validateProjectCatalog(createExampleCatalog());
+    const colors = Object.values(catalog.tokens?.color ?? {});
+    const fonts = Object.values(catalog.tokens?.font ?? {});
+
+    expect(colors.length).toBeGreaterThan(0);
+    expect(fonts.some((font) => font.valueType === 'fontFamily')).toBe(true);
+    for (const family of Object.values(catalog.tokens ?? {})) {
+      for (const token of Object.values(family)) expect(token.uuid).toBeTruthy();
+    }
   });
 
   it('accepts global styles with breakpoints and a style block', () => {
+    const exampleCatalog = createExampleCatalog();
+    const accentTokenUuid = Object.values(exampleCatalog.tokens!.color).find(
+      (token) => token.group === 'accent',
+    )!.uuid;
     const catalog = validateProjectCatalog({
-      ...emptyProjectCatalog(),
+      ...exampleCatalog,
       globalStyles: {
-        breakpoints: [{ id: 'xs', minWidth: 375 }, { id: 'sm', minWidth: 640 }],
+        ...exampleCatalog.globalStyles,
         block: {
-          declarations: { backgroundColor: '{color.bg.canvas}' },
+          declarations: { backgroundColor: tokenReferenceValue(accentTokenUuid) },
           rules: [
             {
               id: 'base-reset',
@@ -88,11 +87,11 @@ describe('validateProjectCatalog', () => {
             },
           ],
         },
-        tokenInterface: { reads: ['color.bg.canvas'] },
+        tokenInterface: { reads: [accentTokenUuid] },
       },
     });
     expect(catalog.globalStyles?.block?.rules).toHaveLength(1);
-    expect(catalog.globalStyles?.breakpoints).toHaveLength(2);
+    expect(catalog.globalStyles?.breakpoints).toEqual(exampleCatalog.globalStyles?.breakpoints);
   });
 
   it('rejects missing schema ref', () => {

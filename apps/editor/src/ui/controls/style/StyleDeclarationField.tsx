@@ -1,12 +1,10 @@
 import type { ReactNode } from 'react';
-import { Combobox, Field, Select } from '../../form/index';
+import { Field, Select } from '../../form/index';
 import { ColorControl } from '../color/index';
 import { ShadowControl } from '../shadow/index';
 import { TextControl } from '../fields/index';
 import { TypographyStyleControl, type TypographyCatalogs } from '../typography/index';
-import { useTokenOptions } from '../token-options';
-import { useTokenValueLabel } from '../fields/TokenPreviewContext';
-import { isTokenReference } from '../fields/TokenValueControl';
+import { TokenValueControl, isTokenReference } from '../fields/TokenValueControl';
 import {
   enumOptionLabel,
   enumOptionsForProperty,
@@ -40,9 +38,6 @@ export function StyleDeclarationField({
   after?: ReactNode;
 }) {
   const kind = styleDeclarationKind(property);
-  const tokenOptions = useTokenOptions();
-  const tokenValueLabel = useTokenValueLabel();
-  const currentLabel = isTokenReference(value) ? tokenValueLabel(value) : undefined;
   const label = stylePropertyLabel(property);
   const enumOptions = enumOptionsForProperty(property);
 
@@ -84,29 +79,25 @@ export function StyleDeclarationField({
       break;
     case 'typography-token':
       control = (
-        <Field label={label}>
-          <Combobox
-            name={name}
-            value={value}
-            currentLabel={currentLabel}
-            options={tokenOptions(typographyTokens, value)}
-            onCommit={onCommit}
-          />
-        </Field>
+        <TokenValueControl
+          name={name}
+          label={label}
+          value={value}
+          tokens={typographyTokens}
+          onCommit={(next) => onCommit(next ?? '')}
+        />
       );
       break;
     case 'spacing':
       control = (
-        <Field label={label}>
-          <Combobox
-            name={name}
-            value={value}
-            currentLabel={currentLabel}
-            placeholder={placeholder}
-            options={tokenOptions(dimensionTokens, value)}
-            onCommit={onCommit}
-          />
-        </Field>
+        <TokenValueControl
+          name={name}
+          label={label}
+          value={value}
+          placeholder={placeholder}
+          tokens={dimensionTokens}
+          onCommit={(next) => onCommit(next ?? '')}
+        />
       );
       break;
     case 'enum':

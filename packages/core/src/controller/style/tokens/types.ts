@@ -1,46 +1,35 @@
-import type { JsonValue } from '../../../utils';
-import type { TokenType } from '../../../schema/document';
+import type {
+  DesignTokenFamily,
+  DesignTokenRecord,
+  DesignTokenSet,
+  DesignTokenUuid,
+  DesignTokenValue,
+  DesignTokenValueType,
+} from '@facadeur/domain';
 
 export type TokenTier = 'primitive' | 'semantic' | 'component';
+export type TokenType = DesignTokenValueType;
+export type TokenTree = DesignTokenSet;
+export type TokenDefinition = DesignTokenRecord;
+export type IdentifiedTokenDefinition = DesignTokenRecord;
 
-/** DTCG tree as stored on the document. Object keys are sorted when canonicalized. */
-export type TokenTree = Record<string, JsonValue>;
-
-export interface TokenDefinition {
-  $value: JsonValue;
-  $type?: TokenType;
-  $description?: string;
-  $deprecated?: boolean | string;
-  $extensions?: Record<string, JsonValue>;
-}
-
-export interface TokenGroupDefinition {
-  $type?: TokenType;
-  $description?: string;
-  $deprecated?: boolean | string;
-  $extensions?: Record<string, JsonValue>;
-}
-
-export interface IndexedToken {
-  path: string;
-  uuid?: string;
-  label?: string;
-  type: TokenType;
-  tier?: TokenTier;
-  value: JsonValue;
-  description?: string;
-  deprecated?: boolean | string;
-  breakpoints: Record<string, JsonValue>;
+export interface IndexedToken extends DesignTokenRecord {
+  readonly family: DesignTokenFamily;
+  /** Derived display path; never used as a persisted identity or reference. */
+  readonly path: string;
+  readonly type: TokenType;
+  readonly tier?: TokenTier;
+  readonly breakpoints: Record<DesignTokenUuid, DesignTokenValue>;
 }
 
 export interface IndexedGroup {
-  path: string;
-  type?: TokenType;
-  tier?: TokenTier;
-  description?: string;
+  readonly family: DesignTokenFamily;
+  readonly group: string;
+  readonly path: string;
+  readonly tier?: TokenTier;
 }
 
 export interface TokenIndex {
-  tokens: Map<string, IndexedToken>;
-  groups: Map<string, IndexedGroup>;
+  readonly tokens: Map<DesignTokenUuid, IndexedToken>;
+  readonly groups: Map<string, IndexedGroup>;
 }

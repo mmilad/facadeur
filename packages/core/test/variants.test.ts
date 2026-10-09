@@ -6,6 +6,17 @@ import {
   type DocumentFile,
   type NestedNode,
 } from '../src/index';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
+const testUuid29 = globalThis.crypto.randomUUID();
+
+const tabletBreakpointUuid = fixtureIds.catalog.breakpoints.tablet;
+const desktopBreakpointUuid = fixtureIds.catalog.breakpoints.desktop;
+const spaceInsetMdRef = fixtureTokenRef(fixtureIds.tokens.space.inset.md);
+const spaceGapLgRef = fixtureTokenRef(fixtureIds.tokens.space.gap.lg);
+const spaceGapMdRef = fixtureTokenRef(fixtureIds.tokens.space.gap.md);
+const spaceGapSmRef = fixtureTokenRef(fixtureIds.tokens.space.gap.sm);
+const spaceStackSmRef = fixtureTokenRef(fixtureIds.tokens.space.stack.sm);
+const spaceGapXlRef = fixtureTokenRef(testUuid29);
 
 const specimen: DocumentFile = {
   version: 1,
@@ -80,7 +91,9 @@ describe('variant overlays', () => {
             styles: {
               declarations: { color: 'navy' },
               states: { hover: { color: 'blue' } },
-              breakpoints: { sm: { declarations: { backgroundColor: 'gainsboro' } } },
+              breakpoints: {
+                [tabletBreakpointUuid]: { declarations: { backgroundColor: 'gainsboro' } },
+              },
               children: { lede: { declarations: { fontWeight: '700' } } },
             },
           },
@@ -93,7 +106,9 @@ describe('variant overlays', () => {
     expect(compact.styles).toMatchObject({
       declarations: { color: 'navy', backgroundColor: 'white' },
       states: { hover: { color: 'blue' } },
-      breakpoints: { sm: { declarations: { backgroundColor: 'gainsboro' } } },
+      breakpoints: {
+        [tabletBreakpointUuid]: { declarations: { backgroundColor: 'gainsboro' } },
+      },
       children: { lede: { declarations: { fontWeight: '700' } } },
     });
   });
@@ -106,10 +121,10 @@ describe('variant overlays', () => {
         ...(specimen.root as Extract<NestedNode, { type: 'frame' }>),
         layout: {
           direction: 'column',
-          padding: '{space.inset.md}',
+          padding: spaceInsetMdRef,
           breakpoints: {
-            tablet: { direction: 'row', gap: '{space.gap.sm}' },
-            desktop: { direction: 'row', gap: '{space.gap.lg}' },
+            [tabletBreakpointUuid]: { direction: 'row', gap: spaceGapSmRef },
+            [desktopBreakpointUuid]: { direction: 'row', gap: spaceGapLgRef },
           },
         },
       },
@@ -119,7 +134,7 @@ describe('variant overlays', () => {
           overrides: {
             nodes: {
               root: {
-                layout: { breakpoints: { tablet: { direction: 'column' } } },
+                layout: { breakpoints: { [tabletBreakpointUuid]: { direction: 'column' } } },
               },
             },
           },
@@ -130,10 +145,10 @@ describe('variant overlays', () => {
     const compact = resolveVariantDocument(laidOut, 'compact');
     expect(compact.root.layout).toEqual({
       direction: 'column',
-      padding: '{space.inset.md}',
+      padding: spaceInsetMdRef,
       breakpoints: {
-        tablet: { direction: 'column', gap: '{space.gap.sm}' },
-        desktop: { direction: 'row', gap: '{space.gap.lg}' },
+        [tabletBreakpointUuid]: { direction: 'column', gap: spaceGapSmRef },
+        [desktopBreakpointUuid]: { direction: 'row', gap: spaceGapLgRef },
       },
     });
   });
@@ -150,8 +165,8 @@ describe('variant overlays', () => {
             nodes: {
               'root.control': {
                 layout: {
-                  gap: '{space.gap.lg}',
-                  breakpoints: { tablet: { direction: 'row' } },
+                  gap: spaceGapLgRef,
+                  breakpoints: { [tabletBreakpointUuid]: { direction: 'row' } },
                 },
               },
             },
@@ -168,16 +183,16 @@ describe('variant overlays', () => {
             component: 'child',
             layout: {
               direction: 'column',
-              gap: '{space.gap.sm}',
-              margin: '{space.stack.sm}',
+              gap: spaceGapSmRef,
+              margin: spaceStackSmRef,
               width: { mode: 'fixed', size: 100 },
               breakpoints: {
-                tablet: {
+                [tabletBreakpointUuid]: {
                   direction: 'column',
-                  gap: '{space.gap.md}',
+                  gap: spaceGapMdRef,
                   width: { mode: 'fixed', size: 120 },
                 },
-                desktop: { gap: '{space.gap.xl}' },
+                [desktopBreakpointUuid]: { gap: spaceGapXlRef },
               },
             },
           },
@@ -190,16 +205,16 @@ describe('variant overlays', () => {
     expect(control?.type).toBe('instance');
     expect(control?.layout).toMatchObject({
       direction: 'column',
-      gap: '{space.gap.lg}',
-      margin: '{space.stack.sm}',
+      gap: spaceGapLgRef,
+      margin: spaceStackSmRef,
       width: { mode: 'fixed', size: 100 },
       breakpoints: {
-        tablet: {
+        [tabletBreakpointUuid]: {
           direction: 'row',
-          gap: '{space.gap.md}',
+          gap: spaceGapMdRef,
           width: { mode: 'fixed', size: 120 },
         },
-        desktop: { gap: '{space.gap.xl}' },
+        [desktopBreakpointUuid]: { gap: spaceGapXlRef },
       },
     });
   });
@@ -297,7 +312,7 @@ describe('variant overlays', () => {
         declarations: { color: 'black', padding: '8px' },
         states: { hover: { color: 'gray' } },
         variants: { tone: { loud: { declarations: { color: 'blue' } } } },
-        breakpoints: { tablet: { declarations: { padding: '12px' } } },
+        breakpoints: { [tabletBreakpointUuid]: { declarations: { padding: '12px' } } },
         children: { label: { declarations: { fontSize: '16px' } } },
       },
       root: {
@@ -314,7 +329,7 @@ describe('variant overlays', () => {
         tone: { loud: { declarations: { color: 'purple' } } },
         size: { compact: { declarations: { letterSpacing: '0.02em' } } },
       },
-      breakpoints: { tablet: { declarations: { padding: '16px' } } },
+      breakpoints: { [tabletBreakpointUuid]: { declarations: { padding: '16px' } } },
       children: {
         label: { declarations: { fontSize: '18px' } },
       },
@@ -328,7 +343,7 @@ describe('variant overlays', () => {
         tone: { loud: { declarations: { color: 'purple' } } },
         size: { compact: { declarations: { letterSpacing: '0.02em' } } },
       },
-      breakpoints: { tablet: { declarations: { padding: '16px' } } },
+      breakpoints: { [tabletBreakpointUuid]: { declarations: { padding: '16px' } } },
       children: { label: { declarations: { fontSize: '18px' } } },
     });
 

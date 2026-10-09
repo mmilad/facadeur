@@ -13,6 +13,9 @@ import {
   validateCatalog,
 } from '@facadeur/core';
 import type { DocumentFile, StyleRule } from '@facadeur/core';
+import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
+
+const tabletBreakpointUuid = fixtureIds.catalog.breakpoints.tablet;
 
 const source: DocumentFile = {
   version: 1,
@@ -188,8 +191,8 @@ describe('readable style classes and selector rules', () => {
       variants: [{ name: 'tone', values: ['quiet', 'loud'] }],
       settings: {
         breakpoints: [
-          { id: 'xs', minWidth: 375 },
-          { id: 'sm', minWidth: 768 },
+          { uuid: fixtureIds.catalog.breakpoints.phone, label: 'Phone', minWidth: 375 },
+          { uuid: tabletBreakpointUuid, label: 'Tablet', minWidth: 768 },
         ],
       },
       styles: {
@@ -199,7 +202,7 @@ describe('readable style classes and selector rules', () => {
             selector: '.card + .title',
             bindings: { card: 'root', title: 'title' },
             variants: { tone: { quiet: { declarations: { color: 'blue' } } } },
-            breakpoints: { sm: { declarations: { color: 'green' } } },
+            breakpoints: { [tabletBreakpointUuid]: { declarations: { color: 'green' } } },
           },
         ],
       },
@@ -207,7 +210,9 @@ describe('readable style classes and selector rules', () => {
     const flat = toFlat(withAxis);
     const pruned = applyCommand(flat, { type: 'removeVariant', name: 'tone' });
     expect(pruned.styles?.rules?.[0]?.variants).toBeUndefined();
-    expect(pruned.styles?.rules?.[0]?.breakpoints?.sm?.declarations).toEqual({ color: 'green' });
+    expect(pruned.styles?.rules?.[0]?.breakpoints?.[tabletBreakpointUuid]?.declarations).toEqual({
+      color: 'green',
+    });
   });
 
   it('checks rule token reads, spacing tokens, variant axes, and breakpoints', () => {
@@ -219,7 +224,7 @@ describe('readable style classes and selector rules', () => {
             id: 'token-rule',
             selector: '.card',
             bindings: { card: 'root' },
-            declarations: { color: '{color.primary}' },
+            declarations: { color: fixtureTokenRef(fixtureIds.tokens.color.text.primary) },
           },
         ],
       },
@@ -229,7 +234,7 @@ describe('readable style classes and selector rules', () => {
       validateCatalog([
         {
           ...withToken,
-          tokenInterface: { reads: ['color.primary'] },
+          tokenInterface: { reads: [fixtureIds.tokens.color.text.primary] },
           styles: {
             rules: [
               {

@@ -7,8 +7,10 @@ import { describe, expect, it, afterEach } from 'vitest';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';
 import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
+import { exampleIds as fixtureIds } from '@facadeur/examples';
 
 const documents = editorStandardCatalog();
+const tabletUuid = fixtureIds.catalog.breakpoints.tablet;
 
 describe('viewport layers UX', () => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -40,10 +42,10 @@ describe('viewport layers UX', () => {
     expect(host.querySelector('button.viewport-layer')).toBeNull();
 
     await act(async () => {
-      session.setViewportChrome('sm', { title: 'Tablet preview' });
+      session.setViewportChrome(tabletUuid, { title: 'Tablet preview' });
     });
     expect(
-      host.querySelector('.viewport-frame[data-breakpoint="sm"] .viewport-chrome-title')
+      host.querySelector(`.viewport-frame[data-breakpoint="${tabletUuid}"] .viewport-chrome-title`)
         ?.textContent,
     ).toBe('Tablet preview');
   });
@@ -61,11 +63,11 @@ describe('viewport layers UX', () => {
     });
 
     await act(async () => {
-      session.selectViewport('sm');
+      session.selectViewport(tabletUuid);
     });
 
     const snap = session.getSnapshot();
-    expect(snap.selectedViewportId).toBe('sm');
+    expect(snap.selectedViewportId).toBe(tabletUuid);
     expect(snap.selectedNodeId).toBeNull();
     expect(host.querySelector('input[name="viewport-inner-padding"]')).toBeNull();
     expect(host.querySelector('input[name="viewport-outer-padding"]')).toBeNull();
@@ -73,10 +75,10 @@ describe('viewport layers UX', () => {
     expect(host.querySelector('.viewport-edit')).toBeNull();
 
     await act(async () => {
-      session.setViewportChrome('sm', { innerPaddingPx: 24, title: 'Tablet preview' });
+      session.setViewportChrome(tabletUuid, { innerPaddingPx: 24, title: 'Tablet preview' });
     });
     const title = document.querySelector(
-      '.viewport-frame[data-breakpoint="sm"] .viewport-chrome-title',
+      `.viewport-frame[data-breakpoint="${tabletUuid}"] .viewport-chrome-title`,
     );
     expect(title?.textContent).toBe('Tablet preview');
   });

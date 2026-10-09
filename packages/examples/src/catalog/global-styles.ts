@@ -1,34 +1,35 @@
 import type { ProjectCatalog } from '@facadeur/domain';
+import { globalIds as exampleGlobalIds } from './idList';
 
 export const globalStyles = {
   breakpoints: [
     {
-      id: 'xs',
+      uuid: exampleGlobalIds.breakpoints.phone,
       label: 'Phone',
       minWidth: 375,
     },
     {
-      id: 'sm',
+      uuid: exampleGlobalIds.breakpoints.tablet,
       label: 'Tablet',
       minWidth: 768,
     },
     {
-      id: 'md',
+      uuid: exampleGlobalIds.breakpoints.laptop,
       label: 'Laptop',
       minWidth: 1024,
     },
     {
-      id: 'lg',
+      uuid: exampleGlobalIds.breakpoints.desktop,
       label: 'Desktop',
       minWidth: 1200,
     },
     {
-      id: 'xl',
+      uuid: exampleGlobalIds.breakpoints.wide,
       label: 'Wide',
       minWidth: 1440,
     },
     {
-      id: 'xxl',
+      uuid: exampleGlobalIds.breakpoints.ultra,
       label: 'Ultra',
       minWidth: 1760,
     },

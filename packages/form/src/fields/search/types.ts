@@ -9,5 +9,6 @@ export type SearchFieldConfig = {
 export type SearchFieldProps = Omit<SearchFieldConfig, 'label' | 'type'> & {
   id: string;
   value: string;
+  className?: string;
   onChange: (next: string) => void;
 };

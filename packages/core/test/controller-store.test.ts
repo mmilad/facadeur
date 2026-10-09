@@ -6,6 +6,7 @@ import {
   type ControllerDocumentStore,
   type DocumentFile,
 } from '../src/index';
+const testUuid16 = globalThis.crypto.randomUUID();
 
 const design: DocumentFile = {
   version: 1,
@@ -22,6 +23,14 @@ const label: DocumentFile = {
   root: { id: 'root', type: 'text', text: 'Initial' },
 };
 const stores: ControllerDocumentStore[] = [];
+const primaryColorUuid = testUuid16;
+const primaryColor = {
+  uuid: primaryColorUuid,
+  label: 'Primary',
+  group: '',
+  valueType: 'color' as const,
+  value: '#123456',
+};
 afterEach(() => stores.splice(0).forEach((store) => store.destroy()));
 function setup() {
   const project = new ProjectController({
@@ -43,7 +52,7 @@ describe('controller-backed document stores', () => {
       observed.push({ change, styles: styles.styles, document: documentStore.getDocument() }),
     );
     styles.setStyleBlock({ declarations: { opacity: '0.5' } });
-    project.styles.setGlobalToken('color.primary', { $type: 'color', $value: '#123456' });
+    project.styles.setGlobalToken('color', primaryColor);
     expect(observed).toHaveLength(1);
     expect(observed[0]).toMatchObject({
       change: { reason: 'command' },
@@ -53,7 +62,7 @@ describe('controller-backed document stores', () => {
     expect(designStore.getDocument().tokens).toEqual(project.styles.globalTokens);
     documentStore.undo();
     expect(styles.styles).toBeUndefined();
-    expect(project.styles.globalTokenIndex.tokens.has('color.primary')).toBe(true);
+    expect(project.styles.globalTokenIndex.tokens.has(primaryColorUuid)).toBe(true);
     designStore.undo();
     expect(project.styles.globalTokenIndex.tokens.size).toBe(0);
     documentStore.redo();
@@ -98,7 +107,7 @@ describe('controller-backed document stores', () => {
   it('resets only the loaded document history and reads replacements through retained views', () => {
     const { project, documentStore, designStore } = setup();
     documentStore.execute({ type: 'setProp', nodeId: 'root', prop: 'text', value: 'Edit' });
-    project.styles.setGlobalToken('color.primary', { $type: 'color', $value: '#123456' });
+    project.styles.setGlobalToken('color', primaryColor);
     const listener = vi.fn();
     const unsubscribe = documentStore.subscribe(listener);
     project.replaceDocument(

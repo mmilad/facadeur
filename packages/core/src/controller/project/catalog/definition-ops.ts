@@ -88,13 +88,14 @@ export function upsertCatalogSchema(
   uuid: string,
   schema: JsonSchemaObject,
 ): ProjectCatalog {
-  const next = structuredClone(catalog) as ProjectCatalog;
-  const existing = next.schemas?.[uuid];
-  next.schemas = {
-    ...(next.schemas ?? {}),
-    [uuid]: preserveFieldIds(existing, schema) as JsonSchemaObject,
+  const existing = catalog.schemas?.[uuid];
+  return {
+    ...catalog,
+    schemas: {
+      ...(catalog.schemas ?? {}),
+      [uuid]: preserveFieldIds(existing, schema) as JsonSchemaObject,
+    },
   };
-  return next;
 }
 
 export function removeCatalogSchema(catalog: ProjectCatalog, uuid: string): ProjectCatalog {
@@ -110,10 +111,11 @@ export function removeCatalogSchema(catalog: ProjectCatalog, uuid: string): Proj
       throw new DocumentError('schema', `Schema "${uuid}" is referenced by ${def.name}`);
     }
   }
-  const next = structuredClone(catalog) as ProjectCatalog;
-  const { [uuid]: _removed, ...rest } = next.schemas ?? {};
-  next.schemas = Object.keys(rest).length ? rest : undefined;
-  return next;
+  const { [uuid]: _removed, ...schemas } = catalog.schemas ?? {};
+  return {
+    ...catalog,
+    schemas: Object.keys(schemas).length ? schemas : undefined,
+  };
 }
 
 export function catalogKindForDefinition(

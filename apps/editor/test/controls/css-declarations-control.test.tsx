@@ -6,6 +6,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { CssDeclarationsControl } from '../../src/ui/controls/generic/CssDeclarationsControl';
 import { layoutCapabilities } from '../../src/domain/layout-capabilities';
 import { toFlat } from '@facadeur/core';
+import { tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 afterEach(cleanup);
 type Props = ComponentProps<typeof CssDeclarationsControl>;
@@ -14,7 +15,7 @@ function setup(overrides: Partial<Props> = {}) {
     entries: [
       { property: 'display', value: 'grid', overridden: true },
       { property: 'width', value: '100px', overridden: false },
-      { property: 'padding', value: '{space.small}', overridden: true },
+      { property: 'padding', value: fixtureTokenRef(testUuid5), overridden: true },
       { property: 'border', value: '1px solid red', overridden: true },
       { property: 'border-radius', value: '4px', overridden: true },
       { property: '--manual', value: 'kept', overridden: true },
@@ -25,7 +26,7 @@ function setup(overrides: Partial<Props> = {}) {
       shadowTokens: [],
       typographyTokens: [],
       radiusTokens: [],
-      dimensionTokens: ['{space.small}', '{space.large}'],
+      dimensionTokens: [fixtureTokenRef(testUuid5), fixtureTokenRef(testUuid6)],
       typographyCatalogs: {
         fontRefs: [],
         fontFamilyTokens: [],
@@ -134,7 +135,7 @@ it('preserves token selections and keeps Add property inside the manual section'
   fireEvent.click(screen.getByRole('button', { name: /Large/ }));
   expect(props.onCommitDeclaration).toHaveBeenCalledExactlyOnceWith(
     'padding',
-    '{space.large}',
+    fixtureTokenRef(testUuid6),
     true,
   );
   fireEvent.click(within(manualSection()).getByRole('button', { name: 'Add property' }));

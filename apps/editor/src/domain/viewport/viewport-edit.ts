@@ -5,9 +5,9 @@ import { activeBreakpoints } from '@facadeur/tokens';
 export type StyleEditMode = 'base' | 'viewport';
 
 export interface ViewportRef {
-  id: string;
+  uuid: string;
   minWidth: number;
-  label?: string;
+  label: string;
 }
 
 export interface ViewportEditContext {
@@ -42,12 +42,12 @@ export function viewportEditContext(input: {
   const breakpoints = activeBreakpoints(input.breakpoints);
   const first = breakpoints[0];
   const base = first ? viewportRef(first) : null;
-  const match = input.focusId ? breakpoints.find((item) => item.id === input.focusId) : undefined;
+  const match = input.focusId ? breakpoints.find((item) => item.uuid === input.focusId) : undefined;
   const focus = match ? viewportRef(match) : null;
-  const focusIsBase = Boolean(focus && base && focus.id === base.id);
+  const focusIsBase = Boolean(focus && base && focus.uuid === base.uuid);
   const overrideViewport = focus && !focusIsBase ? focus : null;
   const writingBreakpointId =
-    input.editTarget === 'viewport' && overrideViewport ? overrideViewport.id : null;
+    input.editTarget === 'viewport' && overrideViewport ? overrideViewport.uuid : null;
   return {
     breakpoints,
     base,
@@ -61,9 +61,9 @@ export function viewportEditContext(input: {
 
 function viewportRef(breakpoint: Breakpoint): ViewportRef {
   return {
-    id: breakpoint.id,
+    uuid: breakpoint.uuid,
     minWidth: breakpoint.minWidth,
-    ...(breakpoint.label ? { label: breakpoint.label } : {}),
+    label: breakpoint.label,
   };
 }
 

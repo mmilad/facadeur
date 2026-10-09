@@ -1,12 +1,13 @@
 import type { Node } from '@facadeur/domain';
+import { ids as exampleFormToggleIds } from './idList';
 
 export const root: Node = {
-  uuid: '550e8400-e29b-41d4-a716-a97359bef840',
+  uuid: exampleFormToggleIds.nodes.root,
   dom: {
     tagName: 'label',
     children: [
       {
-        uuid: '550e8400-e29b-41d4-a716-7feb971f5e3c',
+        uuid: exampleFormToggleIds.nodes.span1,
         dom: {
           tagName: 'span',
           properties: {
@@ -15,17 +16,17 @@ export const root: Node = {
         },
       },
       {
-        uuid: '550e8400-e29b-41d4-a716-4bbc0bebd5af',
+        uuid: exampleFormToggleIds.nodes.div1,
         dom: {
           tagName: 'div',
           children: [
             {
-              uuid: '550e8400-e29b-41d4-a716-db1815e7ce3e',
+              uuid: exampleFormToggleIds.nodes.div2,
               dom: {
                 tagName: 'div',
                 children: [
                   {
-                    uuid: '550e8400-e29b-41d4-a716-f6c221efef5c',
+                    uuid: exampleFormToggleIds.nodes.span2,
                     dom: {
                       tagName: 'span',
                     },
@@ -34,7 +35,7 @@ export const root: Node = {
               },
             },
             {
-              uuid: '550e8400-e29b-41d4-a716-cf6ce94972e3',
+              uuid: exampleFormToggleIds.nodes.span3,
               dom: {
                 tagName: 'span',
                 properties: {

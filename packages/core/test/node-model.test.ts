@@ -5,10 +5,13 @@ import {
   nodeSchema,
   projectCatalogSchema,
 } from '../src/schema/node-model/index';
+const testUuid22 = globalThis.crypto.randomUUID();
+const testUuid23 = globalThis.crypto.randomUUID();
+const testUuid24 = globalThis.crypto.randomUUID();
 
-const imageSchemaUuid = '550e8400-e29b-41d4-a716-446655440001';
-const imageAtomUuid = '550e8400-e29b-41d4-a716-446655440002';
-const rootNodeUuid = '550e8400-e29b-41d4-a716-446655440003';
+const imageSchemaUuid = testUuid22;
+const imageAtomUuid = testUuid23;
+const rootNodeUuid = testUuid24;
 
 describe('node model contract', () => {
   it('accepts a minimal atom definition with dom.children and schema ref', () => {
