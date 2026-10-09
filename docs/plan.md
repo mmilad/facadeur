@@ -1,5 +1,59 @@
 # facadeur – Plan
 
+### Catalog instance field exposure
+
+- [x] Make the effective field contract for a catalog definition include fields exposed by its
+      nested catalog instances, and show those inherited fields with their source in the schema
+      editor. Keep locally authored schema fields editable and inherited source fields read-only.
+- [x] Support three exposure modes: an atom-level default and per-instance overrides for automatic
+      flat exposure, grouped exposure under a configurable object whose initial name is the instance
+      name, and manual field mappings to parent aliases. Preserve the automatic-flat default.
+- [x] Use the same effective contract for Preview Data suggestions, validation, instance values,
+      and resolved ElementBuildConfig output. Target-asset preview defaults seed suggestions;
+      parent and instance values override those defaults for the selected instance.
+- [x] Reuse the existing public-field and scope-resolution rules for nesting and name collisions;
+      do not add a second schema evaluator in the editor. Preserve existing persisted definitions
+      and make new exposure metadata additive.
+
+Evidence: the legacy document path already has `publicFieldsFor`, `automaticFieldGroupsFor`,
+explicit `fieldBindings`, and per-instance forwarding controls. The current Catalog inspector
+builds fields only from the open `NodeDefinition` schema, while child references are
+`NodeModel.config.definitionRef`; consequently the Image schema and defaults do not enter Card's
+effective contract or Preview Data. Action: adapt the established resolver semantics to catalog
+definitions and instance edges, with provenance for grouped and inherited fields. Scope: accepted
+design. Contracts: keep local and inherited schema ownership distinct,
+preserve existing preview/instance precedence, validation, persistence, undo, and generated output.
+Validation: nested flat/group/manual contracts, collisions and cycles, Preview Data precedence,
+round trips/Undo, editor and Core typechecks, codegen, and focused browser interaction.
+
+Implementation decisions: an atom defines the default exposure mode and field map; each
+occurrence may override them. Grouped exposure stores a configurable group name on the occurrence,
+initially copied from the instance name. Manual mode maps source field paths to parent field aliases;
+the occurrence's existing data and binding mechanisms supply values. Keep the resolver in Core's
+catalog domain and have schema, inspector, preview, and validation consumers use that contract.
+
+Binding follow-up: schema properties receive persistent `x-facadeur-prop-id` identifiers. Component
+field bindings use `{props:uuid}` internally while the inspector displays the current field path as
+`props.src`; catalog-wide Design Props keep their separate `{prop:uuid}` namespace. Preview values
+remain defaults, while element attributes resolve the referenced component field id at render time.
+
+Progress (2026-10-09): Core now derives recursive contracts with source provenance, inherited
+preview defaults, flat/group/manual mapping, per-atom defaults, per-instance overrides, and cycle
+rejection. The schema view lists inherited fields read-only; the inspector edits atom defaults and
+instance overrides, including the editable instance group name. Preview resolution and validation
+consume the derived contract. Card and Teaser fixtures now map atom fields onto their semantic
+parent fields. Runtime smoke checks validate the example catalog and manual binding path. The
+focused Vitest command is included but cannot collect under the restricted runner because Vite gets
+`EPERM` resolving a pnpm-linked file; the direct TypeScript checks report existing unrelated
+workspace errors and no diagnostics in the changed Core modules. Controller review: the 453-line
+project controller remains the single catalog mutation coordinator; the new cases route inspector
+changes to the existing catalog operations without creating another mutation owner.
+
+Progress (2026-10-09): schema properties now receive stable IDs during catalog normalization and
+retain them when schemas are edited. Attribute binding options include component fields, displaying
+`props.<field>` while storing `{props:uuid}`. The Image atom now binds `src` and `alt` by field ID;
+preview resolution reads those IDs against current field values, including parent exposure values.
+
 ### Unify authored elements as Layers
 
 - [ ] Evidence: the active flat document model distinguishes `frame`, `text`, and `image`, and

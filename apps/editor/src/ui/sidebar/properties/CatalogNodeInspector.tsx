@@ -38,7 +38,6 @@ export function CatalogNodeInspector({
           keyLabel: 'Attribute',
           valueLabel: 'Value',
           bindable: true,
-          suggestions: { options: componentOptions },
         },
       ],
     },
@@ -78,7 +77,7 @@ export function CatalogNodeInspector({
             type="button"
             role="tab"
             aria-selected={selectedTab.id === tab.id}
-            aria-controls="inspector-tabpanel"
+            aria-controls={`inspector-tabpanel-${tab.id}`}
             className={selectedTab.id === tab.id ? 'inspector-tab is-active' : 'inspector-tab'}
             onClick={() => setActiveTab(tab.id)}
           >
@@ -86,21 +85,25 @@ export function CatalogNodeInspector({
           </button>
         ))}
       </div>
-      <section
-        id="inspector-tabpanel"
-        className="inspector-tabpanel"
-        role="tabpanel"
-        aria-labelledby={`inspector-tab-${selectedTab.id}`}
-      >
-        <div className="inspector-form-stack">
-          {selectedTab.sections.map((section) => (
-            <section className="inspector-tab-section" key={section.label}>
-              <h3 className="inspector-tab-section-title">{section.label}</h3>
-              <InspectorFields app={app} model={model} fields={section.fields} />
-            </section>
-          ))}
-        </div>
-      </section>
+      {tabs.map((tab) => (
+        <section
+          id={`inspector-tabpanel-${tab.id}`}
+          className="inspector-tabpanel"
+          role="tabpanel"
+          aria-labelledby={`inspector-tab-${tab.id}`}
+          hidden={selectedTab.id !== tab.id}
+          key={tab.id}
+        >
+          <div className="inspector-form-stack">
+            {tab.sections.map((section) => (
+              <section className="inspector-tab-section" key={section.label}>
+                <h3 className="inspector-tab-section-title">{section.label}</h3>
+                <InspectorFields app={app} model={model} fields={section.fields} />
+              </section>
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }
@@ -126,12 +129,27 @@ function InspectorFields({
     <Form
       value={value}
       fields={fields}
-      bindOptions={model.propOptions.map((option) => ({ value: option.ref, label: option.name }))}
+      bindOptions={model.propOptions.map((option) => ({
+        value: option.ref,
+        label: option.name,
+        description: previewDefaultForProp(model, option.name),
+        group: option.kind === 'component' ? 'Component props' : 'Design props',
+      }))}
       onChange={(_, meta) =>
         app.inspector.updateField({ nodeUuid: model.nodeUuid, path: meta.path, value: meta.next })
       }
     />
   );
+}
+
+function previewDefaultForProp(
+  model: NonNullable<ReturnType<AppService['inspector']['getModel']>>,
+  name: string,
+) {
+  if (!name.startsWith('props.')) return undefined;
+  const value = valueAtPath(model.formValue.previewData, name.slice('props.'.length));
+  if (value === undefined || value === null) return undefined;
+  return typeof value === 'string' ? value : JSON.stringify(value);
 }
 
 function flattenFields(

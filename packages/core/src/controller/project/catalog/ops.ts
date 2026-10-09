@@ -1,5 +1,6 @@
 import type {
   CatalogMapKey,
+  FieldExposure,
   JsonSchemaObject,
   Node,
   NodeDefinition,
@@ -152,6 +153,19 @@ export function patchNodeName(
   if (!trimmed) return catalog;
   return mutateNode(catalog, definitionUuid, nodeUuid, (node) => {
     (node as { name?: string }).name = trimmed;
+  });
+}
+
+export function patchNodeFieldExposure(
+  catalog: ProjectCatalog,
+  definitionUuid: string,
+  nodeUuid: string,
+  fieldExposure: FieldExposure,
+): ProjectCatalog {
+  return mutateNode(catalog, definitionUuid, nodeUuid, (node) => {
+    const config = { ...(node.config ?? {}) };
+    (config as { fieldExposure?: FieldExposure }).fieldExposure = fieldExposure;
+    (node as { config?: typeof config }).config = config;
   });
 }
 

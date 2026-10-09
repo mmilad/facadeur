@@ -1,7 +1,6 @@
 import { FormatRegistry } from '@sinclair/typebox';
 
-const UUID =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 if (!FormatRegistry.Has('uuid')) {
   FormatRegistry.Set('uuid', (value) => typeof value === 'string' && UUID.test(value));
 }
@@ -14,6 +13,7 @@ export {
   previewDataSchema,
   nodeConfigSchema,
   definitionConfigSchema,
+  fieldExposureSchema,
 } from './config';
 export { nodeSchema, NODE_MODEL_SCHEMA_ID, type NodeModel } from './node';
 export {

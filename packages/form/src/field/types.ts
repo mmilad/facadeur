@@ -12,6 +12,7 @@ import type { ComboboxFieldConfig } from '../fields/combobox';
 import type { LayoutFieldConfig } from '../fields/layout';
 import type { ChipsFieldConfig } from '../fields/chips';
 import type { RecordFieldConfig } from '../fields/record';
+import type { AutocompleteOption } from '../fields/autocomplete/types';
 
 export type FormFieldConfig =
   | TextFieldConfig
@@ -36,6 +37,6 @@ export type FormFieldProps = {
   layout: 'stacked' | 'horizontal';
   value: unknown;
   values: Readonly<Record<string, unknown>>;
-  bindOptions: readonly { value: string; label: string }[];
+  bindOptions: readonly AutocompleteOption[];
   onChange: (next: unknown, meta?: FormChangeMeta) => void;
 };

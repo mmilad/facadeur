@@ -7,6 +7,7 @@ import {
 } from './inspector-view';
 import { resolveDefinitionToElementBuildConfig } from './resolve';
 import { previewFieldsForNode } from './merge';
+import { findDefinition, findNodeByUuid } from '../../catalog/ops';
 
 /**
  * Preview pipeline for canvas/DOM:
@@ -40,7 +41,16 @@ export class PreviewController {
   }
 
   applyFormChange(path: string, value: unknown, nodeUuid: string) {
-    const target = inspectorChangeTarget(path, value, nodeUuid);
+    const snap = this.core.getSnapshot();
+    const definition = snap.openDefinition;
+    const node = definition ? findNodeByUuid(definition.root, nodeUuid) : null;
+    const referencedUuid =
+      nodeUuid !== definition?.root.uuid ? node?.config?.definitionRef : undefined;
+    const previewDefinitionUuid =
+      (referencedUuid && findDefinition(snap.catalog, referencedUuid)?.definition.uuid) ??
+      definition?.uuid ??
+      nodeUuid;
+    const target = inspectorChangeTarget(path, value, nodeUuid, previewDefinitionUuid);
     if (!target) return;
     this.core.applyInspectorFormChange(target);
   }

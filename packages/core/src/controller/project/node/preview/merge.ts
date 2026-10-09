@@ -1,13 +1,13 @@
 import type { FieldValue, Node, NodeDefinition } from '@facadeur/domain';
 import { findNodeByUuid } from '../../catalog/ops';
 
-/** Merge ordered field layers; later layers override earlier ones. */
+/** Defaults seed fields; inherited and node-level values override them in that order. */
 export function mergePreviewFields(
   definitionPreview: Record<string, FieldValue> | undefined,
   nodeData: Record<string, FieldValue> | undefined,
   parentFields: Record<string, FieldValue>,
 ) {
-  return { ...parentFields, ...definitionPreview, ...nodeData };
+  return { ...definitionPreview, ...parentFields, ...nodeData };
 }
 
 export function previewFieldsForNode(

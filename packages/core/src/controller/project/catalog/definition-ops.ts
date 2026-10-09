@@ -1,6 +1,12 @@
-import type { CatalogMapKey, JsonSchemaObject, NodeDefinition, ProjectCatalog } from '@facadeur/domain';
+import type {
+  CatalogMapKey,
+  JsonSchemaObject,
+  NodeDefinition,
+  ProjectCatalog,
+} from '@facadeur/domain';
 import { DocumentError } from '../../../document/errors';
 import { findDefinition } from './ops';
+import { preserveFieldIds } from './field-ids';
 
 export function createCatalogDefinition(
   catalog: ProjectCatalog,
@@ -26,9 +32,22 @@ export function patchCatalogDefinitionRecord(
     throw new DocumentError('schema', `Unknown ${kind} definition "${uuid}"`);
   }
   const next = structuredClone(catalog) as ProjectCatalog;
+  const definitionPatch =
+    patch.schema?.kind === 'inline' && existing.schema.kind === 'inline'
+      ? {
+          ...patch,
+          schema: {
+            ...patch.schema,
+            schema: preserveFieldIds(
+              existing.schema.schema,
+              patch.schema.schema,
+            ) as JsonSchemaObject,
+          },
+        }
+      : patch;
   (next[kind] as Record<string, NodeDefinition>)[uuid] = {
     ...existing,
-    ...patch,
+    ...definitionPatch,
     uuid,
   };
   return next;
@@ -70,7 +89,11 @@ export function upsertCatalogSchema(
   schema: JsonSchemaObject,
 ): ProjectCatalog {
   const next = structuredClone(catalog) as ProjectCatalog;
-  next.schemas = { ...(next.schemas ?? {}), [uuid]: schema };
+  const existing = next.schemas?.[uuid];
+  next.schemas = {
+    ...(next.schemas ?? {}),
+    [uuid]: preserveFieldIds(existing, schema) as JsonSchemaObject,
+  };
   return next;
 }
 

@@ -1,5 +1,6 @@
 'use client';
 
+import type { FieldValue } from '@facadeur/core';
 import type { JsonSchemaObject } from '@facadeur/domain';
 import { useMemo } from 'react';
 import type { AppService } from '../../app-service';
@@ -21,8 +22,19 @@ function emptyObjectSchema(title: string): JsonSchemaObject {
   };
 }
 
-function schemaPropertyRows(schema: JsonSchemaObject | null): { name: string; title: string; type: string }[] {
-  if (!schema || schema.type !== 'object' || !schema.properties || typeof schema.properties !== 'object') {
+function schemaPropertyRows(
+  schema: JsonSchemaObject | null,
+  origins?: ReadonlyMap<
+    string,
+    { kind: string; instanceName?: string; definitionName?: string; fieldName?: string }
+  >,
+): { name: string; title: string; type: string; source: string }[] {
+  if (
+    !schema ||
+    schema.type !== 'object' ||
+    !schema.properties ||
+    typeof schema.properties !== 'object'
+  ) {
     return [];
   }
   return Object.entries(schema.properties).map(([name, spec]) => {
@@ -34,7 +46,16 @@ function schemaPropertyRows(schema: JsonSchemaObject | null): { name: string; ti
         : Array.isArray(row.type)
           ? row.type.join(' | ')
           : 'unknown';
-    return { name, title, type };
+    const origin = origins?.get(name);
+    return {
+      name,
+      title,
+      type,
+      source:
+        origin?.kind === 'inherited'
+          ? `From ${origin.instanceName} (${origin.definitionName})`
+          : 'Local',
+    };
   });
 }
 
@@ -50,11 +71,12 @@ export function CatalogSchemaStage({
   const coreSnap = app.getCoreSnapshot();
   const definition = coreSnap.openDefinition;
   const resolved = app.core.node.schema.resolveForOpenDefinition();
+  const effective = app.core.node.schema.effectiveForOpenDefinition();
   const { fields } = app.core.node.config.inspectorInputs();
-  const previewFields = definition?.config?.previewData?.fields ?? {};
-  const title = definition
-    ? catalogDefinitionDisplayName(coreSnap.catalog, definition)
-    : 'Schema';
+  const previewFields = (effective?.previewDefaults ??
+    definition?.config?.previewData?.fields ??
+    {}) as Record<string, FieldValue>;
+  const title = definition ? catalogDefinitionDisplayName(coreSnap.catalog, definition) : 'Schema';
 
   const schemaEntries = useMemo(
     () =>
@@ -64,11 +86,10 @@ export function CatalogSchemaStage({
     [coreSnap.catalog.schemas],
   );
 
-  const schemaRef =
-    definition?.schema.kind === 'ref' ? definition.schema.uuid : null;
+  const schemaRef = definition?.schema.kind === 'ref' ? definition.schema.uuid : null;
   const selectValue = schemaRef ?? INLINE_SCHEMA_VALUE;
   const selectedShared = schemaRef ? coreSnap.catalog.schemas?.[schemaRef] : undefined;
-  const propertyRows = schemaPropertyRows(resolved);
+  const propertyRows = schemaPropertyRows(effective?.schema ?? resolved, effective?.origins);
 
   if (!definition) {
     return (
@@ -95,27 +116,39 @@ export function CatalogSchemaStage({
       });
       session.setNotice('Schema link updated', 'info');
     } catch (failure) {
-      session.setNotice(failure instanceof Error ? failure.message : 'Could not update schema', 'error');
+      session.setNotice(
+        failure instanceof Error ? failure.message : 'Could not update schema',
+        'error',
+      );
     }
   }
 
   async function saveInlineSchema(next: JsonSchemaObject) {
-    if (definition.schema.kind !== 'inline') return;
+    if (!definition || definition.schema.kind !== 'inline') return;
     try {
       await app.patchDefinition(definition.uuid, {
         schema: { kind: 'inline', schema: next },
       });
       session.setNotice('Schema updated', 'info');
     } catch (failure) {
-      session.setNotice(failure instanceof Error ? failure.message : 'Could not save schema', 'error');
+      session.setNotice(
+        failure instanceof Error ? failure.message : 'Could not save schema',
+        'error',
+      );
     }
   }
 
-  async function writePreview(field: (typeof fields)[number], value: Parameters<typeof app.patchPreviewField>[1]) {
+  async function writePreview(
+    field: (typeof fields)[number],
+    value: Parameters<typeof app.patchPreviewField>[1],
+  ) {
     try {
       await app.patchPreviewField(field.name, value);
     } catch (failure) {
-      session.setNotice(failure instanceof Error ? failure.message : 'Could not save preview value', 'error');
+      session.setNotice(
+        failure instanceof Error ? failure.message : 'Could not save preview value',
+        'error',
+      );
     }
   }
 
@@ -135,8 +168,8 @@ export function CatalogSchemaStage({
           <h1>Schema</h1>
         </div>
         <p className="schema-stage-note">
-          Choose a shared project schema or edit an inline contract, then set preview defaults used on
-          the stage and in the Editor inspector.
+          Choose a shared project schema or edit an inline contract, then set preview defaults used
+          on the stage and in the Editor inspector.
         </p>
       </header>
       <div className="schema-stage-body">
@@ -178,7 +211,7 @@ export function CatalogSchemaStage({
                           <li key={row.name}>
                             <span>{row.title}</span>
                             <span className="meta">
-                              {row.name} · {row.type}
+                              {row.name} · {row.type} · {row.source}
                             </span>
                           </li>
                         ))}
@@ -201,14 +234,34 @@ export function CatalogSchemaStage({
                       schema={definition.schema.schema}
                       onChange={(next) => void saveInlineSchema(next as JsonSchemaObject)}
                     />
+                    {propertyRows.some((row) => row.source !== 'Local') ? (
+                      <div>
+                        <h3>Inherited fields</h3>
+                        <ul className="schema-field-list">
+                          {propertyRows
+                            .filter((row) => row.source !== 'Local')
+                            .map((row) => (
+                              <li key={row.name}>
+                                <span>{row.title}</span>
+                                <span className="meta">
+                                  {row.name} · {row.type} · {row.source}
+                                </span>
+                              </li>
+                            ))}
+                        </ul>
+                      </div>
+                    ) : null}
                   </Stack>
                 ) : null}
               </div>
-              <section className="preview-data-slot" aria-labelledby="catalog-preview-defaults-title">
+              <section
+                className="preview-data-slot"
+                aria-labelledby="catalog-preview-defaults-title"
+              >
                 <h2 id="catalog-preview-defaults-title">Preview defaults</h2>
                 <p className="meta">
-                  Sample values for {title} in the editor and stage. Node-level overrides stay on the
-                  Editor surface.
+                  Sample values for {title} in the editor and stage. Node-level overrides stay on
+                  the Editor surface.
                 </p>
                 <CatalogPreviewFields
                   fields={fields}

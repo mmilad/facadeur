@@ -2,19 +2,23 @@ import type { FieldValue, Node, NodeDefinition, ProjectCatalog } from '@facadeur
 import { htmlTagOptions } from '../../../../document/html-tags';
 import { fieldsFromJsonSchema } from '../../../../schema/json-schema-fields';
 import type { FieldDefinition } from '../../../../schema/document';
-import {
-  classListFromNode,
-  findNodeByUuid,
-  resolveJsonSchemaForDefinition,
-} from '../../catalog/ops';
+import { classListFromNode, findDefinition, findNodeByUuid } from '../../catalog/ops';
+import { effectiveSchemaForDefinition } from '../../catalog/field-contract';
 import { inspectorInputsForNode } from '../config/inspector';
 import { designPropOptions, type DesignPropOption } from './prop-ref';
 
 export type InspectorFormValue = {
-  definition: { name: string };
+  definition: {
+    name: string;
+    fieldExposureMode: 'flat' | 'grouped' | 'manual';
+    fieldExposureFields: Record<string, string>;
+  };
   node: {
     name: string;
     tagName: string;
+    fieldExposureMode: 'flat' | 'grouped' | 'manual';
+    fieldExposureGroupName: string;
+    fieldExposureFields: Record<string, string>;
     classList: string[];
     style: Record<string, string>;
     data: Record<string, string>;
@@ -78,15 +82,6 @@ function recordFromFieldValues(
   );
 }
 
-function schemaFieldsForDefinition(
-  catalog: ProjectCatalog,
-  definition: NodeDefinition,
-): FieldDefinition[] {
-  const schema = resolveJsonSchemaForDefinition(catalog, definition);
-  if (!schema) return [];
-  return fieldsFromJsonSchema(schema);
-}
-
 function schemaFieldSections(
   prefix: 'previewData' | 'nodeData',
   title: string,
@@ -114,21 +109,46 @@ export function buildInspectorFormModel(
 ): InspectorFormModel | null {
   const node = findNodeByUuid(definition.root, nodeUuid);
   if (!node) return null;
+  const referencedDefinition = node.config?.definitionRef
+    ? findDefinition(catalog, node.config.definitionRef)?.definition
+    : undefined;
+  const exposure = node.config?.fieldExposure ??
+    referencedDefinition?.config?.fieldExposure ?? { mode: 'flat' as const };
 
-  const schemaFields = schemaFieldsForDefinition(catalog, definition);
+  const scopedDefinition = referencedDefinition ?? definition;
+  const effective = effectiveSchemaForDefinition(catalog, scopedDefinition);
+  const schemaFields = effective.schema ? fieldsFromJsonSchema(effective.schema) : [];
   const classSuggestions = collectClassSuggestions(definition.root);
   const tagOptions = htmlTagOptions(node.dom.tagName);
-  const nodeInputs = inspectorInputsForNode(catalog, definition, nodeUuid);
-  const previewFields = definition.config?.previewData?.fields ?? {};
+  const nodeInputs = inspectorInputsForNode(
+    catalog,
+    scopedDefinition,
+    nodeUuid,
+    referencedDefinition ? node.data : undefined,
+  );
+  const previewFields = { ...effective.previewDefaults } as Record<string, FieldValue>;
 
   const formValue: InspectorFormValue = {
-    definition: { name: definition.name },
+    definition: {
+      name: definition.name,
+      fieldExposureMode: definition.config?.fieldExposure?.mode ?? 'flat',
+      fieldExposureFields:
+        definition.config?.fieldExposure?.mode === 'manual'
+          ? { ...definition.config.fieldExposure.fields }
+          : {},
+    },
     node: {
       name: node.name ?? '',
       tagName: node.dom.tagName,
       classList: classListFromNode(node),
       style: { ...(node.style ?? {}) },
       data: recordFromFieldValues(node.data ?? {}),
+      fieldExposureMode: exposure.mode,
+      fieldExposureGroupName:
+        exposure.mode === 'grouped'
+          ? (exposure.groupName ?? node.name ?? referencedDefinition?.name ?? '')
+          : (node.name ?? referencedDefinition?.name ?? ''),
+      fieldExposureFields: exposure.mode === 'manual' ? { ...exposure.fields } : {},
     },
     previewData: { ...previewFields },
     nodeData: { ...nodeInputs.values },
@@ -146,15 +166,67 @@ export function buildInspectorFormModel(
           label: 'Name',
           hint: 'Catalog asset display name',
         },
+        ...(definition.kind === 'atom'
+          ? [
+              {
+                type: 'select' as const,
+                path: 'definition.fieldExposure.mode',
+                label: 'Default field exposure',
+                options: ['flat', 'grouped', 'manual'],
+              },
+              ...(definition.config?.fieldExposure?.mode === 'manual'
+                ? [
+                    {
+                      type: 'record' as const,
+                      path: 'definition.fieldExposure.fields',
+                      label: 'Default field mapping',
+                      keyLabel: 'Atom field',
+                      valueLabel: 'Exposed field',
+                    },
+                  ]
+                : []),
+            ]
+          : []),
       ],
     });
 
   if (nodeUuid !== definition.root.uuid) {
+    const targetDefinition = referencedDefinition;
     sections.push({
       type: 'section',
       title: 'Element',
       fields: [
         { type: 'text', path: 'node.name', label: 'Name', hint: 'Layer label' },
+        ...(targetDefinition
+          ? [
+              {
+                type: 'select' as const,
+                path: 'node.fieldExposure.mode',
+                label: 'Exposed fields',
+                options: ['flat', 'grouped', 'manual'],
+              },
+              ...(exposure.mode === 'grouped'
+                ? [
+                    {
+                      type: 'text' as const,
+                      path: 'node.fieldExposure.groupName',
+                      label: 'Group name',
+                    },
+                  ]
+                : []),
+              ...(exposure.mode === 'manual'
+                ? [
+                    {
+                      type: 'record' as const,
+                      path: 'node.fieldExposure.fields',
+                      label: 'Field mapping',
+                      keyLabel: 'Child field',
+                      valueLabel: 'Parent field',
+                    },
+                  ]
+                : []),
+            ]
+          : []),
         ...(!node.config?.definitionRef
           ? [
               {
@@ -217,17 +289,27 @@ export function buildInspectorFormModel(
     nodeUuid,
     formValue,
     fields: sections,
-    propOptions: designPropOptions(catalog),
+    propOptions: designPropOptions(catalog, effective.schema),
   };
 }
 
 export type InspectorFormChangeTarget =
   | { kind: 'definitionName'; value: string }
+  | { kind: 'definitionFieldExposureMode'; mode: 'flat' | 'grouped' | 'manual' }
+  | { kind: 'definitionFieldExposureFields'; value: Readonly<Record<string, string>> }
   | { kind: 'nodeTagName'; nodeUuid: string; value: string }
   | { kind: 'nodeClassList'; nodeUuid: string; value: readonly string[] }
   | { kind: 'nodeStyle'; nodeUuid: string; value: Readonly<Record<string, string>> }
   | { kind: 'nodeDataRecord'; nodeUuid: string; value: Readonly<Record<string, string>> }
-  | { kind: 'previewField'; field: string; value: FieldValue | undefined }
+  | { kind: 'nodeFieldExposureMode'; nodeUuid: string; mode: 'flat' | 'grouped' | 'manual' }
+  | { kind: 'nodeFieldExposureGroupName'; nodeUuid: string; value: string }
+  | { kind: 'nodeFieldExposureFields'; nodeUuid: string; value: Readonly<Record<string, string>> }
+  | {
+      kind: 'previewField';
+      definitionUuid: string;
+      field: string;
+      value: FieldValue | undefined;
+    }
   | { kind: 'nodeSchemaField'; nodeUuid: string; field: string; value: FieldValue | undefined };
 
 /** Map a form path + value to a typed catalog mutation target. */
@@ -235,9 +317,21 @@ export function inspectorChangeTarget(
   path: string,
   value: unknown,
   nodeUuid: string,
+  previewDefinitionUuid = nodeUuid,
 ): InspectorFormChangeTarget | null {
   if (path === 'definition.name') {
     return { kind: 'definitionName', value: String(value ?? '').trim() };
+  }
+  if (path === 'definition.fieldExposure.mode') {
+    const mode = String(value ?? 'flat');
+    if (mode !== 'flat' && mode !== 'grouped' && mode !== 'manual') return null;
+    return { kind: 'definitionFieldExposureMode', mode };
+  }
+  if (path === 'definition.fieldExposure.fields') {
+    return {
+      kind: 'definitionFieldExposureFields',
+      value: (value ?? {}) as Record<string, string>,
+    };
   }
   if (path === 'node.tagName') {
     return { kind: 'nodeTagName', nodeUuid, value: String(value ?? '').trim() };
@@ -263,10 +357,30 @@ export function inspectorChangeTarget(
       value: (value ?? {}) as Record<string, string>,
     };
   }
+  if (path === 'node.fieldExposure.mode') {
+    const mode = String(value ?? 'flat');
+    if (mode !== 'flat' && mode !== 'grouped' && mode !== 'manual') return null;
+    return { kind: 'nodeFieldExposureMode', nodeUuid, mode };
+  }
+  if (path === 'node.fieldExposure.groupName') {
+    return { kind: 'nodeFieldExposureGroupName', nodeUuid, value: String(value ?? '').trim() };
+  }
+  if (path === 'node.fieldExposure.fields') {
+    return {
+      kind: 'nodeFieldExposureFields',
+      nodeUuid,
+      value: (value ?? {}) as Record<string, string>,
+    };
+  }
   if (path.startsWith('previewData.')) {
     const field = path.slice('previewData.'.length);
     if (!field) return null;
-    return { kind: 'previewField', field, value: value as FieldValue | undefined };
+    return {
+      kind: 'previewField',
+      definitionUuid: previewDefinitionUuid,
+      field,
+      value: value as FieldValue | undefined,
+    };
   }
   if (path.startsWith('nodeData.')) {
     const field = path.slice('nodeData.'.length);

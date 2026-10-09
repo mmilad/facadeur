@@ -43,13 +43,25 @@ export function RecordField({
       }
       onChange(updated);
     } else {
-      setDrafts((current) => current.map((item) => (item.id === row.id ? next : item)));
+      const key = next.key.trim();
+      const canCommit =
+        key &&
+        next.value !== '' &&
+        !Object.prototype.hasOwnProperty.call(value, key) &&
+        !drafts.some((draft) => draft.id !== row.id && draft.key.trim() === key);
+      if (canCommit) {
+        rowIds.current.set(key, row.id);
+        onChange({ ...value, [key]: next.value });
+        setDrafts((current) => current.filter((item) => item.id !== row.id));
+      } else {
+        setDrafts((current) => current.map((item) => (item.id === row.id ? next : item)));
+      }
     }
   }
 
   function commit(row: Row) {
     const key = row.key.trim();
-    if (!key) return;
+    if (!key || row.value === '') return;
     if (Object.prototype.hasOwnProperty.call(value, key)) return;
     if (drafts.some((draft) => draft.id !== row.id && draft.key.trim() === key)) return;
     rowIds.current.set(key, row.id);
@@ -80,7 +92,7 @@ export function RecordField({
           ...(bindable
             ? bindOptions.map((option) => ({
                 ...option,
-                group: 'Props',
+                group: option.group ?? 'Props',
                 displayLabel: true,
               }))
             : []),

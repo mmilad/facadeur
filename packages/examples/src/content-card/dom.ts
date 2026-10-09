@@ -15,12 +15,7 @@ export const root: Node = {
         },
         config: {
           definitionRef: '550e8400-e29b-41d4-a716-000000000002',
-          previewData: {
-            fields: {
-              src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='720' height='405'%3E%3Crect fill='%23e0e7ff' width='720' height='405'/%3E%3Ccircle cx='560' cy='96' r='48' fill='%23818cf8'/%3E%3Cpath d='M0 405L240 140L400 320L520 210L720 405Z' fill='%234f46e5'/%3E%3C/svg%3E",
-              alt: 'Abstract landscape',
-            },
-          },
+          fieldExposure: { mode: 'manual', fields: { src: 'imageSrc', alt: 'imageAlt' } },
         },
       },
       {
@@ -35,11 +30,7 @@ export const root: Node = {
               },
               config: {
                 definitionRef: '550e8400-e29b-41d4-a716-dacc33ed3990',
-                previewData: {
-                  fields: {
-                    text: 'Design with confidence',
-                  },
-                },
+                fieldExposure: { mode: 'manual', fields: { text: 'title' } },
               },
             },
             {
@@ -49,11 +40,7 @@ export const root: Node = {
               },
               config: {
                 definitionRef: '550e8400-e29b-41d4-a716-b51f086c1669',
-                previewData: {
-                  fields: {
-                    text: 'Reusable components, shared tokens, and clear field contracts for humans and agents.',
-                  },
-                },
+                fieldExposure: { mode: 'manual', fields: { text: 'body' } },
               },
             },
           ],

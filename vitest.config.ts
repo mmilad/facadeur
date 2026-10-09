@@ -32,6 +32,7 @@ export default defineConfig({
     include: [
       'packages/core/test/node-model.test.ts',
       'packages/core/test/project-catalog.test.ts',
+      'packages/core/test/catalog-field-exposure.test.ts',
       'packages/core/test/core-controller.test.ts',
       'packages/api/test/catalog.test.ts',
       'packages/api/test/project-storage.test.ts',

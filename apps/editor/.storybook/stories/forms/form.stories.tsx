@@ -169,6 +169,80 @@ function VisualLayoutForm() {
   return <FormPlayground value={value} fields={visualLayoutFields} onChange={setValue} />;
 }
 
+const attributeFields = [
+  {
+    type: 'record',
+    name: 'attributes',
+    label: 'Attributes',
+    keyLabel: 'Attribute',
+    valueLabel: 'Value',
+    bindable: true,
+  },
+] satisfies readonly FormFieldConfig[];
+
+const previewDataFields = [
+  { type: 'text', name: 'src', label: 'Source' },
+  { type: 'text', name: 'alt', label: 'Alt text' },
+] satisfies readonly FormFieldConfig[];
+
+function BindableAttributeTabs() {
+  const [activeTab, setActiveTab] = useState<'properties' | 'previewData'>('properties');
+  const [attributes, setAttributes] = useState({ alt: '{props:alt-id}' });
+  const [previewData, setPreviewData] = useState({
+    src: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg"%3E…',
+    alt: 'Placeholder illustration',
+  });
+  const bindOptions = [
+    {
+      value: '{props:src-id}',
+      label: 'props.src',
+      description: previewData.src,
+      group: 'Component props',
+    },
+    {
+      value: '{props:alt-id}',
+      label: 'props.alt',
+      description: previewData.alt,
+      group: 'Component props',
+    },
+  ];
+
+  return (
+    <div style={{ maxWidth: 520, padding: 16 }}>
+      <div role="tablist" aria-label="Image settings">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'properties'}
+          onClick={() => setActiveTab('properties')}
+        >
+          Properties
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'previewData'}
+          onClick={() => setActiveTab('previewData')}
+        >
+          Preview data
+        </button>
+      </div>
+      <section role="tabpanel" hidden={activeTab !== 'properties'}>
+        <Form
+          value={{ attributes }}
+          fields={attributeFields}
+          bindOptions={bindOptions}
+          onChange={(next) => setAttributes(next.attributes)}
+        />
+      </section>
+      <section role="tabpanel" hidden={activeTab !== 'previewData'}>
+        <Form value={previewData} fields={previewDataFields} onChange={setPreviewData} />
+      </section>
+      <pre>{JSON.stringify(attributes, null, 2)}</pre>
+    </div>
+  );
+}
+
 function FormPlayground<T extends Record<string, unknown>>({
   value,
   fields,
@@ -211,3 +285,4 @@ export const Text: Story = {};
 export const FieldTypes: Story = { render: () => <FieldTypesForm /> };
 export const NestedFields: Story = { render: () => <NestedForm /> };
 export const Layout: Story = { render: () => <VisualLayoutForm /> };
+export const BindableAttributeAcrossTabs: Story = { render: () => <BindableAttributeTabs /> };

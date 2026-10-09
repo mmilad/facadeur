@@ -2,6 +2,7 @@ import type {
   CatalogMapKey,
   CatalogPort,
   CoreSnapshot,
+  FieldExposure,
   JsonSchemaObject,
   NodeDefinition,
   ProjectCatalog,
@@ -22,6 +23,7 @@ import {
   findNodeByUuid,
   patchNodeData,
   patchNodeDataRecord,
+  patchNodeFieldExposure,
   patchNodeName,
   patchNodeDomAttributes,
   patchNodeStyleRecord,
@@ -170,6 +172,14 @@ export class CoreController implements CoreControllerHost {
     this.publish();
   }
 
+  private patchNodeExposure(nodeUuid: string, exposure: FieldExposure) {
+    if (!this.openDefinitionId) return;
+    this.catalog = validateProjectCatalog(
+      patchNodeFieldExposure(this.catalog, this.openDefinitionId, nodeUuid, exposure),
+    ) as ProjectCatalog;
+    this.publish();
+  }
+
   patchNodeStyleRecord(nodeUuid: string, record: Readonly<Record<string, string>>) {
     if (!this.openDefinitionId) return;
     this.catalog = validateProjectCatalog(
@@ -265,6 +275,43 @@ export class CoreController implements CoreControllerHost {
         this.patchDefinitionName(target.value);
         return;
       }
+      case 'definitionFieldExposureMode': {
+        const located = this.openDefinitionId
+          ? findDefinition(this.catalog, this.openDefinitionId)
+          : null;
+        if (!located || located.definition.kind !== 'atom') return;
+        const current = located.definition.config?.fieldExposure;
+        const fieldExposure: FieldExposure =
+          target.mode === 'manual'
+            ? {
+                mode: 'manual',
+                fields: current?.mode === 'manual' ? current.fields : {},
+              }
+            : { mode: target.mode };
+        this.patchDefinition(located.kind, located.definition.uuid, {
+          config: { ...located.definition.config, fieldExposure },
+        });
+        return;
+      }
+      case 'definitionFieldExposureFields': {
+        const located = this.openDefinitionId
+          ? findDefinition(this.catalog, this.openDefinitionId)
+          : null;
+        if (!located || located.definition.kind !== 'atom') return;
+        const fields: Record<string, string> = {};
+        for (const [atomField, exposedField] of Object.entries(target.value)) {
+          if (atomField.trim() && exposedField.trim()) {
+            fields[atomField.trim()] = exposedField.trim();
+          }
+        }
+        this.patchDefinition(located.kind, located.definition.uuid, {
+          config: {
+            ...located.definition.config,
+            fieldExposure: { mode: 'manual', fields },
+          },
+        });
+        return;
+      }
       case 'nodeTagName': {
         if (!target.value) return;
         this.patchNodeTagName(target.nodeUuid, target.value);
@@ -286,16 +333,68 @@ export class CoreController implements CoreControllerHost {
         this.patchNodeDataRecord(target.nodeUuid, record);
         return;
       }
+      case 'nodeFieldExposureMode': {
+        const definition = this.getSnapshot().openDefinition;
+        const node = definition ? findNodeByUuid(definition.root, target.nodeUuid) : null;
+        if (!node?.config?.definitionRef) return;
+        const current = node.config.fieldExposure;
+        let exposure: FieldExposure;
+        if (target.mode === 'grouped') {
+          const targetName = findDefinition(this.catalog, node.config.definitionRef)?.definition
+            .name;
+          exposure = {
+            mode: 'grouped',
+            groupName:
+              current?.mode === 'grouped' ? current.groupName : node.name || targetName || 'group',
+          };
+        } else if (target.mode === 'manual') {
+          exposure = {
+            mode: 'manual',
+            fields: current?.mode === 'manual' ? current.fields : {},
+          };
+        } else {
+          exposure = { mode: 'flat' };
+        }
+        this.patchNodeExposure(target.nodeUuid, exposure);
+        return;
+      }
+      case 'nodeFieldExposureGroupName': {
+        if (!target.value) return;
+        const definition = this.getSnapshot().openDefinition;
+        const node = definition ? findNodeByUuid(definition.root, target.nodeUuid) : null;
+        if (!node?.config?.definitionRef) return;
+        this.patchNodeExposure(target.nodeUuid, {
+          mode: 'grouped',
+          groupName: target.value,
+        });
+        return;
+      }
+      case 'nodeFieldExposureFields': {
+        const definition = this.getSnapshot().openDefinition;
+        const node = definition ? findNodeByUuid(definition.root, target.nodeUuid) : null;
+        if (!node?.config?.definitionRef) return;
+        const fields: Record<string, string> = {};
+        for (const [childField, parentField] of Object.entries(target.value)) {
+          if (childField.trim() && parentField.trim())
+            fields[childField.trim()] = parentField.trim();
+        }
+        this.patchNodeExposure(target.nodeUuid, { mode: 'manual', fields });
+        return;
+      }
       case 'previewField': {
-        if (!this.openDefinitionId) return;
-        const located = findDefinition(this.catalog, this.openDefinitionId);
+        const located = findDefinition(this.catalog, target.definitionUuid);
         if (!located) return;
         const fields = {
           ...(located.definition.config?.previewData?.fields ?? {}),
         } as Record<string, import('@facadeur/domain').FieldValue>;
         if (target.value === undefined || target.value === '') delete fields[target.field];
         else fields[target.field] = target.value;
-        this.patchDefinitionPreviewFields(fields);
+        this.patchDefinition(located.kind, target.definitionUuid, {
+          config: {
+            ...located.definition.config,
+            previewData: { fields },
+          },
+        });
         return;
       }
       case 'nodeSchemaField': {

@@ -10,10 +10,17 @@ export interface PreviewData {
 export interface NodeConfig {
   readonly definitionRef?: Uuid;
   readonly previewData?: PreviewData;
+  readonly fieldExposure?: FieldExposure;
 }
+
+export type FieldExposure =
+  | { readonly mode: 'flat' }
+  | { readonly mode: 'grouped'; readonly groupName?: string }
+  | { readonly mode: 'manual'; readonly fields: Readonly<Record<string, string>> };
 
 export interface DefinitionConfig {
   readonly previewData?: PreviewData;
+  readonly fieldExposure?: FieldExposure;
 }
 
 export interface Node {

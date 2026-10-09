@@ -37,7 +37,7 @@ export function PropBindableInput({
   if (mode === 'prop' && (showBindToggle || hasProps)) {
     const selectedRef =
       boundUuid && hasProps
-        ? encodePropRef(boundUuid)
+        ? (propOptions.find((prop) => prop.uuid === boundUuid)?.ref ?? encodePropRef(boundUuid))
         : hasProps
           ? propOptions[0]!.ref
           : '';
@@ -45,7 +45,7 @@ export function PropBindableInput({
       <Inline gap={6} className="eu-prop-bind">
         {hasProps ? (
           <Select
-            aria-label={`${ariaLabel} design prop`}
+            aria-label={`${ariaLabel} prop binding`}
             value={selectedRef}
             disabled={disabled}
             options={propOptions.map((prop) => ({
@@ -55,8 +55,8 @@ export function PropBindableInput({
             onCommit={(next) => onCommit(next)}
           />
         ) : (
-          <select className="eu-control" disabled aria-label={`${ariaLabel} design prop`}>
-            <option value="">No design props yet</option>
+          <select className="eu-control" disabled aria-label={`${ariaLabel} prop binding`}>
+            <option value="">No props available</option>
           </select>
         )}
         <IconButton
@@ -83,16 +83,11 @@ export function PropBindableInput({
           onCommit={(next) => onCommit(next === null ? '' : String(next))}
         />
       ) : (
-        <TextInput
-          aria-label={ariaLabel}
-          value={value}
-          disabled={disabled}
-          onCommit={onCommit}
-        />
+        <TextInput aria-label={ariaLabel} value={value} disabled={disabled} onCommit={onCommit} />
       )}
       {showBindToggle || hasProps ? (
         <IconButton
-          label="Bind design prop"
+          label="Bind prop"
           disabled={disabled}
           onClick={() => {
             setMode('prop');

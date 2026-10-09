@@ -87,8 +87,11 @@
 }
 
 .option small {
+  overflow: hidden;
   color: var(--eu-muted, #756d63);
   font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .empty {

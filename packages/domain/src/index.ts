@@ -8,6 +8,7 @@ export type { JsonSchemaObject, SchemaSource } from './schema-source';
 export type { DomSpec } from './dom';
 export type {
   DefinitionConfig,
+  FieldExposure,
   Node,
   NodeConfig,
   NodeDefinition,
