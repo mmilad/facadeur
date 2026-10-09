@@ -1,5 +1,6 @@
 import {
   findNodeByUuid,
+  readTokenTree,
   type CoreController,
   type CoreSnapshot,
   type InspectorFormModel,
@@ -11,6 +12,13 @@ export interface InspectorViewModel extends InspectorFormModel {
   readonly styleSuggestions: {
     readonly keys: readonly string[];
     readonly valuesByKey: Readonly<Record<string, readonly string[]>>;
+    readonly options: readonly {
+      value: string;
+      label: string;
+      description: string;
+      group: string;
+      displayLabel: boolean;
+    }[];
   };
   readonly formValue: Omit<InspectorFormModel['formValue'], 'node'> & {
     node: InspectorFormModel['formValue']['node'] & { attributes: Record<string, string> };
@@ -99,6 +107,13 @@ type CatalogNode = CoreSnapshot['catalog']['atoms'][string]['root'];
 
 function collectProjectStyleSuggestions(catalog: CoreSnapshot['catalog']) {
   const valuesByKey = new Map<string, Set<string>>();
+  const tokenOptions = [...readTokenTree(catalog.tokens ?? {}).tokens.values()].map((token) => ({
+    value: `{${token.path}}`,
+    label: token.label?.trim() || tokenOptionLabel(token.path),
+    description: token.path,
+    group: 'Design tokens',
+    displayLabel: true,
+  }));
   const definitions = [
     ...Object.values(catalog.atoms),
     ...Object.values(catalog.components),
@@ -123,7 +138,16 @@ function collectProjectStyleSuggestions(catalog: CoreSnapshot['catalog']) {
         [...values].sort((left, right) => left.localeCompare(right)),
       ]),
     ),
+    options: tokenOptions,
   };
+}
+
+function tokenOptionLabel(path: string) {
+  const parts = path.split('.');
+  if (['color', 'space', 'radius', 'shadow', 'type', 'font'].includes(parts[0] ?? '')) {
+    parts.shift();
+  }
+  return parts.map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
 }
 
 function stringRecord(value: unknown) {

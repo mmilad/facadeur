@@ -1,8 +1,10 @@
 import React, { useRef, useState } from 'react';
+import { AutocompleteField } from '../autocomplete/AutocompleteField';
 import styles from './RecordField.module.css';
 import type { RecordFieldProps } from './types';
 
 type Draft = { id: string; key: string; value: string };
+type Row = Draft & { isDraft: boolean };
 
 export function RecordField({
   id,
@@ -17,18 +19,19 @@ export function RecordField({
 }: RecordFieldProps) {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const rowIds = useRef(new Map<string, string>());
+  const nextDraftId = useRef(0);
   const rows = [
     ...Object.entries(value).map(([key, rowValue]) => {
       const id = rowIds.current.get(key) ?? key;
       rowIds.current.set(key, id);
-      return { id, key, value: rowValue };
+      return { id, key, value: rowValue, isDraft: false };
     }),
-    ...drafts,
+    ...drafts.map((draft) => ({ ...draft, isDraft: true })),
   ];
 
-  function update(row: Draft, patch: Partial<Draft>) {
+  function update(row: Row, patch: Partial<Draft>) {
     const next = { ...row, ...patch };
-    if (Object.prototype.hasOwnProperty.call(value, row.key)) {
+    if (!row.isDraft) {
       const updated = { ...value };
       if (patch.key !== undefined && patch.key !== row.key && patch.key.trim()) {
         delete updated[row.key];
@@ -44,15 +47,18 @@ export function RecordField({
     }
   }
 
-  function commit(row: Draft) {
+  function commit(row: Row) {
     const key = row.key.trim();
     if (!key) return;
+    if (Object.prototype.hasOwnProperty.call(value, key)) return;
+    if (drafts.some((draft) => draft.id !== row.id && draft.key.trim() === key)) return;
+    rowIds.current.set(key, row.id);
     onChange({ ...value, [key]: row.value });
     setDrafts((current) => current.filter((item) => item.id !== row.id));
   }
 
-  function remove(row: Draft) {
-    if (Object.prototype.hasOwnProperty.call(value, row.key)) {
+  function remove(row: Row) {
+    if (!row.isDraft) {
       const next = { ...value };
       delete next[row.key];
       rowIds.current.delete(row.key);
@@ -62,76 +68,54 @@ export function RecordField({
 
   return (
     <div className={styles.root}>
-      {rows.map((row) => {
-        const isDraft = !Object.prototype.hasOwnProperty.call(value, row.key);
-        const isBound = bindOptions.some((option) => option.value === row.value);
+      {rows.map((row, index) => {
+        const keyOptions = (suggestions?.keys ?? []).map((key) => ({ value: key, label: key }));
+        const valueOptions = [
+          ...(suggestions?.valuesByKey?.[row.key] ?? []).map((suggestion) => ({
+            value: suggestion,
+            label: suggestion,
+            group: 'Existing values',
+          })),
+          ...(suggestions?.options ?? []),
+          ...(bindable
+            ? bindOptions.map((option) => ({
+                ...option,
+                group: 'Props',
+                displayLabel: true,
+              }))
+            : []),
+        ];
         return (
-          <div className={styles.row} key={row.id}>
+          <div
+            className={styles.row}
+            key={row.id}
+            onBlur={(event) => {
+              if (!row.isDraft) return;
+              const nextTarget = event.relatedTarget;
+              if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) return;
+              commit(row);
+            }}
+          >
             <div className={styles.inputs}>
-              <input
-                className={styles.input}
-                id={id}
-                aria-label={keyLabel}
+              <AutocompleteField
+                id={index === 0 ? id : `${id}-${row.id}-key`}
+                label={keyLabel}
                 value={row.key}
-                list={`${id}-keys`}
+                options={keyOptions}
+                placeholder={keyLabel}
                 disabled={disabled}
-                onChange={(event) => update(row, { key: event.currentTarget.value })}
-                onBlur={() => isDraft && commit(row)}
+                onChange={(next) => update(row, { key: next })}
               />
-              {bindable && bindOptions.length > 0 ? (
-                <div className={styles.valueInput}>
-                  {isBound ? (
-                    <select
-                      className={styles.select}
-                      aria-label={valueLabel}
-                      value={row.value}
-                      disabled={disabled}
-                      onChange={(event) => update(row, { value: event.currentTarget.value })}
-                    >
-                      {bindOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      className={styles.input}
-                      aria-label={valueLabel}
-                      value={row.value}
-                      list={`${id}-values-${row.id}`}
-                      disabled={disabled}
-                      onChange={(event) => update(row, { value: event.currentTarget.value })}
-                      onBlur={() => isDraft && commit(row)}
-                    />
-                  )}
-                  <button
-                    className={styles.button}
-                    type="button"
-                    aria-label={isBound ? 'Switch to literal value' : 'Bind design prop'}
-                    disabled={disabled}
-                    onClick={() => update(row, { value: isBound ? '' : bindOptions[0]!.value })}
-                  >
-                    {isBound ? 'Aa' : '{ }'}
-                  </button>
-                </div>
-              ) : (
-                <input
-                  className={styles.input}
-                  aria-label={valueLabel}
-                  value={row.value}
-                  list={`${id}-values-${row.id}`}
-                  disabled={disabled}
-                  onChange={(event) => update(row, { value: event.currentTarget.value })}
-                  onBlur={() => isDraft && commit(row)}
-                />
-              )}
+              <AutocompleteField
+                id={`${id}-${row.id}-value`}
+                label={valueLabel}
+                value={row.value}
+                options={valueOptions}
+                placeholder={valueLabel}
+                disabled={disabled}
+                onChange={(next) => update(row, { value: next })}
+              />
             </div>
-            <datalist id={`${id}-values-${row.id}`}>
-              {(suggestions?.valuesByKey?.[row.key] ?? []).map((item) => (
-                <option key={item} value={item} />
-              ))}
-            </datalist>
             <button
               className={styles.button}
               type="button"
@@ -152,17 +136,12 @@ export function RecordField({
         onClick={() =>
           setDrafts((current) => [
             ...current,
-            { id: `draft-${Date.now()}-${current.length}`, key: '', value: '' },
+            { id: `draft-${nextDraftId.current++}`, key: '', value: '' },
           ])
         }
       >
         +
       </button>
-      <datalist id={`${id}-keys`}>
-        {suggestions?.keys?.map((key) => (
-          <option key={key} value={key} />
-        ))}
-      </datalist>
     </div>
   );
 }

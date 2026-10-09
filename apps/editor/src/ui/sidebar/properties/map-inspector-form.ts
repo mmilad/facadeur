@@ -3,21 +3,30 @@ import {
   type FieldDefinition,
   type InspectorFormField,
 } from '@facadeur/core';
-import type { FormFieldConfig, RecordFieldSuggestions } from '@facadeur/form';
+import type { AutocompleteOption, FormFieldConfig, RecordFieldSuggestions } from '@facadeur/form';
 
 export function mapInspectorFormFields(
   fields: InspectorFormField[],
   styleSuggestions: RecordFieldSuggestions,
+  componentDataOptions: readonly AutocompleteOption[] = [],
 ): FormFieldConfig[] {
-  return fields.flatMap((field) => mapInspectorField(field, styleSuggestions));
+  return fields.flatMap((field) =>
+    mapInspectorField(field, styleSuggestions, componentDataOptions),
+  );
 }
 
 function mapInspectorField(
   field: InspectorFormField,
   styleSuggestions: RecordFieldSuggestions,
+  componentDataOptions: readonly AutocompleteOption[],
 ): FormFieldConfig[] {
   if (field.type === 'section') {
-    return [{ type: 'layout', fields: mapInspectorFormFields(field.fields, styleSuggestions) }];
+    return [
+      {
+        type: 'layout',
+        fields: mapInspectorFormFields(field.fields, styleSuggestions, componentDataOptions),
+      },
+    ];
   }
   if (field.type === 'text') {
     return [{ type: 'text', name: field.path, label: field.label, bindable: false }];
@@ -46,7 +55,16 @@ function mapInspectorField(
         keyLabel: field.keyLabel,
         valueLabel: field.valueLabel,
         bindable: field.propBindValues,
-        ...(field.path === 'node.style' ? { suggestions: styleSuggestions } : {}),
+        ...(field.path === 'node.style'
+          ? {
+              suggestions: {
+                ...styleSuggestions,
+                options: [...(styleSuggestions.options ?? []), ...componentDataOptions],
+              },
+            }
+          : field.path === 'node.attributes' && componentDataOptions.length
+            ? { suggestions: { options: componentDataOptions } }
+            : {}),
       },
     ];
   }

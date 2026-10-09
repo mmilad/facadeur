@@ -14,6 +14,7 @@ export type ComboboxFieldConfig = {
 
 export type ComboboxFieldProps = Omit<ComboboxFieldConfig, 'label' | 'type' | 'optionsFrom'> & {
   id: string;
+  label?: string;
   value: string;
   options: readonly SelectOption[];
   onChange: (next: string) => void;

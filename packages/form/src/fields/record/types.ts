@@ -1,8 +1,10 @@
+import type { AutocompleteOption } from '../autocomplete/types';
 import type { SelectOption } from '../select';
 
 export type RecordFieldSuggestions = {
   keys?: readonly string[];
   valuesByKey?: Readonly<Record<string, readonly string[]>>;
+  options?: readonly AutocompleteOption[];
 };
 
 export type RecordFieldConfig = {

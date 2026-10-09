@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import type { AutocompleteOption } from '@facadeur/form';
 import type { AppService } from '../../../app-service';
 import { Form } from '@facadeur/form';
 import type { FormFieldConfig } from '@facadeur/form';
@@ -20,10 +21,10 @@ export function CatalogNodeInspector({
   if (!model) {
     return <p className="inspector-empty">Select an element in the layer tree.</p>;
   }
-  const elementFields = sectionFields(model, 'Element')?.fields ?? [];
-  const styleSection = sectionFields(model, 'Layout & style');
-  const nodeDataSection = sectionFields(model, 'Properties', 'Node data');
-  const previewDefaultsSection = sectionFields(model, 'Preview defaults');
+  const componentOptions = componentDataOptions(model);
+  const elementFields = sectionFields(model, 'Element', undefined, componentOptions)?.fields ?? [];
+  const styleSection = sectionFields(model, 'Layout & style', undefined, componentOptions);
+  const nodeDataSection = sectionFields(model, 'Properties', 'Node data', componentOptions);
   const propertySections: InspectorSection[] = [
     {
       label: 'HTML attributes',
@@ -35,17 +36,17 @@ export function CatalogNodeInspector({
           keyLabel: 'Attribute',
           valueLabel: 'Value',
           bindable: true,
+          suggestions: { options: componentOptions },
         },
       ],
     },
     ...(model.selectionKind === 'element' && nodeDataSection ? [nodeDataSection] : []),
   ];
+  const componentDefaultsSection = nodeDataSection
+    ? { ...nodeDataSection, label: 'Component defaults' }
+    : null;
   const previewSections =
-    model.selectionKind === 'root'
-      ? [previewDefaultsSection, nodeDataSection].filter(isInspectorSection)
-      : model.selectionKind === 'instance' && nodeDataSection
-        ? [nodeDataSection]
-        : [];
+    model.selectionKind !== 'element' && componentDefaultsSection ? [componentDefaultsSection] : [];
   const tabs = [
     {
       id: 'style' as const,
@@ -150,13 +151,42 @@ function sectionFields(
   model: NonNullable<ReturnType<AppService['inspector']['getModel']>>,
   title: string,
   label = title,
+  componentOptions: readonly AutocompleteOption[] = [],
 ): InspectorSection | null {
   const section = model.fields.find((field) => field.type === 'section' && field.title === title);
   return section?.type === 'section'
-    ? { label, fields: mapInspectorFormFields(section.fields, model.styleSuggestions) }
+    ? {
+        label,
+        fields: mapInspectorFormFields(section.fields, model.styleSuggestions, componentOptions),
+      }
     : null;
 }
 
-function isInspectorSection(section: InspectorSection | null): section is InspectorSection {
-  return section !== null;
+type InspectorModel = NonNullable<ReturnType<AppService['inspector']['getModel']>>;
+
+function componentDataOptions(model: InspectorModel): AutocompleteOption[] {
+  const labels = new Map<string, string>();
+  const collectLabels = (fields: InspectorModel['fields']) => {
+    for (const field of fields) {
+      if (field.type === 'section') collectLabels(field.fields);
+      else if (field.type === 'schemaField' && field.path.startsWith('nodeData.')) {
+        labels.set(field.path.slice('nodeData.'.length), field.label);
+      }
+    }
+  };
+  collectLabels(model.fields);
+
+  const seenValues = new Set<string>();
+  return Object.entries(model.formValue.nodeData).flatMap(([name, value]) => {
+    if (typeof value !== 'string' || !value.trim() || seenValues.has(value)) return [];
+    seenValues.add(value);
+    return [
+      {
+        value,
+        label: labels.get(name) ?? name,
+        description: value,
+        group: 'Component defaults',
+      },
+    ];
+  });
 }

@@ -1211,3 +1211,54 @@ schema form. Validate form/editor typechecks, detector, formatting, and diff rev
     its migration is scheduled.
   - Contracts: preserve class-token split/add/remove behavior and suggestion filtering.
   - Validation: editor typecheck, relevant form stories, detector, and diff review.
+
+## Keep new record rows stable while editing
+
+`packages/form/src/fields/record/RecordField.tsx` commits a draft from the key input's blur
+handler. Moving focus from the key to the value therefore commits and removes/recreates the row
+mid-interaction, which can drop focus and send subsequent typing to the wrong control. Keep draft
+identity explicit, commit only after focus leaves the whole row, and preserve the row id when it
+moves from draft state into the stored record. Preserve existing-value editing, bind controls, and
+record serialization. Form typecheck, formatting, detector, and diff check pass. Manual Storybook
+interaction is still needed when its server is available; the current page reports a lost
+connection and localhost refused the check from this process.
+
+## Suggest bindable properties in record value fields
+
+`RecordField` receives bindable property options. Keep CSS value suggestions in the text input's
+datalist, and expose design props through the same explicit bind mode used by other CSS values:
+the bind button switches to a select whose options show prop names. Do not mix prop references into
+the native datalist, which does not expose a discoverable dropdown consistently. Preserve draft
+row identity and the string-based record contract. Form typecheck, formatting, detector, and diff
+check pass. Storybook interaction remains to be confirmed after its server reconnects.
+
+## Reuse the labeled token picker pattern in generic forms
+
+The editor already has a searchable, labeled token picker (`TokenValueControl`), while
+`@facadeur/form` comboboxes and record suggestions use native datalists that cannot present rich
+labels or a discoverable option list. Extract the picker interaction into a generic form control
+whose option records, labels, groups, and direct-value behavior come from callers. Use it in
+`ComboboxField` and `RecordField`; the editor supplies CSS values, design-token references, and
+bindable prop references. Keep token parsing/resolution and token-specific preview out of the
+form package. Preserve existing scalar values and record serialization. Validate package/editor
+The form package typecheck, Prettier check, refactor candidate scan, and diff check pass. The editor
+typecheck remains blocked by existing errors in nested API/core dependencies and legacy editor
+forms; it reports no errors in the changed inspector service. Storybook is disconnected in the
+current browser session, so its visual interaction remains unverified.
+
+## Keep autocomplete popovers inside their field area
+
+The generic autocomplete popover is clipped by the inspector's `.side-scroll`, which must remain
+scrollable. Position the popover against the viewport while keeping it in the field subtree so
+record-row focus behavior remains intact. Preserve scrolling, option selection, and direct-value
+behavior. Validate formatting, form typecheck, detector, and diff check; inspect the current
+Storybook page if its connection is available.
+
+## Use component data as inspector suggestions
+
+`CatalogNodeInspector` currently shows both the definition's preview defaults and the selected
+node's effective schema data in its Preview data tab. Keep the schema defaults in the Schema view,
+show only the node data section here as Component defaults, and use those component values as
+labeled autocomplete suggestions for record values. Keep the values literal and preserve existing
+schema and node-data write paths. Validate editor/form typechecks, formatting, detector, and diff
+check; inspect Storybook if available.

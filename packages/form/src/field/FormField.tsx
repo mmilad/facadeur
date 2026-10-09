@@ -196,6 +196,7 @@ export function FormField({
           <Control
             id={id}
             name={field.name}
+            label={field.label}
             value={selected}
             options={options}
             disabled={field.disabled}

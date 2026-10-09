@@ -18,31 +18,6 @@
   min-width: 0;
 }
 
-.valueInput {
-  display: flex;
-  gap: 4px;
-  min-width: 0;
-}
-
-.valueInput > :first-child {
-  flex: 1;
-  min-width: 0;
-}
-
-.input,
-.select {
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 0;
-  min-height: var(--eu-control-height, 28px);
-  padding: 4px 8px;
-  border: 1px solid var(--eu-border, #b7aa9a);
-  border-radius: var(--eu-radius, 6px);
-  background: var(--eu-bg-elevated, #fffdf9);
-  color: var(--eu-fg, #2a241c);
-  font: inherit;
-}
-
 .button {
   min-width: 30px;
   min-height: 30px;

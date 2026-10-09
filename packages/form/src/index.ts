@@ -2,6 +2,8 @@ export { Form } from './form';
 export type { FormChangeMeta, FormProps } from './form';
 export { LayoutField } from './fields/layout';
 export type { LayoutFieldConfig, LayoutFieldProps } from './fields/layout';
+export { AutocompleteField } from './fields/autocomplete';
+export type { AutocompleteFieldProps, AutocompleteOption } from './fields/autocomplete';
 export { ChipsField } from './fields/chips';
 export type { ChipsFieldConfig, ChipsFieldProps } from './fields/chips';
 export { RecordField } from './fields/record';

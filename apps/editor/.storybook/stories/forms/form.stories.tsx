@@ -63,6 +63,27 @@ const fieldTypeFields = [
     label: 'CSS classes',
     suggestions: ['flex', 'grid', 'gap-4', 'p-4', 'rounded-lg', 'text-sm'],
   },
+  {
+    type: 'record',
+    name: 'style',
+    label: 'CSS properties',
+    keyLabel: 'Property',
+    valueLabel: 'Value',
+    bindable: true,
+    suggestions: {
+      keys: ['color', 'backgroundColor', 'borderRadius'],
+      valuesByKey: { color: ['#2563eb', '#1d4ed8'] },
+      options: [
+        {
+          value: '{color.accent.default}',
+          label: 'Accent Default',
+          description: 'color.accent.default',
+          group: 'Design tokens',
+          displayLabel: true,
+        },
+      ],
+    },
+  },
   { type: 'color', name: 'accent', label: 'Accent color' },
 ] satisfies readonly FormFieldConfig[];
 
@@ -76,10 +97,21 @@ function FieldTypesForm() {
     font: 'sans',
     query: '',
     classes: ['flex', 'gap-4'],
+    style: { color: '{color.accent.default}', backgroundColor: '#f8fafc' },
     accent: '#a64020',
   });
 
-  return <FormPlayground value={value} fields={fieldTypeFields} onChange={setValue} />;
+  return (
+    <FormPlayground
+      value={value}
+      fields={fieldTypeFields}
+      bindOptions={[
+        { value: '{prop:headline}', label: 'Headline' },
+        { value: '{prop:eyebrow}', label: 'Eyebrow' },
+      ]}
+      onChange={setValue}
+    />
+  );
 }
 
 const nestedFields = [
@@ -141,16 +173,23 @@ function FormPlayground<T extends Record<string, unknown>>({
   value,
   fields,
   onChange,
+  bindOptions,
 }: {
   value: T;
   fields: readonly FormFieldConfig[];
   onChange: (next: T) => void;
+  bindOptions?: readonly { value: string; label: string }[];
 }) {
   return (
     <div className={styles.playground}>
       <section className={styles.panel}>
         <h2 className={styles.heading}>Fields</h2>
-        <Form<T> value={value} fields={fields} onChange={(next) => onChange(next)} />
+        <Form<T>
+          value={value}
+          fields={fields}
+          bindOptions={bindOptions}
+          onChange={(next) => onChange(next)}
+        />
       </section>
       <section className={styles.panel}>
         <h2 className={styles.heading}>Value</h2>
