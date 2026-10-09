@@ -24,7 +24,10 @@ import {
   PROJECT_TOKEN_CSS_PREFIX,
 } from '../../../domain/component-tokens';
 import type { TableRowData } from '../../settings/Table';
-import { colorTransformOptions } from '../../settings/config/color-transform-options';
+import {
+  colorTransformOptions,
+  dimensionTransformOptions,
+} from '../../settings/config/token-transform-options';
 type ViewportContext = ReturnType<typeof viewportEditContext>;
 
 export function createTokenTableRow({
@@ -75,6 +78,10 @@ export function createTokenTableRow({
   const fieldOptions =
     token.type === 'color'
       ? colorTransformOptions(colorTokens, labelFor, searchValue, resolvePreview)
+      : [];
+  const dimensionFieldOptions =
+    token.type === 'dimension'
+      ? dimensionTransformOptions(scalarTokens, labelFor, searchValue, resolvePreview)
       : [];
   const commitTokenValue = (next: string | null) => {
     if (next === text) return;
@@ -229,6 +236,19 @@ export function createTokenTableRow({
                 : undefined
             }
           />
+        ) : token.type === 'dimension' ? (
+          <TransformableField
+            id={`token-${token.uuid}`}
+            name={`token-${token.uuid}`}
+            label="Spacing value"
+            value={transformDraft?.base === text ? transformDraft.value : text}
+            fieldOptions={dimensionFieldOptions}
+            onTransform={onTransform}
+            onChange={(next) => {
+              onTransformValue(next);
+              commitTokenValue(next);
+            }}
+          />
         ) : scalarTokens.length && typeof shownValue === 'string' ? (
           <TokenValueControl
             name={`token-${token.uuid}`}
@@ -322,7 +342,12 @@ function TokenPreview({
       : undefined;
   const shadowObject = type === 'shadow' && isRecord(value) ? shadowPreview(value, resolve) : null;
   return (
-    <div className="token-table-preview" title={previewText}>
+    <div
+      className={
+        dimension ? 'token-table-preview token-table-preview--dimension' : 'token-table-preview'
+      }
+      title={previewText}
+    >
       {color !== null ? (
         <span
           className="token-table-swatch"
@@ -364,10 +389,14 @@ function TokenPreview({
 }
 
 function dimensionPreview(value: string): { width: string } | null {
-  const number = Number.parseFloat(value);
-  if (!Number.isFinite(number)) return null;
-  const width = Math.max(8, Math.min(88, 8 + Math.abs(number) * 2));
-  return { width: `${width}px` };
+  const match = value
+    .trim()
+    .match(/^([+-]?(?:\d+(?:\.\d*)?|\.\d+))(px|rem|em|ch|ex|vw|vh|vmin|vmax|cm|mm|in|pt|pc|q|%)?$/i);
+  if (!match) return null;
+  const amount = Number(match[1]);
+  if (!Number.isFinite(amount)) return null;
+  const unit = match[2] ?? 'px';
+  return { width: amount === 0 ? '2px' : `${Math.abs(amount)}${unit}` };
 }
 
 function shadowPreview(

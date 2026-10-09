@@ -145,6 +145,10 @@
   font-family: var(--mono);
 }
 
+.token-table-preview--dimension {
+  justify-content: flex-start;
+}
+
 .token-table-swatch {
   display: inline-block;
   flex: none;
@@ -157,8 +161,9 @@
 
 .token-table-dimension-bar {
   display: inline-block;
+  flex: none;
   height: 6px;
-  max-width: 88px;
+  max-width: 100%;
   border-radius: 999px;
   background: var(--accent);
 }

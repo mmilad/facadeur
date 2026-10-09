@@ -50,6 +50,20 @@
 
 ### Unified design-token model
 
+- [x] Settings: use TransformableField for spacing token values.
+  - Evidence: `TokensDomainPanel` already renders Spacing through the shared settings `Table`, but
+    `token-table-row.tsx` still uses the legacy `TokenValueControl` for dimension values while
+    Colors uses editor-supplied options with `TransformableField`.
+  - Action: share token-option grouping in `ui/settings/config`, then supply compatible dimension
+    token references and a direct dimension mode to the Spacing value cell. Keep the existing
+    table, token grouping, and Colors option output unchanged.
+  - Scope: current task; migrate Spacing only.
+  - Contracts: preserve literal dimension strings, `{token:uuid}` references, self-reference
+    filtering, and breakpoint override/reset behavior; do not change `@facadeur/form` or token
+    persistence.
+  - Validation: focused editor tests, editor typecheck, Storybook Settings · Spacing interaction,
+    `git diff --check`, and the refactoring detector.
+
 - [ ] Replace path-keyed DTCG tokens with one UUID-keyed internal record contract.
   - Evidence: token UUIDs currently live in `$extensions.facadeur.uuid` while lookup, edits,
     references, and rendering still depend on DTCG paths. Color, spacing, radius, shadow, and
