@@ -1,26 +1,45 @@
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { card } from '@facadeur/examples';
+import { createStorybookEditor } from '../../fixtures/editor';
+import { CatalogLayersPanel } from '../../../src/ui/sidebar/layers/CatalogLayersPanel';
+import { ProjectTree } from '../../../src/ui/sidebar/layers/ProjectTree';
+import type { EditorSurface } from '../../../src/ui/sidebar/design/design-domain';
 import { ResizableLeftRail } from '../../../src/ui/shell/ResizableLeftRail';
 
 function LeftSidebarPreview() {
+  const editor = useMemo(() => createStorybookEditor(card.uuid, card.root.uuid), []);
+  const subscribe = useMemo(() => editor.app.subscribe.bind(editor.app), [editor.app]);
+  const getSnapshot = useMemo(() => editor.app.getSnapshot.bind(editor.app), [editor.app]);
+  const snap = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  const [surface, setSurface] = useState<EditorSurface>('editor');
+
+  useEffect(() => () => editor.session.destroy(), [editor.session]);
+
+  const openAsset = useCallback(
+    (assetId: string) => {
+      editor.session.openAsset(assetId, 'root');
+      setSurface('editor');
+    },
+    [editor.session],
+  );
+
   return (
-    <div style={{ height: 560, width: 280, border: '1px solid var(--border-subtle, #ddd)' }}>
+    <aside className="side side-left" style={{ height: 720 }}>
       <ResizableLeftRail
-        layers={
-          <section style={{ padding: 12 }}>
-            <h3>Layers</h3>
-            <p>Hero</p>
-            <p>Teaser</p>
-          </section>
-        }
+        layers={<CatalogLayersPanel app={editor.app} session={editor.session} snap={snap} />}
         project={
-          <section style={{ padding: 12 }}>
-            <h3>Project</h3>
-            <p>Pages</p>
-            <p>Components</p>
-          </section>
+          <ProjectTree
+            app={editor.app}
+            session={editor.session}
+            snap={snap}
+            surface={surface}
+            onOpenAsset={openAsset}
+            onOpenDesignDomain={setSurface}
+          />
         }
       />
-    </div>
+    </aside>
   );
 }
 

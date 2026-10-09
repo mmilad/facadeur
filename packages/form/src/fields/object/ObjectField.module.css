@@ -1,0 +1,16 @@
+.object {
+  display: grid;
+  gap: var(--eu-gap-compact, 6px);
+  min-width: 0;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--eu-border, #b7aa9a);
+  border-radius: var(--eu-radius, 6px);
+}
+
+.legend {
+  padding: 0 4px;
+  color: var(--eu-fg-muted, #6b6258);
+  font-size: var(--eu-label-size, 11px);
+  font-weight: 500;
+}

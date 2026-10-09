@@ -13,12 +13,7 @@ import {
 } from '../../domain/assets/files';
 import { isEditableTarget } from '../../domain/keyboard';
 import type { EditorSession } from '../../domain/session';
-import {
-  EDITOR_VIEW_ITEMS,
-  isCatalogDocumentView,
-  isDesignDomain,
-  isSettingsTokenDomain,
-} from '../sidebar/design/design-domain';
+import { isCatalogDocumentView, isDesignDomain } from '../sidebar/design/design-domain';
 import { CatalogCodeStage } from '../stage/CatalogCodeStage';
 import { CatalogPreviewDataStage } from '../stage/CatalogPreviewDataStage';
 import { CatalogSchemaStage } from '../stage/CatalogSchemaStage';
@@ -38,6 +33,7 @@ import { KindBadge } from './KindBadge';
 import { DocumentBreadcrumb } from './DocumentBreadcrumb';
 import { ZoomControls } from './ZoomControls';
 import { useEditorNavigation } from './useEditorNavigation';
+import { EditorSubnav } from './EditorSubnav';
 
 export function EditorShell({
   session,
@@ -72,8 +68,6 @@ export function EditorShell({
   }, [app]);
   const { surface, setSurface } = useEditorNavigation(session, snap);
   const designSurface = isDesignDomain(surface);
-  const settingsSurface =
-    isSettingsTokenDomain(surface) || surface === 'schemas' || surface === 'props';
   const editorCanvas = surface === 'editor';
   useEditorKeys(session, editorCanvas);
 
@@ -111,10 +105,7 @@ export function EditorShell({
           type="button"
           className="text-button"
           onClick={() =>
-            download(
-              'catalog.json',
-              JSON.stringify(app.getCoreSnapshot().catalog, null, 2),
-            )
+            download('catalog.json', JSON.stringify(app.getCoreSnapshot().catalog, null, 2))
           }
         >
           Export catalog
@@ -138,38 +129,7 @@ export function EditorShell({
           {snap.notice.text}
         </p>
       ) : null}
-      <nav className="editor-subnav" aria-label="Editor views" data-testid="editor-subnav">
-        <button
-          type="button"
-          className={settingsSurface ? 'editor-subnav-item is-active' : 'editor-subnav-item'}
-          aria-current={settingsSurface ? 'page' : undefined}
-          data-subnav="settings"
-          onClick={() => setSurface(settingsSurface ? surface : 'colors')}
-        >
-          Settings
-        </button>
-        <button
-          type="button"
-          data-surface="icons"
-          className={surface === 'icons' ? 'editor-subnav-item is-active' : 'editor-subnav-item'}
-          aria-current={surface === 'icons' ? 'page' : undefined}
-          onClick={() => setSurface('icons')}
-        >
-          Icons
-        </button>
-        {EDITOR_VIEW_ITEMS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className={surface === item.id ? 'editor-subnav-item is-active' : 'editor-subnav-item'}
-            aria-current={surface === item.id ? 'page' : undefined}
-            data-surface={item.id}
-            onClick={() => setSurface(item.id)}
-          >
-            {item.label}
-          </button>
-        ))}
-      </nav>
+      <EditorSubnav surface={surface} onSelectSurface={setSurface} />
       <div className="workspace">
         <aside className="side side-left">
           {designSurface || surface === 'schemas' ? (
@@ -202,9 +162,7 @@ export function EditorShell({
                 />
               }
               layers={
-                editorCanvas ? (
-                  <CatalogLayersPanel app={app} session={session} snap={snap} />
-                ) : null
+                editorCanvas ? <CatalogLayersPanel app={app} session={session} snap={snap} /> : null
               }
             />
           )}

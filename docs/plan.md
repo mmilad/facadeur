@@ -1074,3 +1074,11 @@ its temporary repeater demo was removed after runtime verification, while generi
 remains available to other stories. Storybook production build and scoped detector pass. Runtime
 verification confirmed that Asset changes Layer options and repeater edits update story args and
 preview. The previous `dependent-select` library is replaced by `.storybook/lib/schema-form/`.
+
+## Share the editor subnav with its Storybook story
+
+`EditorShell` currently owns the subnav markup inline, while the Header story omits it. Extract the
+subnav into the shell UI as a focused component and render that same component in both places.
+Preserve the existing surface ids, active state, accessible labels, and Settings-to-colors fallback.
+Validate the scoped detector, formatting, editor typecheck, and Storybook rendering when the local
+Storybook toolchain is available.

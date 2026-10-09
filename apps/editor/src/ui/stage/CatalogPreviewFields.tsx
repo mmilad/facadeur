@@ -5,7 +5,7 @@ import { Form as SharedForm } from '@facadeur/form';
 import { parseFieldValue } from '../../domain/field-values';
 import { fieldDisplayLabel } from '../controls/data/field-label';
 import { SchemaValueForm } from '../controls/data/SchemaValueForm';
-import { Field, NumberInput, Stack, TextInput, Toggle } from '../form/index';
+import { Field, Stack, TextInput } from '../form/index';
 
 export function CatalogPreviewFields({
   fields,
@@ -68,42 +68,52 @@ function PreviewField({
 
   if (field.type === 'boolean') {
     return (
-      <Field label={label}>
-        <Toggle
-          name={`preview-${field.name}`}
-          label={value === true ? 'On' : 'Off'}
-          value={value === true}
-          onCommit={(next) => onChange(next)}
-        />
-      </Field>
+      <SharedForm
+        layout="horizontal"
+        value={{ [field.name]: value === true }}
+        fields={[{ name: field.name, label, type: 'boolean' }]}
+        onChange={(next) => onChange(asPrimitiveFieldValue(next[field.name]))}
+      />
     );
   }
 
   if (field.type === 'number') {
     return (
-      <Field label={label}>
-        <NumberInput
-          value={typeof value === 'number' ? value : null}
-          onChange={(next) => {
-            try {
-              onChange(next ?? undefined);
-            } catch (failure) {
-              onInvalid(failure instanceof Error ? failure.message : 'Invalid number');
-            }
-          }}
-        />
-      </Field>
+      <SharedForm
+        layout="horizontal"
+        value={{ [field.name]: typeof value === 'number' ? value : '' }}
+        fields={[{ name: field.name, label, type: 'number' }]}
+        onChange={(next) => onChange(asPrimitiveFieldValue(next[field.name]))}
+      />
     );
   }
 
-  if (['text', 'richText', 'image', 'link', 'token'].includes(field.type)) {
+  if (field.type === 'enum' && field.options?.length) {
+    const options = field.options.map((option) => ({ value: option, label: option }));
+    return (
+      <SharedForm
+        layout="horizontal"
+        value={{ [field.name]: typeof value === 'string' ? value : (options[0]?.value ?? '') }}
+        fields={[{ name: field.name, label, type: 'select', options }]}
+        onChange={(next) => onChange(asPrimitiveFieldValue(next[field.name]))}
+      />
+    );
+  }
+
+  if (
+    field.type === 'text' ||
+    field.type === 'richText' ||
+    field.type === 'image' ||
+    field.type === 'link' ||
+    field.type === 'token'
+  ) {
     const textValue = typeof value === 'string' ? value : '';
     return (
       <SharedForm
         layout="horizontal"
         value={{ [field.name]: textValue }}
         fields={[{ name: field.name, label, type: 'text' }]}
-        onChange={(next) => onChange(next[field.name] || undefined)}
+        onChange={(next) => onChange(asPrimitiveFieldValue(next[field.name]))}
       />
     );
   }
@@ -122,4 +132,10 @@ function PreviewField({
       />
     </Field>
   );
+}
+
+function asPrimitiveFieldValue(value: unknown): FieldValue | undefined {
+  if (value === '' || value === undefined) return undefined;
+  if (typeof value === 'string' || typeof value === 'boolean') return value;
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
 }

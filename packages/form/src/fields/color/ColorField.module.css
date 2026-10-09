@@ -1,0 +1,16 @@
+.input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: var(--eu-control-height, 28px);
+  padding: 3px 4px;
+  border: 1px solid var(--eu-border, #b7aa9a);
+  border-radius: var(--eu-radius, 6px);
+  background: var(--eu-bg-elevated, #fffdf9);
+  cursor: pointer;
+}
+
+.input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

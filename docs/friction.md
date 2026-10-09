@@ -6,6 +6,7 @@
 - **Evidence/impact:** Vite/SWC fails with `EPERM` while canonicalizing the Next.js path under `node_modules/.pnpm/next@.../node_modules/next/dist/compiled/react/index.js` or the editor `baseUrl`. The same command succeeds in the approved host context and completes the production build.
 - **Workaround:** Run the Storybook build in the approved host context; no dependency or config change is needed.
 - **Status (2026-10-09):** Confirmed with a successful Storybook 10.6.1 production build.
+- **Restricted-process recurrence (2026-10-09):** Running `storybook dev -p 6006` or `storybook build` through the local CLI builds the manager, then SWC panics with `EPERM` while canonicalizing `apps/editor` as `jsc.baseUrl`. Preview verification still requires the user's host pnpm environment.
 
 ## Test runner blocked by filesystem sandbox
 

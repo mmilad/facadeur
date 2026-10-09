@@ -1,0 +1,11 @@
+.layout {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--eu-gap-compact, 6px);
+  min-width: 0;
+}
+
+.layout > * {
+  flex: 1 1 0;
+}

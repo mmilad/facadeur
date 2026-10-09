@@ -20,5 +20,17 @@ export function registerSchemaFormPanel({
       title,
       render: ({ active }) => <SchemaFormPanel active={active} parameterKey={parameterKey} />,
     });
+    movePanelToFront(panelId);
   });
+}
+
+function movePanelToFront(panelId: string) {
+  const panels = addons.getElements(types.PANEL);
+  const panel = panels[panelId];
+  if (!panel) return;
+
+  const remaining = Object.entries(panels).filter(([id]) => id !== panelId);
+  for (const id of Object.keys(panels)) delete panels[id];
+  panels[panelId] = panel;
+  for (const [id, entry] of remaining) panels[id] = entry;
 }

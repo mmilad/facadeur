@@ -1,3 +1,4 @@
+import React from 'react';
 import styles from './TextField.module.css';
 import type { TextFieldProps } from './types';
 
