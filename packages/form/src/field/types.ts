@@ -11,7 +11,6 @@ import type { SearchFieldConfig } from '../fields/search';
 import type { ComboboxFieldConfig } from '../fields/combobox';
 import type { LayoutFieldConfig } from '../fields/layout';
 import type { ChipsFieldConfig } from '../fields/chips';
-import type { ClassListFieldConfig } from '../fields/class-list';
 import type { RecordFieldConfig } from '../fields/record';
 
 export type FormFieldConfig =
@@ -27,7 +26,6 @@ export type FormFieldConfig =
   | RepeaterFieldConfig
   | LayoutFieldConfig
   | ChipsFieldConfig
-  | ClassListFieldConfig
   | RecordFieldConfig;
 
 export type ValueFormFieldConfig = Exclude<FormFieldConfig, LayoutFieldConfig>;

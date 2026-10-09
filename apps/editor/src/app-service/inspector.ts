@@ -1,8 +1,17 @@
-import { findNodeByUuid, type CoreController, type InspectorFormModel } from '@facadeur/core';
+import {
+  findNodeByUuid,
+  type CoreController,
+  type CoreSnapshot,
+  type InspectorFormModel,
+} from '@facadeur/core';
 
 export interface InspectorViewModel extends InspectorFormModel {
   readonly selectionKind: 'root' | 'instance' | 'element';
   readonly previewDataVisible: boolean;
+  readonly styleSuggestions: {
+    readonly keys: readonly string[];
+    readonly valuesByKey: Readonly<Record<string, readonly string[]>>;
+  };
   readonly formValue: Omit<InspectorFormModel['formValue'], 'node'> & {
     node: InspectorFormModel['formValue']['node'] & { attributes: Record<string, string> };
   };
@@ -51,6 +60,7 @@ export class InspectorService {
       },
       selectionKind,
       previewDataVisible: hasSchema && selectionKind !== 'element',
+      styleSuggestions: collectProjectStyleSuggestions(snapshot.catalog),
     };
   }
 
@@ -83,6 +93,37 @@ export class InspectorService {
       this.listeners.delete(listener);
     };
   }
+}
+
+type CatalogNode = CoreSnapshot['catalog']['atoms'][string]['root'];
+
+function collectProjectStyleSuggestions(catalog: CoreSnapshot['catalog']) {
+  const valuesByKey = new Map<string, Set<string>>();
+  const definitions = [
+    ...Object.values(catalog.atoms),
+    ...Object.values(catalog.components),
+    ...Object.values(catalog.pages),
+  ];
+  const visit = (node: CatalogNode) => {
+    for (const [key, value] of Object.entries(node.style ?? {})) {
+      if (!value.trim()) continue;
+      const values = valuesByKey.get(key) ?? new Set<string>();
+      values.add(value);
+      valuesByKey.set(key, values);
+    }
+    for (const child of node.dom.children ?? []) visit(child);
+  };
+  for (const definition of definitions) visit(definition.root);
+
+  return {
+    keys: [...valuesByKey.keys()].sort((left, right) => left.localeCompare(right)),
+    valuesByKey: Object.fromEntries(
+      [...valuesByKey].map(([key, values]) => [
+        key,
+        [...values].sort((left, right) => left.localeCompare(right)),
+      ]),
+    ),
+  };
 }
 
 function stringRecord(value: unknown) {

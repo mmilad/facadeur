@@ -1152,3 +1152,62 @@ changed-source editor typecheck, formatting, and detector pass. The Storybook bu
 compilation but SWC failed to canonicalize the editor base path in this Windows environment; the
 open Storybook tab also retained its earlier stale module error because port 6006 was already in
 use and could not be restarted from this process.
+
+Follow-up: hide the bind control when the editor supplies no design-property options; it cannot
+perform an action in that state. Keep it available for both record values and bindable text when
+options exist. Validate form typecheck, formatting, detector, and diff check.
+
+Result: `RecordField` now accepts optional key and per-key value suggestions and renders them with
+native datalists, so free-form input remains supported. The inspector derives those suggestions
+from styles already used across the project catalog and passes them into the reusable form field.
+Form package typecheck, changed-source editor typecheck, formatting, detector, and diff check pass;
+Storybook runtime verification remains blocked by the previously documented local SWC path error.
+
+## Keep emptied style rows until explicit removal
+
+The reusable record control emits a whole style record after each edit, and Core currently drops
+entries with empty values. That makes clearing a value act like deletion and bypasses the row's
+explicit remove button. Preserve empty strings in the catalog node style record; the renderer
+already treats an empty inline style value as inactive. Keep removing a property tied to omission
+from the record. Validate core and form typechecks, the scoped detector, and diff review.
+
+Result: Core now preserves empty string values in node style records and deletes only omitted keys.
+The renderer receives an empty inline style value, which clears its visual effect while keeping the
+editable row in the catalog. Form typecheck and changed-source checks pass. Core's full typecheck is
+still blocked by unrelated existing errors in catalog, API, and test sources; scoped detector and
+diff check pass.
+
+## Add external autocomplete suggestions to inspector records
+
+The reusable form record control currently has plain key/value inputs, so CSS editing offers no
+help when adding declarations. Add optional key suggestions and value suggestions keyed by the
+current key to the generic record field config. Keep suggestions optional and allow arbitrary
+values; the editor supplies them, and `@facadeur/form` stays free of CSS vocabulary. For the
+inspector, derive suggestions from existing project catalog styles so they stay in step with
+actual project data. Validate package/editor types, detector, and Storybook where the local runtime
+allows it.
+
+## Stack class chips above a full-width input
+
+Completed as part of replacing the duplicate class-list field with generic chips. The Inspector
+now uses the reusable chips control, whose chips occupy their own wrapping row above a full-width
+input inside one control boundary.
+
+## Replace the form class-list field with generic chips
+
+`packages/form/src/fields/class-list` duplicates the chip collection behavior in
+`packages/form/src/fields/chips`, while Core already supplies the class suggestions and values.
+Map inspector class lists to the generic `chips` config, remove the duplicate package field and
+its dispatch/public exports, and preserve Core's `classList` inspector contract. The editor's
+older `ClassListInput` remains a separate migration candidate because it is owned by the legacy
+schema form. Validate form/editor typechecks, detector, formatting, and diff review.
+
+- [ ] Backlog: migrate the legacy editor class-list input to the shared chips field
+  - Evidence: `apps/editor/src/ui/form/components/selection/ClassListInput.tsx` repeats chips,
+    free-form input, suggestions, and removal behavior outside `@facadeur/form`.
+  - Action: when replacing the legacy schema form, use the public `@facadeur/form` chips control
+    and remove its local component and `.eu-class-list` styles.
+  - Scope: backlog; keep the current editor form's styling and whitespace semantics stable until
+    its migration is scheduled.
+  - Contracts: preserve class-token split/add/remove behavior and suggestion filtering.
+  - Validation: editor typecheck, relevant form stories, detector, and diff review.

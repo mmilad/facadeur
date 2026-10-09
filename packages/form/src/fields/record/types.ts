@@ -1,5 +1,10 @@
 import type { SelectOption } from '../select';
 
+export type RecordFieldSuggestions = {
+  keys?: readonly string[];
+  valuesByKey?: Readonly<Record<string, readonly string[]>>;
+};
+
 export type RecordFieldConfig = {
   name: string;
   label: string;
@@ -7,6 +12,7 @@ export type RecordFieldConfig = {
   keyLabel?: string;
   valueLabel?: string;
   bindable?: boolean;
+  suggestions?: RecordFieldSuggestions;
   disabled?: boolean;
 };
 
@@ -14,5 +20,6 @@ export type RecordFieldProps = Omit<RecordFieldConfig, 'type'> & {
   id: string;
   value: Record<string, string>;
   bindOptions?: readonly SelectOption[];
+  suggestions?: RecordFieldSuggestions;
   onChange: (next: Record<string, string>) => void;
 };

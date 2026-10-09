@@ -1,4 +1,10 @@
-import type { CatalogMapKey, JsonSchemaObject, Node, NodeDefinition, ProjectCatalog } from '@facadeur/domain';
+import type {
+  CatalogMapKey,
+  JsonSchemaObject,
+  Node,
+  NodeDefinition,
+  ProjectCatalog,
+} from '@facadeur/domain';
 
 const LEAF_TAGS = new Set(['img', 'input', 'br', 'hr', 'meta', 'link']);
 
@@ -11,7 +17,8 @@ export function findDefinition(
   uuid: string,
 ): { kind: CatalogMapKey; definition: NodeDefinition } | null {
   if (catalog.atoms[uuid]) return { kind: 'atoms', definition: catalog.atoms[uuid]! };
-  if (catalog.components[uuid]) return { kind: 'components', definition: catalog.components[uuid]! };
+  if (catalog.components[uuid])
+    return { kind: 'components', definition: catalog.components[uuid]! };
   if (catalog.pages[uuid]) return { kind: 'pages', definition: catalog.pages[uuid]! };
   return null;
 }
@@ -90,9 +97,7 @@ export function patchNodeStyleRecord(
   record: Readonly<Record<string, string>>,
 ): ProjectCatalog {
   return mutateNode(catalog, definitionUuid, nodeUuid, (node) => {
-    const next = Object.fromEntries(
-      Object.entries(record).filter(([, value]) => value.trim() !== ''),
-    );
+    const next = { ...record };
     if (Object.keys(next).length) (node as { style?: Record<string, string> }).style = next;
     else delete (node as { style?: Record<string, string> }).style;
   });

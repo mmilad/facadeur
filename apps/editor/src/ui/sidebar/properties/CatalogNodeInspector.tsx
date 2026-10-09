@@ -20,10 +20,10 @@ export function CatalogNodeInspector({
   if (!model) {
     return <p className="inspector-empty">Select an element in the layer tree.</p>;
   }
-  const elementFields = sectionFields(model.fields, 'Element')?.fields ?? [];
-  const styleSection = sectionFields(model.fields, 'Layout & style');
-  const nodeDataSection = sectionFields(model.fields, 'Properties', 'Node data');
-  const previewDefaultsSection = sectionFields(model.fields, 'Preview defaults');
+  const elementFields = sectionFields(model, 'Element')?.fields ?? [];
+  const styleSection = sectionFields(model, 'Layout & style');
+  const nodeDataSection = sectionFields(model, 'Properties', 'Node data');
+  const previewDefaultsSection = sectionFields(model, 'Preview defaults');
   const propertySections: InspectorSection[] = [
     {
       label: 'HTML attributes',
@@ -147,13 +147,13 @@ function valueAtPath(value: unknown, path: string) {
 }
 
 function sectionFields(
-  fields: import('@facadeur/core').InspectorFormField[],
+  model: NonNullable<ReturnType<AppService['inspector']['getModel']>>,
   title: string,
   label = title,
 ): InspectorSection | null {
-  const section = fields.find((field) => field.type === 'section' && field.title === title);
+  const section = model.fields.find((field) => field.type === 'section' && field.title === title);
   return section?.type === 'section'
-    ? { label, fields: mapInspectorFormFields(section.fields) }
+    ? { label, fields: mapInspectorFormFields(section.fields, model.styleSuggestions) }
     : null;
 }
 

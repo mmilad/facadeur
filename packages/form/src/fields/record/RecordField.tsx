@@ -5,10 +5,12 @@ import type { RecordFieldProps } from './types';
 type Draft = { id: string; key: string; value: string };
 
 export function RecordField({
+  id,
   value,
   keyLabel = 'Key',
   valueLabel = 'Value',
   bindOptions = [],
+  suggestions,
   bindable = false,
   disabled,
   onChange,
@@ -68,13 +70,15 @@ export function RecordField({
             <div className={styles.inputs}>
               <input
                 className={styles.input}
+                id={id}
                 aria-label={keyLabel}
                 value={row.key}
+                list={`${id}-keys`}
                 disabled={disabled}
                 onChange={(event) => update(row, { key: event.currentTarget.value })}
                 onBlur={() => isDraft && commit(row)}
               />
-              {bindable ? (
+              {bindable && bindOptions.length > 0 ? (
                 <div className={styles.valueInput}>
                   {isBound ? (
                     <select
@@ -95,6 +99,7 @@ export function RecordField({
                       className={styles.input}
                       aria-label={valueLabel}
                       value={row.value}
+                      list={`${id}-values-${row.id}`}
                       disabled={disabled}
                       onChange={(event) => update(row, { value: event.currentTarget.value })}
                       onBlur={() => isDraft && commit(row)}
@@ -104,7 +109,7 @@ export function RecordField({
                     className={styles.button}
                     type="button"
                     aria-label={isBound ? 'Switch to literal value' : 'Bind design prop'}
-                    disabled={disabled || (!isBound && bindOptions.length === 0)}
+                    disabled={disabled}
                     onClick={() => update(row, { value: isBound ? '' : bindOptions[0]!.value })}
                   >
                     {isBound ? 'Aa' : '{ }'}
@@ -115,12 +120,18 @@ export function RecordField({
                   className={styles.input}
                   aria-label={valueLabel}
                   value={row.value}
+                  list={`${id}-values-${row.id}`}
                   disabled={disabled}
                   onChange={(event) => update(row, { value: event.currentTarget.value })}
                   onBlur={() => isDraft && commit(row)}
                 />
               )}
             </div>
+            <datalist id={`${id}-values-${row.id}`}>
+              {(suggestions?.valuesByKey?.[row.key] ?? []).map((item) => (
+                <option key={item} value={item} />
+              ))}
+            </datalist>
             <button
               className={styles.button}
               type="button"
@@ -147,6 +158,11 @@ export function RecordField({
       >
         +
       </button>
+      <datalist id={`${id}-keys`}>
+        {suggestions?.keys?.map((key) => (
+          <option key={key} value={key} />
+        ))}
+      </datalist>
     </div>
   );
 }

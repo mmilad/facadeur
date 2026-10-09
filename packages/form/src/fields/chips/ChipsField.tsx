@@ -27,22 +27,24 @@ export function ChipsField({
 
   return (
     <div className={styles.root}>
-      <div className={styles.chips}>
-        {value.map((chip) => (
-          <span className={styles.chip} key={chip}>
-            <span>{chip}</span>
-            <button
-              className={styles.remove}
-              type="button"
-              aria-label={`Remove ${chip}`}
-              disabled={disabled}
-              onClick={() => onChange(value.filter((item) => item !== chip))}
-            >
-              ×
-            </button>
-          </span>
-        ))}
-      </div>
+      {value.length > 0 ? (
+        <div className={styles.chips}>
+          {value.map((chip) => (
+            <span className={styles.chip} key={chip}>
+              <span>{chip}</span>
+              <button
+                className={styles.remove}
+                type="button"
+                aria-label={`Remove ${chip}`}
+                disabled={disabled}
+                onClick={() => onChange(value.filter((item) => item !== chip))}
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      ) : null}
       <input
         className={`${controlStyles.control} ${styles.input}`}
         id={id}

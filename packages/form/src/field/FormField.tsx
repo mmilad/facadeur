@@ -10,7 +10,6 @@ import { TextArea } from '../fields/textarea';
 import { TextField } from '../fields/text';
 import { SearchField } from '../fields/search';
 import { ChipsField } from '../fields/chips';
-import { ClassListField } from '../fields/class-list';
 import { RecordField } from '../fields/record';
 import styles from './FormField.module.css';
 import type { FormFieldProps } from './types';
@@ -129,27 +128,6 @@ export function FormField({
           />
         </div>
       );
-    case 'classList':
-      return (
-        <div className={wrapperClassName}>
-          <label className={styles.label} htmlFor={id}>
-            {field.label}
-          </label>
-          <ClassListField
-            id={id}
-            name={field.name}
-            label={field.label}
-            value={
-              Array.isArray(value)
-                ? value.filter((item): item is string => typeof item === 'string')
-                : []
-            }
-            suggestions={field.suggestions}
-            disabled={field.disabled}
-            onChange={onChange}
-          />
-        </div>
-      );
     case 'record':
       return (
         <div className={wrapperClassName}>
@@ -165,6 +143,7 @@ export function FormField({
             valueLabel={field.valueLabel}
             bindable={field.bindable}
             bindOptions={field.bindable ? bindOptions : []}
+            suggestions={field.suggestions}
             disabled={field.disabled}
             onChange={onChange}
           />
@@ -300,15 +279,17 @@ function BindableText({
           onChange={onChange}
         />
       )}
-      <button
-        className={styles.bindButton}
-        type="button"
-        aria-label={bound ? 'Switch to literal value' : 'Bind design prop'}
-        disabled={disabled || (!bound && options.length === 0)}
-        onClick={() => onChange(bound ? '' : selectedValue)}
-      >
-        {bound ? 'Aa' : '{ }'}
-      </button>
+      {options.length > 0 && (
+        <button
+          className={styles.bindButton}
+          type="button"
+          aria-label={bound ? 'Switch to literal value' : 'Bind design prop'}
+          disabled={disabled}
+          onClick={() => onChange(bound ? '' : selectedValue)}
+        >
+          {bound ? 'Aa' : '{ }'}
+        </button>
+      )}
     </div>
   );
 }

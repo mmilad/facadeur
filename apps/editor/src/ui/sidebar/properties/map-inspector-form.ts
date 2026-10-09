@@ -3,15 +3,21 @@ import {
   type FieldDefinition,
   type InspectorFormField,
 } from '@facadeur/core';
-import type { FormFieldConfig } from '@facadeur/form';
+import type { FormFieldConfig, RecordFieldSuggestions } from '@facadeur/form';
 
-export function mapInspectorFormFields(fields: InspectorFormField[]): FormFieldConfig[] {
-  return fields.flatMap(mapInspectorField);
+export function mapInspectorFormFields(
+  fields: InspectorFormField[],
+  styleSuggestions: RecordFieldSuggestions,
+): FormFieldConfig[] {
+  return fields.flatMap((field) => mapInspectorField(field, styleSuggestions));
 }
 
-function mapInspectorField(field: InspectorFormField): FormFieldConfig[] {
+function mapInspectorField(
+  field: InspectorFormField,
+  styleSuggestions: RecordFieldSuggestions,
+): FormFieldConfig[] {
   if (field.type === 'section') {
-    return [{ type: 'layout', fields: mapInspectorFormFields(field.fields) }];
+    return [{ type: 'layout', fields: mapInspectorFormFields(field.fields, styleSuggestions) }];
   }
   if (field.type === 'text') {
     return [{ type: 'text', name: field.path, label: field.label, bindable: false }];
@@ -28,7 +34,7 @@ function mapInspectorField(field: InspectorFormField): FormFieldConfig[] {
   }
   if (field.type === 'classList') {
     return [
-      { type: 'classList', name: field.path, label: field.label, suggestions: field.suggestions },
+      { type: 'chips', name: field.path, label: field.label, suggestions: field.suggestions },
     ];
   }
   if (field.type === 'record') {
@@ -40,6 +46,7 @@ function mapInspectorField(field: InspectorFormField): FormFieldConfig[] {
         keyLabel: field.keyLabel,
         valueLabel: field.valueLabel,
         bindable: field.propBindValues,
+        ...(field.path === 'node.style' ? { suggestions: styleSuggestions } : {}),
       },
     ];
   }
@@ -117,7 +124,6 @@ function defaultValue(field: FormFieldConfig): unknown {
       return {};
     case 'repeater':
     case 'chips':
-    case 'classList':
       return [];
     case 'layout':
       return {};
