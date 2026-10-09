@@ -20,6 +20,7 @@ import {
   readLabel,
   readTier,
   readType,
+  readUuid,
   rejectUnknownReserved,
 } from './read';
 import { assertBreakpointValue, assertTokenValue } from './values';
@@ -186,7 +187,9 @@ function walk(
       assertBreakpointValue(type, override, path, breakpoint);
     }
     const label = readLabel(node.$extensions, path);
+    const uuid = readUuid(node.$extensions, path);
     const token: IndexedToken = { path, type, value, breakpoints };
+    if (uuid !== undefined) token.uuid = uuid;
     if (label !== undefined) token.label = label;
     if (tier) token.tier = tier;
     if (description !== undefined) token.description = description;

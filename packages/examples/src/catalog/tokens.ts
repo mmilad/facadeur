@@ -1,6 +1,7 @@
 import type { ProjectCatalog } from '@facadeur/domain';
+import { addStableTokenUuids, tokenUuidForPath } from './token-ids';
 
-export const tokens = {
+const tokenDefinitions = {
   color: {
     $extensions: {
       facadeur: {
@@ -421,3 +422,10 @@ export const tokens = {
     },
   },
 } satisfies NonNullable<ProjectCatalog['tokens']>;
+
+export const tokens = addStableTokenUuids(tokenDefinitions);
+
+export function stableTokenReference(path: string): string | null {
+  const uuid = tokenUuidForPath(path);
+  return uuid ? `{token:${uuid}}` : null;
+}

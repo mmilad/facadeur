@@ -1,4 +1,6 @@
 import type { Node } from '@facadeur/domain';
+import { componentPropRef } from '../references';
+import { propIds } from './schema';
 
 export const root: Node = {
   uuid: '550e8400-e29b-41d4-a716-000000000067',
@@ -10,7 +12,7 @@ export const root: Node = {
         name: 'eyebrow',
         dom: {
           tagName: 'p',
-          text: '{props:550e8400-e29b-41d4-a716-000000000201}',
+          text: componentPropRef(propIds.eyebrow),
         },
       },
       {
@@ -18,7 +20,7 @@ export const root: Node = {
         name: 'title',
         dom: {
           tagName: 'h2',
-          text: '{props:550e8400-e29b-41d4-a716-000000000202}',
+          text: componentPropRef(propIds.title),
         },
       },
       {
@@ -26,7 +28,7 @@ export const root: Node = {
         name: 'body',
         dom: {
           tagName: 'p',
-          text: '{props:550e8400-e29b-41d4-a716-000000000203}',
+          text: componentPropRef(propIds.body),
         },
       },
     ],

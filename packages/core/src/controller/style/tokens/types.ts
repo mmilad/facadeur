@@ -23,6 +23,7 @@ export interface TokenGroupDefinition {
 
 export interface IndexedToken {
   path: string;
+  uuid?: string;
   label?: string;
   type: TokenType;
   tier?: TokenTier;

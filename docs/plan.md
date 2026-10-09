@@ -1374,6 +1374,46 @@ uses `node:<uuid>`. The scoped detector and diff check pass. Editor TypeScript r
 the changed canvas/session modules, though the full check still reports existing workspace
 dependency errors. Vitest remains blocked in the sandbox by the documented `EPERM` realpath issue.
 
+## Backlog: split the form-controls section DOM fixture
+
+The refactor detector reports `packages/examples/src/form-controls-section/dom.ts` at 542 lines.
+Keep this cohesive example fixture unchanged during the stable-reference migration; review whether
+its repeated section content should become smaller named example fragments in a separate task.
+Preserve the exported definition shape and catalog behavior if split. Validate catalog examples
+and their preview rendering after any future extraction.
+
+## Give example props and tokens stable references
+
+Example style fixtures currently store path references such as `{color.text.primary}`, while
+component bindings store raw `{props:uuid}` strings. Add stable UUID metadata to every example
+token, convert known style references to `{token:uuid}` as definitions are assembled, and provide
+a small helper for prop references so example nodes use schema-owned IDs instead of repeating
+reference syntax. Preserve DTCG path aliases inside token `$value`s; runtime style resolution is
+out of scope for this pass. Validate the example package types and inspect representative emitted
+catalog data.
+
+Result: example token leaves now carry stable UUID metadata, known style references are emitted as
+`{token:uuid}`, and Card/Image bindings derive `{props:uuid}` from the IDs declared by their schemas.
+Example package typecheck and emitted-reference inspection pass; runtime token/style resolution
+remains outside this change.
+
+## Accept stable UUID metadata on global tokens
+
+- [x] Evidence: the examples catalog now places stable token identity at
+      `$extensions.facadeur.uuid`, but Core's global token reader rejects every Facadeur
+      extension outside `tier`, `breakpoints`, and `label`, causing Storybook catalog reads to fail.
+- Action: extend the token contract and indexed token view to preserve an optional UUID while
+  leaving path-based indexing and existing token behavior intact.
+- Scope: prerequisite for loading example catalogs with stable token identity.
+- Contracts: preserve DTCG path references, validation of existing Facadeur extensions, and all
+  existing token reader output; UUID metadata must survive canonicalization and inspection.
+- Validation: Core and examples typechecks, focused reader inspection, and the scoped detector.
+
+Result: `facadeur.uuid` is now accepted and preserved on indexed token records while path indexing
+remains unchanged. A direct catalog read indexed all 62 tokens and retained all 62 UUIDs. The
+examples typecheck passes; Core typecheck still reports existing errors in catalog mutation,
+design bridge, and test imports, with no diagnostics in the changed token reader files.
+
 Unrelated refactor review: `packages/renderer-dom/src/paint.ts` is 460 lines and
 `packages/renderer-dom/src` has 14 direct source files. Keep the current renderer task scoped to the
 text-content contract; review paint/responsibility boundaries and source-directory ownership in a

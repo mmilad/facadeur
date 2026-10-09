@@ -4,7 +4,7 @@ import { tokenTypes, type TokenType } from '../../../../schema/document';
 import { TOKEN_SEGMENT } from '../syntax';
 const BREAKPOINT_ID = /^[a-z][a-z0-9]*$/;
 const RESERVED = new Set(['$value', '$type', '$description', '$deprecated', '$extensions']);
-const FACADEUR_KEYS = new Set(['tier', 'breakpoints', 'label']);
+const FACADEUR_KEYS = new Set(['tier', 'breakpoints', 'label', 'uuid']);
 const TIERS = new Set(['primitive', 'semantic', 'component']);
 
 export function childEntries(node: Record<string, unknown>, where: string) {
@@ -61,6 +61,9 @@ export function readTier(extensions: unknown, where: string) {
       throw new DocumentError('token-schema', `"${where}" has unknown facadeur extension "${key}"`);
     }
   }
+  if (facadeur.uuid !== undefined && (typeof facadeur.uuid !== 'string' || !facadeur.uuid)) {
+    throw new DocumentError('token-schema', `"${where}" uuid must be a non-empty string`);
+  }
   if (facadeur.tier === undefined) return undefined;
   if (typeof facadeur.tier !== 'string' || !TIERS.has(facadeur.tier)) {
     throw new DocumentError(
@@ -69,6 +72,16 @@ export function readTier(extensions: unknown, where: string) {
     );
   }
   return facadeur.tier as 'primitive' | 'semantic' | 'component';
+}
+
+export function readUuid(extensions: unknown, where: string) {
+  if (!isPlainObject(extensions) || !isPlainObject(extensions.facadeur)) return undefined;
+  const uuid = extensions.facadeur.uuid;
+  if (uuid === undefined) return undefined;
+  if (typeof uuid !== 'string' || !uuid) {
+    throw new DocumentError('token-schema', `"${where}" uuid must be a non-empty string`);
+  }
+  return uuid;
 }
 
 export function readBreakpoints(extensions: unknown, path: string) {
