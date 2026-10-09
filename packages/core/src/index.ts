@@ -23,14 +23,20 @@ export {
   previewFieldsForNode,
 } from './controller/project/node/preview/index';
 export { fieldsFromJsonSchema } from './schema/json-schema-fields';
-export { inspectorInputsForNode, type InspectorInputs } from './controller/project/node/config/inspector';
+export {
+  inspectorInputsForNode,
+  type InspectorInputs,
+} from './controller/project/node/config/inspector';
 export type {
   InspectorFormChangeTarget,
   InspectorFormField,
   InspectorFormModel,
   InspectorFormValue,
 } from './controller/project/node/preview/inspector-view';
-export { buildInspectorFormModel, inspectorChangeTarget } from './controller/project/node/preview/inspector-view';
+export {
+  buildInspectorFormModel,
+  inspectorChangeTarget,
+} from './controller/project/node/preview/inspector-view';
 export {
   designPropOptions,
   encodePropRef,
@@ -50,6 +56,7 @@ export {
   classListFromNode,
   patchNodeData,
   patchNodeDataRecord,
+  patchNodeName,
   patchNodeDomAttributes,
   patchNodeStyleRecord,
   patchNodeTagName,

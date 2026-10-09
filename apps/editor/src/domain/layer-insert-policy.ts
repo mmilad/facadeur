@@ -37,7 +37,7 @@ export function layerInsertEntries(snap: EditorSnapshot): LayerInsertEntry[] {
     );
   }
   return [
-    { kind: 'primitive', tool: 'frame', label: 'Frame' },
+    { kind: 'primitive', tool: 'frame', label: 'Layer' },
     { kind: 'structural', tool: 'repeater', label: 'Repeater' },
     { kind: 'structural', tool: 'switch', label: 'Switch' },
     ...catalogInstances(snap, (asset) => asset.kind === 'atom'),

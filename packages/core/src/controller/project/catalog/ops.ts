@@ -142,6 +142,19 @@ export function patchNodeTagName(
   });
 }
 
+export function patchNodeName(
+  catalog: ProjectCatalog,
+  definitionUuid: string,
+  nodeUuid: string,
+  name: string,
+): ProjectCatalog {
+  const trimmed = name.trim();
+  if (!trimmed) return catalog;
+  return mutateNode(catalog, definitionUuid, nodeUuid, (node) => {
+    (node as { name?: string }).name = trimmed;
+  });
+}
+
 export function resolveJsonSchemaForDefinition(
   catalog: ProjectCatalog,
   definition: NodeDefinition,

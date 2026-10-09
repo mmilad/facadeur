@@ -13,6 +13,7 @@ import { designPropOptions, type DesignPropOption } from './prop-ref';
 export type InspectorFormValue = {
   definition: { name: string };
   node: {
+    name: string;
     tagName: string;
     classList: string[];
     style: Record<string, string>;
@@ -60,7 +61,9 @@ function collectClassSuggestions(root: Node): string[] {
   return [...tokens].sort((left, right) => left.localeCompare(right));
 }
 
-function recordFromFieldValues(record: Readonly<Record<string, FieldValue>>): Record<string, string> {
+function recordFromFieldValues(
+  record: Readonly<Record<string, FieldValue>>,
+): Record<string, string> {
   return Object.fromEntries(
     Object.entries(record).map(([key, value]) => [
       key,
@@ -121,6 +124,7 @@ export function buildInspectorFormModel(
   const formValue: InspectorFormValue = {
     definition: { name: definition.name },
     node: {
+      name: node.name ?? '',
       tagName: node.dom.tagName,
       classList: classListFromNode(node),
       style: { ...(node.style ?? {}) },
@@ -130,8 +134,9 @@ export function buildInspectorFormModel(
     nodeData: { ...nodeInputs.values },
   };
 
-  const sections: InspectorFormField[] = [
-    {
+  const sections: InspectorFormField[] = [];
+  if (nodeUuid === definition.root.uuid)
+    sections.push({
       type: 'section',
       title: 'Asset',
       fields: [
@@ -142,20 +147,24 @@ export function buildInspectorFormModel(
           hint: 'Catalog asset display name',
         },
       ],
-    },
-  ];
+    });
 
-  if (!node.config?.definitionRef) {
+  if (nodeUuid !== definition.root.uuid) {
     sections.push({
       type: 'section',
       title: 'Element',
       fields: [
-        {
-          type: 'select',
-          path: 'node.tagName',
-          label: 'Tag',
-          options: tagOptions,
-        },
+        { type: 'text', path: 'node.name', label: 'Name', hint: 'Layer label' },
+        ...(!node.config?.definitionRef
+          ? [
+              {
+                type: 'select' as const,
+                path: 'node.tagName',
+                label: 'Tag',
+                options: tagOptions,
+              },
+            ]
+          : []),
       ],
     });
   }

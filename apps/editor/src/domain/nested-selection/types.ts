@@ -43,7 +43,8 @@ export interface VirtualLayerItem {
   address: string;
   documentId: string;
   name: string;
-  type: FlatNode['type'];
+  tagName?: string;
+  type: FlatNode['type'] | 'layer';
   children: VirtualLayerItem[];
   virtual: boolean;
   ownerNodeId?: string;

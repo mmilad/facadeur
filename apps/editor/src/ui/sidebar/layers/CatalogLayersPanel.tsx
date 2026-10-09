@@ -7,11 +7,7 @@ import { catalogDefinitionDisplayName } from '../../../domain/catalog/display-na
 import type { DropZone } from '../../../domain/editing';
 import type { LayerItem } from '../../../domain/selection/selection-model';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session';
-import {
-  catalogNodeDragLegal,
-  dropCatalogLayerNode,
-  layerDropZoneFor,
-} from './catalog-layer-drag';
+import { catalogNodeDragLegal, dropCatalogLayerNode, layerDropZoneFor } from './catalog-layer-drag';
 import { CatalogLayerContextMenu } from './CatalogLayerContextMenu';
 import { findLayerByAddress } from './layer-tree';
 
@@ -63,7 +59,7 @@ export function CatalogLayersPanel({
       <h2>Layers</h2>
       <strong className="layers-document-title">{title}</strong>
       <p className="side-note">
-        Drag layers to reorder. Right-click to insert or delete. Root cannot move.
+        Drag layers to reorder. Right-click to insert or delete. Root stays fixed.
       </p>
       <div className="side-scroll">
         {layers ? (
@@ -233,8 +229,8 @@ function CatalogLayerRows({
             onOpenLayerContext(item, event.currentTarget);
           }}
         >
-          <span className="layer-type">{item.type}</span>
           <span className="layer-name">{item.name}</span>
+          <span className="layer-type">{layerTypeLabel(item)}</span>
         </button>
       </div>
       {expanded
@@ -262,11 +258,12 @@ function CatalogLayerRows({
   );
 }
 
-function containsLayer(
-  item: LayerItem,
-  id: string | null,
-  address: string | null,
-): boolean {
+function layerTypeLabel(item: LayerItem) {
+  if (item.type === 'repeater' || item.type === 'switch') return 'Fragment';
+  return item.tagName ?? '';
+}
+
+function containsLayer(item: LayerItem, id: string | null, address: string | null): boolean {
   return (
     item.id === id ||
     item.address === address ||

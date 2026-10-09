@@ -81,6 +81,10 @@ export class InspectorService {
 
     if (input.path === 'node.attributes') {
       this.core.patchNodeDomAttributeRecord(input.nodeUuid, stringRecord(input.value));
+    } else if (input.path === 'node.name') {
+      this.core.patchNodeName(input.nodeUuid, String(input.value ?? ''));
+    } else if (input.path === 'definition.name') {
+      this.core.patchDefinitionName(String(input.value ?? ''));
     } else {
       this.core.node.preview.applyFormChange(input.path, input.value, input.nodeUuid);
     }

@@ -18,6 +18,8 @@ export interface DefinitionConfig {
 
 export interface Node {
   readonly uuid: Uuid;
+  /** Editor-facing label for this authored element, independent of its HTML tag. */
+  readonly name?: string;
   readonly dom: DomSpec & { readonly children?: readonly Node[] };
   readonly style?: Readonly<Record<string, string>>;
   readonly schema?: SchemaSource;

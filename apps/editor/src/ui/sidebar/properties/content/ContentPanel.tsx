@@ -64,6 +64,7 @@ export function ContentPanel({
     node.type === 'instance' && parent?.type === 'switch'
       ? structuralCaseValue(snap.document, node, dataContext)
       : undefined;
+  const isDocumentRoot = node.id === snap.document.rootId;
 
   return (
     <>
@@ -74,19 +75,25 @@ export function ContentPanel({
         <dd>{snap.document.name}</dd>
       </dl>
       <TextControl
-        label="Name"
+        label={isDocumentRoot ? 'Asset name' : 'Name'}
         name="name"
-        value={node.name ?? ''}
+        value={isDocumentRoot ? snap.document.name : (node.name ?? '')}
         onCommit={(value) =>
-          session.execute({
-            type: 'setProp',
-            nodeId: node.id,
-            prop: 'name',
-            value: value.trim() ? value.trim() : null,
-          })
+          isDocumentRoot
+            ? session.execute({
+                type: 'setDocumentMetadata',
+                name: value.trim() || snap.document.name,
+                slug: snap.document.slug ?? snap.document.id,
+              })
+            : session.execute({
+                type: 'setProp',
+                nodeId: node.id,
+                prop: 'name',
+                value: value.trim() ? value.trim() : null,
+              })
         }
       />
-      {node.type !== 'instance' ? (
+      {node.type !== 'instance' && !isDocumentRoot ? (
         <HtmlTagSelect
           name="tag"
           value={node.tag ?? ''}

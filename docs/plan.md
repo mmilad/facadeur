@@ -1,5 +1,28 @@
 # facadeur – Plan
 
+### Unify authored elements as Layers
+
+- [ ] Evidence: the active flat document model distinguishes `frame`, `text`, and `image`, and
+      child insertion, selection, rendering, inspector controls, serialization, validation, and
+      code generation branch on those tags. The catalog node model already stores arbitrary
+      `dom.tagName` but the layer tree infers frame/text/image labels from tag names.
+- Boundary: represent authored DOM elements uniformly as `layer`, retaining `repeater` and
+  `switch` as structural types and `instance` as catalog placement. Keep text/image behaviors
+  as element properties/data rather than layer types. Show `root` for the unrenamable root;
+  selecting it edits the definition name. Catalog insertions remain managed by the catalog.
+- Scope: prerequisite for the requested editor-wide layer model.
+- Contracts: migrate legacy frame/text/image documents on read without losing children, text,
+  image attributes, names, tags, styles, bindings, or variants; preserve atom root semantics,
+  catalog references, repeater/switch behavior, output DOM, Undo, and code generation.
+- Validation: migration/round-trip coverage, core/editor/codegen checks, renderer preview, and
+  refactor detector on changed paths.
+- Progress (2026-10-09): the editor now presents authored DOM nodes as `LAYER`, labels the root
+  `root`, offers one generic Layer insertion, and lets non-root nodes have a catalog-persisted
+  name independent of tag. Selecting a catalog root edits the asset name; legacy document roots
+  edit document metadata. Existing node names stored in legacy DOM data still display. The
+  persisted flat document union and catalog Repeater/Switch operations are not yet unified;
+  finish those before checking off this migration.
+
 ### Right sidebar: inspector boundary and tabbed editing
 
 - [ ] Evidence: `PropertiesPanel` and `CatalogNodeInspector` read Core snapshots and call

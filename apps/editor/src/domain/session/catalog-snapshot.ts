@@ -3,13 +3,7 @@ import type { CoreController } from '@facadeur/core';
 import { catalogAssetSummaries } from '../catalog/asset-list';
 import { catalogDefinitionDisplayName } from '../catalog/display-name';
 import { catalogLayerTree } from '../catalog/layer-tree';
-import type {
-  AssetSummary,
-  EditorDrag,
-  EditorNotice,
-  EditorSnapshot,
-  EditorTool,
-} from './types';
+import type { AssetSummary, EditorDrag, EditorNotice, EditorSnapshot, EditorTool } from './types';
 import type { DefaultKind, ProjectCatalogModel } from '@facadeur/core';
 
 export function placeholderDocumentForDefinition(
@@ -22,7 +16,7 @@ export function placeholderDocumentForDefinition(
     id: definition.uuid,
     name,
     kind: definition.kind,
-    root: { id: definition.root.uuid, type: 'frame', name },
+    root: { id: definition.root.uuid, type: 'frame', name: 'root', children: [] },
   });
 }
 
@@ -53,7 +47,7 @@ export function buildCatalogEditorSnapshot(input: {
   const catalogAssets = catalogAssetSummaries(catalog);
   const assets = catalogAssets.filter((asset) => asset.kind === input.workspace);
   const layers = openDefinition
-    ? catalogLayerTree(openDefinition.uuid, openDefinition.root)
+    ? catalogLayerTree(openDefinition.uuid, openDefinition.root, catalog)
     : null;
 
   return {

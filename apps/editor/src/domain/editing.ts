@@ -21,7 +21,7 @@ import type { EditorTool } from './session';
 export type InsertTool = 'frame' | 'text' | 'image';
 
 const INSERT_TOOL_LABELS: Record<InsertTool, string> = {
-  frame: 'Frame',
+  frame: 'Layer',
   text: 'Text',
   image: 'Image',
 };
@@ -189,7 +189,7 @@ export function numberTokenRefsForDocument(designTree: unknown, doc: FlatDocumen
 }
 
 export function insertDraft(tool: InsertTool, id: string): InsertNode {
-  if (tool === 'frame') return { id, type: 'frame', name: 'Frame' };
+  if (tool === 'frame') return { id, type: 'frame', name: 'layer' };
   if (tool === 'text') return { id, type: 'text', name: 'Text', text: 'Text' };
   return {
     id,

@@ -7,7 +7,8 @@ export interface LayerItem {
   /** Document that defines this node. */
   documentId: string;
   name: string;
-  type: FlatNode['type'];
+  tagName?: string;
+  type: FlatNode['type'] | 'layer';
   children: LayerItem[];
   virtual: boolean;
   ownerNodeId?: string;
@@ -69,7 +70,7 @@ export function renderIdForNode(
 export function layerTree(doc: FlatDocument): LayerItem | null {
   const root = doc.nodes[doc.rootId];
   if (!root) return null;
-  return layerItem(doc, root, root.id, false, undefined, '');
+  return layerItem(doc, root, root.id, false, undefined, '', true);
 }
 
 function descend(doc: FlatDocument, id: string, parts: string[], index: number): string | null {
@@ -90,14 +91,17 @@ function layerItem(
   virtual: boolean,
   ownerNodeId: string | undefined,
   instancePath: string,
+  isRoot = false,
 ): LayerItem {
   const children = 'children' in node ? node.children : [];
   return {
     id: node.id,
     address,
     documentId: doc.id,
-    name: layerName(node),
-    type: node.type,
+    name: isRoot ? 'root' : layerName(node),
+    tagName: tagNameForNode(node),
+    type:
+      node.type === 'frame' || node.type === 'text' || node.type === 'image' ? 'layer' : node.type,
     children: children.flatMap((id) => {
       const child = doc.nodes[id];
       return child
@@ -109,6 +113,15 @@ function layerItem(
     ...(virtual ? { instancePath } : {}),
     fieldEditable: node.type === 'instance' && !virtual,
   };
+}
+
+function tagNameForNode(node: FlatNode): string | undefined {
+  if (node.type === 'repeater' || node.type === 'switch' || node.type === 'instance')
+    return undefined;
+  if (node.tag) return node.tag;
+  if (node.type === 'text') return 'span';
+  if (node.type === 'image') return 'img';
+  return 'div';
 }
 
 export type SelectMode = 'context' | 'deeper' | 'deepest';

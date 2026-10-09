@@ -22,7 +22,9 @@ export function CatalogNodeInspector({
     return <p className="inspector-empty">Select an element in the layer tree.</p>;
   }
   const componentOptions = componentDataOptions(model);
-  const elementFields = sectionFields(model, 'Element', undefined, componentOptions)?.fields ?? [];
+  const isRoot = model.selectionKind === 'root';
+  const headerFields =
+    sectionFields(model, isRoot ? 'Asset' : 'Element', undefined, componentOptions)?.fields ?? [];
   const styleSection = sectionFields(model, 'Layout & style', undefined, componentOptions);
   const nodeDataSection = sectionFields(model, 'Properties', 'Node data', componentOptions);
   const propertySections: InspectorSection[] = [
@@ -64,9 +66,9 @@ export function CatalogNodeInspector({
     <div key={formKey} className="inspector-form-stack" data-testid="catalog-node-inspector">
       <section className="inspector-element" aria-labelledby="inspector-element-title">
         <h2 id="inspector-element-title" className="inspector-element-title">
-          Element
+          {isRoot ? 'Asset' : 'Element'}
         </h2>
-        <InspectorFields app={app} model={model} fields={elementFields} />
+        <InspectorFields app={app} model={model} fields={headerFields} />
       </section>
       <div className="inspector-tabs" role="tablist" aria-label="Element settings">
         {tabs.map((tab) => (

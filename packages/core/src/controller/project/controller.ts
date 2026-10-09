@@ -22,6 +22,7 @@ import {
   findNodeByUuid,
   patchNodeData,
   patchNodeDataRecord,
+  patchNodeName,
   patchNodeDomAttributes,
   patchNodeStyleRecord,
   patchNodeTagName,
@@ -217,6 +218,16 @@ export class CoreController implements CoreControllerHost {
     if (!this.openDefinitionId) return;
     this.catalog = validateProjectCatalog(
       patchNodeTagName(this.catalog, this.openDefinitionId, nodeUuid, tagName),
+    ) as ProjectCatalog;
+    this.publish();
+  }
+
+  patchNodeName(nodeUuid: string, name: string) {
+    if (!this.openDefinitionId) return;
+    const definition = findDefinition(this.catalog, this.openDefinitionId)?.definition;
+    if (!definition || definition.root.uuid === nodeUuid) return;
+    this.catalog = validateProjectCatalog(
+      patchNodeName(this.catalog, this.openDefinitionId, nodeUuid, name),
     ) as ProjectCatalog;
     this.publish();
   }

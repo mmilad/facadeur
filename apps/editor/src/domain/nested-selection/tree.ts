@@ -136,14 +136,25 @@ function layerItem(input: {
     id: node.id,
     address,
     documentId: document.id,
-    name: layerName(node),
-    type: node.type,
+    name: node.id === document.rootId ? 'root' : layerName(node),
+    tagName: tagNameForNode(node),
+    type:
+      node.type === 'frame' || node.type === 'text' || node.type === 'image' ? 'layer' : node.type,
     children,
     virtual,
     ...(ownerNodeId ? { ownerNodeId } : {}),
     ...(virtual ? { instancePath: instancePath.join('/') } : {}),
     fieldEditable: node.type === 'instance' && (virtual || !ownerNodeId),
   };
+}
+
+function tagNameForNode(node: FlatNode): string | undefined {
+  if (node.type === 'repeater' || node.type === 'switch' || node.type === 'instance')
+    return undefined;
+  if (node.tag) return node.tag;
+  if (node.type === 'text') return 'span';
+  if (node.type === 'image') return 'img';
+  return 'div';
 }
 
 function joinAddress(parent: string, id: string, omitParent = false): string {
