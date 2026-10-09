@@ -12,16 +12,8 @@ import type { ComboboxFieldConfig } from '../fields/combobox';
 import type { LayoutFieldConfig } from '../fields/layout';
 import type { ChipsFieldConfig } from '../fields/chips';
 import type { RecordFieldConfig } from '../fields/record';
+import type { TransformableFieldConfig } from '../fields/transformable';
 import type { AutocompleteOption } from '../fields/autocomplete/types';
-import type { ReactNode } from 'react';
-
-export type TextFieldRenderProps = {
-  field: TextFieldConfig;
-  id: string;
-  value: string;
-  bindOptions: readonly AutocompleteOption[];
-  onChange: (next: string) => void;
-};
 
 export type FormFieldConfig =
   | TextFieldConfig
@@ -36,7 +28,8 @@ export type FormFieldConfig =
   | RepeaterFieldConfig
   | LayoutFieldConfig
   | ChipsFieldConfig
-  | RecordFieldConfig;
+  | RecordFieldConfig
+  | TransformableFieldConfig;
 
 export type ValueFormFieldConfig = Exclude<FormFieldConfig, LayoutFieldConfig>;
 
@@ -47,6 +40,5 @@ export type FormFieldProps = {
   value: unknown;
   values: Readonly<Record<string, unknown>>;
   bindOptions: readonly AutocompleteOption[];
-  renderTextField?: (props: TextFieldRenderProps) => ReactNode | undefined;
   onChange: (next: unknown, meta?: FormChangeMeta) => void;
 };

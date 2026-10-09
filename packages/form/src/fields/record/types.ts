@@ -1,4 +1,5 @@
 import type { AutocompleteOption } from '../autocomplete/types';
+import type { TransformableValueFieldConfig } from '../transformable';
 
 export type RecordFieldSuggestions = {
   keys?: readonly string[];
@@ -12,7 +13,7 @@ export type RecordFieldConfig = {
   type: 'record';
   keyLabel?: string;
   valueLabel?: string;
-  bindable?: boolean;
+  valueField?: TransformableValueFieldConfig;
   suggestions?: RecordFieldSuggestions;
   disabled?: boolean;
 };
@@ -20,7 +21,6 @@ export type RecordFieldConfig = {
 export type RecordFieldProps = Omit<RecordFieldConfig, 'type'> & {
   id: string;
   value: Record<string, string>;
-  bindOptions?: readonly AutocompleteOption[];
   suggestions?: RecordFieldSuggestions;
   onChange: (next: Record<string, string>) => void;
 };

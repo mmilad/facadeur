@@ -7,8 +7,19 @@ export type { AutocompleteFieldProps, AutocompleteOption } from './fields/autoco
 export { ChipsField } from './fields/chips';
 export type { ChipsFieldConfig, ChipsFieldProps } from './fields/chips';
 export { RecordField } from './fields/record';
-export type { RecordFieldConfig, RecordFieldProps, RecordFieldSuggestions } from './fields/record';
-export type { FormFieldConfig, TextFieldRenderProps } from './field';
+export type {
+  RecordFieldConfig,
+  RecordFieldProps,
+  RecordFieldSuggestions,
+} from './fields/record';
+export type { FormFieldConfig } from './field';
+export { TransformableField } from './fields/transformable';
+export type {
+  TransformableFieldConfig,
+  TransformableFieldOption,
+  TransformableFieldProps,
+  TransformableValueFieldConfig,
+} from './fields/transformable';
 export { BooleanField } from './fields/boolean';
 export type { BooleanFieldConfig } from './fields/boolean';
 export { ColorField } from './fields/color';

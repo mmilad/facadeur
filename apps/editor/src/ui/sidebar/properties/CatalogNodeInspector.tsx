@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import type { AutocompleteOption } from '@facadeur/form';
+import type { AutocompleteOption, TransformableFieldOption } from '@facadeur/form';
 import type { AppService } from '../../../app-service';
 import { Form } from '@facadeur/form';
 import type { FormFieldConfig } from '@facadeur/form';
 import { mapInspectorFormFields } from './map-inspector-form';
-import { TransformableTextField } from './TransformableTextField';
+import { transformableFieldOptions } from './transformable-field-options';
 
 export function CatalogNodeInspector({
   app,
@@ -23,12 +23,32 @@ export function CatalogNodeInspector({
     return <p className="inspector-empty">Select an element in the layer tree.</p>;
   }
   const componentOptions = componentDataOptions(model);
+  const propOptions = propBindingOptions(model);
+  const fieldOptions = (_path: string, _label: string, color = false) =>
+    transformableFieldOptions({
+      props: propOptions,
+      tokens: model.styleSuggestions.options,
+      color,
+    });
   const isRoot = model.selectionKind === 'root';
   const headerFields =
-    sectionFields(model, isRoot ? 'Asset' : 'Element', undefined, componentOptions)?.fields ?? [];
-  const contentSection = sectionFields(model, 'Content', undefined, componentOptions);
-  const styleSection = sectionFields(model, 'Layout & style', undefined, componentOptions);
-  const nodeDataSection = sectionFields(model, 'Properties', 'Node data', componentOptions);
+    sectionFields(model, isRoot ? 'Asset' : 'Element', undefined, componentOptions, fieldOptions)
+      ?.fields ?? [];
+  const contentSection = sectionFields(model, 'Content', undefined, componentOptions, fieldOptions);
+  const styleSection = sectionFields(
+    model,
+    'Layout & style',
+    undefined,
+    componentOptions,
+    fieldOptions,
+  );
+  const nodeDataSection = sectionFields(
+    model,
+    'Properties',
+    'Node data',
+    componentOptions,
+    fieldOptions,
+  );
   const propertySections: InspectorSection[] = [
     ...(contentSection ? [contentSection] : []),
     {
@@ -40,7 +60,10 @@ export function CatalogNodeInspector({
           label: 'Attributes',
           keyLabel: 'Attribute',
           valueLabel: 'Value',
-          bindable: true,
+          valueField: {
+            type: 'transformable',
+            fieldOptions: fieldOptions('node.attributes', 'Value'),
+          },
         },
       ],
     },
@@ -128,31 +151,12 @@ function InspectorFields({
   const value = Object.fromEntries(
     flattenFields(fields).map((field) => [field.name, valueAtPath(model.formValue, field.name)]),
   );
+  const propOptions = propBindingOptions(model);
   return (
     <Form
       value={value}
       fields={fields}
-      bindOptions={model.propOptions.map((option) => ({
-        value: option.ref,
-        label: option.name,
-        description: previewDefaultForProp(model, option.name),
-        group: option.kind === 'component' ? 'Component props' : 'Design props',
-      }))}
-      renderTextField={({ field, id, value, bindOptions, onChange }) => {
-        if (!field.bindable) return undefined;
-        return (
-          <TransformableTextField
-            id={id}
-            name={field.name}
-            value={value}
-            propOptions={bindOptions}
-            tokenOptions={model.styleSuggestions.options}
-            colorable={/color|colour|background/i.test(`${field.name} ${field.label}`)}
-            disabled={field.disabled}
-            onChange={onChange}
-          />
-        );
-      }}
+      bindOptions={propOptions}
       onChange={(_, meta) =>
         app.inspector.updateField({ nodeUuid: model.nodeUuid, path: meta.path, value: meta.next })
       }
@@ -168,6 +172,16 @@ function previewDefaultForProp(
   const value = valueAtPath(model.formValue.previewData, name.slice('props.'.length));
   if (value === undefined || value === null) return undefined;
   return typeof value === 'string' ? value : JSON.stringify(value);
+}
+
+function propBindingOptions(model: InspectorModel): AutocompleteOption[] {
+  return model.propOptions.map((option) => ({
+    value: option.ref,
+    label: option.name,
+    description: previewDefaultForProp(model, option.name),
+    group: option.kind === 'component' ? 'Component props' : 'Design props',
+    displayLabel: true,
+  }));
 }
 
 function flattenFields(
@@ -190,12 +204,22 @@ function sectionFields(
   title: string,
   label = title,
   componentOptions: readonly AutocompleteOption[] = [],
+  fieldOptions: (
+    path: string,
+    label: string,
+    color?: boolean,
+  ) => readonly TransformableFieldOption[],
 ): InspectorSection | null {
   const section = model.fields.find((field) => field.type === 'section' && field.title === title);
   return section?.type === 'section'
     ? {
         label,
-        fields: mapInspectorFormFields(section.fields, model.styleSuggestions, componentOptions),
+        fields: mapInspectorFormFields(
+          section.fields,
+          model.styleSuggestions,
+          componentOptions,
+          fieldOptions,
+        ),
       }
     : null;
 }

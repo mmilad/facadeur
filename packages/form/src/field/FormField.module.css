@@ -30,38 +30,3 @@
   align-items: center;
   gap: 8px;
 }
-
-.bindable {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-}
-
-.bindable > :first-child {
-  flex: 1;
-  min-width: 0;
-}
-
-.bindSelect {
-  box-sizing: border-box;
-  width: 100%;
-  min-height: var(--eu-control-height, 28px);
-  padding: 4px 8px;
-  border: 1px solid var(--eu-border, #b7aa9a);
-  border-radius: var(--eu-radius, 6px);
-  background: var(--eu-bg-elevated, #fffdf9);
-  color: var(--eu-fg, #2a241c);
-  font: inherit;
-}
-
-.bindButton {
-  min-width: 32px;
-  min-height: 30px;
-  border: 1px solid var(--eu-border, #b7aa9a);
-  border-radius: var(--eu-radius, 6px);
-  background: var(--eu-bg-elevated, #fffdf9);
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}

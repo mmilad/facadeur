@@ -5,6 +5,7 @@ import {
   type CoreSnapshot,
   type InspectorFormModel,
 } from '@facadeur/core';
+import { tokenCustomProperty } from '@facadeur/tokens';
 
 export interface InspectorViewModel extends InspectorFormModel {
   readonly selectionKind: 'root' | 'instance' | 'element';
@@ -113,7 +114,7 @@ function collectProjectStyleSuggestions(catalog: CoreSnapshot['catalog']) {
   const valuesByKey = new Map<string, Set<string>>();
   const tokenOptions = [...readTokenTree(catalog.tokens ?? {}).tokens.values()].map((token) => ({
     value: token.uuid ? `{token:${token.uuid}}` : `{${token.path}}`,
-    label: token.label?.trim() || tokenOptionLabel(token.path),
+    label: tokenCustomProperty(token.path),
     description: token.path,
     group: 'Design tokens',
     displayLabel: true,
@@ -144,14 +145,6 @@ function collectProjectStyleSuggestions(catalog: CoreSnapshot['catalog']) {
     ),
     options: tokenOptions,
   };
-}
-
-function tokenOptionLabel(path: string) {
-  const parts = path.split('.');
-  if (['color', 'space', 'radius', 'shadow', 'type', 'font'].includes(parts[0] ?? '')) {
-    parts.shift();
-  }
-  return parts.map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
 }
 
 function stringRecord(value: unknown) {

@@ -964,153 +964,6 @@ Event implementation scope: extract reusable schema selection before extending e
 
 React event ownership review: `component/catalog.ts` currently builds flat event callback types; `render/event-attributes.ts` owns native extraction; `print.ts` and `data-contracts.ts` own emitted contracts; `render-instance.ts` owns forwarding. Retain these cohesive boundaries and share Core schema/mapping resolution, preserving the native event envelope, typed data and explicit forwarding. No generic runtime library or unrelated split is needed.
 
-## Native event authoring repair (2026-10-06)
-
-- Evidence: Add event holds an unsaved local draft, while header Save persists only the document;
-  Schema has no native element binding control, and the inspector disables bindings without a declaration.
-- Boundary: extract the existing native-event binding adapter into a private content component reused
-  by Schema and the inspector. Keep contract review in ComponentEvents and field bindings in NodeBindings.
-  Add event creates a canonical editable declaration immediately; native bindings use atomic defineEvent
-  commands so shared event wiring is not written into a presentation variant.
-- Preserve serializable Core events/data contracts, validation, Undo, persistence and legacy mappings.
-  Validate creation/binding/save/reload, root/child selection, focused event tests, editor types/lint,
-  and rerun the candidate detector. No package or schema-format changes.
-
-Result: Add event now creates a document declaration immediately. Schema exposes native element
-selection and binding; the inspector can create and bind its first event without a disabled button.
-Button/Link default to click. Shared declarations/bindings use document commands independently of
-nested selection and named presentation variants. 34 focused UI/session/inspector tests, editor
-TypeScript, scoped ESLint and formatting pass; detector reports no size candidates. In the running
-local editor, Button's click event was created, bound to root, saved and verified after reload.
-Existing user edits and staging remain intact.
-
-## Unified event authoring (2026-10-06)
-
-- Evidence: contract and native binding controls expose two independent Add workflows and an
-  event-selection dropdown where users expect a name input; section/page guards hide valid events.
-- Boundary: keep each declaration, schema and native targets inside its event accordion. Extract
-  the event-target adapter next to ComponentEvents and reuse the existing mapping editor with its
-  declaration selector hidden. Replace the separate Schema/inspector adapters rather than retain
-  competing flows. Keep ComponentEvents' transactional schema/mapping review intact.
-- Scope/contracts: all four document kinds can declare events; page field/variant restrictions
-  remain. Preserve existing event names, multiple bindings, data mappings, command validation,
-  Undo, JSON round trips and generated callbacks. Native target is optional.
-- ContentPanel's 482 lines remain cohesive scope/content orchestration; no size-only split.
-- Validation: author/rename/schema/target/native changes, all four kinds, save/reload and existing
-  mapping review; editor TypeScript/lint/format and browser check; rerun detector.
-
-Result: all four document kinds expose Events in Schema and the inspector. Each event has one
-accordion containing its editable name, data schema, optional native target(s), native event and
-mapping controls; callback details stay collapsed. Separate declaration/binding selectors and the
-Add click event shortcut are removed. Renaming keeps the accordion open and updates its targets.
-The existing required-mapping review now lives within the same accordion. A target with incomplete
-mappings remains an explicitly marked draft until valid; declarations remain persistable on their own.
-23 focused UI/inspector tests and editor TypeScript pass, including schema/native data, renaming,
-multiple targets, removal and save/reload for atom/component/section/page. Browser verification on
-New section confirmed manual naming and targeting; temporary test edits were undone to the clean
-baseline. The detector retains only cohesive ContentPanel (474 lines); no further split is warranted.
-
-## Schema and Fonts accordion consistency (2026-10-06)
-
-- Evidence: Fonts has a compact chevron button within a rounded resource row; Schema mixes
-  Section triggers, native details and bordered folds with different spacing and chevrons.
-- Boundary: extract Fonts' disclosure trigger into the existing form/layout layer and add an
-  explicit accordion appearance to Section. Fonts retains its table/preview columns; Schema's
-  event, callback, legacy contract and variant disclosures use the same trigger and border style.
-  Keep other Section appearances and unrelated token tables unchanged.
-- Preserve existing expanded defaults, button names, keyboard activation, mounted-body behavior,
-  event drafts and font editing/removal commands. No document or persistence changes.
-- Validation: existing event/schema and design-resource checks, editor TypeScript/lint/format,
-  visual inspection of expanded/collapsed Schema and Fonts, scoped detector rerun.
-
-Result: Fonts and Schema share the extracted disclosure button. Event/schema accordions have the
-Fonts border radius, row padding, muted chevron, hover and keyboard focus styling. Callback preview,
-legacy contract and legacy variant axes use the same appearance; other form sections retain their
-existing styling. Former native-details content stays mounted while hidden to preserve draft state.
-38 existing UI/font/event/integration tests, editor TypeScript and scoped ESLint pass. Browser checks
-confirmed Enter/Space expansion and collapse and matching Fonts/Schema visuals without data edits.
-The scoped detector has no candidates.
-
-## Legacy UI, document naming and utility classes (2026-10-06)
-
-- Evidence: retired expose/variant panels still occupy Schema; the class editor accepts only one
-  identifier and rejects Tailwind tokens; asset IDs are visible but names/IDs lack a rename action.
-- Boundary: remove legacy authoring panels from Schema while retaining persisted compatibility.
-  Core owns optional native/instance classes arrays, canonicalization and commands; adapters preserve
-  them; renderer/codegen add literal utility classes beside generated local styling classes. Editor
-  owns a reusable badge/autocomplete control and project class suggestions. Keep styleName for local
-  selector identity and old documents. The user clarified that reference IDs should remain stable. Add editable `slug` metadata
-  with project uniqueness validation, a guarded Core command and an editor rename dialog; old
-  documents fall back to their existing ID. New asset creation reserves IDs and public identifiers.
-- Contracts: maintain legacy imports/events/variant data, generated CSS scope, repeated instance
-  styling, clone isolation, JSON/Yjs/Undo, class order and arbitrary non-whitespace utility tokens.
-- Retain cohesive node construction (480 lines); the unrelated declaration editor stays unchanged.
-- Validate class commands/round trips, instance/native rendering and generated literals, badge
-  interactions, legacy-panel removal, relevant types/lint and visual editing checks.
-
-Outcome: retired Schema panels are hidden while persisted data remains supported. Name and public
-identifier are editable through the asset context menu; internal reference IDs remain unchanged.
-Native elements and instances persist ordered utility class arrays, with badges, autocomplete from
-common utilities and project classes, and literal generated output beside existing scoped styles.
-48 focused command/adapter/codegen/rename/variant tests and 24 shell/Schema regressions passed.
-Workspace TypeScript, affected-file ESLint/format checks, and schema export passed. Browser checks
-confirmed badge entry, rename and Undo; temporary edits were undone. The repeated detector flags
-the cohesive node materializer, DOM paint module (451 lines) and unrelated declaration editor.
-DOM class application remains part of presentation painting; retain that boundary rather than
-extracting a speculative helper for three class-list additions. No further split is needed.
-
-## Native form atoms and project grouping (2026-10-06)
-
-- Evidence: starter projects have only one input atom; composed Textarea/Select examples are
-  unsuitable as native atoms. Native Select needs options-array rendering in preview and codegen.
-  Document group metadata already exists, but the project tree has no action to edit it.
-- Boundary: add four single-element atom fixtures with typed fields/events. Core owns a focused
-  group command and native options binding contract; adapters preserve it, renderer and generator
-  render native options. Editor owns a group-name dialog using existing groups as suggestions.
-  API project initialization owns a versioned, additive starter upgrade for existing managed
-  projects, preserving edited atoms and custom group assignments.
-- Retain cohesive DOM painting and node validation; isolate native Select option presentation
-  beside renderer presentation, rather than growing the painting orchestrator. Core validates
-  the option-item contract; preview and codegen consume it through existing public field types.
-- Preserve stable references, current staging, group persistence/Undo, native event envelopes,
-  uncontrolled React values, and the distinction between native atoms and composed components.
-- Validate group naming/history, catalog upgrades, atom contracts and native option rendering,
-  generated controls/events, affected types/lint and live project-tree interactions.
-
-Completed: native Textarea, Select, Checkbox and Radio join Input under Form. Asset context
-menus expose group naming/suggestions and removal; history and persistence preserve stable IDs.
-Select renders typed native options in preview and generated React. Multiple semantic events
-on one native event share a generated handler, preserving both callbacks and their envelopes.
-The default generator command includes the four new atoms. 97 focused/regression tests, source
-and generated workspace TypeScript, affected-source ESLint, formatting and codegen passed.
-Live browser checks confirmed the additive starter upgrade, custom group creation, Undo and
-native Select options; temporary grouping edits were undone. Context-menu positioning now
-measures its rendered height so the additional actions remain inside the viewport.
-
-Repeated detector review: retain the cohesive paint orchestrator (454 lines) and definition
-validator (474 lines); native option presentation/validation have focused colocated helpers.
-Validation and renderer directory concentration remains within their existing domain owners;
-unchanged structural/data-contract candidates remain in the existing backlog.
-
-Unrelated refactoring candidate: LayerContextMenu uses the same anchor-bottom placement that
-previously clipped asset actions. When revisiting layer menus, share measured floating-menu
-positioning within the sidebar domain, preserving insert/delete flyouts and keyboard actions;
-validate at viewport edges and with each submenu. This task fixes only the asset menu used by
-the requested group workflow.
-
-## Root selection when opening project assets (2026-10-06)
-
-Project-tree navigation currently opens documents without a layer selection, leaving the
-inspector empty. Reuse the session's existing root-focus option for both shell navigation
-surfaces. Keep document/drill navigation and explicit layer selection contracts unchanged;
-this is a shell navigation behavior fix and needs no structural split. Validate project-row
-clicks across asset kinds, selection resets and existing URL navigation regressions.
-
-Completed: both project-tree entry points open assets with root focus, including clicking an
-already open asset. 12 navigation tests, editor TypeScript and affected-source ESLint passed.
-Updated the stale legacy-panel assertion to match the previously requested hidden UI.
-The repeated scoped detector has no candidates; existing session orchestration remains untouched.
-
 ## Structured form options and choice groups (2026-10-06)
 
 Select already declares typed option items, but bound/instance field editors fall back to raw
@@ -1132,57 +985,6 @@ references from the exported definitions/schema identity. Preserve the API seed 
 and Storybook selection behavior. Validate examples and API consumers, Storybook build, and
 the scoped refactor detector; no persisted IDs change.
 
-## Move Storybook catalog presets into Controls
-
-The right-sidebar story currently renders asset/layer selectors inside the preview while the
-native Storybook Controls panel is empty. Move that selection into a story arg backed by presets
-generated from the typed example catalog. Each preset pairs one definition with one of its real
-layers, preserving valid selection and the preview's default state. Keep the preset builder in
-the Storybook controls library and remove the in-preview selector. Validate examples types,
-the scoped refactor detector, and a Storybook build.
-
-Result: the sidebar story now exposes one Preset select in Storybook's bottom Controls panel.
-Its options are generated from every catalog definition and its real layers, so selecting one
-previews that node in the inspector. The canvas selector is removed. Examples typecheck, scoped
-detector, diff check, and Storybook production build pass; Vite emitted existing client-directive,
-sourcemap, and chunk-size warnings during its successful build.
-
-## Reusable dependent-select Storybook panel
-
-The catalog preset dropdown combines asset and layer in one static select, but the editor needs
-separate controls where the layer options react to the selected asset. Storybook's native
-argTypes controls cannot filter one select's options from another arg at runtime. Add a generic,
-app-local manager panel configured through story parameters with externally supplied options and
-arg names; changing an asset also selects its first valid layer. Keep catalog knowledge in the
-story and make the panel reusable without Facadeur imports. Validate by building Storybook and
-checking the scoped detector; no package dependency changes are expected.
-
-Result: `.storybook/lib/dependent-select/` now contains a generic panel, typed serializable
-configuration contract, registration helper, and copy/reuse README. The right-sidebar story passes
-catalog groups and layer options from the outside, and the two args render the chosen asset/layer.
-Changing Asset updates Layer to its first valid value. Storybook production build and the scoped
-detector pass; Vite reports its existing client-directive, sourcemap, and chunk-size warnings.
-The blank panel was caused by the manager's classic JSX transform requiring an explicit React
-import; the imports are now present. Runtime verification confirmed the Asset and Layer controls
-render and the Layer options change when Asset changes. The running Storybook manager bundle was
-stale, so the 6006 dev server needs a restart to load the fix.
-
-## Make the Storybook panel schema-driven
-
-The reusable panel currently owns a fixed two-select layout, which limits other stories from
-using it for ordinary fields or repeaters. Replace that fixed shape with an externally supplied
-serializable field schema, keeping dependent selects and adding text, number, boolean, and repeater
-fields with typed item fields. Preserve Storybook args as the only edited state and keep all
-Facadeur catalog data in the story. Validate with the Storybook build and scoped detector.
-
-Result: the manager panel now renders external field schemas for text, number, boolean, static or
-dependent select, and repeater fields. Repeater items accept their own typed controls and add,
-edit, and remove operations update story args. The right-sidebar story supplies catalog fields;
-its temporary repeater demo was removed after runtime verification, while generic repeater support
-remains available to other stories. Storybook production build and scoped detector pass. Runtime
-verification confirmed that Asset changes Layer options and repeater edits update story args and
-preview. The previous `dependent-select` library is replaced by `.storybook/lib/schema-form/`.
-
 ## Share the editor subnav with its Storybook story
 
 `EditorShell` currently owns the subnav markup inline, while the Header story omits it. Extract the
@@ -1190,69 +992,6 @@ subnav into the shell UI as a focused component and render that same component i
 Preserve the existing surface ids, active state, accessible labels, and Settings-to-colors fallback.
 Validate the scoped detector, formatting, editor typecheck, and Storybook rendering when the local
 Storybook toolchain is available.
-
-## Run the editor shell in Storybook
-
-`useEditorNavigation` imports Next navigation hooks inside `EditorShell`, which prevents the full
-shell from running in Storybook. Move framework-specific location reads and push/replace calls
-behind a typed navigation adapter passed to the shell. The Next project workspace supplies its
-existing router, while a Storybook-only browser-history adapter supplies the same query contract
-and reports navigation events through a `storybook/test` spy for the Actions panel. Reuse the
-existing example catalog and in-memory editor fixture; keep authentication and network clients out
-of this story. Preserve editor query keys, unrelated query parameters, deep-link restore, and
-browser back/forward behavior. Validate editor typecheck, formatting, scoped detector, Storybook
-rendering, route changes, and Action events.
-
-Result: `EditorShell` now receives a typed navigation adapter. `ProjectWorkspace` bridges that
-contract to Next.js, and the Storybook App/Editor story uses browser history with popstate restore
-and a `storybook/test` spy for the Actions panel. The story renders the full example catalog through
-the existing in-memory editor fixture. Browser rendering, formatting, and scoped detector pass;
-editor typecheck remains blocked by existing errors in other workspace packages and editor
-modules. Action invocation is wired but was not manually triggered in the browser during this run.
-
-## Use the shared form package in the catalog inspector
-
-The catalog inspector still renders Core's form model through the editor-local `Form` and
-`SchemaForm`, even though `@facadeur/form` is the intended reusable UI owner. Adapt the inspector
-model into `@facadeur/form` field configs and add only the missing reusable class-list and
-key/value-record controls there. Binding options and all field values remain supplied by the
-editor; the form package must not import Core or editor code at runtime. Keep Core's preview form
-model as the temporary source of inspector field metadata so the current preview semantics and
-selection behavior stay intact while we plan its replacement separately. Validate the package and
-editor typechecks, Storybook rendering, scoped detector, formatting, and diff review.
-
-Result: the catalog inspector now renders through `@facadeur/form`, with reusable class-list,
-record, and bindable-value fields. Editor-supplied field configs and design-property options keep
-the package independent of Core. Core's existing preview inspector model remains the adapter for
-now, preserving field semantics while the replacement is planned. Form package typecheck,
-changed-source editor typecheck, formatting, and detector pass. The Storybook build reached preview
-compilation but SWC failed to canonicalize the editor base path in this Windows environment; the
-open Storybook tab also retained its earlier stale module error because port 6006 was already in
-use and could not be restarted from this process.
-
-Follow-up: hide the bind control when the editor supplies no design-property options; it cannot
-perform an action in that state. Keep it available for both record values and bindable text when
-options exist. Validate form typecheck, formatting, detector, and diff check.
-
-Result: `RecordField` now accepts optional key and per-key value suggestions and renders them with
-native datalists, so free-form input remains supported. The inspector derives those suggestions
-from styles already used across the project catalog and passes them into the reusable form field.
-Form package typecheck, changed-source editor typecheck, formatting, detector, and diff check pass;
-Storybook runtime verification remains blocked by the previously documented local SWC path error.
-
-## Keep emptied style rows until explicit removal
-
-The reusable record control emits a whole style record after each edit, and Core currently drops
-entries with empty values. That makes clearing a value act like deletion and bypasses the row's
-explicit remove button. Preserve empty strings in the catalog node style record; the renderer
-already treats an empty inline style value as inactive. Keep removing a property tied to omission
-from the record. Validate core and form typechecks, the scoped detector, and diff review.
-
-Result: Core now preserves empty string values in node style records and deletes only omitted keys.
-The renderer receives an empty inline style value, which clears its visual effect while keeping the
-editable row in the catalog. Form typecheck and changed-source checks pass. Core's full typecheck is
-still blocked by unrelated existing errors in catalog, API, and test sources; scoped detector and
-diff check pass.
 
 ## Add external autocomplete suggestions to inspector records
 
@@ -1263,12 +1002,6 @@ values; the editor supplies them, and `@facadeur/form` stays free of CSS vocabul
 inspector, derive suggestions from existing project catalog styles so they stay in step with
 actual project data. Validate package/editor types, detector, and Storybook where the local runtime
 allows it.
-
-## Stack class chips above a full-width input
-
-Completed as part of replacing the duplicate class-list field with generic chips. The Inspector
-now uses the reusable chips control, whose chips occupy their own wrapping row above a full-width
-input inside one control boundary.
 
 ## Replace the form class-list field with generic chips
 
@@ -1358,21 +1091,19 @@ Bind the Card mock's eyebrow, title, and body nodes to their schema prop IDs. Pr
 `textContent` values as a read fallback while removing them from imperative React property writes.
 Validate catalog schema, binding resolution, inspector editing, React updates, and renderer parity.
 
-## Retire the duplicate viewport board
+Follow-up: `{token:uuid}` is currently emitted literally in preview text because Core resolves
+property references there but does not resolve stable token IDs. Resolve token IDs to their current
+token values for text preview, so token renames keep bindings intact and the canvas shows authored
+content. Keep stable IDs in the document and leave CSS/style token resolution unchanged. Validate
+stable-ID lookup, token rename, missing-token fallback, and editor typecheck.
 
-The editor mounts the React catalog board, while `viewports.ts` still contains an unreferenced
-DOM-renderer board and its test suite. Keep iframe pass-through so stage pointer handling and its
-selection overlays remain authoritative. Make the React board the sole active board contract,
-remove the unused renderer path, and replace the versioned `v2:` selection address with a
-semantic `node:` address. Preserve frame hit-testing, layer selection, stable React updates, and
-viewport labels. Keep focused tests for React reconciliation and iframe pointer pass-through;
-retain independent FrameHost and viewport-chrome helper coverage.
-
-Result: the duplicate DOM-renderer board and its board-specific test file are removed. React board
-updates and iframe pass-through have one focused assertion; cross-breakpoint overlay selection now
-uses `node:<uuid>`. The scoped detector and diff check pass. Editor TypeScript reports no errors in
-the changed canvas/session modules, though the full check still reports existing workspace
-dependency errors. Vitest remains blocked in the sandbox by the documented `EPERM` realpath issue.
+Follow-up: keep HTML attribute names as direct text inputs. Use a declarative transformable field
+configuration whose generic option groups are supplied by the editor for bindable text and record
+values; `@facadeur/form` owns the control, filters empty prop/token groups, and shows the transform
+button only when there is more than one available mode. Keep prop/token choices and binding syntax
+in the editor.
+Preserve the record string contract, CSS key suggestions, and existing autocomplete for other
+records. Validate form/editor types and focused Storybook interaction.
 
 ## Backlog: split the form-controls section DOM fixture
 
@@ -1382,59 +1113,7 @@ its repeated section content should become smaller named example fragments in a 
 Preserve the exported definition shape and catalog behavior if split. Validate catalog examples
 and their preview rendering after any future extraction.
 
-## Give example props and tokens stable references
-
-Example style fixtures currently store path references such as `{color.text.primary}`, while
-component bindings store raw `{props:uuid}` strings. Add stable UUID metadata to every example
-token, convert known style references to `{token:uuid}` as definitions are assembled, and provide
-a small helper for prop references so example nodes use schema-owned IDs instead of repeating
-reference syntax. Preserve DTCG path aliases inside token `$value`s; runtime style resolution is
-out of scope for this pass. Validate the example package types and inspect representative emitted
-catalog data.
-
-Result: example token leaves now carry stable UUID metadata, known style references are emitted as
-`{token:uuid}`, and Card/Image bindings derive `{props:uuid}` from the IDs declared by their schemas.
-Example package typecheck and emitted-reference inspection pass; runtime token/style resolution
-remains outside this change.
-
-## Accept stable UUID metadata on global tokens
-
-- [x] Evidence: the examples catalog now places stable token identity at
-      `$extensions.facadeur.uuid`, but Core's global token reader rejects every Facadeur
-      extension outside `tier`, `breakpoints`, and `label`, causing Storybook catalog reads to fail.
-- Action: extend the token contract and indexed token view to preserve an optional UUID while
-  leaving path-based indexing and existing token behavior intact.
-- Scope: prerequisite for loading example catalogs with stable token identity.
-- Contracts: preserve DTCG path references, validation of existing Facadeur extensions, and all
-  existing token reader output; UUID metadata must survive canonicalization and inspection.
-- Validation: Core and examples typechecks, focused reader inspection, and the scoped detector.
-
-Result: `facadeur.uuid` is now accepted and preserved on indexed token records while path indexing
-remains unchanged. A direct catalog read indexed all 62 tokens and retained all 62 UUIDs. The
-examples typecheck passes; Core typecheck still reports existing errors in catalog mutation,
-design bridge, and test imports, with no diagnostics in the changed token reader files.
-
-## Transformable inspector text field
-
-- [x] Evidence: `packages/form`'s `BindableText` replaces text inputs with an `Aa` toggle and a
-      select, while component prop options and token scope are editor-owned; `apps/editor` also
-      keeps a separate `TextControl` implementation outside the form package.
-- Action: add a narrow text-field render seam to `@facadeur/form`; implement the transform menu,
-  prop/token selection, and color input in the editor using `@facadeur/form` primitives.
-- Scope: initial catalog inspector text fields; do not migrate unrelated editor controls or
-  alter authored schema contracts in this pass.
-- Contracts: store prop/token choices as stable `{props:uuid}` / `{token:uuid}` strings, keep
-  plain text as the default, hide the transform action when only text is available, and keep
-  scope/options/popover logic editor-owned.
-- Validation: form and editor typechecks, focused UI/build verification, detector, and diff review.
-
-Result: the catalog inspector can override text-field rendering while the shared form package
-continues to own its generic inputs. The editor now offers Text, Component prop, CSS token, and
-semantically relevant Color transforms; props and UUID-bearing tokens are stored as stable refs.
-The form package typecheck passes. Editor typecheck remains blocked by existing workspace/type
-resolution errors; Storybook build fails in SWC while canonicalizing `apps/editor` (`os error 5`),
-before it can verify the rendered UI. Color mode is an inspector editing mode over a string value;
-its mode is not persisted as a schema or node-config field in this first pass.
+## Refactoring backlog: recent editor changes
 
 Backlog: the scoped detector also reports `apps/editor/src/ui/sidebar/properties/layout/LayoutPanel.tsx`
 (510 lines), `content/ContentPanel.tsx` (481), and `style/declarations/declaration-editor.tsx` (478).

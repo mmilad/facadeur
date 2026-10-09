@@ -11,6 +11,7 @@ import { TextField } from '../fields/text';
 import { SearchField } from '../fields/search';
 import { ChipsField } from '../fields/chips';
 import { RecordField } from '../fields/record';
+import { TransformableField } from '../fields/transformable';
 import styles from './FormField.module.css';
 import type { FormFieldProps } from './types';
 
@@ -21,7 +22,6 @@ export function FormField({
   value,
   values,
   bindOptions,
-  renderTextField,
   onChange,
 }: FormFieldProps) {
   const wrapperClassName = [styles.field, styles[layout]].join(' ');
@@ -33,34 +33,14 @@ export function FormField({
           <label className={styles.label} htmlFor={id}>
             {field.label}
           </label>
-          {renderTextField?.({
-            field,
-            id,
-            value: typeof value === 'string' ? value : '',
-            bindOptions,
-            onChange: (next) => onChange(next),
-          }) ??
-            (field.bindable ? (
-              <BindableText
-                id={id}
-                name={field.name}
-                label={field.label}
-                value={typeof value === 'string' ? value : ''}
-                options={bindOptions}
-                placeholder={field.placeholder}
-                disabled={field.disabled}
-                onChange={onChange}
-              />
-            ) : (
-              <TextField
-                id={id}
-                name={field.name}
-                value={typeof value === 'string' ? value : ''}
-                placeholder={field.placeholder}
-                disabled={field.disabled}
-                onChange={onChange}
-              />
-            ))}
+          <TextField
+            id={id}
+            name={field.name}
+            value={typeof value === 'string' ? value : ''}
+            placeholder={field.placeholder}
+            disabled={field.disabled}
+            onChange={onChange}
+          />
         </div>
       );
     case 'textarea':
@@ -149,9 +129,8 @@ export function FormField({
             value={isStringRecord(value) ? value : {}}
             keyLabel={field.keyLabel}
             valueLabel={field.valueLabel}
-            bindable={field.bindable}
-            bindOptions={field.bindable ? bindOptions : []}
             suggestions={field.suggestions}
+            valueField={field.valueField}
             disabled={field.disabled}
             onChange={onChange}
           />
@@ -167,6 +146,24 @@ export function FormField({
             id={id}
             name={field.name}
             value={typeof value === 'string' ? value : '#000000'}
+            disabled={field.disabled}
+            onChange={(next) => onChange(next)}
+          />
+        </div>
+      );
+    case 'transformable':
+      return (
+        <div className={wrapperClassName}>
+          <label className={styles.label} htmlFor={id}>
+            {field.label}
+          </label>
+          <TransformableField
+            id={id}
+            name={field.name}
+            label={field.label}
+            value={typeof value === 'string' ? value : ''}
+            fieldOptions={field.fieldOptions}
+            placeholder={field.placeholder}
             disabled={field.disabled}
             onChange={(next) => onChange(next)}
           />
@@ -236,71 +233,6 @@ export function FormField({
         />
       );
   }
-}
-
-function BindableText({
-  id,
-  name,
-  label,
-  value,
-  options,
-  placeholder,
-  disabled,
-  onChange,
-}: {
-  id: string;
-  name: string;
-  label: string;
-  value: string;
-  options: readonly { value: string; label: string }[];
-  placeholder?: string;
-  disabled?: boolean;
-  onChange: (next: unknown) => void;
-}) {
-  const bound = options.some((option) => option.value === value);
-  const selectedValue = options.some((option) => option.value === value)
-    ? value
-    : (options[0]?.value ?? '');
-  return (
-    <div className={styles.bindable}>
-      {bound ? (
-        <select
-          id={id}
-          className={styles.bindSelect}
-          aria-label={`${label} design prop`}
-          value={selectedValue}
-          disabled={disabled || options.length === 0}
-          onChange={(event) => onChange(event.currentTarget.value)}
-        >
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      ) : (
-        <TextField
-          id={id}
-          name={name}
-          value={value}
-          placeholder={placeholder}
-          disabled={disabled}
-          onChange={onChange}
-        />
-      )}
-      {options.length > 0 && (
-        <button
-          className={styles.bindButton}
-          type="button"
-          aria-label={bound ? 'Switch to literal value' : 'Bind design prop'}
-          disabled={disabled}
-          onClick={() => onChange(bound ? '' : selectedValue)}
-        >
-          {bound ? 'Aa' : '{ }'}
-        </button>
-      )}
-    </div>
-  );
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

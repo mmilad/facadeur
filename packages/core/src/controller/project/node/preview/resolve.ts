@@ -4,6 +4,7 @@ import { findDefinition } from '../../catalog/ops';
 import { mergePreviewFields } from './merge';
 import { effectiveSchemaForDefinition } from '../../catalog/field-contract';
 import { componentPropsForSchema } from '../../catalog/field-ids';
+import { readTokenTree } from '../../../style/tokens/global/tree';
 
 /** Merged field layers + catalog context for binding resolution. */
 export type PreviewResolveContext = {
@@ -73,6 +74,7 @@ function textFromNode(
   node: Node,
   fields: Record<string, FieldValue>,
   ctx: PreviewResolveContext,
+  resolveTokenText: (value: string) => string,
 ): string | undefined {
   const fieldText = stringField(fields.text);
   const source =
@@ -81,7 +83,37 @@ function textFromNode(
     (typeof node.dom.properties?.textContent === 'string'
       ? node.dom.properties.textContent
       : undefined);
-  return source === undefined ? undefined : resolveTemplateString(source, ctx);
+  return source === undefined ? undefined : resolveTokenText(resolveTemplateString(source, ctx));
+}
+
+function createTokenTextResolver(tokenTree: unknown) {
+  const tokensByPath = readTokenTree(tokenTree).tokens;
+  const pathsByUuid = new Map<string, string>();
+  for (const token of tokensByPath.values()) {
+    if (token.uuid) pathsByUuid.set(token.uuid, token.path);
+  }
+
+  function resolvePath(path: string, activePaths: ReadonlySet<string>): string | undefined {
+    const token = tokensByPath.get(path);
+    if (!token || activePaths.has(path)) return undefined;
+    const nextActivePaths = new Set(activePaths).add(path);
+    if (typeof token.value === 'string') {
+      const alias = token.value.match(/^\{([^{}]+)\}$/)?.[1];
+      if (alias && tokensByPath.has(alias)) return resolvePath(alias, nextActivePaths);
+      return token.value;
+    }
+    if (typeof token.value === 'number' || typeof token.value === 'boolean') {
+      return String(token.value);
+    }
+    return JSON.stringify(token.value) ?? '';
+  }
+
+  return (value: string) => {
+    const uuid = value.match(/^\{token:([^{}]+)\}$/)?.[1];
+    if (!uuid) return value;
+    const path = pathsByUuid.get(uuid);
+    return path ? (resolvePath(path, new Set()) ?? '') : '';
+  };
 }
 
 /**
@@ -100,6 +132,7 @@ export function resolveDefinitionToElementBuildConfig(
     parentFields,
     new Set([definition.uuid]),
     {},
+    createTokenTextResolver(catalog.tokens ?? {}),
   );
 }
 
@@ -110,6 +143,7 @@ function resolveNodeToElementBuildConfig(
   parentFields: Record<string, FieldValue>,
   activeDefinitions: ReadonlySet<string>,
   inheritedOverrides: Record<string, FieldValue>,
+  resolveTokenText: (value: string) => string,
 ): ElementBuildConfig {
   const definitionRef = node.config?.definitionRef;
   if (definitionRef) {
@@ -147,6 +181,7 @@ function resolveNodeToElementBuildConfig(
         instanceFields,
         new Set(activeDefinitions).add(refDefinition.uuid),
         instanceOverrides,
+        resolveTokenText,
       );
       return { ...built, nodeUuid: node.uuid };
     }
@@ -172,10 +207,18 @@ function resolveNodeToElementBuildConfig(
   };
 
   const children = (node.dom.children ?? []).map((child) =>
-    resolveNodeToElementBuildConfig(child, definition, catalog, fields, activeDefinitions, fields),
+    resolveNodeToElementBuildConfig(
+      child,
+      definition,
+      catalog,
+      fields,
+      activeDefinitions,
+      fields,
+      resolveTokenText,
+    ),
   );
 
-  const text = textFromNode(node, fields, ctx);
+  const text = textFromNode(node, fields, ctx, resolveTokenText);
   const attributes = resolveStringRecord(node.dom.attributes, ctx) ?? {};
   const style = resolveStringRecord(node.style, ctx);
   const properties = node.dom.properties

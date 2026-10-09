@@ -12,7 +12,6 @@ export function Form<T extends Record<string, unknown>>({
   className,
   layout = 'stacked',
   bindOptions = [],
-  renderTextField,
 }: FormProps<T>) {
   const id = useId();
   const classNames = [styles.form, className].filter(Boolean).join(' ');
@@ -39,7 +38,6 @@ export function Form<T extends Record<string, unknown>>({
           value={value[field.name]}
           values={value}
           bindOptions={bindOptions}
-          renderTextField={renderTextField}
           onChange={(next, nestedMeta) => {
             const previous = value[field.name];
             if (!nestedMeta && Object.is(previous, next)) return;

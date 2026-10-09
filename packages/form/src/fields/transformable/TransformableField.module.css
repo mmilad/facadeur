@@ -1,0 +1,72 @@
+.root {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.control {
+  flex: 1;
+  min-width: 0;
+}
+
+.control > * {
+  min-width: 0;
+}
+
+.trigger {
+  flex: 0 0 30px;
+  min-height: 30px;
+  border: 1px solid var(--eu-border, #b7aa9a);
+  border-radius: var(--eu-radius, 6px);
+  background: var(--eu-bg-elevated, #fffdf9);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.trigger:disabled {
+  cursor: not-allowed;
+}
+
+.menu {
+  position: absolute;
+  z-index: 1001;
+  top: calc(100% + 4px);
+  right: 0;
+  display: flex;
+  min-width: 190px;
+  max-width: min(320px, calc(100vw - 24px));
+  flex-direction: column;
+  padding: 4px;
+  border: 1px solid var(--eu-border, #b7aa9a);
+  border-radius: var(--eu-radius, 6px);
+  background: var(--eu-bg-elevated, #fffdf9);
+  box-shadow: 0 8px 24px rgb(42 36 28 / 16%);
+}
+
+.item,
+.back {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 0;
+  border-radius: 4px;
+  padding: 7px 9px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.back {
+  color: var(--eu-muted, #756d63);
+}
+
+.item:hover,
+.back:hover {
+  background: var(--eu-bg, #f6f1ea);
+}

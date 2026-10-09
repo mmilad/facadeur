@@ -1,5 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { AutocompleteField } from '../autocomplete/AutocompleteField';
+import { TextField } from '../text';
+import { TransformableField } from '../transformable';
 import styles from './RecordField.module.css';
 import type { RecordFieldProps } from './types';
 
@@ -8,12 +10,12 @@ type Row = Draft & { isDraft: boolean };
 
 export function RecordField({
   id,
+  name,
   value,
   keyLabel = 'Key',
   valueLabel = 'Value',
-  bindOptions = [],
   suggestions,
-  bindable = false,
+  valueField,
   disabled,
   onChange,
 }: RecordFieldProps) {
@@ -96,13 +98,6 @@ export function RecordField({
             group: 'Existing values',
           })),
           ...(suggestions?.options ?? []),
-          ...(bindable
-            ? bindOptions.map((option) => ({
-                ...option,
-                group: option.group ?? 'Props',
-                displayLabel: true,
-              }))
-            : []),
         ];
         return (
           <div
@@ -117,24 +112,48 @@ export function RecordField({
             }}
           >
             <div className={styles.inputs}>
-              <AutocompleteField
-                id={index === 0 ? id : `${id}-${row.id}-key`}
-                label={keyLabel}
-                value={row.key}
-                options={keyOptions}
-                placeholder={keyLabel}
-                disabled={disabled}
-                onChange={(next) => update(row, { key: next })}
-              />
-              <AutocompleteField
-                id={`${id}-${row.id}-value`}
-                label={valueLabel}
-                value={row.value}
-                options={valueOptions}
-                placeholder={valueLabel}
-                disabled={disabled}
-                onChange={(next) => update(row, { value: next })}
-              />
+              {keyOptions.length ? (
+                <AutocompleteField
+                  id={index === 0 ? id : `${id}-${row.id}-key`}
+                  label={keyLabel}
+                  value={row.key}
+                  options={keyOptions}
+                  placeholder={keyLabel}
+                  disabled={disabled}
+                  onChange={(next) => update(row, { key: next })}
+                />
+              ) : (
+                <TextField
+                  id={index === 0 ? id : `${id}-${row.id}-key`}
+                  name={`${name}.${row.id}.key`}
+                  value={row.key}
+                  placeholder={keyLabel}
+                  disabled={disabled}
+                  onChange={(next) => update(row, { key: next })}
+                />
+              )}
+              {valueField ? (
+                <TransformableField
+                  id={`${id}-${row.id}-value`}
+                  name={`${name}.${row.key}`}
+                  label={valueLabel}
+                  value={row.value}
+                  fieldOptions={valueField.fieldOptions}
+                  placeholder={valueField.placeholder ?? valueLabel}
+                  disabled={disabled}
+                  onChange={(next) => update(row, { value: next })}
+                />
+              ) : (
+                <AutocompleteField
+                  id={`${id}-${row.id}-value`}
+                  label={valueLabel}
+                  value={row.value}
+                  options={valueOptions}
+                  placeholder={valueLabel}
+                  disabled={disabled}
+                  onChange={(next) => update(row, { value: next })}
+                />
+              )}
             </div>
             <button
               className={styles.button}

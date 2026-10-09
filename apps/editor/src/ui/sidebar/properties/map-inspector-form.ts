@@ -3,15 +3,25 @@ import {
   type FieldDefinition,
   type InspectorFormField,
 } from '@facadeur/core';
-import type { AutocompleteOption, FormFieldConfig, RecordFieldSuggestions } from '@facadeur/form';
+import type {
+  AutocompleteOption,
+  FormFieldConfig,
+  RecordFieldSuggestions,
+  TransformableFieldOption,
+} from '@facadeur/form';
 
 export function mapInspectorFormFields(
   fields: InspectorFormField[],
   styleSuggestions: RecordFieldSuggestions,
   componentDataOptions: readonly AutocompleteOption[] = [],
+  fieldOptions: (
+    path: string,
+    label: string,
+    color?: boolean,
+  ) => readonly TransformableFieldOption[],
 ): FormFieldConfig[] {
   return fields.flatMap((field) =>
-    mapInspectorField(field, styleSuggestions, componentDataOptions),
+    mapInspectorField(field, styleSuggestions, componentDataOptions, fieldOptions),
   );
 }
 
@@ -19,17 +29,40 @@ function mapInspectorField(
   field: InspectorFormField,
   styleSuggestions: RecordFieldSuggestions,
   componentDataOptions: readonly AutocompleteOption[],
+  fieldOptions: (
+    path: string,
+    label: string,
+    color?: boolean,
+  ) => readonly TransformableFieldOption[],
 ): FormFieldConfig[] {
   if (field.type === 'section') {
     return [
       {
         type: 'layout',
-        fields: mapInspectorFormFields(field.fields, styleSuggestions, componentDataOptions),
+        fields: mapInspectorFormFields(
+          field.fields,
+          styleSuggestions,
+          componentDataOptions,
+          fieldOptions,
+        ),
       },
     ];
   }
   if (field.type === 'text') {
-    return [{ type: 'text', name: field.path, label: field.label, bindable: field.bindable }];
+    return field.bindable
+      ? [
+          {
+            type: 'transformable',
+            name: field.path,
+            label: field.label,
+            fieldOptions: fieldOptions(
+              field.path,
+              field.label,
+              /color|colour|background/i.test(`${field.path} ${field.label}`),
+            ),
+          },
+        ]
+      : [{ type: 'text', name: field.path, label: field.label }];
   }
   if (field.type === 'select') {
     return [
@@ -54,7 +87,14 @@ function mapInspectorField(
         label: field.label,
         keyLabel: field.keyLabel,
         valueLabel: field.valueLabel,
-        bindable: field.propBindValues,
+        ...(field.propBindValues
+          ? {
+              valueField: {
+                type: 'transformable' as const,
+                fieldOptions: fieldOptions(field.path, field.label, field.path === 'node.style'),
+              },
+            }
+          : {}),
         ...(field.path === 'node.style'
           ? {
               suggestions: {
@@ -68,7 +108,15 @@ function mapInspectorField(
       },
     ];
   }
-  return [mapFieldDefinition(field.path, field.field, field.label, field.propBindable === true)];
+  return [
+    mapFieldDefinition(
+      field.path,
+      field.field,
+      field.label,
+      field.propBindable === true,
+      fieldOptions,
+    ),
+  ];
 }
 
 function mapFieldDefinition(
@@ -76,6 +124,11 @@ function mapFieldDefinition(
   field: FieldDefinition,
   label: string,
   bindable: boolean,
+  fieldOptions: (
+    path: string,
+    label: string,
+    color?: boolean,
+  ) => readonly TransformableFieldOption[],
 ): FormFieldConfig {
   if (field.type === 'boolean') return { type: 'boolean', name: path, label };
   if (field.type === 'number') return { type: 'number', name: path, label };
@@ -95,7 +148,13 @@ function mapFieldDefinition(
       name: path,
       label,
       fields: children.map((child) =>
-        mapFieldDefinition(child.name, child, child.schema?.title?.trim() || child.name, bindable),
+        mapFieldDefinition(
+          child.name,
+          child,
+          child.schema?.title?.trim() || child.name,
+          bindable,
+          fieldOptions,
+        ),
       ),
     };
   }
@@ -106,7 +165,13 @@ function mapFieldDefinition(
       (item?.type === 'object' && item.schema ? fieldsFromJsonSchema(item.schema) : []);
     if (itemFieldsDefinition.length) {
       const itemFields = itemFieldsDefinition.map((child) =>
-        mapFieldDefinition(child.name, child, child.schema?.title?.trim() || child.name, bindable),
+        mapFieldDefinition(
+          child.name,
+          child,
+          child.schema?.title?.trim() || child.name,
+          bindable,
+          fieldOptions,
+        ),
       );
       return {
         type: 'repeater',
@@ -129,7 +194,18 @@ function mapFieldDefinition(
       suggestions: item?.options,
     };
   }
-  return { type: 'text', name: path, label, bindable };
+  return bindable
+    ? {
+        type: 'transformable',
+        name: path,
+        label,
+        fieldOptions: fieldOptions(
+          path,
+          label,
+          /color|colour|background/i.test(`${path} ${label}`),
+        ),
+      }
+    : { type: 'text', name: path, label };
 }
 
 function defaultValue(field: FormFieldConfig): unknown {
