@@ -27,10 +27,31 @@ export function inspectorInputsForNode(
       values[field.name] = effective.previewDefaults[field.name] as FieldValue;
     } else if (field.default !== undefined) {
       values[field.name] = field.default;
+    } else {
+      values[field.name] = emptyFieldValue(field.type);
     }
     if (Object.prototype.hasOwnProperty.call(merged, field.name)) {
       values[field.name] = merged[field.name]!;
     }
   }
   return { fields, values };
+}
+
+function emptyFieldValue(type: FieldDefinition['type']): FieldValue {
+  switch (type) {
+    case 'boolean':
+      return false;
+    case 'number':
+    case 'text':
+    case 'richText':
+    case 'image':
+    case 'link':
+    case 'enum':
+    case 'token':
+      return '';
+    case 'array':
+      return [];
+    case 'object':
+      return {};
+  }
 }

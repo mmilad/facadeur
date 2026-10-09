@@ -58,7 +58,13 @@ export function ensureCatalogFieldIds(catalog: ProjectCatalog) {
     Object.entries(next.pages).map(([uuid, definition]) => [uuid, normalizeDefinition(definition)]),
   );
   return {
-    catalog: { ...next, schemas, atoms, components, pages },
+    catalog: {
+      ...next,
+      ...(next.schemas !== undefined ? { schemas } : {}),
+      atoms,
+      components,
+      pages,
+    },
     changed,
   };
 }

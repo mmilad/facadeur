@@ -172,6 +172,12 @@ export function buildInspectorFormModel(
           label: 'Name',
           hint: 'Catalog asset display name',
         },
+        {
+          type: 'select',
+          path: 'node.tagName',
+          label: 'Tag',
+          options: tagOptions,
+        },
         ...(definition.kind === 'atom'
           ? [
               {

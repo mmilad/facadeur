@@ -1,4 +1,4 @@
-import { Type } from '@sinclair/typebox';
+import { Kind, Type, TypeRegistry } from '@sinclair/typebox';
 import type {
   DesignTokenFamily,
   DesignTokenSet,
@@ -6,6 +6,7 @@ import type {
   DesignTokenValueType,
 } from '@facadeur/domain';
 import { uuidSchema } from './node-model/uuid';
+import { isJsonValue } from '../utils';
 
 export const tokenTypes = [
   'color',
@@ -20,8 +21,22 @@ export const tokenTypes = [
 export const tokenTypeSchema = Type.Union(tokenTypes.map((value) => Type.Literal(value)));
 export type TokenType = DesignTokenValueType;
 
+const JSON_VALUE_KIND = 'DesignTokenValue';
+if (!TypeRegistry.Has(JSON_VALUE_KIND)) {
+  TypeRegistry.Set(JSON_VALUE_KIND, (_schema, value) => isJsonValue(value));
+}
+
 const jsonValueSchema = Type.Unsafe<DesignTokenValue>({
-  description: 'JSON value validated against its valueType by the Core token contract.',
+  [Kind]: JSON_VALUE_KIND,
+  description: 'A JSON value.',
+  anyOf: [
+    { type: 'string' },
+    { type: 'number' },
+    { type: 'boolean' },
+    { type: 'null' },
+    { type: 'array', items: {} },
+    { type: 'object', additionalProperties: {} },
+  ],
 });
 
 export const designTokenRecordSchema = Type.Object(
