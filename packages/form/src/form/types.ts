@@ -12,4 +12,5 @@ export type FormProps<T extends Record<string, unknown>> = {
   onChange: (next: T, meta: FormChangeMeta) => void;
   className?: string;
   layout?: 'stacked' | 'horizontal';
+  bindOptions?: readonly { value: string; label: string }[];
 };

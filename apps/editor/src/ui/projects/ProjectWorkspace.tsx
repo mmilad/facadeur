@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { authClient } from '../../domain/auth/client';
 import { connectProject, loadProject } from '../../domain/project/client';
@@ -8,6 +8,7 @@ import { logProjectFailure } from '../../domain/project/diagnostics';
 import { ManagementHome } from '../management/ManagementHome';
 import { ProjectWorkspaceBar } from '../management/ProjectWorkspaceBar';
 import { EditorShell } from '../shell/EditorShell';
+import type { EditorNavigationAdapter } from '../shell/navigation/navigation-adapter';
 import { ProjectViewer } from './ProjectViewer';
 
 type Connection = ReturnType<typeof connectProject>;
@@ -20,6 +21,15 @@ export function ProjectWorkspace() {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
+  const editorNavigation = useMemo<EditorNavigationAdapter>(
+    () => ({
+      pathname,
+      search: params.toString(),
+      push: (href) => router.push(href, { scroll: false }),
+      replace: (href) => router.replace(href, { scroll: false }),
+    }),
+    [pathname, params, router],
+  );
   const projectId = params.get('project');
   const [connection, setConnection] = useState<Connection | null>(null);
   const current = useRef<Connection | null>(null);
@@ -153,6 +163,7 @@ export function ProjectWorkspace() {
             <EditorShell
               session={connection.session}
               app={connection.app}
+              navigation={editorNavigation}
               persistPendingChanges={connection.persistPendingChanges}
             />
           )}

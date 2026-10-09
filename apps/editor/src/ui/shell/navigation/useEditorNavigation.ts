@@ -1,18 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { editorBreakpoints } from '../../domain/viewport/viewport-edit';
+import { editorBreakpoints } from '../../../domain/viewport/viewport-edit';
 import {
   EDITOR_NAVIGATION_PARAMS,
   hasEditorNavigationSelection,
   parseEditorNavigation,
   writeEditorNavigation,
-} from '../../domain/navigation/editor-navigation';
-import type { EditorSession, EditorSnapshot } from '../../domain/session';
+} from '../../../domain/navigation/editor-navigation';
+import type { EditorSession, EditorSnapshot } from '../../../domain/session';
 import {
   DESIGN_DOMAIN_ITEMS,
   EDITOR_VIEW_ITEMS,
   type EditorSurface,
-} from '../sidebar/design/design-domain';
+} from '../../sidebar/design/design-domain';
+import type { EditorNavigationAdapter } from './navigation-adapter';
 
 const surfaces = new Set<string>([
   ...EDITOR_VIEW_ITEMS.map((item) => item.id),
@@ -26,11 +26,11 @@ const isSurface = (value: string) => surfaces.has(value);
 export function useEditorNavigation(
   session: EditorSession,
   snap: EditorSnapshot,
+  navigation: EditorNavigationAdapter,
 ): { surface: EditorSurface; setSurface: (surface: EditorSurface) => void } {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const query = searchParams.toString();
+  const { pathname, search, push, replace } = navigation;
+  const query = search;
+  const searchParams = new URLSearchParams(query);
   const parsed = parseEditorNavigation(searchParams, { isSurface });
   const [surface, setSurfaceState] = useState<EditorSurface>(() => parsed.surface as EditorSurface);
   const initialized = useRef(false);
@@ -164,16 +164,17 @@ export function useEditorNavigation(
     const target = nextQuery ? `${pathname}?${nextQuery}` : pathname;
     const from = query;
     pending.current = { from, to: nextQuery };
-    const push =
+    const shouldPush =
       !canonicalize.current &&
       (current.surface !== desired.surface || current.documentId !== desired.documentId);
     canonicalize.current = false;
-    if (push) router.push(target, { scroll: false });
-    else router.replace(target, { scroll: false });
+    if (shouldPush) push(target);
+    else replace(target);
   }, [
     pathname,
     query,
-    router,
+    push,
+    replace,
     snap.activeVariantName,
     snap.openId,
     snap.selectedNodeId,

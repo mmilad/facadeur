@@ -1,51 +1,39 @@
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.label {
-  color: var(--eu-fg-muted, #6b6258);
-  font-size: var(--eu-label-size, 11px);
-  font-weight: 500;
-}
-
-.horizontal {
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-}
-
-.horizontal .label {
-  flex: 0 0 76px;
-}
-
-.horizontal > :last-child {
-  flex: 1;
-}
-
-.boolean {
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-}
-
-.bindable {
-  display: flex;
-  align-items: center;
+.root {
+  display: grid;
   gap: 6px;
   min-width: 0;
 }
 
-.bindable > :first-child {
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.inputs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 6px;
+  min-width: 0;
+}
+
+.valueInput {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+}
+
+.valueInput > :first-child {
   flex: 1;
   min-width: 0;
 }
 
-.bindSelect {
+.input,
+.select {
   box-sizing: border-box;
   width: 100%;
+  min-width: 0;
   min-height: var(--eu-control-height, 28px);
   padding: 4px 8px;
   border: 1px solid var(--eu-border, #b7aa9a);
@@ -55,8 +43,8 @@
   font: inherit;
 }
 
-.bindButton {
-  min-width: 32px;
+.button {
+  min-width: 30px;
   min-height: 30px;
   border: 1px solid var(--eu-border, #b7aa9a);
   border-radius: var(--eu-radius, 6px);

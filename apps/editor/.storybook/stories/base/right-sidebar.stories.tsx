@@ -26,12 +26,17 @@ const layersByAsset = Object.fromEntries(
 );
 const schemaForm = {
   fields: [
-    { type: 'select', name: 'assetId', label: 'Asset', options: assetOptions },
     {
-      type: 'select',
-      name: 'layerUuid',
-      label: 'Layer',
-      optionsFrom: { arg: 'assetId', values: layersByAsset },
+      type: 'layout',
+      fields: [
+        { type: 'select', name: 'assetId', label: 'Asset', options: assetOptions },
+        {
+          type: 'select',
+          name: 'layerUuid',
+          label: 'Layer',
+          optionsFrom: { arg: 'assetId', values: layersByAsset },
+        },
+      ],
     },
   ],
 } satisfies StorybookSchemaFormConfig;
@@ -70,12 +75,13 @@ const meta = {
     assetId: { control: false },
     layerUuid: { control: false },
   },
-  parameters: {
-    [STORYBOOK_SCHEMA_FORM_PARAMETER]: schemaForm,
-  },
 } satisfies Meta<typeof RightSidebarPreview>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Inspector: Story = {};
+export const Inspector: Story = {
+  parameters: {
+    [STORYBOOK_SCHEMA_FORM_PARAMETER]: schemaForm,
+  },
+};

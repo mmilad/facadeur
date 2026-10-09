@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { KindBadge } from '../../../src/ui/shell/KindBadge';
-import { EditorSubnav } from '../../../src/ui/shell/EditorSubnav';
+import { EditorSubnav } from '../../../src/ui/shell/navigation/EditorSubnav';
 import type { EditorSurface } from '../../../src/ui/sidebar/design/design-domain';
 
 function HeaderPreview() {

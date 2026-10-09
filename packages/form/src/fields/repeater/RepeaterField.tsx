@@ -9,6 +9,7 @@ export function RepeaterField({
   itemFields,
   createItem,
   value,
+  bindOptions,
   onChange,
 }: RepeaterFieldProps) {
   const items = value.filter(isRecord);
@@ -24,6 +25,7 @@ export function RepeaterField({
           <Form
             value={item}
             fields={itemFields}
+            bindOptions={bindOptions}
             onChange={(next, meta) => {
               const nextItems = items.map((current, itemIndex) =>
                 itemIndex === index ? next : current,

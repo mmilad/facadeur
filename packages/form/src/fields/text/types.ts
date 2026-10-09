@@ -4,6 +4,7 @@ export type TextFieldConfig = {
   type: 'text';
   placeholder?: string;
   disabled?: boolean;
+  bindable?: boolean;
 };
 
 export type TextFieldProps = {

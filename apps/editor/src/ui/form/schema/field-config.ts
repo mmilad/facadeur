@@ -69,5 +69,5 @@ export type FieldConfig =
 export type FieldGroupConfig = {
   type: 'section';
   title?: string;
-  fields: FieldConfig[];
+  fields: (FieldConfig | FieldGroupConfig)[];
 };

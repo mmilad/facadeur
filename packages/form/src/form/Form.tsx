@@ -11,6 +11,7 @@ export function Form<T extends Record<string, unknown>>({
   onChange,
   className,
   layout = 'stacked',
+  bindOptions = [],
 }: FormProps<T>) {
   const id = useId();
   const classNames = [styles.form, className].filter(Boolean).join(' ');
@@ -36,6 +37,7 @@ export function Form<T extends Record<string, unknown>>({
           layout={layout}
           value={value[field.name]}
           values={value}
+          bindOptions={bindOptions}
           onChange={(next, nestedMeta) => {
             const previous = value[field.name];
             if (!nestedMeta && Object.is(previous, next)) return;

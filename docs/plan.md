@@ -1,5 +1,36 @@
 # facadeur – Plan
 
+### Right sidebar: inspector boundary and tabbed editing
+
+- [ ] Evidence: `PropertiesPanel` and `CatalogNodeInspector` read Core snapshots and call
+      `core.node.preview` directly. Core builds an `InspectorFormModel` with presentation sections,
+      while the sidebar renders all sections as one legacy editor form; preview defaults and node
+      properties are mixed into the same long panel. The shared `@facadeur/form` package does not
+      yet provide the editor's class-list, record, and design-prop binding controls.
+- Boundary: add an editor-owned inspector facade on `AppService` for model reads, field updates,
+  and typed inspector-change events. Keep Core responsible for catalog/schema invariants and
+  mutations. Build the catalog inspector vertically as a compact element header/tag control,
+  then Style, Properties, and conditional Preview Data tabs. Reuse the current field controls
+  during this UI pass; migrate their class-list/record/binding behavior into `@facadeur/form`
+  only when its public field contract can preserve those semantics.
+- Scope: prerequisite for the requested right-sidebar redesign and Storybook interaction logging.
+- Contracts: preserve tag, class-list, CSS token binding, node-data binding, schema-backed field,
+  and preview-default persistence semantics. Hide asset renaming from the inspector. Show
+  Preview Data only for a root/instance with an applicable data schema. Keep legacy nested
+  document selection behavior explicit and avoid claiming it is wired when it is not.
+- Validation: right-sidebar Storybook for root and nested node selection; Actions tab logs typed
+  inspector changes; editor/app-service typecheck and focused inspector regressions; scoped
+  candidate scan and diff review.
+- Progress (2026-10-09): `AppService.inspector` now owns catalog inspector reads, updates, and
+  typed field-change events. The catalog inspector is compact and tabbed; style and node-data
+  controls use the current editor form, while HTML attributes use a binding-aware key/value
+  record. Preview Data is limited to schema-backed roots and definition instances. Browser
+  rendering in the Editor Storybook is clean. Remaining: migrate class-list/record/binding
+  controls into `@facadeur/form`, add dedicated typography controls, and implement the legacy
+  nested-document inspector before marking this work complete. Workspace typechecks remain
+  blocked by the pinned pnpm network lookup; direct `tsc` reports existing unrelated workspace
+  and dependency-link errors, with no diagnostics in the new inspector modules.
+
 ### Shared typed example catalog for the editor and Storybook
 
 - [x] Evidence: the `main` branch examples were removed during the node-model migration; API
@@ -1082,3 +1113,42 @@ subnav into the shell UI as a focused component and render that same component i
 Preserve the existing surface ids, active state, accessible labels, and Settings-to-colors fallback.
 Validate the scoped detector, formatting, editor typecheck, and Storybook rendering when the local
 Storybook toolchain is available.
+
+## Run the editor shell in Storybook
+
+`useEditorNavigation` imports Next navigation hooks inside `EditorShell`, which prevents the full
+shell from running in Storybook. Move framework-specific location reads and push/replace calls
+behind a typed navigation adapter passed to the shell. The Next project workspace supplies its
+existing router, while a Storybook-only browser-history adapter supplies the same query contract
+and reports navigation events through a `storybook/test` spy for the Actions panel. Reuse the
+existing example catalog and in-memory editor fixture; keep authentication and network clients out
+of this story. Preserve editor query keys, unrelated query parameters, deep-link restore, and
+browser back/forward behavior. Validate editor typecheck, formatting, scoped detector, Storybook
+rendering, route changes, and Action events.
+
+Result: `EditorShell` now receives a typed navigation adapter. `ProjectWorkspace` bridges that
+contract to Next.js, and the Storybook App/Editor story uses browser history with popstate restore
+and a `storybook/test` spy for the Actions panel. The story renders the full example catalog through
+the existing in-memory editor fixture. Browser rendering, formatting, and scoped detector pass;
+editor typecheck remains blocked by existing errors in other workspace packages and editor
+modules. Action invocation is wired but was not manually triggered in the browser during this run.
+
+## Use the shared form package in the catalog inspector
+
+The catalog inspector still renders Core's form model through the editor-local `Form` and
+`SchemaForm`, even though `@facadeur/form` is the intended reusable UI owner. Adapt the inspector
+model into `@facadeur/form` field configs and add only the missing reusable class-list and
+key/value-record controls there. Binding options and all field values remain supplied by the
+editor; the form package must not import Core or editor code at runtime. Keep Core's preview form
+model as the temporary source of inspector field metadata so the current preview semantics and
+selection behavior stay intact while we plan its replacement separately. Validate the package and
+editor typechecks, Storybook rendering, scoped detector, formatting, and diff review.
+
+Result: the catalog inspector now renders through `@facadeur/form`, with reusable class-list,
+record, and bindable-value fields. Editor-supplied field configs and design-property options keep
+the package independent of Core. Core's existing preview inspector model remains the adapter for
+now, preserving field semantics while the replacement is planned. Form package typecheck,
+changed-source editor typecheck, formatting, and detector pass. The Storybook build reached preview
+compilation but SWC failed to canonicalize the editor base path in this Windows environment; the
+open Storybook tab also retained its earlier stale module error because port 6006 was already in
+use and could not be restarted from this process.

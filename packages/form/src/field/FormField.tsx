@@ -10,10 +10,20 @@ import { TextArea } from '../fields/textarea';
 import { TextField } from '../fields/text';
 import { SearchField } from '../fields/search';
 import { ChipsField } from '../fields/chips';
+import { ClassListField } from '../fields/class-list';
+import { RecordField } from '../fields/record';
 import styles from './FormField.module.css';
 import type { FormFieldProps } from './types';
 
-export function FormField({ field, id, layout, value, values, onChange }: FormFieldProps) {
+export function FormField({
+  field,
+  id,
+  layout,
+  value,
+  values,
+  bindOptions,
+  onChange,
+}: FormFieldProps) {
   const wrapperClassName = [styles.field, styles[layout]].join(' ');
 
   switch (field.type) {
@@ -23,14 +33,27 @@ export function FormField({ field, id, layout, value, values, onChange }: FormFi
           <label className={styles.label} htmlFor={id}>
             {field.label}
           </label>
-          <TextField
-            id={id}
-            name={field.name}
-            value={typeof value === 'string' ? value : ''}
-            placeholder={field.placeholder}
-            disabled={field.disabled}
-            onChange={onChange}
-          />
+          {field.bindable ? (
+            <BindableText
+              id={id}
+              name={field.name}
+              label={field.label}
+              value={typeof value === 'string' ? value : ''}
+              options={bindOptions}
+              placeholder={field.placeholder}
+              disabled={field.disabled}
+              onChange={onChange}
+            />
+          ) : (
+            <TextField
+              id={id}
+              name={field.name}
+              value={typeof value === 'string' ? value : ''}
+              placeholder={field.placeholder}
+              disabled={field.disabled}
+              onChange={onChange}
+            />
+          )}
         </div>
       );
     case 'textarea':
@@ -106,6 +129,47 @@ export function FormField({ field, id, layout, value, values, onChange }: FormFi
           />
         </div>
       );
+    case 'classList':
+      return (
+        <div className={wrapperClassName}>
+          <label className={styles.label} htmlFor={id}>
+            {field.label}
+          </label>
+          <ClassListField
+            id={id}
+            name={field.name}
+            label={field.label}
+            value={
+              Array.isArray(value)
+                ? value.filter((item): item is string => typeof item === 'string')
+                : []
+            }
+            suggestions={field.suggestions}
+            disabled={field.disabled}
+            onChange={onChange}
+          />
+        </div>
+      );
+    case 'record':
+      return (
+        <div className={wrapperClassName}>
+          <label className={styles.label} htmlFor={id}>
+            {field.label}
+          </label>
+          <RecordField
+            id={id}
+            name={field.name}
+            label={field.label}
+            value={isStringRecord(value) ? value : {}}
+            keyLabel={field.keyLabel}
+            valueLabel={field.valueLabel}
+            bindable={field.bindable}
+            bindOptions={field.bindable ? bindOptions : []}
+            disabled={field.disabled}
+            onChange={onChange}
+          />
+        </div>
+      );
     case 'color':
       return (
         <div className={wrapperClassName}>
@@ -167,6 +231,7 @@ export function FormField({ field, id, layout, value, values, onChange }: FormFi
           label={field.label}
           fields={field.fields}
           value={isRecord(value) ? value : {}}
+          bindOptions={bindOptions}
           onChange={(next, meta) => onChange(next, meta)}
         />
       );
@@ -178,12 +243,85 @@ export function FormField({ field, id, layout, value, values, onChange }: FormFi
           itemFields={field.itemFields}
           createItem={field.createItem}
           value={Array.isArray(value) ? value.filter(isRecord) : []}
+          bindOptions={bindOptions}
           onChange={(next, meta) => onChange(next, meta)}
         />
       );
   }
 }
 
+function BindableText({
+  id,
+  name,
+  label,
+  value,
+  options,
+  placeholder,
+  disabled,
+  onChange,
+}: {
+  id: string;
+  name: string;
+  label: string;
+  value: string;
+  options: readonly { value: string; label: string }[];
+  placeholder?: string;
+  disabled?: boolean;
+  onChange: (next: unknown) => void;
+}) {
+  const bound = options.some((option) => option.value === value);
+  const selectedValue = options.some((option) => option.value === value)
+    ? value
+    : (options[0]?.value ?? '');
+  return (
+    <div className={styles.bindable}>
+      {bound ? (
+        <select
+          id={id}
+          className={styles.bindSelect}
+          aria-label={`${label} design prop`}
+          value={selectedValue}
+          disabled={disabled || options.length === 0}
+          onChange={(event) => onChange(event.currentTarget.value)}
+        >
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <TextField
+          id={id}
+          name={name}
+          value={value}
+          placeholder={placeholder}
+          disabled={disabled}
+          onChange={onChange}
+        />
+      )}
+      <button
+        className={styles.bindButton}
+        type="button"
+        aria-label={bound ? 'Switch to literal value' : 'Bind design prop'}
+        disabled={disabled || (!bound && options.length === 0)}
+        onClick={() => onChange(bound ? '' : selectedValue)}
+      >
+        {bound ? 'Aa' : '{ }'}
+      </button>
+    </div>
+  );
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isStringRecord(value: unknown): value is Record<string, string> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    Object.values(value).every((item) => typeof item === 'string')
+  );
 }

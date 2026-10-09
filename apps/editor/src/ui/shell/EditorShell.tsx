@@ -32,17 +32,20 @@ import { UnsavedIndicator } from './UnsavedIndicator';
 import { KindBadge } from './KindBadge';
 import { DocumentBreadcrumb } from './DocumentBreadcrumb';
 import { ZoomControls } from './ZoomControls';
-import { useEditorNavigation } from './useEditorNavigation';
-import { EditorSubnav } from './EditorSubnav';
+import { EditorSubnav } from './navigation/EditorSubnav';
+import type { EditorNavigationAdapter } from './navigation/navigation-adapter';
+import { useEditorNavigation } from './navigation/useEditorNavigation';
 
 export function EditorShell({
   session,
   app: appProp,
+  navigation,
   connectionStatus,
   persistPendingChanges,
 }: {
   session: EditorSession;
   app?: AppService;
+  navigation: EditorNavigationAdapter;
   connectionStatus?: string;
   persistPendingChanges?: () => Promise<void>;
 }) {
@@ -66,7 +69,7 @@ export function EditorShell({
       (globalThis as { __facadeurApp?: typeof app }).__facadeurApp = app;
     }
   }, [app]);
-  const { surface, setSurface } = useEditorNavigation(session, snap);
+  const { surface, setSurface } = useEditorNavigation(session, snap, navigation);
   const designSurface = isDesignDomain(surface);
   const editorCanvas = surface === 'editor';
   useEditorKeys(session, editorCanvas);

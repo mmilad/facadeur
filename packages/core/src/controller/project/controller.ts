@@ -19,6 +19,7 @@ import {
 import { removeCatalogDesignProp, upsertCatalogDesignProp } from './catalog/props-ops';
 import {
   findDefinition,
+  findNodeByUuid,
   patchNodeData,
   patchNodeDataRecord,
   patchNodeDomAttributes,
@@ -132,7 +133,9 @@ export class CoreController implements CoreControllerHost {
   }
 
   removeSchema(uuid: string) {
-    this.catalog = validateProjectCatalog(removeCatalogSchema(this.catalog, uuid)) as ProjectCatalog;
+    this.catalog = validateProjectCatalog(
+      removeCatalogSchema(this.catalog, uuid),
+    ) as ProjectCatalog;
     this.publish();
   }
 
@@ -170,6 +173,31 @@ export class CoreController implements CoreControllerHost {
     if (!this.openDefinitionId) return;
     this.catalog = validateProjectCatalog(
       patchNodeStyleRecord(this.catalog, this.openDefinitionId, nodeUuid, record),
+    ) as ProjectCatalog;
+    this.publish();
+  }
+
+  patchNodeDomAttributeRecord(nodeUuid: string, record: Readonly<Record<string, string>>) {
+    if (!this.openDefinitionId) return;
+    const definition = findDefinition(this.catalog, this.openDefinitionId)?.definition;
+    const node = definition ? findNodeByUuid(definition.root, nodeUuid) : undefined;
+    if (!node) return;
+    const current = node.dom.attributes ?? {};
+    const next = Object.fromEntries(
+      Object.entries(record).filter(
+        ([key, value]) => key !== 'class' && key.trim() && value !== '',
+      ),
+    );
+    const patch = {
+      ...Object.fromEntries(
+        Object.keys(current)
+          .filter((key) => key !== 'class' && !(key in next))
+          .map((key) => [key, '']),
+      ),
+      ...next,
+    };
+    this.catalog = validateProjectCatalog(
+      patchNodeDomAttributes(this.catalog, this.openDefinitionId, nodeUuid, patch),
     ) as ProjectCatalog;
     this.publish();
   }

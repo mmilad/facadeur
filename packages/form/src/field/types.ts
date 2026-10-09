@@ -11,6 +11,8 @@ import type { SearchFieldConfig } from '../fields/search';
 import type { ComboboxFieldConfig } from '../fields/combobox';
 import type { LayoutFieldConfig } from '../fields/layout';
 import type { ChipsFieldConfig } from '../fields/chips';
+import type { ClassListFieldConfig } from '../fields/class-list';
+import type { RecordFieldConfig } from '../fields/record';
 
 export type FormFieldConfig =
   | TextFieldConfig
@@ -24,7 +26,9 @@ export type FormFieldConfig =
   | ObjectFieldConfig
   | RepeaterFieldConfig
   | LayoutFieldConfig
-  | ChipsFieldConfig;
+  | ChipsFieldConfig
+  | ClassListFieldConfig
+  | RecordFieldConfig;
 
 export type ValueFormFieldConfig = Exclude<FormFieldConfig, LayoutFieldConfig>;
 
@@ -34,5 +38,6 @@ export type FormFieldProps = {
   layout: 'stacked' | 'horizontal';
   value: unknown;
   values: Readonly<Record<string, unknown>>;
+  bindOptions: readonly { value: string; label: string }[];
   onChange: (next: unknown, meta?: FormChangeMeta) => void;
 };

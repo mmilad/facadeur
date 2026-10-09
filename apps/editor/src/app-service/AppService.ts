@@ -4,11 +4,13 @@ import { catalogKindForDefinition, createCatalogUuid } from '@facadeur/core';
 import type { FieldValue, JsonSchemaObject } from '@facadeur/domain';
 import type { EditorSession } from '../domain/session/types';
 import type { CatalogDefinitionKind, EditorCatalogPort } from '../domain/project/catalog-port';
+import { InspectorService } from './inspector';
 
 /** Editor entry: catalog editing via {@link CoreController}, chrome via {@link EditorSession}. */
 export class AppService {
   readonly core: CoreController;
   readonly session: EditorSession;
+  readonly inspector: InspectorService;
   private readonly catalogPort: EditorCatalogPort;
 
   constructor(options: {
@@ -18,6 +20,7 @@ export class AppService {
   }) {
     this.core = options.core;
     this.session = options.session;
+    this.inspector = new InspectorService(options.core);
     this.catalogPort = options.catalogPort;
   }
 

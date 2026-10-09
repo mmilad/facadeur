@@ -1,0 +1,42 @@
+.root {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 7px;
+  border: 1px solid var(--eu-border, #b7aa9a);
+  border-radius: var(--eu-radius, 6px);
+  background: var(--eu-bg-elevated, #fffdf9);
+}
+
+.remove,
+.add {
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.remove {
+  border: 0;
+  background: none;
+}
+
+.input {
+  flex: 1 1 140px;
+  width: 100%;
+  min-width: 100px;
+  min-height: var(--eu-control-height, 28px);
+  padding: 4px 8px;
+  border: 1px solid var(--eu-border, #b7aa9a);
+  border-radius: var(--eu-radius, 6px);
+  background: var(--eu-bg-elevated, #fffdf9);
+  color: var(--eu-fg, #2a241c);
+  font: inherit;
+}
