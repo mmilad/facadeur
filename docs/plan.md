@@ -1414,6 +1414,35 @@ remains unchanged. A direct catalog read indexed all 62 tokens and retained all 
 examples typecheck passes; Core typecheck still reports existing errors in catalog mutation,
 design bridge, and test imports, with no diagnostics in the changed token reader files.
 
+## Transformable inspector text field
+
+- [x] Evidence: `packages/form`'s `BindableText` replaces text inputs with an `Aa` toggle and a
+      select, while component prop options and token scope are editor-owned; `apps/editor` also
+      keeps a separate `TextControl` implementation outside the form package.
+- Action: add a narrow text-field render seam to `@facadeur/form`; implement the transform menu,
+  prop/token selection, and color input in the editor using `@facadeur/form` primitives.
+- Scope: initial catalog inspector text fields; do not migrate unrelated editor controls or
+  alter authored schema contracts in this pass.
+- Contracts: store prop/token choices as stable `{props:uuid}` / `{token:uuid}` strings, keep
+  plain text as the default, hide the transform action when only text is available, and keep
+  scope/options/popover logic editor-owned.
+- Validation: form and editor typechecks, focused UI/build verification, detector, and diff review.
+
+Result: the catalog inspector can override text-field rendering while the shared form package
+continues to own its generic inputs. The editor now offers Text, Component prop, CSS token, and
+semantically relevant Color transforms; props and UUID-bearing tokens are stored as stable refs.
+The form package typecheck passes. Editor typecheck remains blocked by existing workspace/type
+resolution errors; Storybook build fails in SWC while canonicalizing `apps/editor` (`os error 5`),
+before it can verify the rendered UI. Color mode is an inspector editing mode over a string value;
+its mode is not persisted as a schema or node-config field in this first pass.
+
+Backlog: the scoped detector also reports `apps/editor/src/ui/sidebar/properties/layout/LayoutPanel.tsx`
+(510 lines), `content/ContentPanel.tsx` (481), and `style/declarations/declaration-editor.tsx` (478).
+These are outside this text-field task; review whether layout composition, content editing, or style
+declaration editing have independently changing responsibilities before splitting them. Preserve
+their inspector behavior and command contracts, and validate the relevant panel interactions after
+any future boundary change.
+
 Unrelated refactor review: `packages/renderer-dom/src/paint.ts` is 460 lines and
 `packages/renderer-dom/src` has 14 direct source files. Keep the current renderer task scoped to the
 text-content contract; review paint/responsibility boundaries and source-directory ownership in a

@@ -6,6 +6,7 @@ import type { AppService } from '../../../app-service';
 import { Form } from '@facadeur/form';
 import type { FormFieldConfig } from '@facadeur/form';
 import { mapInspectorFormFields } from './map-inspector-form';
+import { TransformableTextField } from './TransformableTextField';
 
 export function CatalogNodeInspector({
   app,
@@ -137,6 +138,21 @@ function InspectorFields({
         description: previewDefaultForProp(model, option.name),
         group: option.kind === 'component' ? 'Component props' : 'Design props',
       }))}
+      renderTextField={({ field, id, value, bindOptions, onChange }) => {
+        if (!field.bindable) return undefined;
+        return (
+          <TransformableTextField
+            id={id}
+            name={field.name}
+            value={value}
+            propOptions={bindOptions}
+            tokenOptions={model.styleSuggestions.options}
+            colorable={/color|colour|background/i.test(`${field.name} ${field.label}`)}
+            disabled={field.disabled}
+            onChange={onChange}
+          />
+        );
+      }}
       onChange={(_, meta) =>
         app.inspector.updateField({ nodeUuid: model.nodeUuid, path: meta.path, value: meta.next })
       }

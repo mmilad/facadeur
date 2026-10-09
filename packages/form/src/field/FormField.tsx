@@ -21,6 +21,7 @@ export function FormField({
   value,
   values,
   bindOptions,
+  renderTextField,
   onChange,
 }: FormFieldProps) {
   const wrapperClassName = [styles.field, styles[layout]].join(' ');
@@ -32,27 +33,34 @@ export function FormField({
           <label className={styles.label} htmlFor={id}>
             {field.label}
           </label>
-          {field.bindable ? (
-            <BindableText
-              id={id}
-              name={field.name}
-              label={field.label}
-              value={typeof value === 'string' ? value : ''}
-              options={bindOptions}
-              placeholder={field.placeholder}
-              disabled={field.disabled}
-              onChange={onChange}
-            />
-          ) : (
-            <TextField
-              id={id}
-              name={field.name}
-              value={typeof value === 'string' ? value : ''}
-              placeholder={field.placeholder}
-              disabled={field.disabled}
-              onChange={onChange}
-            />
-          )}
+          {renderTextField?.({
+            field,
+            id,
+            value: typeof value === 'string' ? value : '',
+            bindOptions,
+            onChange: (next) => onChange(next),
+          }) ??
+            (field.bindable ? (
+              <BindableText
+                id={id}
+                name={field.name}
+                label={field.label}
+                value={typeof value === 'string' ? value : ''}
+                options={bindOptions}
+                placeholder={field.placeholder}
+                disabled={field.disabled}
+                onChange={onChange}
+              />
+            ) : (
+              <TextField
+                id={id}
+                name={field.name}
+                value={typeof value === 'string' ? value : ''}
+                placeholder={field.placeholder}
+                disabled={field.disabled}
+                onChange={onChange}
+              />
+            ))}
         </div>
       );
     case 'textarea':

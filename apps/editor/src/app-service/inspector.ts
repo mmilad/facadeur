@@ -112,7 +112,7 @@ type CatalogNode = CoreSnapshot['catalog']['atoms'][string]['root'];
 function collectProjectStyleSuggestions(catalog: CoreSnapshot['catalog']) {
   const valuesByKey = new Map<string, Set<string>>();
   const tokenOptions = [...readTokenTree(catalog.tokens ?? {}).tokens.values()].map((token) => ({
-    value: `{${token.path}}`,
+    value: token.uuid ? `{token:${token.uuid}}` : `{${token.path}}`,
     label: token.label?.trim() || tokenOptionLabel(token.path),
     description: token.path,
     group: 'Design tokens',

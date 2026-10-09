@@ -8,7 +8,7 @@ export { ChipsField } from './fields/chips';
 export type { ChipsFieldConfig, ChipsFieldProps } from './fields/chips';
 export { RecordField } from './fields/record';
 export type { RecordFieldConfig, RecordFieldProps, RecordFieldSuggestions } from './fields/record';
-export type { FormFieldConfig } from './field';
+export type { FormFieldConfig, TextFieldRenderProps } from './field';
 export { BooleanField } from './fields/boolean';
 export type { BooleanFieldConfig } from './fields/boolean';
 export { ColorField } from './fields/color';
