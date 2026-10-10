@@ -10,9 +10,13 @@ export function SettingsSections({
   return (
     <nav className="design-settings-tabs" aria-label="Settings sections">
       {[
-        ...SETTINGS_TOKEN_DOMAIN_ITEMS,
+        ...SETTINGS_TOKEN_DOMAIN_ITEMS.filter(
+          (item) => item.id === 'viewports' || item.id === 'fonts',
+        ),
         { id: 'schemas' as const, label: 'Schemas' },
-        { id: 'props' as const, label: 'Props' },
+        ...SETTINGS_TOKEN_DOMAIN_ITEMS.filter(
+          (item) => item.id !== 'viewports' && item.id !== 'fonts',
+        ),
       ].map((item) => (
         <button
           key={item.id}

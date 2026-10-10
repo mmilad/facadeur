@@ -27,10 +27,10 @@ export const DESIGN_DOMAIN_ITEMS: {
   { id: 'viewports', label: 'Viewports', keys: ['viewports', 'viewport', 'breakpoint', 'media'] },
 ];
 
-/** Token domains edited under the Settings subnav (not the project sidebar). */
-export const SETTINGS_TOKEN_DOMAIN_ITEMS = DESIGN_DOMAIN_ITEMS.filter(
-  (item) => item.id !== 'icons',
-);
+/** Token domains available in Settings, in the order shown in its navigation. */
+export const SETTINGS_TOKEN_DOMAIN_ITEMS = (
+  ['viewports', 'fonts', 'colors', 'spacing', 'shadow', 'radius'] as const
+).flatMap((id) => DESIGN_DOMAIN_ITEMS.filter((item) => item.id === id));
 
 export type SettingsTokenDomain = (typeof SETTINGS_TOKEN_DOMAIN_ITEMS)[number]['id'];
 
