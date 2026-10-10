@@ -1,7 +1,7 @@
 import { breakpointLabel, createCatalogUuid, type Breakpoint } from '@facadeur/core';
 import { activeBreakpoints, configuredBreakpoints, isBreakpointEnabled } from '@facadeur/tokens';
+import { NumberField, TextField } from '@facadeur/form';
 import type { EditorSession, EditorSnapshot } from '../../domain/session';
-import { TextControl } from '../controls/fields/index';
 import { IconButton } from '../form/components/shared/IconButton';
 
 export function ViewportsSettingsPanel({
@@ -18,8 +18,8 @@ export function ViewportsSettingsPanel({
     <div className="stack design-domain-panel viewport-settings">
       <p className="side-note">
         The label is the name on tabs and the canvas. Each viewport keeps a stable UUID so its token
-        and style overrides remain attached when the label changes. The narrowest active viewport
-        is the base layer and does not use a media query. Each wider active viewport adds a min-width
+        and style overrides remain attached when the label changes. The narrowest active viewport is
+        the base layer and does not use a media query. Each wider active viewport adds a min-width
         query. Use the eye control to hide a viewport without deleting its overrides.
       </p>
       <div className="viewport-settings-list">
@@ -34,25 +34,28 @@ export function ViewportsSettingsPanel({
                 enabled ? 'viewport-settings-row' : 'viewport-settings-row is-viewport-inactive'
               }
             >
-              <TextControl
-                label="Label"
-                name={`settings-breakpoint-label-${breakpoint.uuid}`}
-                value={breakpoint.label}
-                onCommit={(value) =>
-                  renameBreakpointLabel(session, snap, breakpoints, breakpoint.uuid, value)
-                }
-              />
-              <label className="field">
+              <label className="viewport-settings-field">
+                <span>Label</span>
+                <TextField
+                  id={`settings-breakpoint-label-${breakpoint.uuid}`}
+                  name={`settings-breakpoint-label-${breakpoint.uuid}`}
+                  value={breakpoint.label}
+                  onChange={() => {}}
+                  onCommit={(value) =>
+                    renameBreakpointLabel(session, snap, breakpoints, breakpoint.uuid, value)
+                  }
+                />
+              </label>
+              <label className="viewport-settings-field">
                 <span>Min width (px)</span>
-                <input
+                <NumberField
+                  id={`settings-breakpoint-width-${breakpoint.uuid}`}
                   name={`settings-breakpoint-width-${breakpoint.uuid}`}
-                  type="number"
                   min={1}
                   step={1}
                   value={breakpoint.minWidth}
-                  onChange={(event) => {
-                    const next = Number(event.target.value);
-                    if (!Number.isInteger(next) || next < 1) return;
+                  onChange={(next) => {
+                    if (typeof next !== 'number' || !Number.isInteger(next) || next < 1) return;
                     commit(
                       breakpoints.map((item) =>
                         item.uuid === breakpoint.uuid ? { ...item, minWidth: next } : item,

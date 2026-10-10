@@ -274,21 +274,36 @@
 }
 
 .viewport-settings {
-  max-width: 960px;
+  width: 100%;
 }
 
 .viewport-settings-list {
   display: grid;
   gap: 12px;
+  width: 100%;
+}
+
+.viewport-settings-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .viewport-settings-row {
   display: grid;
-  grid-template-columns: minmax(140px, 1.4fr) minmax(88px, 0.7fr) 140px minmax(180px, auto);
+  grid-template-columns: minmax(0, 1.4fr) minmax(120px, 0.7fr) minmax(280px, 0.9fr);
   gap: 12px;
   align-items: end;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--line);
+}
+
+.viewport-settings-field > input {
+  width: 100%;
 }
 
 .viewport-settings-meta {
