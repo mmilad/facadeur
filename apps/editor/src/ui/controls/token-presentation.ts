@@ -2,6 +2,14 @@ import { tokenReference } from '@facadeur/core';
 
 /** Token ids stay unchanged; only their author-facing presentation is normalized. */
 const namespaces = new Set(['color', 'space', 'radius', 'shadow', 'type', 'font']);
+const familyLabels: Record<string, string> = {
+  color: 'Colors',
+  space: 'Spacing',
+  radius: 'Radius',
+  shadow: 'Shadow',
+  type: 'Typography',
+  font: 'Fonts',
+};
 
 export function tokenPath(reference: string): string {
   const value = reference.trim();
@@ -25,15 +33,13 @@ export function tokenTitle(path: string): string {
 
 export function tokenDisplayLabel(reference: string, label?: string): string {
   const path = tokenPath(reference);
-  const parts = path.split('.');
+  const parts = path.split('.').filter(Boolean);
   const savedLabel = label?.trim();
-  if (savedLabel) return savedLabel;
   const uuid = tokenReference(reference);
   if (uuid) return `Token ${uuid.slice(0, 8)}`;
-
-  const leaf = tokenLeafLabel(path);
-  const group = parts.length > 1 ? tokenTitle(parts.slice(0, -1).join('.')) : '';
-  // A namespace alone is not a useful group name (color.brand => Brand).
-  const prefix = parts.length === 2 && namespaces.has(parts[0]!) ? '' : group;
-  return [prefix, leaf].filter(Boolean).join(' ');
+  const family = parts.shift();
+  const name = savedLabel || tokenSegmentLabel(parts.pop() ?? '');
+  const familyLabel = family ? (familyLabels[family] ?? tokenSegmentLabel(family)) : '';
+  const group = parts.map(tokenSegmentLabel);
+  return [familyLabel, ...group, name].filter(Boolean).join(' / ');
 }

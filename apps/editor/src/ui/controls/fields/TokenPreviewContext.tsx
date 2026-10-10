@@ -186,23 +186,22 @@ function createTokenLabeler(
   design: FlatDocument,
   document: FlatDocument,
 ): (reference: string) => string {
-  const designLabels = new Map<string, string>();
-  const documentLabels = new Map<string, string>();
+  const designLabels = new Map<string, { path: string; label: string }>();
+  const documentLabels = new Map<string, { path: string; label: string }>();
   for (const token of readTokenTree(design.tokens).tokens.values()) {
-    designLabels.set(tokenReferenceValue(token.uuid), token.label);
+    designLabels.set(tokenReferenceValue(token.uuid), { path: token.path, label: token.label });
   }
   for (const token of readTokenTree(document.tokens).tokens.values()) {
-    documentLabels.set(tokenReferenceValue(token.uuid), token.label);
+    documentLabels.set(tokenReferenceValue(token.uuid), { path: token.path, label: token.label });
   }
-  const componentLabels = new Map<string, string>();
+  const componentLabels = new Map<string, { path: string; label: string }>();
   for (const token of listComponentTokens(document.componentTokens)) {
-    componentLabels.set(`{${token.path}}`, token.label ?? '');
+    componentLabels.set(`{${token.path}}`, { path: token.path, label: token.label ?? '' });
   }
   return (reference: string) => {
     const key = normalizeReference(reference);
-    if (componentLabels.has(key)) return tokenDisplayLabel(key, componentLabels.get(key));
-    if (designLabels.has(key)) return tokenDisplayLabel(key, designLabels.get(key));
-    if (documentLabels.has(key)) return tokenDisplayLabel(key, documentLabels.get(key));
+    const token = componentLabels.get(key) ?? designLabels.get(key) ?? documentLabels.get(key);
+    if (token) return tokenDisplayLabel(token.path, token.label);
     return tokenDisplayLabel(key);
   };
 }
