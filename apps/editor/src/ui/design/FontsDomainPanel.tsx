@@ -117,7 +117,7 @@ export function FontsDomainPanel({
             trigger={
               <button
                 type="button"
-                className="text-button"
+                className="eu-icon-button"
                 name="add-font-trigger"
                 aria-expanded={addOpen}
                 aria-haspopup="dialog"

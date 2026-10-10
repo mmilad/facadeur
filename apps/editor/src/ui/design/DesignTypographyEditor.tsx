@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { TokenValueControl } from '../controls/fields/TokenValueControl';
 import { useTokenResolver, useTokenValueLabel } from '../controls/fields/TokenPreviewContext';
 import {
   formatTypographyFieldValue,
@@ -9,9 +8,13 @@ import {
   type TypographyValue,
 } from '../controls/typography/index';
 import { Field, Inline, Stack } from '../form/index';
+import { TokenEditorField } from '../TokenEditorField';
 
 export type DesignTypographyValue = TypographyValue | string;
-export type DesignTypographyField = (typeof TYPOGRAPHY_VALUE_KEYS)[number];
+export type DesignTypographyField = Exclude<(typeof TYPOGRAPHY_VALUE_KEYS)[number], 'fontFamily'>;
+const DESIGN_TYPOGRAPHY_FIELDS = TYPOGRAPHY_VALUE_KEYS.filter(
+  (key): key is DesignTypographyField => key !== 'fontFamily',
+);
 
 export interface DesignTypographyEditorProps {
   namePrefix: string;
@@ -66,9 +69,6 @@ export function editTypographyField(
   else if (parsed === undefined) delete next[key];
   else {
     switch (key) {
-      case 'fontFamily':
-        next.fontFamily = parsed as TypographyValue['fontFamily'];
-        break;
       case 'fontSize':
         next.fontSize = String(parsed);
         break;
@@ -90,7 +90,6 @@ function tokenOptionsForKey(
   key: DesignTypographyField,
   catalogs: TypographyCatalogs,
 ): readonly string[] {
-  if (key === 'fontFamily') return [...catalogs.fontRefs, ...catalogs.fontFamilyTokens];
   if (key === 'fontWeight') return [...(catalogs.fontWeights ?? []), ...catalogs.fontWeightTokens];
   if (key === 'lineHeight') return [...catalogs.dimensionTokens, ...catalogs.numberTokens];
   return catalogs.dimensionTokens;
@@ -98,8 +97,6 @@ function tokenOptionsForKey(
 
 function fieldLabel(key: DesignTypographyField): string {
   switch (key) {
-    case 'fontFamily':
-      return 'Family';
     case 'fontSize':
       return 'Size';
     case 'fontWeight':
@@ -136,15 +133,6 @@ function validateCssDimension(property: string, value: string, allowNormal = fal
 
 function validateTypographyField(key: DesignTypographyField, value: unknown): void {
   if (typeof value === 'string' && REFERENCE.test(value.trim())) return;
-  if (key === 'fontFamily') {
-    if (
-      (typeof value !== 'string' && !Array.isArray(value)) ||
-      (Array.isArray(value) && value.length === 0)
-    ) {
-      throw new Error('Family must contain at least one name.');
-    }
-    return;
-  }
   if (key === 'fontWeight') {
     if (!(
       (typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= 1000) ||
@@ -191,9 +179,8 @@ export function DesignTypographyEditor(props: DesignTypographyEditorProps) {
   const summary = useMemo(() => {
     if (typeof props.value === 'string') return props.value;
     const size = summaryValue(effective.fontSize, labelFor) || 'Inherited size';
-    const family = summaryValue(effective.fontFamily, labelFor) || 'Inherited family';
-    return [size, family].join(' · ');
-  }, [effective.fontFamily, effective.fontSize, labelFor, props.value]);
+    return size;
+  }, [effective.fontSize, labelFor, props.value]);
 
   const previewValue = (value: unknown): string => {
     if (Array.isArray(value)) return value.map((item) => previewValue(item)).join(', ');
@@ -235,69 +222,71 @@ export function DesignTypographyEditor(props: DesignTypographyEditorProps) {
           <span className="meta">{summary}</span>
         </Inline>
       </summary>
-      <Stack gap={8}>
-        {error ? (
-          <p className="eu-field__error" role="alert">
-            {error}
-          </p>
-        ) : null}
-        {props.onReset && breakpoint ? (
-          <button type="button" className="text-button" onClick={props.onReset}>
-            Reset all fields
-          </button>
-        ) : null}
-        {TYPOGRAPHY_VALUE_KEYS.map((key) => {
-          const shown = effective[key];
-          const local = stored[key];
-          const inherited = breakpoint && local === undefined;
-          return (
-            <div key={key} className="design-token-field">
-              <TokenValueControl
-                name={`${props.namePrefix}-${key}`}
+      <fieldset className="design-typography-fields">
+        <Stack gap={8}>
+          {error ? (
+            <p className="eu-field__error" role="alert">
+              {error}
+            </p>
+          ) : null}
+          {props.onReset && breakpoint ? (
+            <button type="button" className="text-button" onClick={props.onReset}>
+              Reset all fields
+            </button>
+          ) : null}
+          {DESIGN_TYPOGRAPHY_FIELDS.map((key) => {
+            const shown = effective[key];
+            const local = stored[key];
+            const inherited = breakpoint && local === undefined;
+            return (
+              <TokenEditorField
+                key={key}
                 label={fieldLabel(key)}
+                name={`${props.namePrefix}-${key}`}
                 value={formatTypographyFieldValue(shown)}
                 tokens={tokenOptionsForKey(key, catalogs)}
                 placeholder={
-                  key === 'fontFamily'
-                    ? 'Inter, sans-serif'
-                    : key === 'fontWeight'
-                      ? (catalogs.fontWeights ?? []).join(', ') || '400'
-                      : 'Inherited'
+                  key === 'fontWeight'
+                    ? (catalogs.fontWeights ?? []).join(', ') || '400'
+                    : 'Inherited'
                 }
                 onCommit={(next) => commitField(key, next)}
+                className="design-typography-field"
+                hint={inherited ? <span className="meta">Inherited</span> : undefined}
+                action={
+                  breakpoint && local !== undefined ? (
+                    <button
+                      type="button"
+                      className="text-button"
+                      name={`${props.namePrefix}-${key}-reset`}
+                      onClick={() => commitField(key, null)}
+                    >
+                      Reset field
+                    </button>
+                  ) : undefined
+                }
               />
-              {inherited ? <span className="meta">Inherited</span> : null}
-              {breakpoint && local !== undefined ? (
-                <button
-                  type="button"
-                  className="text-button"
-                  name={`${props.namePrefix}-${key}-reset`}
-                  onClick={() => commitField(key, null)}
-                >
-                  Reset field
-                </button>
-              ) : null}
+            );
+          })}
+          <Field label="Sample">
+            <div
+              className="design-typography-sample"
+              style={{
+                fontFamily: previewValue(effective.fontFamily) || undefined,
+                fontSize: previewValue(effective.fontSize) || undefined,
+                fontWeight:
+                  typeof effective.fontWeight === 'number'
+                    ? effective.fontWeight
+                    : previewValue(effective.fontWeight) || undefined,
+                lineHeight: previewValue(effective.lineHeight) || undefined,
+                letterSpacing: previewValue(effective.letterSpacing) || undefined,
+              }}
+            >
+              Aa — The quick brown fox
             </div>
-          );
-        })}
-        <Field label="Sample">
-          <div
-            className="design-typography-sample"
-            style={{
-              fontFamily: previewValue(effective.fontFamily) || undefined,
-              fontSize: previewValue(effective.fontSize) || undefined,
-              fontWeight:
-                typeof effective.fontWeight === 'number'
-                  ? effective.fontWeight
-                  : previewValue(effective.fontWeight) || undefined,
-              lineHeight: previewValue(effective.lineHeight) || undefined,
-              letterSpacing: previewValue(effective.letterSpacing) || undefined,
-            }}
-          >
-            Aa — The quick brown fox
-          </div>
-        </Field>
-      </Stack>
+          </Field>
+        </Stack>
+      </fieldset>
     </details>
   );
 }

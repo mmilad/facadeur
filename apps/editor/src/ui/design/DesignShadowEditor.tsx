@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { TokenValueControl } from '../controls/fields/TokenValueControl';
 import { useTokenResolver, useTokenValueLabel } from '../controls/fields/TokenPreviewContext';
-import { BooleanField, TextArea } from '@facadeur/form';
+import {
+  BooleanField,
+  TextArea,
+  TransformableField,
+  type TransformableFieldOption,
+} from '@facadeur/form';
 import { Field, Inline, Stack } from '../form/index';
 
 export interface DesignShadowValue {
@@ -31,6 +36,8 @@ export interface DesignShadowEditorProps {
   shadowTokens: readonly string[];
   dimensionTokens?: readonly string[];
   colorTokens?: readonly string[];
+  dimensionFieldOptions?: readonly TransformableFieldOption[];
+  colorFieldOptions?: readonly TransformableFieldOption[];
   onCommit: (next: DesignShadowInput | null) => void;
   onReset?: () => void;
 }
@@ -149,6 +156,8 @@ function ShadowObjectEditor({
   shadowTokens: _shadowTokens,
   dimensionTokens,
   colorTokens,
+  dimensionFieldOptions,
+  colorFieldOptions,
   onCommit,
 }: {
   value: DesignShadowValue | DesignShadowValue[];
@@ -156,10 +165,13 @@ function ShadowObjectEditor({
   shadowTokens: readonly string[];
   dimensionTokens?: readonly string[];
   colorTokens?: readonly string[];
+  dimensionFieldOptions?: readonly TransformableFieldOption[];
+  colorFieldOptions?: readonly TransformableFieldOption[];
   onCommit: (next: DesignShadowValue | DesignShadowValue[]) => void;
 }) {
   const list = Array.isArray(value) ? value : [value];
   const [error, setError] = useState<string | null>(null);
+  const [fieldDrafts, setFieldDrafts] = useState<Record<string, string>>({});
   const labels: Record<DesignShadowField, string> = {
     offsetX: 'X',
     offsetY: 'Y',
@@ -177,6 +189,7 @@ function ShadowObjectEditor({
       setError(caught instanceof Error ? caught.message : 'Invalid shadow value');
     }
   };
+  useEffect(() => setFieldDrafts({}), [value]);
   return (
     <Stack gap={8}>
       {error ? (
@@ -203,12 +216,39 @@ function ShadowObjectEditor({
                 );
               }
               const current = displayField(shadow[field]);
+              const draftKey = `${index}:${field}`;
+              const shownValue = fieldDrafts[draftKey] ?? current;
+              const fieldOptions = field === 'color' ? colorFieldOptions : dimensionFieldOptions;
+              if (fieldOptions) {
+                const id = `${namePrefix}-${index}-${field}`;
+                return (
+                  <div key={field} className="design-shadow-field">
+                    <label htmlFor={id}>{labels[field]}</label>
+                    <TransformableField
+                      id={id}
+                      name={id}
+                      label={labels[field]}
+                      value={shownValue}
+                      fieldOptions={fieldOptions}
+                      placeholder={field === 'color' ? '#00000080' : '0px'}
+                      onTransform={() => {
+                        setError(null);
+                        setFieldDrafts((drafts) => ({ ...drafts, [draftKey]: '' }));
+                      }}
+                      onChange={(next) => {
+                        commitField(index, field, next);
+                        setFieldDrafts((drafts) => ({ ...drafts, [draftKey]: next }));
+                      }}
+                    />
+                  </div>
+                );
+              }
               return (
                 <TokenValueControl
                   key={field}
                   name={`${namePrefix}-${index}-${field}`}
                   label={labels[field]}
-                  value={current}
+                  value={shownValue}
                   tokens={field === 'color' ? (colorTokens ?? []) : (dimensionTokens ?? [])}
                   color={field === 'color'}
                   placeholder={field === 'color' ? '#00000080' : '0px'}
@@ -301,6 +341,8 @@ export function DesignShadowEditor(props: DesignShadowEditorProps) {
             shadowTokens={props.shadowTokens}
             dimensionTokens={props.dimensionTokens}
             colorTokens={props.colorTokens}
+            dimensionFieldOptions={props.dimensionFieldOptions}
+            colorFieldOptions={props.colorFieldOptions}
             onCommit={commitStructured}
           />
         ) : null}

@@ -64,6 +64,50 @@
   - Validation: focused editor tests, editor typecheck, Storybook Settings · Spacing interaction,
     `git diff --check`, and the refactoring detector.
 
+- [ ] Refactor: share the token-editor field row in `ui`.
+  - Evidence: global Typography settings duplicate a labeled field row, while Spacing presents its
+    TransformableField as a standalone control; the screenshots show the Typography row's aligned
+    label/control layout is preferred.
+  - Action: add `ui/TokenEditorField` for the shared label, control, inherited hint, and action
+    columns. Use it in the Typography token editor and the global Spacing value row. Keep token
+    parsing, validation, previews, breakpoint reset behavior, and layout-inspector Spacing control
+    in their current owners. Omit the editable Family row from `DesignTypographyEditor` while
+    retaining any existing `fontFamily` value in stored typography tokens and previews.
+  - Scope: current task; consolidate the token editor layout and omit only the Family input from
+    `DesignTypographyEditor`.
+  - Contracts: preserve control names, labels, token options, transform behavior, sparse
+    responsive overrides, and component-token Typography use. Do not clear or rewrite existing
+    `fontFamily` values when other typography fields change. Avoid an Editor/Form dependency.
+  - Validation: formatting, editor typecheck, `git diff --check`, and detector rerun on changed
+    paths.
+
+- [ ] Settings: use TransformableField for structured shadow fields.
+  - Evidence: Shadow tokens already use the shared settings table, but their structured X/Y/blur/
+    spread/color fields still render the legacy token picker instead of the editor-configured
+    control used by Colors and Spacing.
+  - Action: build color and dimension options in `ui/settings/config` consumers and pass them into
+    the shared `DesignShadowEditor`; keep its sidebar caller on the existing path unless it opts in.
+    Hold an empty value locally when changing a field mode, then commit only valid field values.
+  - Scope: current task; Settings · Shadow only.
+  - Contracts: preserve the structured shadow object/array shape, token references, validation,
+    advanced JSON, viewport overrides/reset, and the existing `@facadeur/form` API. Do not change
+    persisted values or component-token editing.
+  - Validation: Storybook Settings · Shadow interaction, Prettier, `git diff --check`, and the
+    refactoring detector pass. Editor typecheck remains pending: Corepack cannot fetch pnpm 10.33.3
+    from this environment; run it in the user's CMD environment.
+
+- [x] Separate token-row assembly from preview rendering.
+  - Evidence: the scoped refactor detector now reports `token-table-row.tsx` at 451 lines. The file
+    combines row editing/writes with independent color, dimension, shadow, and typography preview
+    rendering.
+  - Action: move the existing preview component and its private formatting helpers to a colocated
+    `token-table-preview.tsx`; keep row assembly and token write routing in `token-table-row.tsx`.
+  - Scope: current task prerequisite identified by the post-change detector.
+  - Contracts: preserve preview markup, CSS classes, title/value text, token resolution, and row
+    editing behavior; keep the preview private to the token settings feature.
+  - Validation: Storybook Settings · Shadow visual check, Prettier, `git diff --check`, and the
+    refactoring detector all pass; no size candidates remain.
+
 - [ ] Replace path-keyed DTCG tokens with one UUID-keyed internal record contract.
   - Evidence: token UUIDs currently live in `$extensions.facadeur.uuid` while lookup, edits,
     references, and rendering still depend on DTCG paths. Color, spacing, radius, shadow, and
@@ -1419,5 +1463,5 @@ responsibility without changing ownership or improving validation.
     model shape, runtime behavior or persisted data changed.
 
 - [ ] Backlog: review server module boundaries in `packages/api/src/server/project/files.ts` and
-  `management/service.ts`, flagged by the candidate detector. Keep this separate from the type
-  ownership change; preserve file persistence and management behavior if a future split is justified.
+      `management/service.ts`, flagged by the candidate detector. Keep this separate from the type
+      ownership change; preserve file persistence and management behavior if a future split is justified.

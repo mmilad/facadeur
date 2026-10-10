@@ -185,16 +185,82 @@
   min-width: 0;
 }
 
-.design-token-field {
+.token-editor-field {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(88px, 112px) minmax(0, 1fr);
   align-items: center;
   gap: 8px;
   min-width: 0;
 }
 
+.token-editor-field--with-meta {
+  grid-template-columns: minmax(88px, 112px) minmax(0, 1fr) auto;
+}
+
+.token-editor-field__label {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.token-editor-field__control,
+.token-editor-field__control > * {
+  min-width: 0;
+}
+
+.token-editor-field__meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.token-editor-field__control .token-value-field {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.token-editor-field__control .token-value-field > label {
+  display: none;
+}
+
+.design-spacing-field .token-editor-field__control .eu-field,
+.design-spacing-field .token-editor-field__control .transformable-field {
+  min-width: 0;
+}
+
+.design-spacing-field .token-editor-field__control > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.design-spacing-field .token-editor-field__control > div > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
 .design-shadow-layer .token-value-field {
   grid-template-columns: minmax(88px, 112px) minmax(0, 1fr);
+}
+
+.design-typography-fields {
+  min-width: 0;
+  margin: 0;
+  margin-inline: 2px;
+}
+
+.design-shadow-field {
+  display: grid;
+  grid-template-columns: minmax(88px, 112px) minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.design-shadow-field > label {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 11px;
 }
 
 .design-shadow-inset {
