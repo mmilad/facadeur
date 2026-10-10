@@ -2,8 +2,6 @@
  * @vitest-environment jsdom
  */
 import { describe, expect, it } from 'vitest';
-import { createDocumentStore } from '@facadeur/store-yjs';
-import { createDomRenderer } from '@facadeur/renderer-dom';
 import { createStyleEngine, type CompiledRule } from '@facadeur/style-engine';
 import { compileDocument } from '@facadeur/style-engine';
 import type { DocumentFile } from '@facadeur/core';
@@ -14,9 +12,7 @@ const accentUuid = fixtureIds.tokens.color.accent.default;
 const neutral600Uuid = fixtureIds.tokens.color.neutral._600;
 const phoneBreakpointUuid = fixtureIds.catalog.breakpoints.phone;
 const wideBreakpointUuid = fixtureIds.catalog.breakpoints.wide;
-const button = documentFromExample(
-  exampleCatalog.atoms[fixtureIds.components.button.definition]!,
-);
+const button = documentFromExample(exampleCatalog.atoms[fixtureIds.components.button.definition]!);
 const formSegmented = documentFromExample(
   exampleCatalog.components[fixtureIds.components.formSegmented.definition]!,
 );
@@ -26,6 +22,13 @@ const formInput = documentFromExample(
 const textarea = documentFromExample(
   exampleCatalog.components[fixtureIds.components.textarea.definition]!,
 );
+const canvasFrame: DocumentFile = {
+  version: 1,
+  id: 'canvas-frame',
+  name: 'Canvas frame',
+  kind: 'component',
+  root: { id: 'canvas-frame-root', type: 'frame', layout: { direction: 'row' } },
+};
 
 function text(rules: readonly CompiledRule[]): string {
   return rules
@@ -78,22 +81,22 @@ describe('component style block', () => {
 
   it('writes the painted canvas root into the live stylesheet', () => {
     const engine = createStyleEngine(document);
-    engine.setDocument(button, { address: 'canvas', paintRoot: true });
+    engine.setDocument(canvasFrame, { address: 'canvas', paintRoot: true });
     const css = [...engine.controller.sheet.cssRules].map((rule) => rule.cssText).join('\n');
-    expect(css).toContain(`[data-id="${button.root.id}"]`);
+    expect(css).toContain(`[data-id="${canvasFrame.root.id}"]`);
     expect(css).toContain('display: flex');
-    engine.setDocument(button, { address: 'canvas' });
+    engine.setDocument(canvasFrame, { address: 'canvas' });
     const kept = [...engine.controller.sheet.cssRules].map((rule) => rule.cssText).join('\n');
-    expect(kept).toContain(`[data-id="${button.root.id}"]`);
+    expect(kept).toContain(`[data-id="${canvasFrame.root.id}"]`);
     engine.destroy();
   });
 
   it('emits the frame root on the canvas only when paintRoot is set', () => {
-    const painted = text(compileDocument(button, { address: 'canvas', paintRoot: true }));
-    expect(painted).toContain(`[data-id="${button.root.id}"]`);
+    const painted = text(compileDocument(canvasFrame, { address: 'canvas', paintRoot: true }));
+    expect(painted).toContain(`[data-id="${canvasFrame.root.id}"]`);
     expect(painted).toContain('display: flex');
-    const hidden = text(compileDocument(button, { address: 'canvas' }));
-    expect(hidden).not.toContain(`[data-id="${button.root.id}"]`);
+    const hidden = text(compileDocument(canvasFrame, { address: 'canvas' }));
+    expect(hidden).not.toContain(`[data-id="${canvasFrame.root.id}"]`);
   });
 
   it('compiles named preset style layers against data-variant', () => {
@@ -184,7 +187,7 @@ describe('component style block', () => {
       declarations: [['color', 'purple']],
     });
     expect(compiled).toContainEqual({
-      key: 'host:button:style:wide',
+      key: `host:button:style:${wideBreakpointUuid}`,
       target: { kind: 'node', nodeId: 'button', isInstance: true },
       selector:
         '[data-component="host"] > [data-node="button"][data-component="control"][data-component="control"]',
@@ -347,7 +350,11 @@ describe('nested instance root appearance overrides', () => {
       rules.find((rule) => rule.key === 'owner:group/sign-in/continue:variant:tone:loud')?.selector,
     ).toContain('[data-variant-tone="loud"]');
     expect(
-      rules.find((rule) => rule.key === 'owner:group/sign-in/continue:style:sm')?.minWidth,
+      rules.find(
+        (rule) =>
+          rule.key ===
+          `owner:group/sign-in/continue:style:${fixtureIds.catalog.breakpoints.tablet}`,
+      )?.minWidth,
     ).toBe(768);
     const canvas = compileDocument(owner, {
       address: 'canvas',
@@ -358,205 +365,9 @@ describe('nested instance root appearance overrides', () => {
       canvas.find((rule) => rule.key === 'owner:group/sign-in/continue:base')?.selector,
     ).toContain('[data-id="root/group/sign-in/continue"]');
   });
-
-  it('paints canvas overrides only on the selected rendered path', () => {
-    const button: DocumentFile = {
-      version: 1,
-      id: 'canvas-button',
-      name: 'Button',
-      kind: 'atom',
-      variants: [
-        { name: 'default' },
-        { name: 'compact' },
-        { name: 'tone', values: ['quiet', 'loud'], default: 'quiet' },
-      ],
-      styles: {
-        declarations: { backgroundColor: 'yellow' },
-        variants: {
-          variant: { compact: { declarations: { backgroundColor: 'purple' } } },
-          tone: { loud: { declarations: { backgroundColor: 'blue' } } },
-        },
-      },
-      root: { id: 'button-root', type: 'frame', tag: 'button' },
-    };
-    const template: DocumentFile = {
-      version: 1,
-      id: 'canvas-template',
-      name: 'Template',
-      kind: 'component',
-      root: {
-        id: 'template-root',
-        type: 'frame',
-        children: [
-          {
-            id: 'continue',
-            type: 'instance',
-            component: button.id,
-            variants: { variant: 'compact', tone: 'loud' },
-          },
-        ],
-      },
-    };
-    const owner: DocumentFile = {
-      version: 1,
-      id: 'canvas-owner',
-      name: 'Owner',
-      kind: 'section',
-      styles: {
-        children: {
-          'group/sign-in/continue': {
-            declarations: { color: 'red', backgroundColor: 'red' },
-          },
-          'group/checkout/continue': {
-            declarations: { color: 'black', backgroundColor: 'black' },
-          },
-        },
-      },
-      root: {
-        id: 'root',
-        type: 'frame',
-        children: [
-          {
-            id: 'group',
-            type: 'frame',
-            children: [
-              { id: 'sign-in', type: 'instance', component: template.id },
-              { id: 'checkout', type: 'instance', component: template.id },
-            ],
-          },
-        ],
-      },
-    };
-    const host = document.createElement('div');
-    const styles = createStyleEngine();
-    const renderer = createDomRenderer({
-      parent: host,
-      catalog: [owner, template, button],
-      styles,
-      paintRoot: true,
-    });
-    renderer.mount(owner);
-    expect(
-      host.querySelector('[data-id="root/group/sign-in/continue"]')?.getAttribute('data-component'),
-    ).toBe(button.id);
-    expect(
-      host
-        .querySelector('[data-id="root/group/checkout/continue"]')
-        ?.getAttribute('data-component'),
-    ).toBe(button.id);
-    expect(
-      getComputedStyle(host.querySelector('[data-id="root/group/sign-in/continue"]')!).color,
-    ).toBe('rgb(255, 0, 0)');
-    expect(
-      getComputedStyle(host.querySelector('[data-id="root/group/checkout/continue"]')!).color,
-    ).toBe('rgb(0, 0, 0)');
-    const nestedSelector = compileDocument(owner, {
-      address: 'canvas',
-      paintRoot: true,
-      catalog: [owner, template, button],
-    }).find((rule) => rule.key === 'canvas-owner:group/sign-in/continue:base')?.selector;
-    const namedVariantSelector = compileDocument(button).find((rule) =>
-      rule.key.includes(':variant:variant:compact'),
-    )?.selector;
-    const axisVariantSelector = compileDocument(button).find((rule) =>
-      rule.key.includes(':variant:tone:loud'),
-    )?.selector;
-    const attributeCount = (selector: string | undefined) =>
-      selector?.match(/\[[^\]]+\]/g)?.length ?? 0;
-    expect(nestedSelector).toContain('[data-id="root/group/sign-in/continue"]');
-    expect(attributeCount(nestedSelector)).toBeGreaterThan(attributeCount(namedVariantSelector));
-    expect(attributeCount(nestedSelector)).toBeGreaterThan(attributeCount(axisVariantSelector));
-    renderer.destroy();
-    styles.destroy();
-  });
 });
 
 describe('style engine and renderer', () => {
-  it('keeps instance-root overrides isolated and dominant when child rules are inserted later', () => {
-    const control: DocumentFile = {
-      version: 1,
-      id: 'control',
-      name: 'Control',
-      kind: 'atom',
-      variants: [{ name: 'default' }, { name: 'compact' }],
-      styles: {
-        declarations: { backgroundColor: 'red' },
-        variants: { variant: { compact: { declarations: { backgroundColor: 'blue' } } } },
-      },
-      root: {
-        id: 'root',
-        type: 'frame',
-        tag: 'button',
-        children: [{ id: 'go', type: 'text', tag: 'span', text: 'Go' }],
-      },
-    };
-    const hostDocument: DocumentFile = {
-      version: 1,
-      id: 'host',
-      name: 'Host',
-      kind: 'component',
-      styles: {
-        children: {
-          go: { declarations: { backgroundColor: 'green' } },
-        },
-      },
-      root: {
-        id: 'root',
-        type: 'frame',
-        children: [
-          { id: 'go', type: 'instance', component: 'control', variants: { variant: 'compact' } },
-        ],
-      },
-    };
-    const engine = createStyleEngine(document);
-    // Deliberately insert the child component after the host stylesheet.
-    engine.setDocument(hostDocument);
-    engine.setDocument(control);
-    const parent = document.createElement('div');
-    const renderer = createDomRenderer({
-      parent,
-      catalog: [hostDocument, control],
-      styles: engine,
-    });
-    renderer.mount(hostDocument);
-    const root = parent.querySelector('[data-id="go"]');
-    const nested = parent.querySelector('[data-id="go/go"]');
-    expect(root).toBeInstanceOf(HTMLElement);
-    expect(nested).toBeInstanceOf(HTMLElement);
-    const localSelector =
-      '[data-id="go"][data-node="go"][data-component="control"][data-component="control"]';
-    expect(root?.matches(localSelector)).toBe(true);
-    expect(nested?.matches(localSelector)).toBe(false);
-    // jsdom currently applies source order without modeling selector specificity
-    // consistently, so verify computed color after inserting the local rule last
-    // and assert the stronger selector separately above.
-    engine.setDocument(hostDocument);
-    expect(getComputedStyle(root!).backgroundColor).toBe('rgb(0, 128, 0)');
-    expect(getComputedStyle(nested!).backgroundColor).not.toBe('rgb(0, 128, 0)');
-    renderer.destroy();
-    engine.destroy();
-  });
-
-  it('styles a painted component root through its component selector', () => {
-    const engine = createStyleEngine(document);
-    const host = document.createElement('div');
-    const renderer = createDomRenderer({
-      parent: host,
-      catalog: [formSegmented],
-      styles: engine,
-      paintRoot: true,
-    });
-
-    renderer.mount(formSegmented);
-
-    const root = host.querySelector(`[data-id="${formSegmented.root.id}"]`);
-    expect(root?.getAttribute('data-component')).toBe(formSegmented.id);
-    const css = [...engine.controller.sheet.cssRules].map((rule) => rule.cssText).join('\n');
-    expect(css).toContain(`[data-component="${formSegmented.id}"]`);
-    expect(css).not.toContain(`[data-id="${formSegmented.root.id}"]`);
-    engine.destroy();
-  });
-
   it('uses local token fallbacks on the owner and parent sets on descendants', () => {
     const inputDoc: DocumentFile = {
       version: 1,
@@ -587,149 +398,6 @@ describe('style engine and renderer', () => {
     const css = text(compileDocument(inputDoc, { globalTokens: exampleCatalog.tokens }));
     expect(css).toContain('border: 1px solid var(--input-color-border, var(--color-neutral-600))');
     expect(css).not.toMatch(/\[data-component="input"\][^{]*--input-color-border:/);
-  });
-
-  it('paints token sets and updates a style rule without replacing the element', () => {
-    const engine = createStyleEngine(document);
-    const accentUuid = fixtureIds.tokens.color.accent.default;
-    engine.setDesign({ tokens: exampleCatalog.tokens });
-    const card: DocumentFile = {
-      version: 1,
-      id: 'card',
-      name: 'Card',
-      kind: 'component',
-      tokenInterface: {
-        reads: [accentUuid],
-        sets: {
-          [accentUuid]: '#1d4ed8',
-          'input.color.border': `{token:${accentUuid}}`,
-        },
-      },
-      styles: {
-        declarations: { background: `{token:${accentUuid}}` },
-      },
-      root: {
-        id: 'root',
-        type: 'frame',
-        tag: 'article',
-        children: [{ id: 'title', type: 'text', tag: 'h2', text: 'Hello' }],
-      },
-    };
-    const page: DocumentFile = {
-      version: 1,
-      id: 'page',
-      name: 'Page',
-      kind: 'component',
-      root: {
-        id: 'root',
-        type: 'frame',
-        children: [{ id: 'card', type: 'instance', component: 'card' }],
-      },
-    };
-    const host = document.createElement('div');
-    const renderer = createDomRenderer({
-      parent: host,
-      catalog: [page, card],
-      styles: engine,
-    });
-    renderer.mount(page);
-    const title = host.querySelector('[data-id="card/title"]');
-    expect(title).toBeInstanceOf(HTMLElement);
-    const sheet = [...engine.controller.sheet.cssRules].map((rule) => rule.cssText).join('\n');
-    expect(sheet).toContain('--color-accent-default: #1d4ed8');
-    expect(sheet).toContain('--input-color-border: var(--color-accent-default)');
-    expect(sheet).toContain('background: var(--color-accent-default)');
-
-    const store = createDocumentStore(card);
-    renderer.connect(store);
-    store.execute({
-      type: 'setStyle',
-      nodeId: 'title',
-      property: 'color',
-      value: `{token:${accentUuid}}`,
-    });
-    expect(host.querySelector('[data-id="card/title"]')).toBe(title);
-    expect(title?.textContent).toBe('Hello');
-    const next = [...engine.controller.sheet.cssRules].map((rule) => rule.cssText).join('\n');
-    expect(next).toContain('color: var(--color-accent-default)');
-    engine.destroy();
-  });
-
-  it('patches one node and leaves its sibling element in place', () => {
-    const page: DocumentFile = {
-      version: 1,
-      id: 'page',
-      name: 'Page',
-      kind: 'component',
-      root: {
-        id: 'root',
-        type: 'frame',
-        children: [
-          { id: 'a', type: 'text', tag: 'span', text: 'A' },
-          { id: 'b', type: 'text', tag: 'span', text: 'B' },
-        ],
-      },
-    };
-    const host = document.createElement('div');
-    const renderer = createDomRenderer({ parent: host, catalog: [page] });
-    renderer.mount(page);
-    const sibling = host.querySelector('[data-id="b"]');
-    const store = createDocumentStore(page);
-    renderer.connect(store);
-    store.execute({ type: 'setProp', nodeId: 'a', prop: 'text', value: 'Changed' });
-    expect(host.querySelector('[data-id="a"]')?.textContent).toBe('Changed');
-    expect(host.querySelector('[data-id="b"]')).toBe(sibling);
-    store.execute({
-      type: 'insert',
-      parentId: 'root',
-      node: { id: 'c', type: 'text', tag: 'span', text: 'C' },
-    });
-    expect(host.querySelector('[data-id="c"]')?.textContent).toBe('C');
-    expect(host.querySelector('[data-id="b"]')).toBe(sibling);
-    store.execute({ type: 'remove', nodeId: 'a' });
-    expect(host.querySelector('[data-id="a"]')).toBeNull();
-    expect(host.querySelector('[data-id="b"]')).toBe(sibling);
-  });
-
-  it('updates a nested instance and keeps the frame sibling element', () => {
-    const button: DocumentFile = {
-      version: 1,
-      id: 'button',
-      name: 'Button',
-      kind: 'atom',
-      root: { id: 'root', type: 'text', tag: 'span', text: 'Hello' },
-    };
-    const page: DocumentFile = {
-      version: 1,
-      id: 'page',
-      name: 'Page',
-      kind: 'component',
-      root: {
-        id: 'root',
-        type: 'frame',
-        children: [
-          {
-            id: 'row',
-            type: 'frame',
-            children: [
-              { id: 'go', type: 'instance', component: 'button' },
-              { id: 'note', type: 'text', tag: 'span', text: 'Note' },
-            ],
-          },
-        ],
-      },
-    };
-    const host = document.createElement('div');
-    const renderer = createDomRenderer({ parent: host, catalog: [page, button] });
-    renderer.mount(page);
-    const note = host.querySelector('[data-id="row/note"]');
-    expect(host.querySelector('[data-id="row/go"]')?.textContent).toBe('Hello');
-    const store = createDocumentStore(button);
-    renderer.connect(store);
-    store.execute({ type: 'setProp', nodeId: 'root', prop: 'text', value: 'Updated' });
-    expect(host.querySelector('[data-id="row/go"]')?.textContent).toBe('Updated');
-    expect(host.querySelector('[data-id="row/note"]')).toBe(note);
-    renderer.destroy();
   });
 
   it('emits absolute placement only when position is absolute', () => {

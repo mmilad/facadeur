@@ -1,6 +1,7 @@
 import type { EditorSession, EditorSnapshot } from '../../domain/session';
 import { useMemo } from 'react';
-import { activeBreakpoints, renderDesignCss } from '@facadeur/tokens';
+import { activeBreakpoints } from '@facadeur/core';
+import { renderDesignCss } from '@facadeur/style-engine';
 import { FontsDomainPanel } from '../design/FontsDomainPanel';
 import { IconsDomainPanel } from '../design/IconsDomainPanel';
 import { TokensDomainPanel } from '../design/tokens/TokensDomainPanel';
@@ -14,7 +15,7 @@ import { ViewportsSettingsPanel } from '../design/ViewportsSettingsPanel';
 import { SettingsSections } from '../settings/SettingsSections';
 import { TokenPreviewProvider } from '../controls/fields/TokenPreviewContext';
 import { viewportEditContext } from '../../domain/viewport/viewport-edit';
-import '../form/form.css';
+import '../styles/form.css';
 
 export function DesignDomainStage({
   session,

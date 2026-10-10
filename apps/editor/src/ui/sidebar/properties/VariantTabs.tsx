@@ -3,7 +3,9 @@ import type { EditorSession, EditorSnapshot } from '../../../domain/session';
 import { ownsVariantContract, variantSummaries } from '../../../domain/edits/variant-edit';
 import { createNamedVariant, renameNamedVariant } from '../../../domain/variant-actions';
 import { VariantActionButton } from '../../controls/variants/VariantActionButton';
-import { AddPopover, Field, TextInput } from '../../form/index';
+import { Field } from '../../components/feedback';
+import { AddPopover } from '../../components/overlay';
+import { TextInput } from '../../controls/form-binding/index';
 
 export function VariantTabs({ session, snap }: { session: EditorSession; snap: EditorSnapshot }) {
   const [newName, setNewName] = useState('');

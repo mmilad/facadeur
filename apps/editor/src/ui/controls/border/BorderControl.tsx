@@ -1,5 +1,7 @@
-import { Field, Grid, Select, Stack } from '../../form/index';
-import '../../form/form.css';
+import { Grid, Stack } from '../../components/layout';
+import { Field } from '../../components/feedback';
+import { Select } from '../form-binding/index';
+import '../../styles/form.css';
 import { ColorControl } from '../color/index';
 import { TokenValueControl } from '../fields/TokenValueControl';
 import { BORDER_STYLE_OPTIONS, type BorderValue } from './value';

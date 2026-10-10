@@ -1,5 +1,7 @@
 import type { AxisSize, SizeValue } from '@facadeur/core';
-import { Field, Grid, NumberInput, Section, Select, Stack } from '../../form/index';
+import { Grid, Section, Stack } from '../../components/layout';
+import { Field } from '../../components/feedback';
+import { NumberInput, Select } from '../form-binding/index';
 import { TokenValueControl } from '../fields/TokenValueControl';
 
 const SIZE_MODES = [

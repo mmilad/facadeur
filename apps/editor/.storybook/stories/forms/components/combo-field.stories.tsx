@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { card, exampleCatalog, exampleIds, tokenRef } from '@facadeur/examples';
-import { TransformableField, type TransformableFieldOption } from '@facadeur/form';
+import { BooleanField, TransformableField, type TransformableFieldOption } from '@facadeur/form';
 import { ComboField } from '../../../../src/ui/combofield/ComboField';
 import {
   TokenPreviewProvider,
@@ -48,6 +48,7 @@ function TokenFieldsExample() {
     blur: tokenRef(exampleIds.tokens.space.scale.step6),
     color: tokenRef(exampleIds.tokens.color.neutral._900),
   });
+  const [inset, setInset] = useState(false);
   const rows = [
     { key: 'x', label: 'X offset' },
     { key: 'y', label: 'Y offset' },
@@ -82,9 +83,8 @@ function TokenFieldsExample() {
       })}
     >
       <div className="eu-field">
-        <label>
-          <input type="checkbox" /> Inset
-        </label>
+        <label htmlFor="shadow-inset">Inset</label>
+        <BooleanField id="shadow-inset" value={inset} onChange={setInset} />
       </div>
     </ComboField>
   );

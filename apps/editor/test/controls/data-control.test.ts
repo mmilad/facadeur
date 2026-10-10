@@ -4,9 +4,9 @@ import {
   bindingFieldOptions,
   defaultBinding,
   normalizeBindingTargetChange,
-  parseInstanceFieldValue,
   patchBindingAt,
-} from '../../src/ui/controls/data/value';
+} from '../../src/ui/controls/data/bindings/binding-value';
+import { parseInstanceFieldValue } from '../../src/ui/controls/data/fields/field-value';
 import { fieldDisplayLabel } from '../../src/ui/controls/data/field-label';
 import {
   variantAxisFromValuesText,

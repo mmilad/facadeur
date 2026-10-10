@@ -1,42 +1,35 @@
-# App service (editor logic monolith)
+# Editor service boundaries
 
-Single debuggable entry for editor behavior. UI (canvas + left sidebar first) calls **`AppService`**, which **is** the project controller (design, asset list, snapshot). Nested controllers own domains and delegate to `@facadeur/core` / API until v2 catalog is fully cut over.
+The Editor uses `AppService` as a UI-facing coordinator. Catalog state and catalog mutations belong
+to `CoreController`; Editor chrome and session state belong to `EditorSession`. The API adapter
+implements transport ports and does not own catalog editing rules.
 
-## Hierarchy
-
+```text
+Editor UI
+├── AppService
+│   ├── CoreController  — catalog snapshot, validation, definitions, schemas, design data
+│   ├── EditorSession   — selection, viewport, editing state, persistence coordination
+│   └── InspectorService — adapts Core preview data for inspector controls
+└── Editor CatalogPort — HTTP implementation passed to Core for catalog transport
 ```
-AppService (class, project controller)
-├── api: ApiController
-└── nodeController: NodeController
-    ├── element: ElementController
-    ├── style: StyleController
-    ├── config: ConfigController
-    └── schema: SchemaController
-```
 
-Construct with `new AppService(session)` or `createAppService(session)`.
+## Ownership
 
-**Planned:** editor `AppService` wraps **`CoreController`** (`packages/core/src/controller/core/`) + API **`CatalogPort`**. Current editor-local controller classes are a temporary shim until wiring lands.
+| Owner | Responsibility |
+| --- | --- |
+| `AppService` | UI-facing operations; delegates catalog transport and state changes to Core and session state to EditorSession. |
+| `CoreController` | Validated catalog state, definition/schema/design mutations, and load/save/create/delete orchestration through ports. |
+| `EditorSession` | Editor selection, viewport and editing state; coordinates persistence for the active project. |
+| `InspectorService` | Shapes Core's preview/inspector model for UI controls. |
+| `createCatalogPort` | Maps Core's catalog port methods to the Editor API client. |
+| React canvas | Renders the active Editor canvas. |
 
-| Surface | Responsibility (target) | Legacy bridge today |
-|---------|-------------------------|---------------------|
-| **AppService** | Project view: design, `listAssets()`, `snapshot()` | `EditorSession` + design document |
-| **nodeController** | Open document, selection, layer commands | `session.execute`, v2 open + `patchField` |
-| **nodeController.element** | DOM: tagName, attributes, data, properties, children | `@facadeur/renderer-dom` v2 + legacy resolve |
-| **nodeController.style** | Style rules, `{token:uuid}` / `{prop:uuid}` | Stub; `@facadeur/core` style engine later |
-| **nodeController.config** | Preview data merge (top-down) | `config.previewData` on v2 definitions |
-| **nodeController.schema** | Schema map refs, resolve for inspector | Catalog `schemas` + design `schemaCatalog` |
-| **api** | Persist catalog (API / project storage) | `session.saveProjectCatalog` → catalog routes |
+`@facadeur/renderer-dom` is deprecated. It remains for compatibility and legacy tests; new Editor
+canvas rendering belongs to React. API routes and API-client remain transport layers. Shared
+contracts live in `@facadeur/domain`.
 
-## Validation strategy
+## Validation
 
-- **Runtime:** [Ajv](https://ajv.js.org/) against JSON Schema (v2 node model, catalog API payloads).
-- **TypeBox (@sinclair/typebox):** optional author-time schemas that **compile to JSON Schema**; not required at runtime once Ajv owns validation. Phase out duplicate TypeBox validators in `@facadeur/core` as documents migrate to v2.
-
-## Navigation
-
-Frontend routes can mirror controller boundaries (project → document → layer) for debugging; not required for MVP.
-
-## Code
-
-- `apps/editor/src/app-service/` — `AppService` class and controller classes under `controllers/`.
+Core owns catalog validation and state transitions. API request validation remains at the API
+boundary. `@sinclair/typebox` schemas and Ajv validate their respective persisted/request
+contracts; they are not Editor controller responsibilities.

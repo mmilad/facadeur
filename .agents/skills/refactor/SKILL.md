@@ -66,13 +66,16 @@ Resolve repository paths from the current checkout. Current user instructions an
 
 ## Package ownership
 
-- `core`: portable document/DSL contracts, invariants, project/controller state and store views
-- `tokens`: token evaluation and output
+- `core`: portable document/DSL contracts, invariants, project/controller state and store views;
+  token indexing, reference evaluation, and responsive values
+- `domain`: shared types only; `examples`: reusable catalog and test fixtures
+- `form`: reusable form elements; Editor wrappers may bind those elements to catalog/session state
 - `style-engine`: stylesheet compilation and runtime application
 - `renderer-dom`: DOM rendering
 - `store-yjs`: retained Yjs encoding/persistence adapter; not the owner of Core project state
 - `codegen/engines/react`: React output
 - `apps/editor`: editor selection, controls, sessions, and interaction state
+- `tokens`: deprecated compatibility facade for legacy Core/Examples imports
 
 ProjectController owns project coordination; domain controllers receive focused contexts.
 Keep Core independent of adapters. Cross-package consumers use the owning package's public

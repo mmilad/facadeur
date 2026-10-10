@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { FontFamily } from '@facadeur/core';
-import { fontStack } from '@facadeur/tokens';
+import { fontStack } from '@facadeur/core';
 import {
   createDefaultFont,
   editedFont,
@@ -9,13 +9,15 @@ import {
   parseFontWeights,
   type FontPatch,
 } from '../../domain/edits/font-edit';
-import { fontFamilies } from '../../domain/editing';
+import { fontFamilies } from '../../domain/token-references';
 import { tokensReferencingUuid } from '../../domain/edits/token-edit';
 import { documentsReferencingToken } from '../../domain/component-tokens';
 import type { EditorSession, EditorSnapshot } from '../../domain/session';
 import { Table, type TableRowData } from '../settings/Table';
 import { TextControl } from '../controls/fields/index';
-import { Field, Popover, TextInput } from '../form/index';
+import { Field } from '../components/feedback';
+import { Popover } from '../components/overlay';
+import { TextInput } from '../controls/form-binding/index';
 import './design-resources.css';
 
 export function FontsDomainPanel({

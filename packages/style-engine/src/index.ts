@@ -6,3 +6,10 @@ export { createStyleEngine } from './runtime/engine';
 export { toKebab, mergeDeclarations } from './css/declarations';
 export { expandDeclarations, substituteRefs } from './css/values';
 export { scopeStyleSelector } from './selectors/scope';
+export {
+  renderDesignCss,
+  renderResolvedCss,
+  googleFontUrl,
+  compileDesignRules,
+  type CssOptions,
+} from './design/css';

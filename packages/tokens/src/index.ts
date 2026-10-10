@@ -1,13 +1,4 @@
-export { renderDesignCss, renderResolvedCss, googleFontUrl, type CssOptions } from './css';
-export {
-  createProjectTemplate,
-  createProjectTemplateDocument,
-  defaultIcons,
-  starterAtomIds,
-  starterFormIds,
-  type ProjectTemplate,
-} from './defaults';
-export { tokenCustomProperty, typographyCustomProperty } from './names';
+/** @deprecated Import token resolution from `@facadeur/core`, CSS output from `@facadeur/style-engine`, and project fixtures from `@facadeur/examples`. */
 export {
   activeBreakpoints,
   configuredBreakpoints,
@@ -15,8 +6,19 @@ export {
   isBreakpointEnabled,
   loadTokens,
   quoteFamily,
+  tokenCustomProperty,
+  typographyCustomProperty,
   type CssProperty,
   type DesignInput,
   type ParsedToken,
   type ResolvedDesign,
-} from './resolve';
+} from '@facadeur/core';
+/** @deprecated Import project fixtures from `@facadeur/examples`. */
+export {
+  createProjectTemplate,
+  createProjectTemplateDocument,
+  defaultIcons,
+  starterAtomIds,
+  starterFormIds,
+  type ProjectTemplate,
+} from '@facadeur/examples';

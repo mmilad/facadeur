@@ -12,12 +12,14 @@ import {
   retargetControl,
   setAt,
 } from '../../domain/schema/schema-use';
-import { Checkbox, Combobox, Field, NumberInput, Stack, TextInput } from '../form/index';
+import { Stack } from '../components/layout';
+import { Field } from '../components/feedback';
+import { Checkbox, Combobox, NumberInput, TextInput } from '../controls/form-binding/index';
 import type { EditorSession } from '../../domain/session';
 import { fieldDataSchema } from '@facadeur/core';
 import { fieldDisplayLabel } from '../controls/data/field-label';
-import { SchemaValueForm } from '../controls/data/SchemaValueForm';
-import { isFieldValue } from '../controls/data/item-array-schema';
+import { SchemaValueForm } from '../controls/data/schema/SchemaValueForm';
+import { isFieldValue } from '../controls/data/schema/item-array-schema';
 
 function joinPath(parent: string, name: string): string {
   return parent ? `${parent}.${name}` : name;
@@ -231,6 +233,7 @@ function PreviewControlField({
         <Field label={control.label}>
           <Combobox
             name={`default-${control.path}`}
+            label={control.label}
             value={value === undefined || value === null ? '' : String(value)}
             options={control.options ?? []}
             onCommit={(next) => onWrite(control.path, next)}
@@ -301,6 +304,7 @@ function PreviewControlField({
           <Field label={control.label}>
             <Combobox
               name={`default-choice-${control.path}`}
+              label={control.label}
               value={branchKey}
               options={control.options ?? []}
               onCommit={(next) => {

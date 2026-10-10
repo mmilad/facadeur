@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Field, Modal, Stack } from '../../form/index';
+import { TextField } from '@facadeur/form';
+import { Stack } from '../../components/layout';
+import { Modal } from '../../components/overlay';
 import type { AppService } from '../../../app-service';
 import type { AssetSummary } from '../../../domain/session';
 
@@ -48,9 +50,7 @@ export function RenameAssetDialog({
       }
     >
       <Stack>
-        <Field label="Name">
-          <input name="asset-name" value={name} onChange={(event) => setName(event.target.value)} />
-        </Field>
+        <TextField id="asset-name" name="asset-name" label="Name" value={name} onChange={setName} />
         {error ? <p className="notice notice-error">{error}</p> : null}
       </Stack>
     </Modal>

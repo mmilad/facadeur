@@ -2,7 +2,7 @@
 import '@testing-library/jest-dom/vitest';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, it } from 'vitest';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
+import { createProjectTemplateDocument } from '@facadeur/examples';
 import type { DocumentFile } from '@facadeur/core';
 import { createEditorSession } from '../src/domain/session';
 import { LayersPanel } from '../src/ui/sidebar/layers/LayersPanel';

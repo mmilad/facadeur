@@ -3,7 +3,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { validateCatalog, type DocumentFile } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
+import { createProjectTemplateDocument } from '@facadeur/examples';
 import { createEditorSession } from '../src/domain/session';
 import {
   migrateLegacySchemaLibrary,

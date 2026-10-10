@@ -1,8 +1,8 @@
 import { breakpointLabel, createCatalogUuid, type Breakpoint } from '@facadeur/core';
-import { activeBreakpoints, configuredBreakpoints, isBreakpointEnabled } from '@facadeur/tokens';
+import { activeBreakpoints, configuredBreakpoints, isBreakpointEnabled } from '@facadeur/core';
 import { NumberField, TextField } from '@facadeur/form';
 import type { EditorSession, EditorSnapshot } from '../../domain/session';
-import { IconButton } from '../form/components/shared/IconButton';
+import { IconButton } from '../components/IconButton';
 
 export function ViewportsSettingsPanel({
   session,

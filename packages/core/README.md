@@ -18,6 +18,7 @@ package exports. Inside core, import the owning module directly rather than `src
 | `controller/variants/`   | Variant commands, sparse resolution/derivation, preview-data composition.                                               | Inspector tabs or variant selection widgets.              |
 | `controller/style/`      | Shared StyleController, document styles, global/component tokens, fonts, breakpoints, layout, references, and commands. | CSS compilation, DOM style application, font loading.     |
 | `controller/validation/` | Schema ingress, assertions, tree/definition checks, field contracts and catalog validation.                             | Presentation of validation errors to users.               |
+| `tokens/`                | Pure token indexing, UUID reference validation, responsive value resolution, and CSS property values.                   | CSS stylesheet compilation or DOM style application.      |
 
 Domain names are supplied by directories: use `project/controller.ts`, `style/blocks/parse.ts`,
 and `style/tokens/global/tree.ts`. Small command domains expose `commands.ts`; command directories expose
@@ -30,7 +31,8 @@ Variants keep resolution in `resolve.ts`, derivation in `derive.ts`, and node de
 
 `project.styles` exposes global token/font/breakpoint editing and explicit document scopes
 through `project.styles.document(id)`. See the [style file map and API](src/controller/style/README.md)
-for each module's responsibility. Token evaluation and CSS output stay in `@facadeur/tokens`.
+for each module's responsibility. Token evaluation belongs to Core; stylesheet compilation
+belongs to `@facadeur/style-engine`.
 
 Keep pure contracts below their consumers. Commands can call validation; validation does not
 call commands. Document representation does not depend on editor/adapter packages. Some

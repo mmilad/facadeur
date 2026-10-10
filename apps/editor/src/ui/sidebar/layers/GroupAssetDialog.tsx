@@ -1,5 +1,7 @@
 import { useId, useState } from 'react';
-import { Field, Modal } from '../../form/index';
+import { TextField } from '@facadeur/form';
+import { Field } from '../../components/feedback';
+import { Modal } from '../../components/overlay';
 import type { AssetSummary, EditorSession } from '../../../domain/session';
 
 export function GroupAssetDialog({
@@ -51,22 +53,18 @@ export function GroupAssetDialog({
         }}
       >
         <Field label="Group name">
-          <input
+          <TextField
+            id={listId}
             className="eu-control"
             aria-label="Group name"
-            list={listId}
             value={name}
-            onChange={(event) => {
-              setName(event.currentTarget.value);
+            suggestions={groups.map((group) => ({ value: group }))}
+            onChange={(next) => {
+              setName(next);
               setError('');
             }}
           />
         </Field>
-        <datalist id={listId}>
-          {groups.map((group) => (
-            <option key={group} value={group} />
-          ))}
-        </datalist>
         {error ? <p role="alert">{error}</p> : null}
       </form>
     </Modal>

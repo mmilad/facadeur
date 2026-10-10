@@ -2,6 +2,7 @@ import {
   ID_PATTERN,
   isJsonValue,
   isPlainObject,
+  loadTokens,
   readTokenTree,
   resolveComponentContract,
   resolveChildFieldDefinition,
@@ -13,7 +14,6 @@ import {
   type JsonSchema,
   type SchemaCatalog,
 } from '@facadeur/core';
-import { loadTokens } from '@facadeur/tokens';
 import { invalid, ProjectError } from './persistence';
 
 export function safeId(id: string): void {

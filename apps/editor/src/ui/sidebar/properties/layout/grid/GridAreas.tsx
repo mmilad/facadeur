@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { Field, Stack } from '../../../../form/index';
-import '../../../../form/form.css';
+import { TextField } from '@facadeur/form';
+import { Stack } from '../../../../components/layout';
+import { Field } from '../../../../components/feedback';
+import '../../../../styles/form.css';
 import { parseGridAreas, renameGridArea, serializeGridAreas } from './areas';
 import './grid-areas.css';
 
@@ -46,12 +48,13 @@ function GridAreasDraft({ value, onCommit, onRename, overridden }: GridAreasProp
               {rows.map((row, y) => (
                 <div className="grid-areas-raster__row" key={y}>
                   {row.map((cell, x) => (
-                    <input
+                    <TextField
                       key={x}
+                      id={`grid-area-cell-${y}-${x}`}
                       className="eu-control"
                       aria-label={`Area row ${y + 1} column ${x + 1}`}
                       value={cell}
-                      onChange={(event) => editCell(y, x, event.target.value)}
+                      onChange={(next) => editCell(y, x, next)}
                     />
                   ))}
                 </div>
@@ -123,13 +126,12 @@ function GridAreasDraft({ value, onCommit, onRename, overridden }: GridAreasProp
             </div>
             {parsed.names.map((name) => (
               <div className="grid-areas-actions" key={name}>
-                <input
+                <TextField
+                  id={`grid-area-rename-${name}`}
                   className="eu-control"
                   aria-label={`Rename area ${name}`}
                   value={renames[name] ?? name}
-                  onChange={(event) =>
-                    setRenames((current) => ({ ...current, [name]: event.target.value }))
-                  }
+                  onChange={(next) => setRenames((current) => ({ ...current, [name]: next }))}
                 />
                 <button
                   type="button"

@@ -11,7 +11,7 @@ import {
   shadowTokenRefsForDocument,
   typographyTokenRefsForDocument,
   fontFamilies,
-} from '../../../../../domain/editing';
+} from '../../../../../domain/token-references';
 import type { EditorSession, EditorSnapshot } from '../../../../../domain/session';
 import {
   readStyleDeclarations,

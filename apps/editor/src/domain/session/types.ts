@@ -11,7 +11,7 @@ import type {
   NodeDefinitionModel,
   ProjectCatalogModel,
 } from '@facadeur/core';
-import type { DesignInput } from '@facadeur/tokens';
+import type { DesignInput } from '@facadeur/core';
 import type { JsonFileHandle } from '../assets/files';
 import type { LayerItem } from '../selection/selection-model';
 import type { NestedFieldContext, NestedSelection } from '../nested-selection';

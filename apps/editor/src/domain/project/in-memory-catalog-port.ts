@@ -2,7 +2,6 @@ import {
   createCatalogDefinition,
   createCatalogUuid,
   deleteCatalogDefinitionRecord,
-  patchCatalogDefinitionRecord,
   validateProjectCatalog,
   type NodeDefinitionModel,
   type ProjectCatalogModel,
@@ -31,8 +30,6 @@ export function createInMemoryCatalogPort(
         } as NodeDefinitionModel),
       );
     },
-    patchDefinition: async (kind, uuid, patch) =>
-      commit(patchCatalogDefinitionRecord(getCatalog(), kind, uuid, patch)),
     deleteDefinition: async (kind, uuid) =>
       commit(deleteCatalogDefinitionRecord(getCatalog(), kind, uuid)),
   };

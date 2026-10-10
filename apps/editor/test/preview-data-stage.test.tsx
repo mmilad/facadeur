@@ -6,7 +6,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { EditorSession, EditorSnapshot } from '../src/domain/session';
-import { PreviewDataStage } from '../src/ui/stage/PreviewDataStage';
+import { PreviewDataStage } from '../src/deprecated/PreviewDataStage';
 import { tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 function snapshot(overrides: Partial<EditorSnapshot> = {}): EditorSnapshot {

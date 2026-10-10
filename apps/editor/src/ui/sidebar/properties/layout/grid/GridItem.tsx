@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
-import { Field } from '../../../../form/index';
+import { SelectField, TextField } from '@facadeur/form';
+import { Field } from '../../../../components/feedback';
 import { LayoutChoiceIcon, LayoutIconChoice } from '../../../../controls/layout/icon-choice';
 
 export interface GridItemProps {
@@ -105,22 +106,20 @@ export function GridItem({
         </span>
       ) : null}
       <Field label="Grid area">
-        <select
+        <SelectField
+          id="grid-area-select"
           aria-label="Grid area"
           value={area}
           disabled={!active}
-          onChange={(event) => {
-            if (event.target.value !== area) assignArea(event.target.value);
+          options={[
+            { value: 'auto', label: 'Auto' },
+            ...names.map((name) => ({ value: name, label: name })),
+            ...(unknownArea ? [{ value: area, label: `${area} (current)` }] : []),
+          ]}
+          onChange={(next) => {
+            if (next !== area) assignArea(next);
           }}
-        >
-          <option value="auto">Auto</option>
-          {names.map((name) => (
-            <option key={name} value={name}>
-              {name}
-            </option>
-          ))}
-          {unknownArea ? <option value={area}>{area} (current)</option> : null}
-        </select>
+        />
         {!guidedOnly ? (
           <CssInput
             key={`grid-area:${values['grid-area'] ?? ''}:${active}`}
@@ -329,9 +328,9 @@ function CssInput({
   const [draft, setDraft] = useState(value);
   const [invalid, setInvalid] = useState(false);
   const committed = useRef(value);
-  function save() {
-    if (disabled || draft === committed.current) return;
-    const next = draft.trim();
+  function save(value = draft) {
+    if (disabled || value === committed.current) return;
+    const next = value.trim();
     const valid =
       !next ||
       (span
@@ -341,26 +340,27 @@ function CssInput({
           : !/[;{}]/.test(next));
     setInvalid(!valid);
     if (!valid) return;
-    committed.current = draft;
+    committed.current = value;
     onCommit(next || null);
   }
   return (
-    <input
+    <TextField
+      id={`grid-css-${property}`}
       aria-label={label}
       aria-invalid={invalid}
       title={invalid ? 'Enter a valid CSS value' : undefined}
       value={draft}
       placeholder={placeholder}
       disabled={disabled}
-      onChange={(event) => {
-        setDraft(event.target.value);
+      onChange={(next) => {
+        setDraft(next);
         setInvalid(false);
       }}
-      onBlur={save}
+      onBlur={(event) => save(event.currentTarget.value)}
       onKeyDown={(event) => {
         if (event.key === 'Enter') {
           event.preventDefault();
-          save();
+          save(event.currentTarget.value);
         } else if (event.key === 'Escape') {
           event.preventDefault();
           setDraft(committed.current);

@@ -2,6 +2,7 @@
   "name": "@facadeur/renderer-dom",
   "version": "0.0.0",
   "private": true,
+  "description": "Deprecated compatibility DOM renderer; the Editor canvas uses React.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"

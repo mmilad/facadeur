@@ -3,7 +3,7 @@
 The editor subnavigation separates these tasks:
 
 - **Editor**: structure, style, instance values/bindings, render conditions, and conditional variant selection. Element and event bindings for a layer are edited on the selected layer in Editor (Content).
-- **Schemas**: a project library of reusable JSON Schemas. A component chooses one of these schemas. This library is separate from the document field list. Built-in contracts live in `examples/schemas.json` (Input, Textarea, Image, Video, Card, and Media). The editor can describe objects, arrays, string enums, and composition: `oneOf` is a union, `anyOf` matches any listed shape, and `allOf` matches every listed shape. Media is a `oneOf` union of image and video. Browser edits override that file for the edited id.
+- **Schemas**: a project library of reusable JSON Schemas. A component chooses one of these schemas. This library is separate from the document field list. The built-in example schema catalog is assembled in `packages/examples/src/catalog/schemas.ts`. The editor can describe objects, arrays, string enums, and composition: `oneOf` is a union, `anyOf` matches any listed shape, and `allOf` matches every listed shape. Media is a `oneOf` union of image and video. Project edits are stored in the project catalog.
 - **Schema**: the open document's props, event payloads, and public mappings, plus the chosen library schema. Legacy variant axes remain available in a disclosure.
 - **Code**: read-only React output for the open component.
 - **Preview data**: example values used by the editor, with sparse overrides for each named variant.

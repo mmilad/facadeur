@@ -1,8 +1,12 @@
 # Facadeur DSL
 
+> This page documents the legacy v1 document-file format. The active editor catalog model is
+> owned by `@facadeur/core` and shared types by `@facadeur/domain`.
+
 A facadeur document is JSON. The editor never edits the DOM in place: it runs commands against this document, and the renderer builds DOM from the result. The file on disk is a nested tree. In memory the same document is a flat map of nodes whose children are ordered id lists. Conversion either way is lossless.
 
-Examples live in `examples/`. The JSON Schema generated from `packages/core` is `schema/document.schema.json`.
+The schema generated from `packages/core` is `schema/document.schema.json`. Reusable catalog and
+design fixtures live in `@facadeur/examples`.
 
 ## Document
 
@@ -246,7 +250,7 @@ DOM preview selectors (React codegen uses local CSS Module classes):
 
 Code snippets use symbolic UUID placeholders such as `TYPOGRAPHY_BODY_UUID`; replace them with IDs declared in the relevant Example `idList.ts` file. `tokens` is grouped by family (`color`, `space`, `radius`, `shadow`, `type`, and `font`). Each family is a map keyed by a stable UUID. The map key must match the record's `uuid`; each record has a display `label`, organizational `group`, `valueType`, and `value`. Optional `extensions` hold namespaced metadata such as tier (`primitive`, `semantic`, or `component`). A reference is the whole string `{token:uuid}`. Changing a label or group does not change the token identity or its references.
 
-The CSS custom-property name is generated from the family, group, and label; it is not stored in the token record. The editor displays the label and keeps the UUID as identity. The stored value stays unresolved. `@facadeur/tokens` resolves references when building CSS, and Core rejects a command that introduces a cycle or a missing target. Legacy DTCG input is converted at the read boundary; `$type`, `$value`, and `$extensions.facadeur` are not the canonical document shape.
+The CSS custom-property name is generated from the family, group, and label; it is not stored in the token record. The editor displays the label and keeps the UUID as identity. The stored value stays unresolved. Core resolves references when preparing design CSS, and Core rejects a command that introduces a cycle or a missing target. `@facadeur/style-engine` emits the CSS rules. Legacy DTCG input is converted at the read boundary; `$type`, `$value`, and `$extensions.facadeur` are not the canonical document shape.
 
 Supported `valueType` values: `color`, `dimension`, `number`, `fontFamily`, `fontWeight`, `shadow`, `typography`.
 
@@ -347,9 +351,18 @@ Ids match `[a-z][a-z0-9]*` and stay in token overrides and CSS. `label` is the n
 
 ## Project template
 
-`examples/project-template.json` is an optional starter: the default palette, a 4px spacing scale, radius, shadows, the Inter family, and a type scale. `createProjectTemplate()` in `@facadeur/tokens` returns the same fragment. Spacing steps are `space.0` through `space.24` (the name is the step on a 4px grid, so `space.4` is 16px). `space.gap`, `space.inset`, and `space.stack` are the aliases gap, padding, and margin should use. Palette tokens stay in the design file; atoms and components own their local tokens in `componentTokens` (see above).
+The example project-template fixture contains the default palette, a 4px spacing scale, radius,
+shadows, the Inter family, and a type scale. `createProjectTemplate()` in `@facadeur/examples`
+returns it. Spacing steps are `space.0` through `space.24` (the name is the step on a 4px grid,
+so `space.4` is 16px). `space.gap`, `space.inset`, and `space.stack` are the aliases gap, padding,
+and margin should use. Palette tokens stay in the design file; atoms and components own their local
+tokens in `componentTokens` (see above).
 
-A new project also starts with two atoms, listed by `starterAtomIds`: `button` and `link`. The form controls `input` and `textarea` are listed separately by `starterFormIds` and live in the `form` group (`examples/button.json`, `examples/link.json`, `examples/input.json`, `examples/textarea.json`). They define fields and, where it matters, variant axes. `link` binds `label` and `href`. `textarea` follows `input`, adds a `rows` field, and uses a `resize` axis on the control.
+A new project also starts with two atoms, listed by `starterAtomIds`: `button` and `link`. The form
+controls `input` and `textarea` are listed separately by `starterFormIds`. These example catalog
+definitions live in `@facadeur/examples`. They define fields and, where it matters, variant axes.
+`link` binds `label` and `href`. `textarea` follows `input`, adds a `rows` field, and uses a `resize`
+axis on the control.
 
 ## Flat model
 
@@ -386,7 +399,10 @@ The renderer writes `data-id`. The document root frame is the canvas and is not 
 
 The editor shows one same-origin iframe per breakpoint. The iframe's width is that breakpoint's `minWidth`, so the `@media (min-width)` rules from tokens and style blocks match the frame. Frame height follows the content. Selection and hover are drawn by the editor above the iframes.
 
-## Codegen
+## Legacy React Codegen output
+
+The following describes the legacy v1 generator output. The root `pnpm codegen` command is disabled
+while the catalog-based v2 input workflow is rebuilt; these generated paths are historical.
 
 `@facadeur/codegen` reads these documents and emits one directory per React component through its default React engine.
 Each directory separates `component.tsx`, `types.ts`, `style.module.css`, and its public `index.ts`.
@@ -404,9 +420,9 @@ owning component's local root class. Generated component rules are ordered in ca
 component styles, direct instance overrides, then nested instance overrides. Authored selector
 rules share the direct instance layer and preserve their list order there. `css-modules.d.ts`
 declares the generated stylesheet import.
-`pnpm codegen` writes these files to `dist/facadeur/packages/ui`. Generated CSF3 stories land under
-`dist/facadeur/apps/storybook/src/stories/generated`. Run `pnpm storybook` to preview them. The Next.js example
-in `dist/facadeur/apps/next` imports `@facadeur/ui`.
+The old generator wrote UI files to `dist/facadeur/packages/ui`, CSF3 stories to
+`dist/facadeur/apps/storybook/src/stories/generated`, and a Next.js example to
+`dist/facadeur/apps/next`. These folders are not produced by the current root command.
 
 ## Out of scope here
 

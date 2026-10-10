@@ -4,7 +4,7 @@ import {
   tokenReferenceValue,
   type DesignTokenFamily,
 } from '@facadeur/core';
-import { activeBreakpoints } from '@facadeur/tokens';
+import { activeBreakpoints } from '@facadeur/core';
 import { useEffect, useMemo, useState } from 'react';
 import {
   colorTokenRefs,
@@ -14,7 +14,7 @@ import {
   fontWeightTokenRefs,
   numberTokenRefs,
   shadowTokenRefs,
-} from '../../../domain/editing';
+} from '../../../domain/token-references';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session';
 import { formatTokenValue } from '../../../domain/edits/token-edit';
 import { viewportEditContext } from '../../../domain/viewport/viewport-edit';

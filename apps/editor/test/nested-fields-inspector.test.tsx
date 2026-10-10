@@ -4,7 +4,7 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 import { type DocumentFile } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
+import { createProjectTemplateDocument } from '@facadeur/examples';
 import { createEditorSession } from '../src/domain/session';
 import { editorBreakpoints, viewportEditContext } from '../src/domain/viewport/viewport-edit';
 import { PropertiesPanel } from '../src/ui/sidebar/properties/PropertiesPanel';

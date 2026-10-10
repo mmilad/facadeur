@@ -1,7 +1,8 @@
 import { type FieldDefinition, type FieldValue } from '@facadeur/core';
-import { Field, Select, TextArea, TextInput, Toggle } from '../../form/index';
+import { Field } from '../../components/feedback';
+import { Select, TextArea, TextInput, Toggle } from '../form-binding/index';
 import { fieldDisplayLabel } from '../data/field-label';
-import { parseInstanceFieldValue } from '../data/value';
+import { parseInstanceFieldValue } from '../data/fields/field-value';
 import { parseFieldValue } from '../../../domain/field-values';
 import { JsonSchemaContractFieldEditor } from '../../schema/JsonSchemaContractFieldEditor';
 

@@ -1,6 +1,6 @@
 import type { Spacing, SpacingBox } from '@facadeur/core';
 import { useEffect, useState } from 'react';
-import { Grid, Stack } from '../../form/index';
+import { Grid, Stack } from '../../components/layout';
 import { TokenValueControl } from '../fields/TokenValueControl';
 
 export function boxWith(

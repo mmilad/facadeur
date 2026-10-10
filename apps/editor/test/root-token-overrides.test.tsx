@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import type { DocumentFile } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
+import { createProjectTemplateDocument } from '@facadeur/examples';
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { describe, expect, it } from 'vitest';

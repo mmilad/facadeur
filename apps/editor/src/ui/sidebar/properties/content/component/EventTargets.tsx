@@ -5,8 +5,9 @@ import { dataFieldsForNode } from '../../../../controls/data/index';
 import {
   EventBindingsEditorControl,
   withDefaultMappings,
-} from '../../../../controls/data/EventBindingsEditorControl';
-import { Field, Select } from '../../../../form/index';
+} from '../../../../controls/data/events/EventBindingsEditorControl';
+import { Field } from '../../../../components/feedback';
+import { Select } from '../../../../controls/form-binding/index';
 import { NATIVE_EVENT_NAMES } from '../../../../../domain/events';
 
 export function EventTargets({

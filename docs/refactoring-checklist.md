@@ -64,11 +64,14 @@ Inside a package, use direct internal imports; importing its public barrel can c
 Do not add directory barrels everywhere: `index.ts` is for a meaningful boundary, not a
 requirement for every folder. Preserve supported public imports when reorganizing internals.
 
-In Facadeur, portable document/DSL contracts and invariant enforcement belong to `core`;
-token evaluation/output belongs to `tokens`; shared style compilation belongs to `style-engine`;
-DOM-specific rendering belongs to `renderer-dom`; Yjs encoding belongs to `store-yjs`;
-code generation belongs to `codegen`, with framework-specific output under `engines/<target>`;
-editor selection and controls belong to `apps/editor`.
+In Facadeur, shared types belong to `domain`; portable document/DSL contracts, catalog
+coordination, token indexing/resolution, and responsive values belong to `core`; stylesheet
+compilation and runtime style application belong to `style-engine`; Yjs encoding belongs to
+`store-yjs`; catalog-to-project generation belongs to `codegen`, with framework-specific output
+under `engines/<target>`; reusable example and test fixtures belong to `examples`; reusable form
+elements belong to `form`; editor selection and controls belong to `apps/editor`. The
+`renderer-dom` and `tokens` packages are deprecated compatibility facades retained for legacy
+consumers and tests; do not add new production consumers.
 Put a shared function in the package that owns its semantics, not simply the first caller or
 the lowest package in the dependency graph. Core must remain independent of those adapters.
 

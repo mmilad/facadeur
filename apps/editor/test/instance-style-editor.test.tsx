@@ -3,7 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import { useSyncExternalStore } from 'react';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
+import { createProjectTemplateDocument } from '@facadeur/examples';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { StyleInspector } from '../src/ui/sidebar/properties/style/StyleInspector';
 import { exampleIds as fixtureIds } from '@facadeur/examples';

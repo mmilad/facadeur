@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type DocumentFile } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
+import { createProjectTemplateDocument } from '@facadeur/examples';
 import { readProjectFiles, saveProjectFile } from '@facadeur/api/server';
 import { connectProject } from '../src/domain/project/client';
 

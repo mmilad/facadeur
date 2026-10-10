@@ -12,7 +12,8 @@ import {
   type TypographyCatalogs,
   type TypographyValue,
 } from '../controls/typography/index';
-import { Field, Inline } from '../form/index';
+import { Inline } from '../components/layout';
+import { Field } from '../components/feedback';
 import { ComboField, type ComboFieldItem } from '../combofield/ComboField';
 import { tokenTransformOptions } from '../settings/config/token-transform-options';
 

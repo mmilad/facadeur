@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { tokenDisplayLabel, tokenTitle } from '../src/ui/controls/token-presentation';
 import { catalogTokenOptions } from '../src/ui/controls/token-options';
-import { matchesSearch } from '../src/ui/form/types/options';
+import { matchesSearch } from '../src/ui/design/tokens/token-search';
 import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 describe('unified token presentation', () => {

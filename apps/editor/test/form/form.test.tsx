@@ -14,7 +14,7 @@ import {
   TextInput,
   Toggle,
   type FormChangeMeta,
-} from '../../src/ui/form/index';
+} from '../../src/ui/controls/form-binding/index';
 
 function TestForm({
   initial,

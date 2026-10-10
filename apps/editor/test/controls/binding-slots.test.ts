@@ -3,7 +3,7 @@ import {
   bindingFromSlot,
   slotForBinding,
   slotsForNode,
-} from '../../src/ui/controls/data/binding-slots';
+} from '../../src/ui/controls/data/bindings/binding-slots';
 
 describe('binding slots', () => {
   it('offers value on input and maps it to attribute value', () => {

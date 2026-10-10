@@ -28,13 +28,13 @@ text in `legacy/yjs/`; the separate server and adapter package remain optional l
 
 ## UI (`src/ui/`)
 
-| Area     | Path               | Role                                                      |
-| -------- | ------------------ | --------------------------------------------------------- |
-| Shell    | `shell/`           | Top bar, `EditorShell`, tools                             |
-| Stage    | `stage/`           | Canvas + design-domain stage                              |
-| Form kit | `form/`            | Generic form components (unchanged contract)              |
-| Controls | `controls/<name>/` | Domain controls (`Component.tsx`, `value.ts`, `index.ts`) |
-| Sidebar  | `sidebar/`         | Chrome around the tree and inspector                      |
+| Area         | Path                     | Role                                                             |
+| ------------ | ------------------------ | ---------------------------------------------------------------- |
+| Shell        | `shell/`                 | Top bar, `EditorShell`, tools                                    |
+| Stage        | `stage/`                 | Canvas + design-domain stage                                     |
+| Form binding | `controls/form-binding/` | Session/path adapters over reusable fields from `@facadeur/form` |
+| Controls     | `controls/<name>/`       | Domain controls (`Component.tsx`, `value.ts`, `index.ts`)        |
+| Sidebar      | `sidebar/`               | Chrome around the tree and inspector                             |
 
 ### Properties inspector (`sidebar/properties/`)
 
@@ -45,9 +45,11 @@ text in `legacy/yjs/`; the separate server and adapter package remain optional l
 - `style/overrides/` — per-node style overrides (color/typography/shadow controls)
 - `layout/` — layout control panel
 
-### Layers & design (`sidebar/layers/`, `sidebar/design/`)
+### Layers & design (`sidebar/layers/`, `design/`)
 
-Project tree, viewport list/options, token/font design panels.
+The project tree and viewport list/options live in `sidebar/layers/`; design-domain panels live in
+`design/`. Reusable form elements live in `@facadeur/form`; Editor controls may wrap them to bind
+catalog values and commits.
 
 ## Styles (`src/ui/styles/`)
 

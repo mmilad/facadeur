@@ -2,19 +2,21 @@
 
 import { useEffect, useState } from 'react';
 import { createId, validateCatalog } from '@facadeur/core';
+import { SelectField } from '@facadeur/form';
 import { SchemaBuilderProvider, type JsonSchema as JoySchema } from 'jsonjoy-builder';
 import 'jsonjoy-builder/styles.css';
-import TypeEditor from './jsonjoy-type-editor';
-import type { EditorSnapshot } from '../../domain/session';
+import TypeEditor from '../ui/stage/jsonjoy-type-editor';
+import type { EditorSnapshot } from '../domain/session';
 import type {
   JsonSchema,
   LibrarySchema,
   SchemaValidationIssue,
-} from '../../domain/schema/schema-library';
-import type { EditorSession } from '../../domain/session';
-import { schemaRefUri } from '../../domain/schema/schema-library';
-import { Field, InlineError, TextInput } from '../form/index';
-import styles from './SchemaLibraryStage.module.css';
+} from '../domain/schema/schema-library';
+import type { EditorSession } from '../domain/session';
+import { schemaRefUri } from '../domain/schema/schema-library';
+import { Field, InlineError } from '../ui/components/feedback';
+import { TextInput } from '../ui/controls/form-binding/index';
+import styles from '../ui/stage/SchemaLibraryStage.module.css';
 
 const EDITOR_LABELS = {
   schemaTypeString: 'String',
@@ -31,7 +33,10 @@ const EDITOR_LABELS = {
   stringAllowedValuesEnumLabel: 'Allowed values (enum)',
 };
 
-/** Shared named schemas are part of the design document contract. */
+/**
+ * @deprecated Replaced by `CatalogSchemasPanel`; retained temporarily for composition UI coverage.
+ * Shared named schemas are part of the design document contract.
+ */
 export function SchemaLibraryStage({
   session,
   snap,
@@ -253,26 +258,22 @@ function SchemaEditorPanel({
         ))}
       </section>
       <Field label="Kind">
-        <select
+        <SelectField
+          id="schema-kind"
           name="schema-kind"
           className={styles.kindSelect}
           value={rootKind(editorSchema)}
-          onChange={(event) =>
+          options={ROOT_KINDS.map((kind) => ({ value: kind, label: KIND_LABEL[kind] }))}
+          onChange={(kind) =>
             commit(
               preserveManagedComposition(
-                withRootKind(editorSchema, event.target.value as RootKind),
+                withRootKind(editorSchema, kind as RootKind),
                 schema.schema,
                 schemas,
               ),
             )
           }
-        >
-          {ROOT_KINDS.map((kind) => (
-            <option key={kind} value={kind}>
-              {KIND_LABEL[kind]}
-            </option>
-          ))}
-        </select>
+        />
       </Field>
       <SchemaBuilderProvider messages={EDITOR_LABELS}>
         <div className={`jsonjoy ${styles.joy}`}>
@@ -324,25 +325,21 @@ function CompositionEditor({
           const selectedName = schemas.find((entry) => entry.id === id)?.name ?? id;
           return (
             <div className={styles.compositionRow} key={`${kind}:${index}`}>
-              <select
+              <SelectField
+                id={`schema-${kind}-${index}`}
                 name={`schema-${kind}-${index}`}
                 className={`eu-control ${styles.compositionSelect}`}
                 aria-label={`${label} schema ${index + 1}`}
                 value={id}
-                onChange={(event) =>
+                options={options.map((entry) => ({ value: entry.id, label: entry.name }))}
+                onChange={(nextId) =>
                   onChange(
                     selectedIds.map((selected, selectedIndex) =>
-                      selectedIndex === index ? event.target.value : selected,
+                      selectedIndex === index ? nextId : selected,
                     ),
                   )
                 }
-              >
-                {options.map((entry) => (
-                  <option key={entry.id} value={entry.id}>
-                    {entry.name}
-                  </option>
-                ))}
-              </select>
+              />
               <button
                 type="button"
                 className={styles.compositionRemove}
@@ -358,24 +355,20 @@ function CompositionEditor({
         })}
         {adding ? (
           <div className={styles.compositionRow}>
-            <select
+            <SelectField
+              id={`schema-${kind}-new`}
               name={`schema-${kind}-new`}
               className={`eu-control ${styles.compositionSelect}`}
               aria-label={`Choose schema to ${label}`}
               value=""
-              onChange={(event) => {
-                if (!event.target.value) return;
-                onChange([...selectedIds, event.target.value]);
+              placeholder="Choose a schema"
+              options={addable.map((entry) => ({ value: entry.id, label: entry.name }))}
+              onChange={(nextId) => {
+                if (!nextId) return;
+                onChange([...selectedIds, nextId]);
                 setAdding(false);
               }}
-            >
-              <option value="">Choose a schema</option>
-              {addable.map((entry) => (
-                <option key={entry.id} value={entry.id}>
-                  {entry.name}
-                </option>
-              ))}
-            </select>
+            />
             <button
               type="button"
               className={styles.compositionCancel}

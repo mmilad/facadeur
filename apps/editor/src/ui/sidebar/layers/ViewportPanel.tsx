@@ -1,4 +1,5 @@
 import { breakpointLabel, createCatalogUuid, type Breakpoint } from '@facadeur/core';
+import { NumberField } from '@facadeur/form';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session';
 import { editorBreakpoints } from '../../../domain/viewport/viewport-edit';
 import { resolvedViewportChrome } from '../../../domain/viewport/viewport-chrome';
@@ -68,9 +69,7 @@ export function ViewportOptionsPanel({
       <div className="inspector-context viewport-context" data-testid="viewport-context">
         <span className="inspector-context-kicker">Viewport</span>
         <strong className="inspector-context-title">{chrome.title}</strong>
-        <span className="inspector-context-meta">
-          {breakpoint.minWidth}px · selected on stage
-        </span>
+        <span className="inspector-context-meta">{breakpoint.minWidth}px · selected on stage</span>
       </div>
       <p className="meta">
         Preview chrome only. These settings do not change the component tree or saved layout.
@@ -140,17 +139,16 @@ function BreakpointEditor({
             value={breakpoint.label}
             onCommit={(value) => renameBreakpointLabel(session, snap, breakpoint.uuid, value)}
           />
-          <label className="field">
+          <label className="field" htmlFor={`breakpoint-width-${breakpoint.uuid}`}>
             <span>Min width (px)</span>
-            <input
+            <NumberField
+              id={`breakpoint-width-${breakpoint.uuid}`}
               name={`breakpoint-width-${breakpoint.uuid}`}
-              type="number"
               min={1}
               step={1}
               value={breakpoint.minWidth}
-              onChange={(event) => {
-                const next = Number(event.target.value);
-                if (!Number.isFinite(next) || next <= 0) return;
+              onChange={(next) => {
+                if (typeof next !== 'number' || next <= 0) return;
                 updateBreakpointWidth(session, snap, breakpoint.uuid, next);
               }}
             />
@@ -178,11 +176,14 @@ function addViewport(session: EditorSession, snap: EditorSnapshot) {
   const current = effectiveListedBreakpoints(snap);
   const max = current.reduce((value, item) => Math.max(value, item.minWidth), 0);
   const uuid = createCatalogUuid();
-  const next = [...current, {
-    uuid,
-    label: `Viewport ${current.length + 1}`,
-    minWidth: max > 0 ? max + 320 : 1280,
-  }];
+  const next = [
+    ...current,
+    {
+      uuid,
+      label: `Viewport ${current.length + 1}`,
+      minWidth: max > 0 ? max + 320 : 1280,
+    },
+  ];
   commitBreakpoints(session, snap, next);
   session.selectViewport(uuid);
 }

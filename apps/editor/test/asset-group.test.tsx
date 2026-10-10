@@ -3,7 +3,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, it } from 'vitest';
 import { createEditorSession } from '../src/domain/session';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
+import { createProjectTemplateDocument } from '@facadeur/examples';
 import { GroupAssetDialog } from '../src/ui/sidebar/layers/GroupAssetDialog';
 
 afterEach(cleanup);

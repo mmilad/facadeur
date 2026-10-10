@@ -5,12 +5,14 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./ids": "./src/idList.ts"
+    "./ids": "./src/idList.ts",
+    "./test-support/token-fixtures": "./src/test-support/token-fixtures.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@facadeur/core": "workspace:*",
     "@facadeur/domain": "workspace:*"
   },
   "devDependencies": {

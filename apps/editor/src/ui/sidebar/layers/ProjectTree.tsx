@@ -1,4 +1,5 @@
 import type { DefaultKind } from '@facadeur/core';
+import { SearchField } from '@facadeur/form';
 import type { AppService } from '../../../app-service';
 import {
   assetKindToCatalogMap,
@@ -196,11 +197,12 @@ export function ProjectTree({
       <h2>Project</h2>
       <label className="field tree-search">
         <span>Search</span>
-        <input
+        <SearchField
+          id="asset-search"
           name="asset-search"
           value={query}
           placeholder="Name or id"
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={setQuery}
         />
       </label>
       <p className="side-note">Drag a row onto the stage to insert an instance.</p>

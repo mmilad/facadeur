@@ -2,7 +2,7 @@ import {
   rootTokenOverrideCommand,
   rootTokenTargets,
 } from '../../../../domain/root-token-overrides';
-import { tokenRefsByType } from '../../../../domain/editing';
+import { tokenRefsByType } from '../../../../domain/token-references';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
 import { TokenValueControl } from '../../../controls/fields/TokenValueControl';
 

@@ -3,13 +3,6 @@ import { toFlat, type DesignTokenSet, type DocumentFile } from '@facadeur/core';
 import specimenPage from '../../../examples/specimen-page.json';
 import specimenSection from '../../../examples/specimen-section.json';
 import {
-  colorTokenRefs,
-  dimensionTokenRefs,
-  fontFamilyTokenRefs,
-  fontWeightTokenRefs,
-  numberTokenRefs,
-  shadowTokenRefs,
-  typographyTokenRefs,
   dropParentId,
   emphasizeInsertLine,
   layerDropTarget,
@@ -23,6 +16,15 @@ import {
   toolAllowed,
   writeLayoutFields,
 } from '../src/domain/editing';
+import {
+  colorTokenRefs,
+  dimensionTokenRefs,
+  fontFamilyTokenRefs,
+  fontWeightTokenRefs,
+  numberTokenRefs,
+  shadowTokenRefs,
+  typographyTokenRefs,
+} from '../src/domain/token-references';
 import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 const section = toFlat(specimenSection as DocumentFile);

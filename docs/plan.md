@@ -1,5 +1,361 @@
 # facadeur – Plan
 
+## Editor form ownership cleanup
+
+- [x] Refactor: remove the legacy `apps/editor/src/ui/form` directory and establish `@facadeur/form` as the only reusable form-element implementation.
+  - Evidence: the directory previously implemented native text, number, search, color, select,
+    combobox, checkbox, toggle, radio, and class-list inputs. Product screens across `ui/controls`, `ui/stage`,
+    `ui/design`, and `ui/sidebar` import those implementations. `@facadeur/form` already owns
+    corresponding text, textarea, number, search, color, select, boolean, autocomplete, and chips
+    fields. The editor directory also mixes form context/path binding, schema translation,
+    layout/feedback/overlay components, and dynamic editors.
+  - Action: migrate actual form elements to `@facadeur/form` fields; add package-owned fields only
+    where a required existing interaction has no equivalent. Keep thin editor adapters for
+    catalog/session binding, schema translation, token/prop options, and commit semantics. Move
+    editor layout, feedback, and overlay primitives to their UI owners. Remove the old directory
+    and its demo only after Storybook and product consumers have moved. Do not use delete-and-fix
+    as the discovery process.
+  - Scope: current cleanup goal; preserve current behavior and do not add features.
+  - Contracts: preserve editor session write/commit behavior, nested field paths, disabled/error
+    state, token/prop reference values, keyboard/accessibility behavior, Storybook compositions,
+    and existing public interactions. Only `@facadeur/form` may implement reusable form elements;
+    app adapters must compose its exports rather than render replacement controls.
+  - Validation: inventory/import audit, focused editor and form typechecks, relevant Storybook
+    stories and behavioral coverage, `git diff --check`, and detector rerun. Keep API and
+    API-client outside this task; do not restructure `store-yjs`.
+  - Progress: `TextControl`, `TextInput`, `TextArea`, `NumberInput`, `SearchInput`, `Select`,
+    `Combobox`, `Checkbox`, `Toggle`, `RadioGroup`, `SegmentedControl`, and `ColorInput` now compose fields from
+    `@facadeur/form`; editor adapters retain binding/path, labels, and commit behavior.
+    `ClassListInput` was replaced by package `ChipsField` in Storybook and consumers, then removed.
+    Package fields now forward required input attributes and preserve blur handling. The package
+    `ColorField` owns the picker interaction, with a thin editor binding adapter
+    and deprecated helper re-export. A package `RadioGroupField` now owns the radio input; the
+    no-props disabled select also uses package `SelectField`. The old `ui/form` directory has since
+    been removed after its context, dynamic editor fields, layout, feedback, and overlay modules
+    moved to their owners. The editor schema renderer and its
+    field config have moved to `ui/controls/data/schema-form`; JSON-schema integration and its
+    Storybook story now import from that owner.
+    The schema form and manual form demo now compose the public package `RecordField`; the schema
+    renderer supplies catalog path binding and prop-reference options, and the former local record
+    editor was removed.
+    Keep the render-prop `ArrayField` for now: the package `RepeaterField` uses a static field
+    config, while schema array rows recursively render editor schema controls. Converge these only
+    after deciding whether the shared package field should support nested render-prop content.
+  - Ownership audit: remaining product controls were checked after the migration; the organisation
+    member role selector now uses package `SelectField`. No rendered native form control remains in
+    Editor source or Storybook outside `packages/form`. The one raw input is created on demand as a
+    browser file-picker in `domain/assets/files.ts`, which has no equivalent package field.
+  - Native-field follow-up: replace standard project, management, layer, and grid fields with
+    public package fields while preserving browser validation, names/FormData handling, datalist
+    suggestions, resets, CSS classes, and editor commits. Keep raw DOM controls only for specialized
+    interactions that the package API cannot express; audit the deprecated schema-library view
+    separately before deciding whether to migrate or retire it. The initial scan found 24 native
+    controls outside `ui/form` and one Storybook example, plus a 480-line style declaration editor
+    and 14-file layer directory for independent ownership review.
+    Scope: current cleanup goal; do not touch API/API-client or store-yjs.
+    Validation: import/native-element audit, focused package/editor typechecks, affected Storybook
+    panels, detector rerun, and diff check.
+    Progress: all standard active Editor and Storybook controls now use public `@facadeur/form`
+    fields, including management inputs, the viewer selector, layer search/rename/group controls,
+    breakpoint width, grid controls, and CSS declaration editors. Their existing state, validation,
+    suggestions and commit behavior remain in the owning Editor features. The three old schema-stage
+    selects and Storybook checkbox also use package fields; the schema stage has no active consumer
+    and is marked `@deprecated` with `CatalogSchemasPanel` as replacement. Its composition UI test
+    points to the deprecated module and remains for now. User decision still needed: move its
+    assertions to the active catalog schema editor, or drop this test as deprecated-stage-only.
+    The deprecated `PreviewDataStage` test also remains outside the root Vitest allowlist. It
+    checks legacy base/variant inheritance, sparse commits, clearing, and invalid JSON behavior;
+    the active `CatalogPreviewDataStage` currently has no corresponding test. User decision: port
+    relevant assertions to the active stage or drop this legacy-only test.
+  - Shared UI extraction: `IconButton` was imported by data controls, design settings, token
+    editing, and the component inspector despite being nested under `ui/form`. It now lives in
+    `ui/components`, and these consumers share the same implementation. The form directory no
+    longer owns this cross-domain button primitive.
+  - Shared presentation extraction: `Field`, feedback messages, layout primitives, and Radix
+    overlays are editor UI components, not form controls. Move their implementations to
+    `ui/components/{feedback,layout,overlay}` and keep temporary deprecated re-exports from
+    `ui/form/index` while consumers migrate. Remove their `FormContext` dependency by letting the
+    root form provide density through inherited CSS variables; explicit per-control gaps continue
+    to override the default. Preserve labels/hints/errors, keyboard behavior, overlay focus/close
+    behavior, and compact/comfortable spacing. `form.css` remains in place until its global
+    selectors and tokens have a single stylesheet owner.
+    Scope: current cleanup goal. Validation: consumer/import audit, form and editor typechecks,
+    focused Storybook layout/overlay stories, detector, formatting, and diff check.
+    Progress: implementations and public barrels now live under `ui/components`; all Editor and
+    Storybook imports use those owners, and the old `ui/form` presentation exports are removed.
+    `Stack` and `Inline` now inherit compact/comfortable density through CSS variables instead of
+    reading form context.
+  - Editor binding rehome: after presentation moves, `ui/form` contains the Editor's nested-path
+    context, `live`/`commit` adapters over package fields, and a render-prop array composition used
+    by recursive schema forms. Move this integration to `ui/controls/form-binding`, move its
+    global form stylesheet to `ui/styles`, and update consumers/tests. Move token search matching
+    to the token UI owner and use the public form option types directly; delete the leftover form
+    option alias once consumers are updated. Preserve dotted/bracket path rules, disabled state,
+    prop references, blur/Enter commits, density, and array row behavior. Remove `ui/form` once no
+    imports remain.
+    Scope: current cleanup goal. Validation: import audit, Editor/form typechecks, form binding
+    behavioral coverage, relevant Storybook forms, detector, formatting, and diff check.
+    Progress: all binding/context/array modules now live under `ui/controls/form-binding`; the
+    stylesheet lives under `ui/styles`; token matching lives under `ui/design/tokens`; package
+    option types are imported directly from `@facadeur/form`. `apps/editor/src/ui/form` has been
+    removed. Dormant form tests remain pending a coverage decision; deprecated stage tests remain
+    pending a decision to migrate their assertions to active stages or retire them.
+  - Editor schema-form ownership: `SchemaForm` and its editor `FieldConfig` translated catalog and
+    JSON-schema fields into editor controls. They now live in `ui/controls/data/schema-form/`,
+    alongside the data controls they compose; JSON-schema integration and Storybook consumers use
+    that public subdomain barrel. Reusable form fields remain in `@facadeur/form`, while path
+    binding and session-aware wrappers remain Editor integration. All existing variants, nested
+    paths, schema defaults and commits are preserved. Package typecheck, formatting, import audit
+    and diff check pass; the detector has no size candidate and still reports the 19-file
+    data-controls organization review. Editor typecheck retains the listed pre-existing errors.
+    Config consolidation reviewed and retained: although names overlap with
+    `@facadeur/form`'s `FormFieldConfig`, the Editor config drives a different renderer and adds
+    `schemaField`, `classList`, toggle/checkbox aliases, recursive array items, and editor-only
+    required/hint/prop-binding semantics. Reusing the package renderer contract would couple the
+    Editor adapter to behavior it does not use. The shared leaf inputs themselves already come
+    from `@facadeur/form`.
+    Editor controls now use package `AutocompleteOption` directly. Token filtering uses a private
+    matcher owned by the token UI.
+  - Validation note: the package typecheck passes. Editor typecheck still reports existing Radix,
+    `Inline.alignItems`, `FieldValue`, and `jsonjoy-builder` diagnostics, with no diagnostics on the
+    migrated adapters. The legacy `SchemaForm.placeholder` union error was fixed during this pass.
+    Root Vitest explicitly includes only three Editor test files;
+    existing `apps/editor/test/form` cases are currently dormant and need a coverage decision
+    before deleting any behavior or tests.
+  - Color ownership migration: `ColorInput` duplicated the package's basic `ColorField` with
+    editor-only hex/RGBA/EyeDropper behavior. The complete interaction and pure helpers now live in
+    `@facadeur/form`; a thin binding adapter and deprecated helper re-export preserve editor paths
+    and current test imports. Preserve normalized `#RRGGBBAA` values and live/commit semantics.
+    Package typecheck, formatting, detector, and diff checks pass; editor typecheck reports only
+    the existing diagnostics listed above.
+  - Segmented selection migration: `SegmentedControl` is now a package-owned field used through a
+    thin editor binding adapter in the Schema Type editor and demo. Its segmented styling moved out
+    of the legacy `form.css`; the package style module includes editor-token fallbacks.
+
+## Package ownership cleanup
+
+- [x] Refactor: route Editor catalog transport through the Core controller boundary.
+  - Evidence: `CoreController.persist/reload` already accept `CatalogPort`, but `AppService`
+    separately calls the extended `EditorCatalogPort` for create/delete and then replaces Core's
+    catalog snapshot. This leaves some catalog I/O outside the controller's path.
+  - Action: define the smallest transport capability Core needs and route load/save/create/delete
+    through Core methods while keeping HTTP implementation in the Editor adapter. Do not make
+    Core import API/API-client or move transport into Domain; Domain may hold only shared types.
+  - Scope: current cleanup goal; no edits inside `packages/api` or `packages/api-client`.
+  - Contracts: preserve server CRUD semantics, catalog validation, open-definition selection,
+    errors, save ordering, and dirty-state behavior.
+  - Validation: focused Core/AppService behavior coverage, typechecks, Storybook catalog settings
+    interactions, and import-path audit.
+  - Progress: Core now owns the create/delete transport orchestration alongside its existing
+    persist/reload methods. AppService delegates create, delete, and save to Core; the Editor
+    adapter still implements transport. Definition patching remains a local Core mutation and is
+    persisted through the existing save flow; the unused direct patch transport method was removed
+    from the Editor adapter. Core depends only on Domain catalog types and the transport
+    capability, with no API/API-client dependency. The Core controller remains cohesive as the
+    project state owner; its detector signal alone does not justify splitting. A follow-up source
+    audit found Editor catalog HTTP calls only in `domain/project/catalog-port.ts`; UI writes call
+    AppService or Session and are persisted/reloaded through Core.
+
+- [x] Refactor: remove Core's runtime dependency on example fixture IDs.
+  - Evidence: `packages/core/src/schema/document.ts` imports `exampleIds` from
+    `@facadeur/examples`, and `@facadeur/core` declares Examples as a runtime dependency. Examples
+    is intended to be Storybook/test fixture data, not a dependency of core logic.
+  - Action: identify why default document creation needs those stable IDs and move the contract or
+    data to the correct owner without making Core depend on fixture catalogs. Keep fixture values
+    and generated document behavior unchanged. Core owns its default viewport IDs; Examples reuses
+    that public contract.
+  - Scope: current cleanup goal; separate from the first form migration batch.
+  - Contracts: preserve all default node/token references, stable UUIDs, and catalog validation.
+  - Validation: document creation coverage, core/examples typechecks, import-graph audit, and
+    detector rerun.
+  - Progress: `defaultBreakpointIds` now belongs to Core; the Examples ID catalog imports it, so
+    the stable UUIDs have one source. The Core runtime dependency on Examples moved to dev-only for
+    Core fixtures/tests, while Examples depends on Core for these shared default IDs. No catalog
+    values changed.
+
+- [x] Refactor: reconcile token logic ownership across Core, Tokens, and Style Engine.
+  - Evidence: Core owns `readTokenTree`, token contracts, reference validation, and responsive
+    value resolution. Style Engine owns the shared CSS rule compiler used for text output and
+    runtime CSSOM insertion. API and Store Yjs still import `@facadeur/tokens`; these packages are
+    outside this cleanup's edit scope, so the compatibility facade cannot yet be removed.
+  - Action: token resolution and CSS-property behavior now live in Core; stylesheet compilation
+    and runtime insertion share Style Engine's CSS compiler; templates and reusable fixtures live
+    in Examples. Keep `@facadeur/tokens` as a deprecated compatibility facade for API and Store
+    Yjs. Do not edit API or Store Yjs.
+  - Scope: current cleanup goal; do not touch API/API-client or store-yjs.
+  - Contracts: preserve stable token IDs/paths, raw values, aliases/references, responsive sparse
+    overrides, CSS variable names, generated CSS, and Codegen output.
+  - Validation: Core, Examples, Codegen, and Tokens typechecks passed after the offline workspace
+    install. Style Engine's standalone typecheck reports existing Store Yjs and test typing errors,
+    with no changed-source errors; Server reports existing Store Yjs and test type errors, with no
+    diagnostics in its migrated validation module; Editor reports its documented existing
+    diagnostics. The user-run Core token parse/roundtrip suites pass 10/10, and Style Engine's
+    engine/axis/design-css suites pass 24/24. Preserve token UUID/path contracts, raw values,
+    sparse responsive overrides, exact CSS property naming, CSS output and Codegen output.
+  - Progress: token resolution and CSS-property code now live in Core; project-template data lives
+    in Examples; Style Engine owns shared CSS rule output. Editor, Server, Codegen, and Style Engine
+    no longer import the compatibility package. API and Store Yjs remain its only runtime users,
+    as required by scope. The first install exposed a workspace cycle through Style Engine's
+    Store Yjs test dependency; move CSS tests to Style Engine and share their fixtures through
+    Examples so the deprecated facade does not depend on Style Engine. CSS tests now live with
+    Style Engine, and token test fixtures are shared through Examples. The repeat install removed
+    the Tokens/Style Engine/Store Yjs cycle; the remaining Core/Examples cycle is test-time from
+    Core's fixture imports. API and Store Yjs remain the only runtime consumers of the deprecated
+    facade, by scope. It contains no token or CSS implementation. No API or Store Yjs files changed.
+  - Cleanup: removed the Editor's stale Next.js transpile/alias entries for `@facadeur/tokens`.
+    Evidence: the active Editor source import audit has no facade imports and the package is no
+    longer an Editor dependency. Runtime consumers in API and Store Yjs remain unchanged. The
+    affected-path detector reports no size candidates; `git diff --check` and a follow-up config/
+    import audit pass.
+
+- [x] Refactor: group React Codegen story generation by responsibility.
+  - Evidence: the candidate detector reports 12 direct source files in
+    `packages/codegen/engines/react/src`; the folder contains CLI/output wiring, component and CSS
+    generation, and story generation, with `component/` and `workspace/` already grouping larger
+    subdomains. `stories.ts` and `story-data.ts` are a two-module Storybook-generation unit.
+  - Action: move those two modules into `stories/` and retain the existing `./stories` import path
+    through an explicit barrel. Keep CLI, file-output, CSS, and component-render modules at their
+    current focused boundaries.
+  - Scope: current cleanup goal; organization only.
+  - Contracts: preserve public Codegen exports, generated project files, story output, CSS, and CLI
+    behavior.
+  - Validation: Codegen typecheck passed, detector reports no size candidates, formatting and
+    diff checks pass. Before retiring the deprecated-only test group below, the user's full run
+    passed 22 suites and 89 tests, including the focused four-test `story-data` suite. The broader
+    `generate` suite depended on removed v1 JSON files; no fixtures or v2-to-v1 bridge were
+    restored. The deprecated-only coverage is now retired below.
+
+- [ ] User decision: retire or port the dormant v1 Editor example-fixture tests.
+  - Evidence: `apps/editor/test/fixtures/example-catalog.ts` searches the removed repository-level
+    `examples/` directory and supplies legacy `DocumentFile` helpers; at least 30 Editor tests
+    import it. The root Vitest allowlist excludes these tests, and `docs/node-model-refactor.md`
+    records the v1 tests as paused during the catalog reset. The active examples now live in
+    `@facadeur/examples` with the v2 `ProjectCatalog` model.
+  - Action: wait for the user's choice between porting only still-relevant coverage to the active
+    catalog fixtures and dropping the dormant v1-only test group. Do not invent substitute example
+    documents or silently delete the tests.
+  - Scope: current cleanup goal; tests and test support only.
+  - Contracts: preserve active Editor/Storybook behavior and reuse `@facadeur/examples` if tests
+    are ported. No production code changes are needed for this decision.
+  - Validation: check root Vitest coverage and the actual consumers of each assertion before
+    porting or removing; rerun detector and relevant typechecks after the decision.
+
+- [x] Retire tests for the deprecated React Codegen v1 generator.
+  - Evidence: `packages/codegen/engines/react/test/generate.test.ts` reads the deleted
+    repository-level `examples/*.json` v1 fixtures and exercises the deprecated
+    `DocumentFile`-based generator. Inspection found that every suite under
+    `packages/codegen/engines/react/test` and `packages/codegen/test` tests this same deprecated
+    input/API; even `story-data.test.ts` enters through `generateReact`. The package README and
+    public exports mark the generator deprecated, and there are no production callers.
+  - Action: remove these v1-only tests and their test helper rather than restore deleted JSON
+    templates. Keep the deprecated implementation and public compatibility exports unchanged;
+    do not add a v2-to-v1 bridge.
+  - Scope: tests only; no catalog-generation feature work.
+  - Contracts: retain the legacy implementation for existing external consumers and preserve the
+    current catalog Code view. Keep API/API-client and Store Yjs untouched.
+  - Validation: removed the deprecated test paths from the root allowlist; Codegen typecheck,
+    scoped candidate scan, formatting, and diff checks pass. The user's full run after removal
+    passed 21 suites and 85 tests. Future tests should target the catalog-driven generator when
+    that implementation exists; do not restore JSON templates for legacy test coverage.
+
+- [x] Refactor: register Core's UUID schema format with Ajv without changing validation.
+  - Evidence: `schema.ts` and `json-schema-value.ts` each construct Ajv with `strict: false`,
+    while Core's TypeBox document schemas already pair `format: "uuid"` with a UUID pattern.
+    Unknown-format warnings are repeated across the full test run.
+  - Action: centralize Core's Ajv construction and register `uuid` as annotation-only, which
+    matches current behavior for custom JSON Schemas and leaves the persisted document regex as
+    the UUID check.
+  - Scope: Core validation configuration only; no data or validation contract change.
+  - Contracts: retain all existing JSON Schema validation results and error behavior.
+  - Validation: Core typecheck, scoped formatting and candidate scan pass; an Ajv smoke check
+    compiles a `format: "uuid"` schema without a warning. The user's full `pnpm test` passes 21
+    suites and 85 tests, with all repeated unknown-UUID-format warnings gone.
+
+- [x] Refactor: remove the unused Editor adapter for legacy document-based Codegen
+  - Evidence: `packages/codegen/src/types.ts` accepts legacy `DocumentFile[]`; the root `pnpm codegen`
+    script stays disabled; and
+    `apps/editor/src/deprecated/CodeStage.tsx` was the only Editor caller; the active
+    `CatalogCodeStage` displays Core's build config and says codegen is not wired. Its two-test
+    `code-preview.test.ts` only tested that deprecated v1 adapter, and was outside the root test
+    allowlist.
+  - Action: remove the unused v1 Editor stage, adapter, test, and Editor dependency. Keep the
+    Codegen `DocumentFile[]` API and React engine exports for compatibility, marked deprecated
+    with a catalog-driven replacement direction. Keep the root command disabled; implementing
+    catalog generation restores new user-visible behavior outside this no-feature cleanup.
+  - Scope: current package ownership cleanup.
+  - Contracts: preserve the legacy generator implementation and generated-file contract for
+    compatibility; current Catalog Code view and Editor behavior do not change. Do not touch
+    API/API-client.
+  - Validation: source import audit, Codegen typecheck, detector, and diff check; confirm no
+    active Editor import of Codegen remains.
+
+- [x] Refactor: deprecate the standalone DOM renderer and remove its Editor runtime dependency.
+  - Evidence: the Editor renders canvas elements through React and has no active source import of
+    `@facadeur/renderer-dom`; remaining references are tests, an old architecture document, and
+    package wiring. The root test allowlist still runs `render-node.test.ts`, so package behavior
+    retains compatibility coverage.
+  - Action: mark the public renderer API deprecated in favor of the React canvas; retain the
+    implementation and its coverage until every test-only caller has an equivalent active test or
+    is explicitly retired. Remove runtime dependency edges where only tests import it.
+  - Scope: current cleanup goal; keep this separate from form migration and do not alter
+    store-yjs.
+  - Contracts: retain React canvas rendering and style injection/previews; no API/API-client edits.
+  - Validation: repository-wide import search, Storybook canvas stories, and affected package
+    checks.
+  - Progress: the public renderer exports and package metadata now identify React canvas rendering
+    as the replacement. The Editor package keeps renderer-dom as a devDependency for legacy tests;
+    Next no longer transpiles or aliases it at runtime. Style Engine already keeps its renderer
+    usage in devDependencies. Kept the active `render-node.test.ts` and legacy tests because their
+    behavior has not yet been re-covered by React canvas tests.
+
+- [x] Refactor: organize Editor data controls by responsibility.
+  - Evidence: the scoped detector reported 19 direct source files in `ui/controls/data`. The files
+    combine schema-backed field editing, catalog bindings, events, data directives, and exposure
+    controls; only schema-form files have a clear subdomain migration in the current batch.
+  - Action: moved bindings, events, directives, and schema-value controls into cohesive subdomains
+    with focused barrels; retain shared field-path and label helpers at the data-control boundary.
+    Keep the exposed controls discoverable through the existing `data/index.ts` barrel. Do not
+    create one folder per file or a generic shared layer.
+  - Scope: current cleanup goal, based on imports and responsibility overlap already audited.
+  - Contracts: preserve catalog field paths and value formats, binding target normalization, event
+    payloads, directive semantics, exported panel controls, and all consumer imports or compatible
+    forwarding exports.
+  - Validation: import audit found no stale direct paths, focused Editor typecheck reported no
+    errors in moved controls (remaining diagnostics are pre-existing), detector rerun reports no
+    concentration candidate, formatting passed, and `git diff --check` passed. The relevant
+    Style Engine suites pass 24/24 in the user's CMD environment.
+  - In-scope consolidation: event controls and `ComponentEvents` separately stripped legacy
+    `payload` properties from edited definitions/bindings. Move this canonicalization to the
+    Editor event domain; preserve untouched legacy records and only strip the legacy property when
+    the user edits that record.
+    Contracts: keep event names, schema-backed `data` mappings, and legacy read compatibility.
+    Validation: event-binding regression assertion in the active root Vitest allowlist, Editor
+    typecheck, detector rerun, and diff check. The selected test is independent of the paused v1
+    example-fixture group.
+    Result: `withoutLegacyEventPayload` in `domain/events.ts` now owns this edit-time
+    canonicalization for event definitions and bindings; unedited records still pass through
+    unchanged. The Editor typecheck reports no diagnostics in the changed files. The focused event
+    tests were initially outside the root Vitest allowlist; the fixture-independent binding test
+    now asserts legacy payload removal on edit and is included in that allowlist. The programmatic
+    targeted run reached the known sandbox `EPERM` while resolving Vitest under
+    `node_modules/.pnpm`, before test collection. The detector reports no size candidates and
+    `git diff --check` passes.
+  - Result: mapped 19 direct files and all consumers. The boundaries are bindings, event
+    definitions/bindings, data directives, and schema-backed values; shared field labels/paths
+    remain at the parent level. The schema-form subdomain is already nested. Preserve all current
+    consumers by updating imports and retaining the existing root barrel exports.
+  - Result: moved the controls into `bindings/`, `events/`, `directives/`, `fields/`, and
+    `schema/`; split field parsing/type options from binding normalization. Updated every source and
+    test import, keeping the root barrel's prior exports. No stale direct paths remain, the detector
+    now reports no concentration candidate, changed-file Prettier passes, Style Engine typecheck
+    passes, and Editor typecheck has no errors in moved files. Focused Style Engine tests exposed
+    stale assumptions about token CSS grouping and breakpoint-name keys; those assertions now use
+    the current data model. The first CMD rerun passed 23/24; the remaining mismatch was the
+    case-sensitive canonical path `color.bg.Canvas` (not `color.bg.canvas`) and is corrected.
+    Final CMD run passes all 24 tests across the three Style Engine suites. AJV emits non-fatal
+    warnings that its configured format checker does not recognize `uuid`; schemas still validate
+    in these suites.
+
 ### Move design UI out of the sidebar tree
 
 - [x] Refactor: align design settings and shared design controls with their actual owners.
@@ -78,22 +434,20 @@
   - Validation: focused editor tests, editor typecheck, Storybook Settings · Spacing interaction,
     `git diff --check`, and the refactoring detector.
 
-- [ ] Refactor: share the token-editor field row in `ui`.
-  - Evidence: global Typography settings duplicate a labeled field row, while Spacing presents its
-    TransformableField as a standalone control; the screenshots show the Typography row's aligned
-    label/control layout is preferred.
-  - Action: add `ui/TokenEditorField` for the shared label, control, inherited hint, and action
-    columns. Use it in the Typography token editor and the global Spacing value row. Keep token
-    parsing, validation, previews, breakpoint reset behavior, and layout-inspector Spacing control
-    in their current owners. Omit the editable Family row from `DesignTypographyEditor` while
-    retaining any existing `fontFamily` value in stored typography tokens and previews.
-  - Scope: current task; consolidate the token editor layout and omit only the Family input from
-    `DesignTypographyEditor`.
+- [x] Refactor: share the token-editor field row in `ui`.
+  - Evidence: global Typography settings and Spacing had separate label/control wrappers with
+    inconsistent alignment.
+  - Action: consolidated the shared fieldset and aligned label/control/meta row in
+    `ui/combofield/ComboField`; Typography, structured Shadow, and global Spacing use it. The
+    editable `fontFamily` row is omitted from `DesignTypographyEditor`, while stored values and
+    previews retain it.
+  - Scope: token editor presentation and the Family-row removal only.
   - Contracts: preserve control names, labels, token options, transform behavior, sparse
-    responsive overrides, and component-token Typography use. Do not clear or rewrite existing
-    `fontFamily` values when other typography fields change. Avoid an Editor/Form dependency.
-  - Validation: formatting, editor typecheck, `git diff --check`, and detector rerun on changed
-    paths.
+    responsive overrides, and component-token Typography use. Other typography edits leave stored
+    `fontFamily` values unchanged. Avoid an Editor/Form dependency.
+  - Validation: formatting and `git diff --check` passed; the affected-path detector reports no
+    size candidates. Editor typecheck retains existing unrelated diagnostics, with none reported
+    for the changed files.
 
 - [x] Refactor: share token-backed fieldsets through `ui/combofield/ComboField`.
   - Evidence: Typography, structured Shadow layers, and Spacing each assemble a bordered group and
@@ -1261,7 +1615,7 @@ Validation after the shared path correction: 1,107 tests in 196 files pass, work
 scoped lint/format and diff checks pass. The detector retains four cohesive Core validation size
 signals and its 13-file domain concentration; no size-only reorganizations are warranted.
 
-- [ ] Review extracting token-reference queries from `apps/editor/src/domain/editing.ts` into a domain-owned token-reference module. Evidence: the 524-line file combines token catalog queries, insertion/drop geometry and node placement rules; this feature only changes its placement capabilities. Preserve existing token ordering/reference syntax and editing exports, then validate token-control and editing tests plus typecheck. Completion criterion: separate actual token-query ownership without moving geometry or creating a generic utility package. Deferred because this extraction is independent of structural elements.
+- [x] Extract editor token-reference queries from `apps/editor/src/domain/editing.ts` into `apps/editor/src/domain/token-references.ts`. Evidence: `editing.ts` owned both pure global/component token option queries and placement/drop geometry, while token controls consumed the query helpers directly. Keep placement logic together in `editing.ts`; route production token-query imports to the new domain module and retain re-exports from `editing.ts` for compatibility. Preserved ordering, UUID/component reference syntax and query fallback behavior. Validation: Prettier and diff checks pass; before/after detector scans show no candidate in the edited domain modules (two existing UI size signals remain); editor typecheck still reports pre-existing errors in Inline, Modal, Popover, VariantActionButton, CatalogPreviewDataStage and jsonjoy-type-editor, with no errors in changed files. The existing `editing.test.ts` imports removed JSON templates and cannot currently run, so its behavioral assertions remain for fixture migration.
 - Retained candidates: session assembly remains cohesive lifecycle wiring; the existing layout panel and CSS declaration editor are coherent interaction surfaces and do not need a size-only split for this task. The flat `domain/` directory mixes these domains, but existing subdirectories already own session, selection, schemas and edits; reorganize only with a concrete cross-domain ownership need.
 
 ## Standalone generated workspace (2026-10-06)
@@ -1350,15 +1704,17 @@ its dispatch/public exports, and preserve Core's `classList` inspector contract.
 older `ClassListInput` remains a separate migration candidate because it is owned by the legacy
 schema form. Validate form/editor typechecks, detector, formatting, and diff review.
 
-- [ ] Backlog: migrate the legacy editor class-list input to the shared chips field
+- [x] Refactor: migrate the legacy editor class-list input to the shared chips field
   - Evidence: `apps/editor/src/ui/form/components/selection/ClassListInput.tsx` repeats chips,
     free-form input, suggestions, and removal behavior outside `@facadeur/form`.
   - Action: when replacing the legacy schema form, use the public `@facadeur/form` chips control
     and remove its local component and `.eu-class-list` styles.
-  - Scope: backlog; keep the current editor form's styling and whitespace semantics stable until
-    its migration is scheduled.
+  - Scope: current cleanup goal.
   - Contracts: preserve class-token split/add/remove behavior and suggestion filtering.
   - Validation: editor typecheck, relevant form stories, detector, and diff review.
+  - Result: editor consumers and the Storybook component story now use `@facadeur/form`'s
+    `ChipsField`; the duplicate control and unused `.eu-class-list`/`.eu-class-badge` styles were
+    removed. Existing editor typecheck diagnostics remain unrelated to this field.
 
 ## Keep new record rows stable while editing
 
@@ -1500,3 +1856,45 @@ responsibility without changing ownership or improving validation.
 - [ ] Backlog: review server module boundaries in `packages/api/src/server/project/files.ts` and
       `management/service.ts`, flagged by the candidate detector. Keep this separate from the type
       ownership change; preserve file persistence and management behavior if a future split is justified.
+
+- [x] Refactor: keep token behavior tests with Core ownership
+  - Evidence: `packages/tokens/test/parse.test.ts` and `roundtrip.test.ts` test UUID token
+    resolution, breakpoint semantics, canonical document serialization, and Core token commands,
+    while `packages/tokens` is now only a deprecated compatibility facade.
+  - Action: move both suites to `packages/core/test`, import Core APIs from Core, and retain shared
+    fixture data from `@facadeur/examples/test-support`. Keep every existing assertion.
+  - Scope: current package-ownership cleanup.
+  - Contracts: preserve token UUID identity, reference validation, breakpoint overrides, canonical
+    serialization, and command behavior; no runtime or persisted data changes.
+  - Validation: Core typecheck, both suites pass in CMD (10 tests total), detector, and
+    `git diff --check` pass. Parse tests now supply the semantic tier extension they verify and
+    compare the font's stored fields while allowing Core's indexed metadata. AJV UUID-format
+    warnings are non-fatal. The event binding test separately passed in CMD (2 tests).
+
+- [x] Docs: align refactoring ownership guidance with current package boundaries
+  - Evidence: `docs/refactoring-checklist.md` still assigns token evaluation to deprecated
+    `packages/tokens` and DOM rendering to deprecated `packages/renderer-dom`; Core, Style Engine,
+    and Renderer READMEs now say otherwise. `packages/domain/src/index.ts` uses only type exports.
+  - Action: update the checklist to assign token indexing/resolution to Core, stylesheet output to
+    Style Engine, and mark `renderer-dom` as deprecated compatibility code. Keep Domain type-only.
+  - Scope: current architecture cleanup.
+  - Contracts: documentation-only; no code, runtime, or package API changes.
+  - Validation: compared package README ownership statements and inspected Domain's type-only
+    index; detector and diff check pass.
+
+- [x] Refactor: remove deprecated renderer integrations from Style Engine tests
+  - Evidence: `packages/style-engine/test/engine.test.ts` combines stylesheet compiler/runtime
+    tests with multiple `createDomRenderer` + Store Yjs integration cases. Both compatibility
+    packages are only test-time Style Engine dependencies, and `packages/renderer-dom/test` already
+    covers renderer/store update behavior.
+  - Action: keep compile and direct stylesheet-runtime assertions in Style Engine; drop cases that
+    exercise the deprecated DOM renderer or Yjs store there, then remove their test-only package
+    dependencies. Leave Renderer DOM and Store Yjs source and package APIs untouched.
+  - Scope: current ownership cleanup; deprecated integration tests only.
+  - Contracts: no runtime or user-visible behavior changes. Keep existing Core/Style Engine
+    compiler tests and the Renderer DOM package's own compatibility coverage.
+  - Validation: Style Engine typecheck, focused tests, Renderer DOM coverage review, detector, and
+    diff check. The three Style Engine suites were added to the root Vitest allowlist after CMD
+    confirmed they were otherwise not discoverable; final CMD run passes all 24 tests.
+  - Result: removed six renderer+store cases and the test-only package edges; compiler and direct
+    runtime tests remain. Renderer integration coverage stays in `packages/renderer-dom/test`.

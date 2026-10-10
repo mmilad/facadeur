@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { EditorSession, EditorSnapshot } from '../../domain/session';
-import { Field, TextInput } from '../form/index';
+import { Field } from '../components/feedback';
+import { TextInput } from '../controls/form-binding/index';
 import './design-resources.css';
 
 export function IconsDomainPanel({

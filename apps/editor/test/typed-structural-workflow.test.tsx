@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, expect, it } from 'vitest';
 import { publicFieldsFor, toNested, withPreviewData, type DocumentFile } from '@facadeur/core';
 import { renderDocument } from '@facadeur/renderer-dom';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
+import { createProjectTemplateDocument } from '@facadeur/examples';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';
 

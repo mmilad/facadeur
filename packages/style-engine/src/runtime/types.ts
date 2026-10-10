@@ -1,5 +1,4 @@
-import type { Breakpoint, DocumentChange, DocumentFile } from '@facadeur/core';
-import type { DesignInput } from '@facadeur/tokens';
+import type { Breakpoint, DesignInput, DocumentChange, DocumentFile } from '@facadeur/core';
 import type { CompileOptions } from '../compiler/types';
 import type { StyleController } from './controller';
 export interface RuleChild {

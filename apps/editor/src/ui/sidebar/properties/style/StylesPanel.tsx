@@ -8,11 +8,9 @@ import {
 } from '@facadeur/core';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
 import type { StyleStateName } from '../../../../domain/edits/style-edit';
-import {
-  editorBreakpoints,
-  viewportEditContext,
-} from '../../../../domain/viewport/viewport-edit';
-import { Field, Select } from '../../../form/index';
+import { editorBreakpoints, viewportEditContext } from '../../../../domain/viewport/viewport-edit';
+import { Field } from '../../../components/feedback';
+import { Select } from '../../../controls/form-binding/index';
 import { NodeClassStyleRow } from './NodeClassStyleRow';
 import { ClassNamesEditor } from './ClassNamesEditor';
 import { StyleRuleRow } from './StyleRuleRow';

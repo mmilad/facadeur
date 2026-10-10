@@ -1,5 +1,6 @@
-import Ajv, { type ErrorObject, type ValidateFunction } from 'ajv';
+import { type ErrorObject, type ValidateFunction } from 'ajv';
 import { DocumentError } from '../../document/errors';
+import { createAjv } from './ajv';
 import {
   createDocumentSchema,
   documentFileSchema,
@@ -13,7 +14,7 @@ import {
 } from '../style/tokens/global/legacy-migration';
 import { isPlainObject } from '../../utils';
 
-const ajv = new Ajv({ allErrors: true, strict: false });
+const ajv = createAjv();
 const validateFile: ValidateFunction = ajv.compile(documentFileSchema);
 
 /**
@@ -39,14 +40,22 @@ function migrateDocumentDesignLibraries(data: unknown) {
     'fonts' in data ||
     (migration.tokens !== undefined && migration.tokens !== data.tokens) ||
     migration.breakpoints !== undefined;
-  if (!hasLegacy && !hasLegacyReferenceLocations(data, migration.tokenIds, migration.breakpointIds)) {
+  if (
+    !hasLegacy &&
+    !hasLegacyReferenceLocations(data, migration.tokenIds, migration.breakpointIds)
+  ) {
     return data;
   }
 
-  const next = migrateLegacyReferenceLocations(data, migration.tokenIds, migration.breakpointIds) as Record<string, unknown>;
+  const next = migrateLegacyReferenceLocations(
+    data,
+    migration.tokenIds,
+    migration.breakpointIds,
+  ) as Record<string, unknown>;
   delete next.fonts;
   if (migration.tokens) next.tokens = migration.tokens;
-  if (migration.breakpoints && settings) next.settings = { ...settings, breakpoints: migration.breakpoints };
+  if (migration.breakpoints && settings)
+    next.settings = { ...settings, breakpoints: migration.breakpoints };
   return next;
 }
 
@@ -54,7 +63,7 @@ function migrateDocumentDesignLibraries(data: unknown) {
  * @deprecated Flat document Ajv validator. Remove with {@link validateDocumentFile} and the document-file editor path.
  */
 export function compileDocumentValidator(options: DocumentSchemaOptions = {}): ValidateFunction {
-  return new Ajv({ allErrors: true, strict: false }).compile(createDocumentSchema(options));
+  return createAjv().compile(createDocumentSchema(options));
 }
 
 function formatErrors(errors: ErrorObject[] | null | undefined) {

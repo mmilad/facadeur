@@ -51,18 +51,14 @@ export class AppService {
 
   async persistCatalog(catalog?: ProjectCatalogModel) {
     if (catalog) this.core.replaceCatalog(catalog);
-    this.core.replaceCatalog(await this.catalogPort.save(this.core.getSnapshot().catalog));
+    await this.core.persist(this.catalogPort);
   }
 
   async createDefinition(
     kind: CatalogDefinitionKind,
     definition: Omit<NodeDefinitionModel, 'uuid'> & { uuid?: string },
   ) {
-    const catalog = await this.catalogPort.createDefinition(kind, definition);
-    this.core.replaceCatalog(catalog);
-    const uuid =
-      definition.uuid ??
-      Object.values(catalog[kind]).find((entry) => entry.name === definition.name)?.uuid;
+    const uuid = await this.core.createDefinitionFromPort(this.catalogPort, kind, definition);
     if (uuid) this.session.openAsset(uuid);
   }
 
@@ -73,9 +69,7 @@ export class AppService {
   }
 
   async deleteDefinition(uuid: string) {
-    const kind = catalogKindForDefinition(this.core.getSnapshot().catalog, uuid);
-    if (!kind) throw new Error(`Unknown catalog definition "${uuid}"`);
-    this.core.replaceCatalog(await this.catalogPort.deleteDefinition(kind, uuid));
+    await this.core.deleteDefinitionFromPort(this.catalogPort, uuid);
   }
 
   upsertSchema(uuid: string, schema: JsonSchemaObject) {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
+import { createProjectTemplateDocument } from '@facadeur/examples';
 import {
   createDefaultFont,
   editedFont,

@@ -9,10 +9,13 @@ export function SearchField({
   placeholder,
   disabled,
   className,
+  invalid,
   onChange,
+  ...inputProps
 }: SearchFieldProps) {
   return (
     <input
+      {...inputProps}
       className={[styles.input, className].filter(Boolean).join(' ')}
       id={id}
       name={name}
@@ -20,6 +23,7 @@ export function SearchField({
       value={value}
       placeholder={placeholder}
       disabled={disabled}
+      aria-invalid={invalid || undefined}
       onChange={(event) => onChange(event.currentTarget.value)}
     />
   );

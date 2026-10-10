@@ -1,6 +1,11 @@
 import { type Breakpoint, type DesignTokenSet, type DocumentFile } from '@facadeur/core';
-import { compileDocument, scopeStyleSelector, type CompiledRule } from '@facadeur/style-engine';
-import { renderDesignCss, type DesignInput } from '@facadeur/tokens';
+import {
+  compileDocument,
+  renderDesignCss,
+  scopeStyleSelector,
+  type CompiledRule,
+} from '@facadeur/style-engine';
+import type { DesignInput } from '@facadeur/core';
 import type { LocalClassNames } from './component/types';
 import { instanceNodeIds } from './component/class-names';
 import { componentName } from './names';

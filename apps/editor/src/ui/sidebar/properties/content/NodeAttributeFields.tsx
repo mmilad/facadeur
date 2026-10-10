@@ -2,7 +2,8 @@ import type { FlatNode } from '@facadeur/core';
 import type { EditorSession } from '../../../../domain/session';
 import { attributeEnumOptions } from '../../../controls/html/index';
 import { TextControl } from '../../../controls/fields/index';
-import { Field, Select } from '../../../form/index';
+import { Field } from '../../../components/feedback';
+import { Select } from '../../../controls/form-binding/index';
 
 export function NodeAttributeFields({
   session,

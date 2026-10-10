@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { structuralScopeFields, toFlat, type DocumentFile } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
+import { createProjectTemplateDocument } from '@facadeur/examples';
 import { createEditorSession } from '../src/domain/session';
 import {
   dataFieldsForNode,
   fieldPathOptions,
-} from '../src/ui/controls/data/DataDirectivesEditorControl';
+} from '../src/ui/controls/data/directives/DataDirectivesEditorControl';
 import {
   fieldContextForSelection,
   resolveNestedSelection,

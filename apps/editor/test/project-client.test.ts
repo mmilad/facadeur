@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { toNested, type DocumentFile } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
+import { createProjectTemplateDocument } from '@facadeur/examples';
 import { connectProject, loadProject, type ProjectSnapshot } from '../src/domain/project/client';
 
 const card: DocumentFile = {

@@ -10,7 +10,8 @@ import {
   TransformableField,
   type TransformableFieldOption,
 } from '@facadeur/form';
-import { Field, Inline, Stack } from '../form/index';
+import { Inline, Stack } from '../components/layout';
+import { Field } from '../components/feedback';
 import { ComboField, type ComboFieldItem } from '../combofield/ComboField';
 import {
   colorTransformOptions,

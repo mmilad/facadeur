@@ -1,1 +1,2 @@
 export type { CoreControllerHost } from './host';
+export type { CatalogDefinitionPort } from './catalog-definition-port';

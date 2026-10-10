@@ -7,13 +7,11 @@ import {
   styleStateNames,
   type StyleStateName,
 } from '../../../../domain/edits/style-edit';
-import {
-  editorBreakpoints,
-  viewportEditContext,
-} from '../../../../domain/viewport/viewport-edit';
+import { editorBreakpoints, viewportEditContext } from '../../../../domain/viewport/viewport-edit';
 import { TokenPreviewProvider } from '../../../controls/fields/TokenPreviewContext';
 import type { StructuredDeclarationGroup } from '../../../controls/generic/CssDeclarationsControl';
-import { Field, Select } from '../../../form/index';
+import { Field } from '../../../components/feedback';
+import { Select } from '../../../controls/form-binding/index';
 import { LayoutPanel } from '../layout/LayoutPanel';
 import type { LayoutControlSectionContent } from '../../../controls/layout/index';
 import { DeclarationEditor } from './declarations/declaration-editor';

@@ -1,6 +1,6 @@
 import { Type, type Static, type TSchema } from '@sinclair/typebox';
-import { exampleIds } from '@facadeur/examples/ids';
 import type { FontFamilyDefinition } from '@facadeur/domain';
+import { defaultBreakpointIds } from './default-breakpoint-ids';
 import { defaultKinds } from '../document/kinds';
 import { childFieldPathSchema, idSchema, kindSchema } from './common';
 import {
@@ -269,12 +269,12 @@ export function isVariantPreset(variant: VariantDefinition): variant is VariantP
 
 /** Viewports used when a document does not set its own breakpoints. */
 export const defaultBreakpoints: Breakpoint[] = [
-  { uuid: exampleIds.catalog.breakpoints.phone, label: 'Phone', minWidth: 375 },
-  { uuid: exampleIds.catalog.breakpoints.tablet, label: 'Tablet', minWidth: 768 },
-  { uuid: exampleIds.catalog.breakpoints.laptop, label: 'Laptop', minWidth: 1024 },
-  { uuid: exampleIds.catalog.breakpoints.desktop, label: 'Desktop', minWidth: 1200 },
-  { uuid: exampleIds.catalog.breakpoints.wide, label: 'Wide', minWidth: 1440 },
-  { uuid: exampleIds.catalog.breakpoints.ultra, label: 'Ultra', minWidth: 1760 },
+  { uuid: defaultBreakpointIds.phone, label: 'Phone', minWidth: 375 },
+  { uuid: defaultBreakpointIds.tablet, label: 'Tablet', minWidth: 768 },
+  { uuid: defaultBreakpointIds.laptop, label: 'Laptop', minWidth: 1024 },
+  { uuid: defaultBreakpointIds.desktop, label: 'Desktop', minWidth: 1200 },
+  { uuid: defaultBreakpointIds.wide, label: 'Wide', minWidth: 1440 },
+  { uuid: defaultBreakpointIds.ultra, label: 'Ultra', minWidth: 1760 },
 ];
 
 /** Display name for a configured viewport. */

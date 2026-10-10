@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, type KeyboardEvent } from 'react';
 import styles from './TextField.module.css';
 import type { TextFieldProps } from './types';
 
@@ -6,6 +6,7 @@ export function TextField({
   id,
   name,
   label,
+  type = 'text',
   value,
   placeholder,
   disabled,
@@ -13,6 +14,9 @@ export function TextField({
   suggestions,
   onChange,
   onCommit,
+  onBlur: onBlurProp,
+  onKeyDown: onKeyDownProp,
+  ...inputProps
 }: TextFieldProps) {
   const [draft, setDraft] = useState(value);
   useEffect(() => setDraft(value), [value]);
@@ -20,11 +24,12 @@ export function TextField({
   return (
     <>
       <input
+        {...inputProps}
         className={[styles.input, className].filter(Boolean).join(' ')}
         id={id}
         name={name}
-        type="text"
-        aria-label={label}
+        type={type}
+        aria-label={label ?? inputProps['aria-label']}
         list={listId}
         value={draft}
         placeholder={placeholder}
@@ -34,8 +39,13 @@ export function TextField({
           setDraft(next);
           onChange(next);
         }}
-        onBlur={() => onCommit?.(draft)}
-        onKeyDown={(event) => {
+        onBlur={(event) => {
+          onBlurProp?.(event);
+          onCommit?.(draft);
+        }}
+        onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
+          onKeyDownProp?.(event);
+          if (event.defaultPrevented) return;
           if (event.key === 'Enter') event.currentTarget.blur();
         }}
       />

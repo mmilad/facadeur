@@ -4,7 +4,7 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, it } from 'vitest';
 import { validateCatalog } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
+import { createProjectTemplateDocument } from '@facadeur/examples';
 import button from '../../../examples/button.json';
 import { createEditorSession } from '../src/domain/session';
 import { App } from '../src/ui/shell/EditorShell';

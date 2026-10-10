@@ -1,4 +1,5 @@
-import { ClassListInput, Field } from '../../../form/index';
+import { ChipsField } from '@facadeur/form';
+import { Field } from '../../../components/feedback';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
 
 const UTILITY_CLASSES = [
@@ -49,11 +50,14 @@ export function ClassNamesEditor({
         Style class: <code>.{className}</code>
       </p>
       <Field label="CSS classes">
-        <ClassListInput
-          key={nodeId}
+        <ChipsField
+          id={`classes-${nodeId}`}
+          name={`classes-${nodeId}`}
           label={`CSS classes for ${node?.name ?? nodeId}`}
+          key={nodeId}
           value={node?.classes ?? []}
           suggestions={suggestions}
+          placeholder={`Add a class to ${node?.name ?? nodeId}…`}
           disabled={Boolean(snap.activeVariantName)}
           onChange={(classes) =>
             session.execute({ type: 'setProp', nodeId, prop: 'classes', value: classes })

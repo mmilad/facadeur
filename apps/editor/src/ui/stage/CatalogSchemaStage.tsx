@@ -7,7 +7,9 @@ import type { AppService } from '../../app-service';
 import { catalogDefinitionDisplayName } from '../../domain/catalog/display-name';
 import { catalogSchemaTitle } from '../../domain/catalog/schema-display';
 import type { EditorSession } from '../../domain/session';
-import { Field, Select, Stack } from '../form/index';
+import { Stack } from '../components/layout';
+import { Field } from '../components/feedback';
+import { Select } from '../controls/form-binding/index';
 import { JsonSchemaTypeEditor } from '../schema/JsonSchemaTypeEditor';
 import { CatalogPreviewFields } from './CatalogPreviewFields';
 

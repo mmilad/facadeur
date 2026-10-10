@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { TextArea } from '@facadeur/form';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
 import { variantStyleBlock, writeStyleDeclarations } from '../../../../domain/edits/style-edit';
 import {
@@ -109,14 +110,15 @@ export function NodeClassStyleRow({
       </summary>
       <label className="styles-css-editor">
         <span>CSS declarations</span>
-        <textarea
+        <TextArea
+          id={`node-style-css-${nodeId}`}
           aria-label={`CSS ${nodeId}`}
           name={`css-${nodeId}`}
           rows={Math.max(3, Math.min(12, Object.keys(values).length + 1))}
           value={draft}
           aria-invalid={Boolean(error)}
-          onChange={(event) => {
-            setDraft(event.currentTarget.value);
+          onChange={(next) => {
+            setDraft(next);
             setError('');
           }}
           onBlur={(event) => commit(event.currentTarget.value)}

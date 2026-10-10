@@ -1,7 +1,7 @@
-import Ajv from 'ajv';
 import type { JsonSchema, SchemaCatalog } from '../../schema/document';
+import { createAjv } from './ajv';
 
-const ajv = new Ajv({ allErrors: true, strict: false });
+const ajv = createAjv();
 
 /** Test a JSON value against its preserved JSON Schema contract, including unions. */
 export function matchesSchemaValue(value: unknown, schema: JsonSchema): boolean {

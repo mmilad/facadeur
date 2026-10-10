@@ -1,7 +1,9 @@
 import { ID_PATTERN, type Expose } from '@facadeur/core';
 import { useState } from 'react';
-import { Field, Section, Select, Stack, TextInput } from '../../form/index';
-import '../../form/form.css';
+import { Section, Stack } from '../../components/layout';
+import { Field } from '../../components/feedback';
+import { Select, TextInput } from '../form-binding/index';
+import '../../styles/form.css';
 
 const EXPOSE_PATH = /^[A-Za-z][A-Za-z0-9_-]*(\.[A-Za-z][A-Za-z0-9_-]*)*$/;
 type ExposeKind = 'fields' | 'events';

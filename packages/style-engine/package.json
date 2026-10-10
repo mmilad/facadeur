@@ -10,13 +10,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@facadeur/core": "workspace:*",
-    "@facadeur/tokens": "workspace:*"
+    "@facadeur/core": "workspace:*"
   },
   "devDependencies": {
     "@facadeur/examples": "workspace:*",
-    "@facadeur/renderer-dom": "workspace:*",
-    "@facadeur/store-yjs": "workspace:*",
     "typescript": "^5.9.2"
   }
 }

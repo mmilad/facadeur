@@ -8,7 +8,7 @@ import {
   type NestedNode,
   type SchemaCatalog,
 } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
+import { createProjectTemplateDocument } from '@facadeur/examples';
 
 function resolveExamplesDir(): string {
   const candidates = [resolve(process.cwd(), 'examples'), resolve(process.cwd(), '../../examples')];

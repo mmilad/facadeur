@@ -5,8 +5,17 @@ export type ColorFieldConfig = {
   disabled?: boolean;
 };
 
-export type ColorFieldProps = Omit<ColorFieldConfig, 'label' | 'type'> & {
+import type { InputHTMLAttributes } from 'react';
+
+export type ColorFieldProps = Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  'id' | 'name' | 'value' | 'type' | 'onChange' | 'onBlur'
+> & {
   id: string;
+  name?: string;
+  label?: string;
   value: string;
+  invalid?: boolean;
+  onCommit?: (next: string) => void;
   onChange: (next: string) => void;
 };

@@ -9,6 +9,7 @@ import type {
 } from '@facadeur/domain';
 import { DocumentError } from '../../document/errors';
 import type { CoreControllerHost } from '../../types/host';
+import type { CatalogDefinitionPort } from '../../types/catalog-definition-port';
 import { applyCatalogDesignCommand, type CatalogDesignCommand } from './catalog/design-commands';
 import {
   createCatalogDefinition,
@@ -458,6 +459,24 @@ export class CoreController implements CoreControllerHost {
   async persist(port: CatalogPort) {
     this.catalog = validateProjectCatalog(await port.save(this.catalog)) as ProjectCatalog;
     this.publish();
+  }
+
+  async createDefinitionFromPort(
+    port: CatalogDefinitionPort,
+    kind: CatalogMapKey,
+    definition: Omit<NodeDefinition, 'uuid'> & { uuid?: string },
+  ) {
+    this.replaceCatalog(await port.createDefinition(kind, definition));
+    return (
+      definition.uuid ??
+      Object.values(this.catalog[kind]).find((entry) => entry.name === definition.name)?.uuid
+    );
+  }
+
+  async deleteDefinitionFromPort(port: CatalogDefinitionPort, uuid: string) {
+    const kind = findDefinition(this.catalog, uuid)?.kind;
+    if (!kind) throw new Error(`Unknown catalog definition "${uuid}"`);
+    this.replaceCatalog(await port.deleteDefinition(kind, uuid));
   }
 
   async reload(port: CatalogPort) {

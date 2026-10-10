@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import type { EditorSession, EditorSnapshot } from '../src/domain/session';
 import type { LibrarySchema } from '../src/domain/schema/schema-library';
 import { schemaRefUri } from '../src/domain/schema/schema-library';
-import { SchemaLibraryStage } from '../src/ui/stage/SchemaLibraryStage';
+import { SchemaLibraryStage } from '../src/deprecated/SchemaLibraryStage';
 
 let root: Root | null = null;
 

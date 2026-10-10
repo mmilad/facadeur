@@ -1,12 +1,15 @@
 import type { JsonSchema } from '@facadeur/core';
 import { fieldDisplayLabel } from '../controls/data/field-label';
-import type { FieldConfig, FieldGroupConfig } from '../form/schema/field-config';
+import type { FieldConfig, FieldGroupConfig } from '../controls/data/schema/form';
 import {
   initialDraftForSchema,
   initialValueForSchema,
-} from '../controls/data/item-array-schema';
+} from '../controls/data/schema/item-array-schema';
 
-export function formFieldsForSchema(schema: JsonSchema, label: string): (FieldConfig | FieldGroupConfig)[] {
+export function formFieldsForSchema(
+  schema: JsonSchema,
+  label: string,
+): (FieldConfig | FieldGroupConfig)[] {
   const type = primaryType(schema);
   if (type === 'array') {
     const itemSchema = schema.items ?? { type: 'string' };
@@ -79,12 +82,7 @@ function itemFieldConfig(itemSchema: JsonSchema): FieldConfig | FieldConfig[] {
   if (itemType === 'object' || itemSchema.properties) {
     const requiredNames = new Set(itemSchema.required ?? []);
     return Object.entries(itemSchema.properties ?? {}).map(([prop, child]) =>
-      fieldConfigForSchema(
-        child,
-        prop,
-        fieldDisplayLabel(prop),
-        requiredNames.has(prop),
-      ),
+      fieldConfigForSchema(child, prop, fieldDisplayLabel(prop), requiredNames.has(prop)),
     );
   }
   return fieldConfigForSchema(itemSchema, 'item', fieldDisplayLabel('item'));

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { TextField } from '@facadeur/form';
 import type { FlatNode } from '@facadeur/core';
 import {
   colorTokenRefsForDocument,
@@ -8,7 +9,7 @@ import {
   numberTokenRefsForDocument,
   shadowTokenRefsForDocument,
   fontFamilies,
-} from '../../../../../domain/editing';
+} from '../../../../../domain/token-references';
 import type { EditorSession, EditorSnapshot } from '../../../../../domain/session';
 import { ColorControl, isColorStyleProperty } from '../../../../controls/color/index';
 import { TextControl } from '../../../../controls/fields/index';
@@ -121,18 +122,20 @@ export function StyleOverridesPanel({
       <label className="field">
         <span>Add property</span>
         <span className="pair">
-          <input
+          <TextField
+            id="style-property"
             name="style-property"
             value={property}
             placeholder="property"
-            onChange={(event) => setProperty(event.target.value)}
+            onChange={setProperty}
           />
           {!addingSpecial ? (
-            <input
+            <TextField
+              id="style-value"
               name="style-value"
               value={value}
               placeholder="value"
-              onChange={(event) => setValue(event.target.value)}
+              onChange={setValue}
             />
           ) : null}
         </span>

@@ -90,6 +90,7 @@ export {
   type CatalogDesignCommand,
 } from './controller/project/catalog/index';
 export type { CoreControllerHost } from './types/index';
+export type { CatalogDefinitionPort } from './types/index';
 export type { CatalogPort, CoreSnapshot } from '@facadeur/domain';
 /** @deprecated Use mergePreviewFields */
 export { mergePreviewFields as mergePreviewData } from './controller/project/node/preview/index';
@@ -258,6 +259,19 @@ export {
   migrateLegacyReferenceLocations,
 } from './controller/style/tokens/global/legacy-migration';
 export { tokenCssPropertyName } from './controller/style/tokens/global/selector';
+export { tokenCustomProperty, typographyCustomProperty } from './tokens/names';
+export {
+  activeBreakpoints,
+  configuredBreakpoints,
+  fontStack,
+  isBreakpointEnabled,
+  loadTokens,
+  quoteFamily,
+  type CssProperty,
+  type DesignInput,
+  type ParsedToken,
+  type ResolvedDesign,
+} from './tokens/resolve';
 export {
   type IndexedGroup,
   type IndexedToken,
@@ -274,10 +288,7 @@ export {
   canonicalizeStyleBlock,
   canonicalizeTokenInterface,
 } from './controller/style/blocks/contract';
-export {
-  collectTokenRefs,
-  refsInText,
-} from './controller/style/references/collect';
+export { collectTokenRefs, refsInText } from './controller/style/references/collect';
 export { omitVariantAxis, omitVariantValues } from './controller/style/blocks/edit';
 export { parseStyleBlock, parseTokenInterface } from './controller/style/blocks/parse';
 export {

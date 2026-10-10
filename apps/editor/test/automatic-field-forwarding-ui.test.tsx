@@ -5,7 +5,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
+import { createProjectTemplateDocument } from '@facadeur/examples';
 import { createEditorSession } from '../src/domain/session';
 import { SchemaStage } from '../src/ui/stage/SchemaStage';
 

@@ -18,9 +18,7 @@ const nextConfig: NextConfig = {
     '@facadeur/api',
     '@facadeur/api-client',
     '@facadeur/core',
-    '@facadeur/renderer-dom',
     '@facadeur/style-engine',
-    '@facadeur/tokens',
     'jsonjoy-builder',
   ],
   async rewrites() {
@@ -33,8 +31,6 @@ const nextConfig: NextConfig = {
     config.resolve.alias = {
       ...config.resolve.alias,
       '@facadeur/core': workspaceAlias('core'),
-      '@facadeur/renderer-dom': workspaceAlias('renderer-dom'),
-      '@facadeur/tokens': workspaceAlias('tokens'),
       '@facadeur/style-engine': workspaceAlias('style-engine'),
     };
     return config;

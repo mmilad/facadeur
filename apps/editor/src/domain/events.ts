@@ -1,6 +1,14 @@
 import type { EventDefinition, FieldType } from '@facadeur/core';
 import type { SchemaTypeSelection } from './schema/schema-use';
 
+/** Remove the legacy payload field when an event record is edited into canonical data form. */
+export function withoutLegacyEventPayload<T extends { payload?: unknown }>(
+  value: T,
+): Omit<T, 'payload'> {
+  const { payload: _legacyPayload, ...canonical } = value;
+  return canonical;
+}
+
 export type EventPayloadSource = 'value' | 'checked' | 'valueAsNumber';
 
 export const NATIVE_EVENT_NAMES = [

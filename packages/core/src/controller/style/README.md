@@ -73,5 +73,5 @@ their separate path-based contract. The legacy migration module is used only at 
 catalog read boundaries.
 
 Serialization and validation import pure algorithms directly. They never import the
-live controllers or command dispatcher. Token evaluation/CSS output remains owned by
-`@facadeur/tokens`; style compilation remains owned by `@facadeur/style-engine`.
+live controllers or command dispatcher. Token evaluation is owned by Core's `tokens/` domain;
+stylesheet compilation and runtime injection are owned by `@facadeur/style-engine`.

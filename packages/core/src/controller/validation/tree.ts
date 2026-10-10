@@ -131,7 +131,7 @@ export function validateTree(doc: FlatDocument, options: ValidateOptions = {}): 
   }
 }
 
-/** Token records and breakpoint contracts; reference targets are resolved by `@facadeur/tokens`. */
+/** Token records and breakpoint contracts; token references are validated by Core's token resolver. */
 export function validateLibraries(doc: FlatDocument, options: ValidateOptions = {}): void {
   assertBreakpoints(doc.settings.breakpoints);
   readTokenTree(doc.tokens);

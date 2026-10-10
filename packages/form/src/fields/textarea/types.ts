@@ -7,15 +7,16 @@ export type TextAreaFieldConfig = {
   rows?: number;
 };
 
-export type TextAreaProps = {
+import type { TextareaHTMLAttributes } from 'react';
+
+export type TextAreaProps = Omit<
+  TextareaHTMLAttributes<HTMLTextAreaElement>,
+  'id' | 'name' | 'value' | 'onChange'
+> & {
   id: string;
-  name: string;
+  name?: string;
   value: string;
-  placeholder?: string;
-  disabled?: boolean;
   invalid?: boolean;
-  className?: string;
-  rows?: number;
   onCommit?: (next: string) => void;
   onChange: (next: string) => void;
 };

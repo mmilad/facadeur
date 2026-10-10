@@ -11,10 +11,10 @@ import { TokenValueLabelProvider } from '../../../controls/fields/TokenPreviewCo
 import type { LayoutField } from '../../../../domain/layout-capabilities';
 import {
   clearLayoutBreakpoint,
-  dimensionTokenRefsForDocument,
   writeLayoutFields,
   type LayoutPatch,
 } from '../../../../domain/editing';
+import { dimensionTokenRefsForDocument } from '../../../../domain/token-references';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
 import { canonicalStyleProperty } from '../../../../domain/edits/style-edit';
 import {

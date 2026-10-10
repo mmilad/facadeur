@@ -1,4 +1,4 @@
-import { Field } from '../../../form/index';
+import { Field } from '../../../components/feedback';
 import { LayoutChoiceIcon, LayoutIconChoice } from '../../../controls/layout/icon-choice';
 
 const choices = [

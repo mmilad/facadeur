@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { toFlat, type DocumentFile } from '@facadeur/core';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { StyleInspector } from '../src/ui/sidebar/properties/style/StyleInspector';
-import { Combobox } from '../src/ui/form/index';
+import { Combobox } from '../src/ui/controls/form-binding/index';
 import { TokenValueControl } from '../src/ui/controls/fields/TokenValueControl';
 import {
   TokenPreviewProvider,

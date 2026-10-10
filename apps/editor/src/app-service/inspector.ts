@@ -6,7 +6,7 @@ import {
   type CoreSnapshot,
   type InspectorFormModel,
 } from '@facadeur/core';
-import { tokenCustomProperty } from '@facadeur/tokens';
+import { tokenCustomProperty } from '@facadeur/core';
 
 export interface InspectorViewModel extends InspectorFormModel {
   readonly selectionKind: 'root' | 'instance' | 'element';

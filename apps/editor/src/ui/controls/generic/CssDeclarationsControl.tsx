@@ -12,11 +12,13 @@ import {
   serializeBorder,
   serializeBorderRadius,
 } from '../border/index';
-import { Field, Inline, Section, Stack, TextInput } from '../../form/index';
+import { Inline, Section, Stack } from '../../components/layout';
+import { Field } from '../../components/feedback';
+import { TextInput } from '../form-binding/index';
 import { StyleDeclarationField } from '../style/index';
 import { styleDeclarationGroup, type StyleDeclarationGroup } from '../style/declaration-kind';
 import type { TypographyCatalogs } from '../typography/index';
-import '../../form/form.css';
+import '../../styles/form.css';
 
 export type CssDeclarationEntry = ShownDeclaration & { placeholder?: string };
 

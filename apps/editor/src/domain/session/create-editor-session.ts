@@ -7,9 +7,9 @@ import {
   type CatalogDesignCommand,
   type DefaultKind,
 } from '@facadeur/core';
-import type { DesignInput } from '@facadeur/tokens';
+import type { DesignInput } from '@facadeur/core';
 import { catalogAssetSummaries } from '../catalog/asset-list';
-import { activeBreakpoints } from '@facadeur/tokens';
+import { activeBreakpoints } from '@facadeur/core';
 import { createInMemoryCatalogPort } from '../project/in-memory-catalog-port';
 import { buildCatalogEditorSnapshot, initialCatalogAsset } from './catalog-snapshot';
 import type {

@@ -7,7 +7,7 @@ import {
   type Breakpoint,
   type FlatDocument,
 } from '@facadeur/core';
-import { loadTokens, tokenCustomProperty } from '@facadeur/tokens';
+import { loadTokens, tokenCustomProperty } from '@facadeur/core';
 import { tokenDisplayLabel, tokenPath } from '../token-presentation';
 import { formatTokenValue } from '../../../domain/edits/token-edit';
 

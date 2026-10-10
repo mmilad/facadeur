@@ -1,10 +1,6 @@
-import type { SelectOption } from '../form/types/options';
+import type { AutocompleteOption } from '@facadeur/form';
 import { tokenPath, tokenDisplayLabel, tokenTitle } from './token-presentation';
-import {
-  useTokenLabel,
-  useTokenResolver,
-  useTokenSearchValue,
-} from './fields/TokenPreviewContext';
+import { useTokenLabel, useTokenResolver, useTokenSearchValue } from './fields/TokenPreviewContext';
 
 function tokenGroup(path: string): string | undefined {
   const segments = path.split('.');
@@ -16,7 +12,7 @@ export function useTokenOptions() {
   const labelFor = useTokenLabel();
   const resolve = useTokenResolver();
   const searchValue = useTokenSearchValue();
-  return (tokens: readonly string[], current?: string, emptyLabel = 'None'): SelectOption[] =>
+  return (tokens: readonly string[], current?: string, emptyLabel = 'None'): AutocompleteOption[] =>
     catalogTokenOptions(tokens, current, emptyLabel, labelFor).map((option) => ({
       ...option,
       keywords: `${option.keywords ?? ''} ${searchValue(option.value) ?? ''} ${resolve(option.value) ?? ''}`,
@@ -29,7 +25,7 @@ export function catalogTokenOptions(
   current?: string,
   emptyLabel = 'None',
   resolveLabel: (ref: string) => string = tokenDisplayLabel,
-): SelectOption[] {
+): AutocompleteOption[] {
   const list = current && !tokens.includes(current) ? [current, ...tokens] : [...tokens];
   const options = list.map((ref) => {
     const path = tokenPath(ref);
@@ -50,7 +46,7 @@ export function dimensionTokenOptions(
   current?: string,
   emptyLabel = 'None',
   resolveLabel?: (ref: string) => string,
-): SelectOption[] {
+): AutocompleteOption[] {
   return catalogTokenOptions(tokens, current, emptyLabel, resolveLabel);
 }
 
@@ -58,7 +54,7 @@ export function colorTokenOptions(
   tokens: readonly string[],
   current?: string,
   emptyLabel = 'None',
-): SelectOption[] {
+): AutocompleteOption[] {
   return catalogTokenOptions(tokens, current, emptyLabel);
 }
 
@@ -66,6 +62,6 @@ export function shadowTokenOptions(
   tokens: readonly string[],
   current?: string,
   emptyLabel = 'None',
-): SelectOption[] {
+): AutocompleteOption[] {
   return catalogTokenOptions(tokens, current, emptyLabel);
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { DocumentFile } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
+import { createProjectTemplateDocument } from '@facadeur/examples';
 import { createEditorSession } from '../src/domain/session';
 import { createNamedVariant, renameNamedVariant } from '../src/domain/variant-actions';
 

@@ -46,13 +46,12 @@ insertion/deletion primitives, not a speculative common lifecycle abstraction.
 
 ## Further reductions worth doing separately
 
-1. **Design rule serialization belongs to tokens.** `runtime/design.ts` repeats
-   font-face and responsive-property projection from `packages/tokens/src/css.ts`.
-   Prefer an ordered rule-text output from tokens, consumed by both text codegen
-   and CSSOM insertion. This would remove an entire duplicate serializer without
-   parsing a generated stylesheet back into rules. It needs an intentional tokens
-   public API change and tests for imports preceding style rules, font formats,
-   custom selectors and responsive values.
+1. **Design rule serialization is shared by Style Engine output and runtime.**
+   `design/css.ts` owns ordered rule-text output and `runtime/design.ts` consumes
+   the same compiler for CSSOM insertion. Keep imports ahead of style rules and
+   preserve font formats, custom selectors and responsive values when changing
+   either path. This consolidation is complete; the remaining checks are covered
+   by the design CSS and runtime tests in this package.
 2. **Direct class-token replacement would simplify preview selectors.**
    `selectors/preview.ts` temporarily substitutes class identifiers before replacing
    them with bound attributes because core's current callback returns class names.

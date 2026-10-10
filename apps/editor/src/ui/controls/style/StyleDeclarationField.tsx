@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { Field, Select } from '../../form/index';
+import { Field } from '../../components/feedback';
+import { Select } from '../form-binding/index';
 import { ColorControl } from '../color/index';
 import { ShadowControl } from '../shadow/index';
 import { TextControl } from '../fields/index';

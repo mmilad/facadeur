@@ -1,7 +1,6 @@
-export { FieldsEditorControl } from './FieldsEditorControl';
-export { BindingsEditorControl } from './BindingsEditorControl';
-export { EventsEditorControl } from './EventsEditorControl';
-export { EventBindingsEditorControl } from './EventBindingsEditorControl';
+export { FieldsEditorControl } from './fields';
+export { BindingsEditorControl } from './bindings';
+export { EventsEditorControl, EventBindingsEditorControl } from './events';
 export { ExposeEditorControl } from './ExposeEditorControl';
 export {
   DataDirectivesEditorControl,
@@ -9,20 +8,17 @@ export {
   dataFieldsForNode,
   dataPathOptions,
   fieldPathOptions,
-} from './DataDirectivesEditorControl';
+} from './directives';
 export {
   BINDING_TARGET_LABEL,
   bindingFieldOptions,
   bindingNeedsName,
   defaultBinding,
-  fieldTypeOptions,
   normalizeBindingTargetChange,
-  parseInstanceFieldValue,
   patchBindingAt,
-} from './value';
-export {
   bindingFromSlot,
   type BindingSlot,
   slotForBinding,
   slotsForNode,
-} from './binding-slots';
+} from './bindings';
+export { fieldTypeOptions, parseInstanceFieldValue } from './fields';

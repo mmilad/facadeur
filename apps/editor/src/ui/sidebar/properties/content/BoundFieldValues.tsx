@@ -12,10 +12,11 @@ import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
 import { variantLabel } from '../../../../domain/edits/variant-edit';
 import { fieldDisplayLabel } from '../../../controls/data/field-label';
 import { TextControl } from '../../../controls/fields/index';
-import { Field, Select, Toggle } from '../../../form/index';
+import { Field } from '../../../components/feedback';
+import { Select, Toggle } from '../../../controls/form-binding/index';
 import { boundFields } from './bound-fields';
-import { ItemArrayControl } from '../../../controls/data/ItemArrayControl';
-import { SwitchCaseControl } from '../../../controls/data/SwitchCaseControl';
+import { ItemArrayControl } from '../../../controls/data/schema/ItemArrayControl';
+import { SwitchCaseControl } from '../../../controls/data/schema/SwitchCaseControl';
 import { JsonSchemaContractFieldEditor } from '../../../schema/JsonSchemaContractFieldEditor';
 
 export function BoundFieldValues({

@@ -4,7 +4,7 @@ import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import type { ProjectSnapshot } from '@facadeur/api';
 import { ProjectWorkspace } from '../src/ui/projects/ProjectWorkspace';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
+import { createProjectTemplateDocument } from '@facadeur/examples';
 
 const routing = vi.hoisted(() => ({
   search: 'project=first',

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { VariantAxis } from '@facadeur/core';
-import { Stack } from '../../form/index';
-import '../../form/form.css';
+import { Stack } from '../../components/layout';
+import '../../styles/form.css';
 
 export function VariantStyleLayers({
   axis,

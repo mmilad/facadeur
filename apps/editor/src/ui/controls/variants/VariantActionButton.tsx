@@ -1,6 +1,7 @@
 import * as Popover from '@radix-ui/react-popover';
 import { useRef, useState, type ComponentProps } from 'react';
-import { Field, TextInput } from '../../form/index';
+import { Field } from '../../components/feedback';
+import { TextInput } from '../form-binding/index';
 
 /** Selection stays on the button; secondary actions open only on request. */
 export function VariantActionButton({

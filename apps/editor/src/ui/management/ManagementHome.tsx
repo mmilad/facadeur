@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ManagementCommand, ManagementSnapshot } from '@facadeur/api';
+import { TextField } from '@facadeur/form';
 import { api } from '../../domain/api';
 import { OrganisationWorkspace } from './OrganisationWorkspace';
 import './management.css';
@@ -22,6 +23,7 @@ export function ManagementHome({
   const [notice, setNotice] = useState('');
   const [invitationLink, setInvitationLink] = useState('');
   const [invitationAccepted, setInvitationAccepted] = useState(false);
+  const [newOrganisationName, setNewOrganisationName] = useState('');
 
   const refresh = useCallback(async () => {
     setBusy(true);
@@ -84,9 +86,7 @@ export function ManagementHome({
 
   const createOrganisation = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const form = event.currentTarget;
-    const data = new FormData(form);
-    const name = String(data.get('organisationName') ?? '').trim();
+    const name = newOrganisationName.trim();
     if (!name) return;
     const result = await execute({ type: 'createOrganisation', name });
     if (result) {
@@ -98,7 +98,7 @@ export function ManagementHome({
           result.snapshot.organisations[0]?.id ??
           '',
       );
-      form.reset();
+      setNewOrganisationName('');
     }
   };
 
@@ -154,10 +154,12 @@ export function ManagementHome({
       {invitationLink ? (
         <div className="management-invitation-link">
           <label htmlFor="invitation-link">Invitation link</label>
-          <input
+          <TextField
             id="invitation-link"
+            label="Invitation link"
             readOnly
             value={invitationLink}
+            onChange={() => undefined}
             onFocus={(event) => event.currentTarget.select()}
           />
           <button
@@ -241,11 +243,15 @@ export function ManagementHome({
         >
           <label>
             <span className="sr-only">New organisation name</span>
-            <input
+            <TextField
+              id="organisation-name"
+              label="New organisation name"
               name="organisationName"
               required
               maxLength={100}
               placeholder="Organisation name"
+              value={newOrganisationName}
+              onChange={setNewOrganisationName}
             />
           </label>
           <button type="submit" className="management-button primary" disabled={busy}>

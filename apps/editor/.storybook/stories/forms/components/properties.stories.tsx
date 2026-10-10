@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { Form } from '../../../../src/ui/form/Form';
-import { SchemaForm } from '../../../../src/ui/form/schema/SchemaForm';
-import type { FieldConfig } from '../../../../src/ui/form/schema/field-config';
+import { Form } from '../../../../src/ui/controls/form-binding/Form';
+import { SchemaForm, type FieldConfig } from '../../../../src/ui/controls/data/schema-form';
 
 const fields: FieldConfig[] = [
   { type: 'text', name: 'title', label: 'Title', placeholder: 'Card title' },

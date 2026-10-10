@@ -1,5 +1,4 @@
-import type { Breakpoint, DesignTokenSet } from '@facadeur/core';
-import { loadTokens } from '@facadeur/tokens';
+import { loadTokens, type Breakpoint, type DesignTokenSet } from '@facadeur/core';
 import type { CompileOptions, CompiledRule } from '../compiler/types';
 import { compileDocument } from '../compiler/compile';
 import { StyleController } from './controller';

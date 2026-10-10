@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import type {
   ManagementCommand,
   ManagementResult,
@@ -8,6 +9,7 @@ import type {
   OrganisationRole,
   OrganisationSummary,
 } from '@facadeur/api';
+import { SelectField, TextField } from '@facadeur/form';
 
 const roles: Exclude<OrganisationRole, 'owner'>[] = ['admin', 'editor', 'viewer'];
 export function OrganisationWorkspace({
@@ -29,16 +31,15 @@ export function OrganisationWorkspace({
   canClaimExamples: boolean;
   onOpenProject: (id: string) => void;
 }) {
+  const [projectName, setProjectName] = useState('');
   const members = snapshot.members[organisation.id] ?? [];
   const invitations = snapshot.invitations[organisation.id] ?? [];
   const createProject = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const form = event.currentTarget;
-    const data = new FormData(form);
-    const name = String(data.get('projectName') ?? '').trim();
+    const name = projectName.trim();
     if (!name) return;
     if (await execute({ type: 'createProject', organisationId: organisation.id, name })) {
-      form.reset();
+      setProjectName('');
     }
   };
   const renameOrganisation = async () => {
@@ -116,7 +117,16 @@ export function OrganisationWorkspace({
           <form className="management-inline-form" onSubmit={(event) => void createProject(event)}>
             <label>
               <span className="sr-only">New project name</span>
-              <input name="projectName" required maxLength={100} placeholder="Project name" />
+              <TextField
+                id="project-name"
+                label="New project name"
+                name="projectName"
+                required
+                maxLength={100}
+                placeholder="Project name"
+                value={projectName}
+                onChange={setProjectName}
+              />
             </label>
             <button type="submit" className="management-button primary" disabled={busy}>
               Create project
@@ -144,30 +154,27 @@ export function OrganisationWorkspace({
                   <span className="management-role">Owner</span>
                 ) : (
                   <>
-                    <label className="management-role-control">
-                      <span className="sr-only">Role for {member.name}</span>
-                      <select
-                        value={member.role}
-                        disabled={busy}
-                        onChange={(event) =>
-                          void execute({
-                            type: 'changeMemberRole',
-                            organisationId: organisation.id,
-                            memberId: member.id,
-                            role: event.target.value as OrganisationRole,
-                          })
-                        }
-                      >
-                        {organisation.role === 'owner' ? (
-                          <option value="owner">owner</option>
-                        ) : null}
-                        {roles.map((role) => (
-                          <option key={role} value={role}>
-                            {role}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                    <SelectField
+                      id={`member-role-${member.id}`}
+                      className="management-role-control"
+                      aria-label={`Role for ${member.name}`}
+                      value={member.role}
+                      disabled={busy}
+                      options={[
+                        ...(organisation.role === 'owner'
+                          ? [{ value: 'owner', label: 'owner' }]
+                          : []),
+                        ...roles.map((role) => ({ value: role, label: role })),
+                      ]}
+                      onChange={(role) =>
+                        void execute({
+                          type: 'changeMemberRole',
+                          organisationId: organisation.id,
+                          memberId: member.id,
+                          role: role as OrganisationRole,
+                        })
+                      }
+                    />
                     <button
                       type="button"
                       className="management-button danger"
@@ -301,33 +308,46 @@ function InviteForm({
   busy: boolean;
   execute: (command: ManagementCommand) => Promise<ManagementResult | undefined>;
 }) {
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState<Exclude<OrganisationRole, 'owner'>>('viewer');
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const form = event.currentTarget;
-    const data = new FormData(form);
     const result = await execute({
       type: 'inviteMember',
       organisationId,
-      email: String(data.get('inviteEmail') ?? '').trim(),
-      role: String(data.get('inviteRole') ?? 'viewer') as Exclude<OrganisationRole, 'owner'>,
+      email: email.trim(),
+      role,
     });
-    if (result) form.reset();
+    if (result) {
+      setEmail('');
+      setRole('viewer');
+    }
   };
   return (
     <form className="management-inline-form invite-form" onSubmit={(event) => void submit(event)}>
       <label>
         <span className="sr-only">Email to invite</span>
-        <input type="email" name="inviteEmail" required placeholder="person@example.com" />
+        <TextField
+          id="invite-email"
+          label="Email to invite"
+          type="email"
+          name="inviteEmail"
+          required
+          placeholder="person@example.com"
+          value={email}
+          onChange={setEmail}
+        />
       </label>
       <label>
         <span className="sr-only">Invitation role</span>
-        <select name="inviteRole" defaultValue="viewer">
-          {roles.map((role) => (
-            <option key={role} value={role}>
-              {role}
-            </option>
-          ))}
-        </select>
+        <SelectField
+          id="invite-role"
+          aria-label="Invitation role"
+          name="inviteRole"
+          value={role}
+          options={roles.map((option) => ({ value: option, label: option }))}
+          onChange={(next) => setRole(next as Exclude<OrganisationRole, 'owner'>)}
+        />
       </label>
       <button type="submit" className="management-button primary" disabled={busy}>
         Create invitation

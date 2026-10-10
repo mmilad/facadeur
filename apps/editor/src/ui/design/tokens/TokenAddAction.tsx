@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { TextField } from '@facadeur/form';
-import { Popover } from '../../form/index';
+import { Popover } from '../../components/overlay';
 
 /**
  * Compact token creation action shared by each token CRUD adapter.

@@ -2,8 +2,10 @@ import type { FieldDefinition, FlatNode, VariantPreset, VariantRule } from '@fac
 import {
   DisplayConditionEditor,
   fieldPathOptions,
-} from '../../../controls/data/DataDirectivesEditorControl';
-import { Field, Section, Select, Stack } from '../../../form/index';
+} from '../../../controls/data/directives/DataDirectivesEditorControl';
+import { Section, Stack } from '../../../components/layout';
+import { Field } from '../../../components/feedback';
+import { Select } from '../../../controls/form-binding/index';
 
 export function VariantRulesEditor({
   node,

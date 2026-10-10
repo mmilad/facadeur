@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { TextArea, TextField } from '@facadeur/form';
 import {
   assertStyleSelector,
   bindStyleRuleSelector,
@@ -186,12 +187,13 @@ export function StyleRuleRow({
       </div>
       <label className="styles-selector-editor">
         <span>Selector</span>
-        <input
+        <TextField
+          id={`style-selector-${rule.id}`}
           aria-label={`Selector ${rule.id}`}
           value={selectorDraft}
           disabled={isVariant}
-          onChange={(event) => {
-            setSelectorDraft(event.currentTarget.value);
+          onChange={(next) => {
+            setSelectorDraft(next);
             setSelectorError('');
           }}
           onBlur={(event) => commitSelector(event.currentTarget.value)}
@@ -209,14 +211,15 @@ export function StyleRuleRow({
       ) : null}
       <label className="styles-css-editor">
         <span>CSS declarations</span>
-        <textarea
+        <TextArea
+          id={`style-css-${rule.id}`}
           aria-label={`CSS ${rule.id}`}
           name={`css-${rule.id}`}
           rows={Math.max(3, Math.min(12, Object.keys(visibleDeclarations).length + 1))}
           value={draft}
           aria-invalid={Boolean(error)}
-          onChange={(event) => {
-            setDraft(event.currentTarget.value);
+          onChange={(next) => {
+            setDraft(next);
             setError('');
           }}
           onBlur={(event) => commitCss(event.currentTarget.value)}

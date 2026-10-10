@@ -13,9 +13,12 @@ export function TextArea({
   rows,
   onChange,
   onCommit,
+  onBlur: onBlurProp,
+  ...textareaProps
 }: TextAreaProps) {
   return (
     <textarea
+      {...textareaProps}
       className={[styles.textarea, className].filter(Boolean).join(' ')}
       id={id}
       name={name}
@@ -25,7 +28,10 @@ export function TextArea({
       aria-invalid={invalid || undefined}
       rows={rows}
       onChange={(event) => onChange(event.currentTarget.value)}
-      onBlur={(event) => onCommit?.(event.currentTarget.value)}
+      onBlur={(event) => {
+        onBlurProp?.(event);
+        onCommit?.(event.currentTarget.value);
+      }}
     />
   );
 }

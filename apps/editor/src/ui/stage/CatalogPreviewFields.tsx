@@ -4,8 +4,10 @@ import type { FieldDefinition, FieldValue } from '@facadeur/core';
 import { Form as SharedForm } from '@facadeur/form';
 import { parseFieldValue } from '../../domain/field-values';
 import { fieldDisplayLabel } from '../controls/data/field-label';
-import { SchemaValueForm } from '../controls/data/SchemaValueForm';
-import { Field, Stack, TextInput } from '../form/index';
+import { SchemaValueForm } from '../controls/data/schema/SchemaValueForm';
+import { Stack } from '../components/layout';
+import { Field } from '../components/feedback';
+import { TextInput } from '../controls/form-binding/index';
 
 export function CatalogPreviewFields({
   fields,

@@ -1,5 +1,5 @@
 .textarea {
   composes: control from '../shared/Control.module.css';
-  min-height: 80px;
+  --eu-control-height: 80px;
   resize: vertical;
 }

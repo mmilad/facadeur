@@ -3,9 +3,10 @@ import {
   globalRefInComponentTokenDefault,
   readTokenTree,
   tokenReference,
+  tokenCustomProperty,
+  typographyCustomProperty,
   type DesignTokenSet,
 } from '@facadeur/core';
-import { tokenCustomProperty, typographyCustomProperty } from '@facadeur/tokens';
 import { toKebab } from './declarations';
 import type { SubstituteContext } from './types';
 

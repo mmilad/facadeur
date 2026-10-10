@@ -11,7 +11,7 @@ const spacingTokens = exampleCatalog.tokens;
 
 it.each(['instance', 'canvas'] as const)(
   'lets desktop CSS auto override inherited tablet layout Hug (%s)',
-  (address) => {
+  (address: 'instance' | 'canvas') => {
     const source: DocumentFile = {
       version: 1,
       id: 'responsive-auto',
@@ -93,7 +93,7 @@ it('retains style-before-layout precedence for rules at the same width', () => {
 
 it.each(['row', 'column'] as const)(
   'emits explicit auto width and height with min/max in a %s parent',
-  (direction) => {
+  (direction: 'row' | 'column') => {
     const source: DocumentFile = {
       version: 1,
       id: 'auto-size',

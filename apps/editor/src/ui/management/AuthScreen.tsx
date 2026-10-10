@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { TextField } from '@facadeur/form';
 import { authClient } from '../../domain/auth/client';
 import './management.css';
 
@@ -54,23 +55,25 @@ export function AuthScreen({
         ) : null}
         <form className="management-auth-form" onSubmit={(event) => void submit(event)}>
           <label htmlFor="auth-email">Email</label>
-          <input
+          <TextField
             id="auth-email"
             type="email"
+            label="Email"
             autoComplete="email"
             required
             value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            onChange={setEmail}
           />
           <label htmlFor="auth-name">
             Name <span>(optional)</span>
           </label>
-          <input
+          <TextField
             id="auth-name"
             type="text"
+            label="Name (optional)"
             autoComplete="name"
             value={name}
-            onChange={(event) => setName(event.target.value)}
+            onChange={setName}
           />
           <button type="submit" className="management-button primary" disabled={busy}>
             {busy ? 'Signing in…' : 'Continue'}

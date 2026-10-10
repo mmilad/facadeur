@@ -2,8 +2,10 @@ import type { ReactNode } from 'react';
 import type { VariantAxis } from '@facadeur/core';
 import { useState } from 'react';
 import { variantAxisFromDraft } from '../../../domain/definitions';
-import { Field, Section, Select, Stack, TextInput } from '../../form/index';
-import '../../form/form.css';
+import { Section, Stack } from '../../components/layout';
+import { Field } from '../../components/feedback';
+import { Select, TextInput } from '../form-binding/index';
+import '../../styles/form.css';
 import { variantAxisFromValuesText, variantAxisWithDefault, variantValuesText } from './value';
 
 export function VariantsEditorControl({

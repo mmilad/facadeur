@@ -1,6 +1,6 @@
 import { readTokenTree, tokenReferenceValue } from '@facadeur/core';
 import { TransformableField, TextField } from '@facadeur/form';
-import { typographyTokenRefs } from '../../../domain/editing';
+import { typographyTokenRefs } from '../../../domain/token-references';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session';
 import { formatTokenValue } from '../../../domain/edits/token-edit';
 import type { viewportEditContext } from '../../../domain/viewport/viewport-edit';
@@ -9,7 +9,7 @@ import { TokenValueControl } from '../../controls/fields/TokenValueControl';
 import type { TypographyCatalogs } from '../../controls/typography/index';
 import { DesignShadowEditor, type DesignShadowInput } from '../DesignShadowEditor';
 import { DesignTypographyEditor, type DesignTypographyValue } from '../DesignTypographyEditor';
-import { IconButton } from '../../form/components/shared/IconButton';
+import { IconButton } from '../../components/IconButton';
 import { RemoveTokenButton } from './TokenCrud';
 import {
   commitRawToken,

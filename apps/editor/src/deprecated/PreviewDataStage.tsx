@@ -1,15 +1,20 @@
 import { resolvePreviewData, type FieldDefinition, type FieldValue } from '@facadeur/core';
-import type { EditorSession, EditorSnapshot } from '../../domain/session';
+import type { EditorSession, EditorSnapshot } from '../domain/session';
 import {
   parsePreviewFieldValue,
   patchPreviewData,
   previewValueSource,
-} from '../../domain/preview-data';
-import { variantLabel } from '../../domain/edits/variant-edit';
-import { fieldDisplayLabel } from '../controls/data/field-label';
-import { Field, NumberInput, Select, Stack, TextArea, TextInput, Toggle } from '../form/index';
+} from '../domain/preview-data';
+import { variantLabel } from '../domain/edits/variant-edit';
+import { fieldDisplayLabel } from '../ui/controls/data/field-label';
+import { Stack } from '../ui/components/layout';
+import { Field } from '../ui/components/feedback';
+import { NumberInput, Select, TextArea, TextInput, Toggle } from '../ui/controls/form-binding';
 
-/** Edits the instance preview values independently from the component schema. */
+/**
+ * @deprecated Replaced by `CatalogPreviewDataStage`; retained temporarily for preview data coverage.
+ * Edits instance preview values independently from the component schema.
+ */
 export function PreviewDataStage({
   session,
   snap,

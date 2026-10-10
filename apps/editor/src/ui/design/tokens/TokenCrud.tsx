@@ -9,7 +9,7 @@ import {
 import { tokensReferencingUuid } from '../../../domain/edits/token-edit';
 import { documentsReferencingToken } from '../../../domain/component-tokens';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session';
-import { IconButton } from '../../form/components/shared/IconButton';
+import { IconButton } from '../../components/IconButton';
 import { TokenAddAction } from './TokenAddAction';
 
 const TOKEN_COPY: Record<DesignTokenFamily, { label: string; placeholder: string }> = {
@@ -31,7 +31,8 @@ export function TokenAddRow({
   family: DesignTokenFamily;
 }) {
   const existingPaths = useMemo(
-    () => new Set([...readTokenTree(snap.design.tokens).tokens.values()].map((token) => token.path)),
+    () =>
+      new Set([...readTokenTree(snap.design.tokens).tokens.values()].map((token) => token.path)),
     [snap.design.tokens],
   );
 
@@ -53,7 +54,10 @@ export function TokenAddRow({
       });
       return true;
     } catch (error) {
-      session.setNotice(error instanceof Error ? error.message : `Invalid ${TOKEN_COPY[family].label}`, 'error');
+      session.setNotice(
+        error instanceof Error ? error.message : `Invalid ${TOKEN_COPY[family].label}`,
+        'error',
+      );
       return false;
     }
   }

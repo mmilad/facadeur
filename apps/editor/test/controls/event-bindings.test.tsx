@@ -5,7 +5,8 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { EventBindingsEditorControl } from '../../src/ui/controls/data/EventBindingsEditorControl';
+import type { EventBinding } from '@facadeur/core';
+import { EventBindingsEditorControl } from '../../src/ui/controls/data/events/EventBindingsEditorControl';
 
 describe('event bindings editor', () => {
   afterEach(() => cleanup());
@@ -44,5 +45,35 @@ describe('event bindings editor', () => {
       'change',
     );
     expect(onChange).toHaveBeenLastCalledWith([{ event: 'changed', name: 'change' }]);
+  });
+
+  it('writes canonical data mappings and drops legacy payload when a mapping is edited', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const legacyBinding: EventBinding = {
+      event: 'changed',
+      name: 'input',
+      payload: { value: 'valueAsNumber' },
+    };
+    render(
+      <EventBindingsEditorControl
+        events={[{ name: 'changed', payload: { value: 'number' } }]}
+        bindings={[legacyBinding]}
+        onChangeBindings={onChange}
+      />,
+    );
+
+    await user.selectOptions(
+      document.querySelector('select[name="event-binding-data-source-0-value"]')!,
+      'literal',
+    );
+
+    expect(onChange).toHaveBeenLastCalledWith([
+      {
+        event: 'changed',
+        name: 'input',
+        data: [{ path: 'value', source: { kind: 'literal', value: 0 } }],
+      },
+    ]);
   });
 });

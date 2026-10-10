@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readTokenTree } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
+import { createProjectTemplateDocument } from '@facadeur/examples';
 import {
   assertShadowTokenPath,
   createDefaultShadowToken,

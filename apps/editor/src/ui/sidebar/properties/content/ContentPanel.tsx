@@ -20,7 +20,7 @@ import {
 import { HtmlTagSelect } from '../../../controls/html/index';
 import { InstanceOverridesControl } from '../../../controls/instance/index';
 import { TextControl } from '../../../controls/fields/index';
-import '../../../form/form.css';
+import '../../../styles/form.css';
 import { NodeAttributeFields } from './NodeAttributeFields';
 import { partitionNodeAttributes } from './preview-attribute-keys';
 import { PreviewOptionsDisclosure } from './PreviewOptionsDisclosure';

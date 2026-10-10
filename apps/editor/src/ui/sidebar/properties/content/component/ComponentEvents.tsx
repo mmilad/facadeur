@@ -9,10 +9,8 @@ import {
 } from '@facadeur/core';
 import { useEffect, useState } from 'react';
 import type { EditorSession, EditorSnapshot } from '../../../../../domain/session';
-import {
-  EventBindingsEditorControl,
-  EventsEditorControl,
-} from '../../../../controls/data/index';
+import { withoutLegacyEventPayload } from '../../../../../domain/events';
+import { EventBindingsEditorControl, EventsEditorControl } from '../../../../controls/data/index';
 import { EventTargets } from './EventTargets';
 
 interface PendingEventEdit {
@@ -250,11 +248,8 @@ function updateBindingsForEvent(
     const validMappings = nextSchema
       ? mappings.filter((mapping) => schemaAtPath(nextSchema, mapping.path))
       : [];
-    const { payload: _legacyPayload, ...canonical } = binding as EventBinding & {
-      payload?: unknown;
-    };
     return {
-      ...canonical,
+      ...withoutLegacyEventPayload(binding),
       event: next.name,
       ...(validMappings.length ? { data: validMappings } : { data: undefined }),
     };

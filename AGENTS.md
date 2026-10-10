@@ -55,3 +55,14 @@ When a development command is repeatedly blocked, unexpectedly slow, or needs a 
 record the reproducible command, observed cause/evidence, impact, and a concrete fix in
 `docs/friction.md` under the tooling-friction backlog. Update or close the entry once resolved;
 omit one-off failures with no repeatable cause.
+
+## Verification in the approved host context
+
+Use the repository-pinned package manager from `package.json`. The restricted process can have
+an isolated Corepack cache and can be denied `realpath` access to the workspace `node_modules`,
+causing `pnpm` commands to fail before project code runs (`ENOTFOUND` or `EPERM`). If a pnpm
+install, typecheck, test, lint, or build hits one of those sandbox failures, rerun the same
+command in the approved host context. Do not ask the user to repeat it in CMD when that context
+is available, change the package-manager pin, or add a repository workaround for the isolated
+Corepack cache. Record repeatable failures and the working host-context command in
+`docs/friction.md`.

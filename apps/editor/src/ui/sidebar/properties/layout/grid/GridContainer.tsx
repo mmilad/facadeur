@@ -1,7 +1,9 @@
-import { Field, NumberInput, Stack, TextInput } from '../../../../form/index';
+import { Stack } from '../../../../components/layout';
+import { Field } from '../../../../components/feedback';
+import { NumberInput, TextInput } from '../../../../controls/form-binding/index';
 import { LayoutChoiceIcon, LayoutIconChoice } from '../../../../controls/layout/icon-choice';
 import { TokenValueControl } from '../../../../controls/fields/TokenValueControl';
-import '../../../../form/form.css';
+import '../../../../styles/form.css';
 
 export interface GridContainerProps {
   values: Record<string, string>;

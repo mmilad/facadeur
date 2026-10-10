@@ -1,6 +1,8 @@
 import type { FieldDefinition, FieldValue, VariantAxis } from '@facadeur/core';
-import { Field, Select, Stack, Toggle } from '../../form/index';
-import '../../form/form.css';
+import { Stack } from '../../components/layout';
+import { Field } from '../../components/feedback';
+import { Select, Toggle } from '../form-binding/index';
+import '../../styles/form.css';
 import { InstanceFieldOverride } from './InstanceFieldOverride';
 import { FieldBindingsEditorControl } from './FieldBindingsEditorControl';
 

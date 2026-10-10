@@ -8,7 +8,7 @@ import {
 import { createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
-import { activeBreakpoints } from '@facadeur/tokens';
+import { activeBreakpoints } from '@facadeur/core';
 import { createFrameHost, type FrameHost } from './frame-host';
 import { DynamicElement } from './dynamic-element';
 

@@ -5,7 +5,9 @@ import type { DesignPropDefinition } from '@facadeur/domain';
 import { useMemo, useState } from 'react';
 import type { AppService } from '../../../app-service';
 import type { EditorSession } from '../../../domain/session';
-import { Field, SearchInput, Stack, TextInput } from '../../form/index';
+import { Stack } from '../../components/layout';
+import { Field } from '../../components/feedback';
+import { SearchInput, TextInput } from '../../controls/form-binding/index';
 import { SettingsSections } from '../SettingsSections';
 import type { EditorSurface } from '../../design/design-domain';
 

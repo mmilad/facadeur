@@ -1,10 +1,10 @@
 ﻿# facadeur
 
-Design-system foundation: a JSON document rendered as real DOM on a zoomable stage, with design tokens, fonts, and one iframe per viewport.
+Design-system editor for a versioned component catalog, with tokenized design settings and responsive preview frames.
 
-A document has a kind (`atom`, `component`, `section`, or `page`) and a tree of `frame`, `text`, `image`, and `instance` nodes. The HTML tag is a property. Instances point at another document and may only override fields and variants. Pages contain sections. The file on disk is nested JSON; the editor's store keeps a flat map of nodes and runs every change as a command.
+A catalog contains atoms, components, pages, schemas, tokens, and global styles. Core owns the catalog model and editing state; the React editor renders previews and Style Engine produces design and component CSS.
 
-This repository is the design-system editor through code generation: document model, controller-owned state, tokens, fonts, a live style engine, a DOM renderer that patches nodes in place, viewport frames, a React shell around that stage, and a React generator for Next.js. The specimen page is the document that opens first.
+This repository contains the editor and its catalog-to-project generation packages. The standalone DOM renderer is deprecated; the active canvas is React-based.
 
 ## Run the editor
 
@@ -33,7 +33,7 @@ From an open project you can:
 - **Open** imports a document JSON into the controller. **Save** writes its current snapshot to project JSON without a file picker. **Export JSON** downloads it. New edits stay in memory until Save.
 - Hover shows the click target in the frame under the pointer. Escape clears the selection. **Reset view** fits the frames again.
 
-ProjectController owns editing state and snapshot Undo/Redo. The [project API](docs/project-api.md)
+CoreController owns the active catalog and editing state. The [project API](docs/project-api.md)
 loads JSON and saves explicitly, with source-hash checks. Yjs synchronization is deferred.
 
 ## Documentation
@@ -46,33 +46,15 @@ loads JSON and saves explicitly, with source-hash checks. Yjs synchronization is
 - [Current plan and recorded decisions](docs/plan.md)
 - [Archived implementation history and dated decisions](docs/plan-history.md)
 
-## Generate React and Storybook
+## Code generation and Storybook
+
+The editor's Storybook runs with:
 
 ```bash
-pnpm codegen
-pnpm --dir dist/facadeur install
 pnpm storybook
 ```
 
-`pnpm codegen` reads the example documents, `examples/project-template.json`, and the shared schema library `examples/schemas.json` through `--schemas`, then writes:
-
-- **`dist/facadeur/packages/ui`** — React components, shared schema types, exports and CSS (`@facadeur/ui`)
-- **`dist/facadeur/apps/storybook`** — Storybook configuration and CSF3 stories
-- **`dist/facadeur/apps/next`** — Next.js demonstration app
-
-`dist/facadeur` is an independent pnpm monorepo with its own manifests and TypeScript configuration. It has no runtime dependencies on the Facadeur editor or source packages. Install its dependencies separately; the output can be copied to another directory. Generated output is ignored by Git. Regeneration replaces managed files and removes obsolete generated files while preserving additional custom files and the generated workspace lockfile.
-
-For other document collections, use `--workspace <directory>` instead of `--out`/`--storybook`. `--next-example` includes the bundled Next demo, which uses the example Card, Input, SignIn and Button components.
-
-Storybook opens at http://localhost:6006 and lists every generated atom, component, section, and page.
-
-The thin Next.js sample still consumes the same package:
-
-```bash
-pnpm --dir dist/facadeur next
-```
-
-Open the URL Next prints (http://localhost:3000). The page renders Button (tone and size props), Input, Sign in, and Card from `@facadeur/ui`. The input demo displays the semantic event name, native event type and typed data as you edit. Generated native controls use initial defaults, so they are editable without application state.
+`packages/codegen` owns React project generation. The root `pnpm codegen` command is currently disabled while its v2 catalog input workflow is being rebuilt; it should not be used to generate the legacy standalone workspace described in earlier versions of this README.
 
 ## Checks
 
@@ -89,25 +71,24 @@ pnpm test
 ```
 apps/editor             Next.js + React shell (stage, layers, properties, assets, tokens, fonts)
 apps/server             retained legacy Yjs server; not started by pnpm dev
-packages/core           types, JSON Schema, flat model, commands, DocumentStore
+packages/core           catalog controller, document contracts, validation, and editing commands
 packages/api            data contracts and controllers (auth, roles, SQL, JSON storage)
 packages/api-client     typed HTTP SDK for the editor's API routes
 packages/store-yjs      retained legacy adapter; not used by the editor
-packages/tokens         DTCG parser, reference resolution, CSS custom properties, project template
+packages/tokens         deprecated Core/Examples compatibility facade for API and Store Yjs
 packages/style-engine   live CSSStyleRules, component style blocks, auto layout
-packages/renderer-dom   document JSON to DOM, targeted updates from the store
+packages/renderer-dom   deprecated compatibility DOM renderer; Editor canvas uses React
 packages/codegen       Shared code-generation entry point; React output engine
-examples/               specimen page, section, atoms, and examples/project-template.json
-dist/facadeur/          standalone generated monorepo (UI, Storybook, Next.js)
+packages/examples       shared fixture catalogs for Storybook and tests
 schema/                 generated JSON Schema
 docs/dsl.md             the document format
 docs/plan.md            milestones
 ```
 
-The stage renders the open document: the specimen is a page whose only child is a section instance, which instances the atoms and components. Each viewport frame has its own renderer and style engine, subscribed to the asset stores. Project tokens and fonts live in a design store seeded from `examples/project-template.json` and are pushed into every frame with `setDesign`. Opening an atom, component, or section paints that document's root; a page keeps the root as the unpainted canvas.
+The Editor renders its canvas with React. Core owns the active catalog and editing state; Style Engine compiles and injects design and component styles. Shared catalogs and token fixtures live in `packages/examples` and are reused by Storybook and tests.
 
 To print the default stylesheet:
 
 ```bash
-pnpm exec tsx -e "import { createProjectTemplate, renderDesignCss } from './packages/tokens/src/index.ts'; console.log(renderDesignCss(createProjectTemplate()))"
+pnpm exec tsx -e "import { createProjectTemplate } from '@facadeur/examples'; import { renderDesignCss } from '@facadeur/style-engine'; console.log(renderDesignCss(createProjectTemplate()))"
 ```

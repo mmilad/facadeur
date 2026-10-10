@@ -1,5 +1,5 @@
 import type { Breakpoint, FlatDocument } from '@facadeur/core';
-import { activeBreakpoints } from '@facadeur/tokens';
+import { activeBreakpoints } from '@facadeur/core';
 
 /** Base writes the unqueried layer. Viewport writes one min-width override. */
 export type StyleEditMode = 'base' | 'viewport';

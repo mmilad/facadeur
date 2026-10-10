@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useSyncExternalStore } from 'react';
+import { SelectField } from '@facadeur/form';
 import { createAppService } from '../../app-service';
 import { createInMemoryCatalogPort } from '../../domain/project/in-memory-catalog-port';
 import { readOnlySession } from '../../domain/project/read-only-session';
@@ -22,16 +23,17 @@ export function ProjectViewer({ session }: { session: EditorSession }) {
   return (
     <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       <header className="topbar">
-        <label>
-          Document{' '}
-          <select value={snap.openId} onChange={(event) => viewer.openAsset(event.target.value)}>
-            {snap.catalog.map((document) => (
-              <option key={document.id} value={document.id}>
-                {document.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <label htmlFor="viewer-document">Document</label>
+        <SelectField
+          id="viewer-document"
+          aria-label="Document"
+          value={snap.openId}
+          options={snap.catalog.map((document) => ({
+            value: document.id,
+            label: document.name,
+          }))}
+          onChange={(id) => viewer.openAsset(id)}
+        />
         <span className="meta">View only</span>
         <button type="button" className="text-button" onClick={() => viewer.fit()}>
           Fit preview

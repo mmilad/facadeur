@@ -1,30 +1,25 @@
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { RecordField } from '@facadeur/form';
+import { Divider, Grid, Inline, Section, Stack } from './ui/components/layout';
+import { Field } from './ui/components/feedback';
+import { AddPopover, Modal } from './ui/components/overlay';
 import {
-  AddPopover,
   ArrayField,
   Checkbox,
   ColorInput,
   Combobox,
-  Divider,
-  Field,
   Form,
-  Grid,
-  Inline,
-  Modal,
   NumberInput,
   RadioGroup,
-  RecordField,
   SearchInput,
-  Section,
   SegmentedControl,
   Select,
-  Stack,
   TextArea,
   TextInput,
   Toggle,
   type FormChangeMeta,
-} from './ui/form/index';
+} from './ui/controls/form-binding/index';
 
 type DemoValue = {
   label: string;
@@ -68,7 +63,7 @@ function FormDemoApp() {
     <div style={{ padding: 24, maxWidth: 720, margin: '0 auto' }}>
       <h1 style={{ fontSize: 18, marginBottom: 8 }}>Editor form kit (v1)</h1>
       <p style={{ color: '#6b6258', marginBottom: 16 }}>
-        Dev demo for primitives under <code>apps/editor/src/ui/form</code>.
+        Dev demo for editor binding adapters over <code>@facadeur/form</code> fields.
       </p>
       <Form
         value={value}
@@ -126,6 +121,7 @@ function FormDemoApp() {
             <Field label="Alignment">
               <SegmentedControl
                 name="alignment"
+                label="Alignment"
                 options={[
                   { value: 'start', label: 'Start' },
                   { value: 'center', label: 'Center' },
@@ -169,9 +165,17 @@ function FormDemoApp() {
                 )}
               </ArrayField>
             </Field>
-            <Field label="CSS declarations">
-              <RecordField name="declarations" />
-            </Field>
+            <RecordField
+              id="demo-declarations"
+              name="declarations"
+              label="CSS declarations"
+              value={value.declarations}
+              onChange={(next) => {
+                const previous = value.declarations;
+                setValue((current) => ({ ...current, declarations: next }));
+                setLastMeta({ path: 'declarations', previous, next });
+              }}
+            />
           </Section>
 
           <Inline gap={8}>

@@ -7,11 +7,9 @@ import {
   styleStateNames,
   type StyleStateName,
 } from '../../../../domain/edits/style-edit';
-import {
-  editorBreakpoints,
-  viewportEditContext,
-} from '../../../../domain/viewport/viewport-edit';
-import { Field, Select } from '../../../form/index';
+import { editorBreakpoints, viewportEditContext } from '../../../../domain/viewport/viewport-edit';
+import { Field } from '../../../components/feedback';
+import { Select } from '../../../controls/form-binding/index';
 import { TokenPreviewProvider } from '../../../controls/fields/TokenPreviewContext';
 import { DeclarationEditor } from './declarations/declaration-editor';
 

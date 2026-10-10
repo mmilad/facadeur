@@ -25,7 +25,7 @@ import {
   shadowTokenRefs,
   typographyTokenRefs,
   fontFamilies,
-} from '../../../../domain/editing';
+} from '../../../../domain/token-references';
 import type { EditorSession, EditorSnapshot } from '../../../../domain/session';
 import { ColorControl } from '../../../controls/color/index';
 import { TextControl } from '../../../controls/fields/index';
@@ -41,9 +41,10 @@ import {
   DesignTypographyEditor,
   type DesignTypographyValue,
 } from '../../../design/DesignTypographyEditor';
-import { IconButton } from '../../../form/components/shared/IconButton';
-import { Field, Select } from '../../../form/index';
-import { TextInput } from '../../../form/components/input/TextInput';
+import { IconButton } from '../../../components/IconButton';
+import { Field } from '../../../components/feedback';
+import { Select } from '../../../controls/form-binding/index';
+import { TextInput } from '../../../controls/form-binding/components/input/TextInput';
 import { TokenAddAction } from '../../../design/tokens/TokenAddAction';
 import '../../../design/token-tables.css';
 import { RootTokenOverridesPanel } from './RootTokenOverridesPanel';
