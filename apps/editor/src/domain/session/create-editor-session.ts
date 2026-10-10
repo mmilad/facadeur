@@ -20,6 +20,7 @@ import type {
   EditorSnapshot,
   EditorTool,
 } from './types';
+import type { StyleEditMode } from '../viewport/viewport-edit';
 
 export function createEditorSession(options: EditorSessionOptions): EditorSession {
   const core = options.core ?? new CoreController(options.projectCatalog ?? emptyProjectCatalog());
@@ -45,6 +46,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   }
   let focusViewportId: string | null = defaultFocusViewportId();
   let selectedViewportId: string | null = null;
+  let editTarget: StyleEditMode = 'base';
   let fitHandler: (() => void) | null = null;
   let zoomByHandler: ((factor: number) => void) | null = null;
 
@@ -71,6 +73,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       catalogDirty: catalogDirty(),
       focusViewportId,
       selectedViewportId,
+      editTarget,
     });
   }
 
@@ -204,7 +207,10 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       publish();
     },
     setViewportChrome: refuseDocumentCommand,
-    setEditTarget: refuseDocumentCommand,
+    setEditTarget(target) {
+      editTarget = target;
+      publish();
+    },
     setActiveVariant: refuseDocumentCommand,
     setTool(next) {
       tool = next;
@@ -273,6 +279,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
         catalogDirty: catalogDirty(),
         focusViewportId,
         selectedViewportId,
+        editTarget,
       }).design;
       return {
         tokens: design.tokens,

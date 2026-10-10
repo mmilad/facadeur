@@ -5,6 +5,7 @@ import { catalogDefinitionDisplayName } from '../catalog/display-name';
 import { catalogLayerTree } from '../catalog/layer-tree';
 import type { AssetSummary, EditorDrag, EditorNotice, EditorSnapshot, EditorTool } from './types';
 import type { DefaultKind, ProjectCatalogModel } from '@facadeur/core';
+import type { StyleEditMode } from '../viewport/viewport-edit';
 
 export function placeholderDocumentForDefinition(
   catalog: ProjectCatalogModel,
@@ -36,6 +37,7 @@ export function buildCatalogEditorSnapshot(input: {
   catalogDirty: boolean;
   focusViewportId: string | null;
   selectedViewportId: string | null;
+  editTarget: StyleEditMode;
 }): EditorSnapshot {
   const coreSnap = input.core.getSnapshot();
   const catalog = coreSnap.catalog;
@@ -67,7 +69,7 @@ export function buildCatalogEditorSnapshot(input: {
     focusViewportId: input.focusViewportId,
     selectedViewportId: input.selectedViewportId,
     viewportChrome: {},
-    editTarget: 'base',
+    editTarget: input.editTarget,
     componentTarget: null,
     componentFields: [],
     automaticFieldGroups: [],

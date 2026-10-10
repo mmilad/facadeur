@@ -18,6 +18,20 @@
 
 ### Shared settings table frame
 
+- [ ] Restore responsive token editing from the viewport tabs.
+  - Evidence: `TokensDomainPanel` already reads/writes token breakpoint layers, but the catalog
+    editor session refuses `setEditTarget` and its snapshot builder hardcodes `editTarget: 'base'`.
+    Selecting Tablet therefore changes focus but leaves token rows writing the base value.
+  - Action: retain edit-target state in the catalog session, pass it into snapshots, and allow the
+    token viewport tabs to select the matching base or breakpoint layer. Use a compact reset action
+    in token rows and make the active tab more prominent. Keep token row rendering cohesive; no
+    structural extraction is justified for this change.
+  - Scope: current task; restore editing of responsive design-token values.
+  - Contracts: preserve stable breakpoint UUIDs, base token values, sparse per-breakpoint token
+    overrides, reset behavior, and other breakpoints when editing or clearing one override.
+  - Validation: inspect the focused editor flow, run applicable editor checks when requested,
+    `git diff --check`, and rerun the refactoring detector on affected paths.
+
 - [x] Add UUID identity groundwork for DTCG token fixtures and editor-created tokens.
   - Evidence: Core reads an optional token UUID but the published schema omits it; editor token
     creators do not assign one; example tokens use a separate static path map; the example token

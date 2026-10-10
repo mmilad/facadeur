@@ -9,7 +9,7 @@ import { TokenValueControl } from '../../controls/fields/TokenValueControl';
 import type { TypographyCatalogs } from '../../controls/typography/index';
 import { DesignShadowEditor, type DesignShadowInput } from '../DesignShadowEditor';
 import { DesignTypographyEditor, type DesignTypographyValue } from '../DesignTypographyEditor';
-import { OverrideCue } from '../../sidebar/properties/ViewportEditBar';
+import { IconButton } from '../../form/components/shared/IconButton';
 import { RemoveTokenButton } from './TokenCrud';
 import {
   commitRawToken,
@@ -314,9 +314,11 @@ export function createTokenTableRow({
       </div>,
       <div className="token-table-actions">
         {ctx.overrideViewport && token.override !== undefined ? (
-          <OverrideCue
-            minWidth={ctx.overrideViewport.minWidth}
-            onReset={() =>
+          <IconButton
+            className="token-override-reset"
+            label={`Reset override at ${ctx.overrideViewport.minWidth}px`}
+            name={`reset-token-override-${token.uuid}`}
+            onClick={() =>
               resetTokenBreakpoint(
                 session,
                 snap,
@@ -325,7 +327,9 @@ export function createTokenTableRow({
                 ctx.overrideViewport?.uuid ?? '',
               )
             }
-          />
+          >
+            <ResetOverrideIcon />
+          </IconButton>
         ) : null}
         {token.family !== 'font' ? (
           <RemoveTokenButton
@@ -339,6 +343,20 @@ export function createTokenTableRow({
       </div>,
     ],
   };
+}
+
+function ResetOverrideIcon() {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M3 6a5 5 0 1 1-.2 3M3 3v3h3"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 }
 
 function scalarTokenRefs(

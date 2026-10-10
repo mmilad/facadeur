@@ -269,8 +269,16 @@
 }
 
 .design-viewport-tab.is-active {
-  border-bottom-color: var(--ink);
+  border: 1px solid var(--accent);
+  border-bottom: 3px solid var(--accent);
+  border-radius: 6px 6px 0 0;
+  background: color-mix(in srgb, var(--accent) 8%, var(--white));
+  color: var(--accent);
   font-weight: 600;
+}
+
+.design-viewport-tab.is-active small {
+  color: inherit;
 }
 
 .viewport-settings {

@@ -136,6 +136,15 @@
   min-width: 0;
 }
 
+.token-table-actions .token-override-reset {
+  flex: none;
+}
+
+.token-table-actions .token-override-reset svg {
+  width: 14px;
+  height: 14px;
+}
+
 .token-table-preview {
   display: flex;
   align-items: center;

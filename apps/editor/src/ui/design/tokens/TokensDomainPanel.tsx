@@ -81,20 +81,17 @@ export function TokensDomainPanel({
   const writingId = ctx.writingBreakpointId;
   const colorTokens = useMemo(() => colorTokenRefs(snap.design.tokens), [snap.design.tokens]);
   const shadowTokens = useMemo(() => shadowTokenRefs(snap.design.tokens), [snap.design.tokens]);
-  const typographyCatalogs = useMemo<TypographyCatalogs>(
-    () => {
-      const fonts = fontFamilies(snap.design.tokens);
-      return {
-        fontRefs: projectFontRefs(fonts),
-        fontFamilyTokens: fontFamilyTokenRefs(snap.design.tokens),
-        fontWeights: projectFontWeightOptions(fonts),
-        fontWeightTokens: fontWeightTokenRefs(snap.design.tokens),
-        dimensionTokens: dimensionTokenRefs(snap.design.tokens),
-        numberTokens: numberTokenRefs(snap.design.tokens),
-      };
-    },
-    [snap.design.tokens],
-  );
+  const typographyCatalogs = useMemo<TypographyCatalogs>(() => {
+    const fonts = fontFamilies(snap.design.tokens);
+    return {
+      fontRefs: projectFontRefs(fonts),
+      fontFamilyTokens: fontFamilyTokenRefs(snap.design.tokens),
+      fontWeights: projectFontWeightOptions(fonts),
+      fontWeightTokens: fontWeightTokenRefs(snap.design.tokens),
+      dimensionTokens: dimensionTokenRefs(snap.design.tokens),
+      numberTokens: numberTokenRefs(snap.design.tokens),
+    };
+  }, [snap.design.tokens]);
   const tableTokens = useMemo<TableToken[]>(
     () =>
       tokens.map((token) => {
@@ -181,13 +178,11 @@ export function TokensDomainPanel({
         columns={[
           { id: 'name', label: 'Name', width: '22%' },
           { id: 'preview', label: 'Preview', width: '14%' },
-          { id: 'value', label: 'Value / reference', width: '58%' },
-          { id: 'actions', ariaLabel: 'Actions', width: '6%' },
+          { id: 'value', label: 'Value / reference', width: '54%' },
+          { id: 'actions', ariaLabel: 'Actions', width: '10%' },
         ]}
         context={writing ? `${domainTitle} overrides at ${breakpointLabel(writing)}` : undefined}
-        addAction={
-          <TokenAddRow session={session} snap={snap} family={DOMAIN_FAMILY[domain]} />
-        }
+        addAction={<TokenAddRow session={session} snap={snap} family={DOMAIN_FAMILY[domain]} />}
         emptyState={
           visible.length === 0 ? (
             <p className="inspector-empty">
