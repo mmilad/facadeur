@@ -81,13 +81,34 @@
   - Validation: formatting, editor typecheck, `git diff --check`, and detector rerun on changed
     paths.
 
-- [ ] Settings: use TransformableField for structured shadow fields.
-  - Evidence: Shadow tokens already use the shared settings table, but their structured X/Y/blur/
-    spread/color fields still render the legacy token picker instead of the editor-configured
-    control used by Colors and Spacing.
-  - Action: build color and dimension options in `ui/settings/config` consumers and pass them into
-    the shared `DesignShadowEditor`; keep its sidebar caller on the existing path unless it opts in.
-    Hold an empty value locally when changing a field mode, then commit only valid field values.
+- [x] Refactor: share token-backed fieldsets through `ui/combofield/ComboField`.
+  - Evidence: Typography, structured Shadow layers, and Spacing each assemble a bordered group and
+    labeled token controls, but field rows and fieldsets currently have separate implementations.
+  - Action: add a fieldset renderer configured by a list of labeled token fields or custom controls.
+    Use it in Typography, `ShadowObjectEditor`, and the global Spacing token row; remove the
+    superseded `TokenEditorField` once migrated.
+  - Scope: current task; consolidate shared presentation while keeping per-domain parsing,
+    validation, draft state, and commit behavior in their current owners.
+  - Contracts: labels and token options are supplied by callers; preserve token values, control
+    names, responsive inheritance/reset, Shadow arrays and inset behavior, and TransformableField
+    callbacks.
+  - Validation: formatting, `git diff --check`, and detector rerun passed. Editor typecheck has
+    existing diagnostics in unrelated files; changed files had no reported diagnostics.
+
+- [x] Refactor: use TransformableField throughout Typography and Shadow editors.
+  - Evidence: structured Typography fields and some Shadow fields still use `TokenValueControl`,
+    which pairs a token autocomplete with a separate direct-value switch; whole-token aliases use
+    the same legacy interaction.
+  - Action: render both alias and structured fields as custom `ComboField` controls using
+    `TransformableField`; share token option construction from `ui/settings/config` and add an
+    optional commit callback to TransformableField so Typography keeps its blur-based validation.
+  - Scope: current task; the form control owns transform mode and text commit events, while the
+    domain editors retain parsing, validation, draft state, and persistence callbacks.
+  - Contracts: preserve token refs, raw values, accessible external labels, Typography sparse
+    overrides and reset behavior, Shadow arrays/inset/advanced JSON, and valid-value commits.
+  - Validation: form package typecheck, formatting, `git diff --check`, and detector rerun passed.
+    Editor typecheck reports existing diagnostics in unrelated files. Storybook build is blocked by
+    SWC failing to canonicalize the Windows editor path; no tests were run.
   - Scope: current task; Settings · Shadow only.
   - Contracts: preserve the structured shadow object/array shape, token references, validation,
     advanced JSON, viewport overrides/reset, and the existing `@facadeur/form` API. Do not change

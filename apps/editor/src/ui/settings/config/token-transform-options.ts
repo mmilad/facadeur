@@ -10,7 +10,7 @@ export function colorTransformOptions(
   return [
     { type: 'text', label: 'Text' },
     { type: 'color', label: 'Color' },
-    ...tokenOptionGroups(tokens, labelFor, searchValue, resolve, 'Colors'),
+    ...tokenTransformOptions(tokens, labelFor, searchValue, resolve, 'Colors'),
   ];
 }
 
@@ -22,11 +22,11 @@ export function dimensionTransformOptions(
 ): TransformableFieldOption[] {
   return [
     { type: 'text', label: 'Dimension' },
-    ...tokenOptionGroups(tokens, labelFor, searchValue, resolve, 'Spacing'),
+    ...tokenTransformOptions(tokens, labelFor, searchValue, resolve, 'Spacing'),
   ];
 }
 
-function tokenOptionGroups(
+export function tokenTransformOptions(
   tokens: readonly string[],
   labelFor: (reference: string) => string,
   searchValue: (reference: string) => string | undefined,

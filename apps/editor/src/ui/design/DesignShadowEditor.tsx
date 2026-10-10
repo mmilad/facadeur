@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { TokenValueControl } from '../controls/fields/TokenValueControl';
-import { useTokenResolver, useTokenValueLabel } from '../controls/fields/TokenPreviewContext';
+import {
+  useTokenResolver,
+  useTokenSearchValue,
+  useTokenValueLabel,
+} from '../controls/fields/TokenPreviewContext';
 import {
   BooleanField,
   TextArea,
@@ -8,6 +11,12 @@ import {
   type TransformableFieldOption,
 } from '@facadeur/form';
 import { Field, Inline, Stack } from '../form/index';
+import { ComboField, type ComboFieldItem } from '../combofield/ComboField';
+import {
+  colorTransformOptions,
+  dimensionTransformOptions,
+  tokenTransformOptions,
+} from '../settings/config/token-transform-options';
 
 export interface DesignShadowValue {
   color: string;
@@ -153,20 +162,14 @@ function validateShadowField(field: DesignShadowField, value: string | boolean |
 function ShadowObjectEditor({
   value,
   namePrefix,
-  shadowTokens: _shadowTokens,
-  dimensionTokens,
-  colorTokens,
   dimensionFieldOptions,
   colorFieldOptions,
   onCommit,
 }: {
   value: DesignShadowValue | DesignShadowValue[];
   namePrefix: string;
-  shadowTokens: readonly string[];
-  dimensionTokens?: readonly string[];
-  colorTokens?: readonly string[];
-  dimensionFieldOptions?: readonly TransformableFieldOption[];
-  colorFieldOptions?: readonly TransformableFieldOption[];
+  dimensionFieldOptions: readonly TransformableFieldOption[];
+  colorFieldOptions: readonly TransformableFieldOption[];
   onCommit: (next: DesignShadowValue | DesignShadowValue[]) => void;
 }) {
   const list = Array.isArray(value) ? value : [value];
@@ -198,13 +201,15 @@ function ShadowObjectEditor({
         </p>
       ) : null}
       {list.map((shadow, index) => (
-        <fieldset key={index} className="design-shadow-layer">
-          {list.length > 1 ? <legend>Layer {index + 1}</legend> : null}
-          <Stack gap={8}>
-            {SHADOW_FIELDS.map((field) => {
-              if (field === 'inset') {
-                return (
-                  <label key={field} className="design-shadow-inset">
+        <ComboField
+          key={index}
+          legend={list.length > 1 ? `Layer ${index + 1}` : undefined}
+          fields={SHADOW_FIELDS.map((field): ComboFieldItem => {
+            if (field === 'inset') {
+              return {
+                key: field,
+                content: (
+                  <label className="design-shadow-inset">
                     <BooleanField
                       id={`${namePrefix}-${index}-${field}`}
                       name={`${namePrefix}-${index}-${field}`}
@@ -213,51 +218,42 @@ function ShadowObjectEditor({
                     />
                     <span>{labels[field]}</span>
                   </label>
-                );
-              }
-              const current = displayField(shadow[field]);
-              const draftKey = `${index}:${field}`;
-              const shownValue = fieldDrafts[draftKey] ?? current;
-              const fieldOptions = field === 'color' ? colorFieldOptions : dimensionFieldOptions;
-              if (fieldOptions) {
-                const id = `${namePrefix}-${index}-${field}`;
-                return (
-                  <div key={field} className="design-shadow-field">
-                    <label htmlFor={id}>{labels[field]}</label>
-                    <TransformableField
-                      id={id}
-                      name={id}
-                      label={labels[field]}
-                      value={shownValue}
-                      fieldOptions={fieldOptions}
-                      placeholder={field === 'color' ? '#00000080' : '0px'}
-                      onTransform={() => {
-                        setError(null);
-                        setFieldDrafts((drafts) => ({ ...drafts, [draftKey]: '' }));
-                      }}
-                      onChange={(next) => {
-                        commitField(index, field, next);
-                        setFieldDrafts((drafts) => ({ ...drafts, [draftKey]: next }));
-                      }}
-                    />
-                  </div>
-                );
-              }
-              return (
-                <TokenValueControl
-                  key={field}
-                  name={`${namePrefix}-${index}-${field}`}
+                ),
+              };
+            }
+
+            const current = displayField(shadow[field]);
+            const draftKey = `${index}:${field}`;
+            const shownValue = fieldDrafts[draftKey] ?? current;
+            const fieldOptions = field === 'color' ? colorFieldOptions : dimensionFieldOptions;
+            const name = `${namePrefix}-${index}-${field}`;
+            const placeholder = field === 'color' ? '#00000080' : '0px';
+
+            return {
+              key: field,
+              label: labels[field],
+              htmlFor: name,
+              control: (
+                <TransformableField
+                  id={name}
+                  name={name}
                   label={labels[field]}
                   value={shownValue}
-                  tokens={field === 'color' ? (colorTokens ?? []) : (dimensionTokens ?? [])}
-                  color={field === 'color'}
-                  placeholder={field === 'color' ? '#00000080' : '0px'}
-                  onCommit={(next) => commitField(index, field, next)}
+                  fieldOptions={fieldOptions}
+                  placeholder={placeholder}
+                  onTransform={() => {
+                    setError(null);
+                    setFieldDrafts((drafts) => ({ ...drafts, [draftKey]: '' }));
+                  }}
+                  onChange={(next) => {
+                    commitField(index, field, next);
+                    setFieldDrafts((drafts) => ({ ...drafts, [draftKey]: next }));
+                  }}
                 />
-              );
-            })}
-          </Stack>
-        </fieldset>
+              ),
+            };
+          })}
+        />
       ))}
     </Stack>
   );
@@ -266,6 +262,8 @@ function ShadowObjectEditor({
 export function DesignShadowEditor(props: DesignShadowEditorProps) {
   const breakpoint = isBreakpoint(props);
   const labelFor = useTokenValueLabel();
+  const searchValue = useTokenSearchValue();
+  const resolvePreview = useTokenResolver();
   const [advancedDraft, setAdvancedDraft] = useState(() =>
     typeof props.value === 'string' ? props.value : JSON.stringify(props.value, null, 2),
   );
@@ -279,7 +277,22 @@ export function DesignShadowEditor(props: DesignShadowEditorProps) {
         ? props.value
         : null;
   const currentObject = editableValue;
-  const resolvePreview = useTokenResolver();
+  const dimensionFieldOptions =
+    props.dimensionFieldOptions ??
+    dimensionTransformOptions(props.dimensionTokens ?? [], labelFor, searchValue, resolvePreview);
+  const colorFieldOptions =
+    props.colorFieldOptions ??
+    colorTransformOptions(props.colorTokens ?? [], labelFor, searchValue, resolvePreview);
+  const shadowAliasTokens =
+    typeof props.value === 'string' &&
+    REFERENCE.test(props.value.trim()) &&
+    !props.shadowTokens.includes(props.value.trim())
+      ? [props.value.trim(), ...props.shadowTokens]
+      : props.shadowTokens;
+  const shadowAliasFieldOptions = [
+    { type: 'text' as const, label: 'Shadow' },
+    ...tokenTransformOptions(shadowAliasTokens, labelFor, searchValue, resolvePreview, 'Shadows'),
+  ];
 
   const previewShadowCss = (value: DesignShadowValue): string => {
     const resolve = (item: unknown) => {
@@ -298,13 +311,27 @@ export function DesignShadowEditor(props: DesignShadowEditorProps) {
 
   if (typeof props.value === 'string') {
     return (
-      <TokenValueControl
-        name={props.namePrefix}
-        label={props.label ?? 'Shadow'}
-        value={props.value}
-        tokens={props.shadowTokens}
-        onCommit={props.onCommit}
-        placeholder="0 8px 24px rgba(0,0,0,0.12)"
+      <ComboField
+        fields={[
+          {
+            key: 'shadow-alias',
+            label: props.label ?? 'Shadow',
+            htmlFor: props.namePrefix,
+            control: (
+              <TransformableField
+                id={props.namePrefix}
+                name={props.namePrefix}
+                label={props.label ?? 'Shadow'}
+                value={advancedDraft}
+                fieldOptions={shadowAliasFieldOptions}
+                placeholder="0 8px 24px rgba(0,0,0,0.12)"
+                onChange={setAdvancedDraft}
+                onTransform={() => setAdvancedDraft('')}
+                onCommit={(next) => props.onCommit(next.trim() || null)}
+              />
+            ),
+          },
+        ]}
       />
     );
   }
@@ -338,11 +365,8 @@ export function DesignShadowEditor(props: DesignShadowEditorProps) {
           <ShadowObjectEditor
             value={editableValue as DesignShadowValue | DesignShadowValue[]}
             namePrefix={props.namePrefix}
-            shadowTokens={props.shadowTokens}
-            dimensionTokens={props.dimensionTokens}
-            colorTokens={props.colorTokens}
-            dimensionFieldOptions={props.dimensionFieldOptions}
-            colorFieldOptions={props.colorFieldOptions}
+            dimensionFieldOptions={dimensionFieldOptions}
+            colorFieldOptions={colorFieldOptions}
             onCommit={commitStructured}
           />
         ) : null}

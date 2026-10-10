@@ -19,6 +19,8 @@ export type TransformableFieldProps = Omit<TransformableFieldConfig, 'type'> & {
   id: string;
   value: string;
   onChange: (next: string) => void;
+  /** Called when text is committed or a non-text value is selected. */
+  onCommit?: (next: string) => void;
   onTransform?: (type: Exclude<TransformableFieldOption['type'], 'set'>) => void;
 };
 

@@ -17,6 +17,7 @@ export function TransformableField({
   placeholder,
   disabled,
   onChange,
+  onCommit,
   onTransform,
 }: TransformableFieldProps) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -108,6 +109,7 @@ export function TransformableField({
         placeholder={placeholder}
         disabled={disabled}
         onChange={onChange}
+        onCommit={onCommit}
       />
     );
   }
@@ -122,7 +124,10 @@ export function TransformableField({
         options={active.option.items}
         placeholder={placeholder ?? 'Choose an option…'}
         disabled={disabled}
-        onChange={onChange}
+        onChange={(next) => {
+          onChange(next);
+          onCommit?.(next);
+        }}
       />
     ) : active.option.type === 'color' ? (
       <ColorField
@@ -130,7 +135,10 @@ export function TransformableField({
         name={name}
         value={isColorValue(value) ? normalizeColor(value) : '#000000'}
         disabled={disabled}
-        onChange={onChange}
+        onChange={(next) => {
+          onChange(next);
+          onCommit?.(next);
+        }}
       />
     ) : (
       <TextField
@@ -140,6 +148,7 @@ export function TransformableField({
         placeholder={placeholder}
         disabled={disabled}
         onChange={onChange}
+        onCommit={onCommit}
       />
     );
 

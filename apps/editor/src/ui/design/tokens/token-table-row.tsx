@@ -18,7 +18,7 @@ import {
   type TableToken,
 } from './token-breakpoint-helpers';
 import { TokenPreview } from './token-table-preview';
-import { TokenEditorField } from '../../TokenEditorField';
+import { ComboField } from '../../combofield/ComboField';
 import { tokenLeafLabel } from './token-labels';
 import { withTokenMetadata, withTokenLabel } from '../../../domain/edits/token-edit';
 import {
@@ -254,20 +254,30 @@ export function createTokenTableRow({
             }
           />
         ) : token.type === 'dimension' ? (
-          <TokenEditorField label="Spacing value" className="design-spacing-field">
-            <TransformableField
-              id={`token-${token.uuid}`}
-              name={`token-${token.uuid}`}
-              label="Spacing value"
-              value={transformDraft?.base === text ? transformDraft.value : text}
-              fieldOptions={dimensionFieldOptions}
-              onTransform={onTransform}
-              onChange={(next) => {
-                onTransformValue(next);
-                commitTokenValue(next);
-              }}
-            />
-          </TokenEditorField>
+          <ComboField
+            className="design-spacing-field"
+            fields={[
+              {
+                key: 'spacing',
+                label: 'Spacing value',
+                htmlFor: `token-${token.uuid}`,
+                control: (
+                  <TransformableField
+                    id={`token-${token.uuid}`}
+                    name={`token-${token.uuid}`}
+                    label="Spacing value"
+                    value={transformDraft?.base === text ? transformDraft.value : text}
+                    fieldOptions={dimensionFieldOptions}
+                    onTransform={onTransform}
+                    onChange={(next) => {
+                      onTransformValue(next);
+                      commitTokenValue(next);
+                    }}
+                  />
+                ),
+              },
+            ]}
+          />
         ) : scalarTokens.length && typeof shownValue === 'string' ? (
           <TokenValueControl
             name={`token-${token.uuid}`}
