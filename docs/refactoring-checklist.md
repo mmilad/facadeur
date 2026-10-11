@@ -66,10 +66,10 @@ requirement for every folder. Preserve supported public imports when reorganizin
 
 In Facadeur, shared types belong to `domain`; portable document/DSL contracts, catalog
 coordination, token indexing/resolution, and responsive values belong to `core`; stylesheet
-compilation and runtime style application belong to `style-engine`; Yjs encoding belongs to
-`store-yjs`; catalog-to-project generation belongs to `codegen`, with framework-specific output
-under `engines/<target>`; reusable example and test fixtures belong to `examples`; reusable form
-elements belong to `form`; editor selection and controls belong to `apps/editor`. The
+compilation and runtime style application belong to `style-engine`; catalog-to-project generation
+belongs to `codegen`, with framework-specific output under `engines/<target>`; reusable example and
+test fixtures belong to `examples`; reusable form elements belong to `form`; editor selection and
+controls belong to `apps/editor`. The
 Token records and test fixtures belong in `examples`; token indexing, references, and operations
 belong in `core`. Do not recreate a forwarding `tokens` package.
 Put a shared function in the package that owns its semantics, not simply the first caller or

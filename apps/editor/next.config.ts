@@ -15,15 +15,10 @@ const nextConfig: NextConfig = {
     : {}),
   outputFileTracingRoot: repoRoot,
   transpilePackages: [
-    '@facadeur/api',
-    '@facadeur/api-client',
     '@facadeur/core',
     '@facadeur/style-engine',
     'jsonjoy-builder',
   ],
-  async rewrites() {
-    return [{ source: '/__facadeur/examples', destination: '/api/facadeur/examples' }];
-  },
   webpack: (config) => {
     config.resolve.extensionAlias = {
       '.js': ['.ts', '.tsx', '.js', '.jsx'],

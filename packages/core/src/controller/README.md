@@ -19,7 +19,7 @@ project/
 
 **Element** only forwards preview’s build config — no resolution logic.
 
-Legacy flat document implementations remain under `src/legacy/`. Their retained root exports
-exist for active Server and Store Yjs consumers; new project code should use Catalog APIs.
+Legacy flat-document implementations remain under `src/legacy/` for migration and compatibility
+coverage. New project code should use Catalog APIs.
 
 Catalog design commands reuse the pure token and breakpoint logic in `controller/style/`.

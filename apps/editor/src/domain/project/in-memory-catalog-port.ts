@@ -7,7 +7,7 @@ import {
 } from '@facadeur/core';
 import type { EditorCatalogPort } from './catalog-port';
 
-/** In-memory transport for tests and local-only sessions. */
+/** In-memory catalog port for Storybook and the local editor preview. */
 export function createInMemoryCatalogPort(
   getCatalog: () => ProjectCatalogModel,
 ): EditorCatalogPort {

@@ -14,5 +14,4 @@ Use `--next-example` to include the optional Next.js starter, or use `--out <ui-
 `--storybook <storybook-directory>` to write components and stories into existing projects. Use
 `--entries <uuid,...>` to generate selected definitions and their referenced definitions. Output
 files are tracked in a manifest so regenerating removes stale generated files and leaves unrelated
-files intact. The input must be a JSON serialization of the current Catalog model; legacy
-`DocumentFile` inputs are not supported.
+files intact. The input must be a JSON serialization of the current Catalog model.

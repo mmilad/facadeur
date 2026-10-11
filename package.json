@@ -8,7 +8,6 @@
   },
   "scripts": {
     "dev": "tsx scripts/dev.ts",
-    "dev:server": "pnpm --filter @facadeur/server dev",
     "dev:editor": "pnpm --filter @facadeur/editor dev",
     "build": "pnpm --filter @facadeur/editor build",
     "lint": "eslint . && prettier --check .",

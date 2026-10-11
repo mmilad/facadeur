@@ -4,8 +4,7 @@ The package owns Catalog-backed design CSS generation. Its public entry point is
 other packages should import through `@facadeur/style-engine`.
 
 `renderDesignCss` resolves UUID-keyed tokens, fonts, and responsive design values through Core
-and returns stylesheet text. The Editor injects that output into its design preview. The package
-does not compile legacy `DocumentFile` styles or maintain a separate document CSSOM controller.
+and returns stylesheet text. The Editor injects that output into its design preview.
 
 ```text
 src/

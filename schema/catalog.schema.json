@@ -1,0 +1,2638 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mmilad/facadeur/schema/project-catalog",
+  "additionalProperties": false,
+  "type": "object",
+  "required": ["atoms", "components", "pages"],
+  "properties": {
+    "atoms": {
+      "type": "object",
+      "patternProperties": {
+        "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": ["uuid", "name", "kind", "schema", "root"],
+          "properties": {
+            "uuid": {
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+              "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+              "type": "string"
+            },
+            "name": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "kind": {
+              "anyOf": [
+                {
+                  "const": "atom",
+                  "type": "string"
+                },
+                {
+                  "const": "component",
+                  "type": "string"
+                },
+                {
+                  "const": "page",
+                  "type": "string"
+                }
+              ]
+            },
+            "schema": {
+              "anyOf": [
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": ["kind", "uuid"],
+                  "properties": {
+                    "kind": {
+                      "const": "ref",
+                      "type": "string"
+                    },
+                    "uuid": {
+                      "format": "uuid",
+                      "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                      "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                      "type": "string"
+                    }
+                  }
+                },
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": ["kind", "schema"],
+                  "properties": {
+                    "kind": {
+                      "const": "inline",
+                      "type": "string"
+                    },
+                    "schema": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(.*)$": {}
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "root": {
+              "$id": "T1",
+              "additionalProperties": false,
+              "type": "object",
+              "required": ["uuid", "dom"],
+              "properties": {
+                "uuid": {
+                  "format": "uuid",
+                  "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                  "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                  "type": "string"
+                },
+                "name": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "dom": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": ["tagName"],
+                  "properties": {
+                    "tagName": {
+                      "minLength": 1,
+                      "pattern": "^[A-Za-z][A-Za-z0-9-]*$",
+                      "type": "string"
+                    },
+                    "text": {
+                      "type": "string"
+                    },
+                    "attributes": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(.*)$": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "data": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(.*)$": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "properties": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(.*)$": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "array"
+                            },
+                            {
+                              "type": "object",
+                              "additionalProperties": true
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "event": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(.*)$": {}
+                      }
+                    },
+                    "children": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "T1"
+                      }
+                    }
+                  }
+                },
+                "style": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^(.*)$": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "schema": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": ["kind", "uuid"],
+                      "properties": {
+                        "kind": {
+                          "const": "ref",
+                          "type": "string"
+                        },
+                        "uuid": {
+                          "format": "uuid",
+                          "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                          "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                          "type": "string"
+                        }
+                      }
+                    },
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": ["kind", "schema"],
+                      "properties": {
+                        "kind": {
+                          "const": "inline",
+                          "type": "string"
+                        },
+                        "schema": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "data": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^(.*)$": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "array"
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      ]
+                    }
+                  }
+                },
+                "config": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "properties": {
+                    "definitionRef": {
+                      "format": "uuid",
+                      "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                      "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                      "type": "string"
+                    },
+                    "previewData": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "properties": {
+                        "fields": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "fieldExposure": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["mode"],
+                          "properties": {
+                            "mode": {
+                              "const": "flat",
+                              "type": "string"
+                            }
+                          }
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["mode"],
+                          "properties": {
+                            "mode": {
+                              "const": "grouped",
+                              "type": "string"
+                            },
+                            "groupName": {
+                              "minLength": 1,
+                              "type": "string"
+                            }
+                          }
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["mode", "fields"],
+                          "properties": {
+                            "mode": {
+                              "const": "manual",
+                              "type": "string"
+                            },
+                            "fields": {
+                              "type": "object",
+                              "patternProperties": {
+                                "^(.*)$": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "style": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": ["kind", "uuid"],
+              "properties": {
+                "kind": {
+                  "const": "ref",
+                  "type": "string"
+                },
+                "uuid": {
+                  "format": "uuid",
+                  "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                  "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                  "type": "string"
+                }
+              }
+            },
+            "config": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "previewData": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "properties": {
+                    "fields": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(.*)$": {}
+                      }
+                    }
+                  }
+                },
+                "fieldExposure": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": ["mode"],
+                      "properties": {
+                        "mode": {
+                          "const": "flat",
+                          "type": "string"
+                        }
+                      }
+                    },
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": ["mode"],
+                      "properties": {
+                        "mode": {
+                          "const": "grouped",
+                          "type": "string"
+                        },
+                        "groupName": {
+                          "minLength": 1,
+                          "type": "string"
+                        }
+                      }
+                    },
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": ["mode", "fields"],
+                      "properties": {
+                        "mode": {
+                          "const": "manual",
+                          "type": "string"
+                        },
+                        "fields": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {
+                              "minLength": 1,
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "type": "object",
+      "patternProperties": {
+        "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": ["uuid", "name", "kind", "schema", "root"],
+          "properties": {
+            "uuid": {
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+              "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+              "type": "string"
+            },
+            "name": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "kind": {
+              "anyOf": [
+                {
+                  "const": "atom",
+                  "type": "string"
+                },
+                {
+                  "const": "component",
+                  "type": "string"
+                },
+                {
+                  "const": "page",
+                  "type": "string"
+                }
+              ]
+            },
+            "schema": {
+              "anyOf": [
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": ["kind", "uuid"],
+                  "properties": {
+                    "kind": {
+                      "const": "ref",
+                      "type": "string"
+                    },
+                    "uuid": {
+                      "format": "uuid",
+                      "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                      "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                      "type": "string"
+                    }
+                  }
+                },
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": ["kind", "schema"],
+                  "properties": {
+                    "kind": {
+                      "const": "inline",
+                      "type": "string"
+                    },
+                    "schema": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(.*)$": {}
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "root": {
+              "$id": "T1",
+              "additionalProperties": false,
+              "type": "object",
+              "required": ["uuid", "dom"],
+              "properties": {
+                "uuid": {
+                  "format": "uuid",
+                  "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                  "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                  "type": "string"
+                },
+                "name": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "dom": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": ["tagName"],
+                  "properties": {
+                    "tagName": {
+                      "minLength": 1,
+                      "pattern": "^[A-Za-z][A-Za-z0-9-]*$",
+                      "type": "string"
+                    },
+                    "text": {
+                      "type": "string"
+                    },
+                    "attributes": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(.*)$": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "data": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(.*)$": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "properties": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(.*)$": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "array"
+                            },
+                            {
+                              "type": "object",
+                              "additionalProperties": true
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "event": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(.*)$": {}
+                      }
+                    },
+                    "children": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "T1"
+                      }
+                    }
+                  }
+                },
+                "style": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^(.*)$": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "schema": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": ["kind", "uuid"],
+                      "properties": {
+                        "kind": {
+                          "const": "ref",
+                          "type": "string"
+                        },
+                        "uuid": {
+                          "format": "uuid",
+                          "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                          "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                          "type": "string"
+                        }
+                      }
+                    },
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": ["kind", "schema"],
+                      "properties": {
+                        "kind": {
+                          "const": "inline",
+                          "type": "string"
+                        },
+                        "schema": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "data": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^(.*)$": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "array"
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      ]
+                    }
+                  }
+                },
+                "config": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "properties": {
+                    "definitionRef": {
+                      "format": "uuid",
+                      "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                      "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                      "type": "string"
+                    },
+                    "previewData": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "properties": {
+                        "fields": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "fieldExposure": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["mode"],
+                          "properties": {
+                            "mode": {
+                              "const": "flat",
+                              "type": "string"
+                            }
+                          }
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["mode"],
+                          "properties": {
+                            "mode": {
+                              "const": "grouped",
+                              "type": "string"
+                            },
+                            "groupName": {
+                              "minLength": 1,
+                              "type": "string"
+                            }
+                          }
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["mode", "fields"],
+                          "properties": {
+                            "mode": {
+                              "const": "manual",
+                              "type": "string"
+                            },
+                            "fields": {
+                              "type": "object",
+                              "patternProperties": {
+                                "^(.*)$": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "style": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": ["kind", "uuid"],
+              "properties": {
+                "kind": {
+                  "const": "ref",
+                  "type": "string"
+                },
+                "uuid": {
+                  "format": "uuid",
+                  "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                  "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                  "type": "string"
+                }
+              }
+            },
+            "config": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "previewData": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "properties": {
+                    "fields": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(.*)$": {}
+                      }
+                    }
+                  }
+                },
+                "fieldExposure": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": ["mode"],
+                      "properties": {
+                        "mode": {
+                          "const": "flat",
+                          "type": "string"
+                        }
+                      }
+                    },
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": ["mode"],
+                      "properties": {
+                        "mode": {
+                          "const": "grouped",
+                          "type": "string"
+                        },
+                        "groupName": {
+                          "minLength": 1,
+                          "type": "string"
+                        }
+                      }
+                    },
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": ["mode", "fields"],
+                      "properties": {
+                        "mode": {
+                          "const": "manual",
+                          "type": "string"
+                        },
+                        "fields": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {
+                              "minLength": 1,
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "pages": {
+      "type": "object",
+      "patternProperties": {
+        "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": ["uuid", "name", "kind", "schema", "root"],
+          "properties": {
+            "uuid": {
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+              "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+              "type": "string"
+            },
+            "name": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "kind": {
+              "anyOf": [
+                {
+                  "const": "atom",
+                  "type": "string"
+                },
+                {
+                  "const": "component",
+                  "type": "string"
+                },
+                {
+                  "const": "page",
+                  "type": "string"
+                }
+              ]
+            },
+            "schema": {
+              "anyOf": [
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": ["kind", "uuid"],
+                  "properties": {
+                    "kind": {
+                      "const": "ref",
+                      "type": "string"
+                    },
+                    "uuid": {
+                      "format": "uuid",
+                      "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                      "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                      "type": "string"
+                    }
+                  }
+                },
+                {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": ["kind", "schema"],
+                  "properties": {
+                    "kind": {
+                      "const": "inline",
+                      "type": "string"
+                    },
+                    "schema": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(.*)$": {}
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "root": {
+              "$id": "T1",
+              "additionalProperties": false,
+              "type": "object",
+              "required": ["uuid", "dom"],
+              "properties": {
+                "uuid": {
+                  "format": "uuid",
+                  "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                  "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                  "type": "string"
+                },
+                "name": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "dom": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "required": ["tagName"],
+                  "properties": {
+                    "tagName": {
+                      "minLength": 1,
+                      "pattern": "^[A-Za-z][A-Za-z0-9-]*$",
+                      "type": "string"
+                    },
+                    "text": {
+                      "type": "string"
+                    },
+                    "attributes": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(.*)$": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "data": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(.*)$": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "properties": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(.*)$": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "array"
+                            },
+                            {
+                              "type": "object",
+                              "additionalProperties": true
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "event": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(.*)$": {}
+                      }
+                    },
+                    "children": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "T1"
+                      }
+                    }
+                  }
+                },
+                "style": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^(.*)$": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "schema": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": ["kind", "uuid"],
+                      "properties": {
+                        "kind": {
+                          "const": "ref",
+                          "type": "string"
+                        },
+                        "uuid": {
+                          "format": "uuid",
+                          "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                          "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                          "type": "string"
+                        }
+                      }
+                    },
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": ["kind", "schema"],
+                      "properties": {
+                        "kind": {
+                          "const": "inline",
+                          "type": "string"
+                        },
+                        "schema": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "data": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^(.*)$": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "array"
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      ]
+                    }
+                  }
+                },
+                "config": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "properties": {
+                    "definitionRef": {
+                      "format": "uuid",
+                      "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                      "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                      "type": "string"
+                    },
+                    "previewData": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "properties": {
+                        "fields": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {}
+                          }
+                        }
+                      }
+                    },
+                    "fieldExposure": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["mode"],
+                          "properties": {
+                            "mode": {
+                              "const": "flat",
+                              "type": "string"
+                            }
+                          }
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["mode"],
+                          "properties": {
+                            "mode": {
+                              "const": "grouped",
+                              "type": "string"
+                            },
+                            "groupName": {
+                              "minLength": 1,
+                              "type": "string"
+                            }
+                          }
+                        },
+                        {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "required": ["mode", "fields"],
+                          "properties": {
+                            "mode": {
+                              "const": "manual",
+                              "type": "string"
+                            },
+                            "fields": {
+                              "type": "object",
+                              "patternProperties": {
+                                "^(.*)$": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "style": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": ["kind", "uuid"],
+              "properties": {
+                "kind": {
+                  "const": "ref",
+                  "type": "string"
+                },
+                "uuid": {
+                  "format": "uuid",
+                  "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                  "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                  "type": "string"
+                }
+              }
+            },
+            "config": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "previewData": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "properties": {
+                    "fields": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(.*)$": {}
+                      }
+                    }
+                  }
+                },
+                "fieldExposure": {
+                  "anyOf": [
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": ["mode"],
+                      "properties": {
+                        "mode": {
+                          "const": "flat",
+                          "type": "string"
+                        }
+                      }
+                    },
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": ["mode"],
+                      "properties": {
+                        "mode": {
+                          "const": "grouped",
+                          "type": "string"
+                        },
+                        "groupName": {
+                          "minLength": 1,
+                          "type": "string"
+                        }
+                      }
+                    },
+                    {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "required": ["mode", "fields"],
+                      "properties": {
+                        "mode": {
+                          "const": "manual",
+                          "type": "string"
+                        },
+                        "fields": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {
+                              "minLength": 1,
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "type": "object",
+      "patternProperties": {
+        "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
+          "type": "object",
+          "patternProperties": {
+            "^(.*)$": {}
+          }
+        }
+      }
+    },
+    "tokens": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": ["color", "space", "radius", "shadow", "type", "font"],
+      "properties": {
+        "color": {
+          "type": "object",
+          "patternProperties": {
+            "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": ["uuid", "label", "group", "valueType", "value"],
+              "properties": {
+                "uuid": {
+                  "format": "uuid",
+                  "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                  "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                  "type": "string"
+                },
+                "label": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "group": {
+                  "type": "string"
+                },
+                "valueType": {
+                  "anyOf": [
+                    {
+                      "const": "color",
+                      "type": "string"
+                    },
+                    {
+                      "const": "dimension",
+                      "type": "string"
+                    },
+                    {
+                      "const": "number",
+                      "type": "string"
+                    },
+                    {
+                      "const": "fontFamily",
+                      "type": "string"
+                    },
+                    {
+                      "const": "fontWeight",
+                      "type": "string"
+                    },
+                    {
+                      "const": "shadow",
+                      "type": "string"
+                    },
+                    {
+                      "const": "typography",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "value": {
+                  "description": "A JSON value.",
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "array",
+                      "items": {}
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": {}
+                    }
+                  ]
+                },
+                "breakpoints": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
+                      "description": "A JSON value.",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "array",
+                          "items": {}
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      ]
+                    }
+                  }
+                },
+                "extensions": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^(.*)$": {
+                      "description": "A JSON value.",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "array",
+                          "items": {}
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "space": {
+          "type": "object",
+          "patternProperties": {
+            "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": ["uuid", "label", "group", "valueType", "value"],
+              "properties": {
+                "uuid": {
+                  "format": "uuid",
+                  "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                  "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                  "type": "string"
+                },
+                "label": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "group": {
+                  "type": "string"
+                },
+                "valueType": {
+                  "anyOf": [
+                    {
+                      "const": "color",
+                      "type": "string"
+                    },
+                    {
+                      "const": "dimension",
+                      "type": "string"
+                    },
+                    {
+                      "const": "number",
+                      "type": "string"
+                    },
+                    {
+                      "const": "fontFamily",
+                      "type": "string"
+                    },
+                    {
+                      "const": "fontWeight",
+                      "type": "string"
+                    },
+                    {
+                      "const": "shadow",
+                      "type": "string"
+                    },
+                    {
+                      "const": "typography",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "value": {
+                  "description": "A JSON value.",
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "array",
+                      "items": {}
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": {}
+                    }
+                  ]
+                },
+                "breakpoints": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
+                      "description": "A JSON value.",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "array",
+                          "items": {}
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      ]
+                    }
+                  }
+                },
+                "extensions": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^(.*)$": {
+                      "description": "A JSON value.",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "array",
+                          "items": {}
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "radius": {
+          "type": "object",
+          "patternProperties": {
+            "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": ["uuid", "label", "group", "valueType", "value"],
+              "properties": {
+                "uuid": {
+                  "format": "uuid",
+                  "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                  "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                  "type": "string"
+                },
+                "label": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "group": {
+                  "type": "string"
+                },
+                "valueType": {
+                  "anyOf": [
+                    {
+                      "const": "color",
+                      "type": "string"
+                    },
+                    {
+                      "const": "dimension",
+                      "type": "string"
+                    },
+                    {
+                      "const": "number",
+                      "type": "string"
+                    },
+                    {
+                      "const": "fontFamily",
+                      "type": "string"
+                    },
+                    {
+                      "const": "fontWeight",
+                      "type": "string"
+                    },
+                    {
+                      "const": "shadow",
+                      "type": "string"
+                    },
+                    {
+                      "const": "typography",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "value": {
+                  "description": "A JSON value.",
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "array",
+                      "items": {}
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": {}
+                    }
+                  ]
+                },
+                "breakpoints": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
+                      "description": "A JSON value.",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "array",
+                          "items": {}
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      ]
+                    }
+                  }
+                },
+                "extensions": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^(.*)$": {
+                      "description": "A JSON value.",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "array",
+                          "items": {}
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "shadow": {
+          "type": "object",
+          "patternProperties": {
+            "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": ["uuid", "label", "group", "valueType", "value"],
+              "properties": {
+                "uuid": {
+                  "format": "uuid",
+                  "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                  "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                  "type": "string"
+                },
+                "label": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "group": {
+                  "type": "string"
+                },
+                "valueType": {
+                  "anyOf": [
+                    {
+                      "const": "color",
+                      "type": "string"
+                    },
+                    {
+                      "const": "dimension",
+                      "type": "string"
+                    },
+                    {
+                      "const": "number",
+                      "type": "string"
+                    },
+                    {
+                      "const": "fontFamily",
+                      "type": "string"
+                    },
+                    {
+                      "const": "fontWeight",
+                      "type": "string"
+                    },
+                    {
+                      "const": "shadow",
+                      "type": "string"
+                    },
+                    {
+                      "const": "typography",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "value": {
+                  "description": "A JSON value.",
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "array",
+                      "items": {}
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": {}
+                    }
+                  ]
+                },
+                "breakpoints": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
+                      "description": "A JSON value.",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "array",
+                          "items": {}
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      ]
+                    }
+                  }
+                },
+                "extensions": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^(.*)$": {
+                      "description": "A JSON value.",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "array",
+                          "items": {}
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "type": {
+          "type": "object",
+          "patternProperties": {
+            "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": ["uuid", "label", "group", "valueType", "value"],
+              "properties": {
+                "uuid": {
+                  "format": "uuid",
+                  "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                  "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                  "type": "string"
+                },
+                "label": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "group": {
+                  "type": "string"
+                },
+                "valueType": {
+                  "anyOf": [
+                    {
+                      "const": "color",
+                      "type": "string"
+                    },
+                    {
+                      "const": "dimension",
+                      "type": "string"
+                    },
+                    {
+                      "const": "number",
+                      "type": "string"
+                    },
+                    {
+                      "const": "fontFamily",
+                      "type": "string"
+                    },
+                    {
+                      "const": "fontWeight",
+                      "type": "string"
+                    },
+                    {
+                      "const": "shadow",
+                      "type": "string"
+                    },
+                    {
+                      "const": "typography",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "value": {
+                  "description": "A JSON value.",
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "array",
+                      "items": {}
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": {}
+                    }
+                  ]
+                },
+                "breakpoints": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
+                      "description": "A JSON value.",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "array",
+                          "items": {}
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      ]
+                    }
+                  }
+                },
+                "extensions": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^(.*)$": {
+                      "description": "A JSON value.",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "array",
+                          "items": {}
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "font": {
+          "type": "object",
+          "patternProperties": {
+            "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": ["uuid", "label", "group", "valueType", "value"],
+              "properties": {
+                "uuid": {
+                  "format": "uuid",
+                  "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                  "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                  "type": "string"
+                },
+                "label": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "group": {
+                  "type": "string"
+                },
+                "valueType": {
+                  "anyOf": [
+                    {
+                      "const": "color",
+                      "type": "string"
+                    },
+                    {
+                      "const": "dimension",
+                      "type": "string"
+                    },
+                    {
+                      "const": "number",
+                      "type": "string"
+                    },
+                    {
+                      "const": "fontFamily",
+                      "type": "string"
+                    },
+                    {
+                      "const": "fontWeight",
+                      "type": "string"
+                    },
+                    {
+                      "const": "shadow",
+                      "type": "string"
+                    },
+                    {
+                      "const": "typography",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "value": {
+                  "description": "A JSON value.",
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "type": "array",
+                      "items": {}
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": {}
+                    }
+                  ]
+                },
+                "breakpoints": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
+                      "description": "A JSON value.",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "array",
+                          "items": {}
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      ]
+                    }
+                  }
+                },
+                "extensions": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^(.*)$": {
+                      "description": "A JSON value.",
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "array",
+                          "items": {}
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": {}
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "icons": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": ["id", "name", "src"],
+        "properties": {
+          "id": {
+            "minLength": 1,
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+            "type": "string"
+          },
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "src": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "category": {
+            "minLength": 1,
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "props": {
+      "type": "object",
+      "patternProperties": {
+        "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
+          "additionalProperties": false,
+          "type": "object",
+          "required": ["uuid", "name", "value"],
+          "properties": {
+            "uuid": {
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+              "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+              "type": "string"
+            },
+            "name": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "globalStyles": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "block": {
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {
+            "declarations": {
+              "type": "object",
+              "patternProperties": {
+                "^(--)?[A-Za-z_][\\w-]*$": {
+                  "type": "string"
+                }
+              }
+            },
+            "states": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "hover": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^(--)?[A-Za-z_][\\w-]*$": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "focus-visible": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^(--)?[A-Za-z_][\\w-]*$": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "disabled": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^(--)?[A-Za-z_][\\w-]*$": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "variants": {
+              "type": "object",
+              "patternProperties": {
+                "^[A-Za-z][A-Za-z0-9_-]*$": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^(.*)$": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "properties": {
+                        "declarations": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(--)?[A-Za-z_][\\w-]*$": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "states": {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "properties": {
+                            "hover": {
+                              "type": "object",
+                              "patternProperties": {
+                                "^(--)?[A-Za-z_][\\w-]*$": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "focus-visible": {
+                              "type": "object",
+                              "patternProperties": {
+                                "^(--)?[A-Za-z_][\\w-]*$": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "disabled": {
+                              "type": "object",
+                              "patternProperties": {
+                                "^(--)?[A-Za-z_][\\w-]*$": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "breakpoints": {
+              "type": "object",
+              "patternProperties": {
+                "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "properties": {
+                    "declarations": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(--)?[A-Za-z_][\\w-]*$": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "states": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "properties": {
+                        "hover": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(--)?[A-Za-z_][\\w-]*$": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "focus-visible": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(--)?[A-Za-z_][\\w-]*$": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "disabled": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(--)?[A-Za-z_][\\w-]*$": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "children": {
+              "type": "object",
+              "patternProperties": {
+                "^[A-Za-z][A-Za-z0-9_-]*(?:/[A-Za-z][A-Za-z0-9_-]*)*$": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "properties": {
+                    "declarations": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(--)?[A-Za-z_][\\w-]*$": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "states": {
+                      "additionalProperties": false,
+                      "type": "object",
+                      "properties": {
+                        "hover": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(--)?[A-Za-z_][\\w-]*$": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "focus-visible": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(--)?[A-Za-z_][\\w-]*$": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "disabled": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(--)?[A-Za-z_][\\w-]*$": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "variants": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^[A-Za-z][A-Za-z0-9_-]*$": {
+                          "type": "object",
+                          "patternProperties": {
+                            "^(.*)$": {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "properties": {
+                                "declarations": {
+                                  "type": "object",
+                                  "patternProperties": {
+                                    "^(--)?[A-Za-z_][\\w-]*$": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "states": {
+                                  "additionalProperties": false,
+                                  "type": "object",
+                                  "properties": {
+                                    "hover": {
+                                      "type": "object",
+                                      "patternProperties": {
+                                        "^(--)?[A-Za-z_][\\w-]*$": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    },
+                                    "focus-visible": {
+                                      "type": "object",
+                                      "patternProperties": {
+                                        "^(--)?[A-Za-z_][\\w-]*$": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    },
+                                    "disabled": {
+                                      "type": "object",
+                                      "patternProperties": {
+                                        "^(--)?[A-Za-z_][\\w-]*$": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "breakpoints": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
+                          "additionalProperties": false,
+                          "type": "object",
+                          "properties": {
+                            "declarations": {
+                              "type": "object",
+                              "patternProperties": {
+                                "^(--)?[A-Za-z_][\\w-]*$": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "states": {
+                              "additionalProperties": false,
+                              "type": "object",
+                              "properties": {
+                                "hover": {
+                                  "type": "object",
+                                  "patternProperties": {
+                                    "^(--)?[A-Za-z_][\\w-]*$": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "focus-visible": {
+                                  "type": "object",
+                                  "patternProperties": {
+                                    "^(--)?[A-Za-z_][\\w-]*$": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "disabled": {
+                                  "type": "object",
+                                  "patternProperties": {
+                                    "^(--)?[A-Za-z_][\\w-]*$": {
+                                      "type": "string"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "rules": {
+              "type": "array",
+              "items": {
+                "additionalProperties": false,
+                "type": "object",
+                "required": ["id", "selector", "bindings"],
+                "properties": {
+                  "id": {
+                    "minLength": 1,
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+                    "type": "string"
+                  },
+                  "selector": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "bindings": {
+                    "type": "object",
+                    "patternProperties": {
+                      "^[A-Za-z_][A-Za-z0-9_-]*$": {
+                        "minLength": 1,
+                        "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "declarations": {
+                    "type": "object",
+                    "patternProperties": {
+                      "^(--)?[A-Za-z_][\\w-]*$": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "states": {
+                    "additionalProperties": false,
+                    "type": "object",
+                    "properties": {
+                      "hover": {
+                        "type": "object",
+                        "patternProperties": {
+                          "^(--)?[A-Za-z_][\\w-]*$": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "focus-visible": {
+                        "type": "object",
+                        "patternProperties": {
+                          "^(--)?[A-Za-z_][\\w-]*$": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "disabled": {
+                        "type": "object",
+                        "patternProperties": {
+                          "^(--)?[A-Za-z_][\\w-]*$": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "variants": {
+                    "type": "object",
+                    "patternProperties": {
+                      "^[A-Za-z][A-Za-z0-9_-]*$": {
+                        "type": "object",
+                        "patternProperties": {
+                          "^(.*)$": {
+                            "additionalProperties": false,
+                            "type": "object",
+                            "properties": {
+                              "declarations": {
+                                "type": "object",
+                                "patternProperties": {
+                                  "^(--)?[A-Za-z_][\\w-]*$": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              "states": {
+                                "additionalProperties": false,
+                                "type": "object",
+                                "properties": {
+                                  "hover": {
+                                    "type": "object",
+                                    "patternProperties": {
+                                      "^(--)?[A-Za-z_][\\w-]*$": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  },
+                                  "focus-visible": {
+                                    "type": "object",
+                                    "patternProperties": {
+                                      "^(--)?[A-Za-z_][\\w-]*$": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  },
+                                  "disabled": {
+                                    "type": "object",
+                                    "patternProperties": {
+                                      "^(--)?[A-Za-z_][\\w-]*$": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "breakpoints": {
+                    "type": "object",
+                    "patternProperties": {
+                      "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
+                        "additionalProperties": false,
+                        "type": "object",
+                        "properties": {
+                          "declarations": {
+                            "type": "object",
+                            "patternProperties": {
+                              "^(--)?[A-Za-z_][\\w-]*$": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "states": {
+                            "additionalProperties": false,
+                            "type": "object",
+                            "properties": {
+                              "hover": {
+                                "type": "object",
+                                "patternProperties": {
+                                  "^(--)?[A-Za-z_][\\w-]*$": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              "focus-visible": {
+                                "type": "object",
+                                "patternProperties": {
+                                  "^(--)?[A-Za-z_][\\w-]*$": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              "disabled": {
+                                "type": "object",
+                                "patternProperties": {
+                                  "^(--)?[A-Za-z_][\\w-]*$": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tokenInterface": {
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {
+            "reads": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "format": "uuid",
+                "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                "type": "string"
+              }
+            },
+            "sets": {
+              "type": "object",
+              "patternProperties": {
+                "^(?:[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}|[a-z][a-z0-9]*(?:\\.[a-z0-9]+)+)$": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "breakpoints": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": ["uuid", "label", "minWidth"],
+            "properties": {
+              "uuid": {
+                "format": "uuid",
+                "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                "type": "string"
+              },
+              "label": {
+                "minLength": 1,
+                "maxLength": 48,
+                "type": "string"
+              },
+              "minWidth": {
+                "minimum": 1,
+                "type": "integer"
+              },
+              "enabled": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

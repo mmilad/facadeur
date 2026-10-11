@@ -29,9 +29,8 @@ package public API from outside `packages/form`.
 
 ## Verification and migration
 
-The root Vitest configuration includes the active current-model Editor suites, including the
-integration and color tests under `apps/editor/test/form`. Other legacy suites remain outside the
-allowlist while they are migrated individually from removed flat `DocumentFile` fixtures; do not
-add adapters. Presentation primitives live under `apps/editor/src/ui/components`, and token search
-lives with the token UI. The active checklist and remaining ownership work are in
+The root Vitest configuration includes the maintained Editor suites, including the integration
+and color tests under `apps/editor/test/form`. Retired, unreferenced controls and tests have been
+removed rather than adapted. Presentation primitives live under `apps/editor/src/ui/components`,
+and token search lives with the token UI. The active checklist and remaining ownership work are in
 [the repository plan](plan.md#editor-form-ownership-cleanup).

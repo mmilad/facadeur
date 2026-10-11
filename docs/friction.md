@@ -47,7 +47,6 @@
 
 - **Update (2026-10-04, hydration debugging):** `pnpm exec prettier --write <affected editor files>` stays silent and eventually reports `GET https://registry.npmjs.org/pnpm: fetch failed` in the sandbox. The direct local invocation `node node_modules/prettier/bin/prettier.cjs --write <affected editor files>` succeeds without network access. Use the installed CLI for formatting; fix the pnpm shim's version lookup to use the locally installed pinned version offline.
 
-- **Update (2026-10-04, project-controller adoption):** Direct `node node_modules/typescript/bin/tsc --noEmit -p apps/editor/tsconfig.json` in the restricted process reports incomplete dependency typings (Yjs `Doc.on`/`destroy`, React/Radix props, and testing-library exports). The regular approved `pnpm -r --if-present typecheck` outside the sandbox passes. The exact dependency-resolution cause remains unconfirmed; use the regular workspace command in the matching environment rather than changing dependencies to satisfy these restricted-process diagnostics.
 
 - **Reproduction:** Run pnpm commands from the restricted workspace process. Depending on the command, Corepack attempts to fetch the project pin or pnpm fails resolving `node_modules` with `EPERM`.
 - **Evidence:** `package.json` pins pnpm 10.33.3, matching the user's CMD. The restricted process sets an isolated `COREPACK_HOME` without that package-manager cache and denies `realpath` access to the workspace install. Pointing `COREPACK_HOME` to the user's cache resolves version lookup but not the filesystem restriction.
@@ -77,7 +76,6 @@
 - **Fix (2026-10-10):** `pnpm install --offline --ignore-scripts --config.confirmModulesPurge=false` succeeds in the approved host context and refreshes the complete workspace. The restricted process still cannot launch the cached package manager or create junctions directly; use the approved host command when links change.
 
 - **Update (2026-10-06):** The same no-TTY purge request recurred after removing generated workspace packages. `pnpm install --frozen-lockfile --ignore-scripts --config.confirmModulesPurge=false` successfully rebuilds links without a terminal. A filtered install rebuilt only codegen links and left its workspace dependencies unresolved; run the full workspace install (or include dependency filters) before testing. Full installation restored all nine maintained workspace projects; source typechecks and 77 generator/preview tests then passed.
-- **Update (2026-10-10):** The authorized full offline install refreshed the Examples→Core and Tokens→Style Engine links and confirmed the lockfile was current. It exposed a workspace cycle through `tokens → style-engine → store-yjs → tokens`; moving CSS tests to Style Engine and their reusable fixture helper to Examples removed that cycle and the Tokens→Style Engine dependency. A subsequent full install reports only the Core/Examples test-time cycle.
 
 ## Resolved: codegen did not load the separate example schema library
 

@@ -12,7 +12,6 @@ export { exampleIds } from './idList';
 export { tokenRef } from './references';
 export {
   createProjectTemplate,
-  createProjectTemplateDocument,
   defaultIcons,
   type ProjectTemplate,
 } from './project-template';

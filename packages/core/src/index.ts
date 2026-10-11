@@ -1,15 +1,3 @@
-export {
-  assertComponentTokenDefault,
-  componentTokenPaths,
-  componentTokenPublicPath,
-  findComponentTokenByPath,
-  globalRefInComponentTokenDefault,
-  isLocalComponentTokenPath,
-  listComponentTokens,
-  type ComponentToken,
-  type ComponentTokenMap,
-  type ListedComponentToken,
-} from './controller/style/tokens/component/contract';
 export { DocumentError } from './document/errors';
 export { CoreController } from './controller/project/index';
 export type {
@@ -94,16 +82,6 @@ export {
 export type { CoreControllerHost } from './types/index';
 export type { CatalogDefinitionPort } from './types/index';
 export type { CatalogPort, CoreSnapshot } from './types/core-contracts';
-/** @deprecated Flat DocumentFile stack. New project code should use Catalog APIs. */
-export {
-  applyCommand,
-  type Command,
-  type CommandContext,
-  type InsertNode,
-  type NodeProp,
-} from './legacy/flat/document/commands/index';
-/** @deprecated Flat DocumentFile store contract retained for legacy consumers. */
-export type { DocumentChange, DocumentStore } from './legacy/flat/store/types';
 export { canonicalizeJson, isJsonValue, isPlainObject, type JsonValue } from './utils';
 export {
   childOverridePath,
@@ -112,26 +90,6 @@ export {
 } from './document/child-fields';
 export { assertBreakpoints } from './controller/style/breakpoints';
 export { assertFont, assertFonts, fontStyles } from './controller/style/fonts';
-/** @deprecated Flat DocumentFile adapter API; retained for Server, API, and Store-Yjs. */
-export {
-  canonicalizeFlat,
-  collectSubtree,
-  findParent,
-  flattenSubtree,
-  isInsideSubtree,
-  makeFlatNode,
-  toFlat,
-  toNested,
-  type FlatDocument,
-  type FlatNode,
-  type FrameNode,
-  type ImageNode,
-  type InstanceNode,
-  type RepeaterNode,
-  type SwitchNode,
-  type StructuralNode,
-  type TextNode,
-} from './document/flat';
 export { createCatalogUuid, createId, ID_PATTERN, TAG_PATTERN } from './document/ids';
 export {
   DEFAULT_HTML_TAG_OPTIONS,
@@ -157,55 +115,18 @@ export {
   type NodeType,
 } from './document/kinds';
 export {
-  DOCUMENT_SCHEMA_ID,
-  bindingTargets,
-  createDocumentSchema,
-  documentFileSchema,
   childFieldPathSchema,
-  documentJsonSchema,
-  displayOnSchema,
-  eventBindingSchema,
-  eventDefinitionSchema,
-  exposePathSchema,
-  exposeSchema,
-  isVariantAxis,
-  isVariantPreset,
-  variantInsertionSchema,
-  variantNodeOverrideSchema,
-  variantOverridesSchema,
-  variantPresetSchema,
   fieldTypes,
   previewDataSchema,
   type PreviewData,
-  type Binding,
-  type BindingTarget,
   breakpointLabel,
   defaultBreakpoints,
-  basicSchemaTypes,
-  type BasicSchemaType,
   type Breakpoint,
-  type ComponentSchemaUse,
-  type DocumentFile,
-  type DocumentSchemaOptions,
-  type DocumentSettings,
-  type DisplayOn,
-  type VariantRule,
-  type Repeat,
-  type EventDefinition,
-  type EventBinding,
-  type EventDataMapping,
-  type EventDataSource,
-  type Expose,
-  type ExposePath,
   type FieldDefinition,
   type ChildFieldOverrides,
   type FieldType,
   type FieldValue,
   type JsonSchema,
-  type NamedSchema,
-  type SchemaCatalog,
-  type SchemaFieldUse,
-  type SchemaTypeRef,
   type FontFaceFile,
   type FontFamily,
   type FontFamilyValue,
@@ -217,7 +138,6 @@ export {
   type LayoutOverride,
   type Margin,
   type MarginBox,
-  type NestedNode,
   type SizeValue,
   type Spacing,
   type SpacingBox,
@@ -229,12 +149,6 @@ export {
   type StyleStates,
   type TokenInterface,
   type TokenType,
-  type VariantAxis,
-  type VariantDefinition,
-  type VariantInsertion,
-  type VariantNodeOverride,
-  type VariantOverrides,
-  type VariantPreset,
 } from './schema/document';
 export {
   canonicalizeTokenTree,
@@ -245,14 +159,6 @@ export {
 } from './controller/style/tokens/global/tree';
 export { fontFamilyTokens, tokenReferencesByType } from './controller/style/tokens/global/query';
 export { tokenReference, tokenReferenceValue } from './controller/style/tokens/syntax';
-/**
- * @deprecated Legacy DocumentFile/Store-Yjs decoding only. Current Catalogs must use canonical
- * UUID-keyed token records and `validateProjectCatalog`.
- */
-export {
-  migrateLegacyDesignLibraries,
-  migrateLegacyReferenceLocations,
-} from './controller/style/tokens/global/legacy-migration';
 export { tokenCssPropertyName } from './controller/style/tokens/global/selector';
 export { tokenCustomProperty, typographyCustomProperty } from './tokens/names';
 export {
@@ -280,55 +186,10 @@ export {
   canonicalizeStyleBlock,
   canonicalizeTokenInterface,
 } from './controller/style/blocks/parse';
-export { collectTokenRefs, refsInText } from './controller/style/references/collect';
+export { refsInText } from './controller/style/references/text';
 export { omitVariantAxis, omitVariantValues } from './controller/style/blocks/edit';
 export { parseStyleBlock, parseTokenInterface } from './controller/style/blocks/parse';
 export { matchesSchemaValue } from './controller/validation/index';
-/** @deprecated Flat DocumentFile validation contracts retained for legacy adapters. */
-export {
-  assertDefinitionKind,
-  assertDisplayOn,
-  assertEventBindings,
-  assertChildFields,
-  assertEventDefinition,
-  eventDataMappings,
-  eventDataSchema,
-  assertFieldBindings,
-  assertExpose,
-  assertFieldDefinition,
-  assertRepeat,
-  assertVariantPreset,
-  assertVariantAxis,
-  validateCatalog,
-  resolveChildFieldDefinition,
-  automaticFieldGroupsFor,
-  publicFieldsFor,
-  resolveComponentContract,
-  componentDataSchema,
-  selectStructuralChild,
-  structuralCaseValue,
-  structuralChildSchemas,
-  structuralNodeFields,
-  structuralNodeSchema,
-  structuralScopeFields,
-  type AutomaticFieldGroup,
-  type ContractCatalog,
-  type ContractDocument,
-  type ContractResolverInput,
-  type SchemaResolverContext,
-  type StructuralChildSchema,
-  type StructuralInstance,
-  type StructuralSelection,
-  type StructuralNodeInput,
-  type ValidateCatalogOptions,
-  validateDefinitions,
-  validateDocumentFile,
-  validateLibraries,
-  validateTree,
-  assertValueMatches,
-  type ValidateOptions,
-} from './legacy/flat/validation/index';
-
 export {
   uuidSchema,
   schemaSourceSchema,

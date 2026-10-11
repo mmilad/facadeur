@@ -1,42 +1,32 @@
 # Core ownership
 
-`@facadeur/core` owns the portable document DSL, its invariants, commands, and shared store
-contract. It has no editor, renderer, framework, or Yjs implementation dependency.
-Consumers import the explicit public API from `@facadeur/core`; internal source paths are not
-package exports. Inside core, import the owning module directly rather than `src/index.ts`.
+`@facadeur/core` owns Catalog state and operations, validation, node preview resolution, and
+design-token algorithms. It has no editor, renderer, framework, persistence adapter, or
+collaboration dependency. Consumers import through `@facadeur/core`; internal source paths are
+not package exports. Inside Core, import the owning module directly rather than `src/index.ts`.
 
 ## Source organization
 
-| Area                     | Owns                                                                                                  | Does not own                                                 |
-| ------------------------ | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `document/`              | Flat document model, serialization, tree operations, IDs, kinds, child fields, document errors.       | UI selection or DOM addressing.                              |
-| `schema/`                | Shared TypeBox contracts and derived types, assembled by `document.ts`.                               | Controller state or command execution.                       |
-| `utils.ts`               | Shared JSON value checks, plain-object checks, canonical JSON cloning.                                | Domain-specific behavior or controller state.                |
-| `controller/project/`    | Catalog state, `CoreController`, catalog validation/operations, and node preview resolution.          | Persistence adapters or editor interaction state.            |
-| `controller/style/`      | Pure style/token commands, token algorithms, fonts, breakpoints, layout, selectors, and references.   | Live project facade, CSS compilation, DOM style application. |
-| `controller/validation/` | Schema ingress, assertions, tree/definition checks, field contracts and catalog validation.           | Presentation of validation errors to users.                  |
-| `legacy/flat/document/`  | Flat-document commands and variant operations retained for compatibility consumers.                   | Catalog-native product editing.                              |
-| `legacy/flat/store/`     | The flat `DocumentStore` contract consumed by Store-Yjs.                                              | A Core-owned controller-backed store implementation.         |
-| `tokens/`                | Pure token indexing, UUID reference validation, responsive value resolution, and CSS property values. | CSS stylesheet compilation or DOM style application.         |
+| Area                     | Owns                                                                                          | Does not own                                                 |
+| ------------------------ | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `document/`              | IDs, kinds, child-field operations, and document errors.                                      | UI selection or DOM addressing.                              |
+| `schema/`                | Catalog-facing TypeBox contracts and their derived types.                                    | Controller state or command execution.                       |
+| `utils.ts`               | Shared JSON value checks, plain-object checks, canonical JSON cloning.                       | Domain-specific behavior or controller state.                |
+| `controller/project/`    | Catalog state, `CoreController`, Catalog validation/operations, and node preview resolution. | Persistence adapters or editor interaction state.            |
+| `controller/style/`      | Pure style/token algorithms, fonts, breakpoints, layout, selectors, and style-block parsing. | Live project facade, CSS compilation, DOM style application. |
+| `controller/validation/` | JSON-schema value matching and Catalog validation entry points.                              | Presentation of validation errors to users.                  |
+| `tokens/`                | Token indexing, UUID reference validation, responsive values, and CSS property values.       | CSS stylesheet compilation or DOM style application.         |
 
-Domain names are supplied by directories: use `project/controller.ts`, `style/blocks/parse.ts`,
-and `style/tokens/global/tree.ts`. Small command domains expose `commands.ts`; command directories expose
-`commands/index.ts` with explicit named exports. Consumers use that command boundary, while
-private modules within it import each other directly.
-
-Document commands keep cloning, dispatch, canonicalization, and validation in `commands/apply.ts`.
-Variants keep resolution in `resolve.ts`, derivation in `derive.ts`, and node deltas in
-`derive-node.ts`. See [controller ownership and naming](src/controller/README.md) for details.
+Project and Catalog commands live under `controller/project/`. See
+[controller ownership and naming](src/controller/README.md) for details.
 
 Catalog design edits go through `CoreController.applyDesignCommand`; pure style and token
-algorithms remain in Core's command layer. See the [style file map](src/controller/style/README.md)
-for module ownership. Token evaluation belongs to Core; stylesheet compilation belongs to
-`@facadeur/style-engine`.
+algorithms remain in Core. Stylesheet compilation belongs to `@facadeur/style-engine`.
 
 Keep pure contracts below their consumers. Commands can call validation; validation does not
-call commands. Document representation does not depend on editor/adapter packages. Some
-domains legitimately reference other core domains; avoid turning the domain layout into
-artificially independent packages or adding barrels that create runtime cycles.
+call commands. Catalog representation does not depend on editor packages. Some domains
+legitimately reference other Core domains; avoid artificial package boundaries and barrels that
+create runtime cycles.
 
 Follow the [project return-type rule](../../AGENTS.md#typescript-return-types-and-dependencies):
 infer simple getters, forwarding functions, and internal helpers; retain explicit types for

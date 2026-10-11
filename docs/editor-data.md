@@ -20,7 +20,7 @@ Existing top-level field defaults and preset field values are migrated to previe
 
 ## Conditions and events
 
-Instance `variantRules` is an ordered array of `{ when, variant }`, using the existing `displayOn` condition format. The first matching rule selects the variant; no match falls back to Default. An explicit `instance.variants.variant` takes priority, including an explicit `default`. Rules are preserved by flattening, Yjs, sparse presets, DOM rendering, and React generation.
+Instance `variantRules` is an ordered array of `{ when, variant }`, using the existing `displayOn` condition format. The first matching rule selects the variant; no match falls back to Default. An explicit `instance.variants.variant` takes priority, including an explicit `default`. Rules are preserved by flat-document conversion, sparse presets, DOM rendering, and React generation.
 
 Public events declare their data contract with `data.direct` (one primitive or shared schema) or `data.fields` (named fields with primitive/shared-schema types). The Schema surface uses **Use one type / Declare fields** for both component properties and event data. Declared event fields are required; named schemas preserve their own required/optional fields. Callbacks derive from event names: `commit` generates `onCommit`, independently of the component data interface.
 

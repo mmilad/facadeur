@@ -5,7 +5,7 @@ export function isPlainObject(value: unknown): value is Record<string, unknown> 
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-/** Deep-clone JSON and sort object keys so Yjs read-back matches the command result. */
+/** Deep-clone JSON and sort object keys for deterministic token-tree normalization. */
 export function canonicalizeJson(value: JsonValue): JsonValue {
   if (Array.isArray(value)) return value.map((item) => canonicalizeJson(item));
   if (value !== null && typeof value === 'object') {
