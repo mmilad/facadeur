@@ -277,12 +277,6 @@ export {
   type TokenTier,
   type TokenTree,
 } from './controller/style/tokens/types';
-/** @deprecated Flat DocumentFile style assertions; use Catalog validation for current projects. */
-export {
-  assertStyleContract,
-  assertStyleMap,
-  assertStyleNameAvailable,
-} from './legacy/flat/style/contract';
 export {
   canonicalizeStyleBlock,
   canonicalizeTokenInterface,

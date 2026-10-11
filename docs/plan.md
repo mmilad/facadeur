@@ -3113,6 +3113,17 @@ responsibility without changing ownership or improving validation.
     the root suite passes 71 files / 247 tests and full workspace typecheck passes. The scoped
     detector reports no size candidates; formatting and `git diff --check` pass.
 
+- [x] Refactor: keep legacy Flat style assertions internal to their validator and command owners.
+  - Evidence: `assertStyleContract`, `assertStyleMap`, and `assertStyleNameAvailable` are called by
+    Core's legacy Flat validator and command implementations, but no consumer outside Core imports
+    them. They were exposed by the Core root only through a deprecated export block.
+  - Action: remove the deprecated root re-export while retaining the private implementations and
+    their direct internal imports for Server/API compatibility paths.
+  - Scope: narrow Core's obsolete public surface; no API/API-client or Store Yjs source changes.
+  - Contracts: preserve Flat document validation, style command checks, and all stored style data.
+  - Validation: complete consumer audit; workspace typecheck and root suite pass (71 files / 247
+    tests); scoped candidate detector reports no size candidates; Prettier and `git diff --check` pass.
+
 - [x] Fix React attribute normalization for `autocomplete` in Catalog previews.
   - Evidence: the canonical FormInput example uses lowercase HTML `autocomplete`, but Editor's
     `DynamicElement` forwards it as a React prop unchanged; React reports `Invalid DOM property`
