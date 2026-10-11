@@ -1,40 +1,7 @@
-import {
-  matchesSchemaValue,
-  matchingSchemaIndex,
-  type FieldValue,
-  type JsonSchema,
-} from '@facadeur/core';
-
-export type ItemChoice = {
-  id: string;
-  label: string;
-  schema: JsonSchema;
-  caseValue?: string;
-  payloadSchema?: JsonSchema;
-};
+import { matchesSchemaValue, type FieldValue, type JsonSchema } from '@facadeur/core';
 
 export function schemaMatches(value: FieldValue, schema: JsonSchema): boolean {
   return matchesSchemaValue(value, schema);
-}
-
-export function choiceForValue(value: FieldValue, choices: readonly ItemChoice[]) {
-  const envelope = caseEnvelope(value);
-  if (envelope) return choices.find((choice) => choice.caseValue === envelope.type);
-  return choices[
-    matchingSchemaIndex(
-      value,
-      choices.map((choice) => choice.payloadSchema ?? choice.schema),
-    )
-  ];
-}
-
-export function choiceForDraft(
-  value: FieldValue,
-  choiceId: string | undefined,
-  choices: readonly ItemChoice[],
-) {
-  if (caseEnvelope(value)) return choiceForValue(value, choices);
-  return choiceForValue(value, choices) ?? choices.find((choice) => choice.id === choiceId);
 }
 
 export function caseEnvelope(value: FieldValue): { type: string; props: FieldValue } | undefined {
@@ -48,16 +15,8 @@ export function payloadForValue(value: FieldValue) {
   return caseEnvelope(value)?.props ?? value;
 }
 
-export function makeCaseValue(choice: ItemChoice, payload: FieldValue): FieldValue {
+export function makeCaseValue(choice: { caseValue?: string }, payload: FieldValue): FieldValue {
   return choice.caseValue ? { type: choice.caseValue, props: payload } : payload;
-}
-
-export function matchesChoice(value: FieldValue, choice: ItemChoice): boolean {
-  const envelope = caseEnvelope(value);
-  if (choice.caseValue) {
-    return envelope?.type === choice.caseValue && matchesSchemaValue(value, choice.schema);
-  }
-  return matchesSchemaValue(value, choice.schema);
 }
 
 /** Build a useful editable value without weakening or rewriting its source schema. */

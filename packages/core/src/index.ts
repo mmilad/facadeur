@@ -90,21 +90,24 @@ export {
 export type { CoreControllerHost } from './types/index';
 export type { CatalogDefinitionPort } from './types/index';
 export type { CatalogPort, CoreSnapshot } from '@facadeur/domain';
-/** @deprecated Flat document stack — prefer `@facadeur/core/legacy` for new imports. */
+/** @deprecated Flat DocumentFile stack. New project code should use Catalog APIs. */
 export {
   applyCommand,
-  deriveVariantPreset,
-  resolvePreviewData,
-  resolveVariantDocument,
-  variantPresets,
-  withPreviewData,
   type Command,
   type CommandContext,
-  type DocumentChange,
-  type DocumentStore,
   type InsertNode,
   type NodeProp,
-} from './legacy/index';
+} from './legacy/flat/document/commands/index';
+/** @deprecated Flat DocumentFile store contract retained for legacy consumers. */
+export type { DocumentChange, DocumentStore } from './legacy/flat/store/types';
+/** @deprecated Flat DocumentFile variant helpers. New project code should use Catalog APIs. */
+export {
+  deriveVariantPreset,
+  resolveVariantDocument,
+  variantPresets,
+} from './legacy/flat/variants/index';
+/** @deprecated Flat DocumentFile preview data helpers. New project code should use Catalog APIs. */
+export { resolvePreviewData, withPreviewData } from './legacy/flat/variants/preview-data';
 export { canonicalizeJson, isJsonValue, isPlainObject, type JsonValue } from './utils';
 export {
   childOverridePath,
@@ -300,7 +303,6 @@ export {
   validateCatalog,
   resolveChildFieldDefinition,
   automaticFieldGroupsFor,
-  exposedFields,
   publicFieldsFor,
   resolveComponentContract,
   componentDataSchema,

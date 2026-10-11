@@ -34,7 +34,6 @@ export {
 export {
   automaticFieldGroupsFor,
   componentDataSchema,
-  exposedFields,
   matchesSchemaValue,
   publicFieldsFor,
   resolveComponentContract,

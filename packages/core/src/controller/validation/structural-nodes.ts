@@ -115,7 +115,7 @@ export function deriveStructuralCaseValue(
   context: SchemaResolverContext,
   resolveFields: StructuralFieldResolver,
 ) {
-  const alternatives = structuralNodesInDocument(document).flatMap((node) =>
+  const alternatives = structuralNodesForContract(document).flatMap((node) =>
     structuralChildSchemasInternal(document, node, context, resolveFields, new Set()),
   );
   return (
@@ -134,7 +134,7 @@ export function deriveStructuralScopeFields(
 ) {
   const fields = resolveFields(document, context, new Set());
   for (const field of inheritedFields) fields.set(field.name, field);
-  const owners = structuralNodesInDocument(document);
+  const owners = structuralNodesForContract(document);
   let entersRepeater = false;
   let hasLocalBranch = false;
   for (const owner of owners) {
@@ -325,26 +325,6 @@ function structuralChildSchemasInternal(
       path,
     };
   });
-}
-
-function structuralNodesInDocument(document: ContractDocument): StructuralNodeInput[] {
-  const nodes: StructuralNodeInput[] = [];
-  if ('root' in document) {
-    const visit = (node: NestedNode) => {
-      if (node.type === 'repeater' || node.type === 'switch') nodes.push(node);
-      else if (node.type === 'frame') for (const child of node.children ?? []) visit(child);
-    };
-    visit(document.root);
-    return nodes;
-  }
-  const visit = (id: string) => {
-    const node = document.nodes[id];
-    if (!node) return;
-    if (node.type === 'repeater' || node.type === 'switch') nodes.push(node);
-    else if (node.type === 'frame') for (const childId of node.children) visit(childId);
-  };
-  visit(document.rootId);
-  return nodes;
 }
 
 function defaultCaseValue(componentId: string, context: SchemaResolverContext) {

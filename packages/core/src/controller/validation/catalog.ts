@@ -12,7 +12,7 @@ import { resolveVariantDocument, variantPresets } from '../../legacy/flat/varian
 import { assertValueMatches } from './assertions/fields';
 import { validateDataContracts } from './data-contracts';
 import { validateDefinitions } from './definitions';
-import { exposedFields, validateExposedContracts } from './catalog-exposed';
+import { publicFieldsFor, validateExposedContracts } from './catalog-exposed';
 import type { SchemaResolverContext } from './types';
 import { readTokenTree } from '../style/tokens/global/tree';
 import { validateLibraries, validateTree } from './tree';
@@ -252,7 +252,7 @@ function validateInstanceOverrides(
     if (node.type !== 'instance') continue;
     const target = catalog.get(node.component);
     if (!target) continue;
-    const fields = exposedFields(target, resolverContext);
+    const fields = publicFieldsFor(target, resolverContext);
     for (const [name, value] of Object.entries(node.fields ?? {})) {
       const field = fields.get(name);
       if (!field) {
@@ -363,7 +363,7 @@ export function resolveChildFieldDefinition(
     if (!child) continue;
     const childDocument = catalog.get(child.component);
     if (!childDocument) continue;
-    const definition = exposedFields(
+    const definition = publicFieldsFor(
       resolveVariantDocument(childDocument, child.variants?.variant ?? 'default'),
       { documents: catalog, ...(schemaCatalog ? { schemaCatalog } : {}) },
     ).get(field);

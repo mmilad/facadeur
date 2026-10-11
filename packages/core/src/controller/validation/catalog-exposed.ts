@@ -177,15 +177,6 @@ export function automaticFieldGroupsFor(
   return collectAutomaticFieldGroups(document, resolverContext(catalog), new Set([document.id]));
 }
 
-/** Backwards-compatible internal name; all field semantics live in `publicFieldsFor`. */
-export function exposedFields(
-  document: DocumentFile,
-  catalog: ContractResolverInput,
-  seen = new Set<string>(),
-): Map<string, FieldDefinition> {
-  return resolvePublicFields(document, resolverContext(catalog), seen);
-}
-
 function resolvePublicFields(
   document: ContractDocument,
   context: SchemaResolverContext,

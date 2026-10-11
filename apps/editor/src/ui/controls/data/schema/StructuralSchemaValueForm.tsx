@@ -14,7 +14,6 @@ import {
   payloadForValue,
   schemaMatches,
   setAtPath,
-  type ItemChoice,
 } from './item-array-schema';
 import './schema-value-form.css';
 
@@ -239,7 +238,7 @@ function renderSchemaValue(
   return <FallbackValueField title={title} value={value} path={path} update={update} />;
 }
 
-interface StructuralCaseSchema extends ItemChoice {
+interface StructuralCaseSchema {
   caseValue: string;
   label: string;
   payloadSchema: JsonSchema;
@@ -253,10 +252,8 @@ function structuralCaseSchemas(schema: JsonSchema): StructuralCaseSchema[] {
     return typeof caseValue === 'string' && payloadSchema
       ? [
           {
-            id: caseValue,
             caseValue,
             label: branch.title ?? caseValue,
-            schema: branch,
             payloadSchema,
           },
         ]

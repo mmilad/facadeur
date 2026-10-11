@@ -1,8 +1,19 @@
 import { assertFont, createCatalogUuid, type FontFamily } from '@facadeur/core';
 
 const GENERIC_FAMILIES = new Set([
-  'serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'system-ui', 'ui-serif',
-  'ui-sans-serif', 'ui-monospace', 'ui-rounded', 'emoji', 'math', 'fangsong',
+  'serif',
+  'sans-serif',
+  'monospace',
+  'cursive',
+  'fantasy',
+  'system-ui',
+  'ui-serif',
+  'ui-sans-serif',
+  'ui-monospace',
+  'ui-rounded',
+  'emoji',
+  'math',
+  'fangsong',
 ]);
 
 function splitList(text: string): string[] {
@@ -78,7 +89,10 @@ export function editedFont(font: FontFamily, patch: FontPatch): FontFamily {
       fallbacks,
       source:
         font.value.source.type === 'google'
-          ? { type: 'google', family: patch.googleFamily ?? patch.family ?? font.value.source.family }
+          ? {
+              type: 'google',
+              family: patch.googleFamily ?? patch.family ?? font.value.source.family,
+            }
           : { type: 'file', files: font.value.source.files.map((file) => ({ ...file })) },
     },
   };
@@ -88,8 +102,17 @@ export function editedFont(font: FontFamily, patch: FontPatch): FontFamily {
 
 export function formatFontWeightList(weights: readonly number[]): string {
   const names: Record<number, string> = {
-    100: 'Thin', 200: 'Extra light', 300: 'Light', 400: 'Regular', 500: 'Medium',
-    600: 'Semibold', 700: 'Bold', 800: 'Extra bold', 900: 'Black',
+    100: 'Thin',
+    200: 'Extra light',
+    300: 'Light',
+    400: 'Regular',
+    500: 'Medium',
+    600: 'Semibold',
+    700: 'Bold',
+    800: 'Extra bold',
+    900: 'Black',
   };
-  return weights.map((weight) => names[weight] ? `${names[weight]} ${weight}` : String(weight)).join(', ');
+  return weights
+    .map((weight) => (names[weight] ? `${names[weight]} ${weight}` : String(weight)))
+    .join(', ');
 }

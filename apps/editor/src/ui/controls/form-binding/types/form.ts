@@ -26,15 +26,4 @@ export type FormContextValue<T extends object = object> = {
   pathPrefix: string;
   designPropOptions: readonly DesignPropOption[];
   emitChange: (path: string, next: unknown, options?: { commit?: boolean }) => void;
-  registerCommitHandler?: (path: string, handler: () => void) => () => void;
-};
-
-export type FieldBinding<T> = {
-  value: T;
-  disabled: boolean;
-  id: string;
-  'aria-invalid'?: boolean;
-  onLiveChange: (next: T) => void;
-  onImmediateChange: (next: T) => void;
-  onCommitValue: (next: T) => void;
 };

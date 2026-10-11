@@ -92,7 +92,7 @@
 - **Evidence/impact:** Next inferred `D:/newProjects` as the workspace root and warned about multiple lockfiles; startup also rewrote the generated tsconfig to add Next plugin/types entries on each regeneration.
 - **Fix (2026-10-06):** Generate `outputFileTracingRoot` pointing at the standalone workspace and include Next plugin/type entries in its maintained template. Regenerated development startup and production build pass without the external-root warning or tsconfig rewrite.
 
-## Update: restricted pnpm process cannot resolve the workspace install
+## Resolved: run pnpm verification in the approved host context
 
 - **Reproduction:** Run `pnpm test` or `pnpm --filter @facadeur/editor typecheck` in the
   restricted process with `COREPACK_HOME=C:\Users\smb_r\AppData\Local\node\corepack`.
@@ -139,3 +139,20 @@
   the workspace root. The same checks in the approved host context passed: workspace typecheck and
   root suite (70 files / 247 tests). Use host-context pnpm with the user's Corepack home; deleting
   binaries or `node_modules` is not indicated.
+- **Resolution verified (2026-10-11, Binding/Variant control cleanup):** The ordinary restricted
+  process again failed before script startup with `EPERM` resolving workspace `node_modules`, even
+  after setting the user's `COREPACK_HOME`. Running through the approved host context with the same
+  pinned pnpm succeeded: `pnpm test` passed 71 files / 253 tests, and the Editor typecheck passed.
+  The install and pnpm binary are healthy; use approved host execution for repository checks. No
+  install or binary cleanup is needed.
+- **Update (2026-10-11, Form binding audit):** Plain restricted `pnpm` again used Corepack without
+  the user's cache and failed to download pinned pnpm 10.33.3 (`ENOTFOUND registry.npmjs.org`). A
+  direct local `tsc` invocation ran with incomplete dependency typings and produced unrelated
+  React type errors; the approved host-context `pnpm --filter @facadeur/editor typecheck` with the
+  user's `COREPACK_HOME` passed. Use the same approved host invocation for authoritative checks;
+  the issue remains process isolation, not the installed binaries.
+- **Update (2026-10-11, architecture cleanup audit):** With `COREPACK_HOME` set to the user's
+  cache, restricted `pnpm test` still failed before startup with `EPERM` resolving workspace
+  `node_modules`. The approved host-context run of `pnpm test` passed 71 files / 254 tests, and
+  `pnpm typecheck` passed across the workspace. Continue routing authoritative pnpm checks through
+  the approved host context; no binary or install cleanup is needed.

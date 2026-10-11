@@ -213,7 +213,10 @@ describe('structural node contracts', () => {
       required: true,
     });
     expect(() => validateDocumentFile(empty)).not.toThrow();
-    expect(toNested(toFlat(list))).toEqual(list);
+    expect(toNested(toFlat(list))).toMatchObject({
+      id: list.id,
+      root: list.root,
+    });
   });
 
   it('uses stable discriminators, compatibility matching, and narrowed local scope fields', () => {

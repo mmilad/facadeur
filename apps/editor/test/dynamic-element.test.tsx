@@ -78,6 +78,14 @@ describe('DynamicElement', () => {
     expect(input?.value).toBe('after');
   });
 
+  it('normalizes lowercase HTML autocomplete attributes for React', () => {
+    const view = render(
+      <DynamicElement config={{ tagName: 'input', attributes: { autocomplete: 'off' } }} />,
+    );
+
+    expect(view.container.querySelector('input')?.getAttribute('autocomplete')).toBe('off');
+  });
+
   it('updates bound text content without replacing the element', () => {
     const first: ElementBuildConfig = {
       tagName: 'h2',

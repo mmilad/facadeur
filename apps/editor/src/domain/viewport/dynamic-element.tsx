@@ -14,6 +14,7 @@ const REACT_ATTRIBUTE_NAMES: Readonly<Record<string, string>> = {
   rowspan: 'rowSpan',
   srcset: 'srcSet',
   crossorigin: 'crossOrigin',
+  autocomplete: 'autoComplete',
   acceptcharset: 'acceptCharset',
   'http-equiv': 'httpEquiv',
 };

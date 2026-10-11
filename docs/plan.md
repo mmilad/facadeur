@@ -324,9 +324,9 @@
     raw input is the browser file picker in `domain/assets/files.ts`. Editor typecheck still reports existing Radix,
     `Inline.alignItems`, `FieldValue`, and `jsonjoy-builder` diagnostics, with no diagnostics on the
     migrated adapters. The legacy `SchemaForm.placeholder` union error was fixed during this pass.
-    Root Vitest explicitly includes a targeted set of current-model Editor test files;
-    existing `apps/editor/test/form` cases are currently dormant and need a coverage decision
-    before deleting any behavior or tests.
+    Root Vitest includes every current `apps/editor/test/**/*.test.ts(x)` file, including the Form
+    package adapter and overlay suites. These cases cover active path binding, field commits,
+    add/remove behavior, error labels, and overlay keyboard interactions.
   - Color ownership migration: `ColorInput` duplicated the package's basic `ColorField` with
     editor-only hex/RGBA/EyeDropper behavior. The complete interaction and pure helpers now live in
     `@facadeur/form`; the thin binding adapter preserves normalized `#RRGGBBAA` values and
@@ -461,68 +461,6 @@
     passed 22 suites and 89 tests, including the focused four-test `story-data` suite. The broader
     `generate` suite depended on removed v1 JSON files; no fixtures or v2-to-v1 bridge were
     restored. The deprecated-only coverage is now retired below.
-
-- [ ] Refactor: migrate paused Editor tests to the current `ProjectCatalog` model.
-  - Evidence: `apps/editor/test/fixtures/example-catalog.ts` searched the removed repository-level
-    `examples/` directory, read missing `*.json` files, and fell back to a locally invented schema.
-    The old `selection-model.test.ts` passes `EditorSnapshot.document` (an empty Catalog placeholder)
-    into helpers that require a populated legacy `FlatDocument`; 34 Editor test files imported this
-    helper, while the root Vitest allowlist excludes them. Those suites cover active Editor flows
-    (navigation, design/token/style editing, sessions,
-    history and save) as well as the legacy flat `DocumentFile` model. The maintained
-    `@facadeur/examples` package owns `ProjectCatalog`/`NodeDefinition` data. The Editor session
-    accepts `projectCatalog`; these tests still pass removed `documents`/`design` inputs through a
-    deprecated fixture builder. The user explicitly chose per-test migration to the current model
-    and rejected a conversion shim.
-  - Action: migrate active behavior tests to `ProjectCatalog` and current `NodeDefinition` inputs,
-    using canonical examples where appropriate and local current-model fixtures for behavior under
-    test. Remove the filesystem-based legacy fixture builder and its JSON-schema fallback. Retire
-    only suites proven to exercise removed legacy-only behavior; do not recreate static JSON files.
-  - Scope: current cleanup goal; test and test-support migration only unless a production defect
-    blocks preserving active behavior.
-  - Contracts: preserve active Editor/Storybook behavior and reuse `@facadeur/examples`; no
-    v1-to-v2 adapter or compatibility shim. Keep API/API-client and Store Yjs out of scope.
-  - Validation: audit the original 34 fixture consumers; migrate current behavior tests to the
-    canonical project/catalog and document inputs, retire only cases that exclusively cover removed
-    legacy behavior, then run restored suites, full tests, typecheck, detector, and diff checks.
-  - Completed slice: migrated `project-client.test.ts` from per-DocumentFile save/undo assertions
-    to active Catalog project loading, validation, change tracking, and Catalog endpoint persistence.
-    Narrowed `connectProject` to the project metadata and Catalog fields it consumes, allowing
-    current-model fixtures without legacy document seeds. Removed `persistPendingChanges`, a pure
-    forwarding wrapper, and passed `saveAllChanges` directly to the shell. Kept `loadProject`'s API
-    snapshot contract intact; API types and persistence remain out of scope. The focused suite
-    passes 4/4, Editor typecheck passes, and the root suite passes 47 files / 161 tests after the
-    final integration. The suite is now in the root Vitest allowlist; post-change detector,
-    formatting, import audit, and `git diff --check` pass.
-  - Completed cleanup: `domain/project/diagnostics.ts` no longer accepts DocumentFile/FlatDocument
-    or unused schema/command metadata. Its only caller passes the project ID directly; emitted load
-    phase, project ID, DocumentError code, message, error type, and stack are preserved. Editor
-    typecheck, formatting, scoped import audit, detector, and `git diff --check` pass. No tests were
-    added because the removed fields had no callers and the logger has no behavioral branches.
-  - Progress: the filesystem `example-catalog.ts` adapter and the unused DocumentFile test-store
-    adapter are deleted; repository search finds no remaining imports. Tests for active navigation,
-    token tables, fonts, bound fields, HTML attributes, viewport layers, and event controls use the
-    current Examples Catalog or exercise reusable controls directly. Color tests were consolidated
-    into the active token-table suite; the obsolete full-shell harness was removed. That suite now
-    covers color add, blocked removal, empty labels, and case-insensitive CSS-property collisions.
-    The collision case exposed a real bug: path suggestion used case-sensitive path equality while
-    Core generates case-insensitive CSS property names. The editor now checks availability using
-    Core's `tokenCustomProperty`; the direct Catalog suite passes. Font-domain tests now render
-    `FontsDomainPanel` with a live Catalog session and inspect UUID-keyed font tokens; all 4 pass
-    and the suite is in the root allowlist. Radius, spacing, shadow, and typography CRUD and
-    breakpoint interactions now render the active token panel directly and share the token-table
-    suite; all active CRUD/reference/collision and override assertions were migrated from the old
-    full-shell suites. The current root suite passes 39 files / 146 tests. The old
-    `selection-model.test.ts` compares `FlatDocument` hit helpers against `EditorSnapshot.document`,
-    which is intentionally an empty Catalog placeholder; it is not a valid test of current
-    selection. Remove that legacy-only suite, retain the FlatDocument helper path as deprecated
-    until the older renderer fallback is removed, and keep current selection coverage against
-    UUID-keyed Catalog nodes. The Catalog selection audit also found that authored `data-id`
-    attributes can shadow `ElementBuildConfig.nodeUuid`; prioritize the controller-owned UUID and
-    cover it in the active selection suite. Several other FlatDocument-only test suites were removed
-    after confirming they exercised unmounted/deprecated panels or removed contracts; any unique layout,
-    variant, or node-style behavior still lacking a Catalog equivalent remains a parity decision,
-    not a test-fixture migration.
 
 - [x] Retire tests for the deprecated React Codegen v1 generator.
   - Evidence: `packages/codegen/engines/react/test/generate.test.ts` reads the deleted
@@ -1128,30 +1066,30 @@ reports only the retained cohesive `form-controls-section/dom.ts` data module.
 - [x] Wire editor **`AppService`** → **`CoreController`**; **`CatalogPort`** in API adapter; drop duplicate editor catalog helpers.
 - [ ] Expand core commands/selection; editor keeps UI-only concerns (select chrome, insert/delete UX).
 
-### Deprecation inventory (active compatibility paths)
+### Deprecation inventory (remaining compatibility contracts)
 
-These APIs and files are still marked deprecated. Remove them bottom-up only after migrating
-their callers or persisted data; package scope boundaries below still apply.
+The earlier inventory is partly resolved. `ProjectController` and the Editor's expose-authoring UI
+are removed; the active Editor uses `CoreController` and Catalog sessions. The legacy flat document
+contracts remain in production use by API, Server, and Store Yjs, so deleting them would require a
+separate persistence and package migration. They are deprecated for new Catalog work, but are not
+unused shims.
 
-| Area             | Deprecated surface                                                                                                               | Replacement                                                    |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `@facadeur/core` | `ProjectController`, `validateCatalog`, `validateTree`, `validateDocumentFile`, `compileDocumentValidator`, `documentFileSchema` | `CoreController`, `validateProjectCatalog`, node-model catalog |
-| `@facadeur/core` | Flat `DocumentFile` types and conversion/validation paths                                                                        | Node-model catalog; migrate API/server/editor/store callers    |
-| `@facadeur/core` | Parent-authored expose aliases and legacy `setExpose` command                                                                    | Child-owned inherited contracts; preserve old document support |
-| Editor           | No active expose-authoring UI; legacy alias data remains readable                                                                | Child-contract migration                                       |
+| Area             | Remaining deprecated surface                                                                                                | Current consumers / replacement                                                                                                                |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@facadeur/core` | `DocumentFile`, `documentFileSchema`, `validateDocumentFile`, `validateCatalog`, `validateTree`, `compileDocumentValidator` | API and Server project-file persistence; Store Yjs. Migrate those owners to `ProjectCatalog` and node-model validation before removal.         |
+| `@facadeur/core` | Parent-authored expose aliases and legacy `setExpose` command                                                               | Existing persisted documents and Server validation. Child-owned inherited contracts are the future model; retain read compatibility meanwhile. |
+| Editor           | Expose-authoring UI                                                                                                         | Removed; Core retains serialization and validation for existing alias data.                                                                    |
 
-Retained for this cleanup: the flat-document controller/store and validators still back Editor
-session edits, asset loading, and save reconciliation; Server still reads and validates those
-documents. The deprecated Editor alias authoring UI is removed; Core validation, serialization, and `setExpose` preserve persisted parent-authored aliases.
-The legacy `@facadeur/tokens` facade has been removed after its remaining API and Store Yjs imports
-were redirected to Core and Examples. The unused viewport panel, schema screens, Codegen v1 engine,
-and one-off import fixer had no such active callers and were
-removed in this cleanup.
+The deprecated `@facadeur/tokens` facade, unused viewport panel, schema screens, Codegen v1 engine,
+legacy Editor renderer integrations, and one-off import fixer have been removed. Current Catalog
+editing uses Core's Catalog controller and `@facadeur/examples` fixtures. No API/API-client or
+Store Yjs migration is included in this cleanup; their remaining flat-document imports are the
+concrete boundary for any future compatibility removal.
 
 ### Core package layout (2026-03)
 
 - **Product:** `packages/core/src/controller/project/` — `CoreController`, nested `catalog/`, `node/*`.
-- **Legacy flat docs:** `packages/core/src/legacy/flat/` — import `@facadeur/core/legacy`.
+- **Legacy flat docs:** `packages/core/src/legacy/flat/` — retained symbols remain deprecated Core root exports for active legacy consumers.
 - **Removed top-level** `controller/catalog`, `controller/core`, duplicate `controller/variants` / `src/store` (use legacy paths).
 
 ### Catalog definition enumeration
@@ -1460,9 +1398,9 @@ Undo, and recovered drafts; validate with contract/control/adapter tests and wor
 Retain the assertion and definition validators (530/483 lines): they own the canonical native
 source/type and event declaration checks, while schema resolution and scoped binding checks
 already have separate owners. The 12-file validation directory is a single validation domain.
-Unrelated candidate: structural-nodes.ts remains 572 lines and is unchanged by this task;
-review its repeater/switch validation boundaries separately, preserving structural contracts
-and using the existing structural-node regression suite before any later split.
+Follow-up: the repeated repeater/switch traversal noted here was consolidated in the completed
+"share Core structural-node enumeration" item below. The file remains a cohesive 552-line
+structural derivation module; no file split was needed.
 
 Result (2026-10-06): editor events reuse component schema selection and expose typed callback
 previews. Core owns legacy normalization and validates required native/context/literal data
@@ -2025,18 +1963,27 @@ signals and its 13-file domain concentration; no size-only reorganizations are w
     root suite passes 43 files / 145 tests. Workspace typecheck passes for all 11 projects with
     scripts; refactor detector, import audit, formatting, and diff check pass.
 
-- [ ] Consolidation candidate: share repeated-list add/remove behavior
+- [x] Review candidate: repeated-list add/remove behavior remains with its form owner
   - Evidence: `packages/form/src/fields/repeater/RepeaterField.tsx` and the Editor's
     `ui/controls/form-binding/components/dynamic/ArrayField.tsx` both implement item creation,
     row removal, and repeated rows. The Form version renders fixed `FormFieldConfig`; the Editor
     version renders dynamic Catalog schema children under its own path-prefix context and supports
     collapsible rows.
-  - Candidate boundary: investigate a reusable repeated-list shell owned by `@facadeur/form`, with
-    Editor supplying its child renderer and path binding. Keep the current APIs separate unless
-    the shared primitive preserves each rendering, commit, disabled, and path contract without
-    adding parallel form systems.
-  - Scope: backlog; do not alter the active dynamic schema editor until the shared boundary is
-    proven by focused behavior tests.
+  - Review: keep the implementations separate. `RepeaterField` is a field configured with static
+    `FormFieldConfig[]` and emits nested `FormChangeMeta`; Editor `ArrayField` binds arbitrary
+    Catalog schema children under `PathPrefixProvider`, supports collapsible rows and dynamic
+    default factories, and emits through the Editor form context. Only append/remove mechanics
+    overlap; sharing a renderer would add optional APIs for divergent row, metadata, and binding
+    semantics. Both remain owned by their form systems, and Editor fields still render through
+    `@facadeur/form`.
+  - Scope: audit only; no behavioral or persisted contract change.
+  - Contracts: preserve both APIs, commit and path semantics, disabled behavior, static Form field
+    rendering, and dynamic Catalog schema rendering.
+  - Validation: inspected both implementations and their consumers; the shared-field audit finds
+    native input/select/textarea markup only under `packages/form`; Editor typecheck passes, scoped
+    detector reports no size candidates for these modules, formatting and `git diff --check` pass.
+    The same form-context audit found and removed the unused optional `registerCommitHandler` type
+    member; no references remain.
 
 - [x] Remove the unreferenced legacy `HistoryButtons` component and its tests.
   - Evidence: `apps/editor/src/ui/shell/HistoryButtons.tsx` has no product import; its only consumer
@@ -2051,7 +1998,7 @@ signals and its 13-file domain concentration; no size-only reorganizations are w
   - Validation: source import audit confirms no remaining component callers; detector reports no
     size candidates; the workspace suite passes 24 files / 95 tests and `git diff --check` passes.
 
-- [ ] Refactor: migrate paused Editor tests individually to the current `ProjectCatalog` model.
+- [x] Refactor: migrate paused Editor tests individually to the current `ProjectCatalog` model.
   - Evidence: `apps/editor/test/fixtures/example-catalog.ts` searches the removed root `examples/*.json` and `schemas.json`, and contains a locally invented fallback schema. The user chose individual test migration and explicitly rejected shims/adapters. Current Editor session inputs accept `projectCatalog`; `@facadeur/examples` owns canonical Catalog fixtures. Remaining tests cover a mix of active Catalog behavior and retired DocumentFile workflows, so batch deletion would discard unclassified coverage.
   - Affected tests: `bound-field-values`, `colors-domain`, `component-tokens`, `content-preview-options`, `design-domain`, `drill-navigation`, `event-contract-controls`, `fonts-domain`, `grid-context`, `grid-edits`, `history-buttons`, `icons-domain`, `instance-context`, `instance-token-labels`, `layout-variant-context`, `left-rail-split`, `navigation`, `preview-chrome`, `properties-tabs`, `radius-domain`, `save-state`, `selection-model`, `self-alignment`, `session`, `shadow-domain`, `shell`, `sizing-context`, `spacing-domain`, `structured-options`, `style-inspector-context`, `token-tables`, `typography-domain`, `viewport-edit`, `viewport-layers` (all `.test.ts` / `.test.tsx` under `apps/editor/test`). `editing.test.ts` was subsequently migrated to its current active behavior.
   - Action: migrate each retained test directly to current Core/Examples APIs, with test-local current-model fixtures for behavior not covered by canonical examples. Remove fixture helpers and tests only after imports are gone or evidence shows they only exercise retired behavior. Do not restore JSON templates or add conversion helpers.
@@ -2087,6 +2034,16 @@ signals and its 13-file domain concentration; no size-only reorganizations are w
   - Migration: re-enabled the pure `color-control`, `border-control`, and `shadow-control` value suites. They exercise current editor value functions and use canonical token IDs from `@facadeur/examples`; repaired the stale undefined color-test UUID reference with the existing accent token fixture. Focused runs exposed that Color/Shadow recognized the retired path-style token syntax while current fixtures and Core use `{token:<UUID>}`. Update those two value parsers to the canonical UUID reference contract and retain custom CSS handling; do not add a legacy matcher or conversion shim.
   - Validation: focused suites and the root workspace suite, Editor typecheck, formatting, scoped candidate detector, and `git diff --check`.
   - Result: Color and Shadow now use Core's `tokenReference` parser, removing duplicate token syntax and correctly identifying current UUID references. Focused tests pass 19/19, Editor typecheck passes, and root tests pass 50 files / 175 tests. Formatting, detector, and diff checks pass.
+  - Additional migrated behavior: `project-client.test.ts` now covers Catalog load/change/save;
+    `connectProject` consumes only current project/catalog fields and the forwarding save wrapper is
+    removed. Project diagnostics no longer accept unused DocumentFile/schema/command metadata. Token
+    color suggestions use Core's case-insensitive custom-property semantics, and font/selection
+    suites exercise current Catalog identities.
+  - Final verification: all remaining Editor test files are present in the root Vitest allowlist;
+    repository search finds no `example-catalog` fixture helper or Editor tests naming
+    `DocumentFile`/`FlatDocument`. `pnpm test` passes 71 files / 253 tests and `pnpm typecheck`
+    passes all 11 configured workspace projects in the approved host context. No v1 fixture or
+    conversion shim was restored.
 
 - [x] Refactor: remove synthetic FlatDocument projections from the active Catalog session.
   - Evidence: `EditorSnapshot.design` was a fabricated `FlatDocument` carrying only Catalog tokens,
@@ -2364,11 +2321,11 @@ form/editor typechecks, selection-only value semantics, and the refactor detecto
 
 ## Backlog: split the form-controls section DOM fixture
 
-The refactor detector reports `packages/examples/src/form-controls-section/dom.ts` at 542 lines.
-Keep this cohesive example fixture unchanged during the stable-reference migration; review whether
-its repeated section content should become smaller named example fragments in a separate task.
-Preserve the exported definition shape and catalog behavior if split. Validate catalog examples
-and their preview rendering after any future extraction.
+The refactor detector reports `packages/examples/src/form-controls-section/dom.ts` at 526 lines.
+Review completed: retain it as one canonical static Catalog definition. Its sections share one
+stable-ID namespace and present related form controls as a single example; splitting static node
+data would add fragment indirection without reusing behavior. Preserve the exported definition and
+Catalog preview behavior.
 
 ## Refactoring backlog: recent editor changes
 
@@ -2928,7 +2885,7 @@ responsibility without changing ownership or improving validation.
     156 tests. API source/tests were not modified; detector, formatting, import audit, and diff check
     pass.
 
-- [ ] Refactor: finish reviewing paused Editor control suites individually.
+- [x] Refactor: finish reviewing paused Editor control suites individually.
   - Evidence: `css-declarations-control.test.tsx` covers the maintained Storybook CSS declarations
     control but still references removed `testUuid*` values; `typography-control.test.ts` similarly
     has one removed UUID while exercising helpers used by the active CSS declarations control. The `bindings-editor` and
@@ -2939,9 +2896,8 @@ responsibility without changing ownership or improving validation.
     their tests.
   - Action: migrate tests for maintained Storybook/editor controls to canonical `@facadeur/examples`
     fixtures and re-enable them individually; use a minimal local UUID only where the one-font
-    Example fixture cannot exercise sorting. For uncalled controls, confirm their ownership and
-    supported status before removing their implementation or keeping their tests as product
-    coverage; do not add Catalog adapters or shims.
+    Example fixture cannot exercise sorting. Following the user's decision, remove uncalled
+    Binding/Variant controls and isolated tests; do not add Catalog adapters or shims.
   - Scope: current Editor control and fixture cleanup. Do not touch API/API-client or Store Yjs.
   - Contracts: preserve active Storybook behavior and `@facadeur/form` ownership; only claim
     coverage for controls reachable in maintained product/story composition.
@@ -2950,8 +2906,7 @@ responsibility without changing ownership or improving validation.
   - Completed coverage: the CSS declarations test now wraps the control in Core's token preview
     provider using canonical Example token data and asserts the active form controls by their
     current names. The typography value suite uses the Example Inter font plus one minimal local ID
-    for its sorting case. Both are in the root allowlist; the uncalled Binding and Variant controls
-    remain pending an explicit product-status decision.
+    for its sorting case. Both are in the root allowlist.
   - Result: both focused suites pass (12 tests); Editor typecheck passes and root tests pass 52 files /
     187 tests. Formatting, detector, and `git diff --check` pass.
   - Completed migration: the active `DesignTypographyEditor` and `DesignShadowEditor` tests now
@@ -2990,10 +2945,11 @@ responsibility without changing ownership or improving validation.
     `VariantStyleLayers`, and their isolated tests. Import audits show no product or Storybook
     callers; their implementation and tests only cover legacy `Binding` / `VariantAxis` editors.
     Preserve Core's legacy document contracts because API and Store Yjs still consume them.
-  - Planned cleanup: delete the uncomposed Editor controls and helper modules; remove the
-    variant-draft helper/test. Keep `fieldDisplayLabel`, which has active Catalog and schema-editor
-    callers, with focused coverage. Move the remaining comma-list parser into the font edit module
-    that still needs it. No API, Store Yjs, Catalog model, or persisted behavior changes.
+  - Retired controls: deleted the uncomposed Editor Binding/Variant editors and helper modules,
+    including the variant-draft helper/test. Kept `fieldDisplayLabel`, which has active Catalog and
+    schema-editor callers, with focused coverage; moved the comma-list parser into the font edit
+    module that still needs it. Core's legacy contracts remain for API and Store Yjs consumers. No
+    API, Store Yjs, Catalog model, or persisted behavior changes.
   - Project workspace coverage: update `project-workspace.test.tsx` to supply the current Example
     Catalog alongside the API snapshot's required legacy design/document fields. Keep API source and
     contracts unchanged; assert only the current project loading/resume behavior.
@@ -3007,6 +2963,11 @@ responsibility without changing ownership or improving validation.
     tests. Focused suites pass 11/11; the final detector reports no size candidates. Prettier and
     scoped `git diff --check` pass. Test rendering still emits React controlled-field warnings in
     `design-domain.test.tsx`; track these separately from the refactor.
+  - Validation after retiring the unused controls: `pnpm test` passes 71 files / 253 tests;
+    `pnpm --filter @facadeur/editor typecheck` passes. Scoped candidate scan reports no size
+    candidates, import audit finds no references to deleted Binding/Variant modules, and
+    `git diff --check` passes. Existing React controlled-field warnings in `design-domain.test.tsx`
+    remain unrelated.
   - Legacy controller audit: remove the deprecated flat `ProjectController`, its
     `createControllerStore` adapter, and the two tests that exclusively exercise that retired
     controller stack. Evidence: no production consumers remain; Store-Yjs uses only the separate
@@ -3051,6 +3012,77 @@ responsibility without changing ownership or improving validation.
     class/barrel. Core typecheck, full workspace typecheck, and root suite pass (70 files / 247
     tests); the detector reports no size candidates, and the remaining `StyleController` search
     hits are unrelated flat node style records. API and Store-Yjs source were not changed.
+
+- [x] Refactor: remove Core's `exposedFields` forwarding export.
+  - Evidence: `packages/core/src/controller/validation/catalog-exposed.ts` labels `exposedFields`
+    a backwards-compatible internal name and delegates directly to the canonical
+    `publicFieldsFor` resolution. Only two Core legacy-validator call sites use it; no other
+    repository consumer exists. Its third `seen` argument is unused by all current call sites.
+  - Action: switch those call sites to `publicFieldsFor` and remove the forwarding function and
+    its validation/root exports. Keep `publicFieldsFor` and all field-resolution behavior.
+  - Scope: remove an unconsumed Core compatibility shim; no API/API-client, Store Yjs, persistence,
+    or Catalog contract changes.
+  - Contracts: preserve legacy validation results and the canonical `publicFieldsFor` API. The
+    detector flags `catalog.ts` at 451 lines; retain it as the cohesive flat-catalog validator
+    orchestrator while its assertions and schema-resolution details stay in owned modules.
+  - Validation: Core and workspace typechecks, root tests, repository-wide export/import audit,
+    candidate detector, formatting, and `git diff --check`.
+  - Result: replaced both validator calls with `publicFieldsFor` and removed the forwarding function
+    from Core's validation and root exports. No source references remain. Core and workspace
+    typechecks pass; the root suite passes 71 files / 253 tests. The detector retains only the
+    reviewed 451-line cohesive Catalog validator; formatting and `git diff --check` pass.
+
+- [x] Refactor: remove Core's unused legacy re-export subpath.
+  - Evidence: `packages/core/src/legacy/index.ts` only forwards symbols already exported by
+    `packages/core/src/index.ts`; `@facadeur/core/legacy` has no repository consumers, and Core is
+    marked private. Current Server and Store Yjs consumers still use the Core root legacy exports.
+  - Action: remove the unused `./legacy` package export and forwarding barrel, export the same
+    retained legacy symbols directly from the Core root, and update ownership documentation. Keep
+    the root legacy symbols until active Server/Store Yjs migrations can remove them safely.
+  - Scope: Core's private package export surface; no API/API-client or Store Yjs source changes.
+  - Contracts: preserve all current root imports, signatures, runtime implementations, and legacy
+    DocumentFile behavior. New Catalog code continues to use the Catalog controller APIs.
+  - Validation: repository-wide subpath import audit, Core/workspace typechecks, root tests,
+    candidate detector, formatting, and `git diff --check`.
+  - Result: removed the unused package subpath and its forwarding barrel; retained root symbols
+    now export directly from their legacy implementation modules and remain deprecated in favor of
+    Catalog APIs. No source subpath imports remain. Workspace typecheck passes and root tests pass
+    68 files / 237 tests; detector, changed-file Prettier, and `git diff --check` pass.
+
+- [x] Fix React attribute normalization for `autocomplete` in Catalog previews.
+  - Evidence: the canonical FormInput example uses lowercase HTML `autocomplete`, but Editor's
+    `DynamicElement` forwards it as a React prop unchanged; React reports `Invalid DOM property`
+    during the active design-domain test.
+  - Action: map lowercase `autocomplete` to React's `autoComplete` prop and cover the rendered
+    attribute in the existing DynamicElement behavior suite.
+  - Scope: Editor HTML preview rendering only; no document/example data change.
+  - Contracts: preserve the authored HTML value and Node/ElementBuildConfig output; leave the
+    separate no-`onChange` controlled-value warnings unchanged because a fix may alter editing
+    behavior.
+  - Validation: focused DynamicElement test, root tests, Editor typecheck, detector, formatting,
+    and `git diff --check`.
+  - Result: DynamicElement now maps `autocomplete` to React's `autoComplete`; focused coverage passes
+    5/5, Editor typecheck passes, and the root suite passes 71 files / 254 tests. The invalid DOM
+    property warning is gone; controlled-value warnings remain for the static example inputs.
+
+- [x] Refactor: share Core structural-node enumeration.
+  - Evidence: `structural-nodes.ts` contains two separate Flat/Nested tree traversals for the same
+    repeater/switch nodes. `structuralNodesForContract` is used by catalog field derivation, while
+    `structuralNodesInDocument` is used by case-value and scope-field derivation; both visit frames
+    in document order and emit the same node union.
+  - Action: route the internal case/scope derivations through `structuralNodesForContract` and
+    remove the duplicate private traversal.
+  - Scope: private Core validation consolidation only; keep Core as the Catalog/schema owner and
+    leave API/API-client and Store Yjs untouched.
+  - Contracts: preserve Flat and Nested traversal order, structural-node inclusion rules, case
+    collision behavior, scope fields, Core public exports, and all catalog data.
+  - Validation: focused structural-node/catalog contract tests, Core/workspace typechecks, detector,
+    formatting, and `git diff --check`.
+  - Result: case-value and scope derivation now reuse the existing contract traversal; removed the
+    duplicate Flat/Nested walk. Updated a stale round-trip assertion to allow canonical token
+    metadata added during normalization while still checking identity and structural root. The
+    focused suite passes 17/17, workspace typecheck passes, root tests pass 68 files / 237 tests,
+    detector findings are documented for cohesive validation modules, and `git diff --check` passes.
 
 - [x] Refactor: split Core's mixed validation assertions by document contract.
   - Evidence: `packages/core/src/controller/validation/assertions.ts` contains field/value rules,
@@ -3151,3 +3183,90 @@ responsibility without changing ownership or improving validation.
   - Result: removed seven unused aliases and made `StorybookSchemaFormConfig.fields` use the
     canonical `FormFieldConfig` directly. Alias search is clean; Storybook builds successfully;
     detector, Prettier, and `git diff --check` pass.
+
+- [x] Refactor: remove the unconsumed Editor `FieldBinding` type export.
+  - Evidence: `apps/editor/src/ui/controls/form-binding/types/form.ts` declares this type and the
+    package-local barrels re-export it, but repository-wide search finds no consumer. Active
+    controls derive their binding behavior through `useBindable` and `FormContextValue` instead.
+  - Action: remove only `FieldBinding` and its two barrel exports; keep the Form integration
+    context and all package-owned field wrappers intact.
+  - Scope: remove dead Editor type surface; no runtime behavior or `@facadeur/form` API changes.
+  - Contracts: preserve `Form`, `FormProps`, `FormChangeMeta`, and Catalog path binding behavior.
+  - Validation: repository-wide symbol search, Editor typecheck, root tests, scoped detector,
+    formatting, and `git diff --check`.
+  - Result: removed the unused type and both barrel exports. No Editor consumers remain;
+    `@facadeur/editor` typecheck passes and root tests pass 71 files / 254 tests. The scoped
+    detector reports no size candidates; formatting and `git diff --check` pass.
+
+- [x] Refactor: remove the unconsumed Editor `RadioGroup` adapter.
+  - Evidence: repository-wide search finds the Editor wrapper only in its declaration and two
+    barrels. No product, Storybook, or test consumer uses it. The reusable `RadioGroupField`
+    implementation remains owned and exported by `@facadeur/form`.
+  - Action: remove the Editor-only binding wrapper and its barrel exports; retain the package field.
+  - Scope: remove unused Editor adapter only; no reusable Form API or runtime behavior changes.
+  - Contracts: preserve active field adapters and the package-owned `RadioGroupField` API.
+  - Validation: repository-wide consumer search, Editor typecheck, root tests, scoped detector,
+    formatting, and `git diff --check`.
+  - Result: removed the unused Editor wrapper and barrel exports; retained the Form package field.
+    No active consumers remain. Editor typecheck passes, root tests pass 71 files / 254 tests,
+    detector reports no size candidates, and formatting and `git diff --check` pass.
+
+- [x] Refactor: remove the orphaned Editor token-option builder.
+  - Evidence: `ui/controls/token-options.ts` exports a hook, a generic option builder, and three
+    family wrappers, but repository search finds no product or Storybook consumers. Its only
+    external caller is one test of the generic builder. `TokenValueControl` independently owns the
+    active Catalog picker options and their live labels, values, and unknown-reference retention.
+  - Action: remove the unused builder and its family wrappers; drop only the test that exercises
+    that unconsumed builder. Keep token label formatting/search tests and active picker behavior
+    tests.
+  - Scope: remove a dead duplicate token-picker path; no Catalog data, UI behavior, or persistence
+    changes.
+  - Contracts: preserve active option labels, search behavior, current unknown references, UUIDs,
+    direct values, and commit semantics through `TokenValueControl`.
+  - Validation: repository-wide symbol search, focused token presentation/picker tests, Editor
+    typecheck, root tests, scoped detector, formatting, and `git diff --check`.
+  - Result: removed the orphaned builder and its isolated test while retaining active picker
+    coverage. Focused tests pass 7/7, Editor typecheck passes, root tests pass 71 files / 253 tests,
+    and the scoped detector and `git diff --check` pass. No remaining source/test references exist.
+
+- [x] Refactor: retire the unreachable legacy ItemArray editor.
+  - Evidence: `ItemArrayControl` and `SwitchCaseControl` have no product or Storybook consumers.
+    The active `SchemaValueForm` routes structural unions and arrays to
+    `StructuralSchemaValueForm`, which already implements the supported nested-array and case
+    editing path. `item-array-control.test.tsx` contains one test for this active path alongside
+    eight tests that exclusively test the unmounted control.
+  - Action: remove the dead controls and their private-only helpers/styles; preserve and rename the
+    active nested structural-schema test as a focused SchemaValueForm suite.
+  - Scope: retire unreachable editor UI only; no package Form API, catalog data, or persistence
+    changes.
+  - Contracts: keep active structural union, nested array editing, validation, and commit behavior;
+    retain shared initial-value and path-update helpers used by `JsonSchemaContractEditor` and
+    `StructuralSchemaValueForm`.
+  - Validation: active SchemaValueForm test, Editor typecheck, root suite, candidate detector,
+    formatting, consumer audit, and `git diff --check`.
+  - Result: removed `ItemArrayControl`, its dead `SwitchCaseControl`, dedicated stylesheet, and
+    helpers used only by those controls. Preserved and renamed the nested typed-array assertion as
+    `schema-value-form.test.tsx`. The focused test passes, Editor typecheck passes, and root tests
+    pass 71 files / 244 tests. The detector reports no size candidates; formatting and
+    `git diff --check` pass.
+
+- [x] Refactor: remove the unmounted Event definition/binding editor UI.
+  - Evidence: `EventsEditorControl` and `EventBindingsEditorControl` have no product or Storybook
+    consumers; their only callers are two UI test suites. Editor `domain/events.ts`,
+    `domain/schema/schema-use.ts`, `field-paths.ts`, and the schema selector/options are also
+    private to those unmounted controls. `events.test.ts` only tests `eventDataSelection`, now
+    private to the retired event-definition editor. Core event records and validation remain used
+    by API and Core.
+  - Action: remove the unmounted controls and their UI-only adapters, helpers, and isolated tests.
+    Preserve Core event types, validation, and API consumers unchanged.
+  - Scope: Editor UI-only removal; no Core/API/API-client/Store Yjs or persisted event-contract
+    changes.
+  - Contracts: preserve Core's event definitions, event data sources/mappings, and validation; no
+    active product or Storybook route currently exposes the removed controls.
+  - Validation: consumer audit, Editor typecheck, root suite, candidate detector, formatting, and
+    `git diff --check`.
+  - Result: removed the unreferenced controls, Editor-only duplicate event/schema contracts, and
+    their isolated UI/helper tests; removed the retired tests from the Vitest allowlist. Consumer
+    search found no remaining references, Editor typecheck passes, and the root suite passes 68
+    files / 237 tests. The candidate detector reports no size candidates; changed-file formatting
+    and `git diff --check` pass.
