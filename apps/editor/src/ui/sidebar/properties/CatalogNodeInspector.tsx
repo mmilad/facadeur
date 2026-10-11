@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { AutocompleteOption, TransformableFieldOption } from '@facadeur/form';
+import { getPath } from '@facadeur/form';
 import type { AppService } from '../../../app-service';
 import { Form } from '@facadeur/form';
 import type { FormFieldConfig } from '@facadeur/form';
@@ -149,7 +150,7 @@ function InspectorFields({
   fields: FormFieldConfig[];
 }) {
   const value = Object.fromEntries(
-    flattenFields(fields).map((field) => [field.name, valueAtPath(model.formValue, field.name)]),
+    flattenFields(fields).map((field) => [field.name, getPath(model.formValue, field.name)]),
   );
   const propOptions = propBindingOptions(model);
   return (
@@ -169,7 +170,7 @@ function previewDefaultForProp(
   name: string,
 ) {
   if (!name.startsWith('props.')) return undefined;
-  const value = valueAtPath(model.formValue.previewData, name.slice('props.'.length));
+  const value = getPath(model.formValue.previewData, name.slice('props.'.length));
   if (value === undefined || value === null) return undefined;
   return typeof value === 'string' ? value : JSON.stringify(value);
 }
@@ -189,13 +190,6 @@ function flattenFields(
   return fields.flatMap((field) =>
     field.type === 'layout' ? flattenFields(field.fields) : [field],
   );
-}
-
-function valueAtPath(value: unknown, path: string) {
-  return path.split('.').reduce<unknown>((current, key) => {
-    if (typeof current !== 'object' || current === null) return undefined;
-    return (current as Record<string, unknown>)[key];
-  }, value);
 }
 
 function sectionFields(

@@ -8,6 +8,7 @@ import {
   type InspectorFormModel,
 } from '@facadeur/core';
 import { tokenCustomProperty } from '@facadeur/core';
+import { getPath } from '@facadeur/form';
 
 export interface InspectorViewModel extends InspectorFormModel {
   readonly selectionKind: 'root' | 'instance' | 'element';
@@ -77,7 +78,7 @@ export class InspectorService {
   updateField(input: { nodeUuid: string; path: string; value: unknown }) {
     const model = this.getModel(input.nodeUuid);
     if (!model) return;
-    const previous = valueAtPath(model.formValue, input.path);
+    const previous = getPath(model.formValue, input.path);
     const definitionUuid = this.core.getSnapshot().openDefinition?.uuid;
     if (!definitionUuid) return;
 
@@ -149,11 +150,4 @@ function stringRecord(value: unknown) {
       (entry): entry is [string, string] => typeof entry[1] === 'string',
     ),
   );
-}
-
-function valueAtPath(value: unknown, path: string) {
-  return path.split('.').reduce<unknown>((current, key) => {
-    if (typeof current !== 'object' || current === null) return undefined;
-    return (current as Record<string, unknown>)[key];
-  }, value);
 }

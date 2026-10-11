@@ -3280,3 +3280,18 @@ responsibility without changing ownership or improving validation.
     search found no remaining references, Editor typecheck passes, and the root suite passes 68
     files / 237 tests. The candidate detector reports no size candidates; changed-file formatting
     and `git diff --check` pass.
+
+- [x] Refactor: reuse Form path lookup in the Editor inspector.
+  - Evidence: `app-service/inspector.ts` and `ui/sidebar/properties/CatalogNodeInspector.tsx`
+    each define `valueAtPath` by splitting dot paths and traversing object properties. The Form
+    package already owns `getPath`, including numeric array segments and escaped record keys.
+  - Action: replace both private traversal helpers with the public `@facadeur/form` `getPath`;
+    keep InspectorService event and update behavior in the Editor.
+  - Scope: remove duplicate Editor form-path logic only; no Core, data-model, or persistence change.
+  - Contracts: preserve current nested value lookup and previous-value reporting while using the
+    Form package's canonical path grammar.
+  - Validation: form-path and Inspector UI tests, Editor/workspace typecheck, root suite, detector,
+    formatting, and `git diff --check`. Result: both helpers now call `@facadeur/form` `getPath`;
+    focused suites pass 4/4, the root suite passes 69 files / 242 tests, and workspace typecheck
+    passes. Detector reports no candidates in the affected paths; Prettier and `git diff --check`
+    pass.
