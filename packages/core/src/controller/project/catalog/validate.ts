@@ -57,19 +57,26 @@ function migrateProjectDesignLibraries(data: unknown) {
     breakpoints: globalStyles?.breakpoints,
   });
   const hasLegacyLibraries =
-    migration.tokens !== undefined && (data.tokens === undefined || 'fonts' in data || migration.tokens !== data.tokens);
+    migration.tokens !== undefined &&
+    (data.tokens === undefined || 'fonts' in data || migration.tokens !== data.tokens);
   if (
     !hasLegacyLibraries &&
     !('fonts' in data) &&
     migration.breakpoints === undefined &&
     !hasLegacyReferenceLocations(data, migration.tokenIds, migration.breakpointIds)
-  ) return data;
+  )
+    return data;
 
-  const next = migrateLegacyReferenceLocations(data, migration.tokenIds, migration.breakpointIds) as Record<string, unknown>;
+  const next = migrateLegacyReferenceLocations(
+    data,
+    migration.tokenIds,
+    migration.breakpointIds,
+  ) as Record<string, unknown>;
   delete next.fonts;
   if (migration.tokens) next.tokens = migration.tokens;
-  if (migration.breakpoints && globalStyles) {
-    next.globalStyles = { ...globalStyles, breakpoints: migration.breakpoints };
+  const migratedGlobalStyles = isPlainObject(next.globalStyles) ? next.globalStyles : globalStyles;
+  if (migration.breakpoints && migratedGlobalStyles) {
+    next.globalStyles = { ...migratedGlobalStyles, breakpoints: migration.breakpoints };
   }
   return next;
 }

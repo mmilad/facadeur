@@ -705,7 +705,7 @@
   - Validation: Storybook Settings · Shadow visual check, Prettier, `git diff --check`, and the
     refactoring detector all pass; no size candidates remain.
 
-- [ ] Replace path-keyed DTCG tokens with one UUID-keyed internal record contract.
+- [x] Replace path-keyed DTCG tokens with one UUID-keyed internal record contract.
   - Evidence: token UUIDs currently live in `$extensions.facadeur.uuid` while lookup, edits,
     references, and rendering still depend on DTCG paths. Color, spacing, radius, shadow, and
     typography also have different fixture definitions; spacing and typography IDs are assigned
@@ -755,6 +755,16 @@
     and CSS output; focused Editor/Storybook review; import-cycle review; Prettier,
     `git diff --check`, and refactor detector rerun. Do not claim completion based only on the
     settings table displaying UUIDs.
+  - Result: the shared Domain contract and Example fixtures use UUID-keyed family maps; Core
+    resolution and CSS generation derive selectors from family/group/label, and Editor CRUD uses
+    UUID identity. DTCG paths and legacy fonts/breakpoint IDs normalize at the read boundary. A new
+    Core Catalog migration test covers preserved and deterministic identities, extension data,
+    token references, token-interface keys, font records, and sparse breakpoint overrides. It
+    exposed and fixed a merge bug that had restored original `globalStyles` after migrating their
+    references whenever legacy breakpoints were present. Core round-trip/resolution tests, Style
+    Engine CSS tests, Editor token-table tests, workspace typecheck, and all root tests pass (69
+    files / 243 tests). Formatting, `git diff --check`, and the scoped detector pass. No API,
+    API-client, or Store-Yjs source was changed.
 
 - [x] Fix: clear the visible value in editor state when transforming without persisting an invalid empty token.
   - Evidence: switching a validated color token to Text or another control should start empty, but
