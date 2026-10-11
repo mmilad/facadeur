@@ -3942,3 +3942,19 @@ responsibility without changing ownership or improving validation.
     `canonicalizeComponentTokens` and path-keyed migration test remain. Component-token tests pass
     (6 tests), Core typecheck passes, and the root suite passes (71 files / 249 tests). No API,
     API-client, Store-Yjs, or persistence source changed.
+
+- [x] Review: retain the Editor schema array wrapper alongside Form's RepeaterField.
+  - Evidence: Editor `ArrayField<TItem>` supports any item type, render-prop children, nested path
+    prefixes, and schema-specific add defaults. Form's `RepeaterField` accepts record items and
+    fixed `FormFieldConfig` children, rendering each item through the package Form. `Field` is
+    likewise a composition wrapper for arbitrary Editor controls with hints/errors; Form's
+    `FormField` renders package-owned schema field definitions.
+  - Decision: keep the Editor composition wrappers, which do not declare native inputs, selects, or
+    textareas. Their actual controls continue to come from `@facadeur/form`; moving their distinct
+    schemas and render-prop contracts into the package would add coupling without replacing a
+    duplicated control.
+  - Scope: architecture review only; no behavior or API changes.
+  - Contracts: preserve Editor schema editing, nested form binding, custom array item rendering,
+    package-owned native controls, and Form's data-driven repeater API.
+  - Validation: caller/source audit, root suite (71 files / 249 tests), Editor/Form ownership
+    search, and repository candidate scan.
