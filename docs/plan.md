@@ -1919,14 +1919,24 @@ Layer move follow-up (2026-10-05): a layer-drag regression verifies moving a sib
       Current catalog schema authoring stays in `CatalogSchemasPanel`; legacy schema data and
       recovery migration remain separate compatibility paths. See the completed schema-UI cleanup
       entry above.
-- [ ] Review extracting private schema compatibility helpers from Core validation's
-      `data-contracts.ts` (598 lines). Evidence: tree/scope traversal, event schema-path resolution,
-      field shape compatibility and display-condition assertions coexist. Keep the validation pass
-      and scope ownership together; only extract independently tested shape semantics into
-      private validation modules if that avoids cycles with structural schema derivation.
-      Preserve public Core exports, required/default rules and composed schema/event contracts.
-      Validate contracts, schema-use, structural-node and event/generator tests. Completion: shape
-      compatibility can be tested without tree traversal, with no new cross-package helper API.
+- [x] Refactor: extract Core field-compatibility semantics.
+      Evidence: `data-contracts.ts` owns both the legacy validation traversal and a pure recursive
+      `FieldDefinition` compatibility check for scalars, enums, arrays, and nested objects.
+      `assertFieldBinding` also formats the catalog-specific error but does not own that comparison.
+      Action: move the pure comparison and its private shape helpers into
+      `validation/field-compatibility.ts`; leave required/default checks, field-path scope,
+      traversal, and error messages in `data-contracts.ts`. Cover compatibility directly without
+      constructing a DocumentFile or invoking tree validation. Scope: private Core refactor only;
+      preserve the legacy validator required by API and Store Yjs. Contracts: preserve enum subset,
+      required/default, nested item, and object-field semantics; no Core public export or document
+      format change. Validation: focused compatibility assertions, root suite, workspace typecheck,
+      detector rerun, formatting, and `git diff --check`. Result: extracted the recursive
+      compatibility rules into the private pure module with five focused assertions. Compatibility,
+      Core catalog/token suites pass 40 tests; root tests pass 69 files / 242 tests; workspace
+      typecheck and formatting pass. The detector reports `data-contracts.ts` at 451 lines after
+      extraction; retain it because remaining catalog traversal, required/default validation, and
+      error formatting form one legacy validation flow, and another split would add indirection.
+      `git diff --check` passes.
 
 Post-commit review found a behavioral defect while inspecting the latter candidate: definitions
 and data-contracts duplicate schemaAtPath, traversing a nested composed path twice. Regressions
