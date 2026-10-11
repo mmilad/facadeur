@@ -11,6 +11,9 @@ importers:
       '@eslint/js':
         specifier: ^9.36.0
         version: 9.39.5
+      '@facadeur/examples':
+        specifier: workspace:*
+        version: link:packages/examples
       '@sinclair/typebox':
         specifier: ^0.34.41
         version: 0.34.52
@@ -189,9 +192,6 @@ importers:
         specifier: ^8.17.1
         version: 8.20.0
     devDependencies:
-      '@facadeur/examples':
-        specifier: workspace:*
-        version: link:../examples
       '@types/node':
         specifier: ^22.19.0
         version: 22.20.4

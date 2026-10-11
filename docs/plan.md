@@ -3393,3 +3393,20 @@ responsibility without changing ownership or improving validation.
     boundary; no size-only split was made. Prettier and `git diff --check` pass.
   - Result: moved the mutation target union to `controller/project/inspector-form-change.ts` and
     updated the preview mapper, project controller, host contract, and root export.
+
+- [x] Refactor: keep Examples as a root test fixture dependency, outside Core's package graph.
+  - Evidence: `packages/core/package.json` lists `@facadeur/examples` as a dev dependency solely
+    because Core tests import the canonical fixtures. `packages/examples/package.json` depends on
+    Core for shared Catalog contracts and its retained deprecated Flat project seed, producing a
+    cyclic workspace dependency warning during install.
+  - Action: move the fixture dependency to the workspace root, which owns the Vitest suite, and
+    remove it from Core's manifest. Keep production package direction Examples → Core and all
+    fixture imports/data unchanged.
+  - Scope: workspace test dependency ownership; no app behavior, data, Core API, API/API-client,
+    Store Yjs, or feature changes.
+  - Contracts: preserve Core test resolution of canonical Examples fixtures and keep the
+    deprecated DocumentFile seed available to existing adapters.
+  - Validation: `pnpm install --lockfile-only --offline` completed without the Core/Examples cycle
+    warning; Core and workspace typechecks passed; the full root suite passed (69 files, 243 tests);
+    dependency/import audit and `git diff --check` passed. Prettier could not start because this
+    restricted process has an isolated Corepack home and DNS access to `registry.npmjs.org` failed.
