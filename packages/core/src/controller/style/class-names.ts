@@ -1,21 +1,8 @@
 import { DocumentError } from '../../document/errors';
-import type { DocumentFile, NestedNode } from '../../schema/document';
+import type { NestedNode } from '../../schema/document';
 import type { FlatDocument } from '../../document/flat';
 
 const STYLE_NAME = /^[A-Za-z_][A-Za-z0-9_-]*$/;
-
-/** Stable local class names for every node in the base tree and variant insertions. */
-export function documentClassNames(document: DocumentFile) {
-  const nodes: ClassNameEntry[] = [];
-  collectNested(document.root, nodes, true);
-  for (const variant of document.variants ?? []) {
-    if ('values' in variant) continue;
-    for (const insertion of variant.overrides?.insertions ?? []) {
-      collectNested(insertion.node, nodes, false);
-    }
-  }
-  return assignClassNames(nodes);
-}
 
 /** Internal counterpart used by flat-document validation. */
 export function flatDocumentClassNames(document: FlatDocument) {

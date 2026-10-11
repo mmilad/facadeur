@@ -3,8 +3,8 @@ import {
   applyCommand,
   assertStyleSelector,
   bindStyleRuleSelector,
-  documentClassNames,
   DocumentError,
+  emptyTokenTree,
   renderStyleRuleSelector,
   resolveVariantDocument,
   selectorClassNames,
@@ -22,6 +22,7 @@ const source: DocumentFile = {
   id: 'card',
   name: 'Card',
   kind: 'component',
+  tokens: emptyTokenTree(),
   styles: {
     rules: [
       {
@@ -55,13 +56,10 @@ describe('readable style classes and selector rules', () => {
   it('round-trips rule order and rewrites bound names after node renames', () => {
     const [document] = validateCatalog([source]);
     if (!document) throw new Error('missing document');
-    const names = documentClassNames(document);
-    expect(names).toEqual(
-      new Map([
-        ['root', 'card'],
-        ['title', 'title'],
-      ]),
-    );
+    const names = new Map([
+      ['root', 'card'],
+      ['title', 'title'],
+    ]);
     expect(toNested(toFlat(document))).toEqual(document);
 
     const rule = document.styles?.rules?.[0];
@@ -71,7 +69,10 @@ describe('readable style classes and selector rules', () => {
     if (updated.root.type !== 'frame' || !updated.root.children?.[0])
       throw new Error('missing title');
     updated.root.children[0].styleName = 'heading';
-    const currentNames = documentClassNames(updated);
+    const currentNames = new Map([
+      ['root', 'shell'],
+      ['title', 'heading'],
+    ]);
     expect(() => validateCatalog([updated])).not.toThrow();
     expect(renderStyleRuleSelector(rule, currentNames)).toBe(
       '.shell:checked + .heading, :is(.shell, .heading):not([data-label=".ignored;value"])',
@@ -81,29 +82,6 @@ describe('readable style classes and selector rules', () => {
       heading: 'title',
     });
     expect(() => bindStyleRuleSelector('.unknown', currentNames)).toThrow(/Unknown selector class/);
-  });
-
-  it('generates stable readable fallbacks and reserves explicit names', () => {
-    const file: DocumentFile = {
-      ...source,
-      styles: undefined,
-      root: {
-        id: 'root',
-        type: 'frame',
-        name: 'Renamed UI label',
-        children: [
-          { id: 'header', type: 'text', name: 'card' },
-          { id: 'body', type: 'text', name: 'Card', styleName: 'card' },
-        ],
-      },
-    };
-    expect(documentClassNames(file)).toEqual(
-      new Map([
-        ['root', 'root'],
-        ['header', 'card_2'],
-        ['body', 'card'],
-      ]),
-    );
   });
 
   it('rejects duplicate explicit names and dangling or unbound selectors', () => {
@@ -125,7 +103,15 @@ describe('readable style classes and selector rules', () => {
       /missing node/,
     );
     const mismatch: StyleRule = { id: 'bad', selector: '.other', bindings: { other: 'root' } };
-    expect(renderStyleRuleSelector(mismatch, documentClassNames(source))).toBe('.card');
+    expect(
+      renderStyleRuleSelector(
+        mismatch,
+        new Map([
+          ['root', 'card'],
+          ['title', 'title'],
+        ]),
+      ),
+    ).toBe('.card');
   });
 
   it('renames class properties through setProp and prunes rules on node removal', () => {
@@ -290,6 +276,7 @@ describe('readable style classes and selector rules', () => {
       id: 'owner',
       name: 'Owner',
       kind: 'component',
+      tokens: emptyTokenTree(),
       root: {
         id: 'root',
         type: 'frame',

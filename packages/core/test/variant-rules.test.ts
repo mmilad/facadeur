@@ -1,13 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  applyCommand,
-  deriveVariantPreset,
-  resolveVariantDocument,
-  toFlat,
-  toNested,
-  validateCatalog,
-  type DocumentFile,
-} from '@facadeur/core';
+import { validateCatalog, type DocumentFile } from '@facadeur/core';
 
 const child: DocumentFile = {
   version: 1,
@@ -51,35 +43,5 @@ describe('conditional variant contract', () => {
       { when: { path: 'invalid', truthy: true }, variant: 'missing' },
     ];
     expect(() => validateCatalog([invalid, child])).toThrow();
-  });
-
-  it('persists removal as a sparse unset and restores inherited rules after reset', () => {
-    const edited = toNested(
-      applyCommand(toFlat(parent), {
-        type: 'setProp',
-        nodeId: 'control',
-        prop: 'variantRules',
-        value: null,
-      }),
-    );
-    const preset = deriveVariantPreset(parent, edited, 'quiet');
-    expect(preset.overrides?.nodes?.['root.control']?.unset).toContain('variantRules');
-    const resolved = resolveVariantDocument({ ...parent, variants: [preset] }, 'quiet');
-    expect(
-      resolved.root.type === 'frame' && resolved.root.children?.[0]?.type === 'instance'
-        ? resolved.root.children[0].variantRules
-        : undefined,
-    ).toBeUndefined();
-    const reset = deriveVariantPreset(parent, parent, 'quiet');
-    const inherited = resolveVariantDocument({ ...parent, variants: [reset] }, 'quiet');
-    expect(
-      inherited.root.type === 'frame' && inherited.root.children?.[0]?.type === 'instance'
-        ? inherited.root.children[0].variantRules
-        : undefined,
-    ).toEqual(
-      parent.root.type === 'frame' && parent.root.children?.[0]?.type === 'instance'
-        ? parent.root.children[0].variantRules
-        : undefined,
-    );
   });
 });

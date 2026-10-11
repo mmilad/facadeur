@@ -3075,6 +3075,44 @@ responsibility without changing ownership or improving validation.
     Catalog APIs. No source subpath imports remain. Workspace typecheck passes and root tests pass
     68 files / 237 tests; detector, changed-file Prettier, and `git diff --check` pass.
 
+- [x] Refactor: remove the unused nested `DocumentFile` class-name adapter.
+  - Evidence: `documentClassNames(DocumentFile)` is referenced only by its Core root export and
+    tests. Production legacy validation first converts files to Flat form and uses the separate
+    `flatDocumentClassNames`; current Catalog/style code does not call the nested adapter.
+  - Action: remove the nested traversal and root export, retain the Flat class-name validation
+    path, and remove assertions that only exercised generated names from the unused adapter.
+    Keep selector parsing/binding and the compatibility validator behavior tests.
+  - Scope: retire one dead Core shim; no API/API-client, Store Yjs, serialized document, or runtime
+    behavior changes.
+  - Contracts: preserve selector parsing and binding behavior plus duplicate-class validation for
+    legacy files through Flat validation.
+  - Validation: source-consumer audit, focused Core style/structural tests, Core and workspace
+    typechecks, root suite, candidate detector, formatting, and `git diff --check`.
+  - Result: removed the nested DocumentFile traversal and public re-export; retained the Flat
+    traversal used by legacy validation. Selector tests now supply their class map directly, and
+    legacy round-trip fixtures include the canonical empty token tree. The two excluded suites pass
+    24/24 through a temporary focused config; the root suite passes 71 files / 247 tests and the
+    workspace typecheck passes. Scoped detector, formatting, and `git diff --check` pass.
+
+- [x] Refactor: remove the unused legacy variant authoring helper.
+  - Evidence: `deriveVariantPreset` and its node-diff engine have no product or adapter source
+    callers. The only imports are the Core root export and paused tests for the retired editor's
+    variant-editing workflow. API/Server validation still uses `resolveVariantDocument`, and Store
+    Yjs still applies flat commands, so those compatibility paths remain.
+  - Action: remove `deriveVariantPreset`, its private diff implementation, and tests that only
+    exercise deriving old `DocumentFile` presets. Keep variant resolution, validation, persisted
+    types, flat commands, and the remaining validation/resolve tests.
+  - Scope: remove unreachable legacy authoring behavior; no API/API-client or Store Yjs changes.
+  - Contracts: preserve current Server/API validation of stored variants, Yjs command application,
+    variant resolution, and serialized variant records.
+  - Validation: full consumer audit, focused remaining variant tests, Core/workspace typechecks,
+    root suite, candidate detector, formatting, and `git diff --check`.
+  - Result: deleted `deriveVariantPreset` and its private node-diff module, removed the Core root
+    export, and dropped only tests for the retired authoring operation. Kept variant resolution,
+    validation, persisted records, and command support. The four focused legacy suites pass 39/39;
+    the root suite passes 71 files / 247 tests and full workspace typecheck passes. The scoped
+    detector reports no size candidates; formatting and `git diff --check` pass.
+
 - [x] Fix React attribute normalization for `autocomplete` in Catalog previews.
   - Evidence: the canonical FormInput example uses lowercase HTML `autocomplete`, but Editor's
     `DynamicElement` forwards it as a React prop unchanged; React reports `Invalid DOM property`

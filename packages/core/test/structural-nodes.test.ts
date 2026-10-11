@@ -4,7 +4,6 @@ import {
   applyCommand,
   matchesSchemaValue,
   selectStructuralChild,
-  documentClassNames,
   publicFieldsFor,
   structuralCaseValue,
   structuralChildSchemas,
@@ -171,12 +170,6 @@ describe('structural node contracts', () => {
       schema: { properties: { type: { const: 'card' }, props: { type: 'object' } } },
     });
     expect(structuralNodeFields(list, catalog).get('items')).toMatchObject({ type: 'array' });
-    expect([...documentClassNames(list).keys()]).toEqual([
-      'items-root',
-      'kind-switch',
-      'card-branch',
-      'card2-branch',
-    ]);
     expect(publicFieldsFor(owner, catalog).get('items')?.schema).toEqual(
       structuralNodeFields(list, catalog).get('items')?.schema,
     );

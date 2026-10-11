@@ -105,11 +105,7 @@ export {
 /** @deprecated Flat DocumentFile store contract retained for legacy consumers. */
 export type { DocumentChange, DocumentStore } from './legacy/flat/store/types';
 /** @deprecated Flat DocumentFile variant helpers. New project code should use Catalog APIs. */
-export {
-  deriveVariantPreset,
-  resolveVariantDocument,
-  variantPresets,
-} from './legacy/flat/variants/index';
+export { resolveVariantDocument, variantPresets } from './legacy/flat/variants/index';
 export { canonicalizeJson, isJsonValue, isPlainObject, type JsonValue } from './utils';
 export {
   childOverridePath,
@@ -153,7 +149,6 @@ export {
   replaceSelectorClasses,
   selectorClassNames,
 } from './controller/style/selectors';
-export { documentClassNames } from './controller/style/class-names';
 export {
   defaultKinds,
   defaultNestingRules,
