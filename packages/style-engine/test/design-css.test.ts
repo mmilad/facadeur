@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { createProjectTemplate } from '@facadeur/examples';
+import { createExampleCatalog, createProjectTemplate } from '@facadeur/examples';
 import { loadTokens } from '@facadeur/core';
-import { createTokenPreviewResolver, renderDesignCss } from '@facadeur/style-engine';
+import {
+  createTokenPreviewResolver,
+  renderDesignCss,
+  renderGlobalStyleCss,
+} from '@facadeur/style-engine';
 import type { FontFamilyDefinition } from '@facadeur/core';
 import {
   breakpointIds,
@@ -210,5 +214,63 @@ describe('project template', () => {
     }
     expect(design.tokens.some((token) => token.path === 'color.bg.Canvas')).toBe(true);
     expect(design.tokens.some((token) => token.path === 'color.blue.500')).toBe(true);
+  });
+});
+
+describe('global Catalog CSS node lookup', () => {
+  it('indexes nested page children and root bindings without treating roots as child paths', () => {
+    const catalog = createExampleCatalog();
+    const page = Object.values(catalog.pages)[0]!;
+    const childUuid = '550e8400-e29b-41d4-a716-0000000004fe';
+    const nestedUuid = '550e8400-e29b-41d4-a716-0000000004ff';
+    Reflect.set(page.root.dom, 'children', [
+      {
+        uuid: childUuid,
+        dom: { tagName: 'div', children: [{ uuid: nestedUuid, dom: { tagName: 'span' } }] },
+      },
+    ]);
+    const globalStyles = {
+      block: {
+        children: { [`${childUuid}/${nestedUuid}`]: { declarations: { color: 'red' } } },
+        rules: [
+          {
+            id: 'page-root',
+            selector: '.page',
+            bindings: { page: page.root.uuid },
+            declarations: { display: 'block' },
+          },
+        ],
+      },
+    };
+    const styledCatalog = { ...catalog, globalStyles };
+    const css = renderGlobalStyleCss(styledCatalog);
+    expect(css).toContain(
+      `[data-facadeur-codegen-node="${page.root.uuid}"] > [data-facadeur-codegen-node="${childUuid}"] > [data-facadeur-codegen-node="${nestedUuid}"]`,
+    );
+    expect(css).toContain(`.facadeur-node-${page.root.uuid} {`);
+    Reflect.set(globalStyles.block, 'children', {
+      [page.root.uuid]: { declarations: { color: 'red' } },
+    });
+    expect(() => renderGlobalStyleCss(styledCatalog)).toThrow('does not resolve to Catalog nodes');
+  });
+
+  it('rejects missing authored-rule node bindings', () => {
+    const catalog = createExampleCatalog();
+    const styledCatalog = {
+      ...catalog,
+      globalStyles: {
+        block: {
+          rules: [
+            {
+              id: 'missing',
+              selector: '.missing',
+              bindings: { missing: 'unknown-node' },
+              declarations: { color: 'red' },
+            },
+          ],
+        },
+      },
+    };
+    expect(() => renderGlobalStyleCss(styledCatalog)).toThrow('has an unresolved binding');
   });
 });

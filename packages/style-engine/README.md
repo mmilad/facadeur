@@ -10,6 +10,9 @@ does not compile legacy `DocumentFile` styles or maintain a separate document CS
 ```text
 src/
   design/css.ts  token, font, and responsive CSS generation
+  design/token-preview.ts  effective responsive token preview resolution
+  design/token-preview-names.ts  retained token-table preview naming
+  design/global-css.ts  Catalog global style compilation and node lookup
   runtime/design.ts  private CSSStyleSheet insertion for resolved design styles
   index.ts  package exports
 ```

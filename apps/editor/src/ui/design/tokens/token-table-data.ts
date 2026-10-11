@@ -1,4 +1,4 @@
-import { previewDesignTokenCssVar } from '../../../domain/design-token-css';
+import { previewDesignTokenCssVar } from '@facadeur/style-engine';
 import { matchesSearch } from './token-search';
 
 export interface TokenTableItem {

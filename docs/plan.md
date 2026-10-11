@@ -4520,3 +4520,53 @@ apps/editor/src/ui/controls packages/form/src`, Form/Editor typechecks, full tes
     actual Catalog CLI output, generated UI TypeScript, and diff checks pass. The scoped
     Codegen/validation detector has no size candidates. Cloud process friction and the
     successful lower-concurrency test rerun are recorded in `docs/friction.md`.
+
+- [x] Refactor: consolidate Style Engine preview naming and Catalog CSS indexing.
+  - Evidence: Editor's `domain/design-token-css.ts` owns CSS preview naming used by token
+    search and row labels. Style Engine's `global-css.ts` separately traverses the same
+    atoms/components/pages for child selectors and authored-rule binding UUIDs.
+  - Action: move preview naming to Style Engine's design domain and public entry point without
+    a forwarding shim; migrate its existing test to the owner. Build both global CSS lookup
+    collections in one private traversal. Keep Editor chrome CSS in the frame host.
+  - Scope: Style Engine and Editor consumers/tests; API/API-client and Store-Yjs remain untouched.
+  - Contracts: preserve preview labels/search (`--fcdr-`), emitted selectors/order, root/child
+    binding validation, and Catalog-to-project output. No schema or persistence changes.
+  - Validation: focused Style Engine/codegen/token-table suites, full root tests, workspace
+    typecheck, scoped lint/format, candidate detector, import audit, and diff check.
+  - Result: preview naming and its existing regression test now belong to Style Engine; Editor
+    imports the public API without a shim. Global CSS uses one node traversal for both lookup
+    collections, with nested-page/root-binding/missing-binding coverage. Combined branch tests
+    pass (77 files / 279 tests) using `corepack pnpm test --maxWorkers=2 --testTimeout=30000
+--hookTimeout=30000`; all 11 workspace typechecks, scoped ESLint/Prettier, detector, and diff
+    checks pass. CLI timeout allowances are documented in friction; repository timeouts are
+    unchanged. No API/API-client or Store-Yjs files changed.
+
+- [ ] Backlog: reconcile token-preview labels with emitted custom-property names.
+  - Evidence: the retained preview naming convention uses `--fcdr-` plus dot replacement,
+    while Core's `tokenCustomProperty` supplies unprefixed normalized names to CSS compilation.
+  - Boundary: decide the intended displayed/searchable contract before replacing preview naming
+    with the canonical Core name; consolidate at the Style Engine preview boundary afterward.
+  - Scope: separate UI behavior decision; retain current labels and search in structural cleanup.
+  - Completion: labels and search identify emitted properties with explicit migration coverage.
+  - Validation: token-table search/label tests and CSS output parity for grouped/mixed-case paths.
+
+- [x] Review: remaining deprecated Editor controls before removal.
+  - Evidence: no `@deprecated` markers remain under Editor UI/domain and no deprecated controls
+    directory remains. The only Editor source marker is `app/api/facadeur/examples/route.ts`.
+  - Decision: retain its legacy-write rejection guard; it blocks bypassing project persistence
+    rather than providing a retired control. Retain frame-shell injection as Editor chrome.
+  - Scope: audit only; no controls, features, compatibility guards, or tests removed.
+  - Validation: Editor source marker/path audit and existing root behavior suites.
+
+- [x] Review: integrate the concurrent schema-choice checkout repair.
+  - Evidence: the requested `9d2a43ee` checkout omitted the schema-choice implementation and
+    failed test collection/typecheck. The parent algorithm was recovered and its 19 legacy
+    regression tests passed. Concurrent commit `514d91f` independently tracked it under
+    `controller/validation/schema-choice.ts` and updated its private callers.
+  - Decision: retain that tracked implementation and remove this work's temporary duplicate;
+    no ignore-rule change, duplicate helper, or public forwarding export is added.
+  - Validation: compare recovered algorithm to the parent commit, then rerun full tests and
+    workspace typechecks against the combined branch. Concurrent codegen fixes are preserved.
+  - Result: the integrated branch passes all 11 workspace typechecks and 77 suites / 279 tests,
+    including the maintained schema-choice suite. The temporary duplicate was removed; concurrent
+    codegen changes are intact, and no Core source changes remain in this cleanup commit.

@@ -25,8 +25,7 @@ export function renderGlobalStyleCss(catalog: ProjectCatalog): string {
   const tokens = new Map(
     [...readTokenTree(catalog.tokens ?? {}).tokens].map(([uuid, token]) => [uuid, token]),
   );
-  const selectorsByNode = nodeSelectors(catalog);
-  const nodeUuids = catalogNodeUuids(catalog);
+  const { selectorsByNode, nodeUuids } = indexCatalogNodes(catalog);
   const rules: string[] = [];
   if (block) emitLayer(rules, ':root', block, block.breakpoints, catalog, tokens);
 
@@ -111,33 +110,23 @@ function emitLayer(
   }
 }
 
-function nodeSelectors(catalog: ProjectCatalog) {
-  const selectors = new Map<string, string[]>();
+/** One Catalog walk supplies child-path selectors and authored-rule binding validation. */
+function indexCatalogNodes(catalog: ProjectCatalog) {
+  const selectorsByNode = new Map<string, string[]>();
+  const nodeUuids = new Set<string>();
   const visit = (node: Node, rootUuid: string, path: readonly string[]) => {
-    for (const child of node.dom.children ?? []) {
-      const childPath = [...path, child.uuid];
-      const key = childPath.join('/');
-      selectors.set(key, [...(selectors.get(key) ?? []), pathSelector(rootUuid, childPath)]);
-      visit(child, rootUuid, childPath);
+    nodeUuids.add(node.uuid);
+    if (path.length) {
+      const key = path.join('/');
+      selectorsByNode.set(key, [...(selectorsByNode.get(key) ?? []), pathSelector(rootUuid, path)]);
     }
+    for (const child of node.dom.children ?? []) visit(child, rootUuid, [...path, child.uuid]);
   };
   for (const definitions of [catalog.atoms, catalog.components, catalog.pages]) {
     for (const definition of Object.values(definitions))
       visit(definition.root, definition.root.uuid, []);
   }
-  return selectors;
-}
-
-function catalogNodeUuids(catalog: ProjectCatalog) {
-  const uuids = new Set<string>();
-  const visit = (node: Node) => {
-    uuids.add(node.uuid);
-    for (const child of node.dom.children ?? []) visit(child);
-  };
-  for (const definitions of [catalog.atoms, catalog.components, catalog.pages]) {
-    for (const definition of Object.values(definitions)) visit(definition.root);
-  }
-  return uuids;
+  return { selectorsByNode, nodeUuids };
 }
 
 function pathSelector(rootUuid: string, path: readonly string[]) {

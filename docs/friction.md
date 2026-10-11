@@ -188,3 +188,31 @@ docs/plan.md` attempted to fetch pinned pnpm 10.33.3 and failed with `ENOTFOUND`
 
 - Verified: `corepack pnpm test --maxWorkers=2` passes all 77 suites / 277 tests, including
   the management backend; no timeout increase or test skip was needed.
+
+## Resolved: cloud checkout selects unpinned pnpm by default
+
+- **Reproduction (2026-10-11):** In a fresh cloud checkout, `pnpm install --frozen-lockfile`
+  selects pnpm 11.25.0 despite the repository's 10.33.3 pin, inserts an `allowBuilds` placeholder
+  into `pnpm-workspace.yaml`, and fails with `ERR_PNPM_IGNORED_BUILDS` for esbuild.
+- **Impact:** Installation fails and creates unrelated workspace configuration changes. Switching
+  to Corepack on that install requires replacing the modules directory; noninteractive install
+  otherwise fails with `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY`.
+- **Fix verified:** Restore the generated workspace configuration edit and run
+  `CI=true corepack pnpm install --frozen-lockfile`. Installation completes with pnpm 10.33.3
+  and esbuild's already-approved build. Use `corepack pnpm` for subsequent cloud checks;
+  no repository dependency or package-manager pin change is needed.
+
+## Cloud verification concurrency
+
+- **Reproduction (2026-10-11):** Running workspace typecheck, the default full Vitest suite,
+  and focused UI suites concurrently in the cloud checkout caused existing management setup
+  (10s), project-storage (5s), and token-table (5s) timeouts.
+- **Impact:** Timing failures obscure structural verification; no assertion failure established
+  a behavior regression. The overlapping full run was stopped.
+- **Workaround:** Run `corepack pnpm test --maxWorkers=2` without another test run. The token-table
+  cases then passed, but a design-domain UI test still exceeded 5s under shared host load. Use
+  `corepack pnpm test --maxWorkers=2 --testTimeout=30000 --hookTimeout=30000` for this cloud
+  verification. Keep repository configuration and assertions unchanged; record the CLI allowances
+  with the final result.
+- **Result:** The combined branch passes 77 test files / 279 tests with those CLI allowances;
+  all 11 workspace typechecks also pass. No timeout configuration or test assertion was changed.

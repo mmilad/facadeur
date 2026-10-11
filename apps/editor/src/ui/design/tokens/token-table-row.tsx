@@ -20,10 +20,7 @@ import { TokenPreview } from './token-table-preview';
 import { ComboField } from '../../combofield/ComboField';
 import { tokenLeafLabel } from '../../controls/fields/token-presentation';
 import { withTokenMetadata, withTokenLabel } from '../../../domain/edits/token-edit';
-import {
-  DESIGN_TOKEN_CSS_PREFIX,
-  previewDesignTokenCssVar,
-} from '../../../domain/design-token-css';
+import { DESIGN_TOKEN_CSS_PREFIX, previewDesignTokenCssVar } from '@facadeur/style-engine';
 import type { TableRowData } from '../../settings/Table';
 import {
   colorTransformOptions,

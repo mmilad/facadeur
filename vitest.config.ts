@@ -96,7 +96,7 @@ export default defineConfig({
       'apps/editor/test/editing.test.ts',
       'apps/editor/test/geometry.test.ts',
       'apps/editor/test/frame-host.test.ts',
-      'apps/editor/test/design-token-css.test.ts',
+      'packages/style-engine/test/token-preview-names.test.ts',
       'apps/editor/test/font-edit.test.ts',
       'apps/editor/test/stage.test.ts',
       'apps/editor/test/style-property-controls.test.tsx',
