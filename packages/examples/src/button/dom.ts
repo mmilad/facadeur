@@ -8,8 +8,6 @@ export const root: Node = {
     attributes: {
       type: 'button',
     },
-    properties: {
-      textContent: 'Continue',
-    },
+    text: 'Continue',
   },
 };

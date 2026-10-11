@@ -14,7 +14,6 @@ session. It must not implement replacement native inputs.
   configuration, composed from package form fields and editor binding adapters.
 - `apps/editor/src/ui/components/IconButton.tsx`: shared editor button primitive used by controls,
   design settings, token editing, and inspectors.
-- `apps/editor/src/form-demo.tsx`: manual demo for the integration and field combinations.
 
 ## Form change contract
 
@@ -29,8 +28,9 @@ package public API from outside `packages/form`.
 
 ## Verification and migration
 
-The root Vitest configuration currently includes only two Editor tests; tests under
-`apps/editor/test/form` are dormant. Keep them until their behavior is migrated and decide case by
-case whether to re-enable, relocate, or retire them. Presentation primitives live under
-`apps/editor/src/ui/components`, and token search lives with the token UI. The active checklist and
-remaining ownership work are in [the repository plan](plan.md#editor-form-ownership-cleanup).
+The root Vitest configuration includes the active current-model Editor suites, including the
+integration and color tests under `apps/editor/test/form`. Other legacy suites remain outside the
+allowlist while they are migrated individually from removed flat `DocumentFile` fixtures; do not
+add adapters. Presentation primitives live under `apps/editor/src/ui/components`, and token search
+lives with the token UI. The active checklist and remaining ownership work are in
+[the repository plan](plan.md#editor-form-ownership-cleanup).

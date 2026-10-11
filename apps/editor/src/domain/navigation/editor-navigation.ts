@@ -1,6 +1,5 @@
 export const EDITOR_NAVIGATION_PARAMS = {
   document: 'document',
-  variant: 'variant',
   layer: 'layer',
   viewport: 'viewport',
   surface: 'surface',
@@ -8,7 +7,6 @@ export const EDITOR_NAVIGATION_PARAMS = {
 
 export interface EditorNavigationState {
   documentId?: string;
-  variantName?: string;
   layerId?: string;
   viewportId?: string;
   surface: string;
@@ -39,10 +37,6 @@ export function parseEditorNavigation(
       : defaultSurface;
   return {
     documentId: read(EDITOR_NAVIGATION_PARAMS.document),
-    variantName:
-      read(EDITOR_NAVIGATION_PARAMS.variant) === 'default'
-        ? undefined
-        : read(EDITOR_NAVIGATION_PARAMS.variant),
     layerId: read(EDITOR_NAVIGATION_PARAMS.layer),
     viewportId: read(EDITOR_NAVIGATION_PARAMS.viewport),
     surface,
@@ -50,7 +44,7 @@ export function parseEditorNavigation(
 }
 
 export function hasEditorNavigationSelection(input: EditorNavigationState): boolean {
-  return Boolean(input.documentId || input.variantName || input.layerId || input.viewportId);
+  return Boolean(input.documentId || input.layerId || input.viewportId);
 }
 
 /**
@@ -62,8 +56,8 @@ export function writeEditorNavigation(
   state: EditorNavigationState,
 ): URLSearchParams {
   const output = new URLSearchParams(input);
+  output.delete('variant');
   setOrDelete(output, EDITOR_NAVIGATION_PARAMS.document, state.documentId);
-  setOrDelete(output, EDITOR_NAVIGATION_PARAMS.variant, state.variantName);
   setOrDelete(output, EDITOR_NAVIGATION_PARAMS.layer, state.layerId);
   setOrDelete(output, EDITOR_NAVIGATION_PARAMS.viewport, state.viewportId);
   if (!state.surface || state.surface === 'editor') {

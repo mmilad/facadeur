@@ -1,6 +1,5 @@
-import { readTokenTree, tokenReferenceValue } from '@facadeur/core';
+import { readTokenTree, tokenReferenceValue, tokenReferencesByType } from '@facadeur/core';
 import { TransformableField, TextField } from '@facadeur/form';
-import { typographyTokenRefs } from '../../../domain/token-references';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session';
 import { formatTokenValue } from '../../../domain/edits/token-edit';
 import type { viewportEditContext } from '../../../domain/viewport/viewport-edit';
@@ -19,12 +18,12 @@ import {
 } from './token-breakpoint-helpers';
 import { TokenPreview } from './token-table-preview';
 import { ComboField } from '../../combofield/ComboField';
-import { tokenLeafLabel } from './token-labels';
+import { tokenLeafLabel } from '../../controls/token-presentation';
 import { withTokenMetadata, withTokenLabel } from '../../../domain/edits/token-edit';
 import {
+  DESIGN_TOKEN_CSS_PREFIX,
   previewDesignTokenCssVar,
-  PROJECT_TOKEN_CSS_PREFIX,
-} from '../../../domain/component-tokens';
+} from '../../../domain/design-token-css';
 import type { TableRowData } from '../../settings/Table';
 import {
   colorTransformOptions,
@@ -169,7 +168,7 @@ export function createTokenTableRow({
         />
         <div className="token-path-editor">
           <span aria-hidden="true">
-            --{PROJECT_TOKEN_CSS_PREFIX}-{pathParts[0]}-
+            --{DESIGN_TOKEN_CSS_PREFIX}-{pathParts[0]}-
           </span>
           <TextField
             id={`token-path-${token.uuid}`}
@@ -241,7 +240,7 @@ export function createTokenTableRow({
             breakpointId={writingId}
             isOverride={Boolean(writingId)}
             catalogs={typographyCatalogs}
-            typographyTokens={typographyTokenRefs(snap.design.tokens).filter(
+            typographyTokens={tokenReferencesByType(snap.design.tokens, 'typography').filter(
               (candidate) => candidate !== ref,
             )}
             onCommit={(next) =>

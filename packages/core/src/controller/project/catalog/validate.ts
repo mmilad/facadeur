@@ -2,7 +2,7 @@ import { Value } from '@sinclair/typebox/value';
 import { DocumentError } from '../../../document/errors';
 import { projectCatalogSchema, type ProjectCatalogModel } from '../../../schema/node-model/index';
 import { sanitizeProjectCatalog } from './sanitize-field-values';
-import { findDefinition } from './ops';
+import { findDefinition, listCatalogDefinitions } from './ops';
 import { effectiveSchemaForDefinition } from './field-contract';
 import { matchesSchemaValue } from '../../validation/json-schema-value';
 import { ensureCatalogFieldIds } from './field-ids';
@@ -75,11 +75,7 @@ function migrateProjectDesignLibraries(data: unknown) {
 }
 
 function assertEffectiveCatalogFields(catalog: ProjectCatalogModel) {
-  const definitions = [
-    ...Object.values(catalog.atoms),
-    ...Object.values(catalog.components),
-    ...Object.values(catalog.pages),
-  ];
+  const definitions = listCatalogDefinitions(catalog).map(({ definition }) => definition);
   const validateRecord = (
     values: Readonly<Record<string, unknown>> | undefined,
     schema: Record<string, unknown> | null,

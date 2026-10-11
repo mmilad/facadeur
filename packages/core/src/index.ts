@@ -12,7 +12,6 @@ export {
   type ListedComponentToken,
 } from './controller/style/tokens/component/contract';
 export { DocumentError } from './document/errors';
-export { StyleController } from './controller/style/controller';
 export { CoreController } from './controller/project/index';
 export type {
   BreakpointUuid,
@@ -30,10 +29,9 @@ export type {
 export { NodeController } from './controller/project/node/index';
 export {
   PreviewController,
-  definitionToElementBuildConfig,
-  nodeToElementBuildConfig,
   mergePreviewFields,
   previewFieldsForNode,
+  resolveDefinitionToElementBuildConfig,
 } from './controller/project/node/preview/index';
 export { fieldsFromJsonSchema } from './schema/json-schema-fields';
 export {
@@ -59,6 +57,7 @@ export {
 } from './controller/project/node/preview/prop-ref';
 export {
   findDefinition,
+  listCatalogDefinitions,
   findNodeByUuid,
   findParentOfNode,
   canAcceptCatalogChildren,
@@ -78,7 +77,6 @@ export {
   emptyProjectCatalog,
   assertCatalogRefIntegrity,
   applyCatalogDesignCommand,
-  designSliceFromCatalog,
   catalogKindForDefinition,
   createCatalogDefinition,
   deleteCatalogDefinitionRecord,
@@ -92,13 +90,9 @@ export {
 export type { CoreControllerHost } from './types/index';
 export type { CatalogDefinitionPort } from './types/index';
 export type { CatalogPort, CoreSnapshot } from '@facadeur/domain';
-/** @deprecated Use mergePreviewFields */
-export { mergePreviewFields as mergePreviewData } from './controller/project/node/preview/index';
 /** @deprecated Flat document stack — prefer `@facadeur/core/legacy` for new imports. */
 export {
-  ProjectController,
   applyCommand,
-  createControllerStore,
   deriveVariantPreset,
   resolvePreviewData,
   resolveVariantDocument,
@@ -106,14 +100,10 @@ export {
   withPreviewData,
   type Command,
   type CommandContext,
-  type ControllerDocumentStore,
   type DocumentChange,
-  type DocumentCommandExecutor,
   type DocumentStore,
   type InsertNode,
   type NodeProp,
-  type ProjectChange,
-  type ProjectControllerOptions,
 } from './legacy/index';
 export { canonicalizeJson, isJsonValue, isPlainObject, type JsonValue } from './utils';
 export {
@@ -253,6 +243,7 @@ export {
   removeTokenFromTree,
   setTokenInTree,
 } from './controller/style/tokens/global/tree';
+export { fontFamilyTokens, tokenReferencesByType } from './controller/style/tokens/global/query';
 export { tokenReference, tokenReferenceValue } from './controller/style/tokens/syntax';
 export {
   migrateLegacyDesignLibraries,

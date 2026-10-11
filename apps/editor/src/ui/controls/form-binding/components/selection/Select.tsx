@@ -1,6 +1,5 @@
 import type { SelectHTMLAttributes } from 'react';
-import type { AutocompleteOption } from '@facadeur/form';
-import { SelectField } from '@facadeur/form';
+import { SelectField, type SelectOption } from '@facadeur/form';
 import { useBindable } from '../input/bindable';
 
 export function Select({
@@ -17,7 +16,7 @@ export function Select({
 }: Omit<SelectHTMLAttributes<HTMLSelectElement>, 'value' | 'onChange'> & {
   name?: string;
   value?: string;
-  options: AutocompleteOption[];
+  options: readonly SelectOption[];
   invalid?: boolean;
   onChange?: (value: string) => void;
   onCommit?: (value: string) => void;

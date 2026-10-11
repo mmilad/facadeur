@@ -3,7 +3,7 @@
 import { SchemaBuilderProvider, type JsonSchema as JoySchema } from 'jsonjoy-builder';
 import 'jsonjoy-builder/styles.css';
 import TypeEditor from '../stage/jsonjoy-type-editor';
-import styles from '../stage/SchemaLibraryStage.module.css';
+import styles from './schema-editor.module.css';
 
 const EDITOR_LABELS = {
   schemaTypeString: 'String',

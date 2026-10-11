@@ -6,7 +6,8 @@ import {
   type NodeDefinitionModel,
   type NodeModel,
 } from '@facadeur/core';
-import type { DropZone } from '../editing';
+
+export type DropZone = 'before' | 'inside' | 'after';
 
 function indexAfterRemoval(
   childIds: readonly string[],

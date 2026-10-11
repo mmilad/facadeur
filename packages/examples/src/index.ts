@@ -14,7 +14,5 @@ export {
   createProjectTemplate,
   createProjectTemplateDocument,
   defaultIcons,
-  starterAtomIds,
-  starterFormIds,
   type ProjectTemplate,
 } from './project-template';

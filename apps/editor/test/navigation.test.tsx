@@ -1,168 +1,100 @@
 /**
  * @vitest-environment jsdom
  */
-import { act } from 'react';
-import { createRoot, type Root } from 'react-dom/client';
+import { cleanup, fireEvent, render } from '@testing-library/react';
+import { useSyncExternalStore } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
+import { createExampleCatalog, exampleIds } from '@facadeur/examples';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
-import { App } from '../src/ui/shell/EditorShell';
-import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
+import { EditorSubnav } from '../src/ui/shell/navigation/EditorSubnav';
+import { useEditorNavigation } from '../src/ui/shell/navigation/useEditorNavigation';
+import type { EditorNavigationAdapter } from '../src/ui/shell/navigation/navigation-adapter';
+import { SettingsSections } from '../src/ui/settings/SettingsSections';
 
-const documents = editorStandardCatalog();
+function createTestNavigation(): EditorNavigationAdapter {
+  let search = '';
+  const updateSearch = (href: string) => {
+    search = href.includes('?') ? href.slice(href.indexOf('?') + 1) : '';
+  };
+  return {
+    pathname: '/',
+    get search() {
+      return search;
+    },
+    push: updateSearch,
+    replace: updateSearch,
+  };
+}
+
+function NavigationHarness({
+  session,
+  navigation,
+}: {
+  session: EditorSession;
+  navigation: EditorNavigationAdapter;
+}) {
+  const snapshot = useSyncExternalStore(
+    session.subscribe,
+    session.getSnapshot,
+    session.getSnapshot,
+  );
+  const { surface, setSurface } = useEditorNavigation(session, snapshot, navigation);
+  return (
+    <>
+      <EditorSubnav surface={surface} onSelectSurface={setSurface} />
+      <SettingsSections surface={surface} onSelect={setSurface} />
+      <output data-testid="surface">{surface}</output>
+      <output data-testid="selected-node">{snapshot.selectedNodeId}</output>
+    </>
+  );
+}
 
 describe('editor subnavigation', () => {
-  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
-  let root: Root | null = null;
-  let host: HTMLDivElement | null = null;
+  afterEach(cleanup);
 
-  afterEach(() => {
-    act(() => root?.unmount());
-    host?.remove();
-    root = null;
-    host = null;
-  });
+  it('shows Icons in the subnav and keeps Schemas within Settings', () => {
+    const session = createEditorSession({ projectCatalog: createExampleCatalog() });
+    const view = render(
+      <NavigationHarness session={session} navigation={createTestNavigation()} />,
+    );
 
-  it('selects each asset root when clicking project rows, including an already open asset', async () => {
-    const session = createEditorSession({
-      design: editorStandardDesign(),
-      documents: (['atom', 'component', 'section', 'page'] as const).map((kind) => ({
-        version: 1,
-        id: kind,
-        name: kind,
-        kind,
-        root: { id: `${kind}-root`, type: 'frame' as const },
-      })),
-    });
-    host = document.createElement('div');
-    document.body.append(host);
-    root = createRoot(host);
-    await act(async () => root?.render(<App session={session} />));
-    for (const kind of ['component', 'section', 'page', 'atom', 'atom']) {
-      act(() => session.selectNode(null));
-      await act(async () =>
-        (host!.querySelector(`[data-asset-id="${kind}"]`) as HTMLButtonElement).click(),
-      );
-      expect(session.getSnapshot().openId).toBe(kind);
-      expect(session.getSnapshot().selectedNodeId).toBe(`${kind}-root`);
-      expect(session.getSnapshot().nestedSelection).toBeNull();
-    }
-    await act(async () =>
-      (host!.querySelector('[data-subnav="settings"]') as HTMLButtonElement).click(),
-    );
-    await act(async () =>
-      (host!.querySelector('[data-asset-id="section"]') as HTMLButtonElement).click(),
-    );
-    expect(session.getSnapshot().selectedNodeId).toBe('section-root');
+    expect(view.container.querySelector('[data-surface="icons"]')).not.toBeNull();
+    expect(view.container.querySelector('[data-surface="schemas"]')).toBeNull();
+    expect(view.container.querySelector('[data-design-domain="icons"]')).toBeNull();
+
+    fireEvent.click(view.container.querySelector('[data-subnav="settings"]')!);
+    fireEvent.click(view.container.querySelector('[data-settings-tab="schemas"]')!);
+    expect(view.getByTestId('surface').textContent).toBe('schemas');
+    expect(
+      view.container.querySelector('[data-subnav="settings"]')?.getAttribute('aria-current'),
+    ).toBe('page');
+    expect(
+      view.container.querySelector('[data-settings-tab="schemas"]')?.getAttribute('aria-current'),
+    ).toBe('page');
+
+    fireEvent.click(view.container.querySelector('[data-settings-tab="colors"]')!);
+    expect(view.getByTestId('surface').textContent).toBe('colors');
     session.destroy();
   });
 
-  it('places schema library in Settings and Icons in the subnav', async () => {
-    const session = createEditorSession({ documents, design: editorStandardDesign() });
-    session.openAsset('card', 'root');
-    host = document.createElement('div');
-    document.body.append(host);
-    root = createRoot(host);
-    await act(async () => root?.render(<App session={session} />));
-    expect(host.querySelector('.editor-subnav [data-surface="schemas"]')).toBeNull();
-    expect(host.querySelector('.editor-subnav [data-surface="icons"]')).not.toBeNull();
-    expect(host.querySelector('.side-left [data-design-domain="icons"]')).toBeNull();
-    await act(async () =>
-      (host!.querySelector('[data-subnav="settings"]') as HTMLButtonElement).click(),
+  it('switches Editor, Schema, and Preview without resetting the selected catalog node', () => {
+    const session = createEditorSession({ projectCatalog: createExampleCatalog() });
+    session.openAsset(exampleIds.components.card.definition);
+    const selectedNodeId = session.getSnapshot().selectedNodeId;
+    const view = render(
+      <NavigationHarness session={session} navigation={createTestNavigation()} />,
     );
-    await act(async () =>
-      (host!.querySelector('[data-settings-tab="schemas"]') as HTMLButtonElement).click(),
-    );
-    expect(host.querySelector('[data-subnav="settings"]')?.getAttribute('aria-current')).toBe(
-      'page',
-    );
-    expect(host.querySelector('[data-settings-tab="schemas"]')?.getAttribute('aria-current')).toBe(
-      'page',
-    );
-    expect(host.textContent).toContain('Settings · Schemas');
-    await act(async () =>
-      (host!.querySelector('[data-settings-tab="colors"]') as HTMLButtonElement).click(),
-    );
-    expect(host.querySelector('[data-design-domain="colors"]')).not.toBeNull();
-    expect(session.getSnapshot().selectedNodeId).toBe('root');
+
+    fireEvent.click(view.container.querySelector('[data-surface="schema"]')!);
+    expect(view.getByTestId('surface').textContent).toBe('schema');
+    fireEvent.click(view.container.querySelector('[data-surface="code"]')!);
+    expect(view.getByTestId('surface').textContent).toBe('code');
+    fireEvent.click(view.container.querySelector('[data-surface="preview"]')!);
+    expect(view.getByTestId('surface').textContent).toBe('preview');
+    fireEvent.click(view.container.querySelector('[data-surface="editor"]')!);
+    expect(view.getByTestId('surface').textContent).toBe('editor');
+    expect(view.getByTestId('selected-node').textContent).toBe(selectedNodeId);
+
     session.destroy();
-  });
-
-  it('switches Editor, Schema, and Preview data without resetting selection or variant', async () => {
-    const session: EditorSession = createEditorSession({
-      documents,
-      design: editorStandardDesign(),
-    });
-    session.openAsset('card', 'root');
-    session.execute({
-      type: 'setVariantPreset',
-      preset: {
-        name: 'compact',
-        overrides: {
-          insertions: [
-            { parent: 'root', node: { id: 'variant-child', type: 'text', text: 'Compact' } },
-          ],
-        },
-      },
-    });
-    session.setActiveVariant('compact');
-    session.execute({
-      type: 'defineVariant',
-      axis: { name: 'tone', values: ['default', 'compact'], default: 'default' },
-    });
-    expect(session.getSnapshot().document.nodes['variant-child']).toBeUndefined();
-    expect(session.getSnapshot().activeDocument.nodes['variant-child']).toBeDefined();
-    const selectedBefore = session.getSnapshot().selectedNodeId;
-
-    host = document.createElement('div');
-    document.body.append(host);
-    root = createRoot(host);
-    await act(async () => {
-      root?.render(<App session={session} />);
-    });
-
-    expect(host.querySelector('[data-surface="editor"]')?.getAttribute('aria-current')).toBe(
-      'page',
-    );
-    await act(async () => {
-      (host!.querySelector('[data-surface="schema"]') as HTMLButtonElement).click();
-    });
-    expect(host.querySelector('[data-testid="schema-stage"]')).toBeTruthy();
-    expect(host.textContent).toContain('Component definition');
-    expect(host.textContent).toContain('Props');
-    expect(host.textContent).toContain('Defaults');
-    expect(host.querySelector('[data-testid="code-stage"]')).toBeNull();
-    expect(host.textContent).not.toContain('Legacy variant axes');
-    await act(async () => {
-      (host!.querySelector('[data-surface="code"]') as HTMLButtonElement).click();
-    });
-    expect(host.querySelector('[data-testid="code-stage"]')).toBeTruthy();
-    expect(host.textContent).toContain('React preview');
-    await act(async () => {
-      (host!.querySelector('[data-surface="schema"]') as HTMLButtonElement).click();
-    });
-    expect(session.getSnapshot().selectedNodeId).toBe(selectedBefore);
-    expect(session.getSnapshot().activeVariantName).toBe('compact');
-
-    await act(async () => {
-      (host!.querySelector('[data-surface="preview"]') as HTMLButtonElement).click();
-    });
-    expect(host.querySelector('[data-testid="preview-data-stage"]')).toBeTruthy();
-
-    await act(async () => {
-      (host!.querySelector('[data-surface="editor"]') as HTMLButtonElement).click();
-    });
-    expect(host.querySelector('[data-testid="schema-stage"]')).toBeNull();
-    expect(host.querySelector('[data-testid="preview-data-stage"]')).toBeNull();
-    expect(host.querySelector('button[name="property-tab-content"]')).toBeTruthy();
-    expect(session.getSnapshot().selectedNodeId).toBe(selectedBefore);
-    expect(session.getSnapshot().activeVariantName).toBe('compact');
-    await act(async () => {
-      (host!.querySelector('[data-surface="schema"]') as HTMLButtonElement).click();
-    });
-    await act(async () => {
-      (host!.querySelector('[data-asset-id="button"]') as HTMLButtonElement).click();
-    });
-    expect(host.querySelector('[data-testid="schema-stage"]')).toBeTruthy();
-    expect(session.getSnapshot().openId).toBe('button');
   });
 });

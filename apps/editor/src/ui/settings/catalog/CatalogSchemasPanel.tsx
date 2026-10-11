@@ -8,7 +8,7 @@ import type { EditorSession } from '../../../domain/session';
 import { Field } from '../../components/feedback';
 import { SearchInput, TextInput } from '../../controls/form-binding/index';
 import { JsonSchemaTypeEditor } from '../../schema/JsonSchemaTypeEditor';
-import styles from '../../stage/SchemaLibraryStage.module.css';
+import styles from '../../schema/schema-editor.module.css';
 import { catalogSchemaTitle } from '../../../domain/catalog/schema-display';
 import { SettingsSections } from '../SettingsSections';
 import type { EditorSurface } from '../../design/design-domain';

@@ -5,7 +5,7 @@ import { ColorControl } from '../color/index';
 import { ShadowControl } from '../shadow/index';
 import { TextControl } from '../fields/index';
 import { TypographyStyleControl, type TypographyCatalogs } from '../typography/index';
-import { TokenValueControl, isTokenReference } from '../fields/TokenValueControl';
+import { TokenValueControl } from '../fields/TokenValueControl';
 import {
   enumOptionLabel,
   enumOptionsForProperty,

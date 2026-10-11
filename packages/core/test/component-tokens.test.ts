@@ -5,6 +5,7 @@ import {
   componentTokenPublicPath,
   createId,
   DocumentError,
+  emptyTokenTree,
   listComponentTokens,
   toFlat,
   toNested,
@@ -36,6 +37,7 @@ describe('component tokens', () => {
         },
       },
       tokenInterface: { reads: [globalTokenUuids.neutral600] },
+      tokens: emptyTokenTree(),
       root: { id: 'root', type: 'frame', tag: 'div' },
     };
     expect(toNested(toFlat(file))).toEqual(file);

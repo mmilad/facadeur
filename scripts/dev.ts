@@ -1,6 +1,5 @@
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import path from 'node:path';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 

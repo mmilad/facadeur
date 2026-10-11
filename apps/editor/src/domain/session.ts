@@ -4,6 +4,7 @@ export type {
   AssetSummary,
   EditorNotice,
   EditorSnapshot,
+  EditorDesignSnapshot,
   EditorSession,
   EditorSessionOptions,
 } from './session/types';

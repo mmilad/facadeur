@@ -38,7 +38,8 @@ export function tokenDisplayLabel(reference: string, label?: string): string {
   const uuid = tokenReference(reference);
   if (uuid) return `Token ${uuid.slice(0, 8)}`;
   const family = parts.shift();
-  const name = savedLabel || tokenSegmentLabel(parts.pop() ?? '');
+  const pathName = parts.pop();
+  const name = savedLabel || tokenSegmentLabel(pathName ?? '');
   const familyLabel = family ? (familyLabels[family] ?? tokenSegmentLabel(family)) : '';
   const group = parts.map(tokenSegmentLabel);
   return [familyLabel, ...group, name].filter(Boolean).join(' / ');

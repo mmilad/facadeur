@@ -1,7 +1,11 @@
-import { eventDataSchema, type EventDefinition, type SchemaCatalog } from '@facadeur/core';
+import {
+  eventDataSchema,
+  type EventDefinition,
+  type NamedSchema,
+  type SchemaCatalog,
+} from '@facadeur/core';
 import { useState, type ReactNode } from 'react';
 import { eventDataSelection, withoutLegacyEventPayload } from '../../../../domain/events';
-import type { LibrarySchema } from '../../../../domain/schema/schema-library';
 import type { SchemaTypeSelection } from '../../../../domain/schema/schema-use';
 import { Section, Stack } from '../../../components/layout';
 import { Field } from '../../../components/feedback';
@@ -21,7 +25,7 @@ export function EventsEditorControl({
 }: {
   events: EventDefinition[];
   eventOrigins?: Record<string, string>;
-  schemas?: LibrarySchema[];
+  schemas?: NamedSchema[];
   schemaCatalog?: SchemaCatalog;
   onDefineEvent: (event: EventDefinition, previousName?: string) => void;
   onRemoveEvent: (name: string) => void;
@@ -85,7 +89,7 @@ function EventDefinitionCard({
   event: EventDefinition;
   defaultOpen: boolean;
   originalName: string;
-  schemas: LibrarySchema[];
+  schemas: NamedSchema[];
   schemaCatalog?: SchemaCatalog;
   onDefineEvent: (event: EventDefinition, previousName?: string) => void;
   onRemoveEvent: (name: string) => void;

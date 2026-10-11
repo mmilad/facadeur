@@ -27,6 +27,7 @@
 - **Workaround:** Run the same command with the approved outside-sandbox execution. Confirmed with the regular `pnpm` shim, which reports 10.33.3; this is not a package-version mismatch.
 - **Resolution:** Use the approved host context for pnpm verification; the restricted process's filesystem/Corepack isolation is not repaired by repository read access.
 - **Update (2026-10-10, token test ownership):** Direct Vitest invocation in the restricted process fails before collection with the same `EPERM` resolving `node_modules/.pnpm/vitest@.../dist/spy.js`. Core typecheck passes. The user's CMD run initially exposed stale tier and indexed-font expectations; after correcting both, the same command passes all 10 tests. This confirms host execution is the working test path while the sandbox limitation remains.
+- **Update (2026-10-10, style-engine legacy test retirement):** Direct `node_modules/.bin/vitest.cmd run packages/style-engine/test/design-css.test.ts` again fails before collection with `EPERM` resolving Vitest under `node_modules/.pnpm`. The same focused suite passes in the approved host context (6 tests); Style Engine typecheck runs successfully there as well. Use the approved host context for Vitest; direct in-sandbox invocation remains blocked by virtual-store path access.
 - **Update (2026-10-10, package manager pin):** Root `package.json` already pins `packageManager: "pnpm@10.33.3"`, matching the user's CMD (`pnpm v10.33.3`). In the restricted shell, Corepack initially looked for that exact version in its isolated cache and attempted a blocked registry download (`ENOTFOUND`). Setting `COREPACK_HOME` to the user's existing `C:\Users\smb_r\AppData\Local\node\corepack` cache makes `pnpm --version` report 10.33.3; the test command then reaches the separate sandbox `EPERM` on workspace `node_modules`. Running `pnpm test` through the approved host context succeeds: 21 files, 85 tests. No second pin or repository package-manager change is needed; use the approved host context for pnpm commands that access the workspace install.
 
 - **Update (2026-10-03):** After `/sandbox-add-read-dir D:\newProjects\facadeur`, `node --version` works in the sandbox, but `pnpm --version` and the focused Vitest command stay silent for more than 10 seconds and must be interrupted. The focused command still passes outside the sandbox (13 tests). Repository read access alone has not resolved this friction; diagnose the pnpm startup hang and collect a fresh Windows sandbox log if it persists.
@@ -38,6 +39,12 @@
 
 ## Resolved: Run pnpm verification in the approved host context
 
+- **Update (2026-10-11):** With the user's Corepack cache configured, restricted Vitest still fails
+  before collection with `EPERM` resolving `node_modules/.pnpm/vitest.../dist/spy.js`. The same
+  focused suites pass in the approved host-context execution; the full root suite passes 59 files /
+  212 tests. This isolates the issue to sandbox filesystem permissions; deleting `.bin` is
+  unnecessary. Use approved host-context execution for pnpm tests.
+
 - **Update (2026-10-04, hydration debugging):** `pnpm exec prettier --write <affected editor files>` stays silent and eventually reports `GET https://registry.npmjs.org/pnpm: fetch failed` in the sandbox. The direct local invocation `node node_modules/prettier/bin/prettier.cjs --write <affected editor files>` succeeds without network access. Use the installed CLI for formatting; fix the pnpm shim's version lookup to use the locally installed pinned version offline.
 
 - **Update (2026-10-04, project-controller adoption):** Direct `node node_modules/typescript/bin/tsc --noEmit -p apps/editor/tsconfig.json` in the restricted process reports incomplete dependency typings (Yjs `Doc.on`/`destroy`, React/Radix props, and testing-library exports). The regular approved `pnpm -r --if-present typecheck` outside the sandbox passes. The exact dependency-resolution cause remains unconfirmed; use the regular workspace command in the matching environment rather than changing dependencies to satisfy these restricted-process diagnostics.
@@ -48,8 +55,10 @@
 - **Fix:** Run the same pnpm command in the approved host context. Do not change the pin or add a project-specific cache path.
 - **Update (2026-10-09, inspector boundary):** `pnpm --filter @facadeur/core typecheck` and `pnpm --filter @facadeur/editor typecheck` both stop before reaching project code while Corepack tries to fetch the pinned pnpm 10.33.3 from `registry.npmjs.org` (`ENOTFOUND`). Direct local TypeScript invocations start but report the already-known workspace source/dependency-link errors; they report no diagnostics in the new inspector modules. The pinned pnpm lookup remains the blocker for authoritative workspace typechecks.
 - **Update (2026-10-09, form inputs):** Both filtered pnpm typecheck commands again stop at Corepack's attempt to fetch pnpm 10.33.3 (`getaddrinfo ENOTFOUND registry.npmjs.org`). Direct package TypeScript succeeds for `packages/form`; the editor TypeScript run reports the known workspace errors and no diagnostics in changed form/token files. The network/DNS cause and local-binary workaround remain unchanged.
-- **Update (2026-10-10):** In the approved host context, `pnpm install --offline --ignore-scripts --config.confirmModulesPurge=false` completes with pnpm 10.33.3, and the following `pnpm test` passes 21 files / 85 tests. Use this host-context route for future checks; the user does not need to rerun commands in CMD.
+- **Update (2026-10-10):** With `COREPACK_HOME=C:\Users\smb_r\AppData\Local\node\corepack`, the restricted process reaches the user's pnpm 10.33.3 but still fails on `realpath` for workspace `node_modules`/workspace links (`EPERM`). The approved host-context run of `pnpm test` now passes 24 files / 95 tests. The Editor typecheck reaches TypeScript and reports the two known diagnostics in `CatalogPreviewDataStage` FieldValue nullability and the missing `jsonjoy-builder` declaration. Use the approved host-context route for checks; the user does not need to rerun commands in CMD.
+- **Update (2026-10-10, repeated fixture cleanup):** The restricted process again fell back to Corepack's isolated cache when invoking `pnpm exec prettier` / Vitest, attempting to download pinned pnpm 10.33.3 and failing with `ENOTFOUND registry.npmjs.org`. The user's CMD host had previously run the full suite successfully. Impact: final focused and full validation cannot run in this shell; continue source review and ask for CMD validation only after the migration batch is ready.
 - **Update (2026-10-04, structural renderer):** `pnpm exec vitest run packages/renderer-dom/test/render.test.ts` stayed silent for over 30 seconds in the restricted process and had to be interrupted. The focused test run therefore needs the documented matching pnpm environment outside the sandbox; no test runner output was produced before interruption.
+- **Resolution (2026-10-10):** The private deprecated `packages/renderer-dom` package and its legacy tests were retired after confirming no production callers; this specific reproduction no longer exists. For maintained pnpm checks, the approved host context now runs the pinned workspace pnpm successfully.
 
 ## Browser automation setup fails
 
@@ -82,3 +91,51 @@
 - **Reproduction:** `pnpm --dir dist/facadeur next` with an unrelated `D:/newProjects/package-lock.json` alongside the source and generated workspace lockfiles.
 - **Evidence/impact:** Next inferred `D:/newProjects` as the workspace root and warned about multiple lockfiles; startup also rewrote the generated tsconfig to add Next plugin/types entries on each regeneration.
 - **Fix (2026-10-06):** Generate `outputFileTracingRoot` pointing at the standalone workspace and include Next plugin/type entries in its maintained template. Regenerated development startup and production build pass without the external-root warning or tsconfig rewrite.
+
+## Update: restricted pnpm process cannot resolve the workspace install
+
+- **Reproduction:** Run `pnpm test` or `pnpm --filter @facadeur/editor typecheck` in the
+  restricted process with `COREPACK_HOME=C:\Users\smb_r\AppData\Local\node\corepack`.
+- **Evidence:** Corepack selects the pinned pnpm 10.33.3, then pnpm fails before the scripts run
+  with `EPERM` resolving `D:\newProjects\facadeur\node_modules` or the workspace root. The
+  bundled fallback pnpm is 11.25.0 and does not match the repository pin.
+- **Impact:** This process cannot authoritatively validate Editor changes.
+- **Workaround:** Run checks through the approved host pnpm context. No repository pin change is
+  indicated; the failure is filesystem access after version resolution.
+- **Update (2026-10-10, shell test):** The approved host-context command
+  `pnpm exec vitest run apps/editor/test/shell.test.tsx` succeeds with the user's pinned pnpm. The
+  sandbox still has the documented `EPERM`, but no CMD rerun is needed. The shell test's React
+  warnings included a separate test cleanup bug: its `afterEach` manually called Testing Library's
+  already-registered automatic `cleanup()` inside `act()`, causing duplicate unmounts. Removing
+  that manual cleanup eliminated the unmount errors, but a subsequent host run still showed `act`
+  warnings during keyboard edits. Those trigger a Stage animation-frame update to the zoom session;
+  the key helper now waits for two animation frames inside `act`. A fresh host run is pending to
+  verify the warning fix. **Resolution (2026-10-11):** the focused host run passes 5/5 without React
+  warnings using the two-frame helper.
+- **Update (2026-10-11):** Running that pnpm command from the restricted workspace again selected
+  Corepack but tried to download the pinned pnpm 10.33.3 from `registry.npmjs.org`, failing with
+  `ENOTFOUND` before Vitest started because this shell did not inherit the user's Corepack home.
+  Setting `COREPACK_HOME=C:\Users\smb_r\AppData\Local\node\corepack` selects the cached pinned
+  version 10.33.3, but the restricted process then fails with `EPERM` resolving the workspace
+  root. The global `pnpm.cmd` is only a Corepack shim; deleting it would not fix the filesystem
+  boundary. **Resolution:** run commands through the approved host context with the user's Corepack
+  home; `pnpm test` completes successfully (40 files, 137 tests). No `node_modules` or build-output
+  cleanup is needed.
+- **Update (2026-10-11, repeated during FieldDefinition cleanup):** With the user's cached
+  `COREPACK_HOME`, ordinary restricted execution still failed before scripts with `EPERM` resolving
+  the repository `node_modules`. Re-running through the approved host context succeeded without
+  deleting any binaries: `pnpm test` passed 45 files / 156 tests, and Editor typecheck passed.
+  This confirms the installed pnpm binary and workspace install are healthy; the failure is limited
+  to the restricted process. Use approved host execution when it recurs; deleting `node_modules` is
+  not indicated by this evidence.
+- **Update (2026-10-11, LayoutControl cleanup):** Restricted execution again failed before the
+  script with `EPERM` resolving `D:\newProjects\facadeur\apps\editor`, even with the user's
+  `COREPACK_HOME`. The approved host context ran the same pinned pnpm successfully: Editor typecheck
+  passed, root tests passed 46 files / 154 tests, and Storybook built. No binary or install cleanup
+  was needed; route pnpm checks through the approved host context when this recurs.
+- **Update (2026-10-11, Core validation assertions):** Plain restricted `pnpm` again attempted to
+  fetch pinned pnpm 10.33.3 and failed with `ENOTFOUND registry.npmjs.org`. Setting the user's
+  cached `COREPACK_HOME` resolved the package manager, but restricted pnpm then hit `EPERM` resolving
+  the workspace root. The same checks in the approved host context passed: workspace typecheck and
+  root suite (70 files / 247 tests). Use host-context pnpm with the user's Corepack home; deleting
+  binaries or `node_modules` is not indicated.

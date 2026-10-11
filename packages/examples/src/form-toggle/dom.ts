@@ -10,9 +10,7 @@ export const root: Node = {
         uuid: exampleFormToggleIds.nodes.span1,
         dom: {
           tagName: 'span',
-          properties: {
-            textContent: 'Use token',
-          },
+          text: 'Use token',
         },
       },
       {
@@ -38,9 +36,7 @@ export const root: Node = {
               uuid: exampleFormToggleIds.nodes.span3,
               dom: {
                 tagName: 'span',
-                properties: {
-                  textContent: 'Enabled',
-                },
+                text: 'Enabled',
               },
             },
           ],

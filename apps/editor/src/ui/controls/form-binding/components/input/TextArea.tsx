@@ -1,6 +1,5 @@
 import type { TextareaHTMLAttributes } from 'react';
 import { TextArea as SharedTextArea } from '@facadeur/form';
-import { useDraftCommit } from '../../hooks/useDraftCommit';
 import { useBindable } from './bindable';
 
 export function TextArea({
@@ -29,7 +28,6 @@ export function TextArea({
     onCommitValue,
     id,
   } = useBindable({ name, value: valueProp, disabled, invalid, onChange, onCommit }, '');
-  const { draft, live, commit } = useDraftCommit(value, onLiveChange, onCommitValue);
 
   return (
     <SharedTextArea
@@ -38,11 +36,13 @@ export function TextArea({
       name={name}
       className="eu-control"
       rows={rows}
-      value={draft}
+      value={value}
       disabled={isDisabled}
       invalid={isInvalid}
-      onChange={live}
-      onCommit={() => commit()}
+      onChange={onLiveChange}
+      onCommit={(next) => {
+        if (next !== value) onCommitValue(next);
+      }}
       onBlur={onBlur}
     />
   );

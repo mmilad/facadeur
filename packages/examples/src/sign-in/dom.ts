@@ -12,27 +12,21 @@ export const root: Node = {
         uuid: exampleSignInIds.nodes.p1,
         dom: {
           tagName: 'p',
-          properties: {
-            textContent: 'Welcome back',
-          },
+          text: 'Welcome back',
         },
       },
       {
         uuid: exampleSignInIds.nodes.h21,
         dom: {
           tagName: 'h2',
-          properties: {
-            textContent: 'Sign in to your workspace',
-          },
+          text: 'Sign in to your workspace',
         },
       },
       {
         uuid: exampleSignInIds.nodes.p2,
         dom: {
           tagName: 'p',
-          properties: {
-            textContent: 'Continue with your work email to access your projects.',
-          },
+          text: 'Continue with your work email to access your projects.',
         },
       },
       {

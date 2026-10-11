@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import { getPath, resolvePath } from '../../schema/path';
+import { getPath, resolvePath } from '@facadeur/form';
 import { useOptionalFormContext, usePathPrefix } from '../../FormContext';
 
 type BindableProps<T> = {

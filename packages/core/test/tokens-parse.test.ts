@@ -3,8 +3,10 @@ import {
   activeBreakpoints,
   configuredBreakpoints,
   DocumentError,
+  fontFamilyTokens,
   loadTokens,
   tokenReferenceValue,
+  tokenReferencesByType,
 } from '@facadeur/core';
 import {
   breakpointIds,
@@ -20,6 +22,19 @@ import {
 const testUuid40 = globalThis.crypto.randomUUID();
 
 describe('UUID-keyed token resolution', () => {
+  it('queries typed references and font-family records from the Core token index', () => {
+    const tokens = tokenSet({
+      color: colorTokens,
+      font: { [fontToken.uuid]: fontToken },
+    });
+    expect(tokenReferencesByType(tokens, 'color')).toEqual(
+      Object.keys(colorTokens)
+        .sort((left, right) => left.localeCompare(right))
+        .map(tokenReferenceValue),
+    );
+    expect(fontFamilyTokens(tokens)).toMatchObject([fontToken]);
+  });
+
   it('derives CSS paths from family, group, and label while retaining UUID identity', () => {
     const tokens = {
       ...testTokens,

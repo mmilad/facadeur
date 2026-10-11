@@ -1,5 +1,6 @@
 import {
   findNodeByUuid,
+  listCatalogDefinitions,
   readTokenTree,
   tokenReferenceValue,
   type CoreController,
@@ -118,11 +119,6 @@ function collectProjectStyleSuggestions(catalog: CoreSnapshot['catalog']) {
     description: token.path,
     group: 'Design tokens',
   }));
-  const definitions = [
-    ...Object.values(catalog.atoms),
-    ...Object.values(catalog.components),
-    ...Object.values(catalog.pages),
-  ];
   const visit = (node: CatalogNode) => {
     for (const [key, value] of Object.entries(node.style ?? {})) {
       if (!value.trim()) continue;
@@ -132,7 +128,7 @@ function collectProjectStyleSuggestions(catalog: CoreSnapshot['catalog']) {
     }
     for (const child of node.dom.children ?? []) visit(child);
   };
-  for (const definition of definitions) visit(definition.root);
+  for (const { definition } of listCatalogDefinitions(catalog)) visit(definition.root);
 
   return {
     keys: [...valuesByKey.keys()].sort((left, right) => left.localeCompare(right)),

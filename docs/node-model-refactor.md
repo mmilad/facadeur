@@ -5,7 +5,9 @@ Working notes for a major reshape. **DB and examples may be reset**; do not pres
 ### Phase status
 
 1. **Done:** Legacy `examples/*.json` removed; v2 TypeBox in `@facadeur/core/node-model`; starter project = design + section only; **tests paused** (`vitest` empty include); **legacy inspector removed**; right rail = placeholder UI.
-2. **Next:** Catalog API + seed atoms; preview resolver (top-down); renderer v2 ([packages/renderer-dom/V2-RENDERER.md](../packages/renderer-dom/V2-RENDERER.md)); new properties UI on dom/style/schema/data/config.
+2. **Shipped since this draft:** Catalog controller and preview resolver; React `DynamicElement`
+   renders Core's `ElementBuildConfig`. The former standalone `packages/renderer-dom` package was
+   retired as unused compatibility code.
 
 ### TypeBox vs JSON Schema (Ajv)
 
@@ -23,7 +25,7 @@ Pre-commit inspector under `apps/editor/src/inspector` targeted the **legacy** d
 |--------|----------------|
 | Types + JSON Schema | `@facadeur/core/node-model` |
 | Legacy documents | `documentFileSchema` — **frozen**, replace usages incrementally |
-| Render | `renderer-dom` → consume v2 `Node` + catalog refs |
+| Render | Editor React canvas (`DynamicElement`) consumes Core `ElementBuildConfig` |
 | Persist | API `ProjectCatalog` only (no duplicate JSON shapes) |
 
 ## Refs only — no duplication

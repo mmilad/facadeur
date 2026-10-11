@@ -1,5 +1,6 @@
 export { Form } from './form';
 export type { FormChangeMeta, FormProps } from './form';
+export { formatKey, getPath, joinPath, parsePath, resolvePath, setPath } from './form/path';
 export { LayoutField } from './fields/layout';
 export type { LayoutFieldConfig, LayoutFieldProps } from './fields/layout';
 export { AutocompleteSelectField } from './fields/autocomplete';

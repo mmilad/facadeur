@@ -72,9 +72,9 @@ export function CatalogSchemaStage({
 }) {
   const coreSnap = app.getCoreSnapshot();
   const definition = coreSnap.openDefinition;
-  const resolved = app.core.node.schema.resolveForOpenDefinition();
-  const effective = app.core.node.schema.effectiveForOpenDefinition();
-  const { fields } = app.core.node.config.inspectorInputs();
+  const resolved = app.resolveSchemaForOpenDefinition();
+  const effective = app.effectiveSchemaForOpenDefinition();
+  const { fields } = app.getInspectorInputs();
   const previewFields = (effective?.previewDefaults ??
     definition?.config?.previewData?.fields ??
     {}) as Record<string, FieldValue>;

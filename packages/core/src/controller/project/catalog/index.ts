@@ -1,6 +1,7 @@
 export {
   classListFromNode,
   findDefinition,
+  listCatalogDefinitions,
   findNodeByUuid,
   patchNodeData,
   patchNodeDataRecord,
@@ -29,5 +30,4 @@ export {
 } from './definition-ops';
 export { removeCatalogDesignProp, upsertCatalogDesignProp } from './props-ops';
 export { assertCatalogRefIntegrity, emptyProjectCatalog, validateProjectCatalog } from './validate';
-export { designSliceFromCatalog, mergeDesignSliceIntoCatalog } from './design-bridge';
 export { applyCatalogDesignCommand, type CatalogDesignCommand } from './design-commands';

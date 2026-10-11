@@ -15,35 +15,38 @@ The editor lives in `apps/editor` (npm name `@facadeur/editor`). This note docum
 
 ## Domain (`src/domain/`)
 
-Session, editing commands, selection, viewports, style/token edit helpers and frame host.
-`domain/api.ts` supplies one typed `@facadeur/api-client` HTTP client. Project connection state and browser
-recovery migration remain here; HTTP transport, schema reconciliation and file persistence
-are consumed through package public APIs. Account hooks subscribe to API session changes.
+Session, selection, viewport and tool state live in `src/domain/session/`. The session owns a
+`CoreController`; the active `ProjectCatalogModel` and open definition are read and mutated through
+that controller. `AppService` connects catalog persistence and definition operations to the
+`EditorCatalogPort`. React UI state such as selection, viewport focus, drag state and zoom remains
+in `EditorSession`.
 
-`session.project` owns live document state. Renderer stores are Core controller views;
-they hold history snapshots but no independent live document. Core changes publish after
-commit, so selection, dirty state, Undo and rendering observe the same state. The editor
-has no Yjs dependency or WebSocket transport. Retired integration files are preserved as
-text in `legacy/yjs/`; the separate server and adapter package remain optional legacy code.
+`domain/api.ts` supplies the typed `@facadeur/api-client` client. HTTP transport, schema
+reconciliation and file persistence are consumed through package public APIs. Account hooks
+subscribe to API session changes. The Editor itself has no Yjs dependency or WebSocket transport.
+
+`EditorSnapshot.design` contains only the Catalog-backed token tree, optional icon definitions,
+and active breakpoints. There is no synthetic `FlatDocument` projection in the active Catalog
+session. Retired integration files are preserved as text in `legacy/yjs/`, and the separate server
+and adapter package remain optional legacy code.
 
 ## UI (`src/ui/`)
 
 | Area         | Path                     | Role                                                             |
 | ------------ | ------------------------ | ---------------------------------------------------------------- |
 | Shell        | `shell/`                 | Top bar, `EditorShell`, tools                                    |
-| Stage        | `stage/`                 | Canvas + design-domain stage                                     |
-| Form binding | `controls/form-binding/` | Session/path adapters over reusable fields from `@facadeur/form` |
-| Controls     | `controls/<name>/`       | Domain controls (`Component.tsx`, `value.ts`, `index.ts`)        |
-| Sidebar      | `sidebar/`               | Chrome around the tree and inspector                             |
+| Stage        | `stage/`                 | Catalog-backed canvas + design-domain stage                      |
+| Form binding | `controls/form-binding/` | Catalog/path adapters over reusable fields from `@facadeur/form` |
+| Controls     | `controls/<name>/`       | Editor controls composed from shared form fields                 |
+| Sidebar      | `sidebar/`               | Chrome around the Catalog tree and inspector                     |
 
 ### Properties inspector (`sidebar/properties/`)
 
-- `PropertiesPanel.tsx`, `RightRail.tsx`, `ViewportEditBar.tsx`
-- `content/` — Content tab fields + Data definitions (fields, variants, bindings)
-- `style/declarations/` — style block CSS declarations (`CssDeclarationsControl`)
-- `style/variants/` — per-layer variant styles
-- `style/overrides/` — per-node style overrides (color/typography/shadow controls)
-- `layout/` — layout control panel
+- `PropertiesPanel.tsx`, `RightRail.tsx`
+- Catalog-backed content and data controls live with their owning sidebar/settings domains.
+- The active inspector is `CatalogNodeInspector`. The old DocumentFile structured style inspector
+  and guided grid UI were retired because they had no product callers; their controls are not
+  claimed as Catalog feature parity. Active CSS declaration editing remains in `controls/`.
 
 ### Layers & design (`sidebar/layers/`, `design/`)
 
@@ -53,4 +56,4 @@ catalog values and commits.
 
 ## Styles (`src/ui/styles/`)
 
-Co-located CSS chunks imported from `app/globals.css` (base, shell, design, stage, sidebar). `src/styles.css` is a stub.
+Co-located CSS chunks imported from `app/globals.css` (base, shell, design, stage, sidebar).

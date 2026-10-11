@@ -4,13 +4,15 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { console } from 'node:console';
 
 const repoRoot = path.resolve(import.meta.dirname, '..');
 const roots = ['packages', 'apps', 'scripts'].map((segment) => path.join(repoRoot, segment));
 const skipDirs = new Set(['node_modules', 'dist', '.next', 'coverage']);
 
 const fromRelative = /(\bfrom\s+['"])(\.\.?\/[^'"]+)\.js(['"])/g;
-const exportFromRelative = /(\bexport\s+(?:type\s+)?(?:\*|\{[^}]*\})\s+from\s+['"])(\.\.?\/[^'"]+)\.js(['"])/g;
+const exportFromRelative =
+  /(\bexport\s+(?:type\s+)?(?:\*|\{[^}]*\})\s+from\s+['"])(\.\.?\/[^'"]+)\.js(['"])/g;
 const importCallRelative = /(\bimport\s*\(\s*['"])(\.\.?\/[^'"]+)\.js(['"]\s*\))/g;
 
 function transform(source) {

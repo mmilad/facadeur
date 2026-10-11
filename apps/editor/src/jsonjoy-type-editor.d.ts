@@ -1,4 +1,5 @@
-declare module '*jsonjoy-builder/dist/components/SchemaEditor/TypeEditor.js' {
+// jsonjoy-builder does not expose this component or its types through its public package entry.
+declare module '*jsonjoy-builder/dist/components/SchemaEditor/TypeEditor' {
   import type { ReactElement } from 'react';
   import type { JsonSchema } from 'jsonjoy-builder';
 

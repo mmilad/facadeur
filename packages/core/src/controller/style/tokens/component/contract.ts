@@ -3,6 +3,7 @@ import { createId, ID_PATTERN, UUID_PATTERN } from '../../../../document/ids';
 import { isPlainObject } from '../../../../utils';
 import { tokenTypeSchema, type TokenType } from '../../../../schema/design-tokens';
 import { Value } from '@sinclair/typebox/value';
+import { isTokenPath } from '../path';
 
 export interface ComponentToken {
   path: string;
@@ -17,12 +18,11 @@ export interface ListedComponentToken extends ComponentToken {
   id: string;
 }
 
-const TOKEN_PATH = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+)+$/;
 const UUID_SOURCE = UUID_PATTERN.source.slice(1, -1);
 const SINGLE_REF = new RegExp(`^\\{token:(${UUID_SOURCE})\\}$`, 'i');
 
 export function componentTokenPublicPath(documentId: string, localPath: string): string {
-  if (!TOKEN_PATH.test(localPath)) {
+  if (!isTokenPath(localPath)) {
     throw new DocumentError('schema', `Invalid component token path "${localPath}"`);
   }
   return `${documentId}.${localPath}`;
@@ -127,14 +127,14 @@ export function parseComponentTokenBody(value: unknown): Omit<ComponentToken, 'p
 }
 
 export function parseComponentToken(value: unknown, path: string): ComponentToken {
-  if (!TOKEN_PATH.test(path)) {
+  if (!isTokenPath(path)) {
     throw new DocumentError('schema', `Invalid component token path "${path}"`);
   }
   return { path, ...parseComponentTokenBody(value) };
 }
 
 function isLegacyComponentTokenEntry(key: string, value: unknown) {
-  if (!TOKEN_PATH.test(key)) return false;
+  if (!isTokenPath(key)) return false;
   if (!isPlainObject(value)) return false;
   return typeof value.path !== 'string';
 }

@@ -8,10 +8,9 @@ import {
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { AssetContextMenu } from './AssetContextMenu';
-import { GroupAssetDialog } from './GroupAssetDialog';
 import { RenameAssetDialog } from './RenameAssetDialog';
 import { AssetRows } from './AssetRows';
-import type { AssetSummary, EditorSession, EditorSnapshot } from '../../../domain/session';
+import type { EditorSession, EditorSnapshot } from '../../../domain/session';
 import {
   SIDEBAR_DESIGN_ITEMS,
   type DesignDomain,
@@ -42,10 +41,8 @@ export function ProjectTree({
   onOpenDesignDomain: (domain: DesignDomain) => void;
 }) {
   const [query, setQuery] = useState('');
-  const [groupAssetId, setGroupAssetId] = useState<string | null>(null);
   const [renameAssetId, setRenameAssetId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const [expandedVariants, setExpandedVariants] = useState<Record<string, boolean>>({});
   const [assetContextMenu, setAssetContextMenu] = useState<{
     assetId: string;
     anchor: DOMRect;
@@ -117,37 +114,12 @@ export function ProjectTree({
       TREE_KINDS.map((kind) => {
         const assets = snap.catalog.filter((asset) => asset.kind === kind);
         const labelHit = Boolean(needle) && KIND_LABEL[kind].toLowerCase().includes(needle);
-        const directAssets = assets.filter((asset) => !asset.group);
-        const directVisible =
-          needle && !labelHit
-            ? directAssets.filter((asset) => assetMatches(asset, needle))
-            : directAssets;
-        const groupNames = [
-          ...new Set(assets.flatMap((asset) => (asset.group ? [asset.group] : []))),
-        ];
-        const subgroups = groupNames.map((group) => {
-          const groupedAssets = assets.filter((asset) => asset.group === group);
-          const groupLabelHit = Boolean(needle) && group.toLowerCase().includes(needle);
-          const visible =
-            needle && !labelHit && !groupLabelHit
-              ? groupedAssets.filter((asset) => assetMatches(asset, needle))
-              : groupedAssets;
-          return {
-            id: group,
-            label: titleCase(group),
-            assets: visible,
-            show: !needle || labelHit || groupLabelHit || visible.length > 0,
-          };
-        });
+        const visibleAssets =
+          needle && !labelHit ? assets.filter((asset) => assetMatches(asset, needle)) : assets;
         return {
           kind,
-          assets: directVisible,
-          subgroups,
-          show:
-            !needle ||
-            labelHit ||
-            directVisible.length > 0 ||
-            subgroups.some((group) => group.show),
+          assets: visibleAssets,
+          show: !needle || labelHit || visibleAssets.length > 0,
         };
       }),
     [needle, snap.catalog],
@@ -177,16 +149,9 @@ export function ProjectTree({
     }
   }
 
-  function createVariant(_assetId: string) {
-    session.setNotice('Variants are not available for catalog definitions yet.', 'info');
-    setAssetContextMenu(null);
-  }
-
   function openAssetContext(assetId: string, anchorEl: HTMLElement) {
     setAssetContextMenu({ assetId, anchor: anchorEl.getBoundingClientRect() });
   }
-
-  function renameVariant(_assetId: string, _name: string, _label: string) {}
 
   const contextAsset = assetContextMenu
     ? snap.catalog.find((candidate) => candidate.id === assetContextMenu.assetId)
@@ -239,43 +204,9 @@ export function ProjectTree({
                 session={session}
                 activeRef={activeRef}
                 onOpenAsset={onOpenAsset}
-                expandedVariants={expandedVariants}
-                onToggleVariants={(assetId) =>
-                  setExpandedVariants((prev) => ({ ...prev, [assetId]: prev[assetId] !== true }))
-                }
                 contextAssetId={contextAssetId}
                 onContextAsset={openAssetContext}
-                onRenameVariant={renameVariant}
               />
-              {group.subgroups.map((subgroup) =>
-                subgroup.show ? (
-                  <TreeGroup
-                    key={subgroup.id}
-                    id={`${group.kind}:${subgroup.id}`}
-                    label={subgroup.label}
-                    open={isOpen(`${group.kind}:${subgroup.id}`, needle, expanded)}
-                    onToggle={() => toggle(`${group.kind}:${subgroup.id}`)}
-                  >
-                    <AssetRows
-                      assets={subgroup.assets}
-                      snap={snap}
-                      session={session}
-                      activeRef={activeRef}
-                      onOpenAsset={onOpenAsset}
-                      expandedVariants={expandedVariants}
-                      onToggleVariants={(assetId) =>
-                        setExpandedVariants((prev) => ({
-                          ...prev,
-                          [assetId]: prev[assetId] !== true,
-                        }))
-                      }
-                      contextAssetId={contextAssetId}
-                      onContextAsset={openAssetContext}
-                      onRenameVariant={renameVariant}
-                    />
-                  </TreeGroup>
-                ) : null,
-              )}
             </TreeGroup>
           ) : null,
         )}
@@ -287,20 +218,9 @@ export function ProjectTree({
               asset={contextAsset}
               anchor={assetContextMenu.anchor}
               menuRef={contextMenuRef}
-              onCreateVariant={createVariant}
               onRename={(id) => {
                 onOpenAsset(id);
                 setRenameAssetId(id);
-              }}
-              onGroup={(id) => {
-                onOpenAsset(id);
-                setGroupAssetId(id);
-              }}
-              onRemoveGroup={() => {
-                session.setNotice(
-                  'Asset groups are not available for catalog entries yet.',
-                  'info',
-                );
               }}
               onDelete={(id) => {
                 void app.deleteDefinition(id).catch((failure) => {
@@ -315,15 +235,6 @@ export function ProjectTree({
             document.body,
           )
         : null}
-      {groupAssetId ? (
-        <GroupAssetDialog
-          key={groupAssetId}
-          session={session}
-          asset={snap.catalog.find((asset) => asset.id === groupAssetId)!}
-          groups={[...new Set(snap.catalog.flatMap((asset) => (asset.group ? [asset.group] : [])))]}
-          onClose={() => setGroupAssetId(null)}
-        />
-      ) : null}
       {renameAssetId ? (
         <RenameAssetDialog
           key={renameAssetId}
@@ -388,8 +299,4 @@ function assetMatches(asset: { name: string; id: string; slug?: string }, needle
     asset.id.toLowerCase().includes(needle) ||
     (asset.slug?.toLowerCase().includes(needle) ?? false)
   );
-}
-
-function titleCase(value: string): string {
-  return value.replace(/[-_]+/g, ' ').replace(/\b\w/g, (character) => character.toUpperCase());
 }

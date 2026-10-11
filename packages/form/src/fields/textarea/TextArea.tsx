@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from './TextArea.module.css';
 import type { TextAreaProps } from './types';
 
@@ -16,21 +16,28 @@ export function TextArea({
   onBlur: onBlurProp,
   ...textareaProps
 }: TextAreaProps) {
+  const [draft, setDraft] = useState(value);
+  useEffect(() => setDraft(value), [value]);
+
   return (
     <textarea
       {...textareaProps}
       className={[styles.textarea, className].filter(Boolean).join(' ')}
       id={id}
       name={name}
-      value={value}
+      value={draft}
       placeholder={placeholder}
       disabled={disabled}
       aria-invalid={invalid || undefined}
       rows={rows}
-      onChange={(event) => onChange(event.currentTarget.value)}
+      onChange={(event) => {
+        const next = event.currentTarget.value;
+        setDraft(next);
+        onChange(next);
+      }}
       onBlur={(event) => {
         onBlurProp?.(event);
-        onCommit?.(event.currentTarget.value);
+        onCommit?.(draft);
       }}
     />
   );

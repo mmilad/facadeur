@@ -8,8 +8,6 @@ export const root: Node = {
   },
   dom: {
     tagName: 'p',
-    properties: {
-      textContent: 'Supporting copy that explains the idea in one or two short sentences.',
-    },
+    text: 'Supporting copy that explains the idea in one or two short sentences.',
   },
 };

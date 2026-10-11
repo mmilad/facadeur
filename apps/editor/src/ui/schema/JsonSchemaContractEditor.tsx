@@ -4,7 +4,6 @@ import 'jsonjoy-builder/styles.css';
 import { useMemo } from 'react';
 import { SchemaForm, type FieldConfig, type FieldGroupConfig } from '../controls/data/schema/form';
 import { Form, TextArea } from '../controls/form-binding/index';
-import { fieldDisplayLabel } from '../controls/data/field-label';
 import {
   initialDraftForSchema,
   initialValueForSchema,

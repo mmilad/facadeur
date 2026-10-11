@@ -1,8 +1,8 @@
 import { useLayoutEffect, useState, type RefObject } from 'react';
 import type { AppService } from '../../../app-service';
 import { catalogLayerInsertEntriesForLayer } from '../../../domain/catalog/catalog-layer-insert';
-import type { LayerInsertEntry } from '../../../domain/layer-insert-policy';
-import type { LayerItem } from '../../../domain/selection/selection-model';
+import type { LayerInsertEntry } from '../../../domain/catalog/catalog-layer-insert';
+import type { LayerItem } from '../../../domain/catalog/layer-tree';
 import type { EditorSnapshot } from '../../../domain/session';
 import {
   canDeleteCatalogLayer,

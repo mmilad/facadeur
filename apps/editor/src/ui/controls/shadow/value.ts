@@ -1,9 +1,9 @@
-const TOKEN_REF = /^\{[a-z0-9.]+\}$/;
+import { tokenReference } from '@facadeur/core';
 
 export const KNOWN_SHADOW_STYLE_PROPERTIES = new Set(['box-shadow', 'text-shadow']);
 
 export function isShadowTokenRef(value: string): boolean {
-  return TOKEN_REF.test(value.trim());
+  return Boolean(tokenReference(value.trim()));
 }
 
 export type ShadowControlMode = 'token' | 'custom';

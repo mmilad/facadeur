@@ -44,6 +44,7 @@ export type {
   GlobalStyleBlock,
   GlobalStyleRule,
   GlobalStyles,
+  IconDefinition,
   LayerMap,
   StyleChildLayer,
   StyleDeclarations,

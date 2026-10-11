@@ -29,7 +29,7 @@ function hasStructuralArrayItems(schema: JsonSchema): boolean {
   return hasStructuralCases(items);
 }
 
-/** Route simple contract samples through the shared JSON Schema form; keep structural unions on the legacy editor. */
+/** Route simple contract samples through the shared JSON Schema form and structural unions to their dedicated editor. */
 export function SchemaValueForm({
   schema,
   value,

@@ -9,7 +9,7 @@ import {
   type SchemaCatalog,
 } from '../../schema/document';
 import { resolveVariantDocument, variantPresets } from '../../legacy/flat/variants/resolve';
-import { assertValueMatches } from './assertions';
+import { assertValueMatches } from './assertions/fields';
 import { validateDataContracts } from './data-contracts';
 import { validateDefinitions } from './definitions';
 import { exposedFields, validateExposedContracts } from './catalog-exposed';

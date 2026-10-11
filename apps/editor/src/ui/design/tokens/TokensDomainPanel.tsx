@@ -1,20 +1,13 @@
 import {
   breakpointLabel,
+  fontFamilyTokens,
   readTokenTree,
+  tokenReferencesByType,
   tokenReferenceValue,
   type DesignTokenFamily,
 } from '@facadeur/core';
 import { activeBreakpoints } from '@facadeur/core';
 import { useEffect, useMemo, useState } from 'react';
-import {
-  colorTokenRefs,
-  dimensionTokenRefs,
-  fontFamilyTokenRefs,
-  fontFamilies,
-  fontWeightTokenRefs,
-  numberTokenRefs,
-  shadowTokenRefs,
-} from '../../../domain/token-references';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session';
 import { formatTokenValue } from '../../../domain/edits/token-edit';
 import { viewportEditContext } from '../../../domain/viewport/viewport-edit';
@@ -24,14 +17,13 @@ import {
   type TypographyCatalogs,
 } from '../../controls/typography/index';
 import type { DesignDomain } from '../design-domain';
-import { designDomainLabel, tokenMatchesDomain } from '../design-domain';
+import { designDomainLabel } from '../design-domain';
 import { Table } from '../../settings/Table';
 import { ViewportTabs } from '../ViewportTabs';
 import { TokenAddRow } from './TokenCrud';
 import { effectiveBreakpointValue, groupTokens, type TableToken } from './token-breakpoint-helpers';
 import { createTokenTableRow } from './token-table-row';
-import { tokenLeafLabel, tokenTitle } from './token-labels';
-import { tokenDisplayLabel } from '../../controls/token-presentation';
+import { tokenLeafLabel, tokenTitle } from '../../controls/token-presentation';
 import {
   useTokenLabel,
   useTokenResolver,
@@ -74,22 +66,28 @@ export function TokensDomainPanel({
       .sort((left, right) => naturalTokenCompare(left.path, right.path));
   }, [snap.design.tokens, domain]);
   const ctx = viewportEditContext({
-    breakpoints: activeBreakpoints(snap.design.settings.breakpoints),
+    breakpoints: activeBreakpoints(snap.design.breakpoints),
     focusId: snap.focusViewportId,
     editTarget: snap.editTarget,
   });
   const writingId = ctx.writingBreakpointId;
-  const colorTokens = useMemo(() => colorTokenRefs(snap.design.tokens), [snap.design.tokens]);
-  const shadowTokens = useMemo(() => shadowTokenRefs(snap.design.tokens), [snap.design.tokens]);
+  const colorTokens = useMemo(
+    () => tokenReferencesByType(snap.design.tokens, 'color'),
+    [snap.design.tokens],
+  );
+  const shadowTokens = useMemo(
+    () => tokenReferencesByType(snap.design.tokens, 'shadow'),
+    [snap.design.tokens],
+  );
   const typographyCatalogs = useMemo<TypographyCatalogs>(() => {
-    const fonts = fontFamilies(snap.design.tokens);
+    const fonts = fontFamilyTokens(snap.design.tokens);
     return {
       fontRefs: projectFontRefs(fonts),
-      fontFamilyTokens: fontFamilyTokenRefs(snap.design.tokens),
+      fontFamilyTokens: tokenReferencesByType(snap.design.tokens, 'fontFamily'),
       fontWeights: projectFontWeightOptions(fonts),
-      fontWeightTokens: fontWeightTokenRefs(snap.design.tokens),
-      dimensionTokens: dimensionTokenRefs(snap.design.tokens),
-      numberTokens: numberTokenRefs(snap.design.tokens),
+      fontWeightTokens: tokenReferencesByType(snap.design.tokens, 'fontWeight'),
+      dimensionTokens: tokenReferencesByType(snap.design.tokens, 'dimension'),
+      numberTokens: tokenReferencesByType(snap.design.tokens, 'number'),
     };
   }, [snap.design.tokens]);
   const tableTokens = useMemo<TableToken[]>(

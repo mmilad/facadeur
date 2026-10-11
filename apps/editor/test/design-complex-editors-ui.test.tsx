@@ -4,14 +4,11 @@
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
-import {
-  DesignShadowEditor,
-  type DesignShadowInput,
-} from '../src/ui/sidebar/design/DesignShadowEditor';
+import { DesignShadowEditor, type DesignShadowInput } from '../src/ui/design/DesignShadowEditor';
 import {
   DesignTypographyEditor,
   type DesignTypographyValue,
-} from '../src/ui/sidebar/design/DesignTypographyEditor';
+} from '../src/ui/design/DesignTypographyEditor';
 import type { TypographyCatalogs } from '../src/ui/controls/typography/index';
 import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
@@ -56,7 +53,7 @@ describe('complex design token editor UI', () => {
     const base = {
       fontFamily: fixtureTokenRef(fixtureIds.tokens.font.inter),
       fontSize: '16px',
-      fontWeight: fixtureTokenRef(testUuid17),
+      fontWeight: fixtureTokenRef(fixtureIds.tokens.type.body),
       lineHeight: 1.5,
       letterSpacing: '0',
     };
@@ -80,7 +77,7 @@ describe('complex design token editor UI', () => {
     const base = {
       fontFamily: fixtureTokenRef(fixtureIds.tokens.font.inter),
       fontSize: '16px',
-      fontWeight: fixtureTokenRef(testUuid17),
+      fontWeight: fixtureTokenRef(fixtureIds.tokens.type.body),
       lineHeight: 1.5,
       letterSpacing: '0',
     };
@@ -116,7 +113,7 @@ describe('complex design token editor UI', () => {
         value={{
           fontFamily: fixtureTokenRef(fixtureIds.tokens.font.inter),
           fontSize: '16px',
-          fontWeight: fixtureTokenRef(testUuid17),
+          fontWeight: fixtureTokenRef(fixtureIds.tokens.type.body),
           lineHeight: 1.5,
         }}
         catalogs={catalogs}
@@ -137,7 +134,7 @@ describe('complex design token editor UI', () => {
         value={{
           fontFamily: fixtureTokenRef(fixtureIds.tokens.font.inter),
           fontSize: '.5rem',
-          fontWeight: fixtureTokenRef(testUuid17),
+          fontWeight: fixtureTokenRef(fixtureIds.tokens.type.body),
           lineHeight: 'normal',
           letterSpacing: '1vw',
         }}
@@ -152,7 +149,7 @@ describe('complex design token editor UI', () => {
     expect(commits.at(-1)).toEqual({
       fontFamily: fixtureTokenRef(fixtureIds.tokens.font.inter),
       fontSize: 'clamp(1rem, 2vw, 2rem)',
-      fontWeight: fixtureTokenRef(testUuid17),
+      fontWeight: fixtureTokenRef(fixtureIds.tokens.type.body),
       lineHeight: 'normal',
       letterSpacing: '1vw',
     });
@@ -164,14 +161,14 @@ describe('complex design token editor UI', () => {
       <DesignShadowEditor
         namePrefix="shadow"
         value={{
-          color: fixtureTokenRef(testUuid18),
+          color: fixtureTokenRef(fixtureIds.tokens.color.blue._500),
           offsetX: '0px',
           offsetY: '2px',
           blur: '8px',
         }}
         shadowTokens={[fixtureTokenRef(fixtureIds.tokens.shadow.md)]}
         dimensionTokens={[fixtureTokenRef(fixtureIds.tokens.space.scale.step2)]}
-        colorTokens={[fixtureTokenRef(testUuid18)]}
+        colorTokens={[fixtureTokenRef(fixtureIds.tokens.color.blue._500)]}
         onCommit={(next) => commits.push(next)}
       />,
     );

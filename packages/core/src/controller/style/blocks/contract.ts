@@ -27,8 +27,7 @@ import {
 import { assertStyleSelector, selectorClassNames } from '../selectors';
 import { flatDocumentClassNames } from '../class-names';
 import { collectTokenRefs, refsInText } from '../references/collect';
-
-const TOKEN_PATH = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+)+$/;
+import { isTokenPath } from '../tokens/path';
 
 export function canonicalizeStyleBlock(style: StyleBlock | undefined): StyleBlock | undefined {
   if (!style) return undefined;
@@ -297,7 +296,7 @@ function assertTokenInterfacePaths(value: TokenInterface, options: ValidateOptio
       }
       continue;
     }
-    if (!TOKEN_PATH.test(target)) {
+    if (!isTokenPath(target)) {
       throw new DocumentError(
         'schema',
         `Invalid global-token UUID or component-token path "${target}"`,

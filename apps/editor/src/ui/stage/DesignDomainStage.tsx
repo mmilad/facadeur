@@ -30,7 +30,7 @@ export function DesignDomainStage({
 }) {
   const settingsView = isSettingsTokenDomain(domain);
   const title = settingsView ? 'Settings' : designDomainLabel(domain);
-  const designTitle = snap.design.name?.trim() || 'project design';
+  const designTitle = 'project design';
   const sharedResources = domain === 'fonts' || domain === 'icons';
   const tokenDomain = !sharedResources && domain !== 'viewports';
   const fontStyles = useMemo(
@@ -38,14 +38,14 @@ export function DesignDomainStage({
       renderDesignCss(
         {
           tokens: snap.design.tokens,
-          breakpoints: snap.design.settings.breakpoints,
+          breakpoints: snap.design.breakpoints,
         },
         { selector: '.design-domain-stage' },
       ),
-    [snap.design.tokens, snap.design.settings.breakpoints],
+    [snap.design.tokens, snap.design.breakpoints],
   );
   const ctx = viewportEditContext({
-    breakpoints: activeBreakpoints(snap.design.settings.breakpoints),
+    breakpoints: activeBreakpoints(snap.design.breakpoints),
     focusId: snap.focusViewportId,
     editTarget: snap.editTarget,
   });
@@ -67,7 +67,7 @@ export function DesignDomainStage({
       <div className="design-domain-body">
         <TokenPreviewProvider
           design={snap.design}
-          document={snap.design}
+          document={{ tokens: snap.design.tokens }}
           breakpointId={tokenDomain ? ctx.writingBreakpointId : null}
           breakpoints={ctx.breakpoints.slice()}
         >

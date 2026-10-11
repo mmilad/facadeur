@@ -16,11 +16,16 @@ export async function loadProject(
   return project;
 }
 
+type EditorProject = Pick<
+  ProjectSnapshot,
+  'id' | 'name' | 'organisationName' | 'access' | 'catalog'
+>;
+
 /** Connect API catalog to {@link CoreController} and editor chrome session. */
-export function connectProject(project: ProjectSnapshot) {
+export function connectProject(project: EditorProject) {
   const core = new CoreController(project.catalog);
   const catalogPort = createCatalogPort(project.id);
-  const session = createEditorSession({ core, catalogPort, projectId: project.id });
+  const session = createEditorSession({ core });
   const app = createAppService({ core, session, catalogPort });
   let catalogBaseline = JSON.stringify(core.getSnapshot().catalog);
 
@@ -35,10 +40,6 @@ export function connectProject(project: ProjectSnapshot) {
     catalogBaseline = JSON.stringify(core.getSnapshot().catalog);
   };
 
-  const persistPendingChanges = async () => {
-    await saveAllChanges();
-  };
-
   return {
     session,
     core,
@@ -47,7 +48,6 @@ export function connectProject(project: ProjectSnapshot) {
     project,
     hasPendingChanges,
     saveAllChanges,
-    persistPendingChanges,
     destroy: () => session.destroy(),
   };
 }

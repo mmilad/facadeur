@@ -4,8 +4,8 @@ import { useEffect, useRef, useState, type DragEvent } from 'react';
 import { createPortal } from 'react-dom';
 import type { AppService } from '../../../app-service';
 import { catalogDefinitionDisplayName } from '../../../domain/catalog/display-name';
-import type { DropZone } from '../../../domain/editing';
-import type { LayerItem } from '../../../domain/selection/selection-model';
+import type { DropZone } from '../../../domain/catalog/catalog-layer-move';
+import type { LayerItem } from '../../../domain/catalog/layer-tree';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session';
 import { catalogNodeDragLegal, dropCatalogLayerNode, layerDropZoneFor } from './catalog-layer-drag';
 import { CatalogLayerContextMenu } from './CatalogLayerContextMenu';
@@ -23,8 +23,8 @@ export function CatalogLayersPanel({
   const layers = snap.layers;
   const definition = snap.openDefinition;
   const title = definition
-    ? catalogDefinitionDisplayName(session.core.getSnapshot().catalog, definition)
-    : snap.document.name;
+    ? catalogDefinitionDisplayName(app.getCoreSnapshot().catalog, definition)
+    : 'Design';
   const [over, setOver] = useState<{ id: string; zone: DropZone } | null>(null);
   const [contextLayer, setContextLayer] = useState<{
     address: string;

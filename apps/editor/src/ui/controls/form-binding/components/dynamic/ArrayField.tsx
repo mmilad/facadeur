@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
+import { getPath, resolvePath } from '@facadeur/form';
 import { PathPrefixProvider, useOptionalFormContext, usePathPrefix } from '../../FormContext';
-import { getPath, resolvePath } from '../../schema/path';
 import { IconButton } from '../../../../components/IconButton';
 import { Stack } from '../../../../components/layout/Stack';
 import { Inline } from '../../../../components/layout/Inline';

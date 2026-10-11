@@ -110,7 +110,7 @@ export function CatalogDesignPropsPanel({
               Save catalog
             </button>
           </div>
-          <ul className="schema-library-list">
+          <ul>
             {visible.map((prop) => (
               <li key={prop.uuid}>
                 <button

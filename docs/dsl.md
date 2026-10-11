@@ -358,11 +358,11 @@ so `space.4` is 16px). `space.gap`, `space.inset`, and `space.stack` are the ali
 and margin should use. Palette tokens stay in the design file; atoms and components own their local
 tokens in `componentTokens` (see above).
 
-A new project also starts with two atoms, listed by `starterAtomIds`: `button` and `link`. The form
-controls `input` and `textarea` are listed separately by `starterFormIds`. These example catalog
-definitions live in `@facadeur/examples`. They define fields and, where it matters, variant axes.
-`link` binds `label` and `href`. `textarea` follows `input`, adds a `rows` field, and uses a `resize`
-axis on the control.
+The example catalog also contains reusable atoms such as `button` and `link`, and form controls such
+as `input` and `textarea`. They are catalog fixtures; the current project template does not add
+them to a new project. The definitions live in `@facadeur/examples` and describe fields and, where
+relevant, variant axes. `link` binds `label` and `href`. `textarea` adds a `rows` field and uses a
+`resize` axis on the control.
 
 ## Flat model
 
@@ -404,7 +404,9 @@ The editor shows one same-origin iframe per breakpoint. The iframe's width is th
 The following describes the legacy v1 generator output. The root `pnpm codegen` command is disabled
 while the catalog-based v2 input workflow is rebuilt; these generated paths are historical.
 
-`@facadeur/codegen` reads these documents and emits one directory per React component through its default React engine.
+The deprecated React codegen engine accepted these legacy documents and emitted one directory per
+React component. It was removed with the DocumentFile input model; catalog-driven generation is not
+yet implemented.
 Each directory separates `component.tsx`, `types.ts`, `style.module.css`, and its public `index.ts`.
 Props are the fields and variant axes. The component root sets `data-component` and
 `data-variant-*`. Children set `data-node`. An instance becomes a call to the generated component,

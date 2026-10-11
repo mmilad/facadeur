@@ -77,7 +77,7 @@ export function ProjectWorkspace() {
         })
         .catch((failure: unknown) => {
           if (abort.signal.aborted) return;
-          logProjectFailure(failure, { phase: 'load', projectId: projectId ?? undefined });
+          logProjectFailure(failure, projectId ?? undefined);
           setError(failure instanceof Error ? failure.message : 'Could not open project');
         })
         .finally(() => {
@@ -98,12 +98,6 @@ export function ProjectWorkspace() {
   function navigate(proceed: () => void) {
     if (current.current?.hasPendingChanges()) setPendingLeave({ proceed });
     else proceed();
-  }
-
-  function openProject(id: string) {
-    const query = new URLSearchParams();
-    query.set('project', id);
-    navigate(() => router.push(pathname + '?' + query));
   }
 
   function manageProjects() {
@@ -164,7 +158,7 @@ export function ProjectWorkspace() {
               session={connection.session}
               app={connection.app}
               navigation={editorNavigation}
-              persistPendingChanges={connection.persistPendingChanges}
+              persistPendingChanges={connection.saveAllChanges}
             />
           )}
         </>
@@ -173,11 +167,7 @@ export function ProjectWorkspace() {
           <h1>Loading project…</h1>
         </main>
       ) : (
-        <ManagementHome
-          onOpenProject={openProject}
-          onSignOut={signOut}
-          invitationToken={params.get('invite') ?? undefined}
-        />
+        <ManagementHome onSignOut={signOut} invitationToken={params.get('invite') ?? undefined} />
       )}
       {error ? (
         <div role="alert" className="notice notice-error">

@@ -1,5 +1,5 @@
 import { RadioGroupField } from '@facadeur/form';
-import type { AutocompleteOption } from '@facadeur/form';
+import type { SelectOption } from '@facadeur/form';
 import { useBindable } from '../input/bindable';
 
 export function RadioGroup({
@@ -14,7 +14,7 @@ export function RadioGroup({
 }: {
   name?: string;
   value?: string;
-  options: AutocompleteOption[];
+  options: readonly SelectOption[];
   label?: string;
   disabled?: boolean;
   invalid?: boolean;

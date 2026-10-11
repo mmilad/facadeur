@@ -13,7 +13,7 @@ import { findDefinition, findNodeByUuid } from '../../catalog/ops';
  * Preview pipeline for canvas/DOM:
  * 1. Merge field layers (ancestor → definition preview → instance data).
  * 2. Resolve bindings (`{prop:uuid}`, field-driven attributes/styles/text) to literals.
- * Output is {@link ElementBuildConfig} — {@link @facadeur/renderer-dom} stays dumb.
+ * Output is {@link ElementBuildConfig} for the Editor's React canvas.
  */
 export class PreviewController {
   constructor(private readonly core: CoreControllerHost) {}

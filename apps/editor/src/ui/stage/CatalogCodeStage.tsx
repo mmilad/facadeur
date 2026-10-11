@@ -4,23 +4,12 @@ import { useMemo } from 'react';
 import type { AppService } from '../../app-service';
 import { catalogDefinitionDisplayName } from '../../domain/catalog/display-name';
 
-export function CatalogCodeStage({
-  app,
-  generation,
-}: {
-  app: AppService;
-  generation: number;
-}) {
+export function CatalogCodeStage({ app, generation }: { app: AppService; generation: number }) {
   const coreSnap = app.getCoreSnapshot();
   const definition = coreSnap.openDefinition;
-  const title = definition
-    ? catalogDefinitionDisplayName(coreSnap.catalog, definition)
-    : 'Code';
+  const title = definition ? catalogDefinitionDisplayName(coreSnap.catalog, definition) : 'Code';
 
-  const buildConfig = useMemo(
-    () => app.core.node.element.buildOpenDefinition(),
-    [app, definition, generation],
-  );
+  const buildConfig = useMemo(() => app.buildOpenDefinition(), [app, definition, generation]);
 
   const definitionJson = useMemo(
     () => (definition ? JSON.stringify(definition, null, 2) : ''),
@@ -57,7 +46,10 @@ export function CatalogCodeStage({
           <h2 id="schema-code-title">Element build config</h2>
           <pre>{elementJson || '—'}</pre>
         </section>
-        <section className="schema-card schema-code-preview" aria-labelledby="schema-definition-json">
+        <section
+          className="schema-card schema-code-preview"
+          aria-labelledby="schema-definition-json"
+        >
           <h2 id="schema-definition-json">Definition JSON</h2>
           <pre>{definitionJson}</pre>
         </section>

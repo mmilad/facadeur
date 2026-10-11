@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
+import { getPath, setPath } from '@facadeur/form';
 import { DEFAULT_DENSITY } from './const/index';
 import { FormProvider } from './FormContext';
-import { getPath, setPath } from './schema/path';
 import type { FormChangeMeta, FormProps } from './types/form';
 import '../../styles/form.css';
 

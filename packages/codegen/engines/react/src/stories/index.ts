@@ -1,1 +1,0 @@
-export { generateStories } from './stories';

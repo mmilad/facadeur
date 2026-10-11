@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import type { NamedSchema } from '@facadeur/core';
 import type { SchemaFieldUse, SchemaTypeSelection } from '../../../../domain/schema/schema-use';
 import { parseTypeRef, typeRefValue } from '../../../../domain/schema/schema-use';
-import type { LibrarySchema } from '../../../../domain/schema/schema-library';
 import { Stack } from '../../../components/layout';
 import { Field } from '../../../components/feedback';
 import { Combobox, SegmentedControl, TextInput } from '../../form-binding/index';
@@ -28,7 +28,7 @@ export function SchemaTypeSelector({
 }: {
   name: string;
   value: SchemaTypeSelection | null;
-  schemas: LibrarySchema[];
+  schemas: NamedSchema[];
   onChange: (value: SchemaTypeSelection | null) => void;
   onOpenSchemas?: () => void;
   helperText?: string;

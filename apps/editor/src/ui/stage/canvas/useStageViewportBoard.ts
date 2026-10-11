@@ -1,4 +1,4 @@
-import { useEffect, useRef, type RefObject } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import type { SelectionController } from '../../../domain/selection/selection';
 import type { AppService } from '../../../app-service';
 import type { EditorSession } from '../../../domain/session';
@@ -39,6 +39,7 @@ export function useStageViewportBoard({
 }) {
   const currentRevisionRef = useRef(designRevision);
   const currentGenerationRef = useRef(generation);
+  const [, setBoardRevision] = useState(0);
   const renderedRevisionRef = useRef<number | null>(null);
   const renderedGenerationRef = useRef<number | null>(null);
   currentRevisionRef.current = designRevision;
@@ -53,15 +54,13 @@ export function useStageViewportBoard({
     if (!stageEl || !stage) return;
     const coreSnap = app.getCoreSnapshot();
     if (!coreSnap.openDefinition) return;
-    const buildConfig = app.core.node.element.buildOpenDefinition();
-    if (!buildConfig) return;
     const board = createViewportBoard({
       parent: stageEl,
-      buildConfig,
       title: coreSnap.openDefinition.name,
       catalog: coreSnap.catalog,
     });
     boardRef.current = board;
+    setBoardRevision((revision) => revision + 1);
     renderedRevisionRef.current = currentRevisionRef.current;
     renderedGenerationRef.current = currentGenerationRef.current;
     stageEl.classList.remove('is-ready');
@@ -100,10 +99,8 @@ export function useStageViewportBoard({
         renderedGenerationRef.current === generation)
     )
       return;
-    const buildConfig = app.core.node.element.buildOpenDefinition();
-    if (!buildConfig) return;
     const title = app.getCoreSnapshot().openDefinition?.name;
-    board.updateBuildConfig(buildConfig, title);
+    if (title) board.setTitle(title);
     renderedRevisionRef.current = designRevision;
     renderedGenerationRef.current = generation;
     const frame = window.requestAnimationFrame(() => {
@@ -133,4 +130,6 @@ export function useStageViewportBoard({
     boardRef,
     selectionRef,
   ]);
+
+  return boardRef.current?.frames() ?? [];
 }

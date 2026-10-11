@@ -15,7 +15,7 @@ export function CatalogPreviewDataStage({
 }) {
   const coreSnap = app.getCoreSnapshot();
   const definition = coreSnap.openDefinition;
-  const { fields } = app.core.node.config.inspectorInputs();
+  const { fields } = app.getInspectorInputs();
   const previewFields = definition?.config?.previewData?.fields ?? {};
 
   if (!definition) {

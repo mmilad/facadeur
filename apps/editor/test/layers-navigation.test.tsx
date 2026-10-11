@@ -1,154 +1,110 @@
-// @vitest-environment jsdom
+/**
+ * @vitest-environment jsdom
+ */
 import '@testing-library/jest-dom/vitest';
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { useMemo, useSyncExternalStore } from 'react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, expect, it } from 'vitest';
-import { validateCatalog } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/examples';
-import button from '../../../examples/button.json';
-import { createEditorSession } from '../src/domain/session';
-import { App } from '../src/ui/shell/EditorShell';
-import { exampleIds as fixtureIds } from '@facadeur/examples';
+import { afterEach, describe, expect, it } from 'vitest';
+import { createExampleCatalog, exampleIds } from '@facadeur/examples';
+import { createAppService } from '../src/app-service';
+import { createInMemoryCatalogPort } from '../src/domain/project/in-memory-catalog-port';
+import { createEditorSession, type EditorSession } from '../src/domain/session';
+import { CatalogLayersPanel } from '../src/ui/sidebar/layers/CatalogLayersPanel';
 
-afterEach(cleanup);
+const sessions: EditorSession[] = [];
+
+function CatalogLayersView({ session }: { session: EditorSession }) {
+  const app = useMemo(
+    () =>
+      createAppService({
+        core: session.core,
+        session,
+        catalogPort: createInMemoryCatalogPort(() => session.core.getSnapshot().catalog),
+      }),
+    [session],
+  );
+  const snap = useSyncExternalStore(
+    app.subscribe.bind(app),
+    app.getSnapshot.bind(app),
+    app.getSnapshot.bind(app),
+  );
+  return <CatalogLayersPanel app={app} session={session} snap={snap} />;
+}
+
 function setup() {
-  const session = createEditorSession({
-    design: createProjectTemplateDocument(),
-    documents: [
-      {
-        version: 1,
-        id: 'parent',
-        name: 'Parent',
-        kind: 'component',
-        root: {
-          id: 'root',
-          type: 'frame',
-          children: [{ id: 'child', type: 'instance', component: 'child' }],
-        },
-      },
-      {
-        version: 1,
-        id: 'child',
-        name: 'Child',
-        kind: 'component',
-        root: {
-          id: 'root',
-          type: 'frame',
-          children: [{ id: 'inner', type: 'text', text: 'Inner layer' }],
-        },
-      },
-    ],
-  });
-  session.openAsset('parent');
-  render(<App session={session} />);
+  const session = createEditorSession({ projectCatalog: createExampleCatalog() });
+  sessions.push(session);
+  session.openAsset(exampleIds.components.card.definition);
+  render(<CatalogLayersView session={session} />);
   return session;
 }
-it('selects nested layers locally and drills to a master explicitly', async () => {
-  const session = setup();
-  const layers = within(screen.getByRole('region', { name: 'Layers' }));
-  expect(layers.getByText('Parent', { selector: 'strong' })).toBeVisible();
-  const user = userEvent.setup();
-  await user.dblClick(layers.getByRole('button', { name: 'instance child' }));
-  expect(session.getSnapshot().openId).toBe('parent');
-  expect(session.getSnapshot().selectedNodeId).toBe('child');
-  expect(session.getSnapshot().nestedSelection).toBeNull();
-  await user.click(layers.getByRole('button', { name: 'Expand layers in child' }));
-  await user.dblClick(layers.getByRole('button', { name: 'text Inner layer' }));
-  expect(session.getSnapshot().openId).toBe('parent');
-  expect(session.getSnapshot().selectedNodeId).toBe('child');
-  expect(session.getSnapshot().nestedSelection).toMatchObject({
-    ownerNodeId: 'child',
-    renderId: 'root/child/inner',
-  });
-  act(() => session.drillToMaster('child'));
-  expect(session.getSnapshot().openId).toBe('child');
-  expect(session.getSnapshot().drillParents.map((parent) => parent.documentId)).toEqual(['parent']);
-  act(() => session.navigateDrillParent(0));
-  expect(session.getSnapshot().openId).toBe('parent');
-  expect(session.getSnapshot().selectedNodeId).toBe('child');
+
+afterEach(() => {
+  cleanup();
+  sessions.splice(0).forEach((session) => session.destroy());
 });
 
-it('deletes a layer from the context menu', async () => {
-  const session = createEditorSession({
-    design: createProjectTemplateDocument(),
-    documents: [
-      {
-        version: 1,
-        id: 'demo',
-        name: 'Demo',
-        kind: 'component',
-        root: {
-          id: 'root',
-          type: 'frame',
-          children: [
-            { id: 'keep', type: 'text', text: 'Keep' },
-            { id: 'drop', type: 'text', text: 'Drop' },
-          ],
-        },
-      },
-    ],
-  });
-  session.openAsset('demo');
-  render(<App session={session} />);
-  const layers = within(screen.getByRole('region', { name: 'Layers' }));
-  const user = userEvent.setup();
-  await user.pointer({
-    keys: '[MouseRight>]',
-    target: layers.getByRole('button', { name: 'text Drop' }),
-  });
-  await user.click(screen.getByRole('menuitem', { name: 'Delete layer' }));
-  expect(session.getSnapshot().document.nodes.drop).toBeUndefined();
-  expect(session.getSnapshot().document.nodes.keep).toBeTruthy();
-});
+describe('catalog layer navigation', () => {
+  it('selects catalog nodes and reveals a selected descendant after collapsing its parent', async () => {
+    const session = setup();
+    const layers = within(screen.getByRole('region', { name: 'Layers' }));
+    const user = userEvent.setup();
 
-it('inserts an atom instance from the insert submenu', async () => {
-  const session = createEditorSession({
-    design: createProjectTemplateDocument(),
-    documents: validateCatalog([
-      button,
-      {
-        version: 1,
-        id: 'demo',
-        name: 'Demo',
-        kind: 'component',
-        root: {
-          id: 'root',
-          type: 'frame',
-          children: [{ id: 'label', type: 'text', text: 'Label' }],
-        },
-      },
-    ]),
-  });
-  session.openAsset('demo');
-  render(<App session={session} />);
-  const layers = within(screen.getByRole('region', { name: 'Layers' }));
-  const user = userEvent.setup();
-  await user.pointer({
-    keys: '[MouseRight>]',
-    target: layers.getByRole('button', { name: 'frame root' }),
-  });
-  const insertInside = screen.getByRole('menuitem', { name: 'Insert inside' });
-  await user.hover(insertInside);
-  await user.click(insertInside);
-  fireEvent.click(await screen.findByRole('menuitem', { name: 'Button' }));
-  const nodes = session.getSnapshot().document.nodes.root;
-  expect(nodes?.type).toBe('frame');
-  if (nodes?.type === 'frame') {
-    expect(nodes.children).toHaveLength(2);
-    expect(
-      nodes.children.some((id) => session.getSnapshot().document.nodes[id]?.type === 'instance'),
-    ).toBe(true);
-  }
-});
+    await user.click(layers.getByRole('button', { name: 'eyebrow p' }));
+    expect(session.getSnapshot().selectedCatalogNodeUuid).toBe(
+      exampleIds.components.card.nodes.eyebrow,
+    );
 
-it('folds layer branches and reveals a descendant selected on the stage', async () => {
-  const session = setup();
-  const layers = within(screen.getByRole('region', { name: 'Layers' }));
-  await userEvent.setup().click(layers.getByRole('button', { name: 'Collapse layers in root' }));
-  expect(layers.queryByRole('button', { name: 'instance child' })).not.toBeInTheDocument();
-  act(() => session.selectNode('child'));
-  expect(layers.getByRole('button', { name: 'instance child' })).toBeVisible();
-  expect(layers.queryByText('Viewports')).not.toBeInTheDocument();
-  act(() => session.selectViewport(fixtureIds.catalog.breakpoints.tablet));
-  expect(layers.queryByText('Viewports')).not.toBeInTheDocument();
+    await user.click(layers.getByRole('button', { name: 'Collapse root' }));
+    expect(layers.queryByRole('button', { name: 'eyebrow p' })).not.toBeInTheDocument();
+
+    session.selectNode(exampleIds.components.card.nodes.title);
+    await waitFor(() => {
+      expect(layers.getByRole('button', { name: 'title h2' })).toBeVisible();
+    });
+  });
+
+  it('deletes a catalog layer from its context menu', async () => {
+    const session = setup();
+    const layers = within(screen.getByRole('region', { name: 'Layers' }));
+    const user = userEvent.setup();
+
+    await user.pointer({
+      keys: '[MouseRight>]',
+      target: layers.getByRole('button', { name: 'body p' }),
+    });
+    await user.click(screen.getByRole('menuitem', { name: 'Delete layer' }));
+
+    await waitFor(() => {
+      expect(
+        session.core
+          .getSnapshot()
+          .openDefinition?.root.dom.children?.some(
+            (node) => node.uuid === exampleIds.components.card.nodes.body,
+          ),
+      ).toBe(false);
+    });
+  });
+
+  it('inserts an atom instance under a catalog layer', async () => {
+    const session = setup();
+    const layers = within(screen.getByRole('region', { name: 'Layers' }));
+
+    fireEvent.contextMenu(layers.getByRole('button', { name: 'root article' }));
+    const insertInside = screen.getByRole('menuitem', { name: 'Insert inside' });
+    fireEvent.mouseEnter(insertInside.parentElement!);
+    fireEvent.click(insertInside);
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Button' }));
+
+    await waitFor(() => {
+      expect(
+        session.core
+          .getSnapshot()
+          .openDefinition?.root.dom.children?.some(
+            (node) => node.config?.definitionRef === exampleIds.components.button.definition,
+          ),
+      ).toBe(true);
+    });
+  });
 });

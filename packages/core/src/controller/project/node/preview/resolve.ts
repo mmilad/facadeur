@@ -78,12 +78,7 @@ function textFromNode(
   resolveTokenText: (value: string) => string,
 ): string | undefined {
   const fieldText = stringField(fields.text);
-  const source =
-    fieldText ??
-    node.dom.text ??
-    (typeof node.dom.properties?.textContent === 'string'
-      ? node.dom.properties.textContent
-      : undefined);
+  const source = fieldText ?? node.dom.text;
   return source === undefined ? undefined : resolveTokenText(resolveTemplateString(source, ctx));
 }
 
@@ -114,7 +109,7 @@ function createTokenTextResolver(tokenTree: unknown) {
 
 /**
  * Walk a definition tree: merge field layers, resolve bindings, emit renderer-ready configs.
- * Repeaters / definitionRef expansion belong here later — not in buildElement.
+ * Repeaters / definitionRef expansion belong here later — not in the rendering component.
  */
 export function resolveDefinitionToElementBuildConfig(
   definition: NodeDefinition,
@@ -217,11 +212,7 @@ function resolveNodeToElementBuildConfig(
   const text = textFromNode(node, fields, ctx, resolveTokenText);
   const attributes = resolveStringRecord(node.dom.attributes, ctx) ?? {};
   const style = resolveStringRecord(node.style, ctx);
-  const properties = node.dom.properties
-    ? Object.fromEntries(
-        Object.entries(node.dom.properties).filter(([name]) => name !== 'textContent'),
-      )
-    : undefined;
+  const properties = node.dom.properties;
 
   return {
     tagName: node.dom.tagName,

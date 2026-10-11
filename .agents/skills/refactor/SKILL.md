@@ -73,9 +73,9 @@ Resolve repository paths from the current checkout. Current user instructions an
 - `style-engine`: stylesheet compilation and runtime application
 - `renderer-dom`: DOM rendering
 - `store-yjs`: retained Yjs encoding/persistence adapter; not the owner of Core project state
-- `codegen/engines/react`: React output
+- `codegen`: catalog-to-project generation; keep target-specific output under `engines/<target>`
 - `apps/editor`: editor selection, controls, sessions, and interaction state
-- `tokens`: deprecated compatibility facade for legacy Core/Examples imports
+- token data belongs in `examples`; token indexing and operations belong in `core`
 
 ProjectController owns project coordination; domain controllers receive focused contexts.
 Keep Core independent of adapters. Cross-package consumers use the owning package's public

@@ -8,11 +8,9 @@ import { OrganisationWorkspace } from './OrganisationWorkspace';
 import './management.css';
 
 export function ManagementHome({
-  onOpenProject,
   invitationToken,
   onSignOut,
 }: {
-  onOpenProject: (id: string) => void;
   invitationToken?: string;
   onSignOut?: () => void | Promise<void>;
 }) {
@@ -270,7 +268,6 @@ export function ManagementHome({
           busy={busy}
           execute={execute}
           canClaimExamples={snapshot!.canClaimExamples}
-          onOpenProject={onOpenProject}
         />
       ) : null}
     </main>

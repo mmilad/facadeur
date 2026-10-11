@@ -12,14 +12,9 @@ import {
   type VariantPreset,
   type SchemaCatalog,
 } from '../../schema/document';
-import {
-  assertEventDefinition,
-  assertExpose,
-  assertFieldDefinition,
-  assertValueMatches,
-  assertVariantAxis,
-  assertVariantPreset,
-} from './assertions';
+import { assertEventDefinition, assertExpose } from './assertions/events';
+import { assertFieldDefinition, assertValueMatches } from './assertions/fields';
+import { assertVariantAxis, assertVariantPreset } from './assertions/variants';
 import { eventDataMappings, eventDataSchema, localContractFieldsFor } from './schema-use';
 import { publicFieldsFor } from './catalog-exposed';
 import { matchesSchemaValue } from './json-schema-value';

@@ -23,6 +23,19 @@ export function findDefinition(
   return null;
 }
 
+export function listCatalogDefinitions(
+  catalog: ProjectCatalog,
+): { kind: CatalogMapKey; definition: NodeDefinition }[] {
+  return [
+    ...Object.values(catalog.atoms).map((definition) => ({ kind: 'atoms' as const, definition })),
+    ...Object.values(catalog.components).map((definition) => ({
+      kind: 'components' as const,
+      definition,
+    })),
+    ...Object.values(catalog.pages).map((definition) => ({ kind: 'pages' as const, definition })),
+  ];
+}
+
 export function findNodeByUuid(root: Node, uuid: string): Node | null {
   if (root.uuid === uuid) return root;
   for (const child of root.dom.children ?? []) {

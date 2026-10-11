@@ -96,16 +96,3 @@ function isFieldValue(value: unknown): value is FieldValue {
     Object.values(value).every((item) => isFieldValue(item))
   );
 }
-
-export function findField(paths: PathOption[], path: string): FieldDefinition | undefined {
-  return paths.find((option) => option.value === path)?.field;
-}
-
-export function isScalarField(field: FieldDefinition): boolean {
-  return field.type !== 'array' && field.type !== 'object';
-}
-
-export function withMissingOption(options: PathOption[], value: string): PathOption[] {
-  if (!value || options.some((option) => option.value === value)) return options;
-  return [{ value, label: `Missing: ${value}`, field: { name: value, type: 'text' } }, ...options];
-}

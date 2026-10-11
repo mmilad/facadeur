@@ -1,45 +1,15 @@
-# Style ownership
+# Style and token algorithms
 
-`project.styles` is the shared `StyleController`. It reads live snapshots and sends
-edits through `ProjectController.updateDocument()`. It holds no independent document
-state. The project retains validation, manifest replacement, and executor ownership.
-
-```ts
-project.styles.globalTokens;
-project.styles.globalTokenIndex;
-project.styles.setGlobalToken('color', {
-  uuid: 'TOKEN_UUID', // replace with an assigned UUID
-  label: 'Primary',
-  group: 'brand',
-  valueType: 'color',
-  value: '#123456',
-});
-project.styles.setGlobalToken('font', font);
-project.styles.setBreakpoints(breakpoints);
-
-const document = project.styles.document('button');
-document.styles;
-document.componentTokens;
-document.tokenInterface;
-document.nodeStyle('label');
-document.variantStyle('compact');
-document.setStyleBlock(style);
-document.setNodeStyle('label', 'color', '{token:TOKEN_UUID}');
-document.setComponentToken(id, 'color.label', token);
-```
-
-Global writes target the project's design document. `document(id)` returns a stable
-`DocumentStyle` facade whose writes target only that document. Its command type
-excludes global token/font/breakpoint edits. Existing project/document getters and
-the public pure `applyCommand` API remain available.
+`controller/style/` owns pure flat-document style commands and reusable token, breakpoint,
+layout, selector, and reference logic. Catalog state and design commands are owned by
+`controller/project/`; stylesheet compilation and runtime injection belong to
+`@facadeur/style-engine`.
 
 ## File map
 
 ```text
 style/
-  controller.ts          Project facade: token records, breakpoints, document scopes
-  document.ts            Document facade: styles, component tokens, token interfaces
-  types.ts               Command scopes and project integration contract
+  types.ts               Style command scopes
   commands.ts            Pure command dispatch and private mutation helpers
   fonts.ts               Font-family token value validation and font styles
   breakpoints.ts         Breakpoint validation and cloning

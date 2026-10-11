@@ -9,8 +9,7 @@ import type { FlatDocument } from '../../../../document/flat';
 import { ID_PATTERN } from '../../../../document/ids';
 import { adoptTokenReads } from '../../references/adopt';
 import { rewriteLocalComponentTokenPath } from '../../references/rewrite';
-
-const TOKEN_PATH = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+)+$/;
+import { isTokenPath } from '../path';
 
 function assertTokenId(id: string) {
   if (!ID_PATTERN.test(id)) {
@@ -19,7 +18,7 @@ function assertTokenId(id: string) {
 }
 
 function assertPathAvailable(doc: FlatDocument, path: string, exceptId: string | null) {
-  if (!TOKEN_PATH.test(path)) {
+  if (!isTokenPath(path)) {
     throw new DocumentError('schema', `Invalid component token path "${path}"`);
   }
   for (const [id, token] of Object.entries(doc.componentTokens ?? {})) {

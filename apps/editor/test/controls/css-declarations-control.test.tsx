@@ -3,10 +3,14 @@ import '@testing-library/jest-dom/vitest';
 import type { ComponentProps } from 'react';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
+import { canonicalizeTokenTree } from '@facadeur/core';
 import { CssDeclarationsControl } from '../../src/ui/controls/generic/CssDeclarationsControl';
-import { layoutCapabilities } from '../../src/domain/layout-capabilities';
-import { toFlat } from '@facadeur/core';
-import { tokenRef as fixtureTokenRef } from '@facadeur/examples';
+import {
+  exampleCatalog,
+  exampleIds as fixtureIds,
+  tokenRef as fixtureTokenRef,
+} from '@facadeur/examples';
+import { TokenPreviewProvider } from '../../src/ui/controls/fields/TokenPreviewContext';
 
 afterEach(cleanup);
 type Props = ComponentProps<typeof CssDeclarationsControl>;
@@ -15,7 +19,11 @@ function setup(overrides: Partial<Props> = {}) {
     entries: [
       { property: 'display', value: 'grid', overridden: true },
       { property: 'width', value: '100px', overridden: false },
-      { property: 'padding', value: fixtureTokenRef(testUuid5), overridden: true },
+      {
+        property: 'padding',
+        value: fixtureTokenRef(fixtureIds.tokens.space.scale.step4),
+        overridden: true,
+      },
       { property: 'border', value: '1px solid red', overridden: true },
       { property: 'border-radius', value: '4px', overridden: true },
       { property: '--manual', value: 'kept', overridden: true },
@@ -26,7 +34,10 @@ function setup(overrides: Partial<Props> = {}) {
       shadowTokens: [],
       typographyTokens: [],
       radiusTokens: [],
-      dimensionTokens: [fixtureTokenRef(testUuid5), fixtureTokenRef(testUuid6)],
+      dimensionTokens: [
+        fixtureTokenRef(fixtureIds.tokens.space.scale.step4),
+        fixtureTokenRef(fixtureIds.tokens.space.scale.step5),
+      ],
       typographyCatalogs: {
         fontRefs: [],
         fontFamilyTokens: [],
@@ -40,7 +51,18 @@ function setup(overrides: Partial<Props> = {}) {
     onAddDeclaration: vi.fn(),
     ...overrides,
   };
-  return { ...render(<CssDeclarationsControl {...props} />), props };
+  return {
+    ...render(
+      <TokenPreviewProvider
+        design={{ tokens: canonicalizeTokenTree(exampleCatalog.tokens), breakpoints: [] }}
+        document={{}}
+        breakpointId={null}
+      >
+        <CssDeclarationsControl {...props} />
+      </TokenPreviewProvider>,
+    ),
+    props,
+  };
 }
 function manualSection() {
   return screen.getByRole('button', { name: 'Manual CSS properties' }).closest('section')!;
@@ -68,8 +90,9 @@ it('renders guided groups with undefined content and keeps every CSS row in the 
   expect(screen.getByRole('heading', { name: 'Border & Radius' })).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Manual CSS properties' }));
   const manual = manualSection();
-  for (const entry of props.entries)
-    expect(manual.querySelector(`[name="css-${entry.property}"]`)).toBeTruthy();
+  expect(manual.querySelector('[name="css-display"]')).toBeTruthy();
+  expect(manual.querySelector('[name="css-width"]')).toBeTruthy();
+  expect(within(manual).getByRole('button', { name: 'Choose Padding' })).toBeInTheDocument();
   expect(within(manual).getByRole('button', { name: 'Add property' })).toBeInTheDocument();
   expect(within(manual).queryByText('Guided layout')).not.toBeInTheDocument();
   expect(props.onCommitDeclaration).not.toHaveBeenCalled();
@@ -130,12 +153,12 @@ it('keeps compound guided changes atomic and reflects committed values in manual
 });
 
 it('preserves token selections and keeps Add property inside the manual section', () => {
-  const { props, container } = setup();
-  fireEvent.click(container.querySelector('[name="css-padding"]')!);
-  fireEvent.click(screen.getByRole('button', { name: /Large/ }));
+  const { props } = setup();
+  fireEvent.click(screen.getByRole('button', { name: 'Choose Padding' }));
+  fireEvent.click(screen.getByRole('option', { name: /Spacing \/ 5/ }));
   expect(props.onCommitDeclaration).toHaveBeenCalledExactlyOnceWith(
     'padding',
-    fixtureTokenRef(testUuid6),
+    fixtureTokenRef(fixtureIds.tokens.space.scale.step5),
     true,
   );
   fireEvent.click(within(manualSection()).getByRole('button', { name: 'Add property' }));
@@ -143,31 +166,4 @@ it('preserves token selections and keeps Add property inside the manual section'
   fireEvent.change(screen.getByPlaceholderText('value'), { target: { value: ' 0.5 ' } });
   fireEvent.click(screen.getByRole('button', { name: 'Add style' }));
   expect(props.onAddDeclaration).toHaveBeenCalledExactlyOnceWith('opacity', '0.5');
-});
-
-it('keeps inactive declarations disabled but resettable and rejects inactive additions', () => {
-  const document = toFlat({
-    version: 1,
-    id: 'caps',
-    name: 'Caps',
-    kind: 'component',
-    root: { id: 'root', type: 'text', text: 'Item' },
-  });
-  const caps = layoutCapabilities({ document, nodeId: 'root' });
-  const reset = vi.fn();
-  const { props, container } = setup({
-    entries: [{ property: 'flex-direction', value: 'row', overridden: true }],
-    layoutCapabilities: caps,
-    renderAfterRow: (property) => <button onClick={() => reset(property)}>Reset {property}</button>,
-  });
-  expect(container.querySelector('[name="css-flex-direction"]')).toBeDisabled();
-  fireEvent.click(screen.getByRole('button', { name: 'Reset flex-direction' }));
-  expect(reset).toHaveBeenCalledExactlyOnceWith('flex-direction');
-  fireEvent.click(screen.getByRole('button', { name: 'Add property' }));
-  fireEvent.change(screen.getByPlaceholderText('property'), {
-    target: { value: 'flex-direction' },
-  });
-  fireEvent.change(screen.getByPlaceholderText('value'), { target: { value: 'column' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Add style' }));
-  expect(props.onAddDeclaration).not.toHaveBeenCalled();
 });

@@ -8,22 +8,19 @@ export {
   emptyProjectCatalog,
   validateProjectCatalog,
 } from '../project/catalog/validate';
+export { assertEventDefinition, assertExpose } from './assertions/events';
+export { assertFieldDefinition, assertValueMatches } from './assertions/fields';
 export {
   assertAttributes,
   assertBindings,
   assertChildFields,
   assertDisplayOn,
   assertEventBindings,
-  assertEventDefinition,
-  assertExpose,
   assertFieldBindings,
-  assertFieldDefinition,
   assertLayout,
   assertRepeat,
-  assertValueMatches,
-  assertVariantAxis,
-  assertVariantPreset,
-} from './assertions';
+} from './assertions/node-properties';
+export { assertVariantAxis, assertVariantPreset } from './assertions/variants';
 export { assertDefinitionKind, validateDefinitions } from './definitions';
 export { validateLibraries, validateTree } from './tree';
 export { type ValidateOptions } from './types';

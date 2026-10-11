@@ -4,16 +4,16 @@ import { defaultNestingRules, type NestingRule } from '../../document/kinds';
 import { assertBreakpoints } from '../style/breakpoints';
 import { assertStyleContract } from '../style/blocks/contract';
 import { readTokenTree } from '../style/tokens/global/tree';
+import { assertExpose } from './assertions/events';
 import {
   assertAttributes,
   assertBindings,
   assertChildFields,
   assertDisplayOn,
   assertEventBindings,
-  assertExpose,
   assertRepeat,
   assertLayout,
-} from './assertions';
+} from './assertions/node-properties';
 import { ID_PATTERN } from '../../document/ids';
 
 import type { ValidateOptions } from './types';

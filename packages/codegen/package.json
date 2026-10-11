@@ -2,24 +2,5 @@
   "name": "@facadeur/codegen",
   "version": "0.0.0",
   "private": true,
-  "type": "module",
-  "exports": {
-    ".": "./src/index.ts",
-    "./engines/react": "./engines/react/src/index.ts"
-  },
-  "scripts": {
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "@facadeur/core": "workspace:*",
-    "@facadeur/style-engine": "workspace:*"
-  },
-  "devDependencies": {
-    "@facadeur/examples": "workspace:*",
-    "@types/node": "^22.19.0",
-    "prettier": "^3.6.2",
-    "typescript": "^5.9.2",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1"
-  }
+  "description": "Reserved for catalog-driven project generation; implementation is not wired yet."
 }

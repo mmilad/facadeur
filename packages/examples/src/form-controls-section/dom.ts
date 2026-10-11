@@ -23,27 +23,21 @@ export const root: Node = {
               uuid: exampleFormControlsSectionIds.nodes.p1,
               dom: {
                 tagName: 'p',
-                properties: {
-                  textContent: 'facadeur · editor kit',
-                },
+                text: 'facadeur · editor kit',
               },
             },
             {
               uuid: exampleFormControlsSectionIds.nodes.h11,
               dom: {
                 tagName: 'h1',
-                properties: {
-                  textContent: 'Controls',
-                },
+                text: 'Controls',
               },
             },
             {
               uuid: exampleFormControlsSectionIds.nodes.p2,
               dom: {
                 tagName: 'p',
-                properties: {
-                  textContent: 'A small, token-driven control language for the editor inspector.',
-                },
+                text: 'A small, token-driven control language for the editor inspector.',
               },
             },
           ],
@@ -58,9 +52,7 @@ export const root: Node = {
               uuid: exampleFormControlsSectionIds.nodes.h21,
               dom: {
                 tagName: 'h2',
-                properties: {
-                  textContent: 'Native text controls',
-                },
+                text: 'Native text controls',
               },
             },
             {
@@ -114,9 +106,7 @@ export const root: Node = {
               uuid: exampleFormControlsSectionIds.nodes.h22,
               dom: {
                 tagName: 'h2',
-                properties: {
-                  textContent: 'Text field states',
-                },
+                text: 'Text field states',
               },
             },
             {
@@ -205,9 +195,7 @@ export const root: Node = {
               uuid: exampleFormControlsSectionIds.nodes.h23,
               dom: {
                 tagName: 'h2',
-                properties: {
-                  textContent: 'Selection and options',
-                },
+                text: 'Selection and options',
               },
             },
             {
@@ -334,19 +322,14 @@ export const root: Node = {
               uuid: exampleFormControlsSectionIds.nodes.h24,
               dom: {
                 tagName: 'h2',
-                properties: {
-                  textContent: 'Field definition',
-                },
+                text: 'Field definition',
               },
             },
             {
               uuid: exampleFormControlsSectionIds.nodes.p3,
               dom: {
                 tagName: 'p',
-                properties: {
-                  textContent:
-                    'Compact rows keep component definitions scannable; details can open on demand.',
-                },
+                text: 'Compact rows keep component definitions scannable; details can open on demand.',
               },
             },
             {
@@ -363,27 +346,21 @@ export const root: Node = {
                           uuid: exampleFormControlsSectionIds.nodes.span1,
                           dom: {
                             tagName: 'span',
-                            properties: {
-                              textContent: 'Name',
-                            },
+                            text: 'Name',
                           },
                         },
                         {
                           uuid: exampleFormControlsSectionIds.nodes.span2,
                           dom: {
                             tagName: 'span',
-                            properties: {
-                              textContent: 'Type',
-                            },
+                            text: 'Type',
                           },
                         },
                         {
                           uuid: exampleFormControlsSectionIds.nodes.span3,
                           dom: {
                             tagName: 'span',
-                            properties: {
-                              textContent: 'Default',
-                            },
+                            text: 'Default',
                           },
                         },
                       ],
@@ -466,9 +443,7 @@ export const root: Node = {
               uuid: exampleFormControlsSectionIds.nodes.h25,
               dom: {
                 tagName: 'h2',
-                properties: {
-                  textContent: 'Data-driven form',
-                },
+                text: 'Data-driven form',
               },
             },
             {

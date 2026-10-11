@@ -11,9 +11,7 @@ export const root: Node = {
         uuid: exampleInputIds.nodes.span1,
         dom: {
           tagName: 'span',
-          properties: {
-            textContent: 'Work emails',
-          },
+          text: 'Work emails',
         },
       },
       {

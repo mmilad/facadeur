@@ -14,6 +14,9 @@ import {
 } from '../../src/ui/controls/style/declaration-kind';
 import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
+// The Example catalog has one font; the second local UUID exercises stable sorting.
+const secondFontUuid = '0498c315-10df-54a4-8213-f36bad42e52b';
+
 describe('typography control value', () => {
   it('detects token references', () => {
     expect(isTokenRef(fixtureTokenRef(fixtureIds.tokens.font.inter))).toBe(true);
@@ -21,9 +24,9 @@ describe('typography control value', () => {
   });
 
   it('builds project font refs', () => {
-    expect(projectFontRefs([{ uuid: fixtureIds.tokens.font.inter }, { uuid: testUuid16 }])).toEqual(
-      [fixtureTokenRef(fixtureIds.tokens.font.inter), fixtureTokenRef(testUuid16)],
-    );
+    expect(
+      projectFontRefs([{ uuid: fixtureIds.tokens.font.inter }, { uuid: secondFontUuid }]),
+    ).toEqual([fixtureTokenRef(fixtureIds.tokens.font.inter), fixtureTokenRef(secondFontUuid)]);
   });
 
   it('infers field mode', () => {

@@ -1,127 +1,90 @@
-import { createId, type FlatDocument, type NodeType } from '@facadeur/core';
 import {
-  dropParentId,
+  canAcceptCatalogChildren,
+  createCatalogUuid,
+  defaultNestingRules,
+  findNodeByUuid,
+  findParentOfNode,
+  isInsideCatalogSubtree,
+} from '@facadeur/core';
+import type { AppService } from '../../../app-service/AppService';
+import {
   emphasizeInsertLine,
-  insertDraft,
-  placementAllowed,
   placeInParent,
-  prefersInsideFrame,
-  refusalMessage,
-  sameSlot,
   type Box,
   type InsertTool,
 } from '../../../domain/editing';
+import { catalogNodeFromInsertEntry } from '../../../domain/catalog/layer-node-draft';
+import { catalogPlacementAllowed } from '../../../domain/catalog/catalog-layer-insert';
+import { catalogNodeUuidForRenderedHit } from '../../../domain/catalog/rendered-hit';
+import type { LayerInsertEntry } from '../../../domain/catalog/catalog-layer-insert';
 import { overlayBox, pointInFrame, type OverlayBox } from '../../../domain/viewport/geometry';
-import { dataIdSelector, type SelectionController } from '../../../domain/selection/selection';
-import { documentChain, renderIdForNode } from '../../../domain/selection/selection-model';
-import type { EditorDrag, EditorSession, EditorSnapshot } from '../../../domain/session';
+import { type SelectionController } from '../../../domain/selection/selection';
+import type { EditorDrag, EditorSession } from '../../../domain/session';
 import type { StageController } from '../../../domain/viewport/stage';
 import type { ViewportBoard, ViewportFrame } from '../../../domain/viewport/board';
 
 export interface StageDrop {
-  parentId: string;
+  parentUuid: string;
   index: number;
   line: OverlayBox;
 }
 
-export interface PlaceSubject {
-  type: NodeType;
-  instanceKind?: string;
-}
-
-export interface StageGesture {
-  pointerId: number;
-  startX: number;
-  startY: number;
-  moved: boolean;
-  mode: 'insert' | 'reorder';
-  nodeId: string | null;
-}
-
-export function gestureSubject(snap: EditorSnapshot, gesture: StageGesture): PlaceSubject | null {
-  if (gesture.mode === 'insert') {
-    if (snap.tool === 'select') return null;
-    return { type: snap.tool };
-  }
-  if (!gesture.nodeId) return null;
-  return nodeSubject(snap, gesture.nodeId);
-}
-
-export function dragSubject(snap: EditorSnapshot, drag: EditorDrag): PlaceSubject | null {
-  if (drag.kind === 'asset') {
-    const kind = snap.catalog.find((item) => item.id === drag.assetId)?.kind;
-    return { type: 'instance', instanceKind: kind };
-  }
-  return nodeSubject(snap, drag.nodeId);
-}
-
-function nodeSubject(snap: EditorSnapshot, nodeId: string): PlaceSubject | null {
-  const node = snap.document.nodes[nodeId];
-  if (!node) return null;
-  if (node.type !== 'instance') return { type: node.type };
-  const kind = snap.catalog.find((item) => item.id === node.component)?.kind;
-  return { type: 'instance', instanceKind: kind };
-}
-
 export function createStagePlacement({
+  app,
   session,
   getBoard,
   selection,
   stage,
   stageElement,
-  isNestedRenderedId,
 }: {
+  app: AppService;
   session: EditorSession;
   getBoard: () => ViewportBoard | null;
   selection: SelectionController;
   stage: StageController;
   stageElement: HTMLElement;
-  isNestedRenderedId: (snap: EditorSnapshot, renderedId: string) => boolean;
 }) {
-  function measure(
-    clientX: number,
-    clientY: number,
-    draggedId: string | null,
-    subject: PlaceSubject,
-  ): StageDrop | null {
+  function measure(clientX: number, clientY: number, draggedUuid: string | null): StageDrop | null {
     const board = getBoard();
-    if (!board) return null;
+    const definition = app.getCoreSnapshot().openDefinition;
+    if (!board || !definition) return null;
     const frame = selection.frameAt(clientX, clientY);
     if (!frame) return null;
     const scale = stage.getScale() || 1;
     const frameRect = frame.host.element.getBoundingClientRect();
     const local = pointInFrame({ clientX, clientY, frame: frameRect, scale });
     if (!local) return null;
-    const snap = session.getSnapshot();
     const hit = selection.hitAt(clientX, clientY);
-    if (hit && isNestedRenderedId(snap, hit.id)) return null;
-    const chain = hit
-      ? documentChain(snap.document, hit.id, snap.paintRoot)
-      : [snap.document.rootId];
-    const into = hit ? insideHit(frame, hit.id, local, snap.document, snap.paintRoot) : false;
-    const parentId = dropParentId(snap.document, chain, draggedId, into, (id) =>
-      placementAllowed(snap.document, id, subject.type, subject.instanceKind),
+    const targetUuid = catalogNodeUuidForRenderedHit(
+      frame,
+      hit ? nodeUuidFromHit(hit.id) : null,
+      definition.root,
     );
-    if (!parentId) return null;
-    const parent = snap.document.nodes[parentId];
-    if (parent?.type !== 'frame') return null;
-    const docEl = frame.host.contentDocument();
-    const parentRender = renderIdForNode(snap.document, parentId, snap.paintRoot);
-    const parentEl = parentRender ? docEl.querySelector(dataIdSelector(parentRender)) : docEl.body;
-    if (!isElement(parentEl)) return null;
-    const direction = parent.layout?.direction === 'row' ? 'row' : 'column';
-    const siblings = parent.children.flatMap((id) => {
-      if (id === draggedId) return [];
-      const renderId = renderIdForNode(snap.document, id, snap.paintRoot);
-      if (!renderId) return [];
-      const el = docEl.querySelector(dataIdSelector(renderId));
-      if (!isElement(el)) return [];
-      return [{ id, rect: boxOf(el) }];
+    const target = targetUuid ? findNodeByUuid(definition.root, targetUuid) : definition.root;
+    const parentInfo = targetUuid ? findParentOfNode(definition.root, targetUuid) : null;
+    const parent = target && canAcceptCatalogChildren(target) ? target : parentInfo?.parent;
+    if (
+      !parent ||
+      (draggedUuid && isInsideCatalogSubtree(definition.root, draggedUuid, parent.uuid))
+    )
+      return null;
+
+    const nodesByUuid = new Map(board.renderedNodes(frame).map((entry) => [entry.uuid, entry]));
+    const children = parent.dom.children ?? [];
+    const siblings = children.flatMap((node) => {
+      if (node.uuid === draggedUuid) return [];
+      const rendered = nodesByUuid.get(node.uuid);
+      return rendered ? [{ id: node.uuid, rect: rendered.rect }] : [];
     });
+    const parentBox =
+      nodesByUuid.get(parent.uuid)?.rect ?? boxOf(frame.host.contentDocument().body);
     const placed = placeInParent({
-      direction,
+      direction:
+        parent.style?.display === 'flex' && parent.style?.['flex-direction'] === 'row'
+          ? 'row'
+          : 'column',
       pointer: local,
-      parent: boxOf(parentEl),
+      parent: parentBox,
       siblings,
     });
     const readable = emphasizeInsertLine(placed.line, scale);
@@ -136,34 +99,42 @@ export function createStagePlacement({
       stage: stageElement.getBoundingClientRect(),
       scale,
     });
-    return { parentId, index: placed.index, line };
+    return { parentUuid: parent.uuid, index: placed.index, line };
   }
 
-  function placeTool(toolName: InsertTool, clientX: number, clientY: number, fromDrag: boolean) {
-    const snap = session.getSnapshot();
-    const hit = selection.hitAt(clientX, clientY);
-    if (hit && isNestedRenderedId(snap, hit.id)) return;
-    const chain = hit ? documentChain(snap.document, hit.id, snap.paintRoot) : [];
-    const selected = snap.selectedNode;
-    const append = !fromDrag && selected?.type === 'frame' && chain.includes(selected.id);
-    const subject: PlaceSubject = { type: toolName };
-    const drop = append ? null : measure(clientX, clientY, null, subject);
-    const parentId = append && selected ? selected.id : drop?.parentId;
-    const legal = parentId !== undefined && placementAllowed(snap.document, parentId, toolName);
-    if (!parentId || !legal) {
+  function placeTool(toolName: InsertTool, clientX: number, clientY: number) {
+    const definition = app.getCoreSnapshot().openDefinition;
+    if (!definition) return;
+    const drop = measure(clientX, clientY, null);
+    const parentUuid = drop?.parentUuid ?? definition.root.uuid;
+    const parent = findNodeByUuid(definition.root, parentUuid);
+    const rule = defaultNestingRules[definition.kind];
+    if (!parent || !rule.nodeTypes.includes(toolName)) {
       if (selection.frameAt(clientX, clientY)) {
-        session.setNotice(refusalMessage(snap.document.kind, toolName));
+        session.setNotice(`${definition.kind} cannot contain a ${toolName}.`, 'error');
       }
       return;
     }
-    const id = createId();
-    session.execute({
-      type: 'insert',
-      parentId,
-      ...(append || !drop ? {} : { index: drop.index }),
-      node: insertDraft(toolName, id),
+    const uuid = createCatalogUuid();
+    const node =
+      toolName === 'frame'
+        ? { uuid, name: 'layer', dom: { tagName: 'div', children: [] } }
+        : toolName === 'text'
+          ? { uuid, name: 'Text', dom: { tagName: 'span', text: 'Text' } }
+          : {
+              uuid,
+              name: 'Image',
+              dom: { tagName: 'img', attributes: { alt: '', src: '' } },
+              style: { width: '120px', height: '80px' },
+            };
+    app.insertCatalogNode(parentUuid, drop?.index ?? (parent.dom.children ?? []).length, node);
+    session.selectNode(node.uuid);
+    void app.persistCatalog().catch((failure: unknown) => {
+      session.setNotice(
+        failure instanceof Error ? failure.message : 'Could not save catalog edit',
+        'error',
+      );
     });
-    if (session.getSnapshot().document.nodes[id]) session.selectNode(id);
   }
 
   function applyDrop(
@@ -172,95 +143,57 @@ export function createStagePlacement({
     clientX: number,
     clientY: number,
   ): boolean {
-    const subject = dragSubject(session.getSnapshot(), drag);
-    const resolved =
-      drop ??
-      (subject
-        ? measure(clientX, clientY, drag.kind === 'node' ? drag.nodeId : null, subject)
-        : null);
-    if (!resolved) {
-      if (subject && selection.frameAt(clientX, clientY)) {
-        session.setNotice(
-          refusalMessage(session.getSnapshot().document.kind, subject.type, subject.instanceKind),
-        );
-      }
-      return false;
-    }
+    const definition = app.getCoreSnapshot().openDefinition;
+    if (!definition) return false;
     if (drag.kind === 'node') {
-      const doc = session.getSnapshot().document;
-      if (!sameSlot(doc, drag.nodeId, resolved.parentId, resolved.index)) {
-        session.execute({
-          type: 'move',
-          nodeId: drag.nodeId,
-          parentId: resolved.parentId,
-          index: resolved.index,
-        });
-      }
+      if (!drop || definition.root.uuid === drag.nodeId) return false;
+      app.moveCatalogNode(drag.nodeId, drop.parentUuid, drop.index);
       session.selectNode(drag.nodeId);
-      return true;
+    } else {
+      const asset = session.getSnapshot().catalog.find((item) => item.id === drag.assetId);
+      if (!asset || !drop) return false;
+      const entry: LayerInsertEntry = { kind: 'instance', assetId: asset.id, label: asset.name };
+      const parent = findNodeByUuid(definition.root, drop.parentUuid);
+      if (
+        !parent ||
+        !catalogPlacementAllowed(definition.kind, parent, entry, session.getSnapshot().catalog)
+      )
+        return false;
+      const node = catalogNodeFromInsertEntry(entry);
+      if (!node) return false;
+      app.insertCatalogNode(drop.parentUuid, drop.index, node);
+      session.selectNode(node.uuid);
     }
-    const asset = session.getSnapshot().catalog.find((item) => item.id === drag.assetId);
-    const id = createId();
-    session.execute({
-      type: 'insert',
-      parentId: resolved.parentId,
-      index: resolved.index,
-      node: {
-        id,
-        type: 'instance',
-        component: drag.assetId,
-        ...(asset ? { name: asset.name } : {}),
-      },
+    void app.persistCatalog().catch((failure: unknown) => {
+      session.setNotice(
+        failure instanceof Error ? failure.message : 'Could not save catalog edit',
+        'error',
+      );
     });
-    if (session.getSnapshot().document.nodes[id]) session.selectNode(id);
     return true;
   }
 
-  function applyReorderDrop(nodeId: string, drop: StageDrop) {
-    const snap = session.getSnapshot();
-    if (!sameSlot(snap.document, nodeId, drop.parentId, drop.index)) {
-      session.execute({
-        type: 'move',
-        nodeId,
-        parentId: drop.parentId,
-        index: drop.index,
-      });
-    }
-    session.selectNode(nodeId);
+  function applyReorderDrop(nodeUuid: string, drop: StageDrop) {
+    const definition = app.getCoreSnapshot().openDefinition;
+    if (!definition) return;
+    app.moveCatalogNode(nodeUuid, drop.parentUuid, drop.index);
+    session.selectNode(nodeUuid);
+    void app.persistCatalog().catch((failure: unknown) => {
+      session.setNotice(
+        failure instanceof Error ? failure.message : 'Could not save catalog edit',
+        'error',
+      );
+    });
   }
 
   return { measure, placeTool, applyDrop, applyReorderDrop };
 }
 
-function insideHit(
-  frame: ViewportFrame,
-  renderedId: string,
-  pointer: { x: number; y: number },
-  doc: FlatDocument,
-  paintRoot: boolean,
-): boolean {
-  const chain = documentChain(doc, renderedId, paintRoot);
-  const deepest = chain[chain.length - 1];
-  if (!deepest) return false;
-  const node = doc.nodes[deepest];
-  if (node?.type !== 'frame') return false;
-  const el = frame.host.contentDocument().querySelector(dataIdSelector(renderedId));
-  if (!isElement(el)) return node.type === 'frame' && node.children.length === 0;
-  const rect = boxOf(el);
-  const empty = node.children.length === 0;
-  return prefersInsideFrame(rect, pointer, empty);
+export function nodeUuidFromHit(id: string): string | null {
+  return id.startsWith('node:') ? id.slice('node:'.length) : null;
 }
 
 function boxOf(el: HTMLElement): Box {
   const rect = el.getBoundingClientRect();
   return { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
-}
-
-function isElement(value: unknown): value is HTMLElement {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'nodeType' in value &&
-    (value as Node).nodeType === Node.ELEMENT_NODE
-  );
 }

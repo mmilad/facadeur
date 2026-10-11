@@ -1,6 +1,5 @@
 export { Form } from './Form';
 export type { FormChangeMeta, FormDensity, FormProps, FieldBinding } from './types/index';
-export * from './schema/index';
 
 export {
   TextInput,

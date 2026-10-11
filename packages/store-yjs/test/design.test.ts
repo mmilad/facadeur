@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { createProjectTemplateDocument, loadTokens } from '@facadeur/tokens';
+import { createProjectTemplateDocument } from '@facadeur/examples';
 import { createDocumentStore } from '@facadeur/store-yjs';
-import { toFlat, type DesignTokenRecord, type FontFamilyDefinition } from '@facadeur/core';
+import { loadTokens, toFlat, type DesignTokenRecord, type FontFamilyDefinition } from '@facadeur/core';
 import { exampleIds as fixtureIds } from '@facadeur/examples';
 const testUuid33 = globalThis.crypto.randomUUID();
 const testUuid34 = globalThis.crypto.randomUUID();
@@ -108,7 +108,7 @@ describe('tokens and breakpoints in the Yjs document', () => {
       label: 'Broken',
       group: '',
       valueType: 'color',
-      value: 'not a CSS color',
+      value: 'red; color: blue',
     };
     expect(() =>
       store.execute({ type: 'setToken', family: 'color', token: invalidToken }),

@@ -6,8 +6,8 @@ import {
   catalogPlacementAllowed,
 } from '../../../domain/catalog/catalog-layer-insert';
 import { refusalMessage } from '../../../domain/editing';
-import type { LayerInsertEntry } from '../../../domain/layer-insert-policy';
-import type { LayerItem } from '../../../domain/selection/selection-model';
+import type { LayerInsertEntry } from '../../../domain/catalog/catalog-layer-insert';
+import type { LayerItem } from '../../../domain/catalog/layer-tree';
 import type { EditorSnapshot } from '../../../domain/session';
 import {
   canDeleteCatalogLayer,
@@ -19,7 +19,6 @@ export {
   canDeleteCatalogLayer,
   canInsertBelowCatalogLayer,
   canInsertInsideCatalogLayer,
-  canEditCatalogLayerItem,
 } from './catalog-layer-context-policy';
 
 export async function insertCatalogLayerEntry(
@@ -58,7 +57,7 @@ export async function insertCatalogLayerEntry(
   const node = catalogNodeFromInsertEntry(entry);
   if (!node) return;
 
-  app.core.insertCatalogNode(spot.parentUuid, spot.index, node);
+  app.insertCatalogNode(spot.parentUuid, spot.index, node);
   await app.persistCatalog();
   app.session.selectNode(node.uuid);
 }
@@ -74,7 +73,7 @@ export async function deleteCatalogLayer(
   const parentInfo = findParentOfNode(definition.root, item.id);
   const selectAfter = parentInfo?.parent.uuid ?? definition.root.uuid;
 
-  app.core.removeCatalogNode(item.id);
+  app.removeCatalogNode(item.id);
   await app.persistCatalog();
   app.session.selectNode(selectAfter);
 }

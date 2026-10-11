@@ -12,9 +12,9 @@ import type {
 } from '../../../schema/document';
 import { assertStyleSelector, selectorClassNames } from '../selectors';
 import { tokenReference } from '../tokens/syntax';
+import { isTokenPath } from '../tokens/path';
 
 export const CSS_PROPERTY = /^(--)?[A-Za-z_][\w-]*$/;
-const TOKEN_PATH = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+)+$/;
 export const BREAKPOINT_ID = UUID_PATTERN;
 const STATE_NAMES = ['hover', 'focus-visible', 'disabled'] as const;
 
@@ -150,7 +150,7 @@ export function parseTokenInterface(value: unknown): TokenInterface {
     }
     const sets: Record<string, string> = {};
     for (const path of Object.keys(record.sets).sort()) {
-      if (!UUID_PATTERN.test(path) && !TOKEN_PATH.test(path)) {
+      if (!UUID_PATTERN.test(path) && !isTokenPath(path)) {
         throw new DocumentError(
           'schema',
           `Invalid token UUID or component-token path "${path}" in sets`,

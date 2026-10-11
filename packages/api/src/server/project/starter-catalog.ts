@@ -1,5 +1,5 @@
 import type { DocumentFile } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
+import { createProjectTemplateDocument } from '@facadeur/examples';
 import { starterSchemas } from './starter-schemas';
 
 /** Each project receives its own editable copies of the built-in atom definitions. */

@@ -26,18 +26,14 @@ export const root: Node = {
               uuid: exampleProductCardIds.nodes.h21,
               dom: {
                 tagName: 'h2',
-                properties: {
-                  textContent: 'Everyday ceramic mug',
-                },
+                text: 'Everyday ceramic mug',
               },
             },
             {
               uuid: exampleProductCardIds.nodes.p1,
               dom: {
                 tagName: 'p',
-                properties: {
-                  textContent: '€24.00',
-                },
+                text: '€24.00',
               },
             },
             {

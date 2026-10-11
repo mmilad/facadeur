@@ -1,12 +1,26 @@
 import {
   findDefinition,
-  type FlatNode,
   type NodeModel,
   type ProjectCatalogModel,
 } from '@facadeur/core';
-import type { LayerItem } from '../selection/selection-model';
 
-function layerTypeForNode(node: NodeModel): FlatNode['type'] | 'layer' {
+export interface LayerItem {
+  id: string;
+  /** Catalog UUID render address. */
+  address: string;
+  /** Definition that owns the Catalog node. */
+  documentId: string;
+  name: string;
+  tagName?: string;
+  type: string;
+  children: LayerItem[];
+  virtual: boolean;
+  ownerNodeId?: string;
+  instancePath?: string;
+  fieldEditable: boolean;
+}
+
+function layerTypeForNode(node: NodeModel) {
   if (node.config?.definitionRef) return 'instance';
   return 'layer';
 }

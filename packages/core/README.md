@@ -7,18 +7,17 @@ package exports. Inside core, import the owning module directly rather than `src
 
 ## Source organization
 
-| Area                     | Owns                                                                                                                    | Does not own                                              |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| `document/`              | Flat document model, serialization, tree operations, IDs, kinds, child fields, document errors.                         | UI selection or DOM addressing.                           |
-| `schema/`                | Shared TypeBox contracts and derived types, assembled by `document.ts`.                                                 | Controller state or command execution.                    |
-| `utils.ts`               | Shared JSON value checks, plain-object checks, canonical JSON cloning.                                                  | Domain-specific behavior or controller state.             |
-| `store/`                 | Renderer-facing store contracts and controller-backed views with snapshot Undo/Redo.                                    | CRDT ownership or a second live document state.           |
-| `controller/project/`    | Project state, shared context, command coordination.                                                                    | Persistence or organization features not yet implemented. |
-| `controller/document/`   | Live document views, node/field/event/schema commands.                                                                  | Yjs transactions or editor interaction state.             |
-| `controller/variants/`   | Variant commands, sparse resolution/derivation, preview-data composition.                                               | Inspector tabs or variant selection widgets.              |
-| `controller/style/`      | Shared StyleController, document styles, global/component tokens, fonts, breakpoints, layout, references, and commands. | CSS compilation, DOM style application, font loading.     |
-| `controller/validation/` | Schema ingress, assertions, tree/definition checks, field contracts and catalog validation.                             | Presentation of validation errors to users.               |
-| `tokens/`                | Pure token indexing, UUID reference validation, responsive value resolution, and CSS property values.                   | CSS stylesheet compilation or DOM style application.      |
+| Area                     | Owns                                                                                                  | Does not own                                                 |
+| ------------------------ | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `document/`              | Flat document model, serialization, tree operations, IDs, kinds, child fields, document errors.       | UI selection or DOM addressing.                              |
+| `schema/`                | Shared TypeBox contracts and derived types, assembled by `document.ts`.                               | Controller state or command execution.                       |
+| `utils.ts`               | Shared JSON value checks, plain-object checks, canonical JSON cloning.                                | Domain-specific behavior or controller state.                |
+| `controller/project/`    | Catalog state, `CoreController`, catalog validation/operations, and node preview resolution.          | Persistence adapters or editor interaction state.            |
+| `controller/style/`      | Pure style/token commands, token algorithms, fonts, breakpoints, layout, selectors, and references.   | Live project facade, CSS compilation, DOM style application. |
+| `controller/validation/` | Schema ingress, assertions, tree/definition checks, field contracts and catalog validation.           | Presentation of validation errors to users.                  |
+| `legacy/flat/document/`  | Flat-document commands and variant operations retained for compatibility consumers.                   | Catalog-native product editing.                              |
+| `legacy/flat/store/`     | The flat `DocumentStore` contract consumed by Store-Yjs.                                              | A Core-owned controller-backed store implementation.         |
+| `tokens/`                | Pure token indexing, UUID reference validation, responsive value resolution, and CSS property values. | CSS stylesheet compilation or DOM style application.         |
 
 Domain names are supplied by directories: use `project/controller.ts`, `style/blocks/parse.ts`,
 and `style/tokens/global/tree.ts`. Small command domains expose `commands.ts`; command directories expose
@@ -29,10 +28,10 @@ Document commands keep cloning, dispatch, canonicalization, and validation in `c
 Variants keep resolution in `resolve.ts`, derivation in `derive.ts`, and node deltas in
 `derive-node.ts`. See [controller ownership and naming](src/controller/README.md) for details.
 
-`project.styles` exposes global token/font/breakpoint editing and explicit document scopes
-through `project.styles.document(id)`. See the [style file map and API](src/controller/style/README.md)
-for each module's responsibility. Token evaluation belongs to Core; stylesheet compilation
-belongs to `@facadeur/style-engine`.
+Catalog design edits go through `CoreController.applyDesignCommand`; pure style and token
+algorithms remain in Core's command layer. See the [style file map](src/controller/style/README.md)
+for module ownership. Token evaluation belongs to Core; stylesheet compilation belongs to
+`@facadeur/style-engine`.
 
 Keep pure contracts below their consumers. Commands can call validation; validation does not
 call commands. Document representation does not depend on editor/adapter packages. Some

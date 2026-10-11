@@ -20,6 +20,3 @@ export {
   resolveTemplateString,
   type PreviewResolveContext,
 } from './resolve';
-export { definitionToElementBuildConfig } from './build-config';
-/** @deprecated Use {@link resolveDefinitionToElementBuildConfig} with catalog. */
-export { resolveDefinitionToElementBuildConfig as nodeToElementBuildConfig } from './resolve';

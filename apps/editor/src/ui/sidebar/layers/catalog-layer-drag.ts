@@ -1,8 +1,11 @@
 import type { DragEvent } from 'react';
 import type { AppService } from '../../../app-service';
-import { catalogLayerDropTarget, catalogLayerDropLegal } from '../../../domain/catalog/catalog-layer-move';
-import type { DropZone } from '../../../domain/editing';
-import type { LayerItem } from '../../../domain/selection/selection-model';
+import {
+  catalogLayerDropTarget,
+  catalogLayerDropLegal,
+} from '../../../domain/catalog/catalog-layer-move';
+import type { DropZone } from '../../../domain/catalog/catalog-layer-move';
+import type { LayerItem } from '../../../domain/catalog/layer-tree';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session';
 
 export function layerDropZoneFor(event: DragEvent, item: LayerItem): DropZone {
@@ -35,7 +38,7 @@ export async function dropCatalogLayerNode(
   if (!definition) return;
   const target = catalogLayerDropTarget(definition, draggedUuid, targetItem.id, zone);
   if (!target) return;
-  app.core.moveCatalogNode(draggedUuid, target.parentUuid, target.index);
+  app.moveCatalogNode(draggedUuid, target.parentUuid, target.index);
   await app.persistCatalog();
   session.selectNode(draggedUuid);
 }

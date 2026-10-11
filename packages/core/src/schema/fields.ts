@@ -1,6 +1,9 @@
 import { Kind, Type, TypeRegistry } from '@sinclair/typebox';
+import type { FieldValue } from '@facadeur/domain';
 import { dataPathSchema, idSchema } from './common';
 import { schemaFieldUseSchema, schemaTypeRefSchema, type JsonSchema } from './contract';
+
+export type { FieldValue } from '@facadeur/domain';
 
 export const fieldTypes = [
   'text',
@@ -26,8 +29,6 @@ export const bindingTargets = [
   'options',
 ] as const;
 export type BindingTarget = (typeof bindingTargets)[number];
-
-export type FieldValue = string | number | boolean | FieldValue[] | { [key: string]: FieldValue };
 
 export function isFieldValue(value: unknown): value is FieldValue {
   if (value === null || value === undefined) return false;

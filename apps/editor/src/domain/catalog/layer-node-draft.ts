@@ -1,5 +1,5 @@
 import { createCatalogUuid, type NodeModel } from '@facadeur/core';
-import type { LayerInsertEntry } from '../layer-insert-policy';
+import type { LayerInsertEntry } from './catalog-layer-insert';
 
 /** New catalog tree node for a layer insert menu entry. */
 export function catalogNodeFromInsertEntry(entry: LayerInsertEntry): NodeModel | null {

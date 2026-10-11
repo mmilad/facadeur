@@ -7,25 +7,17 @@ export function AssetContextMenu({
   asset,
   anchor,
   menuRef,
-  onCreateVariant,
   onRename,
-  onGroup,
-  onRemoveGroup,
   onDelete,
   onClose,
 }: {
   asset: AssetSummary;
   anchor: DOMRect;
   menuRef: RefObject<HTMLDivElement | null>;
-  onCreateVariant: (assetId: string) => void;
   onRename: (assetId: string) => void;
-  onGroup: (assetId: string) => void;
-  onRemoveGroup: (assetId: string) => void;
   onDelete: (assetId: string) => void;
   onClose: () => void;
 }) {
-  const canHaveVariants = false;
-
   const left = Math.min(Math.max(8, anchor.left), window.innerWidth - MENU_MIN_WIDTH - 8);
   const top = Math.min(anchor.bottom + 4, window.innerHeight - 8);
   useLayoutEffect(() => {
@@ -34,7 +26,7 @@ export function AssetContextMenu({
     const rect = menu.getBoundingClientRect();
     menu.style.top = `${Math.max(8, Math.min(top, window.innerHeight - rect.height - 8))}px`;
     menu.style.left = `${Math.max(8, Math.min(left, window.innerWidth - rect.width - 8))}px`;
-  }, [asset.group, canHaveVariants, left, menuRef, top]);
+  }, [left, menuRef, top]);
 
   return (
     <div
@@ -54,40 +46,6 @@ export function AssetContextMenu({
       >
         Rename
       </button>
-      <button
-        type="button"
-        role="menuitem"
-        onClick={() => {
-          onGroup(asset.id);
-          onClose();
-        }}
-      >
-        Add to group
-      </button>
-      {asset.group ? (
-        <button
-          type="button"
-          role="menuitem"
-          onClick={() => {
-            onRemoveGroup(asset.id);
-            onClose();
-          }}
-        >
-          Remove from group
-        </button>
-      ) : null}
-      {canHaveVariants ? (
-        <button
-          type="button"
-          role="menuitem"
-          onClick={() => {
-            onCreateVariant(asset.id);
-            onClose();
-          }}
-        >
-          Create variant
-        </button>
-      ) : null}
       <button
         type="button"
         role="menuitem"

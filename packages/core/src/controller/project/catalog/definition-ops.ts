@@ -5,7 +5,7 @@ import type {
   ProjectCatalog,
 } from '@facadeur/domain';
 import { DocumentError } from '../../../document/errors';
-import { findDefinition } from './ops';
+import { findDefinition, listCatalogDefinitions } from './ops';
 import { preserveFieldIds } from './field-ids';
 
 export function createCatalogDefinition(
@@ -61,11 +61,7 @@ export function deleteCatalogDefinitionRecord(
   if (!catalog[kind][uuid]) {
     throw new DocumentError('schema', `Unknown ${kind} definition "${uuid}"`);
   }
-  for (const def of [
-    ...Object.values(catalog.atoms),
-    ...Object.values(catalog.components),
-    ...Object.values(catalog.pages),
-  ]) {
+  for (const { definition: def } of listCatalogDefinitions(catalog)) {
     const visit = (node: NodeDefinition['root']): boolean => {
       if (node.config?.definitionRef === uuid) return true;
       for (const child of node.dom.children ?? []) {
@@ -102,11 +98,7 @@ export function removeCatalogSchema(catalog: ProjectCatalog, uuid: string): Proj
   if (!catalog.schemas?.[uuid]) {
     throw new DocumentError('schema', `Unknown schema "${uuid}"`);
   }
-  for (const def of [
-    ...Object.values(catalog.atoms),
-    ...Object.values(catalog.components),
-    ...Object.values(catalog.pages),
-  ]) {
+  for (const { definition: def } of listCatalogDefinitions(catalog)) {
     if (def.schema.kind === 'ref' && def.schema.uuid === uuid) {
       throw new DocumentError('schema', `Schema "${uuid}" is referenced by ${def.name}`);
     }

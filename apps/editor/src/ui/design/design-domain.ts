@@ -59,24 +59,3 @@ export function isCatalogDocumentView(surface: EditorSurface): boolean {
 export function designDomainLabel(domain: DesignDomain): string {
   return DESIGN_DOMAIN_ITEMS.find((item) => item.id === domain)?.label ?? domain;
 }
-
-export function tokenMatchesDomain(
-  path: string,
-  type: string,
-  domain: Exclude<DesignDomain, 'fonts' | 'icons' | 'viewports'>,
-): boolean {
-  switch (domain) {
-    case 'colors':
-      return type === 'color' || path.startsWith('color.');
-    case 'spacing':
-      return path.startsWith('space.');
-    case 'radius':
-      return path.startsWith('radius.');
-    case 'shadow':
-      return type === 'shadow' || path.startsWith('shadow.');
-    case 'typography':
-      return type === 'typography' || type === 'fontFamily' || path.startsWith('type.');
-    default:
-      return false;
-  }
-}

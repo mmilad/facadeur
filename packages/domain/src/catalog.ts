@@ -2,6 +2,7 @@ import type {
   DesignPropDefinition,
   DesignTokenSet,
   GlobalStyles,
+  IconDefinition,
 } from './design-system';
 import type { JsonSchemaObject } from './schema-source';
 import type { NodeDefinition } from './node';
@@ -16,6 +17,8 @@ export interface ProjectCatalog {
   readonly schemas?: Readonly<Record<Uuid, JsonSchemaObject>>;
   /** Canonical UUID-keyed design token families, including font families. */
   readonly tokens?: DesignTokenSet;
+  /** Shared project icon resources used by the Editor toolbar and design library. */
+  readonly icons?: readonly IconDefinition[];
   /** Semantic props for `{prop:uuid}` style references. Optional until the prop editor lands. */
   readonly props?: Readonly<Record<Uuid, DesignPropDefinition>>;
   /** Global CSS, token reads/sets, and breakpoints (legacy design file concerns). */

@@ -1,4 +1,4 @@
-import type { DesignTokenRecord, DesignTokenUuid, Uuid } from '@facadeur/domain';
+import type { DesignTokenRecord, DesignTokenUuid } from '@facadeur/domain';
 import { tokenIds as exampleTokenIds } from './idList';
 import { tokenRef } from '../../references';
 

@@ -1,5 +1,5 @@
 import { Type } from '@sinclair/typebox';
-import { breakpointSchema } from '../fonts';
+import { breakpointSchema, iconDefinitionSchema } from '../fonts';
 import { designTokenSetSchema } from '../design-tokens';
 import { styleBlockSchema, tokenInterfaceSchema } from '../style';
 import { nodeDefinitionSchema } from './node-definition';
@@ -33,6 +33,7 @@ export const projectCatalogSchema = Type.Object(
     schemas: Type.Optional(Type.Record(uuidSchema, Type.Record(Type.String(), Type.Unknown()))),
     /** Canonical UUID-keyed token families, including fonts. */
     tokens: Type.Optional(designTokenSetSchema),
+    icons: Type.Optional(Type.Array(iconDefinitionSchema, { minItems: 1 })),
     props: Type.Optional(Type.Record(uuidSchema, designPropSchema)),
     globalStyles: Type.Optional(globalStylesSchema),
   },

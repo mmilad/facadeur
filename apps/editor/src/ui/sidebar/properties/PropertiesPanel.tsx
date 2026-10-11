@@ -1,27 +1,11 @@
 'use client';
 
 import type { AppService } from '../../../app-service';
-import type { EditorSession, EditorSnapshot } from '../../../domain/session';
-import type { EditorSurface } from '../../design/design-domain';
+import type { EditorSnapshot } from '../../../domain/session';
 import { CatalogNodeInspector } from './CatalogNodeInspector';
-import { NestedFieldsPanel } from './content/NestedFieldsPanel';
 
-/** Catalog definition properties (schema-driven) plus nested instance fields on legacy docs. */
-export function PropertiesPanel({
-  app,
-  session,
-  snap,
-  surface,
-}: {
-  app: AppService;
-  session: EditorSession;
-  snap: EditorSnapshot;
-  surface?: EditorSurface;
-}) {
-  if (snap.nestedSelection) {
-    return <NestedFieldsPanel session={session} snap={snap} surface={surface} />;
-  }
-
+/** Schema-driven properties for the selected Catalog node. */
+export function PropertiesPanel({ app, snap }: { app: AppService; snap: EditorSnapshot }) {
   const definition = snap.openDefinition;
   if (definition) {
     const nodeUuid = snap.selectedCatalogNodeUuid ?? definition.root.uuid;
@@ -40,7 +24,7 @@ export function PropertiesPanel({
     <div className="properties">
       <div className="inspector-context" data-testid="inspector-context">
         <span className="inspector-context-kicker">Inspector</span>
-        <strong className="inspector-context-title">{snap.document.name}</strong>
+        <strong className="inspector-context-title">Design</strong>
         <span className="inspector-context-meta">
           Open a catalog asset to edit schema-backed fields.
         </span>

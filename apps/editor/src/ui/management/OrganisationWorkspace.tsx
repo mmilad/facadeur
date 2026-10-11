@@ -20,7 +20,6 @@ export function OrganisationWorkspace({
   busy,
   execute,
   canClaimExamples,
-  onOpenProject,
 }: {
   organisation: OrganisationSummary;
   projects: ManagedProject[];
@@ -29,7 +28,6 @@ export function OrganisationWorkspace({
   busy: boolean;
   execute: (command: ManagementCommand) => Promise<ManagementResult | undefined>;
   canClaimExamples: boolean;
-  onOpenProject: (id: string) => void;
 }) {
   const [projectName, setProjectName] = useState('');
   const members = snapshot.members[organisation.id] ?? [];
@@ -103,10 +101,8 @@ export function OrganisationWorkspace({
                 key={project.id}
                 project={project}
                 canManage={canManage}
-                organisationArchived={organisation.archived}
                 busy={busy}
                 execute={execute}
-                onOpenProject={onOpenProject}
               />
             ))}
           </ul>
@@ -238,17 +234,13 @@ export function OrganisationWorkspace({
 function ProjectRow({
   project,
   canManage,
-  organisationArchived,
   busy,
   execute,
-  onOpenProject,
 }: {
   project: ManagedProject;
   canManage: boolean;
-  organisationArchived: boolean;
   busy: boolean;
   execute: (command: ManagementCommand) => Promise<ManagementResult | undefined>;
-  onOpenProject: (id: string) => void;
 }) {
   return (
     <li className="management-project-row">
@@ -257,14 +249,6 @@ function ProjectRow({
         {project.archived ? <span className="management-archived">Archived</span> : null}
       </div>
       <div className="management-actions">
-        <button
-          type="button"
-          className="management-button primary"
-          disabled={busy || project.archived || organisationArchived}
-          onClick={() => onOpenProject(project.id)}
-        >
-          Open
-        </button>
         {canManage ? (
           <>
             <button

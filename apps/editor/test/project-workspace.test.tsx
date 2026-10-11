@@ -4,7 +4,7 @@ import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import type { ProjectSnapshot } from '@facadeur/api';
 import { ProjectWorkspace } from '../src/ui/projects/ProjectWorkspace';
-import { createProjectTemplateDocument } from '@facadeur/examples';
+import { createExampleCatalog, createProjectTemplateDocument } from '@facadeur/examples';
 
 const routing = vi.hoisted(() => ({
   search: 'project=first',
@@ -32,7 +32,8 @@ function project(id: string): ProjectSnapshot {
   return {
     id,
     name: id,
-    design: { ...createProjectTemplateDocument(), schemaCatalog: { schemas: [] } },
+    catalog: createExampleCatalog(),
+    design: createProjectTemplateDocument(),
     documents: [
       {
         version: 1,

@@ -75,9 +75,7 @@ packages/core           catalog controller, document contracts, validation, and 
 packages/api            data contracts and controllers (auth, roles, SQL, JSON storage)
 packages/api-client     typed HTTP SDK for the editor's API routes
 packages/store-yjs      retained legacy adapter; not used by the editor
-packages/tokens         deprecated Core/Examples compatibility facade for API and Store Yjs
 packages/style-engine   live CSSStyleRules, component style blocks, auto layout
-packages/renderer-dom   deprecated compatibility DOM renderer; Editor canvas uses React
 packages/codegen       Shared code-generation entry point; React output engine
 packages/examples       shared fixture catalogs for Storybook and tests
 schema/                 generated JSON Schema

@@ -5,17 +5,20 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
-import { App } from '../src/ui/shell/EditorShell';
-import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
-import { openSettingsDomain } from './settings-navigation';
-import { exampleIds as fixtureIds } from '@facadeur/examples';
+import { EditorShell } from '../src/ui/shell/EditorShell';
+import { clickSettingsTab, openSettingsDomain } from './settings-navigation';
+import { createExampleCatalog, exampleIds as fixtureIds } from '@facadeur/examples';
 
-const documents = editorStandardCatalog();
 const phoneUuid = fixtureIds.catalog.breakpoints.phone;
 const tabletUuid = fixtureIds.catalog.breakpoints.tablet;
-const wideUuid = fixtureIds.catalog.breakpoints.wide;
 const ultraUuid = fixtureIds.catalog.breakpoints.ultra;
 
+const testNavigation = {
+  pathname: '/',
+  search: '',
+  push: (_href: string) => undefined,
+  replace: (_href: string) => undefined,
+};
 describe('design domain stage', () => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   let root: Root | null = null;
@@ -31,68 +34,68 @@ describe('design domain stage', () => {
   });
 
   it('filters color tokens and supports viewport overrides in the stage view', async () => {
-    const session: EditorSession = createEditorSession({
-      documents,
-      design: editorStandardDesign(),
-    });
+    const session: EditorSession = createEditorSession({ projectCatalog: createExampleCatalog() });
     host = document.createElement('div');
     document.body.append(host);
     root = createRoot(host);
     await act(async () => {
-      root?.render(<App session={session} />);
+      root?.render(<EditorShell session={session} navigation={testNavigation} />);
     });
 
     await openSettingsDomain(host!, 'colors');
     expect(host!.textContent).toContain('Settings');
     expect(host!.textContent).toContain('Colors');
-    expect(host!.textContent).toContain('--fcdr-color-accent-default');
-    expect(host!.textContent).not.toContain('space.4');
+    expect(host!.querySelector('[data-design-domain="colors"]')).not.toBeNull();
+    expect(host!.textContent).toContain('Colors / Blue / 500');
+    expect(host!.textContent).not.toContain('Spacing /');
 
     await act(async () => {
       session.setFocusViewport(tabletUuid);
       session.setEditTarget('viewport');
     });
-    expect(host!.querySelector(`[data-viewport-tab="${tabletUuid}"]`)?.getAttribute('aria-selected')).toBe(
-      'true',
-    );
+    expect(
+      host!.querySelector(`[data-viewport-tab="${tabletUuid}"]`)?.getAttribute('aria-selected'),
+    ).toBe('true');
   });
 
   it('returns to the asset preview when opening an asset from the tree', async () => {
-    const session: EditorSession = createEditorSession({
-      documents,
-      design: editorStandardDesign(),
-    });
+    const session: EditorSession = createEditorSession({ projectCatalog: createExampleCatalog() });
     host = document.createElement('div');
     document.body.append(host);
     root = createRoot(host);
     await act(async () => {
-      root?.render(<App session={session} />);
+      root?.render(<EditorShell session={session} navigation={testNavigation} />);
     });
 
     await openSettingsDomain(host!, 'spacing');
     expect(host!.querySelector('.design-domain-stage')).toBeTruthy();
 
     await act(async () => {
-      (host!.querySelector('[data-asset-id="button"]') as HTMLButtonElement).click();
+      (
+        host!.querySelector(
+          `[data-asset-id="${fixtureIds.components.button.definition}"]`,
+        ) as HTMLButtonElement
+      ).click();
     });
     expect(host!.querySelector('.design-domain-stage')).toBeNull();
     expect(document.querySelector('iframe')).toBeTruthy();
   });
   it('preserves element selection, hides canvas editing and selects token breakpoints directly', async () => {
-    const session = createEditorSession({ documents, design: editorStandardDesign() });
-    session.openAsset('button');
+    const session = createEditorSession({ projectCatalog: createExampleCatalog() });
+    session.openAsset(fixtureIds.components.button.definition);
     session.selectNode('root');
-    const before = session.getSnapshot().document;
+    const before = session.getSnapshot().design;
     host = document.createElement('div');
     document.body.append(host);
     root = createRoot(host);
-    await act(async () => root?.render(<App session={session} />));
+    await act(async () =>
+      root?.render(<EditorShell session={session} navigation={testNavigation} />),
+    );
     await openSettingsDomain(host!, 'colors');
     expect(host!.querySelector('[aria-label="Layers"]')).toBeNull();
     expect(host!.querySelector('[aria-label="Inspector"]')).toBeNull();
     expect(host!.querySelector('[aria-label="Tools"]')).toBeNull();
-    expect(host!.querySelector('[data-save="design"]')).not.toBeNull();
-    expect(host!.querySelector('[data-save="document"]')).toBeNull();
+    expect(host!.querySelector('[data-save="catalog"]')).not.toBeNull();
     const desktop = host!.querySelector(`[data-viewport-tab="${ultraUuid}"]`) as HTMLButtonElement;
     await act(async () => {
       desktop.click();
@@ -101,26 +104,28 @@ describe('design domain stage', () => {
     });
     expect(session.getSnapshot().editTarget).toBe('viewport');
     expect(session.getSnapshot().focusViewportId).toBe(ultraUuid);
-    expect(session.getSnapshot().selectedNodeId).toBe('root');
+    expect(session.getSnapshot().selectedNodeId).toBe(fixtureIds.components.button.nodes.root);
     expect(session.getSnapshot().tool).toBe('select');
-    expect(session.getSnapshot().document).toEqual(before);
+    expect(session.getSnapshot().design).toEqual(before);
     await openSettingsDomain(host!, 'fonts', { alreadyOpen: true });
     expect(host!.querySelector('[aria-label="Viewports"]')).toBeNull();
     expect(host!.textContent).toContain('Shared project resources');
     await act(async () =>
       (host!.querySelector('[data-surface="editor"]') as HTMLButtonElement).click(),
     );
-    expect(session.getSnapshot().openId).toBe('button');
-    expect(session.getSnapshot().selectedNodeId).toBe('root');
+    expect(session.getSnapshot().openId).toBe(fixtureIds.components.button.definition);
+    expect(session.getSnapshot().selectedNodeId).toBe(fixtureIds.components.button.nodes.root);
     expect(host!.querySelector('[aria-label="Inspector"]')).not.toBeNull();
   });
 
   it('keeps the viewport list in settings and shows it above token entries', async () => {
-    const session = createEditorSession({ documents, design: editorStandardDesign() });
+    const session = createEditorSession({ projectCatalog: createExampleCatalog() });
     host = document.createElement('div');
     document.body.append(host);
     root = createRoot(host);
-    await act(async () => root?.render(<App session={session} />));
+    await act(async () =>
+      root?.render(<EditorShell session={session} navigation={testNavigation} />),
+    );
     await openSettingsDomain(host!, 'viewports');
 
     expect(
@@ -144,20 +149,26 @@ describe('design domain stage', () => {
       label.blur();
     });
     expect(
-      session.getSnapshot().design.settings.breakpoints?.find((item) => item.uuid === phoneUuid)?.label,
+      session.getSnapshot().design.breakpoints.find((item) => item.uuid === phoneUuid)?.label,
     ).toBe('Mobile');
     await act(async () => {
       setter?.call(width, '1280');
       width.dispatchEvent(new Event('input', { bubbles: true }));
     });
     expect(
-      session.getSnapshot().design.settings.breakpoints?.find((item) => item.uuid === ultraUuid)?.minWidth,
+      session.getSnapshot().design.breakpoints.find((item) => item.uuid === ultraUuid)?.minWidth,
     ).toBe(1280);
 
-    await openSettingsDomain(host!, 'typography', { alreadyOpen: true });
+    await act(async () => clickSettingsTab(host!, 'colors'));
     expect(host!.querySelector('[aria-label="Viewports"]')).toBeInstanceOf(HTMLElement);
-    expect(host!.querySelector(`[data-viewport-tab="${ultraUuid}"]`)?.textContent).toContain('1280');
-    expect(host!.querySelector(`[data-viewport-tab="${phoneUuid}"]`)?.textContent).toContain('Mobile');
-    expect(host!.querySelector(`[data-viewport-tab="${phoneUuid}"]`)?.textContent).toContain('Base');
+    expect(host!.querySelector(`[data-viewport-tab="${ultraUuid}"]`)?.textContent).toContain(
+      '1280',
+    );
+    expect(host!.querySelector(`[data-viewport-tab="${phoneUuid}"]`)?.textContent).toContain(
+      'Mobile',
+    );
+    expect(host!.querySelector(`[data-viewport-tab="${phoneUuid}"]`)?.textContent).toContain(
+      'Base',
+    );
   });
 });

@@ -1,14 +1,13 @@
 import type { CoreController, NodeDefinitionModel, ProjectCatalogModel } from '@facadeur/core';
-import type { DesignPropDefinition } from '@facadeur/domain';
+import type { DesignPropDefinition, FieldValue, JsonSchemaObject, Node } from '@facadeur/domain';
 import { catalogKindForDefinition, createCatalogUuid } from '@facadeur/core';
-import type { FieldValue, JsonSchemaObject } from '@facadeur/domain';
 import type { EditorSession } from '../domain/session/types';
 import type { CatalogDefinitionKind, EditorCatalogPort } from '../domain/project/catalog-port';
 import { InspectorService } from './inspector';
 
 /** Editor entry: catalog editing via {@link CoreController}, chrome via {@link EditorSession}. */
 export class AppService {
-  readonly core: CoreController;
+  private readonly core: CoreController;
   readonly session: EditorSession;
   readonly inspector: InspectorService;
   private readonly catalogPort: EditorCatalogPort;
@@ -39,6 +38,38 @@ export class AppService {
 
   getCoreSnapshot() {
     return this.core.getSnapshot();
+  }
+
+  buildOpenDefinition() {
+    return this.core.node.element.buildOpenDefinition();
+  }
+
+  resolveSchemaForOpenDefinition() {
+    return this.core.node.schema.resolveForOpenDefinition();
+  }
+
+  effectiveSchemaForOpenDefinition() {
+    return this.core.node.schema.effectiveForOpenDefinition();
+  }
+
+  getInspectorInputs() {
+    return this.core.node.config.inspectorInputs();
+  }
+
+  patchNodeStyleRecord(nodeUuid: string, record: Readonly<Record<string, string>>) {
+    this.core.patchNodeStyleRecord(nodeUuid, record);
+  }
+
+  insertCatalogNode(parentUuid: string, index: number, node: Node) {
+    this.core.insertCatalogNode(parentUuid, index, node);
+  }
+
+  moveCatalogNode(nodeUuid: string, parentUuid: string, index: number) {
+    this.core.moveCatalogNode(nodeUuid, parentUuid, index);
+  }
+
+  removeCatalogNode(nodeUuid: string) {
+    this.core.removeCatalogNode(nodeUuid);
   }
 
   get design() {

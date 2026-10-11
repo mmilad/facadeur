@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   CoreController,
-  definitionToElementBuildConfig,
+  resolveDefinitionToElementBuildConfig,
   previewFieldsForNode,
   inspectorInputsForNode,
   type InspectorFormField,
@@ -72,9 +72,12 @@ describe('CoreController', () => {
     expect(previewFieldsForNode(core.getSnapshot().openDefinition!, rootUuid).src).toBe(
       'https://example.test/b.png',
     );
-    expect(definitionToElementBuildConfig(core.getSnapshot().openDefinition!).attributes?.src).toBe(
-      'https://example.test/b.png',
-    );
+    expect(
+      resolveDefinitionToElementBuildConfig(
+        core.getSnapshot().openDefinition!,
+        core.getSnapshot().catalog,
+      ).attributes?.src,
+    ).toBe('https://example.test/b.png');
   });
 
   it('calculates inspector field defs and merged values', () => {

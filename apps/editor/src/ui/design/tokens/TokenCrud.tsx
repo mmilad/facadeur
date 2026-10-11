@@ -7,7 +7,6 @@ import {
   tokenMetadataFromPath,
 } from '../../../domain/edits/token-creation';
 import { tokensReferencingUuid } from '../../../domain/edits/token-edit';
-import { documentsReferencingToken } from '../../../domain/component-tokens';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session';
 import { IconButton } from '../../components/IconButton';
 import { TokenAddAction } from './TokenAddAction';
@@ -39,7 +38,7 @@ export function TokenAddRow({
   function addToken(rawLabel: string): true | false {
     try {
       const path = suggestedTokenPath(rawLabel, family, existingPaths);
-      const metadata = tokenMetadataFromPath(path, family);
+      const metadata = tokenMetadataFromPath(path);
       const definition = defaultTokenValue(family);
       session.executeDesign({
         type: 'setToken',
@@ -90,10 +89,7 @@ export function RemoveTokenButton({
   label: string;
 }) {
   function removeToken() {
-    const refs = [
-      ...tokensReferencingUuid(snap.design.tokens, uuid),
-      ...documentsReferencingToken(session.boardDocuments(), uuid),
-    ];
+    const refs = tokensReferencingUuid(snap.design.tokens, uuid);
     if (refs.length) {
       session.setNotice(
         `Cannot remove "${label}": {token:${uuid}} is referenced in ${refs.join(', ')}`,

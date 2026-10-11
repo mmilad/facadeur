@@ -1,10 +1,8 @@
 import { assertValueMatches, type FieldDefinition, type FieldValue } from '@facadeur/core';
 
 export type FieldValueParseOptions = {
-  /** Trim string-like values before parsing legacy definition defaults. */
+  /** Trim text-like values when committing editor input. */
   trimStrings?: boolean;
-  /** Return `undefined` for an empty string instead of preserving it. */
-  empty?: 'undefined' | 'preserve';
 };
 
 /** Parse and validate one editor field value, including nested structured values. */
@@ -14,11 +12,10 @@ export function parseFieldValue(
   options: FieldValueParseOptions = {},
 ): FieldValue | undefined {
   const trimStrings = options.trimStrings ?? false;
-  const empty = options.empty ?? 'undefined';
   const normalized = trimStrings ? raw.trim() : raw;
 
   if (isStringField(field.type)) {
-    if (empty === 'undefined' && normalized.length === 0) return undefined;
+    if (normalized.length === 0) return undefined;
     assertValueMatches(field, normalized);
     return normalized;
   }

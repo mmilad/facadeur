@@ -1,7 +1,5 @@
 import type { ReactNode } from 'react';
 import { Fragment, useMemo, useState } from 'react';
-import type { ShownDeclaration } from '../../../domain/edits/style-edit';
-import type { LayoutCapabilities } from '../../../domain/layout-capabilities';
 import {
   BorderControl,
   BorderRadiusControl,
@@ -20,7 +18,12 @@ import { styleDeclarationGroup, type StyleDeclarationGroup } from '../style/decl
 import type { TypographyCatalogs } from '../typography/index';
 import '../../styles/form.css';
 
-export type CssDeclarationEntry = ShownDeclaration & { placeholder?: string };
+export type CssDeclarationEntry = {
+  property: string;
+  value: string;
+  overridden: boolean;
+  placeholder?: string;
+};
 
 export type StyleDeclarationCatalogs = {
   colorTokens: readonly string[];
@@ -47,7 +50,6 @@ export function CssDeclarationsControl({
   renderStructuredSection,
   renderAfterRow,
   renderValueLabelScope,
-  layoutCapabilities,
   emptyMessage = 'No declarations.',
 }: {
   entries: CssDeclarationEntry[];
@@ -63,8 +65,6 @@ export function CssDeclarationsControl({
   renderAfterRow?: (property: string, overridden: boolean) => ReactNode;
   /** Scope the displayed token label for values inherited from another owner. */
   renderValueLabelScope?: (property: string, content: ReactNode) => ReactNode;
-  /** Context used to keep existing but inactive layout declarations visible and disabled. */
-  layoutCapabilities?: LayoutCapabilities;
   emptyMessage?: ReactNode;
 }) {
   const [property, setProperty] = useState('');
@@ -187,7 +187,6 @@ export function CssDeclarationsControl({
                 item={item}
                 declarationName={declarationName}
                 catalogs={catalogs}
-                layoutCapabilities={layoutCapabilities}
                 renderValueLabelScope={renderValueLabelScope}
                 onCommitDeclaration={onCommitDeclaration}
                 renderAfterRow={renderAfterRow}
@@ -222,13 +221,6 @@ export function CssDeclarationsControl({
               onClick={() => {
                 const name = property.trim();
                 if (!name || !value.trim()) return;
-                const capability = layoutCapabilities?.property(name);
-                if (capability && !capability.supported) {
-                  setPropertyError(
-                    capability.reason ?? 'This property is inactive in the current layout context.',
-                  );
-                  return;
-                }
                 onAddDeclaration(name, value.trim());
                 setProperty('');
                 setValue('');
@@ -248,7 +240,6 @@ function DeclarationRow({
   item,
   declarationName,
   catalogs,
-  layoutCapabilities,
   renderValueLabelScope,
   onCommitDeclaration,
   renderAfterRow,
@@ -256,13 +247,10 @@ function DeclarationRow({
   item: CssDeclarationEntry;
   declarationName: (property: string) => string;
   catalogs: StyleDeclarationCatalogs;
-  layoutCapabilities?: LayoutCapabilities;
   renderValueLabelScope?: (property: string, content: ReactNode) => ReactNode;
   onCommitDeclaration: (property: string, raw: string, overridden: boolean) => void;
   renderAfterRow?: (property: string, overridden: boolean) => ReactNode;
 }) {
-  const capability = layoutCapabilities?.property(item.property);
-  const disabled = capability ? !capability.supported : false;
   const reset = renderAfterRow?.(item.property, item.overridden);
   const field = (
     <StyleDeclarationField
@@ -276,21 +264,11 @@ function DeclarationRow({
       dimensionTokens={catalogs.dimensionTokens}
       typographyCatalogs={catalogs.typographyCatalogs}
       onCommit={(next) => onCommitDeclaration(item.property, next, item.overridden)}
-      after={disabled ? undefined : reset}
+      after={reset}
     />
   );
   const scopedField = renderValueLabelScope?.(item.property, field) ?? field;
-  if (!disabled) return scopedField;
-  return (
-    <div className="layout-capability-row">
-      <fieldset disabled className="layout-capability-disabled">
-        {scopedField}
-      </fieldset>
-      <p className="meta layout-capability-note">
-        {capability?.reason ?? 'This value is inactive in the current layout context.'} {reset}
-      </p>
-    </div>
-  );
+  return scopedField;
 }
 
 type DeclarationGroup = {

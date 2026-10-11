@@ -49,14 +49,13 @@ describe('management workspace UI', () => {
     vi.restoreAllMocks();
   });
 
-  it('loads projects, exposes owner actions, and opens the selected project', async () => {
+  it('loads projects and exposes owner actions without a project open action', async () => {
     globalThis.fetch = vi.fn(async () => Response.json(ownerSnapshot)) as typeof fetch;
-    const onOpenProject = vi.fn();
     host = document.createElement('div');
     document.body.append(host);
     root = createRoot(host);
 
-    await act(async () => root?.render(<ManagementHome onOpenProject={onOpenProject} />));
+    await act(async () => root?.render(<ManagementHome />));
 
     expect(host!.textContent).toContain('Landing page');
     expect(
@@ -64,27 +63,21 @@ describe('management workspace UI', () => {
         (button) => button.textContent === 'Archive organisation',
       ),
     ).toBe(true);
-    await act(async () => {
-      Array.from(host!.querySelectorAll('button'))
-        .find((button) => button.textContent === 'Open')
-        ?.click();
-    });
-    expect(onOpenProject).toHaveBeenCalledWith('project-1');
+    expect(host!.textContent).not.toContain('Open');
     expect(host!.textContent).toContain('Members and invitations');
   });
 
-  it('keeps project mutation controls hidden for viewers while allowing open', async () => {
+  it('keeps project mutation controls hidden for viewers', async () => {
     const viewerSnapshot: ManagementSnapshot = {
       ...ownerSnapshot,
       organisations: [{ ...ownerSnapshot.organisations[0]!, role: 'viewer' }],
     };
     globalThis.fetch = vi.fn(async () => Response.json(viewerSnapshot)) as typeof fetch;
-    const onOpenProject = vi.fn();
     host = document.createElement('div');
     document.body.append(host);
     root = createRoot(host);
 
-    await act(async () => root?.render(<ManagementHome onOpenProject={onOpenProject} />));
+    await act(async () => root?.render(<ManagementHome />));
 
     expect(
       Array.from(host!.querySelectorAll('button')).some(
@@ -92,12 +85,7 @@ describe('management workspace UI', () => {
       ),
     ).toBe(false);
     expect(host!.textContent).not.toContain('Members and invitations');
-    await act(async () => {
-      Array.from(host!.querySelectorAll('button'))
-        .find((button) => button.textContent === 'Open')
-        ?.click();
-    });
-    expect(onOpenProject).toHaveBeenCalledWith('project-1');
+    expect(host!.textContent).not.toContain('Open');
   });
 
   it('creates an invitation link from the returned token and exposes invitation acceptance', async () => {
@@ -119,9 +107,7 @@ describe('management workspace UI', () => {
     document.body.append(host);
     root = createRoot(host);
 
-    await act(async () =>
-      root?.render(<ManagementHome onOpenProject={() => {}} invitationToken="incoming-token" />),
-    );
+    await act(async () => root?.render(<ManagementHome invitationToken="incoming-token" />));
     expect(host!.textContent).toContain('Accept invitation');
     await act(async () => {
       Array.from(host!.querySelectorAll('button'))

@@ -8,8 +8,6 @@ export const root: Node = {
     attributes: {
       href: '#components',
     },
-    properties: {
-      textContent: 'Explore components',
-    },
+    text: 'Explore components',
   },
 };

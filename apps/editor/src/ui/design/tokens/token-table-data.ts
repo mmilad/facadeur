@@ -1,4 +1,4 @@
-import { previewDesignTokenCssVar } from '../../../domain/component-tokens';
+import { previewDesignTokenCssVar } from '../../../domain/design-token-css';
 import { matchesSearch } from './token-search';
 
 export interface TokenTableItem {

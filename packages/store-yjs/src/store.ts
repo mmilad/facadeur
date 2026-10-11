@@ -3,6 +3,7 @@ import {
   canonicalizeFlat,
   canonicalizeJson,
   DocumentError,
+  loadTokens,
   toFlat,
   toNested,
   validateDefinitions,
@@ -17,7 +18,6 @@ import {
   type FlatDocument,
   type FlatNode,
 } from '@facadeur/core';
-import { loadTokens } from '@facadeur/tokens';
 import * as Y from 'yjs';
 import { ensureDocumentMaps, patchDocument, readDocument } from './codec';
 

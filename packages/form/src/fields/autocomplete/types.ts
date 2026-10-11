@@ -1,6 +1,6 @@
-export type AutocompleteOption = {
-  value: string;
-  label: string;
+import type { SelectOption } from '../select/types';
+
+export type AutocompleteOption = SelectOption & {
   description?: string;
   group?: string;
   keywords?: string;

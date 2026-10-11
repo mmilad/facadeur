@@ -1,4 +1,4 @@
-import type { Breakpoint, FlatDocument } from '@facadeur/core';
+import type { Breakpoint } from '@facadeur/core';
 import { activeBreakpoints } from '@facadeur/core';
 
 /** Base writes the unqueried layer. Viewport writes one min-width override. */
@@ -25,13 +25,6 @@ export interface ViewportEditContext {
   writingBreakpointId: string | null;
   /** Focused viewport that can hold a min-width override. Null on the base frame. */
   overrideViewport: ViewportRef | null;
-}
-
-/** Same list the stage uses: the open document, else the design, else the defaults. */
-export function editorBreakpoints(document: FlatDocument, design: FlatDocument): Breakpoint[] {
-  const own = document.settings.breakpoints;
-  const listed = own?.length ? own : design.settings.breakpoints;
-  return activeBreakpoints(listed);
 }
 
 export function viewportEditContext(input: {

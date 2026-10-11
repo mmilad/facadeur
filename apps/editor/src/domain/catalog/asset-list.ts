@@ -1,18 +1,16 @@
-import type { DefaultKind, NodeDefinitionModel, ProjectCatalogModel } from '@facadeur/core';
+import { listCatalogDefinitions, type DefaultKind, type ProjectCatalogModel } from '@facadeur/core';
 import type { AssetSummary } from '../session/types';
 import { catalogDefinitionDisplayName } from './display-name';
 
 export function catalogAssetSummaries(catalog: ProjectCatalogModel): AssetSummary[] {
   const assets: AssetSummary[] = [];
-  const push = (definition: NodeDefinitionModel, kind: DefaultKind) => {
+  const kindByMapKey = { atoms: 'atom', components: 'component', pages: 'page' } as const;
+  for (const { kind, definition } of listCatalogDefinitions(catalog)) {
     assets.push({
       id: definition.uuid,
       name: catalogDefinitionDisplayName(catalog, definition),
-      kind,
+      kind: kindByMapKey[kind] satisfies DefaultKind,
     });
-  };
-  for (const definition of Object.values(catalog.atoms)) push(definition, 'atom');
-  for (const definition of Object.values(catalog.components)) push(definition, 'component');
-  for (const definition of Object.values(catalog.pages)) push(definition, 'page');
+  }
   return assets.sort((left, right) => left.name.localeCompare(right.name));
 }

@@ -1,15 +1,25 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import {
   listComponentTokens,
+  emptyTokenTree,
   readTokenTree,
   tokenReference,
   tokenReferenceValue,
+  type ComponentTokenMap,
+  type TokenInterface,
+  type TokenTree,
   type Breakpoint,
-  type FlatDocument,
 } from '@facadeur/core';
 import { loadTokens, tokenCustomProperty } from '@facadeur/core';
 import { tokenDisplayLabel, tokenPath } from '../token-presentation';
 import { formatTokenValue } from '../../../domain/edits/token-edit';
+import type { EditorDesignSnapshot } from '../../../domain/session';
+
+type TokenPreviewDocument = {
+  tokens?: TokenTree;
+  componentTokens?: ComponentTokenMap;
+  tokenInterface?: TokenInterface;
+};
 
 const TokenPreviewContext = createContext<(reference: string) => string | undefined>(
   () => undefined,
@@ -29,8 +39,8 @@ export function TokenPreviewProvider({
   declarations,
   breakpoints,
 }: {
-  design: FlatDocument;
-  document: FlatDocument;
+  design: EditorDesignSnapshot;
+  document: TokenPreviewDocument;
   breakpointId: string | null;
   children: ReactNode;
   /** Effective custom properties at the selected element, including local instance rules. */
@@ -40,7 +50,7 @@ export function TokenPreviewProvider({
 }) {
   const { searchValue, labelFor } = useMemo(() => {
     const values = new Map<string, string>();
-    for (const source of [design.tokens, document.tokens]) {
+    for (const source of [design.tokens, document.tokens ?? emptyTokenTree()]) {
       for (const token of readTokenTree(source).tokens.values()) {
         values.set(
           tokenReferenceValue(token.uuid),
@@ -61,7 +71,7 @@ export function TokenPreviewProvider({
     try {
       const compiled = loadTokens({
         tokens: design.tokens,
-        breakpoints: breakpoints ?? design.settings.breakpoints,
+        breakpoints: breakpoints ?? design.breakpoints,
       });
       const index = readTokenTree(design.tokens);
       const properties = new Map<string, string>();
@@ -128,7 +138,7 @@ export function TokenPreviewProvider({
     }
   }, [
     design.tokens,
-    design.settings.breakpoints,
+    design.breakpoints,
     document.tokenInterface,
     breakpointId,
     declarations,
@@ -165,8 +175,8 @@ export function TokenValueLabelProvider({
   document,
   children,
 }: {
-  design: FlatDocument;
-  document: FlatDocument;
+  design: EditorDesignSnapshot;
+  document: TokenPreviewDocument;
   children: ReactNode;
 }) {
   const labelFor = useMemo(
@@ -183,15 +193,15 @@ export function useTokenValueLabel() {
 }
 
 function createTokenLabeler(
-  design: FlatDocument,
-  document: FlatDocument,
+  design: EditorDesignSnapshot,
+  document: TokenPreviewDocument,
 ): (reference: string) => string {
   const designLabels = new Map<string, { path: string; label: string }>();
   const documentLabels = new Map<string, { path: string; label: string }>();
   for (const token of readTokenTree(design.tokens).tokens.values()) {
     designLabels.set(tokenReferenceValue(token.uuid), { path: token.path, label: token.label });
   }
-  for (const token of readTokenTree(document.tokens).tokens.values()) {
+  for (const token of readTokenTree(document.tokens ?? emptyTokenTree()).tokens.values()) {
     documentLabels.set(tokenReferenceValue(token.uuid), { path: token.path, label: token.label });
   }
   const componentLabels = new Map<string, { path: string; label: string }>();

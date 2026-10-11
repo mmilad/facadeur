@@ -90,9 +90,6 @@ importers:
       '@facadeur/examples':
         specifier: workspace:*
         version: link:../../packages/examples
-      '@facadeur/renderer-dom':
-        specifier: workspace:*
-        version: link:../../packages/renderer-dom
       '@storybook/nextjs-vite':
         specifier: 10.6.1
         version: 10.6.1(@babel/core@7.29.7)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(next@15.5.26(@babel/core@7.29.7)(@types/node@22.20.4)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(rollup@4.63.5)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.0))(typescript@5.9.3)(vite@7.3.6(@types/node@22.20.4)(tsx@4.23.15))
@@ -154,9 +151,6 @@ importers:
       '@facadeur/examples':
         specifier: workspace:*
         version: link:../examples
-      '@facadeur/tokens':
-        specifier: workspace:*
-        version: link:../tokens
     devDependencies:
       '@types/node':
         specifier: ^22.19.0
@@ -181,33 +175,7 @@ importers:
         specifier: ^5.9.2
         version: 5.9.3
 
-  packages/codegen:
-    dependencies:
-      '@facadeur/core':
-        specifier: workspace:*
-        version: link:../core
-      '@facadeur/style-engine':
-        specifier: workspace:*
-        version: link:../style-engine
-    devDependencies:
-      '@facadeur/examples':
-        specifier: workspace:*
-        version: link:../examples
-      '@types/node':
-        specifier: ^22.19.0
-        version: 22.20.4
-      prettier:
-        specifier: ^3.6.2
-        version: 3.9.9
-      react:
-        specifier: ^19.1.1
-        version: 19.3.0
-      react-dom:
-        specifier: ^19.1.1
-        version: 19.3.0(react@19.3.0)
-      typescript:
-        specifier: ^5.9.2
-        version: 5.9.3
+  packages/codegen: {}
 
   packages/core:
     dependencies:
@@ -263,30 +231,11 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
-  packages/renderer-dom:
-    dependencies:
-      '@facadeur/core':
-        specifier: workspace:*
-        version: link:../core
-      '@facadeur/domain':
-        specifier: workspace:*
-        version: link:../domain
-    devDependencies:
-      '@facadeur/examples':
-        specifier: workspace:*
-        version: link:../examples
-      typescript:
-        specifier: ^5.9.2
-        version: 5.9.3
-
   packages/store-yjs:
     dependencies:
       '@facadeur/core':
         specifier: workspace:*
         version: link:../core
-      '@facadeur/tokens':
-        specifier: workspace:*
-        version: link:../tokens
       yjs:
         specifier: ^13.6.27
         version: 13.6.33
@@ -307,19 +256,6 @@ importers:
       '@facadeur/examples':
         specifier: workspace:*
         version: link:../examples
-      typescript:
-        specifier: ^5.9.2
-        version: 5.9.3
-
-  packages/tokens:
-    dependencies:
-      '@facadeur/core':
-        specifier: workspace:*
-        version: link:../core
-      '@facadeur/examples':
-        specifier: workspace:*
-        version: link:../examples
-    devDependencies:
       typescript:
         specifier: ^5.9.2
         version: 5.9.3

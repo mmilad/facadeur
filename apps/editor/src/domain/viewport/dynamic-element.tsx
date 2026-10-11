@@ -30,8 +30,8 @@ export function DynamicElement({ config }: { config: ElementBuildConfig }) {
     tagName,
     text,
   } = config;
-  const { textContent: legacyTextContent, ...domProperties } = properties ?? {};
-  const content = text ?? (typeof legacyTextContent === 'string' ? legacyTextContent : undefined);
+  const domProperties = properties ?? {};
+  const content = text;
   const attributeStyle = attributes.style;
   const props: Record<string, unknown> = {};
 

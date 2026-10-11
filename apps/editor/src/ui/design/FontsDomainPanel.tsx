@@ -9,9 +9,8 @@ import {
   parseFontWeights,
   type FontPatch,
 } from '../../domain/edits/font-edit';
-import { fontFamilies } from '../../domain/token-references';
+import { fontFamilyTokens } from '@facadeur/core';
 import { tokensReferencingUuid } from '../../domain/edits/token-edit';
-import { documentsReferencingToken } from '../../domain/component-tokens';
 import type { EditorSession, EditorSnapshot } from '../../domain/session';
 import { Table, type TableRowData } from '../settings/Table';
 import { TextControl } from '../controls/fields/index';
@@ -27,7 +26,7 @@ export function FontsDomainPanel({
   session: EditorSession;
   snap: EditorSnapshot;
 }) {
-  const fonts = useMemo(() => fontFamilies(snap.design.tokens), [snap.design.tokens]);
+  const fonts = useMemo(() => fontFamilyTokens(snap.design.tokens), [snap.design.tokens]);
   const [newFontLabel, setNewFontLabel] = useState('');
   const [addOpen, setAddOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -52,10 +51,7 @@ export function FontsDomainPanel({
   }
 
   function removeFont(font: Font) {
-    const refs = [
-      ...tokensReferencingUuid(snap.design.tokens, font.uuid),
-      ...documentsReferencingToken(session.boardDocuments(), font.uuid),
-    ];
+    const refs = [...tokensReferencingUuid(snap.design.tokens, font.uuid)];
     if (refs.length) {
       session.setNotice(
         `Cannot remove "${font.label}": {token:${font.uuid}} is referenced in ${refs.join(', ')}`,
@@ -71,7 +67,6 @@ export function FontsDomainPanel({
     try {
       const label = newFontLabel.trim();
       if (!label) throw new Error('Font label is required');
-      const group = '';
       if (fonts.some((font) => font.label.toLowerCase() === label.toLowerCase())) {
         throw new Error(`Font "${label}" already exists`);
       }

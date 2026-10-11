@@ -141,11 +141,7 @@ export function buildInspectorFormModel(
     node: {
       name: node.name ?? '',
       tagName: node.dom.tagName,
-      text:
-        node.dom.text ??
-        (typeof node.dom.properties?.textContent === 'string'
-          ? node.dom.properties.textContent
-          : ''),
+      text: node.dom.text ?? '',
       classList: classListFromNode(node),
       style: { ...(node.style ?? {}) },
       data: recordFromFieldValues(node.data ?? {}),

@@ -251,12 +251,12 @@ export type {
   SchemaFieldUse,
   SchemaTypeRef,
 };
+export type { IconDefinition } from '@facadeur/domain';
 export type FontStyle = Static<typeof fontStyleSchema>;
 export type FontFaceFile = Static<typeof fontFaceFileSchema>;
 export type FontSource = Static<typeof fontSourceSchema>;
 export type FontFamily = FontFamilyDefinition;
 export type FontFamilyValue = Static<typeof fontFamilySchema>;
-export type IconDefinition = Static<typeof iconDefinitionSchema>;
 export type Breakpoint = Static<typeof breakpointSchema>;
 
 export function isVariantAxis(variant: VariantDefinition): variant is VariantAxis {

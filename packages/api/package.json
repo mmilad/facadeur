@@ -14,8 +14,7 @@
   "dependencies": {
     "@facadeur/core": "workspace:*",
     "@facadeur/domain": "workspace:*",
-    "@facadeur/examples": "workspace:*",
-    "@facadeur/tokens": "workspace:*"
+    "@facadeur/examples": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.19.0",

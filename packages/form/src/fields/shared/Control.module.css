@@ -16,6 +16,11 @@
   box-shadow: var(--eu-focus-ring, 0 0 0 2px #fffdf9, 0 0 0 4px #3d5a80);
 }
 
+.control[aria-invalid='true'] {
+  border-color: var(--eu-danger, #b42318);
+  box-shadow: 0 0 0 1px var(--eu-danger, #b42318);
+}
+
 .control:disabled {
   opacity: 0.55;
   cursor: not-allowed;

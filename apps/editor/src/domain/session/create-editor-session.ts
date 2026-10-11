@@ -7,10 +7,8 @@ import {
   type CatalogDesignCommand,
   type DefaultKind,
 } from '@facadeur/core';
-import type { DesignInput } from '@facadeur/core';
 import { catalogAssetSummaries } from '../catalog/asset-list';
 import { activeBreakpoints } from '@facadeur/core';
-import { createInMemoryCatalogPort } from '../project/in-memory-catalog-port';
 import { buildCatalogEditorSnapshot, initialCatalogAsset } from './catalog-snapshot';
 import type {
   EditorDrag,
@@ -24,8 +22,6 @@ import type { StyleEditMode } from '../viewport/viewport-edit';
 
 export function createEditorSession(options: EditorSessionOptions): EditorSession {
   const core = options.core ?? new CoreController(options.projectCatalog ?? emptyProjectCatalog());
-  const catalogPort =
-    options.catalogPort ?? createInMemoryCatalogPort(() => core.getSnapshot().catalog);
 
   const listeners = new Set<() => void>();
   let workspace: DefaultKind = 'page';
@@ -153,14 +149,6 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     publish();
   });
 
-  const refuseDocumentCommand = () => {
-    notice = {
-      tone: 'info',
-      text: 'Document commands are not available — edit catalog assets and design tokens only.',
-    };
-    publish();
-  };
-
   return {
     core,
     destroy() {
@@ -182,8 +170,6 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     openAsset(id) {
       openAssetCore(id);
     },
-    drillToMaster: refuseDocumentCommand,
-    navigateDrillParent: refuseDocumentCommand,
     selectNode(nodeId) {
       if (!nodeId) {
         selectedNodeId = null;
@@ -197,7 +183,6 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       selectedRenderId = renderedId;
       publish();
     },
-    setNestedField: refuseDocumentCommand,
     setFocusViewport(id) {
       focusViewportId = id;
       publish();
@@ -206,12 +191,10 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       selectedViewportId = id;
       publish();
     },
-    setViewportChrome: refuseDocumentCommand,
     setEditTarget(target) {
       editTarget = target;
       publish();
     },
-    setActiveVariant: refuseDocumentCommand,
     setTool(next) {
       tool = next;
       publish();
@@ -224,17 +207,12 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       drag = null;
       publish();
     },
-    execute: refuseDocumentCommand,
     executeDesign(command: CatalogDesignCommand) {
       core.applyDesignCommand(command);
       designRevision += 1;
       notice = null;
       publish();
     },
-    executeDocument: refuseDocumentCommand,
-    undo: refuseDocumentCommand,
-    redo: refuseDocumentCommand,
-    loadDocument: refuseDocumentCommand,
     setNotice(text, tone = 'info') {
       notice = { tone, text };
       publish();
@@ -259,47 +237,5 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     fit() {
       fitHandler?.();
     },
-    boardDocuments: () => [],
-    boardStores: () => [],
-    designInput(): DesignInput {
-      const catalog = core.getSnapshot().catalog;
-      const design = buildCatalogEditorSnapshot({
-        core,
-        workspace,
-        openId,
-        selectedNodeId,
-        selectedRenderId,
-        tool,
-        drag,
-        notice,
-        zoomLabel,
-        generation,
-        designRevision,
-        revision,
-        catalogDirty: catalogDirty(),
-        focusViewportId,
-        selectedViewportId,
-        editTarget,
-      }).design;
-      return {
-        tokens: design.tokens,
-        breakpoints: design.settings?.breakpoints,
-      };
-    },
-    filenameFor: (id) => `${id}.json`,
-    fileHandle: () => undefined,
-    rememberHandle: () => {},
-    async saveOpenDocument() {
-      return false;
-    },
-    async saveDesign() {
-      if (!catalogDirty()) return false;
-      await core.persist(catalogPort);
-      catalogBaseline = JSON.stringify(core.getSnapshot().catalog);
-      publish();
-      return true;
-    },
-    documentStores: () => [],
-    markDocumentSaved: () => publish(),
   };
 }

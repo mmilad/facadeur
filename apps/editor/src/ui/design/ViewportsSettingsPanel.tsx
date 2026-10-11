@@ -11,8 +11,8 @@ export function ViewportsSettingsPanel({
   session: EditorSession;
   snap: EditorSnapshot;
 }) {
-  const breakpoints = configuredBreakpoints(snap.design.settings.breakpoints);
-  const active = activeBreakpoints(snap.design.settings.breakpoints);
+  const breakpoints = configuredBreakpoints(snap.design.breakpoints);
+  const active = activeBreakpoints(snap.design.breakpoints);
   const commit = (next: Breakpoint[]) => commitDesignBreakpoints(session, snap, next);
   return (
     <div className="stack design-domain-panel viewport-settings">

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { editorBreakpoints } from '../../../domain/viewport/viewport-edit';
+import { activeBreakpoints, findNodeByUuid } from '@facadeur/core';
 import {
   EDITOR_NAVIGATION_PARAMS,
   hasEditorNavigationSelection,
@@ -36,14 +36,12 @@ export function useEditorNavigation(
   const initialized = useRef(false);
   const initialSelection = useRef({
     documentId: snap.openId,
-    variantName: snap.activeVariantName ?? undefined,
-    layerId: snap.nestedSelection?.renderId ?? snap.selectedNodeId ?? undefined,
+    layerId: snap.selectedCatalogNodeUuid ?? undefined,
     viewportId: snap.selectedViewportId ?? undefined,
     surface: 'editor',
   });
   const canonicalize = useRef(false);
   const initialSyncDone = useRef(false);
-  const skipSync = useRef(false);
   const pending = useRef<{ from: string; to: string } | null>(null);
 
   useEffect(() => {
@@ -64,67 +62,48 @@ export function useEditorNavigation(
     const shouldApplySelection = hasEditorNavigationSelection(requested);
     canonicalize.current = true;
     let next = session.getSnapshot();
-    let changed = false;
 
     if (shouldApplySelection && requested.documentId) {
       const exists = next.catalog.some((asset) => asset.id === requested.documentId);
       if (exists && requested.documentId !== next.openId) {
         session.openAsset(requested.documentId, 'root');
         next = session.getSnapshot();
-        changed = true;
       }
     }
 
     if (shouldApplySelection) {
-      const variant = requested.variantName;
-      const variantExists = Boolean(
-        variant && next.document.variantPresets?.some((preset) => preset.name === variant),
-      );
-      const wantedVariant = variantExists ? variant! : null;
-      if (wantedVariant !== next.activeVariantName) {
-        session.setActiveVariant(wantedVariant);
-        next = session.getSnapshot();
-        changed = true;
-      }
-
       const requestedLayer = requested.layerId;
-      const currentLayer = next.nestedSelection?.renderId ?? next.selectedNodeId;
-      if (requestedLayer?.includes('/')) {
-        if (requestedLayer !== currentLayer) {
-          session.selectRendered(requestedLayer);
-          next = session.getSnapshot();
-          changed = true;
-        }
-      } else {
-        const nodeId =
-          requestedLayer && next.activeDocument.nodes[requestedLayer] ? requestedLayer : null;
+      const currentLayer = next.selectedCatalogNodeUuid;
+      if (requestedLayer) {
+        const root = next.openDefinition?.root;
+        const nodeId = root
+          ? findNodeByUuid(root, requestedLayer)
+            ? requestedLayer
+            : root.uuid
+          : null;
         if (nodeId !== currentLayer) {
           session.selectNode(nodeId);
           next = session.getSnapshot();
-          changed = true;
         }
       }
 
       const viewportId = requested.viewportId;
       const breakpointExists = Boolean(
         viewportId &&
-        editorBreakpoints(next.document, next.design).some((item) => item.uuid === viewportId),
+        activeBreakpoints(snap.design.breakpoints).some((item) => item.uuid === viewportId),
       );
       const wantedViewport = breakpointExists ? viewportId! : null;
       if (wantedViewport !== next.selectedViewportId) {
         session.selectViewport(wantedViewport);
         next = session.getSnapshot();
-        changed = true;
       }
     }
 
     if (surface !== requested.surface) {
       setSurfaceState(requested.surface as EditorSurface);
-      changed = true;
     }
 
     initialized.current = true;
-    if (changed) skipSync.current = true;
   }, [query, session]);
 
   useEffect(() => {
@@ -134,15 +113,12 @@ export function useEditorNavigation(
       if (query === pendingNavigation.from) return;
       pending.current = null;
     }
-    if (skipSync.current) {
-      skipSync.current = false;
-      return;
-    }
+    if (session.getSnapshot().revision !== snap.revision) return;
     if (!initialSyncDone.current) {
       initialSyncDone.current = true;
-      const hasEditorParam = Object.values(EDITOR_NAVIGATION_PARAMS).some((key) =>
-        searchParams.get(key),
-      );
+      const hasEditorParam =
+        Object.values(EDITOR_NAVIGATION_PARAMS).some((key) => searchParams.get(key)) ||
+        searchParams.has('variant');
       if (!hasEditorParam) {
         canonicalize.current = false;
         return;
@@ -151,8 +127,7 @@ export function useEditorNavigation(
     const current = parseEditorNavigation(searchParams, { isSurface });
     const desired = {
       documentId: snap.openId,
-      variantName: snap.activeVariantName ?? undefined,
-      layerId: snap.nestedSelection?.renderId ?? snap.selectedNodeId ?? undefined,
+      layerId: snap.selectedCatalogNodeUuid ?? undefined,
       viewportId: snap.selectedViewportId ?? undefined,
       surface,
     };
@@ -175,9 +150,10 @@ export function useEditorNavigation(
     query,
     push,
     replace,
-    snap.activeVariantName,
+    session,
+    snap.selectedCatalogNodeUuid,
     snap.openId,
-    snap.selectedNodeId,
+    snap.revision,
     snap.selectedRenderId,
     snap.selectedViewportId,
     surface,

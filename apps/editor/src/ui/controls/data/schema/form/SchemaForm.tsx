@@ -3,7 +3,7 @@ import { ChipsField, RecordField as FormRecordField } from '@facadeur/form';
 import type { TransformableFieldOption } from '@facadeur/form';
 import type { FieldValue } from '@facadeur/core';
 import { SchemaValueForm } from '../SchemaValueForm';
-import { getPath } from '../../../form-binding/schema/path';
+import { getPath } from '@facadeur/form';
 import type { FieldDefinition } from '@facadeur/core';
 import { PropBindableInput } from '../../../form-binding/components/input/PropBindableInput';
 import {

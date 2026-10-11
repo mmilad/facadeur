@@ -62,6 +62,7 @@ describe('validateProjectCatalog', () => {
 
     expect(colors.length).toBeGreaterThan(0);
     expect(fonts.some((font) => font.valueType === 'fontFamily')).toBe(true);
+    expect(catalog.icons?.map((icon) => icon.id)).toContain('select');
     for (const family of Object.values(catalog.tokens ?? {})) {
       for (const token of Object.values(family)) expect(token.uuid).toBeTruthy();
     }
@@ -92,6 +93,19 @@ describe('validateProjectCatalog', () => {
     });
     expect(catalog.globalStyles?.block?.rules).toHaveLength(1);
     expect(catalog.globalStyles?.breakpoints).toEqual(exampleCatalog.globalStyles?.breakpoints);
+  });
+
+  it('validates optional project icon resources', () => {
+    const catalog = validateProjectCatalog({
+      ...createExampleCatalog(),
+      icons: [{ id: 'brand-mark', name: 'Brand mark', category: 'brand', src: '/brand.svg' }],
+    });
+    expect(catalog.icons).toEqual([
+      { id: 'brand-mark', name: 'Brand mark', category: 'brand', src: '/brand.svg' },
+    ]);
+    expect(() => validateProjectCatalog({ ...createExampleCatalog(), icons: [{ id: 'bad' }] })).toThrow(
+      DocumentError,
+    );
   });
 
   it('rejects missing schema ref', () => {

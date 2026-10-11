@@ -1,16 +1,17 @@
 'use client';
 
-import { createId, findParent } from '@facadeur/core';
-import { placementAllowed, refusalMessage, toolAllowed } from '../../domain/editing';
+import {
+  canAcceptCatalogChildren,
+  createCatalogUuid,
+  defaultNestingRules,
+  findParentOfNode,
+} from '@facadeur/core';
+import type { NodeModel } from '@facadeur/core';
+import { refusalMessage, toolAllowed } from '../../domain/editing';
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import { createAppService, type AppService } from '../../app-service/index';
 import { createInMemoryCatalogPort } from '../../domain/project/in-memory-catalog-port';
-import {
-  openJsonFile,
-  parseDocumentText,
-  documentToJson,
-  download,
-} from '../../domain/assets/files';
+import { download } from '../../domain/assets/files';
 import { isEditableTarget } from '../../domain/keyboard';
 import type { EditorSession } from '../../domain/session';
 import { isCatalogDocumentView, isDesignDomain } from '../design/design-domain';
@@ -20,7 +21,6 @@ import { CatalogSchemaStage } from '../stage/CatalogSchemaStage';
 import { CatalogDesignPropsPanel } from '../settings/catalog/CatalogDesignPropsPanel';
 import { CatalogSchemasPanel } from '../settings/catalog/CatalogSchemasPanel';
 import { DesignDomainStage } from '../stage/DesignDomainStage';
-import { SettingsSections } from '../settings/SettingsSections';
 import { CatalogLayersPanel } from '../sidebar/layers/CatalogLayersPanel';
 import { ProjectTree } from '../sidebar/layers/ProjectTree';
 import { RightRail } from '../sidebar/properties/RightRail';
@@ -30,7 +30,7 @@ import { ResizableLeftRail } from './ResizableLeftRail';
 import { ToolBar } from './ToolBar';
 import { UnsavedIndicator } from './UnsavedIndicator';
 import { KindBadge } from './KindBadge';
-import { DocumentBreadcrumb } from './DocumentBreadcrumb';
+import { DocumentTitle } from './DocumentTitle';
 import { ZoomControls } from './ZoomControls';
 import { EditorSubnav } from './navigation/EditorSubnav';
 import type { EditorNavigationAdapter } from './navigation/navigation-adapter';
@@ -72,21 +72,17 @@ export function EditorShell({
   const { surface, setSurface } = useEditorNavigation(session, snap, navigation);
   const designSurface = isDesignDomain(surface);
   const editorCanvas = surface === 'editor';
-  useEditorKeys(session, editorCanvas);
+  useEditorKeys(app, session, editorCanvas);
+  const activeKind = snap.openDefinition?.kind ?? snap.workspace;
 
   return (
     <div className="app">
       <header className="topbar">
         <div className="brand">facadeur</div>
-        <DocumentBreadcrumb session={session} snap={snap} />
-        <KindBadge kind={snap.document.kind} />
+        <DocumentTitle app={app} snap={snap} />
+        <KindBadge kind={activeKind} />
         {editorCanvas ? (
-          <ToolBar
-            session={session}
-            tool={snap.tool}
-            kind={snap.document.kind}
-            icons={snap.design.icons}
-          />
+          <ToolBar session={session} tool={snap.tool} kind={activeKind} icons={snap.design.icons} />
         ) : null}
         <div className="topbar-spacer" />
         {connectionStatus ? (
@@ -100,10 +96,7 @@ export function EditorShell({
             Reset view
           </button>
         ) : null}
-        <UnsavedIndicator documentDirty={false} designDirty={snap.designDirty} />
-        <button type="button" className="text-button" onClick={() => void onOpen(session)}>
-          Open
-        </button>
+        <UnsavedIndicator designDirty={snap.designDirty} />
         <button
           type="button"
           className="text-button"
@@ -216,7 +209,7 @@ export function EditorShell({
         )}
         {designSurface || surface === 'schemas' || isCatalogDocumentView(surface) ? null : (
           <ResizableInspector>
-            <RightRail app={app} session={session} snap={snap} surface={surface} />
+            <RightRail app={app} snap={snap} />
           </ResizableInspector>
         )}
       </div>
@@ -224,34 +217,30 @@ export function EditorShell({
   );
 }
 
-/** @deprecated Use EditorShell — kept for tests importing App. */
-export const App = EditorShell;
-
-function useEditorKeys(session: EditorSession, canvasActive: boolean) {
+function useEditorKeys(app: AppService, session: EditorSession, canvasActive: boolean) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (isEditableTarget(event.target)) return;
       const key = event.key.toLowerCase();
-      if (key === 'z' && (event.ctrlKey || event.metaKey) && !event.altKey) {
-        event.preventDefault();
-        if (event.shiftKey) session.redo();
-        else session.undo();
-        return;
-      }
       if (!canvasActive) return;
       if (key === 'g' && event.altKey && (event.ctrlKey || event.metaKey) && !event.shiftKey) {
         event.preventDefault();
         const snap = session.getSnapshot();
-        const nodeId = snap.selectedNodeId;
-        if (!nodeId || nodeId === snap.document.rootId) return;
-        const parent = findParent(snap.document, nodeId);
-        if (!parent || !placementAllowed(snap.document, parent.id, 'frame')) {
-          session.setNotice(refusalMessage(snap.document.kind, 'frame'));
+        const definition = snap.openDefinition;
+        const nodeId = snap.selectedCatalogNodeUuid;
+        if (!definition || !nodeId || nodeId === definition.root.uuid) return;
+        const parentInfo = findParentOfNode(definition.root, nodeId);
+        const acceptsFrame = defaultNestingRules[definition.kind].nodeTypes.includes('frame');
+        if (!parentInfo || !acceptsFrame || !canAcceptCatalogChildren(parentInfo.parent)) {
+          session.setNotice(refusalMessage(definition.kind, 'frame'));
           return;
         }
-        const frameId = createId();
-        session.execute({ type: 'wrap', nodeId, frameId });
-        if (session.getSnapshot().document.nodes[frameId]) session.selectNode(frameId);
+        const frameId = createCatalogUuid();
+        const frame: NodeModel = { uuid: frameId, name: 'layer', dom: { tagName: 'div' } };
+        app.insertCatalogNode(parentInfo.parent.uuid, parentInfo.index, frame);
+        app.moveCatalogNode(nodeId, frameId, 0);
+        session.selectNode(frameId);
+        persistCatalogEdit(app);
         return;
       }
       if (event.metaKey || event.ctrlKey || event.altKey) return;
@@ -262,18 +251,24 @@ function useEditorKeys(session: EditorSession, canvasActive: boolean) {
           return;
         }
         if (!snap.selectedNodeId) return;
-        session.selectNode(findParent(snap.document, snap.selectedNodeId)?.id ?? null);
+        const definition = snap.openDefinition;
+        const parent = definition
+          ? findParentOfNode(definition.root, snap.selectedCatalogNodeUuid ?? '')?.parent.uuid
+          : undefined;
+        session.selectNode(parent ?? null);
         return;
       }
       if (key === 'delete' || key === 'backspace') {
         const snap = session.getSnapshot();
-        const nodeId = snap.selectedNodeId;
-        if (!nodeId || nodeId === snap.document.rootId || snap.nestedSelection) return;
-        const parent = findParent(snap.document, nodeId);
+        const definition = snap.openDefinition;
+        const nodeId = snap.selectedCatalogNodeUuid;
+        if (!definition || !nodeId || nodeId === definition.root.uuid) return;
+        const parent = findParentOfNode(definition.root, nodeId);
         event.preventDefault();
         try {
-          session.execute({ type: 'remove', nodeId });
-          session.selectNode(parent?.id ?? null);
+          app.removeCatalogNode(nodeId);
+          session.selectNode(parent?.parent.uuid ?? definition.root.uuid);
+          persistCatalogEdit(app);
         } catch (error) {
           session.setNotice(
             error instanceof Error ? error.message : 'Could not remove layer',
@@ -285,8 +280,9 @@ function useEditorKeys(session: EditorSession, canvasActive: boolean) {
       if (key === 'f' || key === 't' || key === 'i') {
         const tool = key === 'f' ? 'frame' : key === 't' ? 'text' : 'image';
         const snap = session.getSnapshot();
-        if (!toolAllowed(snap.document.kind, tool)) {
-          session.setNotice(refusalMessage(snap.document.kind, tool));
+        const kind = snap.openDefinition?.kind ?? snap.workspace;
+        if (!toolAllowed(kind, tool)) {
+          session.setNotice(refusalMessage(kind, tool));
           return;
         }
         session.setTool(tool);
@@ -294,18 +290,14 @@ function useEditorKeys(session: EditorSession, canvasActive: boolean) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [session, canvasActive]);
+  }, [app, session, canvasActive]);
 }
 
-async function onOpen(session: EditorSession) {
-  try {
-    const opened = await openJsonFile();
-    if (!opened) return;
-    const file = parseDocumentText(opened.text);
-    session.loadDocument(file, opened.handle);
-    if (session.getSnapshot().notice?.tone === 'error') return;
-    session.setNotice(`Opened ${opened.name}`);
-  } catch (error) {
-    session.setNotice(error instanceof Error ? error.message : 'Could not open the file', 'error');
-  }
+function persistCatalogEdit(app: AppService) {
+  void app.persistCatalog().catch((error) => {
+    app.session.setNotice(
+      error instanceof Error ? error.message : 'Could not save catalog',
+      'error',
+    );
+  });
 }

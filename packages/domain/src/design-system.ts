@@ -66,6 +66,13 @@ export interface FontFamilyDefinition extends DesignTokenRecord<FontFamilyValue>
   readonly valueType: 'fontFamily';
 }
 
+export interface IconDefinition {
+  readonly id: string;
+  readonly name: string;
+  readonly src: string;
+  readonly category?: string;
+}
+
 export type DesignTokenFamilyMap = Readonly<Record<DesignTokenUuid, DesignTokenRecord>>;
 export type DesignTokenSet = Readonly<{
   color: DesignTokenFamilyMap;

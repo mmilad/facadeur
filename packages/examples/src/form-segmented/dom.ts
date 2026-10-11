@@ -10,9 +10,7 @@ export const root: Node = {
         uuid: exampleFormSegmentedIds.nodes.span1,
         dom: {
           tagName: 'span',
-          properties: {
-            textContent: 'Alignment',
-          },
+          text: 'Alignment',
         },
       },
       {
@@ -24,27 +22,21 @@ export const root: Node = {
               uuid: exampleFormSegmentedIds.nodes.span2,
               dom: {
                 tagName: 'span',
-                properties: {
-                  textContent: 'Start',
-                },
+                text: 'Start',
               },
             },
             {
               uuid: exampleFormSegmentedIds.nodes.span3,
               dom: {
                 tagName: 'span',
-                properties: {
-                  textContent: 'Center',
-                },
+                text: 'Center',
               },
             },
             {
               uuid: exampleFormSegmentedIds.nodes.span4,
               dom: {
                 tagName: 'span',
-                properties: {
-                  textContent: 'End',
-                },
+                text: 'End',
               },
             },
           ],

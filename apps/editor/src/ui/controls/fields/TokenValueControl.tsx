@@ -41,7 +41,6 @@ export function TokenValueControl({
   const labelFor = useTokenLabel();
   const resolve = useTokenResolver();
   const searchValue = useTokenSearchValue();
-  const directValue = reference ? directDraft : value;
   const tokenOptions = [...new Set(reference ? [value.trim(), ...tokens] : tokens)].map((token) => {
     const path = tokenPath(token);
     const category = path.split('.')[0];
