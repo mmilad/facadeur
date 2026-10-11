@@ -3490,3 +3490,16 @@ responsibility without changing ownership or improving validation.
     affected paths; Prettier and `git diff --check` pass.
   - Result: removed the `data.name` fallbacks. Missing authored names now use the HTML tag, and
     coverage confirms content and DOM data do not override canonical labels.
+
+- [x] Cleanup: remove the unused Editor SegmentedControl binding.
+  - Evidence: the Editor binding wraps `@facadeur/form`'s `SegmentedControlField`, but repository
+    search finds no consumer of the Editor wrapper beyond its barrel exports.
+  - Action: remove the unused Editor adapter and its exports; retain the reusable field in
+    `packages/form`.
+  - Scope: dead Editor adapter only; no form package or product behavior change.
+  - Contracts: preserve the public `@facadeur/form` field and all active Editor bindings.
+  - Validation: repository-wide audit confirms no Editor references to the removed adapter;
+    workspace typecheck passes; root suite passes (69 files / 245 tests); the detector reports no
+    candidates in the binding directory; Prettier and `git diff --check` pass.
+  - Result: removed the unused Editor wrapper and both barrel exports. The reusable
+    `SegmentedControlField` remains available from `@facadeur/form`.
