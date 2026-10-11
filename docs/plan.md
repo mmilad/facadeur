@@ -3452,3 +3452,25 @@ responsibility without changing ownership or improving validation.
   - Validation: Editor field-value, bound-field and schema-value suites pass (8 tests); Editor and
     workspace typechecks pass; the detector reports no candidates in the affected paths; Prettier
     and `git diff --check` pass.
+
+- [x] Fix: render Catalog form elements as read-only in the canvas without React controlled-field warnings.
+  - Evidence: `StageCanvas` renders Catalog `ElementBuildConfig` through
+    `domain/viewport/dynamic-element.tsx` into the interaction-disabled viewport board. Catalog
+    inputs can include `value` attributes, but this renderer currently passes them to React without
+    an `onChange` handler; `apps/editor/test/design-domain.test.tsx` consequently emits repeated
+    controlled-field warnings even though these elements are only previews.
+  - Action: keep native Catalog element rendering in the Editor renderer and form field
+    implementations in `@facadeur/form`. Mark value-backed input/textarea previews read-only and
+    provide the appropriate inert handling for controlled select/checked fields; preserve their
+    authored values, attributes, and appearance.
+  - Scope: remove misleading React warning noise from the non-interactive canvas preview; no new
+    editing behavior, Catalog data change, API, or Store Yjs change.
+  - Contracts: preserve node identity, authored field values and attributes, iframe rendering, and
+    the canvas's existing non-interactive behavior.
+  - Validation: DynamicElement behavior test, design-domain test with no controlled-field warnings,
+    full root suite, workspace typecheck, detector, formatting, and `git diff --check`.
+  - Result: DynamicElement supplies inert change handling for controlled preview controls and marks
+    value-backed inputs/textareas read-only. The focused suites pass 10/10 without React controlled
+    field warnings; the full suite passes 69 files / 244 tests; workspace typecheck passes. The
+    detector reports no size candidates for changed source/test paths; Prettier and
+    `git diff --check` pass. No API/API-client or Store Yjs files changed.

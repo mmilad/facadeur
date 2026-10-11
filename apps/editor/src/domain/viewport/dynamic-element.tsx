@@ -19,6 +19,8 @@ const REACT_ATTRIBUTE_NAMES: Readonly<Record<string, string>> = {
   'http-equiv': 'httpEquiv',
 };
 
+const ignorePreviewChange = () => {};
+
 export function DynamicElement({ config }: { config: ElementBuildConfig }) {
   const elementRef = useRef<HTMLElement | null>(null);
   const {
@@ -42,6 +44,20 @@ export function DynamicElement({ config }: { config: ElementBuildConfig }) {
   }
   for (const [name, value] of Object.entries(dataset ?? {})) {
     props[`data-${name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`] = value;
+  }
+  const normalizedTagName = tagName.toLowerCase();
+  if (
+    ['input', 'select', 'textarea'].includes(normalizedTagName) &&
+    props.onChange === undefined &&
+    (props.value !== undefined || props.checked !== undefined)
+  ) {
+    props.onChange = ignorePreviewChange;
+    if (
+      (normalizedTagName === 'input' || normalizedTagName === 'textarea') &&
+      props.value !== undefined
+    ) {
+      props.readOnly = true;
+    }
   }
   if (nodeUuid) props['data-facadeur-node-uuid'] = nodeUuid;
   if (style) props.style = reactStyle(style);

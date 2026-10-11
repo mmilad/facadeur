@@ -3,7 +3,7 @@ import { cleanup, render } from '@testing-library/react';
 import { emptyProjectCatalog, type ElementBuildConfig } from '@facadeur/core';
 import { createPortal } from 'react-dom';
 import { act } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DynamicElement } from '../src/domain/viewport/dynamic-element';
 import { createViewportBoard } from '../src/domain/viewport/board';
 
@@ -84,6 +84,40 @@ describe('DynamicElement', () => {
     );
 
     expect(view.container.querySelector('input')?.getAttribute('autocomplete')).toBe('off');
+  });
+
+  it('renders controlled form elements as inert canvas previews', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const inputView = render(
+      <DynamicElement config={{ tagName: 'input', attributes: { value: 'Preview' } }} />,
+    );
+    const input = inputView.container.querySelector('input');
+    expect(input?.readOnly).toBe(true);
+
+    const textareaView = render(
+      <DynamicElement config={{ tagName: 'textarea', attributes: { value: 'Preview' } }} />,
+    );
+    expect(textareaView.container.querySelector('textarea')?.readOnly).toBe(true);
+
+    const selectView = render(
+      <DynamicElement
+        config={{
+          tagName: 'select',
+          attributes: { value: 'phone' },
+          children: [{ tagName: 'option', attributes: { value: 'phone' }, text: 'Phone' }],
+        }}
+      />,
+    );
+    expect(selectView.container.querySelector('select')?.value).toBe('phone');
+
+    const checkboxView = render(
+      <DynamicElement
+        config={{ tagName: 'input', attributes: { type: 'checkbox', checked: true } }}
+      />,
+    );
+    expect(checkboxView.container.querySelector('input')?.checked).toBe(true);
+    expect(error.mock.calls.flat().join(' ')).not.toContain('without an `onChange` handler');
+    error.mockRestore();
   });
 
   it('updates bound text content without replacing the element', () => {
