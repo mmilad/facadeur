@@ -2,7 +2,6 @@ export {
   assertComponentTokenDefault,
   componentTokenPaths,
   componentTokenPublicPath,
-  componentTokensByPath,
   findComponentTokenByPath,
   globalRefInComponentTokenDefault,
   isLocalComponentTokenPath,

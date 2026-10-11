@@ -3924,3 +3924,21 @@ responsibility without changing ownership or improving validation.
     typechecks and Storybook build pass. Form audit finds no native input/select/textarea controls
     in Editor source or stories; `form-binding` controls delegate to `@facadeur/form`. No Core,
     API, Store-Yjs, or persistence code changed.
+
+- [x] Remove the unreferenced path-indexed component token projection.
+  - Evidence: `componentTokensByPath` is exported from Core but repository search finds only its
+    declaration and barrel export. It normalizes UUID-keyed token records into the old path-keyed
+    style view; current style consumers do not call it.
+  - Action: remove the unused function and Core root export. Keep `parseComponentTokens` legacy
+    decoding inside `canonicalizeComponentTokens`, which remains required by the Flat
+    DocumentFile adapter.
+  - Scope: dead Core helper removal only; no API/API-client, Store-Yjs, persisted model, or
+    component-token behavior changes.
+  - Contracts: preserve canonical UUID-keyed component-token records and legacy DocumentFile
+    canonicalization for retained adapters.
+  - Validation: component-token migration/command tests, Core typecheck, root suite, export/caller
+    audit, candidate scan, formatting, and `git diff --check`.
+  - Result: removed `componentTokensByPath` and its unused Core root export. The Flat adapter's
+    `canonicalizeComponentTokens` and path-keyed migration test remain. Component-token tests pass
+    (6 tests), Core typecheck passes, and the root suite passes (71 files / 249 tests). No API,
+    API-client, Store-Yjs, or persistence source changed.

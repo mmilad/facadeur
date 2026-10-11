@@ -94,19 +94,6 @@ export function isLocalComponentTokenPath(
   return findComponentTokenByPath(doc, path) !== undefined;
 }
 
-/** Path-indexed view for style compilation ({path} references). Accepts legacy path-keyed maps. */
-export function componentTokensByPath(
-  value: ComponentTokenMap | undefined,
-): Record<string, Pick<ComponentToken, 'type' | 'value'>> | undefined {
-  const map = value === undefined ? undefined : parseComponentTokens(value);
-  if (!map) return undefined;
-  const byPath: Record<string, Pick<ComponentToken, 'type' | 'value'>> = {};
-  for (const token of Object.values(map)) {
-    byPath[token.path] = { type: token.type, value: token.value };
-  }
-  return byPath;
-}
-
 export function parseComponentTokenBody(value: unknown): Omit<ComponentToken, 'path'> {
   if (!Value.Check(tokenTypeSchema, (value as ComponentToken)?.type)) {
     throw new DocumentError('schema', 'Component token type is invalid');
