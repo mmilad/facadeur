@@ -35,7 +35,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   let generation = 0;
   let designRevision = 0;
   let revision = 0;
-  let catalogBaseline = JSON.stringify(core.getSnapshot().catalog);
+  const catalogBaseline = JSON.stringify(core.getSnapshot().catalog);
   function defaultFocusViewportId() {
     const breakpoints = activeBreakpoints(core.getSnapshot().catalog.globalStyles?.breakpoints);
     return breakpoints[0]?.uuid ?? null;

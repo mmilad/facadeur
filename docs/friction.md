@@ -85,6 +85,7 @@
 - **Cause/evidence:** `examples/project-template.json` has no embedded schema catalog; the definition exists in `examples/schemas.json`, which the CLI command omitted. Validation consistently reported `Schema use on "textarea" references missing schema "textarea"`; this was not a race condition.
 - **Impact:** The normal generator command failed; earlier verification used a temporary design document containing the schema library and did not cover this command.
 - **Fix (2026-10-05):** Add validated `--schemas <schemas.json>` input and pass `--schemas examples/schemas.json` in the package script. The actual `pnpm codegen` command and separate/embedded-library regression tests now pass.
+- **Superseded (2026-10-11):** Catalog-based Codegen replaced the DocumentFile CLI and the old JSON templates. The current CLI validates a Catalog, whose schema library is part of the input; the reproduction and `--schemas` workaround above describe only the retired generator.
 
 ## Resolved: generated Next demo inferred an external workspace root
 
@@ -161,3 +162,12 @@
   (`ENOTFOUND registry.npmjs.org`). Rerunning Prettier through the approved host context passed;
   `pnpm test` passed 71 files / 252 tests and workspace `pnpm typecheck` passed there as well.
   Continue using the approved host context for pnpm commands; no binary or install cleanup is needed.
+- **Resolution verified (2026-10-11, Catalog Codegen migration):** The approved host-context
+  commands `pnpm test`, `pnpm typecheck`, scoped `pnpm exec eslint`, and changed-file
+  `pnpm exec prettier --check` all completed successfully with the pinned pnpm 10.33.3. Root tests
+  passed 74 files / 262 tests. No Corepack, filesystem, or dependency-link failure recurred; use
+  this host context for repository checks if restricted execution fails again.
+- **Update (2026-10-11, schema ownership review):** Restricted `pnpm exec prettier --check
+docs/plan.md` attempted to fetch pinned pnpm 10.33.3 and failed with `ENOTFOUND`; the same
+  command through approved host execution ran successfully and identified formatting to fix. Use
+  the approved host context for package-manager commands; no install or binary cleanup is needed.

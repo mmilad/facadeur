@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useStringDraft } from '../shared/use-string-draft';
 import styles from './TextArea.module.css';
 import type { TextAreaProps } from './types';
 
@@ -16,8 +17,7 @@ export function TextArea({
   onBlur: onBlurProp,
   ...textareaProps
 }: TextAreaProps) {
-  const [draft, setDraft] = useState(value);
-  useEffect(() => setDraft(value), [value]);
+  const [draft, setDraft] = useStringDraft(value);
 
   return (
     <textarea

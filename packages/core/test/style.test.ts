@@ -2,12 +2,13 @@ import { describe, expect, it } from 'vitest';
 import {
   applyCommand,
   DocumentError,
-  resolveVariantDocument,
+  emptyTokenTree,
   tokenReferenceValue,
   toFlat,
   toNested,
   validateCatalog,
 } from '@facadeur/core';
+import { resolveVariantDocument } from '../src/legacy/flat/variants/resolve';
 import type { DocumentFile } from '@facadeur/core';
 import { createExampleCatalog } from '@facadeur/examples';
 
@@ -22,9 +23,7 @@ const exampleSpacingToken = Object.values(exampleCatalog.tokens!.space).find(
   (token) => token.group === 'gap' && token.label === 'Sm',
 )!;
 const breakpointUuid = (label: string) => {
-  const breakpoint = exampleCatalog.globalStyles?.breakpoints?.find(
-    (item) => item.label === label,
-  );
+  const breakpoint = exampleCatalog.globalStyles?.breakpoints?.find((item) => item.label === label);
   if (!breakpoint) throw new Error(`Example catalog is missing the ${label} breakpoint`);
   return breakpoint.uuid;
 };
@@ -41,11 +40,16 @@ const buttonFile: DocumentFile = {
   id: 'button',
   name: 'Button',
   kind: 'component',
+  tokens: emptyTokenTree(),
   styles: {
     states: { hover: { background: tokenReferenceValue(accentTokenUuid) } },
   },
-  tokenInterface: { reads: [accentTokenUuid] },
-  root: { id: 'root', type: 'frame', layout: { gap: '{layout.gap}' } },
+  tokenInterface: { reads: [accentTokenUuid, gapSmUuid] },
+  root: {
+    id: 'root',
+    type: 'frame',
+    layout: { gap: tokenReferenceValue(gapSmUuid) },
+  },
 };
 
 const designFile: DocumentFile = {
@@ -65,7 +69,7 @@ describe('style block and auto layout', () => {
     if (!document) throw new Error('missing button');
     expect(toNested(toFlat(document))).toEqual(document);
     expect(document.styles?.states?.hover?.background).toBe(`{token:${accentTokenUuid}}`);
-    expect(document.root.layout?.gap).toBe('{layout.gap}');
+    expect(document.root.layout?.gap).toBe(tokenReferenceValue(gapSmUuid));
   });
 
   it('validates and resolves named variant style layers without copying base styles', () => {
@@ -156,13 +160,13 @@ describe('style block and auto layout', () => {
       prop: 'layout',
       value: {
         direction: 'row',
-        gap: '{layout.gap}',
+        gap: tokenReferenceValue(gapSmUuid),
         width: { mode: 'fixed', size: { unit: '%', value: 50 } },
-        breakpoints: { [tabletBreakpointUuid]: { gap: '{layout.gap}' } },
+        breakpoints: { [tabletBreakpointUuid]: { gap: tokenReferenceValue(gapSmUuid) } },
       },
     });
     expect(next.nodes.root?.layout).toMatchObject({
-      gap: '{layout.gap}',
+      gap: tokenReferenceValue(gapSmUuid),
       width: { mode: 'fixed', size: { unit: '%', value: 50 } },
     });
     expect(() =>
@@ -232,6 +236,7 @@ describe('style block and auto layout', () => {
         ],
       },
       tokenInterface: { reads: [colorAccentUuid] },
+      tokens: emptyTokenTree(),
       styles: {
         children: {
           submit: {
@@ -249,8 +254,9 @@ describe('style block and auto layout', () => {
       },
     };
 
-    expect(() => validateCatalog([host, button])).not.toThrow();
-    expect(toNested(toFlat(host))).toEqual(host);
+    const [validatedHost] = validateCatalog([host, button]);
+    if (!validatedHost) throw new Error('missing validated host');
+    expect(toNested(toFlat(validatedHost))).toEqual(validatedHost);
     expect(resolveVariantDocument(host, 'compact').styles?.children?.submit).toMatchObject({
       declarations: { color: 'purple' },
       states: { hover: { color: 'white' } },

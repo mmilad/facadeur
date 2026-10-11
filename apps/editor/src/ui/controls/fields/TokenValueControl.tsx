@@ -6,7 +6,7 @@ import {
   useTokenResolver,
   useTokenSearchValue,
 } from './TokenPreviewContext';
-import { tokenPath, tokenTitle } from '../token-presentation';
+import { tokenPath, tokenTitle } from './token-presentation';
 
 /** Token references are kept verbatim, including references not in the current catalog. */
 export function isTokenReference(value: string): boolean {

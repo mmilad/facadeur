@@ -101,92 +101,65 @@ export class CoreController implements CoreControllerHost {
   }
 
   createDefinition(kind: CatalogMapKey, definition: NodeDefinition) {
-    this.catalog = validateProjectCatalog(
-      createCatalogDefinition(this.catalog, kind, definition),
-    ) as ProjectCatalog;
-    this.publish();
+    this.commitCatalog(createCatalogDefinition(this.catalog, kind, definition));
   }
 
   patchDefinition(kind: CatalogMapKey, uuid: string, patch: Partial<NodeDefinition>) {
-    this.catalog = validateProjectCatalog(
-      patchCatalogDefinitionRecord(this.catalog, kind, uuid, patch),
-    ) as ProjectCatalog;
-    if (this.openDefinitionId === uuid) {
-      const located = findDefinition(this.catalog, uuid);
-      if (located) this.selectedNodeUuid = located.definition.root.uuid;
-    }
-    this.publish();
+    this.commitCatalog(patchCatalogDefinitionRecord(this.catalog, kind, uuid, patch), () => {
+      if (this.openDefinitionId === uuid) {
+        const located = findDefinition(this.catalog, uuid);
+        if (located) this.selectedNodeUuid = located.definition.root.uuid;
+      }
+    });
   }
 
   deleteDefinition(kind: CatalogMapKey, uuid: string) {
-    this.catalog = validateProjectCatalog(
-      deleteCatalogDefinitionRecord(this.catalog, kind, uuid),
-    ) as ProjectCatalog;
-    if (this.openDefinitionId === uuid) {
-      this.openDefinitionId = null;
-      this.selectedNodeUuid = null;
-    }
-    this.publish();
+    this.commitCatalog(deleteCatalogDefinitionRecord(this.catalog, kind, uuid), () => {
+      if (this.openDefinitionId === uuid) {
+        this.openDefinitionId = null;
+        this.selectedNodeUuid = null;
+      }
+    });
   }
 
   upsertSchema(uuid: string, schema: JsonSchemaObject) {
-    this.catalog = validateProjectCatalog(
-      upsertCatalogSchema(this.catalog, uuid, schema),
-    ) as ProjectCatalog;
-    this.publish();
+    this.commitCatalog(upsertCatalogSchema(this.catalog, uuid, schema));
   }
 
   removeSchema(uuid: string) {
-    this.catalog = validateProjectCatalog(
-      removeCatalogSchema(this.catalog, uuid),
-    ) as ProjectCatalog;
-    this.publish();
+    this.commitCatalog(removeCatalogSchema(this.catalog, uuid));
   }
 
   upsertDesignProp(prop: import('@facadeur/domain').DesignPropDefinition) {
-    this.catalog = validateProjectCatalog(
-      upsertCatalogDesignProp(this.catalog, prop),
-    ) as ProjectCatalog;
-    this.publish();
+    this.commitCatalog(upsertCatalogDesignProp(this.catalog, prop));
   }
 
   removeDesignProp(uuid: string) {
-    this.catalog = validateProjectCatalog(
-      removeCatalogDesignProp(this.catalog, uuid),
-    ) as ProjectCatalog;
-    this.publish();
+    this.commitCatalog(removeCatalogDesignProp(this.catalog, uuid));
   }
 
   patchNodeField(field: string, value: unknown) {
     if (!this.openDefinitionId || !this.selectedNodeUuid) return;
-    this.catalog = validateProjectCatalog(
+    this.commitCatalog(
       patchNodeData(this.catalog, this.openDefinitionId, this.selectedNodeUuid, field, value),
-    ) as ProjectCatalog;
-    this.publish();
+    );
   }
 
   patchNodeDataRecord(nodeUuid: string, record: Readonly<Record<string, unknown>>) {
     if (!this.openDefinitionId) return;
-    this.catalog = validateProjectCatalog(
-      patchNodeDataRecord(this.catalog, this.openDefinitionId, nodeUuid, record),
-    ) as ProjectCatalog;
-    this.publish();
+    this.commitCatalog(patchNodeDataRecord(this.catalog, this.openDefinitionId, nodeUuid, record));
   }
 
   private patchNodeExposure(nodeUuid: string, exposure: FieldExposure) {
     if (!this.openDefinitionId) return;
-    this.catalog = validateProjectCatalog(
+    this.commitCatalog(
       patchNodeFieldExposure(this.catalog, this.openDefinitionId, nodeUuid, exposure),
-    ) as ProjectCatalog;
-    this.publish();
+    );
   }
 
   patchNodeStyleRecord(nodeUuid: string, record: Readonly<Record<string, string>>) {
     if (!this.openDefinitionId) return;
-    this.catalog = validateProjectCatalog(
-      patchNodeStyleRecord(this.catalog, this.openDefinitionId, nodeUuid, record),
-    ) as ProjectCatalog;
-    this.publish();
+    this.commitCatalog(patchNodeStyleRecord(this.catalog, this.openDefinitionId, nodeUuid, record));
   }
 
   patchNodeDomAttributeRecord(nodeUuid: string, record: Readonly<Record<string, string>>) {
@@ -208,73 +181,74 @@ export class CoreController implements CoreControllerHost {
       ),
       ...next,
     };
-    this.catalog = validateProjectCatalog(
+    this.commitCatalog(
       patchNodeDomAttributes(this.catalog, this.openDefinitionId, nodeUuid, patch),
-    ) as ProjectCatalog;
-    this.publish();
+    );
   }
 
   patchNodeDomText(nodeUuid: string, text: string) {
     if (!this.openDefinitionId) return;
-    this.catalog = validateProjectCatalog(
-      patchNodeDomText(this.catalog, this.openDefinitionId, nodeUuid, text),
-    ) as ProjectCatalog;
-    this.publish();
+    this.commitCatalog(patchNodeDomText(this.catalog, this.openDefinitionId, nodeUuid, text));
   }
 
   patchNodeClassList(nodeUuid: string, classes: readonly string[]) {
     if (!this.openDefinitionId) return;
     const value = classes.join(' ').trim();
-    this.catalog = validateProjectCatalog(
-      patchNodeDomAttributes(this.catalog, this.openDefinitionId, nodeUuid, {
-        class: value,
-      }),
-    ) as ProjectCatalog;
-    this.publish();
+    this.commitCatalog(
+      patchNodeDomAttributes(this.catalog, this.openDefinitionId, nodeUuid, { class: value }),
+    );
   }
 
   patchNodeTagName(nodeUuid: string, tagName: string) {
     if (!this.openDefinitionId) return;
-    this.catalog = validateProjectCatalog(
-      patchNodeTagName(this.catalog, this.openDefinitionId, nodeUuid, tagName),
-    ) as ProjectCatalog;
-    this.publish();
+    this.commitCatalog(patchNodeTagName(this.catalog, this.openDefinitionId, nodeUuid, tagName));
   }
 
   patchNodeName(nodeUuid: string, name: string) {
     if (!this.openDefinitionId) return;
     const definition = findDefinition(this.catalog, this.openDefinitionId)?.definition;
     if (!definition || definition.root.uuid === nodeUuid) return;
-    this.catalog = validateProjectCatalog(
-      patchNodeName(this.catalog, this.openDefinitionId, nodeUuid, name),
-    ) as ProjectCatalog;
-    this.publish();
+    this.commitCatalog(patchNodeName(this.catalog, this.openDefinitionId, nodeUuid, name));
   }
 
   patchDefinitionName(name: string) {
     if (!this.openDefinitionId) return;
     const located = findDefinition(this.catalog, this.openDefinitionId);
     if (!located) return;
-    this.catalog = validateProjectCatalog(
+    this.commitCatalog(
       patchCatalogDefinitionRecord(this.catalog, located.kind, this.openDefinitionId, { name }),
-    ) as ProjectCatalog;
-    this.publish();
+    );
   }
 
-  patchDefinitionPreviewFields(fields: Readonly<Record<string, unknown>>) {
-    if (!this.openDefinitionId) return;
-    const located = findDefinition(this.catalog, this.openDefinitionId);
+  patchDefinitionPreviewField(
+    definitionUuid: string,
+    field: string,
+    value: import('@facadeur/domain').FieldValue | undefined,
+  ) {
+    this.updateDefinitionPreviewField(definitionUuid, field, value, false);
+  }
+
+  private updateDefinitionPreviewField(
+    definitionUuid: string,
+    field: string,
+    value: import('@facadeur/domain').FieldValue | undefined,
+    emptyStringRemoves: boolean,
+  ) {
+    const located = findDefinition(this.catalog, definitionUuid);
     if (!located) return;
-    const definition = located.definition;
-    this.catalog = validateProjectCatalog(
-      patchCatalogDefinitionRecord(this.catalog, located.kind, this.openDefinitionId, {
+    const fields = {
+      ...(located.definition.config?.previewData?.fields ?? {}),
+    } as Record<string, import('@facadeur/domain').FieldValue>;
+    if (value === undefined || (emptyStringRemoves && value === '')) delete fields[field];
+    else fields[field] = value;
+    this.commitCatalog(
+      patchCatalogDefinitionRecord(this.catalog, located.kind, definitionUuid, {
         config: {
-          ...definition.config,
-          previewData: { fields: fields as Record<string, import('@facadeur/domain').FieldValue> },
+          ...located.definition.config,
+          previewData: { fields },
         },
       }),
-    ) as ProjectCatalog;
-    this.publish();
+    );
   }
 
   applyInspectorFormChange(target: InspectorFormChangeTarget) {
@@ -395,19 +369,7 @@ export class CoreController implements CoreControllerHost {
         return;
       }
       case 'previewField': {
-        const located = findDefinition(this.catalog, target.definitionUuid);
-        if (!located) return;
-        const fields = {
-          ...(located.definition.config?.previewData?.fields ?? {}),
-        } as Record<string, import('@facadeur/domain').FieldValue>;
-        if (target.value === undefined || target.value === '') delete fields[target.field];
-        else fields[target.field] = target.value;
-        this.patchDefinition(located.kind, target.definitionUuid, {
-          config: {
-            ...located.definition.config,
-            previewData: { fields },
-          },
-        });
+        this.updateDefinitionPreviewField(target.definitionUuid, target.field, target.value, true);
         return;
       }
       case 'nodeSchemaField': {
@@ -422,31 +384,31 @@ export class CoreController implements CoreControllerHost {
 
   insertCatalogNode(parentUuid: string, index: number, node: import('@facadeur/domain').Node) {
     if (!this.openDefinitionId) return;
-    this.catalog = validateProjectCatalog(
+    this.commitCatalog(
       insertCatalogNode(this.catalog, this.openDefinitionId, parentUuid, index, node),
-    ) as ProjectCatalog;
-    this.selectedNodeUuid = node.uuid;
-    this.publish();
+      () => {
+        this.selectedNodeUuid = node.uuid;
+      },
+    );
   }
 
   removeCatalogNode(nodeUuid: string) {
     if (!this.openDefinitionId) return;
-    this.catalog = validateProjectCatalog(
-      removeCatalogNode(this.catalog, this.openDefinitionId, nodeUuid),
-    ) as ProjectCatalog;
-    if (this.selectedNodeUuid === nodeUuid) {
-      this.selectedNodeUuid = this.getSnapshot().openDefinition?.root.uuid ?? null;
-    }
-    this.publish();
+    this.commitCatalog(removeCatalogNode(this.catalog, this.openDefinitionId, nodeUuid), () => {
+      if (this.selectedNodeUuid === nodeUuid) {
+        this.selectedNodeUuid = this.getSnapshot().openDefinition?.root.uuid ?? null;
+      }
+    });
   }
 
   moveCatalogNode(nodeUuid: string, parentUuid: string, index: number) {
     if (!this.openDefinitionId) return;
-    this.catalog = validateProjectCatalog(
+    this.commitCatalog(
       moveCatalogNode(this.catalog, this.openDefinitionId, nodeUuid, parentUuid, index),
-    ) as ProjectCatalog;
-    this.selectedNodeUuid = nodeUuid;
-    this.publish();
+      () => {
+        this.selectedNodeUuid = nodeUuid;
+      },
+    );
   }
 
   selectNode(uuid: string) {
@@ -456,8 +418,7 @@ export class CoreController implements CoreControllerHost {
   }
 
   async persist(port: CatalogPort) {
-    this.catalog = validateProjectCatalog(await port.save(this.catalog)) as ProjectCatalog;
-    this.publish();
+    this.commitCatalog(await port.save(this.catalog));
   }
 
   async createDefinitionFromPort(
@@ -480,5 +441,11 @@ export class CoreController implements CoreControllerHost {
 
   private publish() {
     for (const listener of this.listeners) listener();
+  }
+
+  private commitCatalog(catalog: unknown, updateState?: () => void) {
+    this.catalog = validateProjectCatalog(catalog) as ProjectCatalog;
+    updateState?.();
+    this.publish();
   }
 }

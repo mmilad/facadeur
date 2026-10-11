@@ -21,7 +21,7 @@ import { overlayBox, pointInFrame, type OverlayBox } from '../../../domain/viewp
 import { type SelectionController } from '../../../domain/selection/selection';
 import type { EditorDrag, EditorSession } from '../../../domain/session';
 import type { StageController } from '../../../domain/viewport/stage';
-import type { ViewportBoard, ViewportFrame } from '../../../domain/viewport/board';
+import type { ViewportBoard } from '../../../domain/viewport/board';
 
 export interface StageDrop {
   parentUuid: string;
@@ -137,12 +137,7 @@ export function createStagePlacement({
     });
   }
 
-  function applyDrop(
-    drag: EditorDrag,
-    drop: StageDrop | null,
-    clientX: number,
-    clientY: number,
-  ): boolean {
+  function applyDrop(drag: EditorDrag, drop: StageDrop | null): boolean {
     const definition = app.getCoreSnapshot().openDefinition;
     if (!definition) return false;
     if (drag.kind === 'node') {

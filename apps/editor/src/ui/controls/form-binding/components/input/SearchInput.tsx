@@ -1,7 +1,6 @@
 import type { InputHTMLAttributes } from 'react';
 import { SearchField } from '@facadeur/form';
 import { IconButton } from '../../../../components/IconButton';
-import { useDraftCommit } from '../../hooks/useDraftCommit';
 import { useBindable } from './bindable';
 
 export function SearchInput({
@@ -30,8 +29,6 @@ export function SearchInput({
     onCommitValue,
     id,
   } = useBindable({ name, value: valueProp, disabled, invalid, onChange, onCommit }, '');
-  const { draft, live, commit } = useDraftCommit(value, onLiveChange, onCommitValue);
-
   return (
     <div className="eu-search-wrap">
       <SearchField
@@ -39,23 +36,21 @@ export function SearchInput({
         id={idProp ?? id}
         name={name}
         className="eu-control"
-        value={draft}
+        value={value}
         disabled={isDisabled}
         placeholder={placeholder}
         invalid={isInvalid}
-        onChange={live}
-        onBlur={(event) => {
-          onBlur?.(event);
-          commit();
-        }}
+        onChange={onLiveChange}
+        onCommit={onCommitValue}
+        onBlur={onBlur}
       />
-      {draft ? (
+      {value ? (
         <span className="eu-search-clear">
           <IconButton
             label="Clear search"
             disabled={isDisabled}
             onClick={() => {
-              live('');
+              onLiveChange('');
               onCommitValue('');
             }}
           >

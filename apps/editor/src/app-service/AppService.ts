@@ -76,10 +76,6 @@ export class AppService {
     return this.getSnapshot().design;
   }
 
-  listAssets() {
-    return this.getSnapshot().catalog;
-  }
-
   async persistCatalog(catalog?: ProjectCatalogModel) {
     if (catalog) this.core.replaceCatalog(catalog);
     await this.core.persist(this.catalogPort);
@@ -132,18 +128,7 @@ export class AppService {
   async patchPreviewField(field: string, value: FieldValue | undefined) {
     const definition = this.core.getSnapshot().openDefinition;
     if (!definition) return;
-    const fields = { ...(definition.config?.previewData?.fields ?? {}) } as Record<
-      string,
-      FieldValue
-    >;
-    if (value === undefined) delete fields[field];
-    else fields[field] = value;
-    await this.patchDefinition(definition.uuid, {
-      config: {
-        ...definition.config,
-        previewData: { fields },
-      },
-    });
+    this.core.patchDefinitionPreviewField(definition.uuid, field, value);
   }
 }
 

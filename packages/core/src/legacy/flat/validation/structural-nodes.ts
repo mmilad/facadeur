@@ -1,11 +1,8 @@
 import { DocumentError } from '../../../document/errors';
 import type { FlatNode } from '../../../document/flat';
 import type { FieldDefinition, FieldValue, JsonSchema, NestedNode } from '../../../schema/document';
-import {
-  matchingSchemaIndex,
-  matchesSchemaValue,
-  resolveJsonSchema,
-} from '../../../controller/validation/json-schema-value';
+import { matchesSchemaValue, resolveJsonSchema } from '../../../controller/validation/json-schema-value';
+import { matchingSchemaIndex } from './schema-choice';
 import type { ContractDocument, SchemaResolverContext } from './types';
 
 export { matchesSchemaValue };

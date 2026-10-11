@@ -1,4 +1,5 @@
-import React, { useEffect, useState, type KeyboardEvent } from 'react';
+import React, { type KeyboardEvent } from 'react';
+import { useStringDraft } from '../shared/use-string-draft';
 import styles from './TextField.module.css';
 import type { TextFieldProps } from './types';
 
@@ -18,8 +19,7 @@ export function TextField({
   onKeyDown: onKeyDownProp,
   ...inputProps
 }: TextFieldProps) {
-  const [draft, setDraft] = useState(value);
-  useEffect(() => setDraft(value), [value]);
+  const [draft, setDraft] = useStringDraft(value);
   const listId = suggestions?.length ? `${id}-suggestions` : undefined;
   return (
     <>

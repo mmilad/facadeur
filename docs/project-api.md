@@ -36,7 +36,11 @@ roles, organisations and projects are retained. Legacy auth tables remain intact
 
 Save accepts `{ document, source, expectedHash }`. Use the source/hash from GET; a new document uses its chosen JSON filename and a null hash. The document ID must match the URL. Validation includes the current catalog and design schema. Saves are serialized and files are replaced atomically. A source changed externally returns 409. Saving a snapshot only clears the dirty baseline for that exact snapshot, preserving later edits.
 
-Editing stays in the browser until Save. Export JSON remains a browser download. Code generation reads the exported files, so save before generating components. There is currently no cross-tab collaboration, remote command API, or automatic persistence of new edits.
+Editing stays in the browser until Save. Export JSON remains a browser download. Code generation
+accepts a canonical Catalog JSON file through `pnpm codegen --catalog <file>`; it does not load a
+managed project directly. Export the current Catalog when you want to generate from its latest
+state. There is currently no cross-tab collaboration, remote command API, or automatic persistence
+of new edits.
 
 During the Yjs removal, 13 unsaved documents (including new-atom) were recovered into ignored `.facadeur/editor-recovery.json`. GET overlays these drafts onto unchanged source files and marks them unsaved. Save removes only the successfully exported draft from recovery. `.facadeur/yjs-retirement-snapshot.json` preserves the full prior catalog; original durable Yjs data is untouched. A conflicting source is reported instead of silently overriding either version.
 

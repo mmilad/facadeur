@@ -1,4 +1,4 @@
-import { CoreController, emptyProjectCatalog, validateProjectCatalog } from '@facadeur/core';
+import { CoreController, emptyProjectCatalog } from '@facadeur/core';
 import { createAppService } from '../../app-service';
 import { createCatalogPort } from './catalog-port';
 import { createEditorSession } from '../session';
@@ -12,8 +12,7 @@ export async function loadProject(
 ): Promise<ProjectSnapshot> {
   const project = await api.projects.load(projectId, { signal });
   if (!project || project.id !== projectId) throw new Error('Invalid project');
-  project.catalog = validateProjectCatalog(project.catalog ?? emptyProjectCatalog());
-  return project;
+  return { ...project, catalog: project.catalog ?? emptyProjectCatalog() };
 }
 
 type EditorProject = Pick<

@@ -178,7 +178,30 @@ importers:
         specifier: ^5.9.2
         version: 5.9.3
 
-  packages/codegen: {}
+  packages/codegen:
+    dependencies:
+      '@facadeur/core':
+        specifier: workspace:*
+        version: link:../core
+      '@facadeur/domain':
+        specifier: workspace:*
+        version: link:../domain
+      '@facadeur/style-engine':
+        specifier: workspace:*
+        version: link:../style-engine
+    devDependencies:
+      '@facadeur/examples':
+        specifier: workspace:*
+        version: link:../examples
+      '@types/node':
+        specifier: ^22.19.0
+        version: 22.20.4
+      tsx:
+        specifier: ^4.20.5
+        version: 4.23.15
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
 
   packages/core:
     dependencies:
@@ -252,6 +275,9 @@ importers:
       '@facadeur/core':
         specifier: workspace:*
         version: link:../core
+      '@facadeur/domain':
+        specifier: workspace:*
+        version: link:../domain
     devDependencies:
       '@facadeur/examples':
         specifier: workspace:*

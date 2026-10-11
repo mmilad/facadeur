@@ -6,7 +6,7 @@ import {
   type Breakpoint,
 } from '@facadeur/core';
 import { createTokenPreviewResolver } from '@facadeur/style-engine';
-import { tokenDisplayLabel, tokenPath } from '../token-presentation';
+import { tokenDisplayLabel, tokenPath } from './token-presentation';
 import { formatTokenValue } from '../../../domain/edits/token-edit';
 import type { EditorDesignSnapshot } from '../../../domain/session';
 

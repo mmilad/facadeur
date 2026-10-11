@@ -4,4 +4,4 @@ export {
   emptyProjectCatalog,
   validateProjectCatalog,
 } from '../project/catalog/validate';
-export { matchingSchemaIndex, matchesSchemaValue } from './json-schema-value';
+export { matchesSchemaValue } from './json-schema-value';

@@ -54,7 +54,10 @@ The editor's Storybook runs with:
 pnpm storybook
 ```
 
-`packages/codegen` owns React project generation. The root `pnpm codegen` command is currently disabled while its v2 catalog input workflow is being rebuilt; it should not be used to generate the legacy standalone workspace described in earlier versions of this README.
+`packages/codegen` owns React project generation from a canonical `ProjectCatalog`. Run
+`pnpm codegen --catalog catalog.json --workspace ./generated-project`; see the
+[Codegen guide](packages/codegen/README.md) for component-only output and options. Legacy
+`DocumentFile` JSON inputs are no longer supported.
 
 ## Checks
 

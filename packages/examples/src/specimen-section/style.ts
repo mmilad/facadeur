@@ -123,7 +123,7 @@ export const styles = {
     alignContent: 'stretch',
     gridTemplateColumns: 'repeat(1, minmax(0, 1fr))',
     justifyItems: 'stretch',
-    rowGap: tokenRef(exampleTokenIds.radius.lg),
+    rowGap: tokenRef(exampleTokenIds.space.gap.lg),
   },
   [exampleSpecimenSectionIds.nodes.div12]: {
     display: 'flex',

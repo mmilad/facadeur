@@ -1,7 +1,7 @@
 'use client';
 
 import type { FieldValue, JsonSchemaField } from '@facadeur/core';
-import { fieldDisplayLabel } from '../controls/data/field-label';
+import { fieldDisplayLabel } from '../controls/fields/field-label';
 import { SchemaValueForm } from '../controls/data/schema/SchemaValueForm';
 import { Stack } from '../components/layout';
 

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createExampleCatalog } from '@facadeur/examples';
+import type { ProjectCatalogModel } from '@facadeur/core';
 import { connectProject, loadProject } from '../src/domain/project/client';
 
 function project() {
@@ -20,7 +21,7 @@ afterEach(() => {
 });
 
 describe('Catalog project client', () => {
-  it('loads a project catalog with cancellation and rejects failed or invalid responses', async () => {
+  it('loads a project catalog with cancellation and rejects failed or mismatched responses', async () => {
     const input = project();
     const fetch = vi.fn().mockResolvedValueOnce(Response.json(input));
     vi.stubGlobal('fetch', fetch);
@@ -36,14 +37,18 @@ describe('Catalog project client', () => {
 
     fetch.mockResolvedValueOnce(Response.json({ ...input, id: 'another-project' }));
     await expect(loadProject(undefined, input.id)).rejects.toThrow('Invalid project');
+  });
 
-    fetch.mockResolvedValueOnce(
-      Response.json({
-        ...input,
-        catalog: { atoms: {}, components: {}, pages: {}, props: 'invalid' },
-      }),
+  it('validates Catalog data through the Core controller when connecting a project', () => {
+    const invalidCatalog = {
+      atoms: {},
+      components: {},
+      pages: {},
+      props: 'invalid',
+    } as unknown as ProjectCatalogModel;
+    expect(() => connectProject({ ...project(), catalog: invalidCatalog })).toThrow(
+      '/props Expected object',
     );
-    await expect(loadProject(undefined, input.id)).rejects.toThrow('/props Expected object');
   });
 
   it('tracks Catalog changes and persists them through the project Catalog endpoint', async () => {

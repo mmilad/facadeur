@@ -4,7 +4,7 @@ import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import type { ProjectSnapshot } from '@facadeur/api';
 import { ProjectWorkspace } from '../src/ui/projects/ProjectWorkspace';
-import { createExampleCatalog, createProjectTemplateDocument } from '@facadeur/examples';
+import { createExampleCatalog } from '@facadeur/examples';
 
 const routing = vi.hoisted(() => ({
   search: 'project=first',
@@ -28,23 +28,11 @@ afterEach(() => {
   routing.search = 'project=first';
 });
 
-function project(id: string): ProjectSnapshot {
+function project(id: string): Pick<ProjectSnapshot, 'id' | 'name' | 'access' | 'catalog'> {
   return {
     id,
     name: id,
     catalog: createExampleCatalog(),
-    design: createProjectTemplateDocument(),
-    documents: [
-      {
-        version: 1,
-        id: 'section',
-        name: 'Section',
-        kind: 'section',
-        root: { id: 'root', type: 'frame', children: [] },
-      },
-    ],
-    sources: {},
-    hashes: {},
     access: { role: 'owner', canWrite: true },
   };
 }

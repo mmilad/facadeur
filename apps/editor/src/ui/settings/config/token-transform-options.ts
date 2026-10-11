@@ -1,5 +1,5 @@
 import type { AutocompleteOption, TransformableFieldOption } from '@facadeur/form';
-import { tokenPath, tokenTitle } from '../../controls/token-presentation';
+import { tokenPath, tokenTitle } from '../../controls/fields/token-presentation';
 
 export function colorTransformOptions(
   tokens: readonly string[],

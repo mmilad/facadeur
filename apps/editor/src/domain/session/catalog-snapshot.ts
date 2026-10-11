@@ -2,7 +2,7 @@ import { defaultBreakpoints, emptyTokenTree, type CoreController } from '@facade
 import { catalogAssetSummaries } from '../catalog/asset-list';
 import { catalogLayerTree } from '../catalog/layer-tree';
 import type { AssetSummary, EditorDrag, EditorNotice, EditorSnapshot, EditorTool } from './types';
-import type { DefaultKind, ProjectCatalogModel } from '@facadeur/core';
+import type { DefaultKind } from '@facadeur/core';
 import type { StyleEditMode } from '../viewport/viewport-edit';
 
 export function buildCatalogEditorSnapshot(input: {

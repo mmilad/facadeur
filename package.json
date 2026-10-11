@@ -18,7 +18,7 @@
     "test": "vitest run --passWithNoTests",
     "verify": "pnpm typecheck && pnpm lint && pnpm test",
     "schema": "tsx scripts/export-schema.ts",
-    "codegen": "echo \"codegen disabled until catalog-driven generation is implemented\" && exit 1",
+    "codegen": "pnpm --filter @facadeur/codegen codegen",
     "storybook": "pnpm --filter @facadeur/editor storybook"
   },
   "devDependencies": {

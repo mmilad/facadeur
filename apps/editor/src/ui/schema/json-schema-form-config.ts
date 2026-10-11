@@ -1,5 +1,5 @@
 import { primaryJsonSchemaType, type JsonSchema } from '@facadeur/core';
-import { fieldDisplayLabel } from '../controls/data/field-label';
+import { fieldDisplayLabel } from '../controls/fields/field-label';
 import type { FieldConfig, FieldGroupConfig } from '../controls/data/schema/form';
 import {
   initialDraftForSchema,

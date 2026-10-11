@@ -17,4 +17,5 @@ export type SearchFieldProps = Omit<
   value: string;
   invalid?: boolean;
   onChange: (next: string) => void;
+  onCommit?: (next: string) => void;
 };

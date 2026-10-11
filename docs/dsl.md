@@ -401,12 +401,13 @@ The editor shows one same-origin iframe per breakpoint. The iframe's width is th
 
 ## Legacy React Codegen output
 
-The following describes the legacy v1 generator output. The root `pnpm codegen` command is disabled
-while the catalog-based v2 input workflow is rebuilt; these generated paths are historical.
+The following describes the legacy v1 generator output; these generated paths are historical.
+Current Catalog-based generation and its output options are documented in the
+[Codegen guide](../packages/codegen/README.md).
 
-The deprecated React codegen engine accepted these legacy documents and emitted one directory per
-React component. It was removed with the DocumentFile input model; catalog-driven generation is not
-yet implemented.
+The deprecated React codegen engine accepted legacy documents and emitted one directory per React
+component. That engine was removed with the DocumentFile input model; the current generator accepts
+canonical Catalog data and has a different output contract.
 Each directory separates `component.tsx`, `types.ts`, `style.module.css`, and its public `index.ts`.
 Props are the fields and variant axes. The component root sets `data-component` and
 `data-variant-*`. Children set `data-node`. An instance becomes a call to the generated component,

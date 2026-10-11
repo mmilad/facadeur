@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import {
-  resolveVariantDocument,
-  validateCatalog,
-  type DocumentFile,
-  type NestedNode,
-} from '../src/index';
+import { validateCatalog, type DocumentFile, type NestedNode } from '../src/index';
+import { resolveVariantDocument } from '../src/legacy/flat/variants/resolve';
 import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 const testUuid29 = globalThis.crypto.randomUUID();
 

@@ -13,8 +13,9 @@ catalog and persisted before acknowledgement. API edits are remote transactions:
 local Undo does not undo somebody else's API edit.
 
 Save is a separate, explicit export of the current shared state to its JSON source.
-It does not open a file picker. Export JSON remains a browser download. Code generation
-continues to read these JSON sources, so Save before generating updated components.
+It does not open a file picker. Export JSON remains a browser download. The current Codegen CLI
+accepts canonical Catalog JSON through `pnpm codegen --catalog <file>`; it does not load these
+legacy Yjs project sources directly.
 
 | Method | Path                                       | Result                                  |
 | ------ | ------------------------------------------ | --------------------------------------- |

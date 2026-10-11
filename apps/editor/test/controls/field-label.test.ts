@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fieldDisplayLabel } from '../../src/ui/controls/data/field-label';
+import { fieldDisplayLabel } from '../../src/ui/controls/fields/field-label';
 
 describe('field display labels', () => {
   it('humanizes field names without changing their stored keys', () => {

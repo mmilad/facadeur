@@ -210,9 +210,12 @@ export type EventDefinition = Static<typeof eventDefinitionSchema>;
 export type EventBinding = Static<typeof eventBindingSchema>;
 export type EventDataMapping = NonNullable<EventBinding['data']>[number];
 export type EventDataSource = EventDataMapping['source'];
-/** @deprecated Legacy parent-authored aliases; retained until child-contract inheritance migration. */
+/**
+ * @deprecated Legacy DocumentFile aliases. Catalogs use `fieldExposure`; this shape remains only
+ * for Server/API/Store-Yjs compatibility with persisted DocumentFiles.
+ */
 export type Expose = Static<typeof exposeSchema>;
-/** @deprecated Legacy expose alias path; retained for document compatibility. */
+/** @deprecated Path syntax for the legacy DocumentFile `Expose` contract. */
 export type ExposePath = Static<typeof exposePathSchema>;
 export type VariantAxis = Static<typeof variantAxisSchema>;
 export type DisplayOn = Static<typeof displayOnSchema>;

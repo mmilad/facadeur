@@ -5,7 +5,7 @@ import { IconButton } from '../../../../components/IconButton';
 import { Stack } from '../../../../components/layout/Stack';
 import { Inline } from '../../../../components/layout/Inline';
 import { Section } from '../../../../components/layout/Section';
-import { fieldDisplayLabel } from '../../../data/field-label';
+import { fieldDisplayLabel } from '../../../fields/field-label';
 
 export type ArrayFieldHelpers<TItem> = {
   remove: () => void;

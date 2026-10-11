@@ -3,7 +3,7 @@ import { defineConfig } from 'vitest/config';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 
-/** Curated current-model suites; migration status is tracked in docs/plan.md. */
+/** Maintained behavior suites; migration status for excluded tests is tracked in docs/plan.md. */
 export default defineConfig({
   esbuild: {
     jsx: 'automatic',
@@ -16,9 +16,12 @@ export default defineConfig({
       '@facadeur/api/schema': `${root}packages/api/src/schema/index.ts`,
       '@facadeur/api': `${root}packages/api/src/index.ts`,
       '@facadeur/domain': `${root}packages/domain/src/index.ts`,
+      '@facadeur/examples/test-support/token-fixtures': `${root}packages/examples/src/test-support/token-fixtures.ts`,
       '@facadeur/core': `${root}packages/core/src/index.ts`,
       '@facadeur/store-yjs': `${root}packages/store-yjs/src/index.ts`,
       '@facadeur/style-engine': `${root}packages/style-engine/src/index.ts`,
+      '@facadeur/codegen': `${root}packages/codegen/src/index.ts`,
+      '@facadeur/examples': `${root}packages/examples/src/index.ts`,
     },
     dedupe: ['@sinclair/typebox'],
   },
@@ -32,12 +35,16 @@ export default defineConfig({
       'packages/core/test/examples.test.ts',
       'packages/core/test/axis-size-auto.test.ts',
       'packages/core/test/component-tokens.test.ts',
+      'packages/core/test/style-rules.test.ts',
+      'packages/core/test/style.test.ts',
       'packages/core/test/catalog-field-exposure.test.ts',
       'packages/core/test/field-compatibility.test.ts',
       'packages/core/test/core-controller.test.ts',
       'packages/api/test/catalog.test.ts',
       'packages/api/test/project-storage.test.ts',
       'packages/style-engine/test/design-css.test.ts',
+      'packages/codegen/test/generate.test.ts',
+      'packages/codegen/test/cli.test.ts',
       'packages/core/test/catalog-design.test.ts',
       'packages/core/test/catalog-tree-ops.test.ts',
       'packages/core/test/prop-ref.test.ts',
@@ -74,6 +81,7 @@ export default defineConfig({
       'apps/editor/test/form/overlay.test.tsx',
       'apps/editor/test/controls/field-label.test.ts',
       'packages/form/test/form-path.test.ts',
+      'packages/form/test/search-field.test.tsx',
       'apps/editor/test/controls/token-preview.test.tsx',
       'apps/editor/test/icons-domain.test.tsx',
       'apps/editor/test/token-tables.test.tsx',

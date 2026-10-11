@@ -21,7 +21,7 @@ export interface ProjectCatalog {
   readonly icons?: readonly IconDefinition[];
   /** Semantic props for `{prop:uuid}` style references. Optional until the prop editor lands. */
   readonly props?: Readonly<Record<Uuid, DesignPropDefinition>>;
-  /** Global CSS, token reads/sets, and breakpoints (legacy design file concerns). */
+  /** Project-level CSS declarations, token bindings, and responsive breakpoints. */
   readonly globalStyles?: GlobalStyles;
 }
 

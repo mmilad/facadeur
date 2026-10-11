@@ -18,7 +18,7 @@ import {
 } from './token-breakpoint-helpers';
 import { TokenPreview } from './token-table-preview';
 import { ComboField } from '../../combofield/ComboField';
-import { tokenLeafLabel } from '../../controls/token-presentation';
+import { tokenLeafLabel } from '../../controls/fields/token-presentation';
 import { withTokenMetadata, withTokenLabel } from '../../../domain/edits/token-edit';
 import {
   DESIGN_TOKEN_CSS_PREFIX,

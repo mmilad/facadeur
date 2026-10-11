@@ -2,5 +2,24 @@
   "name": "@facadeur/codegen",
   "version": "0.0.0",
   "private": true,
-  "description": "Reserved for catalog-driven project generation; implementation is not wired yet."
+  "description": "Generate React components and Storybook stories from a ProjectCatalog.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./engines/react": "./engines/react/src/index.ts"
+  },
+  "scripts": {
+    "codegen": "tsx src/cli.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@facadeur/core": "workspace:*",
+    "@facadeur/domain": "workspace:*",
+    "@facadeur/style-engine": "workspace:*"
+  },
+  "devDependencies": {
+    "@facadeur/examples": "workspace:*",
+    "@types/node": "^22.19.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
 }

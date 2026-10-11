@@ -2,10 +2,8 @@ import { type ErrorObject, type ValidateFunction } from 'ajv';
 import { DocumentError } from '../../../document/errors';
 import { createAjv } from '../../../controller/validation/ajv';
 import {
-  createDocumentSchema,
   documentFileSchema,
   type DocumentFile,
-  type DocumentSchemaOptions,
 } from '../../../schema/document';
 import {
   hasLegacyReferenceLocations,
@@ -18,7 +16,9 @@ const ajv = createAjv();
 const validateFile: ValidateFunction = ajv.compile(documentFileSchema);
 
 /**
- * @deprecated Flat `DocumentFile` JSON. Prefer {@link validateProjectCatalog} for project data; remove with the document-file editor path.
+ * @deprecated Legacy `DocumentFile` validation and migration for API, Server, and Store-Yjs
+ * adapters. Catalog project data must use `validateProjectCatalog`; remove after those adapters
+ * migrate away from the document-file format.
  */
 export function validateDocumentFile(data: unknown): DocumentFile {
   const migrated = migrateDocumentDesignLibraries(data);
@@ -57,13 +57,6 @@ function migrateDocumentDesignLibraries(data: unknown) {
   if (migration.breakpoints && settings)
     next.settings = { ...settings, breakpoints: migration.breakpoints };
   return next;
-}
-
-/**
- * @deprecated Flat document Ajv validator. Remove with {@link validateDocumentFile} and the document-file editor path.
- */
-export function compileDocumentValidator(options: DocumentSchemaOptions = {}): ValidateFunction {
-  return createAjv().compile(createDocumentSchema(options));
 }
 
 function formatErrors(errors: ErrorObject[] | null | undefined) {

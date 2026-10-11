@@ -181,7 +181,7 @@ describe('design token tables', () => {
     expect(labelOf()).toBe('Comfortable');
     expect(inputFor().value).toBe('Comfortable');
 
-    let tokens = session!.getSnapshot().design.tokens as TokenTree;
+    const tokens = session!.getSnapshot().design.tokens as TokenTree;
     act(() => {
       session!.executeDesign({
         type: 'setToken',

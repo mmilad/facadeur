@@ -23,7 +23,7 @@ import { ViewportTabs } from '../ViewportTabs';
 import { TokenAddRow } from './TokenCrud';
 import { effectiveBreakpointValue, groupTokens, type TableToken } from './token-breakpoint-helpers';
 import { createTokenTableRow } from './token-table-row';
-import { tokenLeafLabel, tokenTitle } from '../../controls/token-presentation';
+import { tokenLeafLabel, tokenTitle } from '../../controls/fields/token-presentation';
 import {
   useTokenLabel,
   useTokenResolver,

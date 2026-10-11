@@ -220,7 +220,7 @@ export function useStagePointer({
       pending = null;
       selection.showInsert(null);
       session.endDrag();
-      placement.applyDrop(drag, drop, event.clientX, event.clientY);
+      placement.applyDrop(drag, drop);
     };
 
     const onDragLeave = (event: DragEvent) => {

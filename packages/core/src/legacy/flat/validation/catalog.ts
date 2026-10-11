@@ -48,7 +48,9 @@ export interface ValidateCatalogOptions {
 }
 
 /**
- * @deprecated Legacy document catalog validation. New projects should use `validateProjectCatalog`.
+ * @deprecated Legacy `DocumentFile` catalog validation retained for API and Server persistence.
+ * New Catalog project data must use `validateProjectCatalog`; remove after those boundaries
+ * migrate away from the document-file format.
  */
 export function validateCatalog(
   files: readonly unknown[],

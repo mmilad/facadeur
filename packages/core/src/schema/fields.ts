@@ -129,13 +129,16 @@ export const eventDefinitionSchema = Type.Object(
   { additionalProperties: false },
 );
 
-/** @deprecated Legacy alias path; retained until child-contract inheritance migration. */
+/** @deprecated Legacy DocumentFile path syntax; Catalog field exposure uses its own contract. */
 export const exposePathSchema = Type.String({
   minLength: 1,
   pattern: '^[A-Za-z][A-Za-z0-9_-]*(\\.[A-Za-z][A-Za-z0-9_-]*)*$',
 });
 
-/** @deprecated Parent-authored aliases; retained for existing documents pending child-contract inheritance. */
+/**
+ * @deprecated Legacy DocumentFile parent-authored aliases. Catalogs use `fieldExposure`; this
+ * shape remains only for Server/API/Store-Yjs compatibility with persisted DocumentFiles.
+ */
 export const exposeSchema = Type.Object(
   {
     fields: Type.Optional(Type.Record(idSchema, exposePathSchema)),

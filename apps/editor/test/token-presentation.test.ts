@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { tokenDisplayLabel, tokenTitle } from '../src/ui/controls/token-presentation';
+import { tokenDisplayLabel, tokenTitle } from '../src/ui/controls/fields/token-presentation';
 import { matchesSearch } from '../src/ui/design/tokens/token-search';
 import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 

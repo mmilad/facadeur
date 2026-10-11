@@ -154,7 +154,7 @@ export function removeEvent(doc: FlatDocument, name: string) {
   }
 }
 
-/** @deprecated Compatibility command for parent-authored aliases pending child-contract inheritance. */
+/** @deprecated Legacy DocumentFile command; Catalogs use Core's `fieldExposure` operations. */
 export function setExpose(doc: FlatDocument, expose: Expose | null) {
   if (expose === null) {
     delete doc.expose;

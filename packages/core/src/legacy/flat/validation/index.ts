@@ -1,5 +1,5 @@
 /** Public Flat DocumentFile validation contracts retained for existing Core consumers. */
-export { compileDocumentValidator, validateDocumentFile } from './schema';
+export { validateDocumentFile } from './schema';
 export { assertEventDefinition, assertExpose } from './assertions/events';
 export { assertFieldDefinition, assertValueMatches } from './assertions/fields';
 export {

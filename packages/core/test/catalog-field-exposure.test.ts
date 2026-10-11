@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { FieldExposure, FieldValue, NodeDefinition, ProjectCatalog } from '@facadeur/domain';
+import { createExampleCatalog, exampleIds } from '@facadeur/examples';
 import { effectiveSchemaForDefinition } from '../src/controller/project/catalog/field-contract';
 import { CoreController } from '../src/controller/project/controller';
 import { buildInspectorFormModel } from '../src/controller/project/node/preview/inspector-view';
 import { resolveDefinitionToElementBuildConfig } from '../src/controller/project/node/preview/resolve';
 import { validateProjectCatalog } from '../src/controller/project/catalog/validate';
-const testUuid7 = globalThis.crypto.randomUUID();
 const testUuid8 = globalThis.crypto.randomUUID();
-const testUuid9 = globalThis.crypto.randomUUID();
 const testUuid10 = globalThis.crypto.randomUUID();
 const testUuid11 = globalThis.crypto.randomUUID();
 const testUuid12 = globalThis.crypto.randomUUID();
@@ -15,39 +14,22 @@ const testUuid13 = globalThis.crypto.randomUUID();
 const testUuid14 = globalThis.crypto.randomUUID();
 const testUuid15 = globalThis.crypto.randomUUID();
 
-const imageId = testUuid7;
+const imageId = exampleIds.components.image.definition;
 const cardId = testUuid8;
-const imageNodeId = testUuid9;
 
 function catalogWith(
   exposure: FieldExposure,
   imageInstanceExposure?: FieldExposure,
   previewData: Record<string, FieldValue> = {},
 ): ProjectCatalog {
-  const image: NodeDefinition = {
-    uuid: imageId,
-    name: 'Image',
-    kind: 'atom',
-    schema: {
-      kind: 'inline',
-      schema: {
-        type: 'object',
-        required: ['src'],
-        properties: {
-          src: { type: 'string', default: 'asset-src' },
-          alt: { type: 'string' },
-          ratio: { type: 'string' },
-        },
-        additionalProperties: false,
-      },
-    },
+  const catalog = createExampleCatalog();
+  const image = catalog.atoms[imageId]!;
+  const exposedImage: NodeDefinition = {
+    ...image,
     config: {
+      ...image.config,
       fieldExposure: exposure,
       previewData: { fields: { src: 'asset-src', alt: 'asset-alt' } },
-    },
-    root: {
-      uuid: imageNodeId,
-      dom: { tagName: 'img', attributes: { src: 'fallback-src', alt: 'fallback-alt' } },
     },
   };
   const card: NodeDefinition = {
@@ -81,7 +63,11 @@ function catalogWith(
       },
     },
   };
-  return { atoms: { [imageId]: image }, components: { [cardId]: card }, pages: {} };
+  return {
+    ...catalog,
+    atoms: { ...catalog.atoms, [imageId]: exposedImage },
+    components: { ...catalog.components, [cardId]: card },
+  };
 }
 
 describe('catalog field exposure', () => {
@@ -247,11 +233,7 @@ describe('catalog field exposure', () => {
 
     const core = new CoreController(catalog);
     core.openDefinition(cardId);
-    core.node.preview.applyFormChange(
-      'node.text',
-      `{props:${titlePropId}}`,
-      testUuid15,
-    );
+    core.node.preview.applyFormChange('node.text', `{props:${titlePropId}}`, testUuid15);
     expect(core.getSnapshot().openDefinition?.root.dom.children?.[0]?.dom.text).toBe(
       `{props:${titlePropId}}`,
     );

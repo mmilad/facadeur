@@ -51,6 +51,7 @@ export {
   buildInspectorFormModel,
   inspectorChangeTarget,
 } from './controller/project/node/preview/inspector-view';
+export { componentPropsForSchema } from './controller/project/catalog/field-ids';
 export {
   designPropOptions,
   encodePropRef,
@@ -103,8 +104,6 @@ export {
 } from './legacy/flat/document/commands/index';
 /** @deprecated Flat DocumentFile store contract retained for legacy consumers. */
 export type { DocumentChange, DocumentStore } from './legacy/flat/store/types';
-/** @deprecated Flat DocumentFile variant helpers. New project code should use Catalog APIs. */
-export { resolveVariantDocument, variantPresets } from './legacy/flat/variants/index';
 export { canonicalizeJson, isJsonValue, isPlainObject, type JsonValue } from './utils';
 export {
   childOverridePath,
@@ -142,6 +141,7 @@ export {
 } from './document/html-tags';
 export { canonicalizeLayout, layoutTokenRefs, parseLayout } from './controller/style/layout';
 export {
+  appendStyleSelectorSuffix,
   assertStyleSelector,
   bindStyleRuleSelector,
   renderStyleRuleSelector,
@@ -283,7 +283,7 @@ export {
 export { collectTokenRefs, refsInText } from './controller/style/references/collect';
 export { omitVariantAxis, omitVariantValues } from './controller/style/blocks/edit';
 export { parseStyleBlock, parseTokenInterface } from './controller/style/blocks/parse';
-export { matchingSchemaIndex, matchesSchemaValue } from './controller/validation/index';
+export { matchesSchemaValue } from './controller/validation/index';
 /** @deprecated Flat DocumentFile validation contracts retained for legacy adapters. */
 export {
   assertDefinitionKind,
@@ -299,7 +299,6 @@ export {
   assertRepeat,
   assertVariantPreset,
   assertVariantAxis,
-  compileDocumentValidator,
   validateCatalog,
   resolveChildFieldDefinition,
   automaticFieldGroupsFor,

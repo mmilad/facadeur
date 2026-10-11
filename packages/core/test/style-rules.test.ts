@@ -1,18 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyCommand,
+  appendStyleSelectorSuffix,
   assertStyleSelector,
   bindStyleRuleSelector,
   DocumentError,
   emptyTokenTree,
   renderStyleRuleSelector,
-  resolveVariantDocument,
   selectorClassNames,
   toFlat,
   toNested,
   validateCatalog,
 } from '@facadeur/core';
 import type { DocumentFile, StyleRule } from '@facadeur/core';
+import { resolveVariantDocument } from '../src/legacy/flat/variants/resolve';
 import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 const tabletBreakpointUuid = fixtureIds.catalog.breakpoints.tablet;
@@ -51,15 +52,14 @@ describe('readable style classes and selector rules', () => {
     expect(() => assertStyleSelector('.card??')).toThrow(DocumentError);
     expect(() => assertStyleSelector(':has()')).toThrow(DocumentError);
     expect(() => assertStyleSelector('.card /* .ignored */')).toThrow(DocumentError);
+    expect(appendStyleSelectorSuffix(':is(.card, .title), .card::before', ':hover')).toBe(
+      ':is(.card, .title):hover, .card:hover::before',
+    );
   });
 
   it('round-trips rule order and rewrites bound names after node renames', () => {
     const [document] = validateCatalog([source]);
     if (!document) throw new Error('missing document');
-    const names = new Map([
-      ['root', 'card'],
-      ['title', 'title'],
-    ]);
     expect(toNested(toFlat(document))).toEqual(document);
 
     const rule = document.styles?.rules?.[0];
