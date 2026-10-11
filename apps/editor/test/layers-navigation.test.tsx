@@ -7,7 +7,9 @@ import { useMemo, useSyncExternalStore } from 'react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createExampleCatalog, exampleIds } from '@facadeur/examples';
+import type { Node } from '@facadeur/domain';
 import { createAppService } from '../src/app-service';
+import { catalogLayerTree } from '../src/domain/catalog/layer-tree';
 import { createInMemoryCatalogPort } from '../src/domain/project/in-memory-catalog-port';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { CatalogLayersPanel } from '../src/ui/sidebar/layers/CatalogLayersPanel';
@@ -46,6 +48,34 @@ afterEach(() => {
 });
 
 describe('catalog layer navigation', () => {
+  it('uses authored node names and falls back to the tag instead of content data', () => {
+    const catalog = createExampleCatalog();
+    const root: Node = {
+      uuid: 'root',
+      dom: {
+        tagName: 'main',
+        children: [
+          {
+            uuid: 'named',
+            name: '  Primary action  ',
+            data: { name: 'form field value' },
+            dom: { tagName: 'button', data: { name: 'DOM data value' } },
+          },
+          {
+            uuid: 'unnamed',
+            data: { name: 'another form value' },
+            dom: { tagName: 'input', data: { name: 'DOM data value' } },
+          },
+        ],
+      },
+    };
+
+    const tree = catalogLayerTree('definition-1', root, catalog);
+
+    expect(tree.name).toBe('root');
+    expect(tree.children.map(({ name }) => name)).toEqual(['Primary action', 'input']);
+  });
+
   it('selects catalog nodes and reveals a selected descendant after collapsing its parent', async () => {
     const session = setup();
     const layers = within(screen.getByRole('region', { name: 'Layers' }));

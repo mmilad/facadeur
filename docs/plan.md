@@ -3474,3 +3474,19 @@ responsibility without changing ownership or improving validation.
     field warnings; the full suite passes 69 files / 244 tests; workspace typecheck passes. The
     detector reports no size candidates for changed source/test paths; Prettier and
     `git diff --check` pass. No API/API-client or Store Yjs files changed.
+
+- [x] Cleanup: use only the canonical Catalog node name for Editor layer labels.
+  - Evidence: `apps/editor/src/domain/catalog/layer-tree.ts` falls back to `node.data.name` and
+    `node.dom.data.name`, even though node names are represented by `node.name`; the data fields
+    are content/DOM data and can coincidentally contain a `name` key. Example Catalog definitions
+    are normalized to carry layer names before they are exposed to Editor.
+  - Action: remove the data-field fallback and use the existing HTML-tag fallback when a node has
+    no authored `name`; add focused coverage for both behaviors.
+  - Scope: Editor layer-label cleanup only; no persisted data migration or compatibility shim.
+  - Contracts: preserve root label, trimmed authored node names, DOM tag fallback, Catalog data,
+    public APIs, API/API-client, and Store Yjs behavior.
+  - Validation: focused layer navigation suite passes (4 tests); full root suite passes (69 files /
+    245 tests); Editor and workspace typechecks pass; the detector reports no candidates in the
+    affected paths; Prettier and `git diff --check` pass.
+  - Result: removed the `data.name` fallbacks. Missing authored names now use the HTML tag, and
+    coverage confirms content and DOM data do not override canonical labels.

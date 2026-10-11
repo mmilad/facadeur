@@ -1,8 +1,4 @@
-import {
-  findDefinition,
-  type NodeModel,
-  type ProjectCatalogModel,
-} from '@facadeur/core';
+import { findDefinition, type NodeModel, type ProjectCatalogModel } from '@facadeur/core';
 
 export interface LayerItem {
   id: string;
@@ -28,8 +24,6 @@ function layerTypeForNode(node: NodeModel) {
 function layerNameForNode(node: NodeModel, root: boolean): string {
   if (root) return 'root';
   if (node.name?.trim()) return node.name.trim();
-  const legacyName = node.data?.name ?? node.dom.data?.name;
-  if (typeof legacyName === 'string' && legacyName.trim()) return legacyName.trim();
   return node.dom.tagName;
 }
 
