@@ -1,12 +1,12 @@
-import { DocumentError } from '../../document/errors';
-import type { FlatNode } from '../../document/flat';
+import { DocumentError } from '../../../document/errors';
+import type { FlatNode } from '../../../document/flat';
 import type {
   DocumentFile,
   EventDefinition,
   FieldDefinition,
   NestedNode,
   SchemaCatalog,
-} from '../../schema/document';
+} from '../../../schema/document';
 import { localContractFieldsFor } from './schema-use';
 import {
   addStructuralField,

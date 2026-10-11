@@ -9,7 +9,7 @@ import {
 import { omitVariantAxis, omitVariantValues } from '../../../controller/style/blocks/edit';
 import { parseStyleBlock } from '../../../controller/style/blocks/parse';
 import { removeNamedVariantLayer } from './style-layers';
-import { assertVariantAxis, assertVariantPreset } from '../../../controller/validation/assertions/variants';
+import { assertVariantAxis, assertVariantPreset } from '../validation/assertions/variants';
 import type { Command } from '../document/commands/index';
 
 export function defineVariant(doc: FlatDocument, axis: VariantAxis) {

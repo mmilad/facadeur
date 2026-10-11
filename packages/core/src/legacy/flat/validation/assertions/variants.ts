@@ -1,5 +1,5 @@
-import { DocumentError } from '../../../document/errors';
-import type { VariantPreset } from '../../../schema/document';
+import { DocumentError } from '../../../../document/errors';
+import type { VariantPreset } from '../../../../schema/document';
 
 export function assertVariantAxis(axis: {
   name: string;

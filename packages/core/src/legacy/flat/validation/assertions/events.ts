@@ -1,7 +1,7 @@
-import { DocumentError } from '../../../document/errors';
-import { ID_PATTERN } from '../../../document/ids';
-import { fieldTypes, type EventDefinition, type Expose } from '../../../schema/document';
-import { isPlainObject as isRecord } from '../../../utils';
+import { DocumentError } from '../../../../document/errors';
+import { ID_PATTERN } from '../../../../document/ids';
+import { fieldTypes, type EventDefinition, type Expose } from '../../../../schema/document';
+import { isPlainObject as isRecord } from '../../../../utils';
 
 const EXPOSE_PATH = /^[A-Za-z][A-Za-z0-9_-]*(\.[A-Za-z][A-Za-z0-9_-]*)*$/;
 

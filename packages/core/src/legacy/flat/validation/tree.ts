@@ -1,9 +1,9 @@
-import { DocumentError } from '../../document/errors';
-import { type FlatDocument, type FlatNode } from '../../document/flat';
-import { defaultNestingRules, type NestingRule } from '../../document/kinds';
-import { assertBreakpoints } from '../style/breakpoints';
-import { assertStyleContract } from '../style/blocks/contract';
-import { readTokenTree } from '../style/tokens/global/tree';
+import { DocumentError } from '../../../document/errors';
+import { type FlatDocument, type FlatNode } from '../../../document/flat';
+import { defaultNestingRules, type NestingRule } from '../../../document/kinds';
+import { assertBreakpoints } from '../../../controller/style/breakpoints';
+import { assertStyleContract } from '../../../controller/style/blocks/contract';
+import { readTokenTree } from '../../../controller/style/tokens/global/tree';
 import { assertExpose } from './assertions/events';
 import {
   assertAttributes,
@@ -14,7 +14,7 @@ import {
   assertRepeat,
   assertLayout,
 } from './assertions/node-properties';
-import { ID_PATTERN } from '../../document/ids';
+import { ID_PATTERN } from '../../../document/ids';
 
 import type { ValidateOptions } from './types';
 

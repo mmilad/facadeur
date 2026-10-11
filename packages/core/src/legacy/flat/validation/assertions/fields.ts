@@ -1,7 +1,10 @@
-import { DocumentError } from '../../../document/errors';
-import { isPlainObject as isRecord } from '../../../utils';
-import { fieldTypes, type FieldDefinition, type FieldValue } from '../../../schema/document';
-import { matchesLegacyStructuralValue, matchesSchemaValue } from '../json-schema-value';
+import { DocumentError } from '../../../../document/errors';
+import { isPlainObject as isRecord } from '../../../../utils';
+import { fieldTypes, type FieldDefinition, type FieldValue } from '../../../../schema/document';
+import {
+  matchesLegacyStructuralValue,
+  matchesSchemaValue,
+} from '../../../../controller/validation/json-schema-value';
 
 export function assertFieldDefinition(field: FieldDefinition): void {
   if (!fieldTypes.includes(field.type)) {

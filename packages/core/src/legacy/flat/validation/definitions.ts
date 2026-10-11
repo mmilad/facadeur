@@ -1,7 +1,7 @@
 import { assertSelectOptionsField } from './select-options';
 import { schemaAtPath } from './schema-path';
-import { DocumentError } from '../../document/errors';
-import { type FlatDocument } from '../../document/flat';
+import { DocumentError } from '../../../document/errors';
+import { type FlatDocument } from '../../../document/flat';
 import {
   type Binding,
   type EventBinding,
@@ -11,13 +11,13 @@ import {
   type JsonSchema,
   type VariantPreset,
   type SchemaCatalog,
-} from '../../schema/document';
+} from '../../../schema/document';
 import { assertEventDefinition, assertExpose } from './assertions/events';
 import { assertFieldDefinition, assertValueMatches } from './assertions/fields';
 import { assertVariantAxis, assertVariantPreset } from './assertions/variants';
 import { eventDataMappings, eventDataSchema, localContractFieldsFor } from './schema-use';
 import { publicFieldsFor } from './catalog-exposed';
-import { matchesSchemaValue } from './json-schema-value';
+import { matchesSchemaValue } from '../../../controller/validation/json-schema-value';
 import type { SchemaResolverContext } from './types';
 
 /** Pages do not own component properties; sections may expose data contracts. */

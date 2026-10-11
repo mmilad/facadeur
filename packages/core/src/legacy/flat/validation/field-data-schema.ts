@@ -1,5 +1,5 @@
-import type { FieldDefinition, JsonSchema, SchemaCatalog } from '../../schema/document';
-import { resolveJsonSchema } from './json-schema-value';
+import type { FieldDefinition, JsonSchema, SchemaCatalog } from '../../../schema/document';
+import { resolveJsonSchema } from '../../../controller/validation/json-schema-value';
 
 export function fieldDataSchema(field: FieldDefinition, schemaCatalog?: SchemaCatalog): JsonSchema {
   if (field.schema) return resolveJsonSchema(field.schema, schemaCatalog);

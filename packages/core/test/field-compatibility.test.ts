@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { FieldDefinition } from '../src/schema/document';
-import { compatibleFieldType } from '../src/controller/validation/field-compatibility';
+import { compatibleFieldType } from '../src/legacy/flat/validation/field-compatibility';
 
 function field(
   name: string,

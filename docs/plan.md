@@ -3307,3 +3307,25 @@ responsibility without changing ownership or improving validation.
   - Validation: Form and Editor field suites are included in the root suite (69 files / 242 tests
     pass); workspace typecheck passes. Detector reports no size candidates; Prettier and
     `git diff --check` pass.
+
+- [x] Refactor: place Flat DocumentFile validation under its legacy owner.
+  - Evidence: `controller/validation` has 16 direct source files. Its Ajv schema, catalog,
+    definitions, tree, data-contract and structural contract implementations consume the legacy
+    Flat/DocumentFile model and are called by `legacy/flat` or API/Store-Yjs through Core's public
+    exports. Current `ProjectCatalog` validation uses only the shared JSON-schema value matcher.
+  - Action: move Flat-only validation implementations and assertions to
+    `legacy/flat/validation`; keep the `@facadeur/core` export names stable through explicit owning
+    barrels and keep the shared JSON-schema matcher with current Core validation.
+  - Scope: Core-internal ownership correction. Do not edit API, API-client, Store Yjs, persisted
+    documents, or Core's public export names/shapes.
+  - Contracts: preserve DocumentFile validation, command-time assertions, validation errors, and
+    all root Core imports used by existing adapters.
+  - Validation: Core legacy and Catalog tests, full root suite, workspace typecheck, import audit,
+    detector, formatting, and `git diff --check`.
+  - Result: moved Flat-only validators, assertions, resolver contracts, and helpers under
+    `legacy/flat/validation`; kept the shared Ajv factory and JSON-schema matcher under current
+    `controller/validation`. Core root export names remain unchanged; API, API-client, and Store Yjs
+    source were not edited. Core and workspace typechecks pass, as does the root suite (69 files /
+    242 tests). Formatting and `git diff --check` pass. The detector still flags four cohesive
+    validation modules over 450 lines and the 14-file directory; reviewed them as separate
+    validation operations sharing the same Flat contract graph, so no size-only split was made.

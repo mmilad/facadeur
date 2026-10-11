@@ -1,18 +1,18 @@
 import { type ErrorObject, type ValidateFunction } from 'ajv';
-import { DocumentError } from '../../document/errors';
-import { createAjv } from './ajv';
+import { DocumentError } from '../../../document/errors';
+import { createAjv } from '../../../controller/validation/ajv';
 import {
   createDocumentSchema,
   documentFileSchema,
   type DocumentFile,
   type DocumentSchemaOptions,
-} from '../../schema/document';
+} from '../../../schema/document';
 import {
   hasLegacyReferenceLocations,
   migrateLegacyDesignLibraries,
   migrateLegacyReferenceLocations,
-} from '../style/tokens/global/legacy-migration';
-import { isPlainObject } from '../../utils';
+} from '../../../controller/style/tokens/global/legacy-migration';
+import { isPlainObject } from '../../../utils';
 
 const ajv = createAjv();
 const validateFile: ValidateFunction = ajv.compile(documentFileSchema);

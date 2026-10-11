@@ -1,9 +1,9 @@
 import { fieldDataSchema } from './field-data-schema';
 import { schemaAtPath } from './schema-path';
-import { DocumentError } from '../../document/errors';
-import { type FlatDocument, toNested, type FlatNode } from '../../document/flat';
-import { type FieldDefinition, type JsonSchema, type SchemaCatalog } from '../../schema/document';
-import { variantPresets } from '../../legacy/flat/variants/resolve';
+import { DocumentError } from '../../../document/errors';
+import { type FlatDocument, toNested, type FlatNode } from '../../../document/flat';
+import { type FieldDefinition, type JsonSchema, type SchemaCatalog } from '../../../schema/document';
+import { variantPresets } from '../variants/resolve';
 import { assertValueMatches } from './assertions/fields';
 import {
   componentDataSchema,
@@ -13,7 +13,7 @@ import {
 } from './catalog-exposed';
 import type { SchemaResolverContext } from './types';
 import { eventDataMappings, eventDataSchema, localContractFieldsFor } from './schema-use';
-import { resolveJsonSchema } from './json-schema-value';
+import { resolveJsonSchema } from '../../../controller/validation/json-schema-value';
 import { compatibleFieldType } from './field-compatibility';
 
 interface DataScope {

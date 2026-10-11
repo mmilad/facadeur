@@ -285,6 +285,7 @@ export {
 export { collectTokenRefs, refsInText } from './controller/style/references/collect';
 export { omitVariantAxis, omitVariantValues } from './controller/style/blocks/edit';
 export { parseStyleBlock, parseTokenInterface } from './controller/style/blocks/parse';
+export { matchingSchemaIndex, matchesSchemaValue } from './controller/validation/index';
 export {
   assertDefinitionKind,
   assertDisplayOn,
@@ -306,8 +307,6 @@ export {
   publicFieldsFor,
   resolveComponentContract,
   componentDataSchema,
-  matchesSchemaValue,
-  matchingSchemaIndex,
   selectStructuralChild,
   structuralCaseValue,
   structuralChildSchemas,
@@ -330,9 +329,8 @@ export {
   validateTree,
   assertValueMatches,
   type ValidateOptions,
-} from './controller/validation/index';
-
-export { fieldDataSchema } from './controller/validation/field-data-schema';
+  fieldDataSchema,
+} from './legacy/flat/validation/index';
 
 export {
   uuidSchema,

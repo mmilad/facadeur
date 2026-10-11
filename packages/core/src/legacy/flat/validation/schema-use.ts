@@ -6,7 +6,7 @@ import type {
   JsonSchema,
   SchemaCatalog,
   SchemaTypeRef,
-} from '../../schema/document';
+} from '../../../schema/document';
 import type { ContractDocument } from './types';
 
 const SCHEMA_REF_PREFIX = 'facadeur://schema/';

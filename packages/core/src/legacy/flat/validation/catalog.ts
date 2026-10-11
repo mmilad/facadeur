@@ -1,5 +1,5 @@
-import { DocumentError } from '../../document/errors';
-import { type FlatDocument, toFlat } from '../../document/flat';
+import { DocumentError } from '../../../document/errors';
+import { type FlatDocument, toFlat } from '../../../document/flat';
 import {
   type DocumentFile,
   isVariantAxis,
@@ -7,14 +7,14 @@ import {
   type FieldValue,
   type NestedNode,
   type SchemaCatalog,
-} from '../../schema/document';
-import { resolveVariantDocument, variantPresets } from '../../legacy/flat/variants/resolve';
+} from '../../../schema/document';
+import { resolveVariantDocument, variantPresets } from '../variants/resolve';
 import { assertValueMatches } from './assertions/fields';
 import { validateDataContracts } from './data-contracts';
 import { validateDefinitions } from './definitions';
 import { publicFieldsFor, validateExposedContracts } from './catalog-exposed';
 import type { SchemaResolverContext } from './types';
-import { readTokenTree } from '../style/tokens/global/tree';
+import { readTokenTree } from '../../../controller/style/tokens/global/tree';
 import { validateLibraries, validateTree } from './tree';
 import { type ValidateOptions } from './types';
 import { validateDocumentFile } from './schema';

@@ -1,4 +1,4 @@
-import type { FieldDefinition } from '../../schema/document';
+import type { FieldDefinition } from '../../../schema/document';
 
 export function compatibleFieldType(
   source: FieldDefinition,

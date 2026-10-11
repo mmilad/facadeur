@@ -16,7 +16,7 @@ import {
 } from '../../../schema/document';
 import { DocumentError } from '../../../document/errors';
 import type { FlatDocument } from '../../../document/flat';
-import type { ValidateOptions } from '../../validation/types';
+import type { ValidateOptions } from '../../../legacy/flat/validation/types';
 import {
   assertSpacingValue,
   BREAKPOINT_ID,

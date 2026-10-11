@@ -1,15 +1,15 @@
-import { DocumentError } from '../../../document/errors';
-import { type FlatNode } from '../../../document/flat';
-import { ID_PATTERN } from '../../../document/ids';
-import { isPlainObject as isRecord } from '../../../utils';
+import { DocumentError } from '../../../../document/errors';
+import { type FlatNode } from '../../../../document/flat';
+import { ID_PATTERN } from '../../../../document/ids';
+import { isPlainObject as isRecord } from '../../../../utils';
 import type {
   Binding,
   DisplayOn,
   EventBinding,
   FieldValue,
   Repeat,
-} from '../../../schema/document';
-import { parseLayout } from '../../style/layout';
+} from '../../../../schema/document';
+import { parseLayout } from '../../../../controller/style/layout';
 
 const DATA_PATH = /^[A-Za-z_$][A-Za-z0-9_$-]*(\.[A-Za-z_$][A-Za-z0-9_$-]*)*$/;
 const CHILD_FIELD_PATH = /^[A-Za-z][A-Za-z0-9_-]*(\/[A-Za-z][A-Za-z0-9_-]*)*$/;

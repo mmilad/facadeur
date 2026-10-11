@@ -1,6 +1,6 @@
-import type { NestingRule } from '../../document/kinds';
-import type { FlatDocument } from '../../document/flat';
-import type { DocumentFile, FieldDefinition, SchemaCatalog } from '../../schema/document';
+import type { NestingRule } from '../../../document/kinds';
+import type { FlatDocument } from '../../../document/flat';
+import type { DocumentFile, FieldDefinition, SchemaCatalog } from '../../../schema/document';
 
 export type ContractDocument = DocumentFile | FlatDocument;
 export type ContractCatalog = ReadonlyMap<string, ContractDocument>;
