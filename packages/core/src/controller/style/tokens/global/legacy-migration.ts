@@ -451,9 +451,7 @@ function migrateNested(
       result[property] = migrateTokenInterface(item, tokenIds, breakpointIds);
     } else if (property === 'reads' && Array.isArray(item)) {
       result[property] = item.map((path) =>
-        typeof path === 'string'
-          ? (tokenIds.get(path) ?? tokenIds.get(path.toLowerCase()) ?? path)
-          : path,
+        typeof path === 'string' ? (tokenIdForPath(path, tokenIds) ?? path) : path,
       );
     } else if (property === 'breakpoints' && isPlainObject(item)) {
       const remapped: Record<string, unknown> = {};
@@ -481,18 +479,16 @@ function migrateTokenInterface(
   for (const [property, item] of Object.entries(value)) {
     if (property === 'reads' && Array.isArray(item)) {
       result[property] = item.map((path) =>
-        typeof path === 'string'
-          ? (tokenIds.get(path) ?? tokenIds.get(path.toLowerCase()) ?? path)
-          : path,
+        typeof path === 'string' ? (tokenIdForPath(path, tokenIds) ?? path) : path,
       );
     } else if (property === 'sets' && isPlainObject(item)) {
       const sets: Record<string, unknown> = {};
       for (const [key, setValue] of Object.entries(item)) {
-        const uuid = tokenIds.get(key) ?? tokenIds.get(key.toLowerCase());
+        const uuid = tokenIdForPath(key, tokenIds);
         if (!uuid) sets[key] = migrateNested(setValue, tokenIds, breakpointIds);
       }
       for (const [key, setValue] of Object.entries(item)) {
-        const uuid = tokenIds.get(key) ?? tokenIds.get(key.toLowerCase());
+        const uuid = tokenIdForPath(key, tokenIds);
         if (uuid && !Object.hasOwn(sets, uuid)) {
           sets[uuid] = migrateNested(setValue, tokenIds, breakpointIds);
         }
@@ -508,6 +504,10 @@ function migrateTokenInterface(
 function setTokenPathId(into: Map<string, string>, path: string, uuid: string) {
   into.set(path, uuid);
   into.set(path.toLowerCase(), uuid);
+}
+
+function tokenIdForPath(path: string, tokenIds: ReadonlyMap<string, string>) {
+  return tokenIds.get(path) ?? tokenIds.get(path.toLowerCase());
 }
 
 function hasDtcgNode(value: Record<string, unknown>): boolean {

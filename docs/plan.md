@@ -3657,6 +3657,18 @@ responsibility without changing ownership or improving validation.
   - Result: the Core barrel now marks the migration exports deprecated and states the canonical
     Catalog contract. Names and signatures remain available to the retained adapters.
 
+- [x] Refactor: share legacy token path-to-UUID lookup inside the migration owner.
+  - Evidence: `legacy-migration.ts` repeats the exact case-insensitive token-path lookup in
+    document `reads`, `tokenInterface.reads`, and both passes over `tokenInterface.sets`.
+  - Action: extract one private path lookup and reuse it in those branches. Keep the cohesive DTCG,
+    font, breakpoint, and reference migration pipeline in its existing Core owner.
+  - Scope: in-scope Core cleanup; no change to the canonical Catalog contract or legacy adapters.
+  - Contracts: preserve case-insensitive matching, unresolved-path retention, existing-set-key
+    precedence, output ordering, and stable UUID assignment.
+  - Validation: Core typecheck passes; the focused token parse/round-trip suites pass (11 tests).
+    The candidate detector retains the 543-line cohesion signal for the overall migration module;
+    Prettier and `git diff --check` pass.
+
 - [x] Deprecation: identify the public Flat document conversion boundary.
   - Evidence: Core's root barrel publicly exposes `toFlat`, `toNested`, `canonicalizeFlat`, and
     Flat node/document types without deprecation metadata. Current consumers remain in Server,
