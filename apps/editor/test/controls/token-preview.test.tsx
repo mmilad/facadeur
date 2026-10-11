@@ -2,7 +2,7 @@
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { describe, expect, it } from 'vitest';
-import type { DesignTokenSet, TokenInterface } from '@facadeur/core';
+import type { DesignTokenSet } from '@facadeur/core';
 import {
   TokenPreviewProvider,
   useTokenPreview,
@@ -16,6 +16,8 @@ const RED_600_UUID = fixtureIds.tokens.color.blue._600;
 const BASE_UUID = globalThis.crypto.randomUUID();
 const SURFACE_UUID = globalThis.crypto.randomUUID();
 const UNKNOWN_UUID = globalThis.crypto.randomUUID();
+const PHONE_UUID = globalThis.crypto.randomUUID();
+const TABLET_UUID = globalThis.crypto.randomUUID();
 
 function Preview({ reference }: { reference: string }) {
   return (
@@ -49,13 +51,12 @@ describe('token previews', () => {
       [RED_500_UUID]: colorToken(RED_500_UUID, 'Warm', 'red', '#ff0000'),
     });
     const initialDesign = design(tokens);
-    const document = {};
     const host = window.document.createElement('div');
     const root = createRoot(host);
     const render = (next: ReturnType<typeof design>) =>
       act(() =>
         root.render(
-          <TokenPreviewProvider design={next} document={document} breakpointId={null}>
+          <TokenPreviewProvider design={next} breakpointId={null}>
             <Label reference={`{token:${RED_500_UUID}}`} />
           </TokenPreviewProvider>,
         ),
@@ -80,12 +81,11 @@ describe('token previews', () => {
         [RED_600_UUID]: colorToken(RED_600_UUID, 'Crimson', 'red', `{token:${RED_500_UUID}}`),
       }),
     );
-    const document = {};
     const host = window.document.createElement('div');
     const root = createRoot(host);
     act(() =>
       root.render(
-        <TokenPreviewProvider design={designData} document={document} breakpointId={null}>
+        <TokenPreviewProvider design={designData} breakpointId={null}>
           <Label reference={`{token:${RED_500_UUID}}`} />
           <Label reference={`{token:${RED_600_UUID}}`} />
         </TokenPreviewProvider>,
@@ -99,40 +99,44 @@ describe('token previews', () => {
     act(() => root.unmount());
   });
 
-  it('resolves aliases and UUID-targeted global token sets without mutating references', () => {
-    const designData = design(
-      tokenSet({
-        [BASE_UUID]: colorToken(BASE_UUID, 'Base', '', '#ff0000'),
-        [SURFACE_UUID]: colorToken(SURFACE_UUID, 'Surface', '', `{token:${BASE_UUID}}`),
-      }),
-    );
-    const tokenInterface: TokenInterface = {
-      reads: [BASE_UUID, SURFACE_UUID],
-      sets: { [SURFACE_UUID]: `{token:${BASE_UUID}}` },
+  it('resolves global aliases at the selected breakpoint and overlays declarations', () => {
+    const designData = {
+      ...design(
+        tokenSet({
+          [BASE_UUID]: {
+            ...colorToken(BASE_UUID, 'Base', '', '#ff0000'),
+            breakpoints: { [TABLET_UUID]: '#0000ff' },
+          },
+          [SURFACE_UUID]: {
+            ...colorToken(SURFACE_UUID, 'Surface', '', `{token:${BASE_UUID}}`),
+          },
+        }),
+      ),
+      breakpoints: [
+        { uuid: PHONE_UUID, label: 'Phone', minWidth: 375 },
+        { uuid: TABLET_UUID, label: 'Tablet', minWidth: 768 },
+      ],
     };
-    const document = { tokenInterface };
     const host = window.document.createElement('div');
     const root = createRoot(host);
     act(() =>
       root.render(
-        <TokenPreviewProvider design={designData} document={document} breakpointId={null}>
+        <TokenPreviewProvider design={designData} breakpointId={TABLET_UUID}>
           <Preview reference={`{token:${SURFACE_UUID}}`} />
           <Preview reference={`{token:${UNKNOWN_UUID}}`} />
         </TokenPreviewProvider>,
       ),
     );
-    expect(host.querySelectorAll('output')[0]?.textContent).toBe('#ff0000');
+    expect(host.querySelectorAll('output')[0]?.textContent).toBe('#0000ff');
     expect(host.querySelectorAll('output')[0]?.getAttribute('data-search-value')).toBe(
       `{token:${BASE_UUID}}`,
     );
     expect(host.querySelectorAll('output')[1]?.textContent).toBe('unresolved');
-    expect(document.tokenInterface.sets?.[SURFACE_UUID]).toBe(`{token:${BASE_UUID}}`);
     act(() =>
       root.render(
         <TokenPreviewProvider
           design={designData}
-          document={document}
-          breakpointId={null}
+          breakpointId={TABLET_UUID}
           declarations={{ '--color-base': '#00ff00' }}
         >
           <Preview reference={`{token:${SURFACE_UUID}}`} />
@@ -140,7 +144,7 @@ describe('token previews', () => {
       ),
     );
     expect(host.querySelector('output')?.textContent).toBe('#00ff00');
-    expect(document.tokenInterface.sets?.[SURFACE_UUID]).toBe(`{token:${BASE_UUID}}`);
+    expect(designData.tokens.color[BASE_UUID]?.value).toBe('#ff0000');
     act(() => root.unmount());
   });
 });

@@ -369,7 +369,7 @@
     FieldValue nullability and the missing `jsonjoy-builder` declaration). The direct panel test
     uses a Catalog-backed EditorSession without a conversion fixture or full Editor shell.
 - [x] Refactor: route Editor catalog transport through the Core controller boundary.
-  - Evidence: `CoreController.persist/reload` already accept `CatalogPort`, but `AppService`
+  - Evidence: `CoreController.persist` already accepts `CatalogPort`, but `AppService`
     separately calls the extended `EditorCatalogPort` for create/delete and then replaces Core's
     catalog snapshot. This leaves some catalog I/O outside the controller's path.
   - Action: define the smallest transport capability Core needs and route load/save/create/delete
@@ -380,8 +380,10 @@
     errors, save ordering, and dirty-state behavior.
   - Validation: focused Core/AppService behavior coverage, typechecks, Storybook catalog settings
     interactions, and import-path audit.
-  - Progress: Core now owns the create/delete transport orchestration alongside its existing
-    persist/reload methods. AppService delegates create, delete, and save to Core; the Editor
+  - Progress: Core now owns create/delete transport orchestration alongside persistence.
+    The unused generic reload operation was removed: initial loading obtains the project
+    snapshot (including its catalog) from the project endpoint, then Core validates and owns that
+    catalog in its constructor. AppService delegates create, delete, and save to Core; the Editor
     adapter still implements transport. Definition patching remains a local Core mutation and is
     persisted through the existing save flow; the unused direct patch transport method was removed
     from the Editor adapter. Core depends only on Domain catalog types and the transport
@@ -1772,8 +1774,8 @@ facadeur is a visual design-system editor. Atoms, components, sections, and page
 - The CSS custom-property selector is derived from family/group/label and is not stored as token identity. Renaming a label or group changes the generated selector while UUID references remain stable.
 - Responsive token values live in `breakpoints` maps keyed by breakpoint UUID. Font families are records in the `font` family; breakpoints are separate UUID resources.
 - Catalog integration tests source real token and breakpoint records from `@facadeur/examples` via `createExampleCatalog()`. Keep inline records only for deliberately invalid or minimal legacy-contract cases so example edits flow into tests directly.
-- Legacy W3C DTCG documents are converted at the Core read boundary. `$type`, `$value`, and `$extensions.facadeur` are migration input, not the canonical runtime format.
-- Keep `packages/core/src/controller/style/tokens/global/legacy-migration.ts` cohesive: it owns the single DTCG-to-canonical conversion boundary; splitting its traversal and normalization would divide one algorithm without creating a new owner. Preserve legacy input acceptance and canonical UUID output, and validate through Core migration/type checks.
+- Legacy W3C DTCG DocumentFiles are converted at the deprecated Flat read boundary. Current Catalog validation accepts only canonical UUID-keyed token libraries; `$type`, `$value`, and `$extensions.facadeur` remain migration input only for Flat adapters.
+- Keep `packages/core/src/controller/style/tokens/global/legacy-migration.ts` cohesive: it owns the DTCG-to-canonical conversion used by Flat DocumentFile validation and Store-Yjs decoding; splitting its traversal and normalization would divide one algorithm without creating a new owner. Preserve that adapter's legacy input acceptance and canonical UUID output, and validate through Core migration/type checks.
 - Three levels: primitive, semantic, and component tokens. Tier metadata is namespaced under `extensions`.
 - In the editor, tokens become CSS custom properties on a root rule.
 - Components can read tokens and override them for nested children through CSS variable cascading. The schema declares which tokens a component reads and sets.
@@ -2226,14 +2228,14 @@ inspector, derive suggestions from existing project catalog styles so they stay 
 actual project data. Validate package/editor types, detector, and Storybook where the local runtime
 allows it.
 
-## Replace the form class-list field with generic chips
+## Replace the form class-list field with generic chips (completed)
 
 `packages/form/src/fields/class-list` duplicates the chip collection behavior in
 `packages/form/src/fields/chips`, while Core already supplies the class suggestions and values.
 Map inspector class lists to the generic `chips` config, remove the duplicate package field and
-its dispatch/public exports, and preserve Core's `classList` inspector contract. The editor's
-older `ClassListInput` remains a separate migration candidate because it is owned by the legacy
-schema form. Validate form/editor typechecks, detector, formatting, and diff review.
+its dispatch/public exports, and preserve Core's `classList` inspector contract. Keep the
+schema-specific Editor `BoundClassList` adapter: it maps Catalog schema values through the shared
+`ChipsField` while preserving Editor form-path commits.
 
 - [x] Refactor: migrate the legacy editor class-list input to the shared chips field
   - Evidence: `apps/editor/src/ui/form/components/selection/ClassListInput.tsx` repeats chips,
@@ -2246,6 +2248,10 @@ schema form. Validate form/editor typechecks, detector, formatting, and diff rev
   - Result: editor consumers and the Storybook component story now use `@facadeur/form`'s
     `ChipsField`; the duplicate control and unused `.eu-class-list`/`.eu-class-badge` styles were
     removed. Existing editor typecheck diagnostics remain unrelated to this field.
+  - Current-state audit: `packages/form` exports only the generic chips element; Core inspector
+    `classList` records map to that config, and schema-backed Editor values render `ChipsField`
+    through `BoundClassList`. No class-list field or hand-built chips input remains in `packages/form`
+    or Editor. Full root suite (71 files / 247 tests) and workspace typecheck pass.
 
 ## Keep new record rows stable while editing
 
@@ -2705,8 +2711,8 @@ responsibility without changing ownership or improving validation.
   - Evidence: `apps/editor/src/domain/preview-data.ts` only has consumers in two non-allowlisted
     test files. Its migration, sparse patch, and source-selection helpers accept the deprecated
     `DocumentFile`/`FlatDocument` envelope. Current preview UI reads and writes Catalog
-    `config.previewData` through `CatalogPreviewFields`; `parseFieldValue` is the parser actually
-    used by active Catalog UI and definition editing.
+    `config.previewData` through `CatalogPreviewFields`; the schema-less parser fallback retained
+    at that time was later proven unreachable and removed in the follow-up below.
   - Action: delete the unreferenced legacy preview-data module and its DocumentFile-only behavior
     suite. Keep parser coverage in `field-values.test.ts`, call the active `parseFieldValue`
     directly, remove its unused empty-string preservation mode, and add that test to the root Vitest
@@ -2718,10 +2724,9 @@ responsibility without changing ownership or improving validation.
   - Validation: focused parser and preview UI tests, root suite, Editor typecheck, import audit,
     detector, formatting, and `git diff --check`.
   - Result: removed the unreferenced `preview-data.ts` module and its tests for DocumentFile
-    migration/patching. Migrated active parser coverage to `parseFieldValue`, removed its unused
-    empty-string preservation option, and enabled the parser suite. Catalog preview and parser
-    focused suites pass 9/9; root suite passes 45 files / 156 tests. Editor typecheck, source audit,
-    detector, formatting, and diff checks pass.
+    migration/patching. The parser was initially retained for the apparent preview fallback; the
+    follow-up audit below established that active Inspector fields always carry JSON Schema, so that
+    fallback and parser-only test suite are now removed.
 - [x] Refactor: remove orphaned DocumentFile asset factory
   - Evidence: `domain/assets/new-asset.ts` returns a deprecated `DocumentFile`; repository search
     finds only `apps/editor/test/new-asset.test.ts` importing it. The active ProjectTree New actions
@@ -2999,10 +3004,11 @@ responsibility without changing ownership or improving validation.
     Preserve pure style command algorithms and the `GlobalTokenCommand` / `DesignLibraryCommand`
     types used by Catalog design commands. Update Core ownership docs to describe the surviving
     command layer rather than the deleted project facade.
-  - Detector review: retain `legacy-migration.ts` as one cohesive read-boundary migration. It is
-    called by Catalog validation and legacy DocumentFile validation and directly by Store-Yjs;
-    its token, font, breakpoint, reference, and token-interface rewrites share the same generated
-    identity maps. Splitting it now would add cross-module plumbing without changing ownership.
+  - Detector review: retain `legacy-migration.ts` as one cohesive legacy read-boundary migration.
+    It is called by Flat DocumentFile validation and Store-Yjs decoding; its token, font,
+    breakpoint, reference, and token-interface rewrites share generated identity maps. Current
+    Catalog validation no longer invokes this compatibility path. Splitting it now would add
+    cross-module plumbing without changing ownership.
   - Result: removed the unused flat `ProjectController`, `createControllerStore`, their legacy
     project notifications/types, and the two tests devoted to that retired controller behavior.
     Removed the now-unconsumed `StyleController` / `DocumentStyle` facade and corrected the Core
@@ -3539,3 +3545,290 @@ responsibility without changing ownership or improving validation.
   - Result: the focused Core layout tests now operate directly on the exported `Layout` contract,
     including reverse-ordered sparse breakpoints to verify canonical sorting. The migrated suite is
     part of the standard root run.
+
+- [x] Cleanup: remove unconsumed Flat preview-data helpers.
+  - Evidence: `resolvePreviewData` and `withPreviewData` are only referenced by Core's root export
+    and legacy `DocumentFile` tests; no current Editor, Core Catalog, API, or Store Yjs production
+    code calls them. The active inspector builds preview defaults from `ProjectCatalog` through
+    `controller/project/node/preview/inspector-view.ts`.
+  - Action: remove the obsolete helpers and root exports, delete their isolated legacy preview-data
+    test, and remove the corresponding helper-only assertion from the legacy schema-use test. Keep
+    the separate Flat preview-data persistence/command contracts intact where adapters still own
+    them.
+  - Scope: removal of dead deprecated Core behavior and tests; no API/API-client or Store Yjs source
+    edits, persisted data changes, or active Catalog behavior changes.
+  - Contracts: preserve current Catalog preview defaults and typed inspector mutation targets; retain
+    Flat preview-data data shapes and Yjs codec behavior for adapter compatibility.
+  - Validation: verify repository-wide references, run focused current Catalog preview/inspector
+    suites and the root suite, typecheck, detector, formatting, and `git diff --check`.
+  - Result: removed the legacy helper module, its root exports, the isolated helper test, and the
+    corresponding assertion from the legacy schema-use suite. A production/test reference audit
+    leaves only persisted Flat `previewData` handling in the Yjs adapter and legacy command/type
+    contracts. The full root suite passes (71 files / 252 tests); workspace typecheck passes;
+    Prettier, the candidate detector, and `git diff --check` pass. Current Catalog preview tests
+    remain in the root suite; API/API-client and Store Yjs sources were not edited.
+
+- [x] Cleanup: stop migrating legacy token libraries in current Catalog validation.
+  - Evidence: `validateProjectCatalog` currently converts DTCG token trees, a separate `fonts`
+    array, string breakpoint IDs, and path-based token references before validating the current
+    UUID-keyed Catalog schema. `packages/core/test/project-catalog.test.ts` asserts this legacy
+    import path. The same migration remains needed by the deprecated Flat document validator, so
+    removing the whole migration module would affect retained adapter behavior.
+  - Action: make current Catalog validation validate the canonical Catalog shape directly and
+    replace the migration test with a rejection test for legacy token-library input. Keep the
+    migration implementation scoped to the Flat compatibility validator and leave its legacy
+    exports/consumers unchanged in this step.
+  - Scope: remove the active Catalog compatibility shim only; no persistence migration or data
+    rewrite, no API/API-client edits, and no Store Yjs edits.
+  - Contracts: preserve canonical UUID-keyed token records, configured breakpoint UUIDs, Catalog
+    sanitization/field-ID completion, and all valid current project behavior; legacy Flat document
+    parsing remains available for its existing consumers.
+  - Validation: focused Catalog suite passes (7 tests); full root suite passes (71 files / 252
+    tests); workspace typecheck passes; the candidate detector reports no size candidates in the
+    changed source/test paths; formatting and `git diff --check` pass. A reference audit confirms
+    the migration remains consumed only by the deprecated Flat validator and Core exports; the
+    current Catalog validator no longer calls it.
+  - Result: current Catalog input now goes straight through canonical sanitization and UUID-keyed
+    schema validation. Legacy DTCG/font-array conversion remains behind Flat validation for its
+    retained adapter consumers.
+
+- [x] Deprecation: mark the remaining public legacy token migration helpers.
+  - Evidence: Core's root barrel still exports `migrateLegacyDesignLibraries` and
+    `migrateLegacyReferenceLocations` without deprecation metadata. Current Catalog validation no
+    longer uses them; remaining in-repository consumers are Flat `DocumentFile` validation and
+    Store-Yjs decoding.
+  - Action: mark the root exports deprecated with their retained adapter consumers and canonical
+    Catalog replacement documented. Keep the functions and signatures intact for those consumers.
+  - Scope: public API documentation only; no runtime behavior or package consumer changes.
+  - Contracts: preserve both helper names and signatures, and preserve legacy decoding at the
+    adapter boundary while current Catalog validation stays canonical-only.
+  - Validation: reference search confirms callers are limited to Flat validation and Store-Yjs
+    decoding; workspace typecheck passes; formatter, candidate detector, and `git diff --check`
+    pass.
+  - Result: the Core barrel now marks the migration exports deprecated and states the canonical
+    Catalog contract. Names and signatures remain available to the retained adapters.
+
+- [x] Deprecation: identify the public Flat document conversion boundary.
+  - Evidence: Core's root barrel publicly exposes `toFlat`, `toNested`, `canonicalizeFlat`, and
+    Flat node/document types without deprecation metadata. Current consumers remain in Server,
+    API, and Store-Yjs; these packages still exchange `DocumentFile` or Yjs-backed Flat state.
+  - Action: annotate the Flat conversion functions/types and the `DocumentFile` type as deprecated,
+    stating that the APIs are retained for those adapter boundaries and new editor/project code
+    should use Catalog APIs. Keep all implementations, names, signatures, serialization, and
+    adapter consumers unchanged.
+  - Scope: clarify the retirement boundary only; do not modify API/API-client or Store-Yjs.
+  - Contracts: preserve Flat and DocumentFile runtime/data contracts and all existing imports;
+    current Catalog validation and Editor behavior remain canonical.
+  - Validation: audit consumers, run the workspace typecheck and root suite, rerun the candidate
+    detector on changed paths, and check formatting and the final diff.
+  - Result: the Core barrel now marks Flat conversion exports and Flat types as adapter-only, the
+    conversion functions document their legacy direction, and the `DocumentFile` type is explicitly
+    deprecated. Existing API, Server, and Store-Yjs imports and runtime contracts remain intact.
+    Workspace typecheck passes; root tests pass (71 files / 252 tests); Prettier, detector, and
+    `git diff --check` pass.
+
+## Completed cleanup: active Editor/Core boundaries
+
+- [x] Cleanup: remove legacy Flat token context from Editor previews.
+  - Evidence: `TokenPreviewProvider` is used only by the active Design stage and focused Editor
+    preview tests. The stage passes the same current global design tokens as both `design.tokens`
+    and `document.tokens`; no product caller supplies `componentTokens` or `tokenInterface.sets`.
+    `TokenValueLabelProvider` has no callers, so `useTokenValueLabel()` always falls back to a
+    generic path formatter even though the active provider builds canonical global token labels.
+    Those document fields and overlays belong to the retired Flat-document token UI.
+  - Action: make preview and label resolution consume the current design token snapshot only;
+    remove local-document/component-token/set overlays and the unused value-label context. Use the
+    canonical label resolver in both design editors. Update preview tests to cover aliases, labels,
+    breakpoints, and declaration overrides using the current design contract.
+  - Scope: current Editor cleanup; leave Core's legacy Flat token contracts and Store Yjs untouched.
+  - Contracts: preserve global UUID references, family/group/name labels, alias resolution,
+    responsive token preview, search values, declaration overlays, and non-mutating previews.
+  - Validation: focused preview/consumer tests, Editor typecheck, root suite, consumer search,
+    candidate detector, formatting, and `git diff --check`.
+  - Result: `TokenPreviewProvider` now reads the current global design tokens only; its label and
+    search contexts no longer accept legacy document tokens, component tokens, or token-interface
+    sets. Removed the unused value-label context, routed typography and shadow editors through the
+    canonical label resolver, and stopped passing a duplicate token tree from Design stage. Focused
+    preview/declaration/table tests pass (24 tests); root suite passes 71 files /
+    247 tests; workspace typecheck, Prettier, candidate scan, consumer search, and `git diff --check`
+    pass. No Core legacy or Store Yjs sources were changed.
+
+- [x] Refactor: remove the orphaned FieldDefinition-to-schema Editor adapter.
+  - Evidence: `JsonSchemaContractFieldEditor` has no imports or Storybook/test callers; it only
+    converts the retired `FieldDefinition` shape through `fieldDataSchema` before delegating to the
+    active `SchemaValueForm`. The active schema editor already accepts canonical `JsonSchema`.
+    Repository search shows the Core root export of `fieldDataSchema` is used only by this orphan;
+    Core's legacy validator imports its implementation internally.
+  - Action: delete the unreferenced Editor wrapper and remove the obsolete Core root export. Keep
+    the private legacy conversion used by Core's Flat validator and keep the canonical Catalog
+    schema editor unchanged.
+  - Scope: current Editor no-shims cleanup; no API/API-client, Store Yjs, persisted format, or
+    active schema editing behavior changes.
+  - Contracts: preserve the active `JsonSchemaContractEditor` and `SchemaValueForm` behavior; do
+    not add a Catalog adapter or retain a public forwarding export.
+  - Validation: repository-wide consumer search, Core and workspace typechecks, candidate detector,
+    formatting, and `git diff --check`. No test suite references the deleted wrapper.
+  - Result: removed the unmounted adapter and its Core root export. The Core implementation stays
+    private for its legacy Flat validator; repository search finds no source references to the
+    deleted Editor component or public helper. Workspace typecheck and formatting pass; the
+    affected-directory detector reports no size candidates, and `git diff --check` passes.
+
+- [x] Refactor: remove the unreachable legacy preview-field parsing fallback.
+  - Evidence: both `CatalogPreviewFields` callers pass `AppService.getInspectorInputs()` fields;
+    Core builds these through `fieldsFromJsonSchema`, which sets `field.schema` for every result.
+    The component handles that schema first, making its later `FieldDefinition`/`parseFieldValue`
+    branches unreachable for active Catalog data. `parseFieldValue` has no other source caller;
+    its test suite only constructs legacy schema-less `FieldDefinition` records. The active
+    `SchemaValueForm` path already has its own behavior suite.
+  - Action: make `CatalogPreviewFields` render the guaranteed JSON Schema form path only; remove
+    the dead type-based Form/TextInput fallback, `parseFieldValue`, and its parser-only tests and
+    Vitest allowlist entry. Keep `isFieldValue`/`isFieldRecord`, which active schema forms still use.
+  - Scope: remove an unreachable Editor compatibility branch; no Catalog data, field values,
+    persistence, or API behavior changes.
+  - Contracts: preserve JSON Schema defaults, enum/scalar/array/object editing and validation through
+    `SchemaValueForm`, and continue rendering actual controls through `@facadeur/form`.
+  - Validation: source-call audit, SchemaValueForm suite, Editor/workspace typecheck, root suite,
+    candidate detector, formatting, and `git diff --check`.
+  - Result: `CatalogPreviewFields` now accepts Core's schema-guaranteed `JsonSchemaField` and renders
+    only `SchemaValueForm`; removed the schema-less native-field fallback, `parseFieldValue`, and its
+    isolated test/allowlist entry. Kept the active FieldValue guards. Workspace typecheck passes;
+    root suite passes 70 files / 246 tests, including SchemaValueForm and Inspector integration.
+    Detector finds no size candidate, formatting and `git diff --check` pass.
+
+## Backlog: Editor JSON Schema form projection
+
+- [x] Review duplicate JSON Schema-to-field projection across Core and Editor.
+  - Evidence: Core's `fieldsFromJsonSchema` derives `FieldDefinition` views for Inspector defaults
+    and field metadata. Editor's `formFieldsForSchema` separately maps JSON Schema to the
+    `SchemaForm` field configs, while `mapFieldDefinition` maps Core's derived view to the separate
+    `FormFieldConfig` used by the properties inspector. These paths overlap on scalar, enum, array,
+    object, and required-field interpretation, but serve distinct schema-value and bindable-inspector
+    workflows.
+  - Action: give `primaryJsonSchemaType` one Core owner for the identical JSON Schema rule that
+    selects the first declared type from a type array, then use it from Core's field projection,
+    Editor's schema-value config, structural renderer, array-default helpers, and prop-binding
+    capability check. Keep enum interpretation, Core's
+    `FieldDefinition` metadata, Editor's Form config mapping, prop-binding behavior, and
+    SchemaValueForm's nested-array/default/union behavior in their existing owners; those outputs
+    have different contracts and cannot be collapsed safely.
+  - Scope: consolidation candidate in the current architecture cleanup; no persisted schema or
+    Catalog contract changes.
+  - Contracts: preserve required/default handling, scalar and enum values, nested arrays/objects,
+    schema titles/annotations, prop binding, and Form package ownership.
+  - Validation: SchemaValueForm and Inspector behavior coverage, Core/Editor typechecks, root
+    suite, consumer audit, candidate detector, formatting, and `git diff --check`.
+  - Result: all six Editor schema type reads now use the Core rule; the only remaining
+    `Array.isArray(schema.type)` selector is the implementation in Core. Corrected the current
+    Form ownership guide to point at `ui/controls/data/schema/form/`. Full validation recorded
+    after this final migration.
+
+## Backlog: Editor Core snapshot boundary
+
+- [x] Review replacing `AppService.getCoreSnapshot()` with focused UI queries.
+  - Evidence: multiple Editor components read different slices from the generic Core snapshot:
+    open definition and selected node state, shared schemas and props, catalog export data, and
+    breakpoint settings. `AppService` keeps its controller private, so UI does not bypass the
+    service, but the generic method exposes the whole Core snapshot and couples these components
+    to its shape. The viewport board currently consumes the complete catalog for rendering.
+  - Action: define focused AppService read contracts for UI needs and a deliberate rendering input
+    for the viewport board; migrate callers and remove the generic snapshot method only when all
+    required data can be supplied without duplicating catalog state or changing update behavior.
+  - Scope: separate Editor-boundary cleanup backlog; no source changes in this step.
+  - Contracts: preserve reactive updates, selected/open definition behavior, schema and prop
+    management, catalog export output, breakpoint updates, and viewport board rendering. Keep Core
+    as the source of catalog state and do not add another catalog cache.
+  - Validation: AppService query tests, affected Editor UI suites, Editor typecheck, root suite,
+    candidate detector, formatting, and `git diff --check`.
+  - Result: retained the current getter. It is the only UI-facing Core read boundary on `AppService`,
+    whose controller remains private; the stage and editor tools need open-definition and catalog
+    snapshots together, and the viewport renderer consumes the catalog directly. Focused accessors
+    would only forward the same snapshot slices and expand the service surface without removing
+    Core-shape dependencies. Confirmed there are no direct UI references to `session.core` outside
+    composition roots.
+
+- [x] Refactor: move Core controller contracts from Domain into Core.
+  - Evidence: `packages/domain/src/core-contracts.ts` declares `CoreSnapshot` and `CatalogPort`,
+    both used by Core's controller/host and re-exported by Core. The only application consumers
+    import them through `@facadeur/core`; no API, API-client, or Store Yjs source consumes these
+    declarations directly.
+  - Action: define both contracts in Core's `types` domain, update Core's internal imports and
+    root type exports, and remove the Domain-only file and exports.
+  - Scope: align these Core-owned contracts with package ownership; no API/API-client or Store Yjs
+    edits and no catalog data or persistence changes.
+  - Contracts: retain the `@facadeur/core` type names and shapes, controller snapshot semantics,
+    and `CatalogPort.save` behavior. Domain remains shared types only and no longer exports
+    controller-specific contracts.
+  - Validation: complete source import audit, Core and Editor typechecks, root suite, candidate
+    detector, formatting, and `git diff --check`.
+  - Result: `CoreSnapshot` and `CatalogPort` now live under Core's `types`, remain exported from
+    `@facadeur/core`, and are no longer exported by Domain. No API, API-client, or Store Yjs source
+    imports these contracts. Domain/Core/Editor typechecks pass and the root suite passes 71 files /
+    247 tests; the candidate detector reports no size candidates in the moved contract paths.
+
+## Reviewed: Core controller cohesion
+
+- [x] Keep `CoreController` as the project catalog coordinator.
+  - Evidence: the detector reports 484 lines. The class owns catalog state, selection, and
+    publication while delegating tree edits, schema validation, definition records, design
+    commands, and node configuration to focused modules.
+  - Decision: keep the cohesive controller as the single stateful project entry point; splitting
+    command forwarding from state and publication would fragment the lifecycle without creating
+    independently owned behavior.
+  - Contracts: preserve Core's single catalog state, selection publication, validation on writes,
+    and the AppService/Controller public boundary.
+  - Validation: Core typecheck, root suite, candidate detector, and scoped diff review.
+
+## Completed cleanup: Editor form-binding helper
+
+- [x] Remove the unused Editor form-binding density helper.
+  - Evidence: `gapForDensity` has no callers in Editor source; the only remaining references are
+    its local declaration and a barrel export. Active form layout uses the package-owned component
+    styles and the Editor `Form` wrapper applies its density class.
+  - Action: remove the dead helper and its export while retaining `DEFAULT_DENSITY`, which is used
+    by the Editor form-binding context.
+  - Scope: dead Editor helper only; keep all `@facadeur/form` controls and Editor path-binding
+    behavior unchanged.
+  - Contracts: preserve compact/comfortable density classes, form field rendering, and live/commit
+    callbacks.
+  - Validation: caller audit, Editor typecheck, relevant form tests, candidate detector, formatting,
+    and `git diff --check`.
+  - Result: removed the unreferenced helper and barrel export. Editor typecheck passes, the two
+    focused Form suites pass (7 tests), and the full root suite passes 71 files / 247 tests. The
+    candidate detector reports no size candidates; formatting and `git diff --check` pass.
+
+## Backlog: active Server compatibility boundaries
+
+- [ ] Review the 523-line `apps/server/src/project/index.ts` repository boundary.
+  - Evidence: `ProjectRepository.load` and `assertDurable` recover the file/Yjs journal and
+    reconcile exported source files; `edit`, `applyUpdate`, and `create` stage and validate Yjs
+    candidates; `save`, `commit`, and `persist` coordinate durable writes, revisions, and
+    publication. These flows share synchronous commit ordering but have distinct recovery and
+    mutation responsibilities.
+  - Action: when Server is in scope, assess a small private recovery module while keeping
+    `ProjectRepository` as the lifecycle/transaction orchestrator. Do not split save/commit helpers
+    away from their journal invariants unless tests can exercise the complete protocol together.
+  - Scope: separate Server backlog; no current Storybook/Editor dependency and no Server source
+    changes in this cleanup step.
+  - Contracts: preserve source-hash conflict detection, pending-export recovery, stable source
+    mappings, revision checks, complete-project validation, candidate-store cleanup, persistence
+    before publication, and listener isolation.
+  - Validation: Server project recovery/save/conflict tests, Server typecheck, root suite, and
+    candidate detector. Include interrupted-save recovery and external source edits.
+
+- [ ] Review duplicate legacy field-to-schema projection in Core and Server.
+  - Evidence: Core's `legacy/flat/validation/field-data-schema.ts` and Server's
+    `project/validation.ts:schemaForLegacyField` recursively project `FieldDefinition` records.
+    The outputs intentionally differ today: Core produces standard JSON Schema and resolves named
+    schemas, while Server adds `x-facadeur-type` metadata and legacy defaults for `schemas.json`
+    fallback augmentation.
+  - Action: once the `DocumentFile`/`schemas.json` adapter can be retired, compare remaining shared
+    semantics and consolidate only the common projection in Core. Keep the Server-specific legacy
+    metadata mapping at its adapter boundary; do not add a generic mode to the canonical schema
+    builder.
+  - Scope: separate Server/Core legacy-contract backlog; no current Editor behavior depends on
+    this fallback and no code changes are included here.
+  - Contracts: preserve legacy field defaults, enum/array/object handling, required properties,
+    `x-facadeur-type` interpretation, schema references, and strict canonical `schemaCatalog`
+    validation.
+  - Validation: direct parity tests for shared field shapes, Server legacy fallback tests, Core
+    field/schema tests, both package typechecks, and root suite before consolidating.

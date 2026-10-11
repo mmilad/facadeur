@@ -269,7 +269,6 @@ export function CatalogSchemaStage({
                   fields={fields}
                   previewFields={previewFields}
                   onWrite={(field, value) => void writePreview(field, value)}
-                  onInvalid={(message) => session.setNotice(message, 'error')}
                 />
               </section>
             </div>

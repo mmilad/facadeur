@@ -10,8 +10,9 @@ session. It must not implement replacement native inputs.
   select, autocomplete, radio, boolean, chips, record, repeater, and transformable fields.
 - `apps/editor/src/ui/controls/form-binding/`: editor integration that binds package fields to
   catalog paths and editor session changes. It also contains recursive schema array composition.
-- `apps/editor/src/ui/controls/data/schema-form/`: editor schema-to-control translation and field
-  configuration, composed from package form fields and editor binding adapters.
+- `apps/editor/src/ui/controls/data/schema/`: schema-value interpretation and structural editing.
+  `schema/form/` owns the editor-only field configuration/rendering adapter, composed from package
+  form fields and editor binding controls.
 - `apps/editor/src/ui/components/IconButton.tsx`: shared editor button primitive used by controls,
   design settings, token editing, and inspectors.
 

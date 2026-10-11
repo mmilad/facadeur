@@ -1,4 +1,4 @@
-import type { JsonSchema } from '@facadeur/core';
+import { primaryJsonSchemaType, type JsonSchema } from '@facadeur/core';
 import { fieldDisplayLabel } from '../controls/data/field-label';
 import type { FieldConfig, FieldGroupConfig } from '../controls/data/schema/form';
 import {
@@ -10,7 +10,7 @@ export function formFieldsForSchema(
   schema: JsonSchema,
   label: string,
 ): (FieldConfig | FieldGroupConfig)[] {
-  const type = primaryType(schema);
+  const type = primaryJsonSchemaType(schema);
   if (type === 'array') {
     const itemSchema = schema.items ?? { type: 'string' };
     return [
@@ -39,7 +39,7 @@ export function fieldConfigForSchema(
   label: string,
   required = false,
 ): FieldConfig {
-  const type = primaryType(schema);
+  const type = primaryJsonSchemaType(schema);
   const base = { name, label, required };
   const stringEnum = schema.enum?.filter((entry): entry is string => typeof entry === 'string');
   if (stringEnum?.length) {
@@ -78,7 +78,7 @@ export function fieldConfigForSchema(
 }
 
 function itemFieldConfig(itemSchema: JsonSchema): FieldConfig | FieldConfig[] {
-  const itemType = primaryType(itemSchema);
+  const itemType = primaryJsonSchemaType(itemSchema);
   if (itemType === 'object' || itemSchema.properties) {
     const requiredNames = new Set(itemSchema.required ?? []);
     return Object.entries(itemSchema.properties ?? {}).map(([prop, child]) =>
@@ -86,8 +86,4 @@ function itemFieldConfig(itemSchema: JsonSchema): FieldConfig | FieldConfig[] {
     );
   }
   return fieldConfigForSchema(itemSchema, 'item', fieldDisplayLabel('item'));
-}
-
-function primaryType(schema: JsonSchema) {
-  return Array.isArray(schema.type) ? schema.type[0] : schema.type;
 }

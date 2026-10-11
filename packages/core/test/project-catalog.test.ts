@@ -68,101 +68,22 @@ describe('validateProjectCatalog', () => {
     }
   });
 
-  it('migrates legacy token, font, and breakpoint data at the Catalog read boundary', () => {
-    const blueUuid = '8e9dc664-3269-4e29-b09c-983fd19a2b10';
-    const legacyCatalog = {
-      ...createExampleCatalog(),
-      tokens: {
-        color: {
-          blue: {
-            $type: 'color',
-            500: {
-              $value: '#2563eb',
-              $extensions: {
-                facadeur: {
-                  uuid: blueUuid,
-                  label: '500',
-                  breakpoints: { tablet: '#1d4ed8' },
-                  tier: 'primitive',
-                },
-                vendor: { retained: true },
-              },
+  it('rejects legacy token library shapes instead of migrating them in current Catalog validation', () => {
+    const catalog = createExampleCatalog();
+    expect(() =>
+      validateProjectCatalog({
+        ...catalog,
+        tokens: {
+          color: {
+            blue: {
+              $type: 'color',
+              500: { $value: '#2563eb' },
             },
           },
-          accent: {
-            $type: 'color',
-            Default: { $value: '{color.blue.500}' },
-          },
         },
-      },
-      fonts: [
-        {
-          id: 'font-inter',
-          label: 'Inter',
-          family: 'Inter',
-          weights: [400, 700],
-          source: { type: 'google', family: 'Inter' },
-          fallbacks: ['Arial', 'sans-serif'],
-        },
-      ],
-      globalStyles: {
-        breakpoints: [
-          { id: 'phone', label: 'Phone', minWidth: 375 },
-          { id: 'tablet', label: 'Tablet', minWidth: 768 },
-        ],
-        tokenInterface: {
-          reads: ['color.blue.500'],
-          sets: { 'color.blue.500': '{color.accent.Default}' },
-        },
-        block: {
-          declarations: { color: '{color.blue.500}' },
-          breakpoints: {
-            tablet: { declarations: { color: '{color.accent.Default}' } },
-          },
-        },
-      },
-    };
-
-    const catalog = validateProjectCatalog(legacyCatalog);
-    const migratedAgain = validateProjectCatalog(legacyCatalog);
-    const tabletUuid = catalog.globalStyles?.breakpoints?.[1]?.uuid;
-    const blue = catalog.tokens?.color[blueUuid];
-    const accent = Object.values(catalog.tokens?.color ?? {}).find(
-      (token) => token.label === 'Default',
-    );
-    const font = Object.values(catalog.tokens?.font ?? {})[0];
-
-    expect(blue).toMatchObject({
-      uuid: blueUuid,
-      group: 'blue',
-      label: '500',
-      valueType: 'color',
-      value: '#2563eb',
-      breakpoints: { [tabletUuid!]: '#1d4ed8' },
-      extensions: { facadeur: { tier: 'primitive' }, vendor: { retained: true } },
-    });
-    expect(accent?.value).toBe(tokenReferenceValue(blueUuid));
-    expect(font).toMatchObject({
-      label: 'Inter',
-      group: '',
-      valueType: 'fontFamily',
-      value: { family: 'Inter', weights: [400, 700], fallbacks: ['Arial', 'sans-serif'] },
-    });
-    expect(font?.uuid).toBe(Object.values(migratedAgain.tokens?.font ?? {})[0]?.uuid);
-    expect(catalog.globalStyles?.breakpoints?.map(({ uuid }) => uuid)).toEqual(
-      migratedAgain.globalStyles?.breakpoints?.map(({ uuid }) => uuid),
-    );
-    expect(catalog.globalStyles?.tokenInterface).toEqual({
-      reads: [blueUuid],
-      sets: { [blueUuid]: tokenReferenceValue(accent!.uuid) },
-    });
-    expect(catalog.globalStyles?.block).toEqual({
-      declarations: { color: tokenReferenceValue(blueUuid) },
-      breakpoints: {
-        [tabletUuid!]: { declarations: { color: tokenReferenceValue(accent!.uuid) } },
-      },
-    });
-    expect('fonts' in catalog).toBe(false);
+      }),
+    ).toThrow('/tokens/');
+    expect(() => validateProjectCatalog({ ...catalog, fonts: [] })).toThrow(/\/fonts\b/);
   });
 
   it('accepts global styles with breakpoints and a style block', () => {

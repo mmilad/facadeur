@@ -110,9 +110,13 @@ export interface InstanceNode {
 
 export type StructuralNode = RepeaterNode | SwitchNode;
 
+/** @deprecated Legacy node representation used by the Flat DocumentFile adapter. */
 export type FlatNode = FrameNode | TextNode | ImageNode | InstanceNode | StructuralNode;
 
-/** In-memory document: one map of nodes, children as ordered id lists. */
+/**
+ * @deprecated Legacy in-memory document used by Server and Store-Yjs adapters. Current project
+ * state is represented by `ProjectCatalogModel`.
+ */
 export interface FlatDocument {
   version: 1;
   id: string;

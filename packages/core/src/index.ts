@@ -33,7 +33,11 @@ export {
   previewFieldsForNode,
   resolveDefinitionToElementBuildConfig,
 } from './controller/project/node/preview/index';
-export { fieldsFromJsonSchema } from './schema/json-schema-fields';
+export {
+  fieldsFromJsonSchema,
+  primaryJsonSchemaType,
+  type JsonSchemaField,
+} from './schema/json-schema-fields';
 export {
   inspectorInputsForNode,
   type InspectorInputs,
@@ -89,7 +93,7 @@ export {
 } from './controller/project/catalog/index';
 export type { CoreControllerHost } from './types/index';
 export type { CatalogDefinitionPort } from './types/index';
-export type { CatalogPort, CoreSnapshot } from '@facadeur/domain';
+export type { CatalogPort, CoreSnapshot } from './types/core-contracts';
 /** @deprecated Flat DocumentFile stack. New project code should use Catalog APIs. */
 export {
   applyCommand,
@@ -106,8 +110,6 @@ export {
   resolveVariantDocument,
   variantPresets,
 } from './legacy/flat/variants/index';
-/** @deprecated Flat DocumentFile preview data helpers. New project code should use Catalog APIs. */
-export { resolvePreviewData, withPreviewData } from './legacy/flat/variants/preview-data';
 export { canonicalizeJson, isJsonValue, isPlainObject, type JsonValue } from './utils';
 export {
   childOverridePath,
@@ -116,6 +118,7 @@ export {
 } from './document/child-fields';
 export { assertBreakpoints } from './controller/style/breakpoints';
 export { assertFont, assertFonts, fontStyles } from './controller/style/fonts';
+/** @deprecated Flat DocumentFile adapter API; retained for Server, API, and Store-Yjs. */
 export {
   canonicalizeFlat,
   collectSubtree,
@@ -248,6 +251,10 @@ export {
 } from './controller/style/tokens/global/tree';
 export { fontFamilyTokens, tokenReferencesByType } from './controller/style/tokens/global/query';
 export { tokenReference, tokenReferenceValue } from './controller/style/tokens/syntax';
+/**
+ * @deprecated Legacy DocumentFile/Store-Yjs decoding only. Current Catalogs must use canonical
+ * UUID-keyed token records and `validateProjectCatalog`.
+ */
 export {
   migrateLegacyDesignLibraries,
   migrateLegacyReferenceLocations,
@@ -333,7 +340,6 @@ export {
   validateTree,
   assertValueMatches,
   type ValidateOptions,
-  fieldDataSchema,
 } from './legacy/flat/validation/index';
 
 export {

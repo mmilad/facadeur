@@ -1,4 +1,4 @@
-import type { FieldValue, JsonSchema } from '@facadeur/core';
+import { primaryJsonSchemaType, type FieldValue, type JsonSchema } from '@facadeur/core';
 import { JsonSchemaContractEditor } from '../../../schema/JsonSchemaContractEditor';
 import { StructuralSchemaValueForm } from './StructuralSchemaValueForm';
 
@@ -22,7 +22,7 @@ function usesStructuralEditor(schema: JsonSchema): boolean {
 }
 
 function hasStructuralArrayItems(schema: JsonSchema): boolean {
-  const type = Array.isArray(schema.type) ? schema.type[0] : schema.type;
+  const type = primaryJsonSchemaType(schema);
   if (type !== 'array' && !schema.items) return false;
   const items = schema.items;
   if (!items || Array.isArray(items)) return false;
@@ -59,6 +59,6 @@ export function SchemaValueForm({
 
 function schemaUsesAdvancedEditor(schema: JsonSchema): boolean {
   if (schema.properties || schema.items) return true;
-  const type = Array.isArray(schema.type) ? schema.type[0] : schema.type;
+  const type = primaryJsonSchemaType(schema);
   return type === 'object' || type === 'array';
 }

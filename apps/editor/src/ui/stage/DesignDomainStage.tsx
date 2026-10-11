@@ -67,7 +67,6 @@ export function DesignDomainStage({
       <div className="design-domain-body">
         <TokenPreviewProvider
           design={snap.design}
-          document={{ tokens: snap.design.tokens }}
           breakpointId={tokenDomain ? ctx.writingBreakpointId : null}
           breakpoints={ctx.breakpoints.slice()}
         >

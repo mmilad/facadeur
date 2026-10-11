@@ -19,7 +19,6 @@ export function createInMemoryCatalogPort(
     return validated;
   };
   return {
-    load: async () => structuredClone(getCatalog()) as ProjectCatalogModel,
     save: async (catalog) => commit(catalog),
     createDefinition: async (kind, definition) => {
       const uuid = definition.uuid ?? createCatalogUuid();

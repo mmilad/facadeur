@@ -55,7 +55,6 @@ function setup(overrides: Partial<Props> = {}) {
     ...render(
       <TokenPreviewProvider
         design={{ tokens: canonicalizeTokenTree(exampleCatalog.tokens), breakpoints: [] }}
-        document={{}}
         breakpointId={null}
       >
         <CssDeclarationsControl {...props} />

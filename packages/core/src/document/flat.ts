@@ -52,6 +52,7 @@ export type {
 } from './flat/flat-types';
 export { collectSubtree, findParent, isInsideSubtree } from './flat/flat-tree';
 
+/** @deprecated Adapter from the legacy nested DocumentFile model to Flat storage. */
 export function toFlat(file: DocumentFile) {
   const nodes: Record<string, FlatNode> = {};
   const rootId = flattenSubtree(file.root, nodes, new Set());
@@ -84,6 +85,7 @@ export function toFlat(file: DocumentFile) {
   });
 }
 
+/** @deprecated Adapter from Flat storage back to the legacy nested DocumentFile model. */
 export function toNested(doc: FlatDocument): DocumentFile {
   const nested = expandNode(doc, doc.rootId, new Set());
   const file: DocumentFile = {
@@ -127,6 +129,7 @@ export function toNested(doc: FlatDocument): DocumentFile {
   return file;
 }
 
+/** @deprecated Canonicalizes the legacy Flat storage model; current projects use Catalog APIs. */
 export function canonicalizeFlat(doc: FlatDocument): FlatDocument {
   const nodes: Record<string, FlatNode> = {};
   for (const id of Object.keys(doc.nodes).sort()) {

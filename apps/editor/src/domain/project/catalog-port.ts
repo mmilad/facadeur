@@ -9,7 +9,6 @@ export type EditorCatalogPort = CatalogPort & CatalogDefinitionPort;
 
 export function createCatalogPort(projectId: string): EditorCatalogPort {
   return {
-    load: () => api.projects.loadCatalog(projectId),
     save: (catalog: ProjectCatalogModel) => api.projects.saveCatalog(projectId, catalog),
     createDefinition: (kind, definition) =>
       api.projects.createCatalogDefinition(projectId, kind, definition),

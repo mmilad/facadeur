@@ -1,4 +1,9 @@
-import { matchesSchemaValue, type FieldValue, type JsonSchema } from '@facadeur/core';
+import {
+  matchesSchemaValue,
+  primaryJsonSchemaType,
+  type FieldValue,
+  type JsonSchema,
+} from '@facadeur/core';
 import { isFieldRecord, isFieldValue } from '../../../../domain/field-values';
 
 export function schemaMatches(value: FieldValue, schema: JsonSchema): boolean {
@@ -49,7 +54,7 @@ export function initialValueForSchema(
     return undefined;
   }
 
-  const type = Array.isArray(schema.type) ? schema.type[0] : schema.type;
+  const type = primaryJsonSchemaType(schema);
   if (type === 'object' || schema.properties) {
     const value: Record<string, FieldValue> = {};
     for (const name of includeOptionalFields
@@ -109,7 +114,7 @@ export function initialDraftForSchema(schema: JsonSchema): FieldValue {
   const alternatives = schema.oneOf ?? schema.anyOf;
   if (alternatives?.length) return initialDraftForSchema(alternatives[0]!);
 
-  const type = Array.isArray(schema.type) ? schema.type[0] : schema.type;
+  const type = primaryJsonSchemaType(schema);
   if (type === 'object' || schema.properties) {
     const value: Record<string, FieldValue> = {};
     for (const [name, child] of Object.entries(schema.properties ?? {})) {

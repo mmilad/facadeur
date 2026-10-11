@@ -3,7 +3,6 @@ import {
   applyCommand,
   publicFieldsFor,
   resolveComponentContract,
-  resolvePreviewData,
   toFlat,
   toNested,
   validateCatalog,
@@ -265,29 +264,6 @@ describe('Core schema-use contract resolution', () => {
     expect(
       applyCommand(updated, { type: 'setSchemaCatalog', schemaCatalog: null }).schemaCatalog,
     ).toBeUndefined();
-  });
-
-  it('uses contract defaults and schema-use preview samples with existing preview precedence', () => {
-    const document: DocumentFile = {
-      ...baseDocument,
-      schemaUse: {
-        ...baseDocument.schemaUse,
-        defaults: { title: 'Sample title', label: 'Sample' },
-      },
-      previewData: {
-        fields: { title: 'Explicit title' },
-        variants: { compact: { label: 'Variant sample' } },
-      },
-      variants: [{ name: 'compact', overrides: { fields: { title: 'Variant default' } } }],
-    };
-    const fields = resolveComponentContract(document, {
-      documents: new Map([[document.id, document]]),
-      schemaCatalog,
-    });
-    expect(resolvePreviewData(document, 'compact', fields)).toEqual({
-      title: 'Explicit title',
-      label: 'Variant sample',
-    });
   });
 
   it('accepts named schema descriptions while rejecting unrelated catalog properties', () => {

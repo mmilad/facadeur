@@ -3,7 +3,7 @@ import { TransformableField, type TransformableFieldOption } from '@facadeur/for
 import {
   useTokenResolver,
   useTokenSearchValue,
-  useTokenValueLabel,
+  useTokenLabel,
 } from '../controls/fields/TokenPreviewContext';
 import {
   formatTypographyFieldValue,
@@ -200,7 +200,7 @@ function previewText(value: unknown): string {
 export function DesignTypographyEditor(props: DesignTypographyEditorProps) {
   const { catalogs } = props;
   const resolvePreview = useTokenResolver();
-  const labelFor = useTokenValueLabel();
+  const labelFor = useTokenLabel();
   const searchValue = useTokenSearchValue();
   const [error, setError] = useState<string | null>(null);
   const [aliasDraft, setAliasDraft] = useState(() =>

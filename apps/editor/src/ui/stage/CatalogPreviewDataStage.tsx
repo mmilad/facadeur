@@ -2,17 +2,10 @@
 
 import type { AppService } from '../../app-service';
 import { catalogDefinitionDisplayName } from '../../domain/catalog/display-name';
-import type { EditorSession } from '../../domain/session';
 import { CatalogPreviewFields } from './CatalogPreviewFields';
 
 /** Edits definition-level preview defaults (`config.previewData.fields`). */
-export function CatalogPreviewDataStage({
-  app,
-  session,
-}: {
-  app: AppService;
-  session: EditorSession;
-}) {
+export function CatalogPreviewDataStage({ app }: { app: AppService }) {
   const coreSnap = app.getCoreSnapshot();
   const definition = coreSnap.openDefinition;
   const { fields } = app.getInspectorInputs();
@@ -52,7 +45,6 @@ export function CatalogPreviewDataStage({
               fields={fields}
               previewFields={previewFields}
               onWrite={(field, value) => void app.patchPreviewField(field.name, value)}
-              onInvalid={(message) => session.setNotice(message, 'error')}
             />
           </section>
         </div>

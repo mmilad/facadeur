@@ -1,1 +1,1 @@
-export { DEFAULT_DENSITY, gapForDensity } from './density';
+export { DEFAULT_DENSITY } from './density';

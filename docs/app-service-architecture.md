@@ -19,14 +19,14 @@ Editor UI
 
 ## Ownership
 
-| Owner               | Responsibility                                                                                                        |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `AppService`        | UI-facing operations; delegates catalog transport and state changes to Core and session state to EditorSession.       |
-| `CoreController`    | Validated catalog state, definition/schema/design mutations, and load/save/create/delete orchestration through ports. |
-| `EditorSession`     | Editor selection, viewport and editing state; coordinates persistence for the active project.                         |
-| `InspectorService`  | Shapes Core's preview/inspector model for UI controls.                                                                |
-| `createCatalogPort` | Maps Core's catalog port methods to the Editor API client.                                                            |
-| React canvas        | Renders the active Editor canvas.                                                                                     |
+| Owner               | Responsibility                                                                                                                                         |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `AppService`        | UI-facing operations; delegates catalog transport and state changes to Core and session state to EditorSession.                                        |
+| `CoreController`    | Validated catalog state initialized from the project snapshot, definition/schema/design mutations, and save/create/delete orchestration through ports. |
+| `EditorSession`     | Editor selection, viewport and editing state; coordinates persistence for the active project.                                                          |
+| `InspectorService`  | Shapes Core's preview/inspector model for UI controls.                                                                                                 |
+| `createCatalogPort` | Maps Core's catalog port methods to the Editor API client.                                                                                             |
+| React canvas        | Renders the active Editor canvas.                                                                                                                      |
 
 The Editor canvas renders through React `DynamicElement`, consuming `ElementBuildConfig` from Core.
 API routes and API-client remain transport layers. Shared contracts live in `@facadeur/domain`.
@@ -35,4 +35,6 @@ API routes and API-client remain transport layers. Shared contracts live in `@fa
 
 Core owns catalog validation and state transitions. API request validation remains at the API
 boundary. `@sinclair/typebox` schemas and Ajv validate their respective persisted/request
-contracts; they are not Editor controller responsibilities.
+contracts; they are not Editor controller responsibilities. Initial project loading uses the
+project snapshot endpoint, then Core validates and owns its catalog; the catalog port is used for
+subsequent saves and definition creation/deletion.

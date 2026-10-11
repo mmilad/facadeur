@@ -1,7 +1,7 @@
 import type { FieldValue, Node, NodeDefinition, ProjectCatalog } from '@facadeur/domain';
 import { htmlTagOptions, isVoidHtmlTag } from '../../../../document/html-tags';
 import { fieldsFromJsonSchema } from '../../../../schema/json-schema-fields';
-import type { FieldDefinition } from '../../../../schema/document';
+import type { JsonSchemaField } from '../../../../schema/json-schema-fields';
 import { classListFromNode, findDefinition, findNodeByUuid } from '../../catalog/ops';
 import { effectiveSchemaForDefinition } from '../../catalog/field-contract';
 import { inspectorInputsForNode } from '../config/inspector';
@@ -45,7 +45,7 @@ export type InspectorFormField =
   | {
       type: 'schemaField';
       path: string;
-      field: FieldDefinition;
+      field: JsonSchemaField;
       label: string;
       propBindable?: boolean;
     };
@@ -87,7 +87,7 @@ function recordFromFieldValues(
 function schemaFieldSections(
   prefix: 'previewData' | 'nodeData',
   title: string,
-  fields: FieldDefinition[],
+  fields: JsonSchemaField[],
 ): InspectorFormField | null {
   if (!fields.length) return null;
   return {

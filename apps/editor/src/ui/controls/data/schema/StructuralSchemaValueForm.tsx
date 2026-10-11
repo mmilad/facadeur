@@ -1,5 +1,5 @@
 ﻿import type { ReactNode } from 'react';
-import type { FieldValue, JsonSchema } from '@facadeur/core';
+import { primaryJsonSchemaType, type FieldValue, type JsonSchema } from '@facadeur/core';
 import { isFieldRecord, isFieldValue } from '../../../../domain/field-values';
 import { Stack } from '../../../components/layout';
 import { Field } from '../../../components/feedback';
@@ -73,7 +73,7 @@ function renderSchemaValue(
     );
   }
 
-  const type = Array.isArray(schema.type) ? schema.type[0] : schema.type;
+  const type = primaryJsonSchemaType(schema);
   const title = schema.title || key.split('.').at(-1) || 'Value';
   const hint = schema.description;
   const scalarEnum = schema.enum?.length ? schema.enum.filter(isFieldValue) : undefined;
@@ -369,7 +369,7 @@ function FallbackValueField({
 function initialDisplayValue(schema: JsonSchema): FieldValue | undefined {
   if ('default' in schema && isFieldValue(schema.default)) return schema.default;
   if ('const' in schema && isFieldValue(schema.const)) return schema.const;
-  const type = Array.isArray(schema.type) ? schema.type[0] : schema.type;
+  const type = primaryJsonSchemaType(schema);
   if (type === 'boolean') return false;
   if (type === 'number' || type === 'integer') return 0;
   return undefined;

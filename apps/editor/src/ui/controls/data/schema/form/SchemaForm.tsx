@@ -4,7 +4,7 @@ import type { TransformableFieldOption } from '@facadeur/form';
 import type { FieldValue } from '@facadeur/core';
 import { SchemaValueForm } from '../SchemaValueForm';
 import { getPath } from '@facadeur/form';
-import type { FieldDefinition } from '@facadeur/core';
+import { primaryJsonSchemaType, type JsonSchemaField } from '@facadeur/core';
 import { PropBindableInput } from '../../../form-binding/components/input/PropBindableInput';
 import {
   useDesignPropOptions,
@@ -223,7 +223,7 @@ function BoundSchemaField({ config }: { config: import('./field-config').SchemaF
   const designPropOptions = useDesignPropOptions();
   const raw = getPath(form.value, config.name);
   const schema = config.field.schema;
-  const propBindable = config.propBindable === true && fieldSupportsPropBind(config.field, schema);
+  const propBindable = config.propBindable === true && fieldSupportsPropBind(config.field);
 
   if (propBindable) {
     const textValue =
@@ -249,17 +249,6 @@ function BoundSchemaField({ config }: { config: import('./field-config').SchemaF
     );
   }
 
-  if (!schema) {
-    return (
-      <PrefixScalarField
-        config={{
-          type: config.field.type === 'number' ? 'number' : 'text',
-          name: config.name,
-          label: config.label,
-        }}
-      />
-    );
-  }
   return (
     <SchemaValueForm
       schema={schema}
@@ -270,10 +259,10 @@ function BoundSchemaField({ config }: { config: import('./field-config').SchemaF
   );
 }
 
-function fieldSupportsPropBind(field: FieldDefinition, schema: FieldDefinition['schema']): boolean {
+function fieldSupportsPropBind(field: JsonSchemaField): boolean {
+  const schema = field.schema;
   if (field.type === 'boolean' || field.type === 'object' || field.type === 'array') return false;
-  if (!schema) return field.type === 'text' || field.type === 'number' || field.type === 'enum';
-  const type = Array.isArray(schema.type) ? schema.type[0] : schema.type;
+  const type = primaryJsonSchemaType(schema);
   return type === 'string' || type === 'number' || type === 'integer' || field.type === 'enum';
 }
 

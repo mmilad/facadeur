@@ -193,7 +193,7 @@ export function EditorShell({
         ) : surface === 'code' ? (
           <CatalogCodeStage app={app} generation={snap.generation} />
         ) : surface === 'preview' ? (
-          <CatalogPreviewDataStage app={app} session={session} />
+          <CatalogPreviewDataStage app={app} />
         ) : (
           <StageCanvas
             app={app}

@@ -241,6 +241,7 @@ export type TokenInterface = Static<typeof tokenInterfaceSchema>;
 export type Binding = Static<typeof bindingSchema>;
 export type NestedNode = Static<typeof nestedNodeSchema>;
 export type DocumentSettings = Static<typeof settingsSchema>;
+/** @deprecated Legacy persisted DocumentFile contract retained by Server, API, and Store-Yjs. */
 export type DocumentFile = Static<typeof documentFileSchema>;
 export type {
   BasicSchemaType,

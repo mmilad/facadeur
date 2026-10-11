@@ -1,11 +1,10 @@
 import type { FieldValue, NodeDefinition, ProjectCatalog } from '@facadeur/domain';
-import type { FieldDefinition } from '../../../../schema/document';
-import { fieldsFromJsonSchema } from '../../../../schema/json-schema-fields';
+import { fieldsFromJsonSchema, type JsonSchemaField } from '../../../../schema/json-schema-fields';
 import { effectiveSchemaForDefinition } from '../../catalog/field-contract';
 import { previewFieldsForNode } from '../preview/merge';
 
 export type InspectorInputs = {
-  fields: readonly FieldDefinition[];
+  fields: readonly JsonSchemaField[];
   values: Record<string, FieldValue>;
 };
 
@@ -37,7 +36,7 @@ export function inspectorInputsForNode(
   return { fields, values };
 }
 
-function emptyFieldValue(type: FieldDefinition['type']): FieldValue {
+function emptyFieldValue(type: JsonSchemaField['type']): FieldValue {
   switch (type) {
     case 'boolean':
       return false;

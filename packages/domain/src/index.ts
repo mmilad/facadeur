@@ -16,12 +16,7 @@ export type {
   NodeDefinitionKind,
   PreviewData,
 } from './node';
-export type {
-  CatalogMapKey,
-  DefinitionMap,
-  ProjectCatalog,
-  ProjectCatalogModel,
-} from './catalog';
+export type { CatalogMapKey, DefinitionMap, ProjectCatalog, ProjectCatalogModel } from './catalog';
 export type {
   Breakpoint,
   BreakpointUuid,
@@ -54,4 +49,3 @@ export type {
   VariantStyleMap,
 } from './design-system';
 export type { ElementBuildConfig } from './element-build';
-export type { CatalogPort, CoreSnapshot } from './core-contracts';

@@ -156,3 +156,8 @@
   `node_modules`. The approved host-context run of `pnpm test` passed 71 files / 254 tests, and
   `pnpm typecheck` passed across the workspace. Continue routing authoritative pnpm checks through
   the approved host context; no binary or install cleanup is needed.
+- **Update (2026-10-11, Flat cleanup verification):** An unapproved restricted `pnpm exec prettier`
+  invocation again selected Corepack without the host cache and failed fetching pinned pnpm 10.33.3
+  (`ENOTFOUND registry.npmjs.org`). Rerunning Prettier through the approved host context passed;
+  `pnpm test` passed 71 files / 252 tests and workspace `pnpm typecheck` passed there as well.
+  Continue using the approved host context for pnpm commands; no binary or install cleanup is needed.

@@ -1,13 +1,8 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import {
-  listComponentTokens,
-  emptyTokenTree,
   readTokenTree,
   tokenReference,
   tokenReferenceValue,
-  type ComponentTokenMap,
-  type TokenInterface,
-  type TokenTree,
   type Breakpoint,
 } from '@facadeur/core';
 import { loadTokens, tokenCustomProperty } from '@facadeur/core';
@@ -15,17 +10,10 @@ import { tokenDisplayLabel, tokenPath } from '../token-presentation';
 import { formatTokenValue } from '../../../domain/edits/token-edit';
 import type { EditorDesignSnapshot } from '../../../domain/session';
 
-type TokenPreviewDocument = {
-  tokens?: TokenTree;
-  componentTokens?: ComponentTokenMap;
-  tokenInterface?: TokenInterface;
-};
-
 const TokenPreviewContext = createContext<(reference: string) => string | undefined>(
   () => undefined,
 );
 const TokenLabelContext = createContext<(reference: string) => string>(tokenDisplayLabel);
-const TokenValueLabelContext = createContext<(reference: string) => string>(tokenDisplayLabel);
 const TokenSearchValueContext = createContext<(reference: string) => string | undefined>(
   () => undefined,
 );
@@ -33,14 +21,12 @@ const TokenSearchValueContext = createContext<(reference: string) => string | un
 /** Preview uses the same token compiler as the canvas; global refs stay UUID-based. */
 export function TokenPreviewProvider({
   design,
-  document,
   breakpointId,
   children,
   declarations,
   breakpoints,
 }: {
   design: EditorDesignSnapshot;
-  document: TokenPreviewDocument;
   breakpointId: string | null;
   children: ReactNode;
   /** Effective custom properties at the selected element, including local instance rules. */
@@ -50,22 +36,17 @@ export function TokenPreviewProvider({
 }) {
   const { searchValue, labelFor } = useMemo(() => {
     const values = new Map<string, string>();
-    for (const source of [design.tokens, document.tokens ?? emptyTokenTree()]) {
-      for (const token of readTokenTree(source).tokens.values()) {
-        values.set(
-          tokenReferenceValue(token.uuid),
-          formatTokenValue(token.breakpoints[breakpointId ?? ''] ?? token.value),
-        );
-      }
-    }
-    for (const token of listComponentTokens(document.componentTokens)) {
-      values.set(`{${token.path}}`, formatTokenValue(token.value));
+    for (const token of readTokenTree(design.tokens).tokens.values()) {
+      values.set(
+        tokenReferenceValue(token.uuid),
+        formatTokenValue(token.breakpoints[breakpointId ?? ''] ?? token.value),
+      );
     }
     return {
       searchValue: (reference: string) => values.get(normalizeReference(reference)),
-      labelFor: createTokenLabeler(design, document),
+      labelFor: createTokenLabeler(design),
     };
-  }, [design.tokens, document.tokens, document.componentTokens, breakpointId]);
+  }, [design.tokens, breakpointId]);
 
   const resolve = useMemo(() => {
     try {
@@ -100,10 +81,6 @@ export function TokenPreviewProvider({
           (_, reference: string) => `var(${customProperty(reference)})`,
         );
 
-      for (const [target, value] of Object.entries(document.tokenInterface?.sets ?? {})) {
-        const property = propertyByUuid.get(target) ?? tokenCustomProperty(target);
-        if (property) properties.set(property, replaceReferences(value));
-      }
       for (const [name, value] of Object.entries(declarations ?? {})) {
         if (!name.startsWith('--')) continue;
         properties.set(name, replaceReferences(value));
@@ -136,21 +113,12 @@ export function TokenPreviewProvider({
       // An incomplete design must not prevent editing or discard unknown references.
       return () => undefined;
     }
-  }, [
-    design.tokens,
-    design.breakpoints,
-    document.tokenInterface,
-    breakpointId,
-    declarations,
-    breakpoints,
-  ]);
+  }, [design.tokens, design.breakpoints, breakpointId, declarations, breakpoints]);
 
   return (
     <TokenSearchValueContext.Provider value={searchValue}>
       <TokenLabelContext.Provider value={labelFor}>
-        <TokenValueLabelContext.Provider value={labelFor}>
-          <TokenPreviewContext.Provider value={resolve}>{children}</TokenPreviewContext.Provider>
-        </TokenValueLabelContext.Provider>
+        <TokenPreviewContext.Provider value={resolve}>{children}</TokenPreviewContext.Provider>
       </TokenLabelContext.Provider>
     </TokenSearchValueContext.Provider>
   );
@@ -170,47 +138,14 @@ export function useTokenLabel() {
 }
 
 /** Current value labels may follow the document that owns an inherited value. */
-export function TokenValueLabelProvider({
-  design,
-  document,
-  children,
-}: {
-  design: EditorDesignSnapshot;
-  document: TokenPreviewDocument;
-  children: ReactNode;
-}) {
-  const labelFor = useMemo(
-    () => createTokenLabeler(design, document),
-    [design.tokens, document.tokens, document.componentTokens],
-  );
-  return (
-    <TokenValueLabelContext.Provider value={labelFor}>{children}</TokenValueLabelContext.Provider>
-  );
-}
-
-export function useTokenValueLabel() {
-  return useContext(TokenValueLabelContext);
-}
-
-function createTokenLabeler(
-  design: EditorDesignSnapshot,
-  document: TokenPreviewDocument,
-): (reference: string) => string {
+function createTokenLabeler(design: EditorDesignSnapshot): (reference: string) => string {
   const designLabels = new Map<string, { path: string; label: string }>();
-  const documentLabels = new Map<string, { path: string; label: string }>();
   for (const token of readTokenTree(design.tokens).tokens.values()) {
     designLabels.set(tokenReferenceValue(token.uuid), { path: token.path, label: token.label });
   }
-  for (const token of readTokenTree(document.tokens ?? emptyTokenTree()).tokens.values()) {
-    documentLabels.set(tokenReferenceValue(token.uuid), { path: token.path, label: token.label });
-  }
-  const componentLabels = new Map<string, { path: string; label: string }>();
-  for (const token of listComponentTokens(document.componentTokens)) {
-    componentLabels.set(`{${token.path}}`, { path: token.path, label: token.label ?? '' });
-  }
   return (reference: string) => {
     const key = normalizeReference(reference);
-    const token = componentLabels.get(key) ?? designLabels.get(key) ?? documentLabels.get(key);
+    const token = designLabels.get(key);
     if (token) return tokenDisplayLabel(token.path, token.label);
     return tokenDisplayLabel(key);
   };

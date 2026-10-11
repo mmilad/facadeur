@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   useTokenResolver,
   useTokenSearchValue,
-  useTokenValueLabel,
+  useTokenLabel,
 } from '../controls/fields/TokenPreviewContext';
 import {
   BooleanField,
@@ -262,7 +262,7 @@ function ShadowObjectEditor({
 
 export function DesignShadowEditor(props: DesignShadowEditorProps) {
   const breakpoint = isBreakpoint(props);
-  const labelFor = useTokenValueLabel();
+  const labelFor = useTokenLabel();
   const searchValue = useTokenSearchValue();
   const resolvePreview = useTokenResolver();
   const [advancedDraft, setAdvancedDraft] = useState(() =>

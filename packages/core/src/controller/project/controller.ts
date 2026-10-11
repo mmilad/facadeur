@@ -1,7 +1,5 @@
 import type {
   CatalogMapKey,
-  CatalogPort,
-  CoreSnapshot,
   FieldExposure,
   JsonSchemaObject,
   NodeDefinition,
@@ -9,6 +7,7 @@ import type {
 } from '@facadeur/domain';
 import { DocumentError } from '../../document/errors';
 import type { CoreControllerHost } from '../../types/host';
+import type { CatalogPort, CoreSnapshot } from '../../types/core-contracts';
 import type { CatalogDefinitionPort } from '../../types/catalog-definition-port';
 import { applyCatalogDesignCommand, type CatalogDesignCommand } from './catalog/design-commands';
 import {
@@ -477,10 +476,6 @@ export class CoreController implements CoreControllerHost {
     const kind = findDefinition(this.catalog, uuid)?.kind;
     if (!kind) throw new Error(`Unknown catalog definition "${uuid}"`);
     this.replaceCatalog(await port.deleteDefinition(kind, uuid));
-  }
-
-  async reload(port: CatalogPort) {
-    this.replaceCatalog(await port.load());
   }
 
   private publish() {

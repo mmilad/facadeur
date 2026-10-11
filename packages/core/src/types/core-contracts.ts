@@ -1,6 +1,6 @@
-import type { ProjectCatalog } from './catalog';
-import type { NodeDefinition } from './node';
-import type { Uuid } from './uuid';
+import type { ProjectCatalog } from '@facadeur/domain';
+import type { NodeDefinition } from '@facadeur/domain';
+import type { Uuid } from '@facadeur/domain';
 
 export interface CoreSnapshot {
   readonly catalog: ProjectCatalog;
@@ -9,8 +9,7 @@ export interface CoreSnapshot {
   readonly selectedNodeUuid: Uuid | null;
 }
 
-/** Implemented by the editor API layer — not part of core algorithms. */
+/** Persistence port used by Core to save the validated catalog. */
 export interface CatalogPort {
-  load(): Promise<ProjectCatalog>;
   save(catalog: ProjectCatalog): Promise<ProjectCatalog>;
 }

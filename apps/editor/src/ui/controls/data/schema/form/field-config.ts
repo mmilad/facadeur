@@ -1,4 +1,4 @@
-import type { FieldDefinition } from '@facadeur/core';
+import type { JsonSchemaField } from '@facadeur/core';
 import type { AutocompleteOption } from '@facadeur/form';
 
 export type FieldConfigBase = {
@@ -52,7 +52,7 @@ export type ClassListFieldConfig = FieldConfigBase & {
 
 export type SchemaFieldConfig = FieldConfigBase & {
   type: 'schemaField';
-  field: FieldDefinition;
+  field: JsonSchemaField;
   propBindable?: boolean;
 };
 
