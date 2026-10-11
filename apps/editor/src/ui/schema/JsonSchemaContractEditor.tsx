@@ -2,12 +2,12 @@ import { matchesSchemaValue, type FieldValue, type JsonSchema } from '@facadeur/
 import { SchemaBuilderProvider } from 'jsonjoy-builder';
 import 'jsonjoy-builder/styles.css';
 import { useMemo } from 'react';
+import { isFieldValue } from '../../domain/field-values';
 import { SchemaForm, type FieldConfig, type FieldGroupConfig } from '../controls/data/schema/form';
 import { Form, TextArea } from '../controls/form-binding/index';
 import {
   initialDraftForSchema,
   initialValueForSchema,
-  isFieldValue,
 } from '../controls/data/schema/item-array-schema';
 import { formFieldsForSchema } from './json-schema-form-config';
 import './json-schema-contract-editor.css';

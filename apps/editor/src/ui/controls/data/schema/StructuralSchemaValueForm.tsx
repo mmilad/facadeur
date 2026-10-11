@@ -1,5 +1,6 @@
 ﻿import type { ReactNode } from 'react';
 import type { FieldValue, JsonSchema } from '@facadeur/core';
+import { isFieldRecord, isFieldValue } from '../../../../domain/field-values';
 import { Stack } from '../../../components/layout';
 import { Field } from '../../../components/feedback';
 import { Popover } from '../../../components/overlay';
@@ -9,7 +10,6 @@ import {
   caseEnvelope,
   initialDraftForSchema,
   initialValueForSchema,
-  isFieldValue,
   makeCaseValue,
   payloadForValue,
   schemaMatches,
@@ -79,7 +79,7 @@ function renderSchemaValue(
   const scalarEnum = schema.enum?.length ? schema.enum.filter(isFieldValue) : undefined;
   if (
     scalarEnum?.length &&
-    scalarEnum.every((entry) => !isRecord(entry) && !Array.isArray(entry))
+    scalarEnum.every((entry) => !isFieldRecord(entry) && !Array.isArray(entry))
   ) {
     const options = scalarEnum.map((entry, index) => ({
       value: String(index),
@@ -102,7 +102,7 @@ function renderSchemaValue(
   }
 
   if (type === 'object' || schema.properties) {
-    const object = isRecord(value) ? value : {};
+    const object = isFieldRecord(value) ? value : {};
     const requiredNames = new Set(schema.required ?? []);
     return (
       <Stack gap={8}>
@@ -373,8 +373,4 @@ function initialDisplayValue(schema: JsonSchema): FieldValue | undefined {
   if (type === 'boolean') return false;
   if (type === 'number' || type === 'integer') return 0;
   return undefined;
-}
-
-function isRecord(value: FieldValue | undefined): value is Record<string, FieldValue> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

@@ -3438,3 +3438,17 @@ responsibility without changing ownership or improving validation.
   - Validation: Editor Form/schema suites pass (7 tests); Editor and workspace typechecks pass;
     detector reports no size candidates in the selection adapters; Prettier and `git diff --check`
     pass.
+
+- [x] Refactor: make Editor FieldValue validation and record checks single-owner.
+  - Evidence: `domain/field-values.ts` and `ui/controls/data/schema/item-array-schema.ts` duplicate
+    recursive FieldValue validation. `StructuralSchemaValueForm.tsx` separately repeats the
+    non-null, non-array object guard also used by the path helper.
+  - Action: export the Editor-owned FieldValue validator and a type-preserving record guard from
+    `domain/field-values.ts`; have the structural schema helper and UI consume those implementations.
+  - Scope: Editor-internal validation reuse; no Core/domain package types, schema behavior, data,
+    public package exports, API, or Store Yjs changes.
+  - Contracts: preserve FieldValue's exclusion of null and non-finite numbers, recursive arrays and
+    objects, structural case envelopes, and immutable path updates.
+  - Validation: Editor field-value, bound-field and schema-value suites pass (8 tests); Editor and
+    workspace typechecks pass; the detector reports no candidates in the affected paths; Prettier
+    and `git diff --check` pass.

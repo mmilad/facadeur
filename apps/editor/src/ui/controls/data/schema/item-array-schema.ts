@@ -1,11 +1,12 @@
 import { matchesSchemaValue, type FieldValue, type JsonSchema } from '@facadeur/core';
+import { isFieldRecord, isFieldValue } from '../../../../domain/field-values';
 
 export function schemaMatches(value: FieldValue, schema: JsonSchema): boolean {
   return matchesSchemaValue(value, schema);
 }
 
 export function caseEnvelope(value: FieldValue): { type: string; props: FieldValue } | undefined {
-  if (!isRecord(value) || typeof value.type !== 'string' || !Object.hasOwn(value, 'props'))
+  if (!isFieldRecord(value) || typeof value.type !== 'string' || !Object.hasOwn(value, 'props'))
     return undefined;
   const props = value.props;
   return isFieldValue(props) ? { type: value.type, props } : undefined;
@@ -127,13 +128,6 @@ export function initialDraftForSchema(schema: JsonSchema): FieldValue {
   return {};
 }
 
-export function isFieldValue(value: unknown): value is FieldValue {
-  if (typeof value === 'string' || typeof value === 'boolean') return true;
-  if (typeof value === 'number') return Number.isFinite(value);
-  if (Array.isArray(value)) return value.every(isFieldValue);
-  return isRecord(value) && Object.values(value).every(isFieldValue);
-}
-
 export function setAtPath(
   value: FieldValue,
   path: readonly (string | number)[],
@@ -149,7 +143,7 @@ export function setAtPath(
     else result[head] = next;
     return result;
   }
-  if (typeof head === 'string' && isRecord(value)) {
+  if (typeof head === 'string' && isFieldRecord(value)) {
     const result: Record<string, FieldValue> = { ...value } as Record<string, FieldValue>;
     if (tail.length)
       result[head] = setAtPath(result[head] ?? (typeof tail[0] === 'number' ? [] : {}), tail, next);
@@ -158,8 +152,4 @@ export function setAtPath(
     return result;
   }
   return value;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
