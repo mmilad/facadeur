@@ -2,7 +2,6 @@ export { PreviewController } from './controller';
 export {
   buildInspectorFormModel,
   inspectorChangeTarget,
-  type InspectorFormChangeTarget,
   type InspectorFormField,
   type InspectorFormModel,
   type InspectorFormValue,

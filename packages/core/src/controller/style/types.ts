@@ -1,21 +1,9 @@
-import type { Command } from '../../legacy/flat/document/commands/types';
+import type { DesignTokenFamily } from '@facadeur/domain';
+import type { Breakpoint } from '../../schema/document';
+import type { TokenDefinition } from './tokens/types';
 
-export type GlobalTokenCommand = Extract<Command, { type: 'setToken' | 'removeToken' }>;
+export type GlobalTokenCommand =
+  | { type: 'setToken'; family: DesignTokenFamily; token: TokenDefinition }
+  | { type: 'removeToken'; family: DesignTokenFamily; uuid: string };
 
-export type DesignLibraryCommand = Extract<Command, { type: 'setBreakpoints' }>;
-
-export type DocumentStyleCommand = Extract<
-  Command,
-  {
-    type:
-      | 'setStyle'
-      | 'setStyleBlock'
-      | 'setVariantStyleBlock'
-      | 'setTokenInterface'
-      | 'setComponentToken'
-      | 'removeComponentToken'
-      | 'renameComponentTokenPath';
-  }
->;
-
-export type StyleCommand = GlobalTokenCommand | DesignLibraryCommand | DocumentStyleCommand;
+export type DesignLibraryCommand = { type: 'setBreakpoints'; breakpoints: Breakpoint[] };

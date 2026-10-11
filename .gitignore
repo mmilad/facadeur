@@ -11,3 +11,11 @@ storybook-static
 .facadeur/
 .DS_Store
 legacy
+!packages/core/src/legacy/
+packages/core/src/legacy/*
+!packages/core/src/legacy/flat/
+packages/core/src/legacy/flat/*
+!packages/core/src/legacy/flat/document/
+!packages/core/src/legacy/flat/document/**
+!packages/core/src/legacy/flat/style/
+!packages/core/src/legacy/flat/style/**

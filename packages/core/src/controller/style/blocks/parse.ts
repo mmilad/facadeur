@@ -18,6 +18,14 @@ export const CSS_PROPERTY = /^(--)?[A-Za-z_][\w-]*$/;
 export const BREAKPOINT_ID = UUID_PATTERN;
 const STATE_NAMES = ['hover', 'focus-visible', 'disabled'] as const;
 
+export function canonicalizeStyleBlock(style: StyleBlock | undefined) {
+  return style ? parseStyleBlock(style) : undefined;
+}
+
+export function canonicalizeTokenInterface(value: TokenInterface | undefined) {
+  return value ? parseTokenInterface(value) : undefined;
+}
+
 /**
  * Gap, padding, and margin accept only a token reference. Longhands included.
  * Checked on the style block and on `node.style`, whatever letter case the key uses.

@@ -1,16 +1,16 @@
 # Style and token algorithms
 
-`controller/style/` owns pure flat-document style commands and reusable token, breakpoint,
-layout, selector, and reference logic. Catalog state and design commands are owned by
-`controller/project/`; stylesheet compilation and runtime injection belong to
+`controller/style/` owns reusable token, breakpoint, layout, selector, reference, and style-block
+parsing logic. Catalog state and design mutations are owned by `controller/project/`. Flat
+DocumentFile style commands and assertions live under `legacy/flat/style/`; new project code
+should use Catalog APIs. Stylesheet compilation and runtime injection belong to
 `@facadeur/style-engine`.
 
 ## File map
 
 ```text
 style/
-  types.ts               Style command scopes
-  commands.ts            Pure command dispatch and private mutation helpers
+  types.ts               Catalog token and breakpoint command contracts shared with Flat
   fonts.ts               Font-family token value validation and font styles
   breakpoints.ts         Breakpoint validation and cloning
   layout.ts              Layout parsing, normalization, and token references
@@ -18,7 +18,6 @@ style/
   class-names.ts         Stable document CSS class names
   blocks/
     parse.ts             Parse authored style blocks and token interfaces
-    contract.ts          Validate and canonicalize style contracts
     edit.ts              Prune/rebase nodes and variant axes in style blocks
   tokens/
     types.ts             UUID-keyed token records, groups, and indexes
@@ -36,6 +35,11 @@ style/
     adopt.ts             Add introduced global references to tokenInterface.reads
     rewrite.ts           Rewrite local component-token references on rename
 ```
+
+`legacy/flat/style/` contains the Flat DocumentFile style command dispatcher and the validation
+that depends on Flat nodes. `controller/style/types.ts` owns only the shared token and breakpoint
+command shapes; the legacy command union reuses those shapes without making Catalog commands
+depend on the Flat contract.
 
 Global token identity and references use UUIDs. A token's CSS custom-property path is derived
 from its family, group, and label; it is not persisted as token identity. Component tokens keep

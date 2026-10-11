@@ -1,22 +1,19 @@
-import { DocumentError } from '../../document/errors';
-import { makeFlatNode, type FlatDocument } from '../../document/flat';
-import type { Breakpoint } from '../../schema/document';
-import type { CommandContext } from '../../legacy/flat/document/commands/types';
-import { setVariantStyleBlock } from '../../legacy/flat/variants/commands';
+import { DocumentError } from '../../../document/errors';
+import { makeFlatNode, type FlatDocument } from '../../../document/flat';
+import type { Breakpoint } from '../../../schema/document';
+import type { CommandContext } from '../document/commands/types';
+import { setVariantStyleBlock } from '../variants/commands';
 import type { StyleCommand } from './types';
-import {
-  removeTokenFromTree,
-  setTokenInTree,
-} from './tokens/global/tree';
+import { removeTokenFromTree, setTokenInTree } from '../../../controller/style/tokens/global/tree';
 import {
   removeComponentToken,
   renameComponentTokenPath,
   setComponentToken,
-} from './tokens/component/commands';
-import { adoptTokenReads } from './references/adopt';
-import { parseStyleBlock, parseTokenInterface } from './blocks/parse';
-import { assertStyleMap } from './blocks/contract';
-import { assertBreakpoints, cloneBreakpoints } from './breakpoints';
+} from '../../../controller/style/tokens/component/commands';
+import { adoptTokenReads } from '../../../controller/style/references/adopt';
+import { parseStyleBlock, parseTokenInterface } from '../../../controller/style/blocks/parse';
+import { assertStyleMap } from './contract';
+import { assertBreakpoints, cloneBreakpoints } from '../../../controller/style/breakpoints';
 
 /** Mutates only the working document supplied by pure command application; owns no project state. */
 export function applyStyleCommand(

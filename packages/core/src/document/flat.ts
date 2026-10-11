@@ -16,7 +16,7 @@ import { canonicalizeComponentTokens } from '../controller/style/tokens/componen
 import {
   canonicalizeStyleBlock,
   canonicalizeTokenInterface,
-} from '../controller/style/blocks/contract';
+} from '../controller/style/blocks/parse';
 import { canonicalizeTokenTree } from '../controller/style/tokens/global/tree';
 import {
   cloneBinding,

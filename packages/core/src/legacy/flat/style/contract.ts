@@ -2,7 +2,7 @@ import {
   assertComponentTokenDefault,
   assertComponentTokenKind,
   isLocalComponentTokenPath,
-} from '../tokens/component/contract';
+} from '../../../controller/style/tokens/component/contract';
 import {
   defaultBreakpoints,
   isVariantAxis,
@@ -16,30 +16,16 @@ import {
 } from '../../../schema/document';
 import { DocumentError } from '../../../document/errors';
 import type { FlatDocument } from '../../../document/flat';
-import type { ValidateOptions } from '../../../legacy/flat/validation/types';
+import type { ValidateOptions } from '../validation/types';
 import {
   assertSpacingValue,
   BREAKPOINT_ID,
   CSS_PROPERTY,
-  parseStyleBlock,
-  parseTokenInterface,
-} from './parse';
-import { assertStyleSelector, selectorClassNames } from '../selectors';
-import { flatDocumentClassNames } from '../class-names';
-import { collectTokenRefs, refsInText } from '../references/collect';
-import { isTokenPath } from '../tokens/path';
-
-export function canonicalizeStyleBlock(style: StyleBlock | undefined): StyleBlock | undefined {
-  if (!style) return undefined;
-  return parseStyleBlock(style);
-}
-
-export function canonicalizeTokenInterface(
-  value: TokenInterface | undefined,
-): TokenInterface | undefined {
-  if (!value) return undefined;
-  return parseTokenInterface(value);
-}
+} from '../../../controller/style/blocks/parse';
+import { assertStyleSelector, selectorClassNames } from '../../../controller/style/selectors';
+import { flatDocumentClassNames } from '../../../controller/style/class-names';
+import { collectTokenRefs, refsInText } from '../../../controller/style/references/collect';
+import { isTokenPath } from '../../../controller/style/tokens/path';
 
 export function assertStyleContract(doc: FlatDocument, options: ValidateOptions = {}): void {
   const breakpoints = doc.settings.breakpoints?.length

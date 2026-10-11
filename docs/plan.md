@@ -3339,3 +3339,57 @@ responsibility without changing ownership or improving validation.
     242 tests). Formatting and `git diff --check` pass. The detector still flags four cohesive
     validation modules over 450 lines and the 14-file directory; reviewed them as separate
     validation operations sharing the same Flat contract graph, so no size-only split was made.
+
+- [x] Refactor: place Flat-only style commands and contracts under their legacy owner.
+  - Evidence: `controller/style/commands.ts` dispatches commands against `FlatDocument` and
+    imports `CommandContext` and variant commands from `legacy/flat`; `blocks/contract.ts` mixes
+    legacy Flat validation (`ValidateOptions`, `FlatDocument`) with canonicalization used by the
+    legacy Flat reader. Meanwhile `controller/project/catalog/design-commands.ts` imports its
+    token and breakpoint command types from `controller/style/types.ts`, which currently derives
+    them from the legacy Flat `Command` union.
+  - Action: move Flat-only style dispatch and assertion helpers under `legacy/flat/style`, keep
+    shared style-block parsing/canonicalization in the current style domain, and define the
+    Catalog token/breakpoint command types independently of the Flat command union. Have the
+    Flat command contract reuse those shared command shapes without duplicating their payloads.
+    Track the existing Flat document-command modules already imported by Core's root entry point;
+    the global `.gitignore` rule had hidden those required source files from the earlier move.
+    Narrow the ignore exception to the Flat document and style source directories.
+  - Scope: ownership and dependency-direction refactor in Core only; no behavior, persisted data,
+    API/API-client, Store Yjs, or public root export changes.
+  - Contracts: preserve every `Command` and `StyleCommand` variant payload, Flat validation error,
+    style parsing/canonicalization, breakpoint/token behavior, and existing `@facadeur/core`
+    root exports.
+  - Validation: Core typecheck and workspace typecheck pass; the active Catalog design/token
+    regressions pass (5/5), and the curated root suite passes (69 files / 243 tests). Legacy Flat
+    command suites remain paused outside the root allowlist per the existing test migration plan.
+    Import audit confirms the current Catalog design command no longer depends on the Flat command
+    union, and API/API-client/Store Yjs source was not changed. Prettier and `git diff --check`
+    pass. The detector flags the 543-line token migration and 488-line structural command module;
+    both remain cohesive migration/tree-command responsibilities, so no size-only split was made.
+  - Result: moved Flat-only style dispatch and assertions to `legacy/flat/style`, retained
+    canonicalization in current Core parsing, and made token/breakpoint command contracts current
+    Core types reused by the Flat command union. The earlier Flat document-command move was
+    present locally but hidden by `.gitignore`; its required modules are now visible and included
+    by the scoped ignore exception, so a clean checkout can resolve Core's already-published
+    imports. Updated style ownership documentation and marked the remaining Flat-only root
+    assertion and validation exports deprecated.
+
+- [x] Refactor: move the inspector mutation target to the project controller contract.
+  - Evidence: `CoreController` and `CoreControllerHost` import `InspectorFormChangeTarget` from
+    `node/preview/inspector-view.ts`, a presentation module that builds inspector values and
+    layout. The target union represents mutation requests for both project definitions and nodes,
+    so its owner is the project controller boundary rather than the preview view builder.
+  - Action: define the change-target union under `controller/project/`, update the preview path
+    mapper, Core controller, host contract, and root type export to import that owner directly, and
+    remove the type from the preview barrel.
+  - Scope: Core type ownership only; preserve all target variants, public root type name, mapper
+    behavior, inspector flow, and mutation ownership in `CoreController`.
+  - Contracts: no domain schema, runtime behavior, API/API-client, Store Yjs, or persistence
+    changes.
+  - Validation: Core typecheck and workspace typecheck pass; root suite passes (69 files / 243
+    tests). Consumer audit confirms Core controller and host use the project-owned contract,
+    while the root export retains the public type name. No API/API-client/Store Yjs source changes.
+    Candidate detector flags the 489-line ProjectController, which remains a cohesive orchestration
+    boundary; no size-only split was made. Prettier and `git diff --check` pass.
+  - Result: moved the mutation target union to `controller/project/inspector-form-change.ts` and
+    updated the preview mapper, project controller, host contract, and root export.

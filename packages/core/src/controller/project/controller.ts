@@ -32,7 +32,7 @@ import {
   patchNodeTagName,
 } from './catalog/ops';
 import { insertCatalogNode, moveCatalogNode, removeCatalogNode } from './catalog/tree-ops';
-import type { InspectorFormChangeTarget } from './node/preview/inspector-view';
+import type { InspectorFormChangeTarget } from './inspector-form-change';
 import { emptyProjectCatalog, validateProjectCatalog } from './catalog/validate';
 import { NodeController } from './node/controller';
 

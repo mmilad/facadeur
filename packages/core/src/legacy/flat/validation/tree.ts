@@ -2,7 +2,7 @@ import { DocumentError } from '../../../document/errors';
 import { type FlatDocument, type FlatNode } from '../../../document/flat';
 import { defaultNestingRules, type NestingRule } from '../../../document/kinds';
 import { assertBreakpoints } from '../../../controller/style/breakpoints';
-import { assertStyleContract } from '../../../controller/style/blocks/contract';
+import { assertStyleContract } from '../style/contract';
 import { readTokenTree } from '../../../controller/style/tokens/global/tree';
 import { assertExpose } from './assertions/events';
 import {

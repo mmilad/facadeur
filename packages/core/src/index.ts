@@ -39,11 +39,11 @@ export {
   type InspectorInputs,
 } from './controller/project/node/config/inspector';
 export type {
-  InspectorFormChangeTarget,
   InspectorFormField,
   InspectorFormModel,
   InspectorFormValue,
 } from './controller/project/node/preview/inspector-view';
+export type { InspectorFormChangeTarget } from './controller/project/inspector-form-change';
 export {
   buildInspectorFormModel,
   inspectorChangeTarget,
@@ -275,17 +275,21 @@ export {
   type TokenTier,
   type TokenTree,
 } from './controller/style/tokens/types';
+/** @deprecated Flat DocumentFile style assertions; use Catalog validation for current projects. */
 export {
   assertStyleContract,
   assertStyleMap,
   assertStyleNameAvailable,
+} from './legacy/flat/style/contract';
+export {
   canonicalizeStyleBlock,
   canonicalizeTokenInterface,
-} from './controller/style/blocks/contract';
+} from './controller/style/blocks/parse';
 export { collectTokenRefs, refsInText } from './controller/style/references/collect';
 export { omitVariantAxis, omitVariantValues } from './controller/style/blocks/edit';
 export { parseStyleBlock, parseTokenInterface } from './controller/style/blocks/parse';
 export { matchingSchemaIndex, matchesSchemaValue } from './controller/validation/index';
+/** @deprecated Flat DocumentFile validation contracts retained for legacy adapters. */
 export {
   assertDefinitionKind,
   assertDisplayOn,

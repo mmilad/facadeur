@@ -1,5 +1,5 @@
 import type { CoreSnapshot } from '@facadeur/domain';
-import type { InspectorFormChangeTarget } from '../controller/project/node/preview/inspector-view';
+import type { InspectorFormChangeTarget } from '../controller/project/inspector-form-change';
 
 /** Sub-controllers use this surface; the concrete class is {@link CoreController}. */
 export interface CoreControllerHost {
