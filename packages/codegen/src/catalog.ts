@@ -11,13 +11,23 @@ export interface CatalogEntry {
 export function catalogEntries(catalog: ProjectCatalog, requested?: readonly string[]) {
   const all = listCatalogDefinitions(catalog).map(({ definition }) => definition);
   const names = uniqueExportNames(all);
+  const directories = new Map<string, string>();
+  const usedDirectories = new Set<string>();
+  for (const definition of all) {
+    const base = slug(definition.name, definition.uuid);
+    let directory = base;
+    let suffix = 2;
+    while (usedDirectories.has(directory)) directory = `${base}-${suffix++}`;
+    usedDirectories.add(directory);
+    directories.set(definition.uuid, directory);
+  }
   const selected = selectDefinitions(catalog, all, requested);
   return selected.map(
     (definition) =>
       ({
         definition,
         exportName: names.get(definition.uuid)!,
-        directory: slug(definition.name, definition.uuid),
+        directory: directories.get(definition.uuid)!,
       }) satisfies CatalogEntry,
   );
 }

@@ -39,6 +39,7 @@ export default defineConfig({
       'packages/core/test/style.test.ts',
       'packages/core/test/catalog-field-exposure.test.ts',
       'packages/core/test/field-compatibility.test.ts',
+      'packages/core/test/schema-choice.test.ts',
       'packages/core/test/core-controller.test.ts',
       'packages/api/test/catalog.test.ts',
       'packages/api/test/project-storage.test.ts',

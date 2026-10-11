@@ -4482,3 +4482,41 @@ apps/editor/src/ui/controls packages/form/src`, Form/Editor typechecks, full tes
     candidate detector, and `git diff --check` passed.
   - Result: migrated stale assertions and enabled the retained Flat adapter tests in the root
     suite; no production code or persistence contract changed.
+
+- [x] Repair the missing schema-choice dependency blocking Catalog Codegen verification.
+  - Evidence: fresh checkout of `9d2a43ee` fails Core typecheck and loading Codegen because
+    structural-nodes and its retained regression test import a file absent from Git history.
+  - Action: keep property-aware schema matching beside Core JSON Schema validation and update
+    the retained legacy consumer and test directly; do not add a forwarding shim.
+  - Scope: prerequisite to verifying the authorized Catalog migration; API/adapters unchanged.
+  - Contracts: only valid schemas compete; supplied properties select the most specific match,
+    with configured order breaking ties, including union/allOf contracts.
+  - Validation: retained schema-choice regression, Codegen CLI, generated project compilation,
+    root tests/typecheck, scoped lint/format and candidate scan.
+
+- [x] Finish React output compatibility for the current Catalog examples.
+  - Evidence: compiling all generated example components finds colliding output directories
+    for same-name definitions, HTML attribute spelling/types, and unknown dynamic image props.
+  - Action: disambiguate output directories at Codegen's Catalog boundary and normalize HTML
+    attributes to React props in the React engine, keeping source Catalog data unchanged.
+  - Contracts: every definition keeps its export and output; valid HTML numeric/boolean
+    attributes and schema-backed text attributes retain their DOM meaning.
+  - Validation: compile the complete generated example UI, regression tests, root checks.
+
+  - Result: Codegen preserves every same-name definition using unique component/story paths;
+    React output normalizes autocomplete/readonly/tabindex and numeric/boolean HTML attributes.
+    Invalid literal numeric attributes are omitted, matching their absent numeric DOM value.
+    Dynamic text/image attributes emit scalar values rather than unknown object types.
+    The full generated example UI compiles. A permanent CLI regression compiles all generated
+    components using the checkout's installed React typings (no network install in tests).
+    The missing schema matcher now lives beside Core validation with direct consumers and its
+    two retained tests enabled. No legacy JSON templates, shims, API or adapter changes.
+    Existing token mappings are already canonical and were verified unchanged.
+    Retain the 553-line legacy structural-nodes module: only its import changed; broader
+    retirement remains outside this Catalog Codegen verification prerequisite.
+
+  - Final validation: `corepack pnpm test --maxWorkers=2` passes 77 files / 277 tests;
+    `corepack pnpm typecheck` passes all workspace packages. Scoped ESLint, Prettier,
+    actual Catalog CLI output, generated UI TypeScript, and diff checks pass. The scoped
+    Codegen/validation detector has no size candidates. Cloud process friction and the
+    successful lower-concurrency test rerun are recorded in `docs/friction.md`.

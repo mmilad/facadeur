@@ -22,6 +22,18 @@ describe('Catalog-driven React code generation', () => {
     expect(generated.stories[0]?.contents).toContain("from '@facadeur/ui'");
   });
 
+  it('keeps same-name definitions in separate component and story files', () => {
+    const catalog = createExampleCatalog();
+    const generated = generateReact({ catalog });
+    expect(new Set(generated.ui.map((file) => file.path)).size).toBe(generated.ui.length);
+    expect(new Set(generated.stories.map((file) => file.path)).size).toBe(generated.stories.length);
+    expect(generated.ui.some((file) => file.path === 'components/input-2/index.tsx')).toBe(true);
+    const input = generated.ui.find((file) => file.path === 'components/input/index.tsx');
+    expect(input?.contents).toContain('autoComplete=');
+    const textarea = generated.ui.find((file) => file.path === 'components/textarea/index.tsx');
+    expect(textarea?.contents).toContain('rows={3}');
+  });
+
   it('preserves authored classes when attaching generated node styles', () => {
     const catalog = createExampleCatalog();
     const button = Object.values(catalog.atoms).find((definition) => definition.name === 'Button')!;

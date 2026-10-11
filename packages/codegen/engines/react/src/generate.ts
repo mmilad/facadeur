@@ -226,7 +226,7 @@ function renderNode(
   const props = Object.entries(attributes)
     .map(
       ([key, value]) =>
-        ` ${reactAttribute(key)}=${jsxValue(value, source?.dom.attributes?.[key], propPaths)}`,
+        ` ${reactAttribute(key)}=${jsxValue(reactValue(reactAttribute(key), value), source?.dom.attributes?.[key], propPaths)}`,
     )
     .join('');
   const tag = safeTag(node.tagName);
@@ -244,7 +244,9 @@ function jsxValue(value: unknown, source: unknown, propPaths: ReadonlyMap<string
     const path = match?.[1] ? propPaths.get(match[1]) : undefined;
     if (path && match) {
       const fallback = value === match[0] ? undefined : value;
-      return `{getProp(props, ${JSON.stringify(path)}) ?? ${JSON.stringify(fallback)}}`;
+      const convert =
+        typeof value === 'boolean' ? 'Boolean' : typeof value === 'number' ? 'Number' : 'String';
+      return `{${convert}(getProp(props, ${JSON.stringify(path)}) ?? ${JSON.stringify(fallback ?? '')})}`;
     }
   }
   return `{${JSON.stringify(value)}}`;
@@ -288,7 +290,50 @@ function kebab(value: string) {
 function reactAttribute(value: string) {
   if (value === 'class') return 'className';
   if (value === 'for') return 'htmlFor';
+  if (value === 'autocomplete') return 'autoComplete';
+  if (value === 'readonly') return 'readOnly';
+  if (value === 'tabindex') return 'tabIndex';
+  if (value === 'maxlength') return 'maxLength';
+  if (value === 'minlength') return 'minLength';
   return value.replace(/^aria-/, 'aria-').replace(/^data-/, 'data-');
+}
+
+function reactValue(key: string, value: unknown) {
+  if (typeof value !== 'string') return value;
+  if (
+    [
+      'rows',
+      'cols',
+      'size',
+      'span',
+      'rowSpan',
+      'colSpan',
+      'tabIndex',
+      'maxLength',
+      'minLength',
+    ].includes(key)
+  ) {
+    const number = Number(value);
+    if (Number.isFinite(number)) return number;
+    // Invalid HTML numeric attributes have no numeric DOM value to preserve.
+    return undefined;
+  }
+  if (
+    [
+      'controls',
+      'autoPlay',
+      'loop',
+      'muted',
+      'multiple',
+      'disabled',
+      'checked',
+      'required',
+      'readOnly',
+    ].includes(key)
+  ) {
+    return true;
+  }
+  return value;
 }
 
 function safeTag(value: string) {

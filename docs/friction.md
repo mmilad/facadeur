@@ -171,3 +171,20 @@
 docs/plan.md` attempted to fetch pinned pnpm 10.33.3 and failed with `ENOTFOUND`; the same
   command through approved host execution ran successfully and identified formatting to fix. Use
   the approved host context for package-manager commands; no install or binary cleanup is needed.
+
+## Cloud verification process limits (2026-10-11)
+
+- Reproduction: `corepack pnpm exec tsx -e <Catalog export>` in the Work cloud checkout.
+- Evidence: tsx attempts an IPC socket at `/tmp/tsx-0/*.pipe` and fails with `listen EPERM`
+  before project code. `node --import tsx` executes the same Catalog export/CLI successfully.
+- Workaround: use `node --import tsx --input-type=module -e <script>` or
+  `node --import tsx packages/codegen/src/cli.ts <arguments>` in this environment.
+  The configured execution tools expose no separate approved Windows host context here.
+- Impact: CLI shim verification is blocked, but the actual CLI and generated output can be checked.
+- Fix: enable Unix IPC socket creation for tsx in the cloud runner; keep the repository pin.
+- Root `corepack pnpm test` also hit the management route suite's 10-second setup timeout under
+  default concurrency (75 suites passed, 273 tests passed). Its isolated rerun passed. Use
+  `corepack pnpm test --maxWorkers=2` to reduce runner contention without changing test timeouts.
+
+- Verified: `corepack pnpm test --maxWorkers=2` passes all 77 suites / 277 tests, including
+  the management backend; no timeout increase or test skip was needed.

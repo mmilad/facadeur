@@ -1,6 +1,8 @@
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { createExampleCatalog } from '@facadeur/examples';
 import { runCodegen } from '../src/cli';
@@ -67,6 +69,26 @@ describe('Catalog codegen CLI', () => {
       );
       expect(existsSync(join(root, 'packages/ui/styles.d.ts'))).toBe(true);
       expect(existsSync(join(root, 'packages/ui/index.ts'))).toBe(true);
+      symlinkSync(
+        fileURLToPath(new URL('../../../apps/editor/node_modules', import.meta.url)),
+        join(root, 'node_modules'),
+        process.platform === 'win32' ? 'junction' : 'dir',
+      );
+      const configPath = join(root, 'packages/ui/tsconfig.json');
+      const config = ts.readConfigFile(configPath, ts.sys.readFile);
+      const parsed = ts.parseJsonConfigFileContent(
+        config.config,
+        ts.sys,
+        join(root, 'packages/ui'),
+      );
+      const program = ts.createProgram(parsed.fileNames, parsed.options);
+      const diagnostics = ts.getPreEmitDiagnostics(program);
+      expect(
+        diagnostics.map((diagnostic) =>
+          ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'),
+        ),
+      ).toEqual([]);
+
       expect(
         existsSync(join(root, 'apps/storybook/src/stories/generated/button.stories.tsx')),
       ).toBe(true);
@@ -81,7 +103,7 @@ describe('Catalog codegen CLI', () => {
       else process.env.INIT_CWD = previousInitCwd;
       rmSync(directory, { recursive: true, force: true });
     }
-  });
+  }, 30000);
 
   it('rejects workspace mode combined with component output directories', () => {
     expect(() =>
