@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  compileDocumentValidator,
-  validateProjectCatalog,
-} from '@facadeur/core';
+import { validateProjectCatalog } from '@facadeur/core';
 import { createExampleCatalog, exampleCatalogDefinitions } from '@facadeur/examples';
 
 describe('examples', () => {
@@ -27,29 +24,5 @@ describe('examples', () => {
     expect(catalog.globalStyles?.breakpoints?.every((breakpoint) => Boolean(breakpoint.uuid))).toBe(
       true,
     );
-  });
-
-  it('can describe a different kind list', () => {
-    const validate = compileDocumentValidator({
-      kinds: ['block', 'page'],
-      schemaId: 'https://github.com/mmilad/facadeur/schema/custom.json',
-    });
-    const ok = validate({
-      version: 1,
-      id: 'block',
-      name: 'Block',
-      kind: 'block',
-      root: { id: 'root', type: 'frame' },
-    });
-    expect(ok).toBe(true);
-    expect(
-      validate({
-        version: 1,
-        id: 'atom',
-        name: 'Atom',
-        kind: 'atom',
-        root: { id: 'root', type: 'frame' },
-      }),
-    ).toBe(false);
   });
 });

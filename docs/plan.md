@@ -3503,3 +3503,21 @@ responsibility without changing ownership or improving validation.
     candidates in the binding directory; Prettier and `git diff --check` pass.
   - Result: removed the unused Editor wrapper and both barrel exports. The reusable
     `SegmentedControlField` remains available from `@facadeur/form`.
+
+- [x] Test cleanup: keep canonical Examples Catalog validation in the maintained suite.
+  - Evidence: `packages/core/test/examples.test.ts` contains one active test validating the
+    canonical Examples Catalog and UUID-keyed resources, plus one test that only checks the
+    deprecated Flat `compileDocumentValidator`; repository search finds no other consumer of that
+    legacy validator.
+  - Action: remove the Flat-only validator test and add the current fixture validation suite to
+    Vitest's maintained root allowlist.
+  - Scope: test selection and retired legacy-only assertion; retain Core's legacy validator/export
+    for adapter compatibility, with no API/API-client or Store Yjs source changes.
+  - Contracts: keep the canonical Catalog fixture, stable resource IDs, token UUID map keys, and
+    configured breakpoint UUIDs validated in the standard suite.
+  - Validation: the focused suite passes (1 test); the full root suite passes (70 files / 246
+    tests); workspace typecheck passes; the detector reports no candidates in the test/config
+    paths; Prettier and `git diff --check` pass.
+  - Result: the maintained suite now validates the shared Examples Catalog. Removed the assertion
+    that only exercised the deprecated Flat validator; its implementation remains for adapter
+    compatibility.
