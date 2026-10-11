@@ -3295,3 +3295,15 @@ responsibility without changing ownership or improving validation.
     focused suites pass 4/4, the root suite passes 69 files / 242 tests, and workspace typecheck
     passes. Detector reports no candidates in the affected paths; Prettier and `git diff --check`
     pass.
+
+- [x] Refactor: share the Form package's record value guard.
+  - Evidence: `field/FormField.tsx` and `fields/repeater/RepeaterField.tsx` define the same
+    `isRecord` guard, checking for a non-null, non-array object. Both use it to normalize field
+    values inside the Form package.
+  - Action: move the predicate to a private helper in the existing `field/` domain and import it
+    from both components; keep component-specific string-record validation local to FormField.
+  - Scope: private Form package deduplication; no Editor, Core, public export, or data changes.
+  - Contracts: preserve rejection of null, arrays, and primitives and acceptance of object records.
+  - Validation: Form and Editor field suites are included in the root suite (69 files / 242 tests
+    pass); workspace typecheck passes. Detector reports no size candidates; Prettier and
+    `git diff --check` pass.

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Form } from '../../form/Form';
+import { isRecord } from '../../field/is-record';
 import styles from './RepeaterField.module.css';
 import type { RepeaterFieldProps } from './types';
 
@@ -54,8 +55,4 @@ export function RepeaterField({
       </button>
     </fieldset>
   );
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

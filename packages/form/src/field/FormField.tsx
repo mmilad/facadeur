@@ -12,6 +12,7 @@ import { SearchField } from '../fields/search';
 import { ChipsField } from '../fields/chips';
 import { RecordField } from '../fields/record';
 import { TransformableField } from '../fields/transformable';
+import { isRecord } from './is-record';
 import styles from './FormField.module.css';
 import type { FormFieldProps } from './types';
 
@@ -233,10 +234,6 @@ export function FormField({
         />
       );
   }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function isStringRecord(value: unknown): value is Record<string, string> {
