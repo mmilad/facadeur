@@ -1,44 +1,5 @@
-import type { InputHTMLAttributes } from 'react';
-import { BooleanField } from '@facadeur/form';
-import { useBindable } from '../input/bindable';
+import { BooleanInput, type BooleanInputProps } from './BooleanInput';
 
-export function Checkbox({
-  name,
-  value: valueProp,
-  label,
-  disabled,
-  invalid,
-  onChange,
-  onCommit,
-  ...rest
-}: Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'type'> & {
-  name?: string;
-  value?: boolean;
-  label: string;
-  invalid?: boolean;
-  onChange?: (value: boolean) => void;
-  onCommit?: (value: boolean) => void;
-}) {
-  const {
-    value,
-    disabled: isDisabled,
-    invalid: isInvalid,
-    onImmediateChange,
-    id,
-  } = useBindable({ name, value: valueProp, disabled, invalid, onChange, onCommit }, false);
-
-  return (
-    <label className="eu-toggle" style={{ gap: 6 }}>
-      <BooleanField
-        {...rest}
-        id={id}
-        name={name}
-        value={Boolean(value)}
-        disabled={isDisabled}
-        invalid={isInvalid}
-        onChange={onImmediateChange}
-      />
-      <span className="eu-field__label">{label}</span>
-    </label>
-  );
+export function Checkbox(props: BooleanInputProps) {
+  return <BooleanInput {...props} labelGap={6} />;
 }

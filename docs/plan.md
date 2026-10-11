@@ -3425,3 +3425,16 @@ responsibility without changing ownership or improving validation.
   - Validation: focused token table and token preview suites pass (18 tests); Editor and workspace
     typechecks pass; the detector reports no candidates in `ui/design/tokens`; Prettier and
     `git diff --check` pass.
+
+- [x] Refactor: share Editor Checkbox and Toggle binding through one BooleanField adapter.
+  - Evidence: the two selection wrappers duplicate Form binding, fallback, disabled/invalid
+    propagation, and label rendering around the same `@facadeur/form` `BooleanField`.
+  - Action: keep the public `Checkbox` and `Toggle` wrappers, but delegate their shared mechanics to
+    one private adapter; preserve Toggle's `role="switch"` and Checkbox's tighter label gap.
+  - Scope: Editor adapter deduplication; keep native boolean field ownership in `packages/form`.
+    No data, public adapter names, accessibility intent, or interaction changes.
+  - Contracts: preserve controlled and Form-bound updates, `onCommit`, disabled/invalid props,
+    passed input attributes, and each wrapper's current markup distinctions.
+  - Validation: Editor Form/schema suites pass (7 tests); Editor and workspace typechecks pass;
+    detector reports no size candidates in the selection adapters; Prettier and `git diff --check`
+    pass.
