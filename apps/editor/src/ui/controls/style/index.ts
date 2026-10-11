@@ -1,3 +1,4 @@
+export { CssDeclarationsControl } from './CssDeclarationsControl';
 export { StyleDeclarationField } from './StyleDeclarationField';
 export {
   CSS_ENUM_OPTIONS,

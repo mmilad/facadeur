@@ -13,8 +13,8 @@ import {
 import { Inline, Section, Stack } from '../../components/layout';
 import { Field } from '../../components/feedback';
 import { TextInput } from '../form-binding/index';
-import { StyleDeclarationField } from '../style/index';
-import { styleDeclarationGroup, type StyleDeclarationGroup } from '../style/declaration-kind';
+import { StyleDeclarationField } from './StyleDeclarationField';
+import { styleDeclarationGroup, type StyleDeclarationGroup } from './declaration-kind';
 import type { TypographyCatalogs } from '../typography/index';
 import '../../styles/form.css';
 

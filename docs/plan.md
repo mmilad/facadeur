@@ -3881,3 +3881,22 @@ responsibility without changing ownership or improving validation.
     validation.
   - Validation: direct parity tests for shared field shapes, Server legacy fallback tests, Core
     field/schema tests, both package typechecks, and root suite before consolidating.
+
+- [x] Refactor: place the maintained CSS declarations editor in the style controls domain.
+  - Evidence: `CssDeclarationsControl` is the only source file under `controls/generic`; it groups
+    CSS declarations by style category, composes border/radius controls, and delegates each row to
+    `StyleDeclarationField`. Its active Storybook story and behavioral test import it by the
+    `generic` path, while the cohesive related fields and declaration-kind rules already live under
+    `controls/style`.
+  - Action: move the control and its barrel into `controls/style`, update the Storybook/test imports,
+    and remove the misleading `generic` directory. Keep declaration grouping and compound/manual
+    editing together in the existing control.
+  - Scope: Editor/Storybook module organization only; no behavior, data, or package ownership change.
+  - Contracts: preserve the Storybook entry, props, declaration ordering, inherited ownership/reset,
+    atomic patches, token selection, and manual property editing.
+  - Validation: the CSS declaration UI suite passes (5 tests); Editor typecheck and Storybook build
+    pass; repository import audit finds only the style barrel, its Storybook story, and its test;
+    scoped candidate scan reports no size candidates; formatting and `git diff --check` pass.
+  - Result: removed `controls/generic`, moved the control into `controls/style`, and exposed it
+    through the style barrel. The declaration grouping and compound/manual editor stay cohesive;
+    props, edit callbacks, ordering, and behavior are unchanged.

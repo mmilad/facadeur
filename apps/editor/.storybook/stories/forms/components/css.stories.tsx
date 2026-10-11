@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { CssDeclarationsControl } from '../../../../src/ui/controls/generic/CssDeclarationsControl';
+import { CssDeclarationsControl } from '../../../../src/ui/controls/style/index';
 
 const meta = {
   title: 'Forms/Components/CSS',

@@ -4,7 +4,7 @@ import type { ComponentProps } from 'react';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { canonicalizeTokenTree } from '@facadeur/core';
-import { CssDeclarationsControl } from '../../src/ui/controls/generic/CssDeclarationsControl';
+import { CssDeclarationsControl } from '../../src/ui/controls/style/index';
 import {
   exampleCatalog,
   exampleIds as fixtureIds,
