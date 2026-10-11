@@ -3521,3 +3521,21 @@ responsibility without changing ownership or improving validation.
   - Result: the maintained suite now validates the shared Examples Catalog. Removed the assertion
     that only exercised the deprecated Flat validator; its implementation remains for adapter
     compatibility.
+
+- [x] Test migration: cover Core layout parsing without a Flat `DocumentFile` fixture.
+  - Evidence: `packages/core/test/axis-size-auto.test.ts` tests the still-used layout parser and
+    token-reference rules, but its round-trip case constructs a deprecated Flat document and the
+    suite is outside the maintained root allowlist.
+  - Action: rewrite that case to exercise `parseLayout`/`canonicalizeLayout` directly, retaining
+    coverage for auto dimensions, sparse breakpoint records, axis modes, and validation errors;
+    include the migrated suite in the root allowlist.
+  - Scope: Core layout parser tests only; keep the retained legacy document adapter and parser
+    behavior unchanged. No API/API-client or Store Yjs changes.
+  - Contracts: preserve canonical layout values, sorted sparse breakpoint keys, token references,
+    accepted axis modes, and validation errors.
+  - Validation: focused suite passes (6 tests); full root suite passes (71 files / 252 tests);
+    workspace typecheck passes; detector reports no candidates in the test/config paths; Prettier
+    and `git diff --check` pass.
+  - Result: the focused Core layout tests now operate directly on the exported `Layout` contract,
+    including reverse-ordered sparse breakpoints to verify canonical sorting. The migrated suite is
+    part of the standard root run.

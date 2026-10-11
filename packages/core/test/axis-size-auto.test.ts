@@ -1,44 +1,32 @@
 import { expect, it } from 'vitest';
-import {
-  canonicalizeLayout,
-  parseLayout,
-  toFlat,
-  toNested,
-  validateCatalog,
-  type AxisSize,
-  type DocumentFile,
-} from '../src/index';
+import { canonicalizeLayout, parseLayout, type AxisSize, type Layout } from '../src/index';
 import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 const phoneBreakpointUuid = fixtureIds.catalog.breakpoints.phone;
 const tabletBreakpointUuid = fixtureIds.catalog.breakpoints.tablet;
 
-it('validates and round-trips explicit auto dimensions and sparse breakpoint constraints', () => {
-  const source: DocumentFile = {
-    version: 1,
-    id: 'auto-size',
-    name: 'Auto size',
-    kind: 'component',
-    settings: {
-      breakpoints: [
-        { uuid: phoneBreakpointUuid, label: 'Phone', minWidth: 375 },
-        { uuid: tabletBreakpointUuid, label: 'Tablet', minWidth: 768 },
-      ],
-    },
-    root: {
-      id: 'root',
-      type: 'frame',
-      layout: {
-        width: { mode: 'auto', min: 10, max: { unit: '%', value: 90 } },
-        height: { mode: 'auto', min: 20, max: 300 },
-        breakpoints: { [tabletBreakpointUuid]: { height: { mode: 'auto' } } },
-      },
+it('canonicalizes explicit auto dimensions and sparse breakpoint constraints', () => {
+  const source: Layout = {
+    width: { mode: 'auto', min: 10, max: { unit: '%', value: 90 } },
+    height: { mode: 'auto', min: 20, max: 300 },
+    breakpoints: {
+      [tabletBreakpointUuid]: { height: { mode: 'auto' } },
+      [phoneBreakpointUuid]: { width: { mode: 'fill' } },
     },
   };
-  const [validated] = validateCatalog([source]);
-  expect(validated?.root.layout).toEqual(source.root.layout);
-  expect(toNested(toFlat(validated!))).toEqual(validated);
-  expect(canonicalizeLayout(source.root.layout)).toEqual(source.root.layout);
+  const canonical = parseLayout(source);
+
+  expect(canonical).toEqual({
+    ...source,
+    breakpoints: {
+      [phoneBreakpointUuid]: { width: { mode: 'fill' } },
+      [tabletBreakpointUuid]: { height: { mode: 'auto' } },
+    },
+  });
+  expect(Object.keys(canonical.breakpoints ?? {})).toEqual(
+    [phoneBreakpointUuid, tabletBreakpointUuid].sort(),
+  );
+  expect(canonicalizeLayout(source)).toEqual(canonical);
 });
 
 it('preserves auto min/max tokens in the layout parser', () => {
@@ -49,7 +37,7 @@ it('preserves auto min/max tokens in the layout parser', () => {
 });
 
 it.each<AxisSize>([{ mode: 'hug' }, { mode: 'fill' }, { mode: 'fixed', size: 100 }])(
-  'retains legacy axis mode $mode',
+  'accepts axis mode $mode',
   (axis: AxisSize) => {
     expect(parseLayout({ width: axis })).toEqual({ width: axis });
   },
