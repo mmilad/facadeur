@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { createProjectTemplate } from '@facadeur/examples';
 import { loadTokens } from '@facadeur/core';
-import { renderDesignCss } from '@facadeur/style-engine';
+import { createTokenPreviewResolver, renderDesignCss } from '@facadeur/style-engine';
 import type { FontFamilyDefinition } from '@facadeur/core';
 import {
   breakpointIds,
   colorTokens,
   fontToken,
+  record,
   space4Token,
   testBreakpoints,
   testTokens,
@@ -118,6 +119,52 @@ describe('CSS output from UUID-keyed tokens', () => {
     expect(() => loadTokens({ tokens: repeatedBase, breakpoints: testBreakpoints })).toThrow(
       /repeats the base breakpoint/,
     );
+  });
+});
+
+describe('responsive token previews', () => {
+  it('resolves UUID aliases with inherited breakpoints and element declarations', () => {
+    const base = globalThis.crypto.randomUUID();
+    const surface = globalThis.crypto.randomUUID();
+    const tokens = tokenSet({
+      color: {
+        [base]: record(base, 'Base', '', 'color', '#ff0000', {
+          breakpoints: { [breakpointIds.tablet]: '#0000ff' },
+        }),
+        [surface]: record(surface, 'Surface', '', 'color', `{token:${base}}`),
+      },
+    });
+    const resolve = createTokenPreviewResolver({
+      tokens,
+      breakpoints: testBreakpoints,
+      breakpointId: breakpointIds.tablet,
+    });
+
+    expect(resolve(`{token:${surface}}`)).toBe('#0000ff');
+    const withElementOverride = createTokenPreviewResolver({
+      tokens,
+      breakpoints: testBreakpoints,
+      breakpointId: breakpointIds.tablet,
+      declarations: { '--color-base': '#00ff00' },
+    });
+    expect(withElementOverride(`{token:${surface}}`)).toBe('#00ff00');
+    expect(tokens.color[base]?.value).toBe('#ff0000');
+  });
+
+  it('returns unresolved for missing and cyclic custom properties', () => {
+    const resolve = createTokenPreviewResolver({
+      tokens: tokenSet(),
+      breakpoints: testBreakpoints,
+      breakpointId: breakpointIds.phone,
+      declarations: {
+        '--color-first': 'var(--color-second)',
+        '--color-second': 'var(--color-first)',
+        '--color-third': 'var(--color-missing)',
+      },
+    });
+
+    expect(resolve('color.first')).toBeUndefined();
+    expect(resolve('color.third')).toBeUndefined();
   });
 });
 

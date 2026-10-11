@@ -5,7 +5,7 @@ import {
   tokenReferenceValue,
   type Breakpoint,
 } from '@facadeur/core';
-import { loadTokens, tokenCustomProperty } from '@facadeur/core';
+import { createTokenPreviewResolver } from '@facadeur/style-engine';
 import { tokenDisplayLabel, tokenPath } from '../token-presentation';
 import { formatTokenValue } from '../../../domain/edits/token-edit';
 import type { EditorDesignSnapshot } from '../../../domain/session';
@@ -50,65 +50,12 @@ export function TokenPreviewProvider({
 
   const resolve = useMemo(() => {
     try {
-      const compiled = loadTokens({
+      return createTokenPreviewResolver({
         tokens: design.tokens,
         breakpoints: breakpoints ?? design.breakpoints,
+        breakpointId,
+        declarations,
       });
-      const index = readTokenTree(design.tokens);
-      const properties = new Map<string, string>();
-      const propertyByUuid = new Map(
-        [...index.tokens.values()].map((token) => [token.uuid, tokenCustomProperty(token.path)]),
-      );
-      const targetWidth = compiled.breakpoints.find((item) => item.uuid === breakpointId)?.minWidth;
-      for (const property of compiled.properties) {
-        let value = property.value;
-        if (targetWidth !== undefined) {
-          for (const breakpoint of compiled.breakpoints) {
-            if (breakpoint.minWidth > targetWidth) continue;
-            value = property.breakpoints[breakpoint.uuid] ?? value;
-          }
-        }
-        properties.set(property.name, value);
-      }
-
-      const customProperty = (reference: string) => {
-        const uuid = tokenReference(`{${reference}}`);
-        return (uuid && propertyByUuid.get(uuid)) || tokenCustomProperty(reference);
-      };
-      const replaceReferences = (value: string) =>
-        value.replace(
-          /\{([^{}]+)\}/g,
-          (_, reference: string) => `var(${customProperty(reference)})`,
-        );
-
-      for (const [name, value] of Object.entries(declarations ?? {})) {
-        if (!name.startsWith('--')) continue;
-        properties.set(name, replaceReferences(value));
-      }
-
-      function expand(value: string, seen: Set<string>): string | undefined {
-        let missing = false;
-        const result = value.replace(/var\((--[\w-]+)\)/g, (_, name: string) => {
-          const nested = properties.get(name);
-          if (nested === undefined || seen.has(name)) {
-            missing = true;
-            return '';
-          }
-          const resolved = expand(nested, new Set([...seen, name]));
-          if (resolved === undefined) missing = true;
-          return resolved ?? '';
-        });
-        return missing ? undefined : result;
-      }
-
-      return (reference: string) => {
-        const value = reference.trim();
-        const uuid = tokenReference(value);
-        const key = uuid ? propertyByUuid.get(uuid) : tokenCustomProperty(tokenPath(value));
-        if (!key) return undefined;
-        const resolved = properties.get(key);
-        return resolved ? expand(resolved, new Set([key])) : undefined;
-      };
     } catch {
       // An incomplete design must not prevent editing or discard unknown references.
       return () => undefined;

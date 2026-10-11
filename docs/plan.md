@@ -3900,3 +3900,27 @@ responsibility without changing ownership or improving validation.
   - Result: removed `controls/generic`, moved the control into `controls/style`, and exposed it
     through the style barrel. The declaration grouping and compound/manual editor stay cohesive;
     props, edit callbacks, ordering, and behavior are unchanged.
+
+- [x] Refactor: move responsive token preview calculation into Style Engine.
+  - Evidence: `TokenPreviewContext` mixes React context wiring and Editor label/search state with
+    a pure calculation that compiles token properties, selects inherited responsive values,
+    overlays local declarations, expands CSS variable references, and detects cycles/missing refs.
+    Style Engine owns style previews, while its current tests cover CSS compilation but not this
+    Editor-owned calculation.
+  - Action: expose a focused `createTokenPreviewResolver` from Style Engine and move the pure
+    responsive/custom-property expansion there. Keep React contexts, Editor-specific labels,
+    search values, and graceful error handling in the Editor provider.
+  - Scope: current Editor/Style Engine ownership cleanup; preserve the canonical token data and
+    existing Editor interactions.
+  - Contracts: preserve UUID and path references, sparse breakpoint inheritance, declaration
+    overlay precedence, non-mutating behavior, and unresolved output for cycles/missing refs.
+  - Validation: Style Engine behavior coverage for responsive aliases/overlays/failures, Editor
+    token preview integration suite, both package typechecks, root suite, candidate scan, formatting,
+    public import audit, and `git diff --check`.
+  - Result: `createTokenPreviewResolver` now owns sparse breakpoint selection, UUID/path lookup,
+    local declaration overlays, and recursive custom-property expansion in Style Engine. Editor
+    retains only provider wiring and its graceful fallback for invalid/incomplete designs. The
+    focused suites pass (11 tests), the root suite passes (71 files / 249 tests), both package
+    typechecks and Storybook build pass. Form audit finds no native input/select/textarea controls
+    in Editor source or stories; `form-binding` controls delegate to `@facadeur/form`. No Core,
+    API, Store-Yjs, or persistence code changed.
