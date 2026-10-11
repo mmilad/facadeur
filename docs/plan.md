@@ -3410,3 +3410,18 @@ responsibility without changing ownership or improving validation.
     warning; Core and workspace typechecks passed; the full root suite passed (69 files, 243 tests);
     dependency/import audit and `git diff --check` passed. Prettier could not start because this
     restricted process has an isolated Corepack home and DNS access to `registry.npmjs.org` failed.
+
+- [x] Refactor: share the token-record predicate across the token table domain.
+  - Evidence: `token-table-preview.tsx` and `token-breakpoint-helpers.ts` independently define the
+    same object/non-array check for `DesignTokenValue` records. Both callers are within the token
+    table feature, but one uses the predicate for rendering and the other for sparse typography
+    override merging.
+  - Action: move the predicate to a small private token-value module and reuse it from both callers;
+    retain the same type guard and runtime semantics.
+  - Scope: Editor token table deduplication; no public exports, stored data, preview behavior, API,
+    or Store Yjs changes.
+  - Contracts: continue rejecting null, arrays, and primitives while accepting object records;
+    preserve typography merge behavior and preview output.
+  - Validation: focused token table and token preview suites pass (18 tests); Editor and workspace
+    typechecks pass; the detector reports no candidates in `ui/design/tokens`; Prettier and
+    `git diff --check` pass.

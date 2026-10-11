@@ -1,5 +1,6 @@
 import { type DesignTokenFamily, type DesignTokenValue } from '@facadeur/core';
 import { naturalTokenCompare } from './token-table-data';
+import { isTokenRecord } from './token-value';
 
 export {
   commitRawToken,
@@ -66,10 +67,6 @@ function mergeBreakpointValue(
   override: DesignTokenValue | undefined,
 ): DesignTokenValue {
   if (override === undefined) return base;
-  if (isRecord(base) && isRecord(override)) return { ...base, ...override };
+  if (isTokenRecord(base) && isTokenRecord(override)) return { ...base, ...override };
   return override;
-}
-
-function isRecord(value: unknown): value is Readonly<Record<string, DesignTokenValue>> {
-  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
 }

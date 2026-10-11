@@ -1,5 +1,6 @@
 import type { DesignTokenValue } from '@facadeur/core';
 import { formatTokenValue } from '../../../domain/edits/token-edit';
+import { isTokenRecord } from './token-value';
 
 export function TokenPreview({
   value,
@@ -20,7 +21,7 @@ export function TokenPreview({
   const previewValue = resolved ?? previewText;
   const dimension =
     type === 'dimension' && typeof value === 'string' ? dimensionPreview(value) : null;
-  const typography = type === 'typography' && isRecord(value) ? value : null;
+  const typography = type === 'typography' && isTokenRecord(value) ? value : null;
   const typographyFamily =
     typography && typeof typography.fontFamily === 'string'
       ? (resolve(typography.fontFamily) ?? typography.fontFamily)
@@ -29,7 +30,8 @@ export function TokenPreview({
     typography && typeof typography.fontSize === 'string'
       ? (resolve(typography.fontSize) ?? typography.fontSize)
       : undefined;
-  const shadowObject = type === 'shadow' && isRecord(value) ? shadowPreview(value, resolve) : null;
+  const shadowObject =
+    type === 'shadow' && isTokenRecord(value) ? shadowPreview(value, resolve) : null;
   return (
     <div
       className={
@@ -105,8 +107,4 @@ function shadowPreview(
   const blur = part('blur', '8px');
   const spread = value.spread === undefined ? '' : ` ${part('spread', '0px')}`;
   return `${value.inset ? 'inset ' : ''}${x} ${y} ${blur}${spread} ${color}`;
-}
-
-function isRecord(value: unknown): value is Readonly<Record<string, DesignTokenValue>> {
-  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
 }
