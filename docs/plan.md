@@ -90,6 +90,18 @@ completed change logs out of this file.
 
 ## Remaining follow-up
 
+- [x] Refactor: separate Catalog subtree deepcopy from insertion.
+  - Evidence: `tree-ops.ts` previously performed recursive ID replacement inline while also
+    placing the clone into a target definition.
+  - Action: keep the recursive fresh-ID clone and bound-style remapping in a private tree helper;
+    let the existing insertion operation place its result. Defer component creation to a later
+    change.
+  - Scope: prepare the existing clipboard insert path for a future component insertion strategy.
+  - Contracts: preserve recursive node data, fresh UUIDs, style bindings, and existing paste
+    behavior; Core remains independent of Editor.
+  - Validation: focused layer clipboard tests, Core and Editor typechecks, full suite (66 files,
+    239 tests), candidate detector, and diff check passed.
+
 - [x] App: keep Next workspace aliases from capturing package subpaths.
   - Evidence: the broad `@facadeur/core` Webpack alias also matches
     `@facadeur/core/default-breakpoint-ids`, producing an invalid `src/index.ts/...` path in
@@ -263,12 +275,12 @@ completed change logs out of this file.
 The maintained-source candidate scan found two size signals and one directory concentration
 signal. The review decisions are:
 
-- `packages/core/src/controller/project/controller.ts` (528 lines): the single Core catalog
+- `packages/core/src/controller/project/controller.ts` (555 lines): the single Core catalog
   coordination facade, including its public query surface. Query implementations live in the
   adjacent `catalog/queries.ts` module.
 - `packages/examples/src/form-controls-section/dom.ts` (526 lines): one canonical reusable
   Catalog fixture tree.
-- `apps/editor/src/app-service/AppService.ts` (519 lines): one event-to-operation coordinator;
+- `apps/editor/src/app-service/AppService.ts` (565 lines): one event-to-operation coordinator;
   its switch is the single dispatch boundary and its private helpers own related Catalog actions.
   Splitting cases into per-event services would scatter the operation contract again.
 - `packages/core/src/controller/project/catalog` (12 direct source files): keep the files together

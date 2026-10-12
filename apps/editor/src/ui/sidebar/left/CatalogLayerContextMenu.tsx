@@ -8,14 +8,24 @@ const FLYOUT_WIDTH = 148;
 
 export function CatalogLayerContextMenu({
   item,
+  canCopy,
+  canPaste,
   onInsert,
+  onPaste,
+  onCopy,
+  onCopyAsComponent,
   onDelete,
   anchor,
   menuRef,
   onClose,
 }: {
   item: SidebarLayer;
+  canCopy: boolean;
+  canPaste: boolean;
   onInsert: (targetId: string, placement: InsertPlacement, option: SidebarInsertOption) => void;
+  onPaste: (targetId: string, placement: InsertPlacement) => void;
+  onCopy: () => void;
+  onCopyAsComponent: () => void;
   onDelete: (id: string) => void;
   anchor: DOMRect;
   menuRef: RefObject<HTMLDivElement | null>;
@@ -36,7 +46,7 @@ export function CatalogLayerContextMenu({
     setFlyoutSide(rect.right + FLYOUT_WIDTH > window.innerWidth ? 'left' : 'right');
   }, [anchor, menuRef, openSubmenu]);
 
-  if (!hasInsert && !showDelete) return null;
+  if (!hasInsert && !canCopy && !showDelete) return null;
 
   const left = Math.min(Math.max(8, anchor.left), window.innerWidth - MENU_MIN_WIDTH - 8);
   const top = Math.min(anchor.bottom + 4, window.innerHeight - 8);
@@ -54,9 +64,14 @@ export function CatalogLayerContextMenu({
         <InsertSubmenu
           label={`${insertLabel} inside`}
           entries={insideEntries}
+          canPaste={canPaste}
           flyoutSide={flyoutSide}
           open={openSubmenu === 'inside'}
           onOpen={() => setOpenSubmenu('inside')}
+          onPaste={() => {
+            onPaste(item.id, 'inside');
+            onClose();
+          }}
           onPick={(entry) => {
             onInsert(item.id, 'inside', entry);
             onClose();
@@ -67,14 +82,29 @@ export function CatalogLayerContextMenu({
         <InsertSubmenu
           label={`${insertLabel} below`}
           entries={belowEntries}
+          canPaste={canPaste}
           flyoutSide={flyoutSide}
           open={openSubmenu === 'below'}
           onOpen={() => setOpenSubmenu('below')}
+          onPaste={() => {
+            onPaste(item.id, 'below');
+            onClose();
+          }}
           onPick={(entry) => {
             onInsert(item.id, 'below', entry);
             onClose();
           }}
         />
+      ) : null}
+      {canCopy ? (
+        <button type="button" role="menuitem" onClick={onCopy}>
+          Copy layer
+        </button>
+      ) : null}
+      {canCopy ? (
+        <button type="button" role="menuitem" onClick={onCopyAsComponent}>
+          Copy as component
+        </button>
       ) : null}
       {showDelete ? (
         <button
@@ -96,16 +126,20 @@ export function CatalogLayerContextMenu({
 function InsertSubmenu({
   label,
   entries,
+  canPaste,
   flyoutSide,
   open,
   onOpen,
+  onPaste,
   onPick,
 }: {
   label: string;
   entries: readonly SidebarInsertOption[];
+  canPaste: boolean;
   flyoutSide: 'left' | 'right';
   open: boolean;
   onOpen: () => void;
+  onPaste: () => void;
   onPick: (entry: SidebarInsertOption) => void;
 }) {
   return (
@@ -141,6 +175,11 @@ function InsertSubmenu({
               {entry.label}
             </button>
           ))}
+          {canPaste ? (
+            <button type="button" role="menuitem" onClick={onPaste}>
+              From clipboard
+            </button>
+          ) : null}
         </div>
       ) : null}
     </div>

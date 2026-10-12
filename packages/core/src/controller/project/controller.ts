@@ -30,7 +30,12 @@ import {
   patchNodeStyleRecord,
   patchNodeTagName,
 } from './catalog/ops';
-import { insertCatalogNode, moveCatalogNode, removeCatalogNode } from './catalog/tree-ops';
+import {
+  duplicateCatalogNode,
+  insertCatalogNode,
+  moveCatalogNode,
+  removeCatalogNode,
+} from './catalog/tree-ops';
 import type { InspectorFormChangeTarget } from './inspector-form-change';
 import { emptyProjectCatalog, validateProjectCatalog } from './catalog/validate';
 import {
@@ -467,6 +472,28 @@ export class CoreController implements CoreControllerHost {
         this.selectedNodeUuid = node.uuid;
       },
     );
+  }
+
+  duplicateCatalogNode(
+    sourceDefinitionUuid: string,
+    sourceNodeUuid: string,
+    parentUuid: string,
+    index: number,
+  ) {
+    if (!this.openDefinitionId) return null;
+    const result = duplicateCatalogNode(
+      this.catalog,
+      sourceDefinitionUuid,
+      sourceNodeUuid,
+      this.openDefinitionId,
+      parentUuid,
+      index,
+    );
+    if (!result) return null;
+    this.commitCatalog(result.catalog, () => {
+      this.selectedNodeUuid = result.nodeUuid;
+    });
+    return result.nodeUuid;
   }
 
   removeCatalogNode(nodeUuid: string) {

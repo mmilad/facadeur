@@ -33,6 +33,10 @@ export class AppService {
   readonly session: EditorSession;
   readonly inspector: InspectorService;
   private readonly catalogPort: EditorCatalogPort;
+  private layerClipboard: {
+    sourceDefinitionId: string;
+    sourceNodeId: string;
+  } | null = null;
   private snapshotSource: ReturnType<EditorSession['getSnapshot']> | null = null;
   private snapshotValue: ReturnType<EditorSession['getSnapshot']> | null = null;
 
@@ -206,6 +210,12 @@ export class AppService {
         }
         case EditorEventType.LayerInsert:
           await this.insertSidebarLayer(event.data);
+          return;
+        case EditorEventType.LayerCopy:
+          this.copySidebarLayer(event.data);
+          return;
+        case EditorEventType.LayerPaste:
+          await this.pasteSidebarLayer(event.data);
           return;
         case EditorEventType.LayerMove:
           await this.moveSidebarLayer(event.data.sourceId, event.data.targetId, event.data.zone);
@@ -397,6 +407,39 @@ export class AppService {
     this.insertCatalogNode(spot.parentUuid, spot.index, node);
     await this.persistCatalog();
     this.session.selectNode(node.uuid);
+  }
+
+  private async pasteSidebarLayer(intent: EditorEventDataMap[EditorEventType.LayerPaste]) {
+    const snapshot = this.session.getSnapshot();
+    const definition = snapshot.openDefinition;
+    const item = findLayer(snapshot.layers, intent.targetId);
+    if (!definition || !item) return;
+    const spot = catalogLayerInsertTarget(definition, item, intent.placement);
+    if (!spot) return;
+    const clipboard = this.layerClipboard;
+    if (!clipboard) return;
+    const nodeId = this.core.duplicateCatalogNode(
+      clipboard.sourceDefinitionId,
+      clipboard.sourceNodeId,
+      spot.parentUuid,
+      spot.index,
+    );
+    if (!nodeId) {
+      this.session.setNotice('Could not insert the copied layer here', 'error');
+      return;
+    }
+    await this.persistCatalog();
+    this.session.selectNode(nodeId);
+  }
+
+  private copySidebarLayer(intent: EditorEventDataMap[EditorEventType.LayerCopy]) {
+    const snapshot = this.session.getSnapshot();
+    const item = findLayer(snapshot.layers, intent.nodeId);
+    if (!item || item.virtual || item.id === snapshot.openDefinition?.root.uuid) return;
+    this.layerClipboard = {
+      sourceDefinitionId: item.documentId,
+      sourceNodeId: item.id,
+    };
   }
 
   private async deleteSidebarLayer(nodeId: string) {

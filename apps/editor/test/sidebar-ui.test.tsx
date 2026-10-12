@@ -64,6 +64,7 @@ describe('sidebar UI contracts', () => {
       nodeId: 'root',
       formKey: 'asset-1:root',
       selectionKind: 'root',
+      layerStyle: { selector: '.root', declarations: {}, breakpoints: [], overrides: {} },
       headerFields: [{ type: 'text', name: 'definition.name', label: 'Name' }],
       tabs: [{ id: 'style', label: 'Style', sections: [] }],
       values: { 'definition.name': 'Card' },

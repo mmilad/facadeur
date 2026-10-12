@@ -145,4 +145,59 @@ describe('catalog layer navigation', () => {
       ).toBe(true);
     });
   });
+
+  it('offers Copy as component while component creation is deferred', async () => {
+    const session = setup();
+    const layers = within(screen.getByRole('region', { name: 'Layers' }));
+    const user = userEvent.setup();
+    const initialComponentCount = Object.keys(session.core.getSnapshot().catalog.components).length;
+
+    fireEvent.contextMenu(layers.getByRole('button', { name: 'body p' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Copy as component' }));
+    expect(Object.keys(session.core.getSnapshot().catalog.components)).toHaveLength(
+      initialComponentCount,
+    );
+
+    fireEvent.contextMenu(layers.getByRole('button', { name: 'root article' }));
+    const insertInside = screen.getByRole('menuitem', { name: 'Insert inside' });
+    fireEvent.mouseEnter(insertInside.parentElement!);
+    await user.click(await screen.findByRole('menuitem', { name: 'From clipboard' }));
+
+    await waitFor(() => {
+      const bodyLayers = session.core
+        .getSnapshot()
+        .openDefinition?.root.dom.children?.filter((node) => node.name === 'body');
+      expect(bodyLayers).toHaveLength(2);
+      expect(bodyLayers?.some((node) => node.uuid !== exampleIds.components.card.nodes.body)).toBe(
+        true,
+      );
+    });
+  });
+
+  it('keeps the regular copy layer clipboard insertion available', async () => {
+    const session = setup();
+    const layers = within(screen.getByRole('region', { name: 'Layers' }));
+    const user = userEvent.setup();
+
+    fireEvent.contextMenu(layers.getByRole('button', { name: 'body p' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Copy layer' }));
+
+    fireEvent.contextMenu(layers.getByRole('button', { name: 'eyebrow p' }));
+    const insertBelow = screen.getByRole('menuitem', { name: 'Insert below' });
+    fireEvent.mouseEnter(insertBelow.parentElement!);
+    await user.click(await screen.findByRole('menuitem', { name: 'From clipboard' }));
+
+    await waitFor(() => {
+      const children = session.core.getSnapshot().openDefinition?.root.dom.children ?? [];
+      expect(children.filter((node) => node.name === 'body')).toHaveLength(2);
+      expect(children.some((node) => node.uuid === exampleIds.components.card.nodes.body)).toBe(
+        true,
+      );
+      expect(
+        children.some(
+          (node) => node.uuid !== exampleIds.components.card.nodes.body && node.dom.tagName === 'p',
+        ),
+      ).toBe(true);
+    });
+  });
 });

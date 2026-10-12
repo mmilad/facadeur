@@ -19,6 +19,8 @@ export enum EditorEventType {
   LayerWrap = 'layer.wrap',
   LayerSelectParent = 'layer.select-parent',
   LayerInsert = 'layer.insert',
+  LayerCopy = 'layer.copy',
+  LayerPaste = 'layer.paste',
   LayerMove = 'layer.move',
   InspectorFieldChange = 'inspector.field.change',
   SurfaceNavigate = 'surface.navigate',
@@ -72,6 +74,13 @@ export interface EditorEventDataMap {
     readonly placement: 'inside' | 'below';
     readonly kind: 'instance' | 'primitive';
     readonly value: string;
+  };
+  [EditorEventType.LayerCopy]: {
+    readonly nodeId: string;
+  };
+  [EditorEventType.LayerPaste]: {
+    readonly targetId: string;
+    readonly placement: 'inside' | 'below';
   };
   [EditorEventType.LayerMove]: {
     readonly sourceId: string;

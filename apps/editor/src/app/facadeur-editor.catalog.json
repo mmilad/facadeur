@@ -1776,7 +1776,8 @@
           "padding": "10px 0",
           "borderBottom": "1px solid #e8e6e2"
         }
-      }
+      },
+      "category": "sidebar"
     },
     "660e8400-e29b-41d4-a716-00000000017c": {
       "uuid": "660e8400-e29b-41d4-a716-00000000017c",

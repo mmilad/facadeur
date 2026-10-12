@@ -1,4 +1,5 @@
-import type { Node, NodeDefinition, ProjectCatalog } from '@facadeur/domain';
+import type { GlobalStyleRule, Node, NodeDefinition, ProjectCatalog } from '@facadeur/domain';
+import { createCatalogUuid } from '../../../document/ids';
 import { findDefinition, findNodeByUuid } from './ops';
 
 const LEAF_TAGS = new Set(['img', 'input', 'br', 'hr', 'meta', 'link']);
@@ -40,6 +41,91 @@ export function insertCatalogNode(
   (targetParent.dom as { children?: Node[] }).children = children;
   (next[located.kind] as Record<string, NodeDefinition>)[definitionUuid] = definition;
   return next;
+}
+
+export function duplicateCatalogNode(
+  catalog: ProjectCatalog,
+  sourceDefinitionUuid: string,
+  sourceNodeUuid: string,
+  targetDefinitionUuid: string,
+  parentUuid: string,
+  index: number,
+): { catalog: ProjectCatalog; nodeUuid: string } | null {
+  const target = findDefinition(catalog, targetDefinitionUuid);
+  if (!target) return null;
+  const cloneResult = cloneCatalogSubtree(catalog, sourceDefinitionUuid, sourceNodeUuid);
+  const targetParent = findNodeByUuid(target.definition.root, parentUuid);
+  if (!cloneResult || !targetParent || !canAcceptCatalogChildren(targetParent)) return null;
+
+  const next = structuredClone(catalog) as ProjectCatalog;
+  const nextTarget = findDefinition(next, targetDefinitionUuid);
+  const nextParent = nextTarget && findNodeByUuid(nextTarget.definition.root, parentUuid);
+  if (!nextTarget || !nextParent) return null;
+  const children = [...(nextParent.dom.children ?? [])];
+  children.splice(Math.max(0, Math.min(index, children.length)), 0, cloneResult.node);
+  (nextParent.dom as { children?: Node[] }).children = children;
+  (next[nextTarget.kind] as Record<string, NodeDefinition>)[targetDefinitionUuid] =
+    nextTarget.definition;
+
+  return {
+    catalog: appendCatalogStyleRules(next, cloneResult.styleRules),
+    nodeUuid: cloneResult.node.uuid,
+  };
+}
+
+/** Clone a node subtree with fresh IDs and remap styles bound entirely within the subtree. */
+function cloneCatalogSubtree(
+  catalog: ProjectCatalog,
+  sourceDefinitionUuid: string,
+  sourceNodeUuid: string,
+) {
+  const source = findDefinition(catalog, sourceDefinitionUuid);
+  const sourceNode = source && findNodeByUuid(source.definition.root, sourceNodeUuid);
+  if (!sourceNode) return null;
+
+  const idMap = new Map<string, string>();
+  const node = cloneCatalogNodeTree(sourceNode, idMap);
+  const styleRules = (catalog.globalStyles?.block?.rules ?? []).flatMap((rule, index) => {
+    const bindings = Object.entries(rule.bindings ?? {});
+    if (!bindings.length || !bindings.every(([, uuid]) => idMap.has(uuid))) return [];
+    const originalNodeUuid = bindings[0]![1];
+    const clonedNodeUuid = idMap.get(originalNodeUuid)!;
+    return [
+      {
+        ...structuredClone(rule),
+        id:
+          rule.id === `layer-${originalNodeUuid}`
+            ? `layer-${clonedNodeUuid}`
+            : `layer-${clonedNodeUuid}-${index}`,
+        bindings: Object.fromEntries(
+          bindings.map(([className, uuid]) => [className, idMap.get(uuid)!]),
+        ),
+      },
+    ];
+  });
+  return { node, styleRules };
+}
+
+function appendCatalogStyleRules(catalog: ProjectCatalog, styleRules: readonly GlobalStyleRule[]) {
+  if (!styleRules.length) return catalog;
+  const rules = catalog.globalStyles?.block?.rules ?? [];
+  const block = { ...(catalog.globalStyles?.block ?? {}), rules: [...rules, ...styleRules] };
+  return { ...catalog, globalStyles: { ...(catalog.globalStyles ?? {}), block } };
+}
+
+function cloneCatalogNodeTree(node: Node, idMap: Map<string, string>): Node {
+  const uuid = createCatalogUuid();
+  idMap.set(node.uuid, uuid);
+  return {
+    ...node,
+    uuid,
+    dom: {
+      ...node.dom,
+      ...(node.dom.children
+        ? { children: node.dom.children.map((child) => cloneCatalogNodeTree(child, idMap)) }
+        : {}),
+    },
+  };
 }
 
 export function isInsideCatalogSubtree(

@@ -24,8 +24,15 @@ export function CatalogLayersPanel({
     address: string;
     anchor: DOMRect;
   } | null>(null);
+  const [hasCopiedLayer, setHasCopiedLayer] = useState(false);
   const contextMenuRef = useRef<HTMLDivElement | null>(null);
   const contextItem = findLayerByAddress(model.layers, contextLayer?.address ?? '');
+  const copyContextLayer = () => {
+    if (!contextItem || contextItem.virtual || contextItem.id === model.rootId) return;
+    setHasCopiedLayer(true);
+    onEvent({ type: EditorEventType.LayerCopy, data: { nodeId: contextItem.id } });
+    setContextLayer(null);
+  };
 
   useEffect(() => {
     if (!contextLayer) return;
@@ -122,6 +129,17 @@ export function CatalogLayersPanel({
         ? createPortal(
             <CatalogLayerContextMenu
               item={contextItem}
+              canCopy={!contextItem.virtual && contextItem.id !== model.rootId}
+              canPaste={hasCopiedLayer}
+              onPaste={(targetId, placement) => {
+                if (!hasCopiedLayer) return;
+                onEvent({
+                  type: EditorEventType.LayerPaste,
+                  data: { targetId, placement },
+                });
+              }}
+              onCopy={copyContextLayer}
+              onCopyAsComponent={copyContextLayer}
               onInsert={(targetId, placement, option) =>
                 onEvent({
                   type: EditorEventType.LayerInsert,
