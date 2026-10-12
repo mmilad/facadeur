@@ -214,6 +214,9 @@ export class AppService {
         case EditorEventType.LayerCopy:
           this.copySidebarLayer(event.data);
           return;
+        case EditorEventType.LayerCopyAsComponent:
+          await this.copySidebarLayerAsComponent(event.data);
+          return;
         case EditorEventType.LayerPaste:
           await this.pasteSidebarLayer(event.data);
           return;
@@ -440,6 +443,51 @@ export class AppService {
       sourceDefinitionId: item.documentId,
       sourceNodeId: item.id,
     };
+  }
+
+  private async copySidebarLayerAsComponent(
+    intent: EditorEventDataMap[EditorEventType.LayerCopyAsComponent],
+  ) {
+    const snapshot = this.session.getSnapshot();
+    const sourceDefinition = snapshot.openDefinition;
+    const item = findLayer(snapshot.layers, intent.nodeId);
+    const sourceNode = sourceDefinition && findNodeByUuid(sourceDefinition.root, intent.nodeId);
+    if (
+      !sourceDefinition ||
+      !item ||
+      item.virtual ||
+      item.id === sourceDefinition.root.uuid ||
+      !sourceNode
+    ) {
+      return;
+    }
+
+    const name = sourceNode.name?.trim() || item.name;
+    const component = blankCatalogDefinition('component', catalogAssetSummaries(this.core), name);
+    const componentId = await this.createDefinition('components', component);
+    if (!componentId) return;
+
+    this.session.openAsset(componentId, 'root');
+    const clonedNodeId = this.core.duplicateCatalogNode(
+      sourceDefinition.uuid,
+      sourceNode.uuid,
+      component.root.uuid,
+      0,
+    );
+    const clonedRoot = clonedNodeId
+      ? findNodeByUuid(this.core.getSnapshot().openDefinition?.root ?? component.root, clonedNodeId)
+      : null;
+    if (!clonedRoot) {
+      await this.deleteDefinition(componentId);
+      this.session.openAsset(sourceDefinition.uuid, 'root');
+      this.session.setNotice('Could not create component from this layer', 'error');
+      return;
+    }
+
+    this.core.patchDefinition('components', componentId, { root: clonedRoot });
+    await this.persistCatalog();
+    this.session.openAsset(componentId, 'root');
+    this.session.setNotice(`Component "${name}" created`, 'info');
   }
 
   private async deleteSidebarLayer(nodeId: string) {

@@ -33,6 +33,14 @@ export function CatalogLayersPanel({
     onEvent({ type: EditorEventType.LayerCopy, data: { nodeId: contextItem.id } });
     setContextLayer(null);
   };
+  const copyContextLayerAsComponent = () => {
+    if (!contextItem || contextItem.virtual || contextItem.id === model.rootId) return;
+    onEvent({
+      type: EditorEventType.LayerCopyAsComponent,
+      data: { nodeId: contextItem.id },
+    });
+    setContextLayer(null);
+  };
 
   useEffect(() => {
     if (!contextLayer) return;
@@ -139,7 +147,7 @@ export function CatalogLayersPanel({
                 });
               }}
               onCopy={copyContextLayer}
-              onCopyAsComponent={copyContextLayer}
+              onCopyAsComponent={copyContextLayerAsComponent}
               onInsert={(targetId, placement, option) =>
                 onEvent({
                   type: EditorEventType.LayerInsert,

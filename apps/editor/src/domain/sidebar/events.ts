@@ -20,6 +20,7 @@ export enum EditorEventType {
   LayerSelectParent = 'layer.select-parent',
   LayerInsert = 'layer.insert',
   LayerCopy = 'layer.copy',
+  LayerCopyAsComponent = 'layer.copy-as-component',
   LayerPaste = 'layer.paste',
   LayerMove = 'layer.move',
   InspectorFieldChange = 'inspector.field.change',
@@ -76,6 +77,9 @@ export interface EditorEventDataMap {
     readonly value: string;
   };
   [EditorEventType.LayerCopy]: {
+    readonly nodeId: string;
+  };
+  [EditorEventType.LayerCopyAsComponent]: {
     readonly nodeId: string;
   };
   [EditorEventType.LayerPaste]: {

@@ -297,3 +297,17 @@ signal. The review decisions are:
 The earlier batch passed workspace typecheck and the full test suite (64 files, 231 tests).
 Formatting, source/import audits, candidate review, and `git diff --check` also passed. The
 Storybook build still prints existing Vite `use client`, sourcemap, and large-chunk warnings.
+
+- [x] Editor: create a component from a copied layer subtree.
+  - Evidence: `Copy as component` currently shares `copyContextLayer` with `Copy layer`, so it
+    only changes the AppService's transient layer clipboard and creates no catalog asset.
+  - Action: give component creation its own editor event and AppService operation. Reuse Core's
+    existing subtree duplication so node IDs and bound global style rules are cloned; create a
+    component named after the layer with that cloned node as its root, then open it. Keep the
+    existing clipboard event and paste behavior exclusive to `Copy layer`.
+  - Scope: requested context-menu behavior; retain AppService as the cohesive event-to-operation
+    coordinator and leave clone identity/style semantics in Core.
+  - Contracts: preserve source node data, remap cloned IDs and in-subtree style bindings, keep the
+    generated component's root equal to the clone, and do not alter the normal layer clipboard.
+  - Validation: focused layer-navigation test (6 tests), Editor typecheck, ESLint, Prettier,
+    candidate detector, and `git diff --check` passed.

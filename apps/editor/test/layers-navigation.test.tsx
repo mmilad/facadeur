@@ -146,7 +146,7 @@ describe('catalog layer navigation', () => {
     });
   });
 
-  it('offers Copy as component while component creation is deferred', async () => {
+  it('creates a named component with the copied layer as its root', async () => {
     const session = setup();
     const layers = within(screen.getByRole('region', { name: 'Layers' }));
     const user = userEvent.setup();
@@ -154,24 +154,25 @@ describe('catalog layer navigation', () => {
 
     fireEvent.contextMenu(layers.getByRole('button', { name: 'body p' }));
     await user.click(screen.getByRole('menuitem', { name: 'Copy as component' }));
-    expect(Object.keys(session.core.getSnapshot().catalog.components)).toHaveLength(
-      initialComponentCount,
-    );
 
+    await waitFor(() => {
+      const components = Object.values(session.core.getSnapshot().catalog.components);
+      expect(components).toHaveLength(initialComponentCount + 1);
+      const component = components.find((definition) => definition.name === 'body');
+      expect(component?.root.uuid).not.toBe(exampleIds.components.card.nodes.body);
+      expect(component?.root.name).toBe('body');
+      expect(component?.root.dom.tagName).toBe('p');
+      expect(session.getSnapshot().openId).toBe(component?.uuid);
+    });
+
+    session.openAsset(exampleIds.components.card.definition, 'root');
+    await waitFor(() => {
+      expect(layers.getByRole('button', { name: 'root article' })).toBeInTheDocument();
+    });
     fireEvent.contextMenu(layers.getByRole('button', { name: 'root article' }));
     const insertInside = screen.getByRole('menuitem', { name: 'Insert inside' });
     fireEvent.mouseEnter(insertInside.parentElement!);
-    await user.click(await screen.findByRole('menuitem', { name: 'From clipboard' }));
-
-    await waitFor(() => {
-      const bodyLayers = session.core
-        .getSnapshot()
-        .openDefinition?.root.dom.children?.filter((node) => node.name === 'body');
-      expect(bodyLayers).toHaveLength(2);
-      expect(bodyLayers?.some((node) => node.uuid !== exampleIds.components.card.nodes.body)).toBe(
-        true,
-      );
-    });
+    expect(screen.queryByRole('menuitem', { name: 'From clipboard' })).not.toBeInTheDocument();
   });
 
   it('keeps the regular copy layer clipboard insertion available', async () => {

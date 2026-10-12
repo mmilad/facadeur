@@ -18,14 +18,17 @@ export function assetKindToCatalogMap(kind: DefaultKind): 'atoms' | 'components'
 export function blankCatalogDefinition(
   kind: 'atom' | 'component' | 'page',
   taken: readonly AssetSummary[],
+  requestedName?: string,
 ): NodeDefinitionModel {
   const baseName = `New ${NOUN[kind]}`;
   const names = new Set(taken.map((asset) => asset.name));
-  let name = baseName;
-  let count = 2;
-  while (names.has(name)) {
-    name = `${baseName} ${count}`;
-    count += 1;
+  let name = requestedName?.trim() || baseName;
+  if (!requestedName?.trim()) {
+    let count = 2;
+    while (names.has(name)) {
+      name = `${baseName} ${count}`;
+      count += 1;
+    }
   }
   const uuid = createCatalogUuid();
   const rootUuid = createCatalogUuid();
