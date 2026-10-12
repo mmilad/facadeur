@@ -22,6 +22,23 @@ const testUuid38 = globalThis.crypto.randomUUID();
 const testUuid39 = globalThis.crypto.randomUUID();
 
 describe('CSS output from UUID-keyed tokens', () => {
+  it('switches the single Facadeur header between mobile and desktop at the laptop breakpoint', () => {
+    const css = renderGlobalStyleCss(createExampleCatalog());
+
+    expect(css).toContain('@media (min-width: 1024px)');
+    expect(css).toContain(
+      '[data-facadeur-codegen-node="660e8400-e29b-41d4-a716-000000000c1d"] > [data-facadeur-codegen-node="660e8400-e29b-41d4-a716-000000000c1e"] > [data-facadeur-codegen-node="660e8400-e29b-41d4-a716-000000000c20"] {',
+    );
+    expect(css).toContain('display: none;');
+    expect(css).toContain('display: flex;');
+    expect(css).toContain(
+      '[data-facadeur-codegen-node="660e8400-e29b-41d4-a716-000000000c1d"] > [data-facadeur-codegen-node="660e8400-e29b-41d4-a716-000000000c24"] > [data-facadeur-codegen-node="660e8400-e29b-41d4-a716-000000000c25"] {',
+    );
+    expect(css).toContain(
+      '[data-facadeur-codegen-node="660e8400-e29b-41d4-a716-000000000c1d"] > [data-facadeur-codegen-node="660e8400-e29b-41d4-a716-000000000c24"] > [data-facadeur-codegen-node="660e8400-e29b-41d4-a716-000000000c28"] {',
+    );
+  });
+
   it('emits derived selectors and resolves UUID references', () => {
     const css = renderDesignCss({
       tokens: tokenSet({

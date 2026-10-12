@@ -33,8 +33,9 @@ const UUID_SOURCE = UUID_PATTERN.source.slice(1, -1);
 const tokenInterfaceSetKeySchema = Type.String({
   pattern: `^(?:${UUID_SOURCE}|[a-z][a-z0-9]*(?:\\.[a-z0-9]+)+)$`,
 });
+const styleTargetSegment = `(?:${UUID_SOURCE}|[A-Za-z][A-Za-z0-9_-]*)`;
 const styleTargetSchema = Type.String({
-  pattern: '^[A-Za-z][A-Za-z0-9_-]*(?:/[A-Za-z][A-Za-z0-9_-]*)*$',
+  pattern: `^${styleTargetSegment}(?:/${styleTargetSegment})*$`,
 });
 
 /** Sparse appearance for one local node or a rendered path to a nested instance root. */

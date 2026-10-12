@@ -6,7 +6,7 @@ import {
   tokenCustomProperty,
 } from '@facadeur/core';
 import type { ElementBuildConfig, Node, ProjectCatalog } from '@facadeur/domain';
-import { renderDesignCss, renderGlobalStyleCss } from '@facadeur/style-engine';
+import { renderBoxSizingReset, renderDesignCss, renderGlobalStyleCss } from '@facadeur/style-engine';
 import { catalogEntries } from '../../../src/catalog';
 import { CodegenError } from '../../../src/error';
 import type {
@@ -59,6 +59,7 @@ export function generateReact(options: GenerateOptions): GenerateOutput {
     });
   }
 
+  cssRules.unshift(renderBoxSizingReset());
   cssRules.push(renderGlobalStyleCss(options.catalog));
 
   const breakpoints = options.catalog.globalStyles?.breakpoints;

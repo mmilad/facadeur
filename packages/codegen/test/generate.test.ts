@@ -13,9 +13,9 @@ describe('Catalog-driven React code generation', () => {
 
     expect(component?.contents).toContain('export function Button');
     expect(component?.contents).toContain('<button');
-    expect(generated.ui.find((file) => file.path === 'styles/components.css')?.contents).toContain(
-      `[data-facadeur-codegen-node="${button!.root.uuid}"]`,
-    );
+    const componentsCss = generated.ui.find((file) => file.path === 'styles/components.css')?.contents;
+    expect(componentsCss).toMatch(/^\*,\n\*::before,\n\*::after \{\n  box-sizing: border-box;/);
+    expect(componentsCss).toContain(`[data-facadeur-codegen-node="${button!.root.uuid}"]`);
     expect(
       generated.ui.find((file) => file.path === 'styles/design-tokens.css')?.contents,
     ).toContain('--color-');

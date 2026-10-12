@@ -39,6 +39,11 @@
 
 ## Resolved: Run pnpm verification in the approved host context
 
+- **Update (2026-10-12, responsive header):** `pnpm exec prettier --write <affected files>` again
+  stopped before formatting because the restricted process tried to download pinned pnpm 10.33.3
+  from `registry.npmjs.org` and failed with `ENOTFOUND`. The identical command succeeded in the
+  approved host context. Continue using that context for workspace pnpm commands; no repository
+  package-manager change is needed.
 - **Update (2026-10-11):** With the user's Corepack cache configured, restricted Vitest still fails
   before collection with `EPERM` resolving `node_modules/.pnpm/vitest.../dist/spy.js`. The same
   focused suites pass in the approved host-context execution; the full root suite passes 59 files /

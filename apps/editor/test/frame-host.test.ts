@@ -17,6 +17,8 @@ describe('FrameHost', () => {
     expect(frameDocument).toBe(host.element.contentDocument);
     expect(frameDocument.defaultView).toBe(host.contentWindow());
     const shell = frameDocument.getElementById('facadeur-frame-shell');
+    expect(shell?.textContent).toContain('*::before');
+    expect(shell?.textContent).toContain('box-sizing: border-box');
     expect(shell?.textContent).toContain('[data-empty="true"]');
     expect(shell?.textContent).toContain('min-width: 64px');
     expect(host.element.ownerDocument).toBe(document);

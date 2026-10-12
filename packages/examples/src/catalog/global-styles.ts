@@ -1,7 +1,9 @@
 import type { ProjectCatalog } from '@facadeur/domain';
 import { globalIds as exampleGlobalIds } from './idList';
+import { facadeurHeaderStyleChildren } from '../facadeur-editor/header';
 
 export const globalStyles = {
+  block: { children: facadeurHeaderStyleChildren },
   breakpoints: [
     {
       uuid: exampleGlobalIds.breakpoints.phone,

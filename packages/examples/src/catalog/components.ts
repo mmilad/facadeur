@@ -19,6 +19,7 @@ import { definition as sign_in } from '../sign-in';
 import { definition as specimen_section } from '../specimen-section';
 import { definition as textarea } from '../textarea';
 import { definition as variant_input } from '../variant-input';
+import { facadeurComponentCatalog } from '../facadeur-editor/components';
 import type { ProjectCatalog } from '@facadeur/domain';
 
 export const definitions = {
@@ -43,4 +44,5 @@ export const definitions = {
   [specimen_section.uuid]: specimen_section,
   [textarea.uuid]: textarea,
   [variant_input.uuid]: variant_input,
+  ...facadeurComponentCatalog,
 } satisfies ProjectCatalog['components'];

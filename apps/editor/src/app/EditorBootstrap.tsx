@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { createExampleCatalog, card } from '@facadeur/examples';
+import { createExampleCatalog, facadeurWorkspace } from '@facadeur/examples';
 import { createEditorSession } from '../domain/session/create-editor-session';
 import { EditorHost } from './EditorHost';
 import type { EditorNavigationAdapter } from '../ui/shell/navigation/navigation-adapter';
@@ -22,8 +22,8 @@ export function EditorBootstrap() {
   );
   const editor = useMemo(() => {
     const session = createEditorSession({ projectCatalog: createExampleCatalog() });
-    session.openAsset(card.uuid);
-    session.selectNode(card.root.uuid);
+    session.openAsset(facadeurWorkspace.uuid);
+    session.selectNode(facadeurWorkspace.root.uuid);
     return { session };
   }, []);
 

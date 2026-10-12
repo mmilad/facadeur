@@ -1,3 +1,5 @@
+import { renderBoxSizingReset } from '@facadeur/style-engine';
+
 /**
  * One same-origin iframe. Callers read the frame document only through this
  * object, so a later host can isolate the frame without changing the editor.
@@ -18,7 +20,6 @@ function contentHeight(frameDocument: Document): number {
   }
   return bottom;
 }
-
 const FRAME_SHELL_CSS = `
   html, body { margin: 0; background: #fffcf7; }
   body { overflow: hidden; }
@@ -114,7 +115,7 @@ export function createFrameHost(options: FrameHostOptions): FrameHost {
     if (frameDocument.getElementById(SHELL_ID)) return;
     const style = frameDocument.createElement('style');
     style.id = SHELL_ID;
-    style.textContent = FRAME_SHELL_CSS;
+    style.textContent = `${renderBoxSizingReset()}\n${FRAME_SHELL_CSS}`;
     head.append(style);
   }
 

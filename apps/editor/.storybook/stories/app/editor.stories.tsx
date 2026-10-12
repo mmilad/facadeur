@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { fn } from 'storybook/test';
-import { card } from '@facadeur/examples';
+import { facadeurWorkspace } from '@facadeur/examples';
 import type { InspectorFieldChangedEvent } from '../../../src/app-service';
 import { EditorHost } from '../../../src/app/EditorHost';
 import { createStorybookEditor } from '../../fixtures/editor';
@@ -14,7 +14,10 @@ function EditorAppPreview({
   onNavigation: (event: StorybookNavigationEvent) => void;
   onInspectorChange: (event: InspectorFieldChangedEvent) => void;
 }) {
-  const editor = useMemo(() => createStorybookEditor(card.uuid, card.root.uuid), []);
+  const editor = useMemo(
+    () => createStorybookEditor(facadeurWorkspace.uuid, facadeurWorkspace.root.uuid),
+    [],
+  );
   const navigation = useStorybookNavigation(onNavigation);
 
   useEffect(() => editor.app.inspector.subscribe(onInspectorChange), [editor, onInspectorChange]);

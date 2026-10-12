@@ -24,6 +24,59 @@ compatibility shims for them. A future server or persistence layer is a separate
 
 ## Completed cleanup
 
+- [x] Design: make the Facadeur workspace and settings concepts responsive.
+  - Evidence: `packages/examples/src/facadeur-editor.ts` fixes both root frames at 1280px, the
+    workspace canvas at a 500px minimum, and preview/inspector/settings panels at fixed widths;
+    these styles overflow narrow viewport frames and make frame selection appear oversized.
+  - Action: use full-width outer frames and fluid flex sizing for composed panels; reserve fixed
+    dimensions only for deliberate controls such as the navigation rail. Add a mobile-specific
+    concept with collapsible-style navigation/inspector affordances because Catalog node inline
+    styles do not express media queries. Keep this design-only and reuse the existing fixture
+    helpers.
+  - Scope: current UI design prototype; no Core/style-engine behavior or CSS cascade changes.
+  - Contracts: preserve existing workspace/settings concepts and Catalog format; the mobile
+    composition is a separate visual example, not responsive runtime behavior.
+  - Validation: example tests, full suite (66 files, 236 tests), Examples and Editor typechecks,
+    Storybook build, candidate scan, responsive dimension audit, and `git diff --check` passed.
+
+- [x] Style: use intrinsic frame height and a shared border-box reset.
+  - Evidence: Facadeur mockup roots use `height: 100%` although viewport frame hosts measure
+    content height; `frame-host.ts` sets `boxSizing` on only `body`, while iframe descendants do
+    not inherit it. The editor's `base.css` reset does not cross into those iframe documents.
+  - Action: let the mockup roots and shared panel wrappers size from content; add one
+    style-engine-owned box-sizing reset and consume it in iframe previews and generated
+    `components.css` so both rendering paths agree.
+  - Scope: current layout correctness; no Catalog schema or style semantics beyond the standard
+    CSS box model baseline.
+  - Contracts: keep iframe content-height measurement and node declarations intact; do not add
+    reset behavior to design-token-only CSS output.
+  - Validation: frame-host and codegen tests, focused examples test, package typechecks, full
+    suite (66 files, 236 tests), Storybook build, candidate scan, reset-consumer audit, and diff check.
+
+- [x] Design: compose the Facadeur concepts from schema-backed Catalog components.
+  - Evidence: `facadeur-editor.ts` builds workspace and settings pages as large inline trees;
+    the settings categories and CSS rules duplicate row markup, and the workspace includes an
+    always-visible context menu that represents an active state.
+  - Action: extract reusable Header, left/right Sidebar, Canvas, and Shell definitions; use
+    schema-backed component instances with preview data for repeated settings-category and CSS
+    rule rows (including the active category style); remove the open context menu from the default
+    workspace concept; add only icons needed by this design to the shared Example icon catalog.
+    Keep one shared header definition with left/right groups and nested desktop/mobile action
+    groups; use accessible Save buttons in both responsive groups, show project context and save
+    status on desktop, and show the menu on mobile. Switch groups through project-level Catalog
+    breakpoint styles (mobile below 1024 px, desktop from the Laptop breakpoint). Omit search until
+    it has a real control contract, and keep mobile copy compact. Keep literal fixture copy so raw
+    component-property bindings do not appear when an editable definition itself is previewed.
+  - Scope: design-only Example Catalog composition. Keep existing page identities and Catalog
+    contracts; do not add Core preview/repeater behavior or an event system.
+  - Contracts: use existing `definitionRef`, component schema, `previewData.fields`, and global
+    breakpoint-style contracts. Align `styleTargetSchema` with the UUID child paths already used
+    by style-engine when resolving Catalog nodes. Catalog currently has no runtime array-repeater
+    expansion, so row repetitions must use supported component instances; do not claim they are
+    driven by an array repeater.
+  - Validation: workspace typecheck; full suite (66 files, 237 tests); Storybook production build;
+    composed PreviewData resolution and responsive CSS tests; candidate detector and diff check.
+
 - Removed DocumentFile/Flat adapters, legacy-only Core behaviors and tests, and the generated
   DocumentFile schema. Catalog is the active data contract; no shim remains.
 - Removed unused API/server/Yjs/token packages and orphaned Editor controls. `packages/form` owns
@@ -36,6 +89,35 @@ Detailed implementation history is in Git and the existing [plan history](plan-h
 completed change logs out of this file.
 
 ## Remaining follow-up
+
+- [ ] Examples: review `form-controls-section/dom.ts` for a component boundary.
+  - Evidence: the 526-line Catalog node tree contains multiple sections of form-control examples
+    and repeated `definitionRef` setup.
+  - Action: check whether repeated preview setup can be composed from existing schema-backed
+    Example components while preserving the current specimen and its stable IDs.
+  - Scope: backlog; unrelated to the Facadeur editor concept composition.
+  - Contracts: retain canonical Example IDs, form package ownership, and current preview data.
+  - Validation: focused Example Catalog validation and visual Storybook inspection.
+
+- [x] Design: build a Facadeur editor UI prototype in Examples.
+  - Evidence: the current reusable Catalog pages are form/specimen demonstrations; they do not
+    provide a screen-level design for the Facadeur editor. The current document supports node
+    styles and project breakpoints, but has no stylesheet rule model for global selectors or
+    active class declarations.
+  - Action: add separate Catalog pages for a redesigned editor workspace and global-style
+    settings. Use stable Example IDs and existing Catalog/Node/style contracts; render CSS
+    provenance as clearly separated visual groups without claiming real cascade behavior. Make
+    the editor Storybook composition open the workspace prototype by default.
+  - Scope: design-only prototype; existing examples remain available. Exclude variants and product
+    logic, new APIs, persistence, and real event management. One-off visual parts stay in the
+    page tree; extract reusable example components only when genuine reuse appears.
+  - Contracts: preserve current Example exports and IDs; add pages through the existing Catalog
+    shape. Keep source identities visually distinct (local, active class, inherited, global), keep
+    CSS property names fixed while showing editable value affordances, and represent context-menu
+    layer actions. Use no native form-element implementations in the Catalog mockup.
+  - Validation: Examples and Editor typechecks, canonical Example Catalog tests (66 files / 236
+    total tests in the full run), Storybook build, no-variant/API audit, candidate detector rerun,
+    and diff check passed.
 
 - [x] Refactor: decouple project/layer sidebar and inspector from Core.
   - Evidence: `ui/sidebar/layers` and `ui/sidebar/properties` receive `AppService`,
@@ -148,6 +230,10 @@ intact unless their responsibilities change:
 - `apps/editor/src/app-service/AppService.ts` (455 lines): one event-to-operation coordinator;
   its switch is the single dispatch boundary and its private helpers own related Catalog actions.
   Splitting cases into per-event services would scatter the operation contract again.
+- `packages/examples/src/facadeur-editor/components.ts` (688 lines): retain the non-header
+  definitions, schemas, preview defaults, and registry together as one cohesive Catalog component
+  set for the Facadeur design concepts. The responsive header lives in `header.ts` because its
+  breakpoint-based layout changes independently from the other design components.
 
 ## Latest verification
 
