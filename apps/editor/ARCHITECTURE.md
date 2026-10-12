@@ -12,7 +12,7 @@ The editor lives in `apps/editor` (npm name `@facadeur/editor`). This note docum
 ## Domain (`src/domain/`)
 
 Session, selection, viewport and tool state live in `src/domain/session/`. The session owns a
-`CoreController`; the active `ProjectCatalogModel` and open definition are read and mutated through
+`CoreController`; the active `ProjectCatalog` and open definition are read and mutated through
 that controller. `AppService` connects catalog persistence and definition operations to the
 `EditorCatalogPort`. React UI state such as selection, viewport focus, drag state and zoom remains
 in `EditorSession`.

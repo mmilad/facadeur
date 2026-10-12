@@ -3,10 +3,10 @@ import type {
   CoreController,
   DefaultKind,
   NodeDefinitionModel,
-  ProjectCatalogModel,
   Breakpoint,
   TokenTree,
 } from '@facadeur/core';
+import type { ProjectCatalog } from '@facadeur/domain';
 import type { LayerItem } from '../catalog/layer-tree';
 import type { StyleEditMode } from '../viewport/viewport-edit';
 
@@ -52,7 +52,7 @@ export interface EditorSnapshot {
 
 export interface EditorDesignSnapshot {
   tokens: TokenTree;
-  icons?: ProjectCatalogModel['icons'];
+  icons?: ProjectCatalog['icons'];
   breakpoints: Breakpoint[];
 }
 
@@ -83,5 +83,5 @@ export interface EditorSession {
 
 export interface EditorSessionOptions {
   core?: CoreController;
-  projectCatalog?: ProjectCatalogModel;
+  projectCatalog?: ProjectCatalog;
 }

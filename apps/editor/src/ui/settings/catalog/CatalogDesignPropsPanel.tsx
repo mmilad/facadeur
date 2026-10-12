@@ -2,7 +2,7 @@
 
 import { createCatalogUuid } from '@facadeur/core';
 import type { DesignPropDefinition } from '@facadeur/domain';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import type { AppService } from '../../../app-service';
 import type { EditorSession } from '../../../domain/session';
 import { Stack } from '../../components/layout';
@@ -22,12 +22,7 @@ export function CatalogDesignPropsPanel({
   surface: EditorSurface;
   onSelectSurface: (surface: EditorSurface) => void;
 }) {
-  const catalog = app.getCoreSnapshot().catalog;
-  const entries = useMemo(
-    () =>
-      Object.values(catalog.props ?? {}).sort((left, right) => left.name.localeCompare(right.name)),
-    [catalog.props],
-  );
+  const entries = app.getDesignProps().sort((left, right) => left.name.localeCompare(right.name));
   const [selectedId, setSelectedId] = useState(entries[0]?.uuid ?? '');
   const [query, setQuery] = useState('');
 
@@ -83,7 +78,7 @@ export function CatalogDesignPropsPanel({
   function removeSelected() {
     if (!selected) return;
     app.removeDesignProp(selected.uuid);
-    const next = Object.values(app.getCoreSnapshot().catalog.props ?? {})[0];
+    const next = app.getDesignProps()[0];
     setSelectedId(next?.uuid ?? '');
   }
 

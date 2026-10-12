@@ -208,5 +208,4 @@ export {
   projectCatalogJsonSchema,
   type NodeModel,
   type NodeDefinitionModel,
-  type ProjectCatalogModel,
 } from './schema/node-model/index';

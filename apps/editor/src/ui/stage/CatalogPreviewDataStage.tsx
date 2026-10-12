@@ -1,7 +1,6 @@
 'use client';
 
 import type { AppService } from '../../app-service';
-import { catalogDefinitionDisplayName } from '../../domain/catalog/display-name';
 import { CatalogPreviewFields } from './CatalogPreviewFields';
 
 /** Edits definition-level preview defaults (`config.previewData.fields`). */
@@ -19,7 +18,7 @@ export function CatalogPreviewDataStage({ app }: { app: AppService }) {
     );
   }
 
-  const title = catalogDefinitionDisplayName(coreSnap.catalog, definition);
+  const title = app.getDefinitionDisplayName(definition.uuid) ?? definition.name;
 
   return (
     <section

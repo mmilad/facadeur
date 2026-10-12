@@ -10,7 +10,6 @@ import {
   type FontPatch,
 } from '../../domain/edits/font-edit';
 import { fontFamilyTokens } from '@facadeur/core';
-import { tokensReferencingUuid } from '../../domain/edits/token-edit';
 import type { EditorSession, EditorSnapshot } from '../../domain/session';
 import { Table, type TableRowData } from '../settings/Table';
 import { TextControl } from '../controls/fields/index';
@@ -51,7 +50,7 @@ export function FontsDomainPanel({
   }
 
   function removeFont(font: Font) {
-    const refs = [...tokensReferencingUuid(snap.design.tokens, font.uuid)];
+    const refs = session.core.getTokensReferencingUUID(font.uuid);
     if (refs.length) {
       session.setNotice(
         `Cannot remove "${font.label}": {token:${font.uuid}} is referenced in ${refs.join(', ')}`,

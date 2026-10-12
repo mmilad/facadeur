@@ -24,23 +24,25 @@ export function CatalogSchemasPanel({
   surface: EditorSurface;
   onSelectSurface: (surface: EditorSurface) => void;
 }) {
-  const catalog = app.getCoreSnapshot().catalog;
+  const schemas = app.getSchemas();
   const entries = useMemo(
     () =>
-      Object.entries(catalog.schemas ?? {}).sort(([idA, a], [idB, b]) =>
-        catalogSchemaTitle(a, idA).localeCompare(catalogSchemaTitle(b, idB)),
-      ),
-    [catalog.schemas],
+      schemas
+        .map(({ uuid, schema }) => [uuid, schema] as const)
+        .sort(([idA, a], [idB, b]) =>
+          catalogSchemaTitle(a, idA).localeCompare(catalogSchemaTitle(b, idB)),
+        ),
+    [schemas],
   );
   const [selectedId, setSelectedId] = useState(entries[0]?.[0] ?? '');
   const [query, setQuery] = useState('');
 
   useEffect(() => {
     if (!selectedId && entries[0]?.[0]) setSelectedId(entries[0][0]);
-    if (selectedId && !catalog.schemas?.[selectedId] && entries[0]?.[0]) {
+    if (selectedId && !schemas.some(({ uuid }) => uuid === selectedId) && entries[0]?.[0]) {
       setSelectedId(entries[0][0]);
     }
-  }, [entries, selectedId, catalog.schemas]);
+  }, [entries, selectedId, schemas]);
 
   const needle = query.trim().toLowerCase();
   const visibleEntries = useMemo(
@@ -55,7 +57,7 @@ export function CatalogSchemasPanel({
     [entries, needle],
   );
 
-  const selected = selectedId ? catalog.schemas?.[selectedId] : undefined;
+  const selected = schemas.find(({ uuid }) => uuid === selectedId)?.schema;
 
   function addSchema() {
     const id = createCatalogUuid();
@@ -101,7 +103,7 @@ export function CatalogSchemasPanel({
     try {
       app.removeSchema(selectedId);
       await app.saveSchemas();
-      const next = Object.keys(app.getCoreSnapshot().catalog.schemas ?? {})[0];
+      const next = app.getSchemas()[0]?.uuid;
       setSelectedId(next ?? '');
     } catch (failure) {
       session.setNotice(

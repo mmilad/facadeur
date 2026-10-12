@@ -21,5 +21,5 @@ export {
   nodeDefinitionKindSchema,
   type NodeDefinitionModel,
 } from './node-definition';
-export { projectCatalogSchema, type ProjectCatalogModel } from './catalog';
+export { projectCatalogSchema } from './catalog';
 export { projectCatalogJsonSchema } from './json-schema';

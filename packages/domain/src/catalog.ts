@@ -25,6 +25,4 @@ export interface ProjectCatalog {
   readonly globalStyles?: GlobalStyles;
 }
 
-export type ProjectCatalogModel = ProjectCatalog;
-
 export type CatalogMapKey = 'atoms' | 'components' | 'pages';

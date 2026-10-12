@@ -44,9 +44,7 @@ export function useStageViewportBoard({
   const renderedGenerationRef = useRef<number | null>(null);
   currentRevisionRef.current = designRevision;
   currentGenerationRef.current = generation;
-  const breakpointSignature = JSON.stringify(
-    app.getCoreSnapshot().catalog.globalStyles?.breakpoints ?? null,
-  );
+  const breakpointSignature = JSON.stringify(app.getDesignSnapshot().breakpoints);
 
   useEffect(() => {
     const stageEl = stageRef.current;
@@ -57,7 +55,7 @@ export function useStageViewportBoard({
     const board = createViewportBoard({
       parent: stageEl,
       title: coreSnap.openDefinition.name,
-      catalog: coreSnap.catalog,
+      breakpoints: app.getActiveBreakpoints(),
     });
     boardRef.current = board;
     setBoardRevision((revision) => revision + 1);

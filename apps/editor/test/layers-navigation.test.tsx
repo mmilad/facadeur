@@ -6,6 +6,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { useMemo, useSyncExternalStore } from 'react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
+import { CoreController } from '@facadeur/core';
 import { createExampleCatalog, exampleIds } from '@facadeur/examples';
 import type { Node } from '@facadeur/domain';
 import { createAppService } from '../src/app-service';
@@ -70,7 +71,9 @@ describe('catalog layer navigation', () => {
       },
     };
 
-    const tree = catalogLayerTree('definition-1', root, catalog);
+    const core = new CoreController(catalog);
+    core.openDefinition(exampleIds.components.card.definition);
+    const tree = catalogLayerTree('definition-1', root, core);
 
     expect(tree.name).toBe('root');
     expect(tree.children.map(({ name }) => name)).toEqual(['Primary action', 'input']);

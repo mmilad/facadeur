@@ -3,14 +3,12 @@ import {
   createCatalogUuid,
   deleteCatalogDefinitionRecord,
   type NodeDefinitionModel,
-  type ProjectCatalogModel,
 } from '@facadeur/core';
+import type { ProjectCatalog } from '@facadeur/domain';
 import type { EditorCatalogPort } from './catalog-port';
 
 /** In-memory catalog port for Storybook and the local editor preview. */
-export function createInMemoryCatalogPort(
-  getCatalog: () => ProjectCatalogModel,
-): EditorCatalogPort {
+export function createInMemoryCatalogPort(getCatalog: () => ProjectCatalog): EditorCatalogPort {
   return {
     save: async (catalog) => catalog,
     createDefinition: async (kind, definition) => {

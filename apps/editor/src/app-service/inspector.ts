@@ -1,13 +1,4 @@
-import {
-  findNodeByUuid,
-  listCatalogDefinitions,
-  readTokenTree,
-  tokenReferenceValue,
-  type CoreController,
-  type CoreSnapshot,
-  type InspectorFormModel,
-} from '@facadeur/core';
-import { tokenCustomProperty } from '@facadeur/core';
+import { findNodeByUuid, type CoreController, type InspectorFormModel } from '@facadeur/core';
 import { getPath } from '@facadeur/form';
 
 export interface InspectorViewModel extends InspectorFormModel {
@@ -71,7 +62,7 @@ export class InspectorService {
       },
       selectionKind,
       previewDataVisible: hasSchema && selectionKind !== 'element',
-      styleSuggestions: collectProjectStyleSuggestions(snapshot.catalog),
+      styleSuggestions: this.core.getProjectStyleSuggestions(),
     };
   }
 
@@ -108,39 +99,6 @@ export class InspectorService {
       this.listeners.delete(listener);
     };
   }
-}
-
-type CatalogNode = CoreSnapshot['catalog']['atoms'][string]['root'];
-
-function collectProjectStyleSuggestions(catalog: CoreSnapshot['catalog']) {
-  const valuesByKey = new Map<string, Set<string>>();
-  const tokenOptions = [...readTokenTree(catalog.tokens ?? {}).tokens.values()].map((token) => ({
-    value: tokenReferenceValue(token.uuid),
-    label: tokenCustomProperty(token.path),
-    description: token.path,
-    group: 'Design tokens',
-  }));
-  const visit = (node: CatalogNode) => {
-    for (const [key, value] of Object.entries(node.style ?? {})) {
-      if (!value.trim()) continue;
-      const values = valuesByKey.get(key) ?? new Set<string>();
-      values.add(value);
-      valuesByKey.set(key, values);
-    }
-    for (const child of node.dom.children ?? []) visit(child);
-  };
-  for (const { definition } of listCatalogDefinitions(catalog)) visit(definition.root);
-
-  return {
-    keys: [...valuesByKey.keys()].sort((left, right) => left.localeCompare(right)),
-    valuesByKey: Object.fromEntries(
-      [...valuesByKey].map(([key, values]) => [
-        key,
-        [...values].sort((left, right) => left.localeCompare(right)),
-      ]),
-    ),
-    options: tokenOptions,
-  };
 }
 
 function stringRecord(value: unknown) {

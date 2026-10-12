@@ -100,9 +100,7 @@ export function EditorShell({
         <button
           type="button"
           className="text-button"
-          onClick={() =>
-            download('catalog.json', JSON.stringify(app.getCoreSnapshot().catalog, null, 2))
-          }
+          onClick={() => download('catalog.json', JSON.stringify(app.getCatalog(), null, 2))}
         >
           Export catalog
         </button>

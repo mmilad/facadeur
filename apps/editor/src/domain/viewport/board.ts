@@ -1,6 +1,5 @@
 /** Editor canvas: one iframe per active project breakpoint. */
-import { breakpointLabel, type Breakpoint, type ProjectCatalogModel } from '@facadeur/core';
-import { activeBreakpoints } from '@facadeur/core';
+import { breakpointLabel, type Breakpoint } from '@facadeur/core';
 import { createFrameHost, type FrameHost } from './frame-host';
 
 export interface ViewportFrame {
@@ -28,18 +27,17 @@ export interface ViewportBoard {
 export function createViewportBoard(options: {
   parent: HTMLElement;
   title: string;
-  catalog: ProjectCatalogModel;
+  breakpoints: readonly Breakpoint[];
 }): ViewportBoard {
   const ownerDocument = options.parent.ownerDocument;
   const row = ownerDocument.createElement('div');
   row.className = 'viewport-frames';
   options.parent.append(row);
 
-  const breakpoints = activeBreakpoints(options.catalog.globalStyles?.breakpoints);
   const frames: ViewportFrame[] = [];
   let destroyed = false;
 
-  for (const breakpoint of breakpoints) {
+  for (const breakpoint of options.breakpoints) {
     const column = ownerDocument.createElement('section');
     column.className = 'viewport-frame';
     column.dataset.breakpoint = breakpoint.uuid;

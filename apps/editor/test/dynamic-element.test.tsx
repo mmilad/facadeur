@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import { cleanup, render } from '@testing-library/react';
-import { emptyProjectCatalog, type ElementBuildConfig } from '@facadeur/core';
+import { CoreController, emptyProjectCatalog, type ElementBuildConfig } from '@facadeur/core';
 import { createPortal } from 'react-dom';
 import { act } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -147,7 +147,7 @@ describe('DynamicElement', () => {
       board = createViewportBoard({
         parent: boardHost!,
         title: 'Preview',
-        catalog: emptyProjectCatalog(),
+        breakpoints: new CoreController(emptyProjectCatalog()).getActiveBreakpoints(),
       });
     });
     const frameDocument = board!.frames()[0]!.host.contentDocument();

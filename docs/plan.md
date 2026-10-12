@@ -37,6 +37,22 @@ completed change logs out of this file.
 
 ## Remaining follow-up
 
+- [x] Refactor: route Catalog queries through Core.
+  - Evidence: Editor session, stage, schema/props panels, layer tree, and Inspector still read
+    Catalog fields directly or pass the whole Catalog to helpers such as viewport-board creation,
+    definition labeling, and layer tag resolution. `ProjectCatalogModel` is only a type alias for
+    `ProjectCatalog`.
+  - Action: add focused CoreController queries for active/configured breakpoints, definition
+    lookup/display names and summaries, effective node tags, schemas, design props, design preview
+    data, and project style suggestions. Migrate consumers; remove the Editor Catalog query helpers
+    and the `ProjectCatalogModel` alias. Keep editor-only presentation and snapshot formatting in
+    Editor. Keep raw Catalog access only for explicit whole-document operations such as export,
+    initial fixture input, dirty comparison, and the Catalog port.
+  - Contracts: preserve UUID identity, schema-derived display-name fallback, recursive instance
+    tag resolution and cycle fallback, breakpoint ordering/enabled filtering, sorted UI labels,
+    and Catalog serialization. Do not change Catalog shape or add compatibility shims.
+  - Validation: focused Core query and Editor behavior coverage, workspace typecheck and full tests,
+    consumer audit, detector rerun, formatting, and `git diff --check`.
 - [ ] Decide whether Settings token labels/search should use the same CSS custom-property names as
       compiled styles. The current preview uses `--fcdr-` plus a hyphenated token path, while Core's
       compiler naming is different. After the display/search contract is decided, consolidate naming
@@ -47,14 +63,14 @@ completed change logs out of this file.
 The maintained-source candidate scan found two size signals; both are cohesive and should remain
 intact unless their responsibilities change:
 
-- `packages/core/src/controller/project/controller.ts` (451 lines): the single Core catalog
-  coordination facade.
+- `packages/core/src/controller/project/controller.ts` (528 lines): the single Core catalog
+  coordination facade, including its public query surface. Query implementations live in the
+  adjacent `catalog/queries.ts` module.
 - `packages/examples/src/form-controls-section/dom.ts` (526 lines): one canonical reusable
   Catalog fixture tree.
 
 ## Latest verification
 
-The latest cleanup batch passed `pnpm schema`, workspace typecheck, and the Storybook production
-build. Formatting, source/import audits, candidate review, and `git diff --check` also passed.
-The test suite was not rerun for that final documentation/schema-export batch. The Storybook build
-still prints existing Vite `use client`, sourcemap, and large-chunk warnings.
+The latest batch passed workspace typecheck and the full test suite (64 files, 231 tests).
+Formatting, source/import audits, candidate review, and `git diff --check` also passed. The
+Storybook build still prints existing Vite `use client`, sourcemap, and large-chunk warnings.

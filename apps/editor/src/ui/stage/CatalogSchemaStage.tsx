@@ -2,9 +2,7 @@
 
 import type { FieldValue } from '@facadeur/core';
 import type { JsonSchemaObject } from '@facadeur/domain';
-import { useMemo } from 'react';
 import type { AppService } from '../../app-service';
-import { catalogDefinitionDisplayName } from '../../domain/catalog/display-name';
 import { catalogSchemaTitle } from '../../domain/catalog/schema-display';
 import type { EditorSession } from '../../domain/session';
 import { Stack } from '../components/layout';
@@ -78,19 +76,18 @@ export function CatalogSchemaStage({
   const previewFields = (effective?.previewDefaults ??
     definition?.config?.previewData?.fields ??
     {}) as Record<string, FieldValue>;
-  const title = definition ? catalogDefinitionDisplayName(coreSnap.catalog, definition) : 'Schema';
+  const title = definition ? (app.getDefinitionDisplayName(definition.uuid) ?? 'Schema') : 'Schema';
 
-  const schemaEntries = useMemo(
-    () =>
-      Object.entries(coreSnap.catalog.schemas ?? {}).sort(([idA, a], [idB, b]) =>
-        catalogSchemaTitle(a, idA).localeCompare(catalogSchemaTitle(b, idB)),
-      ),
-    [coreSnap.catalog.schemas],
-  );
+  const schemaEntries = app
+    .getSchemas()
+    .map(({ uuid, schema }) => [uuid, schema] as const)
+    .sort(([idA, a], [idB, b]) =>
+      catalogSchemaTitle(a, idA).localeCompare(catalogSchemaTitle(b, idB)),
+    );
 
   const schemaRef = definition?.schema.kind === 'ref' ? definition.schema.uuid : null;
   const selectValue = schemaRef ?? INLINE_SCHEMA_VALUE;
-  const selectedShared = schemaRef ? coreSnap.catalog.schemas?.[schemaRef] : undefined;
+  const selectedShared = schemaRef ? app.getSchema(schemaRef) : undefined;
   const propertyRows = schemaPropertyRows(effective?.schema ?? resolved, effective?.origins);
 
   if (!definition) {
@@ -106,7 +103,7 @@ export function CatalogSchemaStage({
       if (next === INLINE_SCHEMA_VALUE) {
         const seed =
           resolved ??
-          emptyObjectSchema(catalogDefinitionDisplayName(coreSnap.catalog, definition!));
+          emptyObjectSchema(app.getDefinitionDisplayName(definition!.uuid) ?? definition!.name);
         await app.patchDefinition(definition!.uuid, {
           schema: { kind: 'inline', schema: seed },
         });

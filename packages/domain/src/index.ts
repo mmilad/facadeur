@@ -16,7 +16,7 @@ export type {
   NodeDefinitionKind,
   PreviewData,
 } from './node';
-export type { CatalogMapKey, DefinitionMap, ProjectCatalog, ProjectCatalogModel } from './catalog';
+export type { CatalogMapKey, DefinitionMap, ProjectCatalog } from './catalog';
 export type {
   Breakpoint,
   BreakpointUuid,

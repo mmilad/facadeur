@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, type DragEvent } from 'react';
 import { createPortal } from 'react-dom';
 import type { AppService } from '../../../app-service';
-import { catalogDefinitionDisplayName } from '../../../domain/catalog/display-name';
 import type { DropZone } from '../../../domain/catalog/catalog-layer-move';
 import type { LayerItem } from '../../../domain/catalog/layer-tree';
 import type { EditorSession, EditorSnapshot } from '../../../domain/session';
@@ -23,7 +22,7 @@ export function CatalogLayersPanel({
   const layers = snap.layers;
   const definition = snap.openDefinition;
   const title = definition
-    ? catalogDefinitionDisplayName(app.getCoreSnapshot().catalog, definition)
+    ? (app.getDefinitionDisplayName(definition.uuid) ?? definition.name)
     : 'Design';
   const [over, setOver] = useState<{ id: string; zone: DropZone } | null>(null);
   const [contextLayer, setContextLayer] = useState<{

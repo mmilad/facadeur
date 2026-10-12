@@ -33,7 +33,18 @@ import {
 import { insertCatalogNode, moveCatalogNode, removeCatalogNode } from './catalog/tree-ops';
 import type { InspectorFormChangeTarget } from './inspector-form-change';
 import { emptyProjectCatalog, validateProjectCatalog } from './catalog/validate';
+import {
+  definitionDisplayName,
+  definitionSummaries,
+  effectiveNodeTagName,
+  projectStyleSuggestions,
+  tokenByReference,
+  tokenByUuid,
+  tokenReferencePaths,
+} from './catalog/queries';
 import { NodeController } from './node/controller';
+import { activeBreakpoints, configuredBreakpoints } from '../../tokens/resolve';
+import { emptyTokenTree } from '../style/tokens/global/tree';
 
 /**
  * Single source of truth for {@link ProjectCatalog} and catalog editing selection.
@@ -67,6 +78,72 @@ export class CoreController implements CoreControllerHost {
       openDefinition: openDefinition ? structuredClone(openDefinition) : null,
       selectedNodeUuid: this.selectedNodeUuid,
     };
+  }
+
+  getDefinition(uuid: string) {
+    const located = findDefinition(this.catalog, uuid);
+    return located ? { ...located, definition: structuredClone(located.definition) } : null;
+  }
+
+  getDefinitionDisplayName(uuid: string) {
+    const definition = findDefinition(this.catalog, uuid)?.definition;
+    return definition ? definitionDisplayName(this.catalog, definition) : null;
+  }
+
+  getDefinitionSummaries() {
+    return definitionSummaries(this.catalog);
+  }
+
+  getEffectiveNodeTagName(nodeUuid: string) {
+    const definition = this.openDefinitionId
+      ? findDefinition(this.catalog, this.openDefinitionId)?.definition
+      : undefined;
+    const node = definition ? findNodeByUuid(definition.root, nodeUuid) : undefined;
+    return node ? effectiveNodeTagName(this.catalog, node) : null;
+  }
+
+  getActiveBreakpoints() {
+    return activeBreakpoints(this.catalog.globalStyles?.breakpoints);
+  }
+
+  getDesignSnapshot() {
+    return {
+      tokens: structuredClone(this.catalog.tokens ?? emptyTokenTree()),
+      ...(this.catalog.icons ? { icons: structuredClone(this.catalog.icons) } : {}),
+      breakpoints: configuredBreakpoints(this.catalog.globalStyles?.breakpoints),
+    };
+  }
+
+  getSchemas() {
+    return Object.entries(this.catalog.schemas ?? {}).map(([uuid, schema]) => ({
+      uuid,
+      schema: structuredClone(schema),
+    }));
+  }
+
+  getSchema(uuid: string) {
+    const schema = this.catalog.schemas?.[uuid];
+    return schema ? structuredClone(schema) : undefined;
+  }
+
+  getDesignProps() {
+    return Object.values(this.catalog.props ?? {}).map((prop) => structuredClone(prop));
+  }
+
+  getProjectStyleSuggestions() {
+    return projectStyleSuggestions(this.catalog);
+  }
+
+  getTokenByUUID(uuid: string) {
+    return tokenByUuid(this.catalog, uuid);
+  }
+
+  getTokenByReference(value: unknown) {
+    return tokenByReference(this.catalog, value);
+  }
+
+  getTokensReferencingUUID(uuid: string) {
+    return tokenReferencePaths(this.catalog, uuid);
   }
 
   replaceCatalog(catalog: unknown) {

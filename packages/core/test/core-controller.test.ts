@@ -4,6 +4,7 @@ import {
   resolveDefinitionToElementBuildConfig,
   previewFieldsForNode,
   inspectorInputsForNode,
+  readTokenTree,
   type InspectorFormField,
 } from '../src/index';
 import { createExampleCatalog, exampleIds } from '@facadeur/examples';
@@ -32,6 +33,29 @@ function createControllerCatalog() {
 }
 
 describe('CoreController', () => {
+  it('answers Catalog and token queries through its controller API', () => {
+    const catalog = createControllerCatalog();
+    const core = new CoreController(catalog);
+    core.openDefinition(atomUuid);
+    const token = readTokenTree(catalog.tokens ?? {})
+      .tokens.values()
+      .next().value;
+
+    expect(core.getDefinition(atomUuid)?.definition.name).toBe('Image');
+    expect(core.getDefinitionDisplayName(atomUuid)).toBe('Image');
+    expect(core.getDefinitionSummaries()).toContainEqual({
+      uuid: atomUuid,
+      name: 'Image',
+      kind: 'atom',
+    });
+    expect(core.getEffectiveNodeTagName(rootUuid)).toBe('img');
+    expect(core.getActiveBreakpoints().length).toBeGreaterThan(0);
+    expect(token).toBeDefined();
+    expect(core.getTokenByUUID(token!.uuid)?.uuid).toBe(token!.uuid);
+    expect(core.getTokenByReference(`{token:${token!.uuid}}`)?.uuid).toBe(token!.uuid);
+    expect(core.getTokenByReference('not-a-token')).toBeUndefined();
+  });
+
   it('opens a definition and resolves preview fields', () => {
     const catalog = createControllerCatalog();
     const core = new CoreController(catalog);

@@ -330,7 +330,6 @@ export function createTokenTableRow({
         {token.family !== 'font' ? (
           <RemoveTokenButton
             session={session}
-            snap={snap}
             family={token.family}
             uuid={token.uuid}
             label={displayLabel}

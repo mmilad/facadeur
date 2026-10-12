@@ -2,12 +2,11 @@
 
 import { useMemo } from 'react';
 import type { AppService } from '../../app-service';
-import { catalogDefinitionDisplayName } from '../../domain/catalog/display-name';
 
 export function CatalogCodeStage({ app, generation }: { app: AppService; generation: number }) {
   const coreSnap = app.getCoreSnapshot();
   const definition = coreSnap.openDefinition;
-  const title = definition ? catalogDefinitionDisplayName(coreSnap.catalog, definition) : 'Code';
+  const title = definition ? (app.getDefinitionDisplayName(definition.uuid) ?? 'Code') : 'Code';
 
   const buildConfig = useMemo(() => app.buildOpenDefinition(), [app, definition, generation]);
 

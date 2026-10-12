@@ -2,13 +2,11 @@ import {
   CoreController,
   DocumentError,
   emptyProjectCatalog,
-  findDefinition,
   findNodeByUuid,
   type CatalogDesignCommand,
   type DefaultKind,
 } from '@facadeur/core';
 import { catalogAssetSummaries } from '../catalog/asset-list';
-import { activeBreakpoints } from '@facadeur/core';
 import { buildCatalogEditorSnapshot, initialCatalogAsset } from './catalog-snapshot';
 import type {
   EditorDrag,
@@ -37,7 +35,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   let revision = 0;
   const catalogBaseline = JSON.stringify(core.getSnapshot().catalog);
   function defaultFocusViewportId() {
-    const breakpoints = activeBreakpoints(core.getSnapshot().catalog.globalStyles?.breakpoints);
+    const breakpoints = core.getActiveBreakpoints();
     return breakpoints[0]?.uuid ?? null;
   }
   let focusViewportId: string | null = defaultFocusViewportId();
@@ -80,7 +78,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   }
 
   function openAssetCore(id: string) {
-    const located = findDefinition(core.getSnapshot().catalog, id);
+    const located = core.getDefinition(id);
     if (!located) {
       core.closeDefinition();
       notice = { tone: 'error', text: `Unknown catalog definition "${id}"` };
@@ -122,7 +120,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     }
   }
 
-  const initial = initialCatalogAsset(catalogAssetSummaries(core.getSnapshot().catalog));
+  const initial = initialCatalogAsset(catalogAssetSummaries(core));
   if (initial) {
     workspace = initial.kind;
     openAssetCore(initial.id);
@@ -133,16 +131,14 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   const unsubCore = core.subscribe(() => {
     generation += 1;
     designRevision += 1;
-    if (openId && !findDefinition(core.getSnapshot().catalog, openId)) {
+    if (openId && !core.getDefinition(openId)) {
       openId = '';
       selectedNodeId = null;
       selectedRenderId = null;
     }
     if (
       focusViewportId &&
-      !activeBreakpoints(core.getSnapshot().catalog.globalStyles?.breakpoints).some(
-        (item) => item.uuid === focusViewportId,
-      )
+      !core.getActiveBreakpoints().some((item) => item.uuid === focusViewportId)
     ) {
       focusViewportId = defaultFocusViewportId();
     }

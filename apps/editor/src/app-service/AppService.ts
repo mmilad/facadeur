@@ -1,6 +1,6 @@
-import type { CoreController, NodeDefinitionModel, ProjectCatalogModel } from '@facadeur/core';
+import type { CoreController, NodeDefinitionModel } from '@facadeur/core';
 import type { DesignPropDefinition, FieldValue, JsonSchemaObject, Node } from '@facadeur/domain';
-import { catalogKindForDefinition, createCatalogUuid } from '@facadeur/core';
+import { createCatalogUuid } from '@facadeur/core';
 import type { EditorSession } from '../domain/session/types';
 import type { CatalogDefinitionKind, EditorCatalogPort } from '../domain/project/catalog-port';
 import { InspectorService } from './inspector';
@@ -40,6 +40,34 @@ export class AppService {
     return this.core.getSnapshot();
   }
 
+  getCatalog() {
+    return this.core.getSnapshot().catalog;
+  }
+
+  getDefinitionDisplayName(uuid: string) {
+    return this.core.getDefinitionDisplayName(uuid);
+  }
+
+  getActiveBreakpoints() {
+    return this.core.getActiveBreakpoints();
+  }
+
+  getDesignSnapshot() {
+    return this.core.getDesignSnapshot();
+  }
+
+  getSchemas() {
+    return this.core.getSchemas();
+  }
+
+  getSchema(uuid: string) {
+    return this.core.getSchema(uuid);
+  }
+
+  getDesignProps() {
+    return this.core.getDesignProps();
+  }
+
   buildOpenDefinition() {
     return this.core.node.element.buildOpenDefinition();
   }
@@ -76,8 +104,7 @@ export class AppService {
     return this.getSnapshot().design;
   }
 
-  async persistCatalog(catalog?: ProjectCatalogModel) {
-    if (catalog) this.core.replaceCatalog(catalog);
+  async persistCatalog() {
     await this.core.persist(this.catalogPort);
   }
 
@@ -90,9 +117,9 @@ export class AppService {
   }
 
   async patchDefinition(uuid: string, patch: Partial<NodeDefinitionModel>) {
-    const kind = catalogKindForDefinition(this.core.getSnapshot().catalog, uuid);
-    if (!kind) throw new Error(`Unknown catalog definition "${uuid}"`);
-    this.core.patchDefinition(kind, uuid, patch);
+    const located = this.core.getDefinition(uuid);
+    if (!located) throw new Error(`Unknown catalog definition "${uuid}"`);
+    this.core.patchDefinition(located.kind, uuid, patch);
   }
 
   async deleteDefinition(uuid: string) {

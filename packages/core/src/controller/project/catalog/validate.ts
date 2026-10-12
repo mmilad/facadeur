@@ -1,6 +1,7 @@
 import { Value } from '@sinclair/typebox/value';
 import { DocumentError } from '../../../document/errors';
-import { projectCatalogSchema, type ProjectCatalogModel } from '../../../schema/node-model/index';
+import { projectCatalogSchema } from '../../../schema/node-model/index';
+import type { ProjectCatalog } from '@facadeur/domain';
 import { sanitizeProjectCatalog } from './sanitize-field-values';
 import { findDefinition, listCatalogDefinitions } from './ops';
 import { effectiveSchemaForDefinition } from './field-contract';
@@ -19,12 +20,12 @@ function catalogSchemaErrorMessage(data: unknown): string {
   }
 }
 
-export function validateProjectCatalog(data: unknown): ProjectCatalogModel {
+export function validateProjectCatalog(data: unknown): ProjectCatalog {
   const sanitized =
-    data && typeof data === 'object' ? sanitizeProjectCatalog(data as ProjectCatalogModel) : data;
+    data && typeof data === 'object' ? sanitizeProjectCatalog(data as ProjectCatalog) : data;
   const catalog =
     sanitized && typeof sanitized === 'object'
-      ? ensureCatalogFieldIds(sanitized as ProjectCatalogModel).catalog
+      ? ensureCatalogFieldIds(sanitized as ProjectCatalog).catalog
       : sanitized;
 
   try {
@@ -36,12 +37,12 @@ export function validateProjectCatalog(data: unknown): ProjectCatalogModel {
     throw new DocumentError('schema', catalogSchemaErrorMessage(catalog));
   }
 
-  assertCatalogRefIntegrity(catalog as ProjectCatalogModel);
-  assertEffectiveCatalogFields(catalog as ProjectCatalogModel);
-  return catalog as ProjectCatalogModel;
+  assertCatalogRefIntegrity(catalog as ProjectCatalog);
+  assertEffectiveCatalogFields(catalog as ProjectCatalog);
+  return catalog as ProjectCatalog;
 }
 
-function assertEffectiveCatalogFields(catalog: ProjectCatalogModel) {
+function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
   const definitions = listCatalogDefinitions(catalog).map(({ definition }) => definition);
   const validateRecord = (
     values: Readonly<Record<string, unknown>> | undefined,
@@ -161,7 +162,7 @@ function schemaPathExists(schema: Record<string, unknown> | null, path: string) 
 }
 
 /** Ensure schema refs and definitionRef targets exist in the catalog. */
-export function assertCatalogRefIntegrity(catalog: ProjectCatalogModel): void {
+export function assertCatalogRefIntegrity(catalog: ProjectCatalog): void {
   const schemaIds = new Set(Object.keys(catalog.schemas ?? {}));
   const definitionIds = new Set<string>([
     ...Object.keys(catalog.atoms),
@@ -206,7 +207,7 @@ export function assertCatalogRefIntegrity(catalog: ProjectCatalogModel): void {
   assertDefinitionRefsAcyclic(catalog);
 }
 
-function assertDefinitionRefsAcyclic(catalog: ProjectCatalogModel) {
+function assertDefinitionRefsAcyclic(catalog: ProjectCatalog) {
   const definitions = new Map([
     ...Object.entries(catalog.atoms),
     ...Object.entries(catalog.components),
@@ -235,6 +236,6 @@ function assertDefinitionRefsAcyclic(catalog: ProjectCatalogModel) {
   for (const uuid of definitions.keys()) visitDefinition(uuid);
 }
 
-export function emptyProjectCatalog(): ProjectCatalogModel {
+export function emptyProjectCatalog(): ProjectCatalog {
   return { atoms: {}, components: {}, pages: {} };
 }

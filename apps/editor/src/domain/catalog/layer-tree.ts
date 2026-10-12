@@ -1,4 +1,4 @@
-import { findDefinition, type NodeModel, type ProjectCatalogModel } from '@facadeur/core';
+import type { CoreController, NodeModel } from '@facadeur/core';
 
 export interface LayerItem {
   id: string;
@@ -31,27 +31,18 @@ function layerNameForNode(node: NodeModel, root: boolean): string {
 export function catalogLayerTree(
   definitionUuid: string,
   root: NodeModel,
-  catalog: ProjectCatalogModel,
+  core: CoreController,
 ): LayerItem {
   const visit = (node: NodeModel, isRoot = false): LayerItem => ({
     id: node.uuid,
     address: `node:${node.uuid}`,
     documentId: definitionUuid,
     name: layerNameForNode(node, isRoot),
-    tagName: tagNameForNode(node, catalog),
+    tagName: core.getEffectiveNodeTagName(node.uuid) ?? node.dom.tagName,
     type: layerTypeForNode(node),
     children: (node.dom.children ?? []).map((child) => visit(child)),
     virtual: false,
     fieldEditable: false,
   });
   return visit(root, true);
-}
-
-function tagNameForNode(node: NodeModel, catalog: ProjectCatalogModel, seen = new Set<string>()) {
-  const definitionRef = node.config?.definitionRef;
-  if (!definitionRef || seen.has(definitionRef)) return node.dom.tagName;
-  const target = findDefinition(catalog, definitionRef)?.definition;
-  if (!target) return node.dom.tagName;
-  const nextSeen = new Set(seen).add(definitionRef);
-  return tagNameForNode(target.root, catalog, nextSeen);
 }

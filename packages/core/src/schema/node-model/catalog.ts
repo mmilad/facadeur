@@ -39,5 +39,3 @@ export const projectCatalogSchema = Type.Object(
   },
   { additionalProperties: false },
 );
-
-export type { ProjectCatalogModel } from '@facadeur/domain';

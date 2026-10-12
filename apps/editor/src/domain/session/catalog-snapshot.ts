@@ -1,4 +1,4 @@
-import { defaultBreakpoints, emptyTokenTree, type CoreController } from '@facadeur/core';
+import type { CoreController } from '@facadeur/core';
 import { catalogAssetSummaries } from '../catalog/asset-list';
 import { catalogLayerTree } from '../catalog/layer-tree';
 import type { AssetSummary, EditorDrag, EditorNotice, EditorSnapshot, EditorTool } from './types';
@@ -24,17 +24,12 @@ export function buildCatalogEditorSnapshot(input: {
   editTarget: StyleEditMode;
 }): EditorSnapshot {
   const coreSnap = input.core.getSnapshot();
-  const catalog = coreSnap.catalog;
   const openDefinition = coreSnap.openDefinition;
-  const design = {
-    tokens: catalog.tokens ?? emptyTokenTree(),
-    ...(catalog.icons ? { icons: catalog.icons } : {}),
-    breakpoints: [...(catalog.globalStyles?.breakpoints ?? defaultBreakpoints)],
-  };
-  const catalogAssets = catalogAssetSummaries(catalog);
+  const design = input.core.getDesignSnapshot();
+  const catalogAssets = catalogAssetSummaries(input.core);
   const assets = catalogAssets.filter((asset) => asset.kind === input.workspace);
   const layers = openDefinition
-    ? catalogLayerTree(openDefinition.uuid, openDefinition.root, catalog)
+    ? catalogLayerTree(openDefinition.uuid, openDefinition.root, input.core)
     : null;
 
   return {

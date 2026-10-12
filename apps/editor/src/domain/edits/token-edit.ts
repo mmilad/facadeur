@@ -160,19 +160,6 @@ export function resetTokenBreakpoint(
   }
 }
 
-export function tokensReferencingUuid(tree: unknown, uuid: string): string[] {
-  const paths: string[] = [];
-  for (const token of readTokenTree(tree).tokens.values()) {
-    if (
-      containsTokenReference(token.value, uuid) ||
-      Object.values(token.breakpoints).some((value) => containsTokenReference(value, uuid))
-    ) {
-      paths.push(token.path);
-    }
-  }
-  return paths.sort((left, right) => left.localeCompare(right));
-}
-
 function tokenRecord(tree: TokenTree, family: DesignTokenFamily, uuid: string): TokenDefinition {
   const token = readTokenTree(tree).tokens.get(uuid);
   if (!token || token.family !== family) throw new Error(`Missing ${family} token ${uuid}`);
