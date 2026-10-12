@@ -3,10 +3,8 @@
 import { useEffect, useMemo } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { createExampleCatalog, card } from '@facadeur/examples';
-import { createAppService } from '../app-service';
-import { createInMemoryCatalogPort } from '../domain/project/in-memory-catalog-port';
 import { createEditorSession } from '../domain/session/create-editor-session';
-import { EditorShell } from '../ui/shell/EditorShell';
+import { EditorHost } from './EditorHost';
 import type { EditorNavigationAdapter } from '../ui/shell/navigation/navigation-adapter';
 
 export function EditorBootstrap() {
@@ -26,15 +24,10 @@ export function EditorBootstrap() {
     const session = createEditorSession({ projectCatalog: createExampleCatalog() });
     session.openAsset(card.uuid);
     session.selectNode(card.root.uuid);
-    const app = createAppService({
-      core: session.core,
-      session,
-      catalogPort: createInMemoryCatalogPort(() => session.core.getSnapshot().catalog),
-    });
-    return { app, session };
+    return { session };
   }, []);
 
   useEffect(() => () => editor.session.destroy(), [editor]);
 
-  return <EditorShell session={editor.session} app={editor.app} navigation={navigation} />;
+  return <EditorHost session={editor.session} navigation={navigation} />;
 }

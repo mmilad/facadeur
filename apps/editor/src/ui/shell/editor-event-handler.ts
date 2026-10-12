@@ -4,7 +4,7 @@ import type { EditorEvent } from '../../domain/sidebar/events';
 import { EditorEventType } from '../../domain/sidebar/events';
 import { isDesignDomain, isEditorSurfaceId, type EditorSurface } from '../design/design-domain';
 
-/** Coordinates root-only navigation and delegates editor operations to AppService. */
+/** Handles host-only navigation and delegates editor operations to AppService. */
 export function createEditorEventHandler(options: {
   app: AppService;
   session: EditorSession;

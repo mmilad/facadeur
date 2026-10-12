@@ -9,7 +9,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { findNodeByUuid } from '@facadeur/core';
 import { createExampleCatalog, exampleIds } from '@facadeur/examples';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
-import { EditorShell } from '../src/ui/shell/EditorShell';
+import { EditorHost } from '../src/app/EditorHost';
 import type { EditorNavigationAdapter } from '../src/ui/shell/navigation/navigation-adapter';
 
 const sessions: EditorSession[] = [];
@@ -69,7 +69,7 @@ describe('catalog editor shell', () => {
   it('renders the shell and selected design surface around the canonical catalog', () => {
     const session = createSession();
     const view = render(
-      <EditorShell session={session} navigation={createTestNavigation('surface=colors')} />,
+      <EditorHost session={session} navigation={createTestNavigation('surface=colors')} />,
     );
 
     expect(view.container.querySelector('.app')).not.toBeNull();
@@ -89,7 +89,7 @@ describe('catalog editor shell', () => {
     vi.spyOn(session.core, 'persist').mockResolvedValue();
     session.openAsset(exampleIds.components.card.definition);
     session.selectNode(exampleIds.components.card.nodes.title);
-    render(<EditorShell session={session} navigation={createTestNavigation()} />);
+    render(<EditorHost session={session} navigation={createTestNavigation()} />);
 
     await pressKey({ key: 'Delete' });
 
@@ -106,7 +106,7 @@ describe('catalog editor shell', () => {
     vi.spyOn(session.core, 'persist').mockResolvedValue();
     session.openAsset(exampleIds.components.card.definition);
     session.selectNode(exampleIds.components.card.nodes.title);
-    render(<EditorShell session={session} navigation={createTestNavigation()} />);
+    render(<EditorHost session={session} navigation={createTestNavigation()} />);
 
     await pressKey({ key: 'g', ctrlKey: true, altKey: true });
 
@@ -127,7 +127,7 @@ describe('catalog editor shell', () => {
       top: '20px',
     });
     session.selectNode(exampleIds.components.card.nodes.title);
-    render(<EditorShell session={session} navigation={createTestNavigation()} />);
+    render(<EditorHost session={session} navigation={createTestNavigation()} />);
 
     await pressKey({ key: 'ArrowRight' });
 

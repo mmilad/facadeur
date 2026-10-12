@@ -3,7 +3,7 @@ import type { DesignPropDefinition } from '@facadeur/domain';
 import type { Node } from '@facadeur/domain';
 import type { Breakpoint, CatalogDesignCommand, DesignTokenFamily } from '@facadeur/core';
 
-/** Stable event names emitted by the editor's sidebar UI. */
+/** Stable event names emitted by editor UI. */
 export enum EditorEventType {
   AssetOpen = 'asset.open',
   AssetCreate = 'asset.create',
@@ -15,6 +15,8 @@ export enum EditorEventType {
   LayerDragStart = 'layer.drag.start',
   LayerDragEnd = 'layer.drag.end',
   LayerDelete = 'layer.delete',
+  LayerWrap = 'layer.wrap',
+  LayerSelectParent = 'layer.select-parent',
   LayerInsert = 'layer.insert',
   LayerMove = 'layer.move',
   InspectorFieldChange = 'inspector.field.change',
@@ -27,6 +29,7 @@ export enum EditorEventType {
   ViewportSelect = 'editor.viewport.select',
   EditTargetSet = 'editor.edit-target.set',
   CatalogPersist = 'catalog.persist',
+  CatalogExport = 'catalog.export',
   DesignPropsSave = 'catalog.design-props.save',
   SchemaUpsert = 'catalog.schema.upsert',
   SchemaRemove = 'catalog.schema.remove',
@@ -57,6 +60,8 @@ export interface EditorEventDataMap {
   [EditorEventType.LayerDragStart]: { readonly nodeId: string };
   [EditorEventType.LayerDragEnd]: Record<never, never>;
   [EditorEventType.LayerDelete]: { readonly nodeId: string };
+  [EditorEventType.LayerWrap]: { readonly nodeId: string };
+  [EditorEventType.LayerSelectParent]: Record<never, never>;
   [EditorEventType.LayerInsert]: {
     readonly targetId: string;
     readonly placement: 'inside' | 'below';
@@ -82,6 +87,7 @@ export interface EditorEventDataMap {
   [EditorEventType.ViewportSelect]: { readonly breakpointId: string | null };
   [EditorEventType.EditTargetSet]: { readonly target: 'base' | 'viewport' };
   [EditorEventType.CatalogPersist]: Record<never, never>;
+  [EditorEventType.CatalogExport]: Record<never, never>;
   [EditorEventType.DesignPropsSave]: Record<never, never>;
   [EditorEventType.SchemaUpsert]: {
     readonly uuid: string;

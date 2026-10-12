@@ -1,6 +1,13 @@
 import type { CoreController, NodeDefinitionModel } from '@facadeur/core';
 import type { DesignPropDefinition, FieldValue, JsonSchemaObject, Node } from '@facadeur/domain';
-import { createCatalogUuid } from '@facadeur/core';
+import {
+  canAcceptCatalogChildren,
+  createCatalogUuid,
+  defaultNestingRules,
+  findNodeByUuid,
+  findParentOfNode,
+} from '@facadeur/core';
+import type { NodeModel } from '@facadeur/core';
 import type { EditorSession } from '../domain/session/types';
 import type { CatalogDefinitionKind, EditorCatalogPort } from '../domain/project/catalog-port';
 import { InspectorService } from './inspector';
@@ -15,8 +22,7 @@ import {
   type LayerInsertEntry,
 } from '../domain/catalog/catalog-layer-insert';
 import { catalogNodeFromInsertEntry } from '../domain/catalog/layer-node-draft';
-import { refusalMessage } from '../domain/editing';
-import { findNodeByUuid, findParentOfNode } from '@facadeur/core';
+import { isInsertTool, refusalMessage, toolAllowed } from '../domain/editing';
 import type { LayerItem } from '../domain/catalog/layer-tree';
 import { buildInspectorSidebarViewModel } from './sidebar-view-model';
 
@@ -164,6 +170,17 @@ export class AppService {
         case EditorEventType.LayerDelete:
           await this.deleteSidebarLayer(event.data.nodeId);
           return;
+        case EditorEventType.LayerWrap:
+          await this.wrapLayer(event.data.nodeId);
+          return;
+        case EditorEventType.LayerSelectParent: {
+          const snapshot = this.session.getSnapshot();
+          const root = snapshot.openDefinition?.root;
+          const selected = snapshot.selectedCatalogNodeUuid;
+          const parentId = root && selected ? findParentOfNode(root, selected)?.parent.uuid : null;
+          this.session.selectNode(parentId ?? null);
+          return;
+        }
         case EditorEventType.LayerInsert:
           await this.insertSidebarLayer(event.data);
           return;
@@ -178,11 +195,21 @@ export class AppService {
           });
           return;
         case EditorEventType.SurfaceNavigate:
-          // Shell-only events share the same contract but have no AppService operation.
+          // Navigation is handled by the editor host.
           return;
-        case EditorEventType.ToolSet:
+        case EditorEventType.CatalogExport:
+          // Export is handled by the editor host because it owns browser file interactions.
+          return;
+        case EditorEventType.ToolSet: {
+          const snapshot = this.session.getSnapshot();
+          const kind = snapshot.openDefinition?.kind ?? snapshot.workspace;
+          if (isInsertTool(event.data.tool) && !toolAllowed(kind, event.data.tool)) {
+            this.session.setNotice(refusalMessage(kind, event.data.tool), 'error');
+            return;
+          }
           this.session.setTool(event.data.tool);
           return;
+        }
         case EditorEventType.ZoomBy:
           this.session.zoomBy(event.data.factor);
           return;
@@ -358,6 +385,23 @@ export class AppService {
     this.removeCatalogNode(nodeId);
     await this.persistCatalog();
     this.session.selectNode(parent?.parent.uuid ?? definition.root.uuid);
+  }
+
+  private async wrapLayer(nodeId: string) {
+    const definition = this.session.getSnapshot().openDefinition;
+    if (!definition || nodeId === definition.root.uuid) return;
+    const parentInfo = findParentOfNode(definition.root, nodeId);
+    const acceptsFrame = defaultNestingRules[definition.kind].nodeTypes.includes('frame');
+    if (!parentInfo || !acceptsFrame || !canAcceptCatalogChildren(parentInfo.parent)) {
+      this.session.setNotice(refusalMessage(definition.kind, 'frame'), 'error');
+      return;
+    }
+    const frameId = createCatalogUuid();
+    const frame: NodeModel = { uuid: frameId, name: 'layer', dom: { tagName: 'div' } };
+    this.insertCatalogNode(parentInfo.parent.uuid, parentInfo.index, frame);
+    this.moveCatalogNode(nodeId, frameId, 0);
+    await this.persistCatalog();
+    this.session.selectNode(frameId);
   }
 
   private async moveSidebarLayer(

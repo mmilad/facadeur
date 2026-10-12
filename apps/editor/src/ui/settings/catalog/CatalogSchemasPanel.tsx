@@ -3,7 +3,6 @@
 import { createCatalogUuid } from '@facadeur/core';
 import type { JsonSchemaObject } from '@facadeur/domain';
 import { useEffect, useMemo, useState } from 'react';
-import type { AppService } from '../../../app-service';
 import type { EditorEvent } from '../../../domain/sidebar/events';
 import { EditorEventType } from '../../../domain/sidebar/events';
 import { Field } from '../../components/feedback';
@@ -15,15 +14,14 @@ import { SettingsSections } from '../SettingsSections';
 import type { EditorSurface } from '../../design/design-domain';
 
 export function CatalogSchemasPanel({
-  app,
+  schemas,
   surface,
   onEvent,
 }: {
-  app: AppService;
+  schemas: readonly { uuid: string; schema: JsonSchemaObject }[];
   surface: EditorSurface;
   onEvent: (event: EditorEvent) => void;
 }) {
-  const schemas = app.getSchemas();
   const entries = useMemo(
     () =>
       schemas
@@ -91,7 +89,7 @@ export function CatalogSchemasPanel({
   function removeSelected() {
     if (!selectedId) return;
     onEvent({ type: EditorEventType.SchemaRemove, data: { uuid: selectedId } });
-    setSelectedId(app.getSchemas()[0]?.uuid ?? '');
+    setSelectedId(schemas.find(({ uuid }) => uuid !== selectedId)?.uuid ?? '');
   }
 
   return (

@@ -1,4 +1,4 @@
-import type { EditorSession, EditorSnapshot } from '../../domain/session';
+import type { EditorSnapshot } from '../../domain/session';
 import type { EditorEvent } from '../../domain/sidebar/events';
 import { useMemo } from 'react';
 import { activeBreakpoints } from '@facadeur/core';
@@ -19,12 +19,10 @@ import { viewportEditContext } from '../../domain/viewport/viewport-edit';
 import '../styles/form.css';
 
 export function DesignDomainStage({
-  session,
   snap,
   domain,
   onEvent,
 }: {
-  session: EditorSession;
   snap: EditorSnapshot;
   domain: DesignDomain;
   onEvent: (event: EditorEvent) => void;
@@ -74,7 +72,7 @@ export function DesignDomainStage({
           {domain === 'fonts' ? (
             <FontsDomainPanel snap={snap} onEvent={onEvent} />
           ) : domain === 'icons' ? (
-            <IconsDomainPanel session={session} snap={snap} />
+            <IconsDomainPanel snap={snap} />
           ) : domain === 'viewports' ? (
             <ViewportsSettingsPanel breakpoints={snap.design.breakpoints} onEvent={onEvent} />
           ) : (

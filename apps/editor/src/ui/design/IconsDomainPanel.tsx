@@ -1,14 +1,12 @@
 import { useMemo, useState } from 'react';
-import type { EditorSession, EditorSnapshot } from '../../domain/session';
+import type { EditorSnapshot } from '../../domain/session';
 import { Field } from '../components/feedback';
 import { TextInput } from '../controls/form-binding/index';
 import './design-resources.css';
 
 export function IconsDomainPanel({
-  session: _session,
   snap,
 }: {
-  session: EditorSession;
   snap: EditorSnapshot;
 }) {
   const [query, setQuery] = useState('');

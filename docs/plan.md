@@ -94,6 +94,26 @@ completed change logs out of this file.
   - Validation: focused tests (3 files, 8 tests), editor typecheck, Storybook build, detector
     rerun, and diff check.
 
+- [x] Refactor: separate the editor host from the presentational AppShell.
+  - Evidence: `EditorShell` currently creates/fetches `AppService`, subscribes to editor state,
+    owns navigation and event dispatch, and also renders the UI. Keyboard shortcuts and several
+    stage/settings children still call AppService or EditorSession directly, so a Storybook
+    composition cannot replace the host without inheriting runtime behavior.
+  - Action: move runtime creation, subscriptions, navigation, keyboard command translation,
+    event dispatch, and surface composition into `EditorHost`. Make `AppShell` receive the editor
+    snapshot, display labels, composed main content, and `onEvent`; it no longer accepts
+    `AppService` or `EditorSession`. Update the Storybook app story to use the replaceable host.
+    Keep `AppService` as the operation boundary.
+  - Scope: current cleanup; preserve existing editor and Storybook behavior. The stage's DOM
+    interaction hooks still receive runtime adapters for catalog reads and session view state;
+    a future stage-specific contract can remove those direct reads without changing AppShell.
+  - Contracts: preserve the single `EditorEvent` union, navigation, keyboard behavior, selection,
+    Catalog operations, notice/error handling, save/export, schema/token editing, and stage
+    geometry/drag behavior. Avoid adding a second event union or a new store.
+  - Validation: editor typecheck, full tests (66 files, 235 tests), Storybook build, AppShell
+    service/session import audit, detector rerun, and diff check passed. Existing integration tests
+    cover host wiring and event behavior.
+
 - [x] Refactor: route Catalog queries through Core.
   - Evidence: Editor session, stage, schema/props panels, layer tree, and Inspector still read
     Catalog fields directly or pass the whole Catalog to helpers such as viewport-board creation,

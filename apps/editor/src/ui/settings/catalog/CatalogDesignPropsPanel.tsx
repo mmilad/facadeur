@@ -3,7 +3,6 @@
 import { createCatalogUuid } from '@facadeur/core';
 import type { DesignPropDefinition } from '@facadeur/domain';
 import { useState } from 'react';
-import type { AppService } from '../../../app-service';
 import type { EditorEvent } from '../../../domain/sidebar/events';
 import { EditorEventType } from '../../../domain/sidebar/events';
 import { Stack } from '../../components/layout';
@@ -13,27 +12,27 @@ import { SettingsSections } from '../SettingsSections';
 import type { EditorSurface } from '../../design/design-domain';
 
 export function CatalogDesignPropsPanel({
-  app,
+  entries,
   surface,
   onEvent,
 }: {
-  app: AppService;
+  entries: readonly DesignPropDefinition[];
   surface: EditorSurface;
   onEvent: (event: EditorEvent) => void;
 }) {
-  const entries = app.getDesignProps().sort((left, right) => left.name.localeCompare(right.name));
-  const [selectedId, setSelectedId] = useState(entries[0]?.uuid ?? '');
+  const sortedEntries = [...entries].sort((left, right) => left.name.localeCompare(right.name));
+  const [selectedId, setSelectedId] = useState(sortedEntries[0]?.uuid ?? '');
   const [query, setQuery] = useState('');
 
   const needle = query.trim().toLowerCase();
   const visible = needle
-    ? entries.filter(
+    ? sortedEntries.filter(
         (prop) =>
           prop.name.toLowerCase().includes(needle) || prop.uuid.toLowerCase().includes(needle),
       )
-    : entries;
+    : sortedEntries;
 
-  const selected = entries.find((prop) => prop.uuid === selectedId);
+  const selected = sortedEntries.find((prop) => prop.uuid === selectedId);
 
   function addProp() {
     const uuid = createCatalogUuid();
@@ -62,7 +61,7 @@ export function CatalogDesignPropsPanel({
   function removeSelected() {
     if (!selected) return;
     onEvent({ type: EditorEventType.DesignPropRemove, data: { uuid: selected.uuid } });
-    const next = app.getDesignProps()[0];
+    const next = sortedEntries.find((prop) => prop.uuid !== selected.uuid);
     setSelectedId(next?.uuid ?? '');
   }
 

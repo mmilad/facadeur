@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { fn } from 'storybook/test';
 import { card } from '@facadeur/examples';
 import type { InspectorFieldChangedEvent } from '../../../src/app-service';
-import { EditorShell } from '../../../src/ui/shell/EditorShell';
+import { EditorHost } from '../../../src/app/EditorHost';
 import { createStorybookEditor } from '../../fixtures/editor';
 import { useStorybookNavigation, type StorybookNavigationEvent } from '../../lib/app/navigation';
 
@@ -23,7 +23,7 @@ function EditorAppPreview({
 
   return (
     <div style={{ height: '100vh', minHeight: 640 }}>
-      <EditorShell session={editor.session} app={editor.app} navigation={navigation} />
+      <EditorHost session={editor.session} app={editor.app} navigation={navigation} />
     </div>
   );
 }

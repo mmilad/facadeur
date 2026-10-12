@@ -5,7 +5,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
-import { EditorShell } from '../src/ui/shell/EditorShell';
+import { EditorHost } from '../src/app/EditorHost';
 import { clickSettingsTab, openSettingsDomain } from './settings-navigation';
 import { createExampleCatalog, exampleIds as fixtureIds } from '@facadeur/examples';
 
@@ -39,7 +39,7 @@ describe('design domain stage', () => {
     document.body.append(host);
     root = createRoot(host);
     await act(async () => {
-      root?.render(<EditorShell session={session} navigation={testNavigation} />);
+      root?.render(<EditorHost session={session} navigation={testNavigation} />);
     });
 
     await openSettingsDomain(host!, 'colors');
@@ -64,7 +64,7 @@ describe('design domain stage', () => {
     document.body.append(host);
     root = createRoot(host);
     await act(async () => {
-      root?.render(<EditorShell session={session} navigation={testNavigation} />);
+      root?.render(<EditorHost session={session} navigation={testNavigation} />);
     });
 
     await openSettingsDomain(host!, 'spacing');
@@ -89,7 +89,7 @@ describe('design domain stage', () => {
     document.body.append(host);
     root = createRoot(host);
     await act(async () =>
-      root?.render(<EditorShell session={session} navigation={testNavigation} />),
+      root?.render(<EditorHost session={session} navigation={testNavigation} />),
     );
     await openSettingsDomain(host!, 'colors');
     expect(host!.querySelector('[aria-label="Layers"]')).toBeNull();
@@ -124,7 +124,7 @@ describe('design domain stage', () => {
     document.body.append(host);
     root = createRoot(host);
     await act(async () =>
-      root?.render(<EditorShell session={session} navigation={testNavigation} />),
+      root?.render(<EditorHost session={session} navigation={testNavigation} />),
     );
     await openSettingsDomain(host!, 'viewports');
 
