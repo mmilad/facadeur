@@ -4,6 +4,7 @@ export {
   exampleCatalogDefinitions,
   exampleCatalogLayers,
 } from './catalog';
+export { createFacadeurEditorCatalog } from './facadeur-editor-catalog';
 export { definition as button } from './button';
 export { definition as card } from './card';
 export { facadeurSettings, facadeurWorkspace, facadeurWorkspaceMobile } from './facadeur-editor';

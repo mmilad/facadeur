@@ -10,6 +10,7 @@ import type { ViewportBoard } from '../../domain/viewport/board';
 import { useStagePointer } from './canvas/useStagePointer';
 import { useStageViewportBoard } from './canvas/useStageViewportBoard';
 import { DynamicElement } from '../../domain/viewport/dynamic-element';
+import { renderGlobalStyleCss } from '@facadeur/style-engine';
 
 export function StageCanvas({
   app,
@@ -77,9 +78,29 @@ export function StageCanvas({
     () => (frames.length ? app.buildOpenDefinition() : null),
     [app, frames, openId, generation, designRevision],
   );
+  const globalStyleCss = useMemo(
+    () => renderGlobalStyleCss(app.getCatalog()),
+    [app, generation, designRevision],
+  );
+  useEffect(() => {
+    for (const frame of boardRef.current?.frames() ?? []) {
+      if (!frame.host.element.isConnected) continue;
+      const document = frame.host.contentDocument();
+      let style = document.head.querySelector<HTMLStyleElement>(
+        'style[data-facadeur-global-styles]',
+      );
+      if (!style) {
+        style = document.createElement('style');
+        style.dataset.facadeurGlobalStyles = 'true';
+        document.head.append(style);
+      }
+      style.textContent = globalStyleCss;
+    }
+  }, [frames, globalStyleCss]);
+  const mountedFrames = frames.filter((frame) => frame.host.element.isConnected);
   const framePortals =
-    buildConfig && frames.length
-      ? frames.map((frame) =>
+    buildConfig && mountedFrames.length
+      ? mountedFrames.map((frame) =>
           createPortal(
             <DynamicElement config={buildConfig} />,
             frame.host.contentDocument().body,

@@ -63,6 +63,7 @@ export interface EditorSession {
   destroy: () => void;
   subscribe: (listener: () => void) => () => void;
   getSnapshot: () => EditorSnapshot;
+  markCatalogSaved: () => void;
   setWorkspace: (kind: DefaultKind) => void;
   openAsset: (id: string, focus?: 'root') => void;
   selectNode: (nodeId: string | null) => void;

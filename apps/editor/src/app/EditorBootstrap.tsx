@@ -2,10 +2,13 @@
 
 import { useEffect, useMemo } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { createExampleCatalog, facadeurWorkspace } from '@facadeur/examples';
+import { validateProjectCatalog } from '@facadeur/core';
+import { facadeurWorkspace } from '@facadeur/examples';
+import { download } from '../domain/assets/files';
 import { createEditorSession } from '../domain/session/create-editor-session';
 import { EditorHost } from './EditorHost';
 import type { EditorNavigationAdapter } from '../ui/shell/navigation/navigation-adapter';
+import facadeurEditorCatalog from './facadeur-editor.catalog.json';
 
 export function EditorBootstrap() {
   const pathname = usePathname();
@@ -21,7 +24,8 @@ export function EditorBootstrap() {
     [pathname, params, router],
   );
   const editor = useMemo(() => {
-    const session = createEditorSession({ projectCatalog: createExampleCatalog() });
+    const projectCatalog = validateProjectCatalog(structuredClone(facadeurEditorCatalog));
+    const session = createEditorSession({ projectCatalog });
     session.openAsset(facadeurWorkspace.uuid);
     session.selectNode(facadeurWorkspace.root.uuid);
     return { session };
@@ -29,5 +33,16 @@ export function EditorBootstrap() {
 
   useEffect(() => () => editor.session.destroy(), [editor]);
 
-  return <EditorHost session={editor.session} navigation={navigation} />;
+  return (
+    <EditorHost
+      session={editor.session}
+      navigation={navigation}
+      persistPendingChanges={async () =>
+        download(
+          'facadeur-editor.catalog.json',
+          JSON.stringify(editor.session.core.getSnapshot().catalog, null, 2),
+        )
+      }
+    />
+  );
 }

@@ -25,6 +25,7 @@ import { catalogNodeFromInsertEntry } from '../domain/catalog/layer-node-draft';
 import { isInsertTool, refusalMessage, toolAllowed } from '../domain/editing';
 import type { LayerItem } from '../domain/catalog/layer-tree';
 import { buildInspectorSidebarViewModel } from './sidebar-view-model';
+import { layerSelectorForName } from '@facadeur/core';
 
 /** Editor entry: catalog editing via {@link CoreController}, chrome via {@link EditorSession}. */
 export class AppService {
@@ -140,7 +141,26 @@ export class AppService {
     const model = this.inspector.getModel(nodeUuid);
     if (!model) return null;
     const formKey = `${this.session.getSnapshot().openId}:${nodeUuid}`;
-    return buildInspectorSidebarViewModel(model, formKey);
+    const snapshot = this.core.getSnapshot();
+    const catalog = snapshot.catalog;
+    const node = snapshot.openDefinition
+      ? findNodeByUuid(snapshot.openDefinition.root, nodeUuid)
+      : null;
+    const rule = catalog.globalStyles?.block?.rules?.find(
+      (item) => item.id === `layer-${nodeUuid}`,
+    );
+    const layerStyle = {
+      selector: layerSelectorForName(String(model.formValue.node.name ?? 'Layer')),
+      declarations: { ...(node?.style ?? {}), ...(rule?.declarations ?? {}) },
+      breakpoints: catalog.globalStyles?.breakpoints ?? [],
+      overrides: Object.fromEntries(
+        Object.entries(rule?.breakpoints ?? {}).map(([id, layer]) => [
+          id,
+          layer.declarations ?? {},
+        ]),
+      ),
+    };
+    return buildInspectorSidebarViewModel(model, formKey, layerStyle);
   }
 
   async dispatchEditorEvent(event: EditorEvent) {

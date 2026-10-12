@@ -39,6 +39,17 @@
 
 ## Resolved: Run pnpm verification in the approved host context
 
+- **Update (2026-10-12, layer class styles):** Restricted Core and Editor typechecks both stopped
+  in Corepack before TypeScript ran, attempting to download the pinned pnpm 10.33.3 and failing
+  with `ENOTFOUND registry.npmjs.org`. The same commands completed in the approved host context
+  (Core passed; Editor passed after fixing one local type error). Run pnpm checks in the approved
+  host context when this recurs; no package-manager or repository workaround is needed.
+
+- **Update (2026-10-12, Facadeur JSON seed):** Restricted `pnpm exec prettier --write <affected files>`
+  attempted to download pinned pnpm 10.33.3 and failed with `ENOTFOUND registry.npmjs.org`. The same
+  command passed in the approved host context; workspace typecheck and the JSON/factory consistency
+  check passed there too. Continue using the approved host context; no Corepack pin or install
+  change is needed.
 - **Update (2026-10-12, responsive header):** `pnpm exec prettier --write <affected files>` again
   stopped before formatting because the restricted process tried to download pinned pnpm 10.33.3
   from `registry.npmjs.org` and failed with `ENOTFOUND`. The identical command succeeded in the

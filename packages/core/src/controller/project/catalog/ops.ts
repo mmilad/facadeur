@@ -7,6 +7,7 @@ import type {
   ProjectCatalog,
 } from '@facadeur/domain';
 import { isVoidHtmlTag } from '../../../document/html-tags';
+import { syncLayerStyleSelector } from './layer-styles';
 
 function nodeAcceptsChildren(tagName: string): boolean {
   return !isVoidHtmlTag(tagName);
@@ -175,9 +176,10 @@ export function patchNodeName(
 ): ProjectCatalog {
   const trimmed = name.trim();
   if (!trimmed) return catalog;
-  return mutateNode(catalog, definitionUuid, nodeUuid, (node) => {
+  const renamed = mutateNode(catalog, definitionUuid, nodeUuid, (node) => {
     (node as { name?: string }).name = trimmed;
   });
+  return syncLayerStyleSelector(renamed, nodeUuid, trimmed);
 }
 
 export function patchNodeFieldExposure(

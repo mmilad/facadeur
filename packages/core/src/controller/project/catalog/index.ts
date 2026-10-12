@@ -29,5 +29,6 @@ export {
   upsertCatalogSchema,
 } from './definition-ops';
 export { removeCatalogDesignProp, upsertCatalogDesignProp } from './props-ops';
+export { layerSelectorForName } from './layer-styles';
 export { assertCatalogRefIntegrity, emptyProjectCatalog, validateProjectCatalog } from './validate';
 export { applyCatalogDesignCommand, type CatalogDesignCommand } from './design-commands';

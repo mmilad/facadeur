@@ -47,6 +47,12 @@ export interface InspectorSidebarModel {
   readonly nodeId: string;
   readonly formKey: string;
   readonly selectionKind: 'root' | 'instance' | 'element';
+  readonly layerStyle: {
+    readonly selector: string;
+    readonly declarations: Readonly<Record<string, string>>;
+    readonly breakpoints: readonly import('@facadeur/core').Breakpoint[];
+    readonly overrides: Readonly<Record<string, Readonly<Record<string, string>>>>;
+  };
   readonly headerFields: readonly FormFieldConfig[];
   readonly tabs: readonly {
     readonly id: 'style' | 'properties' | 'previewData';

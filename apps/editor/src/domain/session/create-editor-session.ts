@@ -33,7 +33,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   let generation = 0;
   let designRevision = 0;
   let revision = 0;
-  const catalogBaseline = JSON.stringify(core.getSnapshot().catalog);
+  let catalogBaseline = JSON.stringify(core.getSnapshot().catalog);
   function defaultFocusViewportId() {
     const breakpoints = core.getActiveBreakpoints();
     return breakpoints[0]?.uuid ?? null;
@@ -158,6 +158,10 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     getSnapshot() {
       if (!snapshot) throw new DocumentError('schema', 'Editor session is not ready');
       return snapshot;
+    },
+    markCatalogSaved() {
+      catalogBaseline = JSON.stringify(core.getSnapshot().catalog);
+      publish();
     },
     setWorkspace(kind) {
       workspace = kind;

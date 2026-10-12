@@ -60,16 +60,18 @@ export function EditorHost({
     });
     return (event: Parameters<typeof dispatch>[0]) => {
       if (event.type === EditorEventType.CatalogExport) {
-        download('catalog.json', JSON.stringify(app.getCatalog(), null, 2));
+        download('facadeur-editor.catalog.json', JSON.stringify(app.getCatalog(), null, 2));
         return;
       }
       if (event.type === EditorEventType.CatalogPersist && persistPendingChanges) {
-        void persistPendingChanges().catch((error) => {
-          session.setNotice(
-            error instanceof Error ? error.message : 'Could not save catalog',
-            'error',
-          );
-        });
+        void persistPendingChanges()
+          .then(() => session.markCatalogSaved())
+          .catch((error) => {
+            session.setNotice(
+              error instanceof Error ? error.message : 'Could not save catalog',
+              'error',
+            );
+          });
         return;
       }
       dispatch(event);
@@ -123,5 +125,3 @@ export function EditorHost({
     />
   );
 }
-
-

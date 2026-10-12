@@ -60,6 +60,10 @@ export function DynamicElement({ config }: { config: ElementBuildConfig }) {
     }
   }
   if (nodeUuid) props['data-facadeur-node-uuid'] = nodeUuid;
+  if (nodeUuid) {
+    const currentClass = typeof props.className === 'string' ? props.className : '';
+    props.className = [currentClass, `facadeur-node-${nodeUuid}`].filter(Boolean).join(' ');
+  }
   if (style) props.style = reactStyle(style);
   if (attributeStyle)
     props.style = { ...parseInlineStyle(attributeStyle), ...reactStyle(style ?? {}) };

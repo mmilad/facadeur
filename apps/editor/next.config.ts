@@ -21,8 +21,8 @@ const nextConfig: NextConfig = {
     };
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@facadeur/core': workspaceAlias('core'),
-      '@facadeur/style-engine': workspaceAlias('style-engine'),
+      '@facadeur/core$': workspaceAlias('core'),
+      '@facadeur/style-engine$': workspaceAlias('style-engine'),
     };
     return config;
   },

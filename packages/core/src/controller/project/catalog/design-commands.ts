@@ -1,5 +1,9 @@
 import type { ProjectCatalog } from '@facadeur/domain';
-import type { DesignLibraryCommand, GlobalTokenCommand } from '../../style/types';
+import type {
+  DesignLibraryCommand,
+  GlobalTokenCommand,
+  LayerStyleCommand,
+} from '../../style/types';
 import { assertBreakpoints, cloneBreakpoints } from '../../style/breakpoints';
 import {
   emptyTokenTree,
@@ -7,13 +11,17 @@ import {
   setTokenInTree,
 } from '../../style/tokens/global/tree';
 import { validateProjectCatalog } from './validate';
+import { setLayerStyleDeclaration } from './layer-styles';
 
-export type CatalogDesignCommand = GlobalTokenCommand | DesignLibraryCommand;
+export type CatalogDesignCommand = GlobalTokenCommand | DesignLibraryCommand | LayerStyleCommand;
 
 export function applyCatalogDesignCommand(
   catalog: ProjectCatalog,
   command: CatalogDesignCommand,
 ): ProjectCatalog {
+  if (command.type === 'setLayerStyleDeclaration') {
+    return validateProjectCatalog(setLayerStyleDeclaration(catalog, command)) as ProjectCatalog;
+  }
   if (command.type === 'setToken') {
     const tokens = setTokenInTree(
       catalog.tokens ?? emptyTokenTree(),

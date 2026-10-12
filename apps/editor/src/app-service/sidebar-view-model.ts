@@ -9,9 +9,12 @@ import { mapInspectorFormFields } from './map-inspector-form';
 import { transformableFieldOptions } from './transformable-field-options';
 import type { InspectorSidebarModel } from '../domain/sidebar/types';
 
+export type InspectorLayerStyle = InspectorSidebarModel['layerStyle'];
+
 export function buildInspectorSidebarViewModel(
   model: InspectorViewModel,
   formKey: string,
+  layerStyle: InspectorLayerStyle,
 ): InspectorSidebarModel {
   const propOptions = propBindingOptions(model);
   const fieldOptions = (_path: string, _label: string, color = false) =>
@@ -25,7 +28,16 @@ export function buildInspectorSidebarViewModel(
     sectionFields(model, isRoot ? 'Asset' : 'Element', undefined, propOptions, fieldOptions)
       ?.fields ?? [];
   const contentSection = sectionFields(model, 'Content', undefined, propOptions, fieldOptions);
-  const styleSection = sectionFields(model, 'Layout & style', undefined, propOptions, fieldOptions);
+  const rawStyleSection = sectionFields(
+    model,
+    'Layout & style',
+    undefined,
+    propOptions,
+    fieldOptions,
+  );
+  const styleSection = rawStyleSection
+    ? { ...rawStyleSection, fields: filterNodeStyle(rawStyleSection.fields) }
+    : null;
   const nodeDataSection = sectionFields(
     model,
     'Properties',
@@ -74,11 +86,25 @@ export function buildInspectorSidebarViewModel(
     nodeId: model.nodeUuid,
     formKey,
     selectionKind: model.selectionKind,
+    layerStyle,
     headerFields,
     tabs,
     values: Object.fromEntries(names.map((name) => [name, getPath(model.formValue, name)])),
     bindOptions: propOptions,
   };
+}
+
+function filterNodeStyle(fields: readonly FormFieldConfig[]): FormFieldConfig[] {
+  const result: FormFieldConfig[] = [];
+  for (const field of fields) {
+    if (field.type !== 'layout') {
+      if (field.name !== 'node.style') result.push(field);
+      continue;
+    }
+    const children = filterNodeStyle(field.fields);
+    if (children.length) result.push({ ...field, fields: children });
+  }
+  return result;
 }
 
 function previewDefaultForProp(model: InspectorViewModel, name: string) {

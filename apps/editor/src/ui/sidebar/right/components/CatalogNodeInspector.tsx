@@ -6,6 +6,7 @@ import type { FieldValue } from '@facadeur/domain';
 import type { InspectorSidebarModel } from '../../../../domain/sidebar/types';
 import type { EditorEvent } from '../../../../domain/sidebar/events';
 import { EditorEventType } from '../../../../domain/sidebar/events';
+import { LayerStylesEditor } from './LayerStylesEditor';
 
 export function CatalogNodeInspector({
   model,
@@ -74,6 +75,14 @@ export function CatalogNodeInspector({
                 />
               </section>
             ))}
+            {tab.id === 'style' ? (
+              <LayerStylesEditor
+                key={model.formKey}
+                nodeId={model.nodeId}
+                layerStyle={model.layerStyle}
+                onEvent={onEvent}
+              />
+            ) : null}
           </div>
         </section>
       ))}

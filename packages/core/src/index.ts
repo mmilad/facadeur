@@ -78,6 +78,7 @@ export {
   upsertCatalogDesignProp,
   removeCatalogDesignProp,
   type CatalogDesignCommand,
+  layerSelectorForName,
 } from './controller/project/catalog/index';
 export type { CoreControllerHost } from './types/index';
 export type { CatalogDefinitionPort } from './types/index';

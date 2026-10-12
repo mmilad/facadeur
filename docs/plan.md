@@ -90,6 +90,33 @@ completed change logs out of this file.
 
 ## Remaining follow-up
 
+- [x] App: keep Next workspace aliases from capturing package subpaths.
+  - Evidence: the broad `@facadeur/core` Webpack alias also matches
+    `@facadeur/core/default-breakpoint-ids`, producing an invalid `src/index.ts/...` path in
+    `pnpm dev` and a Watchpack `ENOTDIR` scan.
+  - Action: make workspace aliases exact package-name aliases so package subpaths resolve through
+    their declared `exports` entries.
+  - Scope: fix dev-server module resolution; preserve existing root package imports and workspace
+    transpilation.
+  - Contracts: keep public package subpath exports usable from the Editor.
+  - Validation: Editor typecheck passed; `pnpm dev` compiled and `/` returned HTTP 200 with no
+    module-resolution or Watchpack scan errors; the app rendered in the browser; candidate scan
+    and diff check passed.
+
+- [x] App: seed the dev editor with a Facadeur-only JSON Catalog snapshot.
+  - Evidence: `EditorBootstrap` previously started from the full Example Catalog, while the
+    Storybook story has a separate fixture bootstrap; the app's catalog export serialized the
+    live Catalog.
+  - Action: add a curated Catalog factory containing Facadeur components/pages, shared tokens,
+    required icons and responsive global styles; generate an editable JSON seed and use it only
+    in the app bootstrap. Make the app's Save action download the current JSON snapshot and clear
+    the dirty indicator.
+  - Scope: app-only JSON seed and download-based save/export; no DB, API, autosave or Yjs.
+  - Contracts: retain the existing ProjectCatalog JSON shape and stable Facadeur IDs/references;
+    leave Storybook's full example fixtures unchanged.
+  - Validation: app and Examples typechecks, snapshot/factory comparison, candidate scan, and diff
+    check. (Automated tests were not run.)
+
 - [ ] Examples: review `form-controls-section/dom.ts` for a component boundary.
   - Evidence: the 526-line Catalog node tree contains multiple sections of form-control examples
     and repeated `definitionRef` setup.
@@ -217,19 +244,37 @@ completed change logs out of this file.
       compiler naming is different. After the display/search contract is decided, consolidate naming
       at the Style Engine boundary and cover both labels and compiled CSS with focused tests.
 
+- [x] Editor: edit layer styles through name-derived global class rules.
+  - Evidence: the Inspector previously exposed `node.style` declarations, while Catalog global
+    style rules already supported selectors, node bindings, and sparse breakpoint overrides; the
+    preview did not apply those global rules.
+  - Action: derive a valid class selector from each layer name, group its CSS controls in a
+    collapsible layer section, and edit base or per-viewport declarations through global style
+    rules. Apply compiled rules in iframe previews. On first edit, migrate that layer's legacy
+    `node.style` declarations into its class rule; keep the selector synchronized with renames.
+  - Scope: Editor inspector style workflow; no second style format or dependency.
+  - Contracts: preserve selector bindings, token/raw CSS values, sparse breakpoint overrides,
+    undo/history, legacy catalog style values, and generated CSS behavior.
+  - Validation: Core and Editor typechecks, candidate detector rerun, formatting, and
+    `git diff --check` passed. Tests were not run because they were not requested.
+
 ## Refactoring review
 
-The maintained-source candidate scan found two size signals; all are cohesive and should remain
-intact unless their responsibilities change:
+The maintained-source candidate scan found two size signals and one directory concentration
+signal. The review decisions are:
 
 - `packages/core/src/controller/project/controller.ts` (528 lines): the single Core catalog
   coordination facade, including its public query surface. Query implementations live in the
   adjacent `catalog/queries.ts` module.
 - `packages/examples/src/form-controls-section/dom.ts` (526 lines): one canonical reusable
   Catalog fixture tree.
-- `apps/editor/src/app-service/AppService.ts` (455 lines): one event-to-operation coordinator;
+- `apps/editor/src/app-service/AppService.ts` (519 lines): one event-to-operation coordinator;
   its switch is the single dispatch boundary and its private helpers own related Catalog actions.
   Splitting cases into per-event services would scatter the operation contract again.
+- `packages/core/src/controller/project/catalog` (12 direct source files): keep the files together
+  because they all implement Catalog-owned queries, validation, tree, definition, and style
+  operations. The new layer-style behavior belongs in this domain and the existing `index.ts`
+  remains its public boundary; a finer split would add indirection without separating ownership.
 - `packages/examples/src/facadeur-editor/components.ts` (688 lines): retain the non-header
   definitions, schemas, preview defaults, and registry together as one cohesive Catalog component
   set for the Facadeur design concepts. The responsive header lives in `header.ts` because its
@@ -237,6 +282,6 @@ intact unless their responsibilities change:
 
 ## Latest verification
 
-The latest batch passed workspace typecheck and the full test suite (64 files, 231 tests).
+The earlier batch passed workspace typecheck and the full test suite (64 files, 231 tests).
 Formatting, source/import audits, candidate review, and `git diff --check` also passed. The
 Storybook build still prints existing Vite `use client`, sourcemap, and large-chunk warnings.
