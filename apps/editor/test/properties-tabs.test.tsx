@@ -20,7 +20,14 @@ function renderInspector() {
     session,
     catalogPort: createInMemoryCatalogPort(() => session.core.getSnapshot().catalog),
   });
-  render(<CatalogNodeInspector model={app.getInspectorSidebarModel(rootUuid)} onChange={(nodeId, path, value) => void app.dispatchSidebarIntent({ type: 'inspector.change', nodeId, path, value })} />);
+  render(
+    <CatalogNodeInspector
+      model={app.getInspectorSidebarModel(rootUuid)}
+      onChange={(nodeId, path, value) =>
+        void app.dispatchSidebarIntent({ type: 'inspector.change', nodeId, path, value })
+      }
+    />,
+  );
   return session;
 }
 

@@ -7,9 +7,7 @@ const NOUN: Record<'atom' | 'component' | 'page', string> = {
   page: 'page',
 };
 
-export function assetKindToCatalogMap(
-  kind: DefaultKind,
-): 'atoms' | 'components' | 'pages' | null {
+export function assetKindToCatalogMap(kind: DefaultKind): 'atoms' | 'components' | 'pages' | null {
   if (kind === 'atom') return 'atoms';
   if (kind === 'component') return 'components';
   if (kind === 'page') return 'pages';

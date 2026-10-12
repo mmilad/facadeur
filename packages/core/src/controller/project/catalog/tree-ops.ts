@@ -7,10 +7,7 @@ export function canAcceptCatalogChildren(node: Node): boolean {
   return !LEAF_TAGS.has(node.dom.tagName.toLowerCase());
 }
 
-export function findParentOfNode(
-  root: Node,
-  uuid: string,
-): { parent: Node; index: number } | null {
+export function findParentOfNode(root: Node, uuid: string): { parent: Node; index: number } | null {
   for (let index = 0; index < (root.dom.children ?? []).length; index += 1) {
     const child = root.dom.children![index]!;
     if (child.uuid === uuid) return { parent: root, index };
@@ -45,7 +42,11 @@ export function insertCatalogNode(
   return next;
 }
 
-export function isInsideCatalogSubtree(root: Node, ancestorUuid: string, nodeUuid: string): boolean {
+export function isInsideCatalogSubtree(
+  root: Node,
+  ancestorUuid: string,
+  nodeUuid: string,
+): boolean {
   if (ancestorUuid === nodeUuid) return true;
   const ancestor = findNodeByUuid(root, ancestorUuid);
   if (!ancestor) return false;

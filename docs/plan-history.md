@@ -500,31 +500,30 @@ Erster Größen-Scan vom 2026-10-01. Offene Einträge sind **Prüfaufträge**, k
 Refactors. Vor Umsetzung konkrete Verantwortlichkeiten, Grenzen und Verhaltenstests festlegen.
 Bei zusammenhängendem Code darf die Entscheidung ausdrücklich „beibehalten“ lauten.
 
-| Status                    | Kandidat                                                         | Ergebnis / nächste Prüfung                                                                               |
-| ------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Erledigt                  | `packages/core/src/validate.ts`                                  | Schema, lokale Regeln und Catalog-Contracts extrahiert; Exports und Invarianten erhalten.                |
-| Erledigt                  | `packages/core/src/commands/commands.ts`                         | Kleiner Dispatcher und Mutation-Familien; atomare Validierung und Undo-Vertrag erhalten.                 |
-| Erledigt                  | `retired adapter source codec`                                | Encode, Decode und gemeinsame legacy collaboration system-Helfer extrahiert; öffentliche Funktionen bleiben in `codec.ts`.       |
-| Erledigt                  | `packages/core/src/variants/variants.ts`                         | Resolver, Preset-Ableitung und Node-Deltas getrennt; Sparse-Override-Verhalten erhalten.                 |
-| Erledigt                  | `packages/core/src/document/schema.ts`                           | Schemafamilien unter `document/schemas/`; `schema.ts` behält die öffentlichen Exports.                   |
-| Erledigt                  | `apps/editor/src/ui/stage/StageCanvas.tsx`                       | Zeigerinteraktion und Board-Mount liegen in `stage/canvas/`; `StageCanvas` bleibt die Komponente.        |
-| Erledigt                  | `packages/core/src/token-tree.ts`                                | Werteprüfungen, Lesen und Baummutation getrennt; öffentliche Funktionen bleiben in `token-tree.ts`.      |
-| Erledigt                  | `packages/codegen-react/src/component/render.ts`                 | Ereignisse, Datenausdrücke, Bindings und Instanzen extrahiert; `renderNode` bleibt öffentlich.           |
-| Erledigt                  | `packages/core/src/document/flat.ts`                             | Klonen und Baumabfragen unter `document/flat/`; Umwandlung bleibt in `flat.ts`.                          |
-| Erledigt                  | `packages/core/src/styles/style-block.ts`                        | Parser nach `style-block-parse.ts`; Canonicalize, Prune und Contract bleiben zusammen.                   |
-| Erledigt                  | `packages/tokens/src/resolve.ts`                                 | CSS-Ausgabe nach `css-properties.ts`; `loadTokens` und die öffentlichen Exports bleiben in `resolve.ts`. |
-| Erledigt                  | `apps/editor/src/ui/sidebar/layers/ProjectTree.tsx`              | Zeilen und Kontextmenü in `AssetRows.tsx`; Suche und Anlegen bleiben im Baum.                            |
-| Erledigt                  | `apps/editor/src/domain/session/create-editor-session.ts`        | Katalog, Snapshot und Befehle liegen daneben; `createEditorSession` bleibt der Koordinator.              |
-| Erledigt                  | `packages/codegen-react/src/component/catalog.ts`                | Feldtypen und Defaults nach `catalog-fields.ts`; `assignCatalog` bleibt der Katalogdurchlauf.            |
-| Erledigt                  | `apps/editor/src/ui/sidebar/design/tokens/TokensDomainPanel.tsx` | Zeile, Vorschau und Breakpoint-Helfer extrahiert; Token-Cluster liegt unter `design/tokens/`.            |
-| Beibehalten nach Refactor | `packages/renderer-dom/src/render.ts`                            | Rendering/Reconciliation bleibt zusammen; Resolution, Presentation und Contracts wurden extrahiert.      |
+| Status                    | Kandidat                                                         | Ergebnis / nächste Prüfung                                                                                                 |
+| ------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Erledigt                  | `packages/core/src/validate.ts`                                  | Schema, lokale Regeln und Catalog-Contracts extrahiert; Exports und Invarianten erhalten.                                  |
+| Erledigt                  | `packages/core/src/commands/commands.ts`                         | Kleiner Dispatcher und Mutation-Familien; atomare Validierung und Undo-Vertrag erhalten.                                   |
+| Erledigt                  | `retired adapter source codec`                                   | Encode, Decode und gemeinsame legacy collaboration system-Helfer extrahiert; öffentliche Funktionen bleiben in `codec.ts`. |
+| Erledigt                  | `packages/core/src/variants/variants.ts`                         | Resolver, Preset-Ableitung und Node-Deltas getrennt; Sparse-Override-Verhalten erhalten.                                   |
+| Erledigt                  | `packages/core/src/document/schema.ts`                           | Schemafamilien unter `document/schemas/`; `schema.ts` behält die öffentlichen Exports.                                     |
+| Erledigt                  | `apps/editor/src/ui/stage/StageCanvas.tsx`                       | Zeigerinteraktion und Board-Mount liegen in `stage/canvas/`; `StageCanvas` bleibt die Komponente.                          |
+| Erledigt                  | `packages/core/src/token-tree.ts`                                | Werteprüfungen, Lesen und Baummutation getrennt; öffentliche Funktionen bleiben in `token-tree.ts`.                        |
+| Erledigt                  | `packages/codegen-react/src/component/render.ts`                 | Ereignisse, Datenausdrücke, Bindings und Instanzen extrahiert; `renderNode` bleibt öffentlich.                             |
+| Erledigt                  | `packages/core/src/document/flat.ts`                             | Klonen und Baumabfragen unter `document/flat/`; Umwandlung bleibt in `flat.ts`.                                            |
+| Erledigt                  | `packages/core/src/styles/style-block.ts`                        | Parser nach `style-block-parse.ts`; Canonicalize, Prune und Contract bleiben zusammen.                                     |
+| Erledigt                  | `packages/tokens/src/resolve.ts`                                 | CSS-Ausgabe nach `css-properties.ts`; `loadTokens` und die öffentlichen Exports bleiben in `resolve.ts`.                   |
+| Erledigt                  | `apps/editor/src/ui/sidebar/layers/ProjectTree.tsx`              | Zeilen und Kontextmenü in `AssetRows.tsx`; Suche und Anlegen bleiben im Baum.                                              |
+| Erledigt                  | `apps/editor/src/domain/session/create-editor-session.ts`        | Katalog, Snapshot und Befehle liegen daneben; `createEditorSession` bleibt der Koordinator.                                |
+| Erledigt                  | `packages/codegen-react/src/component/catalog.ts`                | Feldtypen und Defaults nach `catalog-fields.ts`; `assignCatalog` bleibt der Katalogdurchlauf.                              |
+| Erledigt                  | `apps/editor/src/ui/sidebar/design/tokens/TokensDomainPanel.tsx` | Zeile, Vorschau und Breakpoint-Helfer extrahiert; Token-Cluster liegt unter `design/tokens/`.                              |
+| Beibehalten nach Refactor | `packages/renderer-dom/src/render.ts`                            | Rendering/Reconciliation bleibt zusammen; Resolution, Presentation und Contracts wurden extrahiert.                        |
 
 `apps/editor/src/domain` ist nach `schema/`, `edits/`, `viewport/`, `selection/`, `navigation/`
 und `assets/` gruppiert. Token-Panels liegen unter `sidebar/design/tokens/`. Komponenten-Editoren
 des Content-Inspectors liegen unter `properties/content/component/`. `controls/data` und `shell`
 bleiben flach, jeweils eine UI-Domäne. Keine `shared/`- oder `utils`-Ordner. Der DOM-Renderer
 behält Paint und Kind-Abgleich zusammen, weil beide sich gegenseitig aufrufen.
-
 
 ## Completed implementation reports (2026-10-06 to 2026-10-09)
 

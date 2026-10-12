@@ -14,11 +14,7 @@ const nextConfig: NextConfig = {
     ? { distDir: process.env.FACADEUR_EDITOR_DIST_DIR }
     : {}),
   outputFileTracingRoot: repoRoot,
-  transpilePackages: [
-    '@facadeur/core',
-    '@facadeur/style-engine',
-    'jsonjoy-builder',
-  ],
+  transpilePackages: ['@facadeur/core', '@facadeur/style-engine', 'jsonjoy-builder'],
   webpack: (config) => {
     config.resolve.extensionAlias = {
       '.js': ['.ts', '.tsx', '.js', '.jsx'],

@@ -10,8 +10,4 @@ export { definition as image } from './image';
 export { schemaUuid as imageSchemaUuid } from './image/schema';
 export { exampleIds } from './idList';
 export { tokenRef } from './references';
-export {
-  createProjectTemplate,
-  defaultIcons,
-  type ProjectTemplate,
-} from './project-template';
+export { createProjectTemplate, defaultIcons, type ProjectTemplate } from './project-template';

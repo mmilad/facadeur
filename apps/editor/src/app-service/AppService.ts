@@ -7,9 +7,7 @@ import { InspectorService } from './inspector';
 import { assetKindToCatalogMap, blankCatalogDefinition } from '../domain/catalog/blank-definition';
 import { catalogAssetSummaries } from '../domain/catalog/asset-list';
 import type { SidebarIntent } from '../domain/sidebar/types';
-import {
-  catalogLayerDropTarget,
-} from '../domain/catalog/catalog-layer-move';
+import { catalogLayerDropTarget } from '../domain/catalog/catalog-layer-move';
 import {
   catalogLayerInsertTarget,
   catalogPlacementAllowed,
@@ -249,7 +247,11 @@ export class AppService {
     this.session.selectNode(parent?.parent.uuid ?? definition.root.uuid);
   }
 
-  private async moveSidebarLayer(sourceId: string, targetId: string, zone: 'before' | 'inside' | 'after') {
+  private async moveSidebarLayer(
+    sourceId: string,
+    targetId: string,
+    zone: 'before' | 'inside' | 'after',
+  ) {
     const definition = this.session.getSnapshot().openDefinition;
     if (!definition) return;
     const target = catalogLayerDropTarget(definition, sourceId, targetId, zone);

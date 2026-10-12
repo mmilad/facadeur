@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type DragEvent } from 'react';
 import { createPortal } from 'react-dom';
-import type { SidebarInsertOption, SidebarIntent, SidebarLayer, LayerSidebarModel } from '../../../domain/sidebar/types';
+import type { SidebarIntent, SidebarLayer, LayerSidebarModel } from '../../../domain/sidebar/types';
 import { layerDropZoneFor } from './catalog-layer-drag';
 import { CatalogLayerContextMenu } from './CatalogLayerContextMenu';
 import { findLayerByAddress } from './layer-tree';
@@ -15,7 +15,9 @@ export function CatalogLayersPanel({
   onIntent: (intent: SidebarIntent) => void;
 }) {
   const layers = model.layers;
-  const [over, setOver] = useState<{ id: string; zone: 'before' | 'inside' | 'after' } | null>(null);
+  const [over, setOver] = useState<{ id: string; zone: 'before' | 'inside' | 'after' } | null>(
+    null,
+  );
   const [contextLayer, setContextLayer] = useState<{
     address: string;
     anchor: DOMRect;

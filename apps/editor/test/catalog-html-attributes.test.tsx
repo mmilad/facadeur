@@ -45,7 +45,14 @@ describe('catalog inspector HTML attributes', () => {
       session,
       catalogPort: createInMemoryCatalogPort(() => session.core.getSnapshot().catalog),
     });
-    render(<CatalogNodeInspector model={app.getInspectorSidebarModel(rootUuid)} onChange={(nodeId, path, value) => void app.dispatchSidebarIntent({ type: 'inspector.change', nodeId, path, value })} />);
+    render(
+      <CatalogNodeInspector
+        model={app.getInspectorSidebarModel(rootUuid)}
+        onChange={(nodeId, path, value) =>
+          void app.dispatchSidebarIntent({ type: 'inspector.change', nodeId, path, value })
+        }
+      />,
+    );
 
     fireEvent.click(screen.getByRole('tab', { name: 'Properties' }));
     expect(screen.queryByTestId('preview-options-disclosure')).toBeNull();

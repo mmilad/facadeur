@@ -7,9 +7,9 @@ not package exports. Inside Core, import the owning module directly rather than 
 
 ## Source organization
 
-| Area                     | Owns                                                                                          | Does not own                                                 |
-| ------------------------ | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `document/`              | IDs, kinds, child-field operations, and document errors.                                      | UI selection or DOM addressing.                              |
+| Area                     | Owns                                                                                         | Does not own                                                 |
+| ------------------------ | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `document/`              | IDs, kinds, child-field operations, and document errors.                                     | UI selection or DOM addressing.                              |
 | `schema/`                | Catalog-facing TypeBox contracts and their derived types.                                    | Controller state or command execution.                       |
 | `utils.ts`               | Shared JSON value checks, plain-object checks, canonical JSON cloning.                       | Domain-specific behavior or controller state.                |
 | `controller/project/`    | Catalog state, `CoreController`, Catalog validation/operations, and node preview resolution. | Persistence adapters or editor interaction state.            |

@@ -63,7 +63,12 @@ function RightSidebarPreview({ assetId, layerUuid }: { assetId: string; layerUui
           <RightRail
             model={snap.sidebar.inspector}
             onChange={(nodeId, path, value) =>
-              void editor.app.dispatchSidebarIntent({ type: 'inspector.change', nodeId, path, value })
+              void editor.app.dispatchSidebarIntent({
+                type: 'inspector.change',
+                nodeId,
+                path,
+                value,
+              })
             }
           />
         </ResizableInspector>

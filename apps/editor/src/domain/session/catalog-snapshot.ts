@@ -51,7 +51,9 @@ export function buildCatalogEditorSnapshot(input: {
           virtual: item.virtual,
           documentId: item.documentId,
           canDelete: Boolean(
-            openDefinition && !item.virtual && item.documentId === input.openId &&
+            openDefinition &&
+            !item.virtual &&
+            item.documentId === input.openId &&
             item.id !== openDefinition.root.uuid,
           ),
           insertInside: sidebarInsertOptions(item, 'inside'),

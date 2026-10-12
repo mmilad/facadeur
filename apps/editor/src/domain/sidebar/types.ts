@@ -51,11 +51,17 @@ export interface InspectorSidebarModel {
   readonly tabs: readonly {
     readonly id: 'style' | 'properties' | 'previewData';
     readonly label: string;
-    readonly sections: readonly { readonly label: string; readonly fields: readonly FormFieldConfig[] }[];
+    readonly sections: readonly {
+      readonly label: string;
+      readonly fields: readonly FormFieldConfig[];
+    }[];
   }[];
   readonly values: Readonly<Record<string, unknown>>;
   readonly bindOptions: readonly {
-    value: string; label: string; description?: string; group?: string;
+    value: string;
+    label: string;
+    description?: string;
+    group?: string;
   }[];
 }
 
@@ -89,4 +95,9 @@ export type SidebarIntent =
       readonly targetId: string;
       readonly zone: 'before' | 'inside' | 'after';
     }
-  | { readonly type: 'inspector.change'; readonly nodeId: string; readonly path: string; readonly value: unknown };
+  | {
+      readonly type: 'inspector.change';
+      readonly nodeId: string;
+      readonly path: string;
+      readonly value: unknown;
+    };

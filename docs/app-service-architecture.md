@@ -19,14 +19,14 @@ Editor UI
 
 ## Ownership
 
-| Owner               | Responsibility                                                                                                                                         |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `AppService`        | UI-facing operations; delegates catalog transport and state changes to Core and session state to EditorSession.                                        |
-| `CoreController`    | Validated catalog state, definition/schema/design mutations, and save/create/delete orchestration through ports.                                       |
-| `EditorSession`     | Editor selection, viewport and editing state.                                                                                                           |
-| `InspectorService`  | Shapes Core's preview/inspector model for UI controls.                                                                                                 |
-| `createInMemoryCatalogPort` | Supplies local persistence and definition operations to Storybook and the local preview.                                                  |
-| React canvas        | Renders the active Editor canvas.                                                                                                                      |
+| Owner                       | Responsibility                                                                                                   |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `AppService`                | UI-facing operations; delegates catalog transport and state changes to Core and session state to EditorSession.  |
+| `CoreController`            | Validated catalog state, definition/schema/design mutations, and save/create/delete orchestration through ports. |
+| `EditorSession`             | Editor selection, viewport and editing state.                                                                    |
+| `InspectorService`          | Shapes Core's preview/inspector model for UI controls.                                                           |
+| `createInMemoryCatalogPort` | Supplies local persistence and definition operations to Storybook and the local preview.                         |
+| React canvas                | Renders the active Editor canvas.                                                                                |
 
 The Editor canvas renders through React `DynamicElement`, consuming `ElementBuildConfig` from Core.
 Shared contracts live in `@facadeur/domain`.

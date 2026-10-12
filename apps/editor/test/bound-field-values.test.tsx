@@ -52,7 +52,14 @@ describe('catalog inspector preview fields', () => {
       session,
       catalogPort: createInMemoryCatalogPort(() => session.core.getSnapshot().catalog),
     });
-    render(<CatalogNodeInspector model={app.getInspectorSidebarModel(rootUuid)} onChange={(nodeId, path, value) => void app.dispatchSidebarIntent({ type: 'inspector.change', nodeId, path, value })} />);
+    render(
+      <CatalogNodeInspector
+        model={app.getInspectorSidebarModel(rootUuid)}
+        onChange={(nodeId, path, value) =>
+          void app.dispatchSidebarIntent({ type: 'inspector.change', nodeId, path, value })
+        }
+      />,
+    );
 
     fireEvent.click(screen.getByRole('tab', { name: 'Preview data' }));
     const placeholder = screen.getByRole('textbox', { name: 'placeholder' });

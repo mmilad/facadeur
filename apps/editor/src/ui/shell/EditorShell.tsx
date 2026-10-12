@@ -147,7 +147,8 @@ export function EditorShell({
                   onOpenDesignDomain={(domain) => setSurface(domain)}
                   onIntent={(intent) => {
                     void app.dispatchSidebarIntent(intent);
-                    if (intent.type === 'asset.open' && isDesignDomain(surface)) setSurface('editor');
+                    if (intent.type === 'asset.open' && isDesignDomain(surface))
+                      setSurface('editor');
                   }}
                 />
               }

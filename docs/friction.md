@@ -47,7 +47,6 @@
 
 - **Update (2026-10-04, hydration debugging):** `pnpm exec prettier --write <affected editor files>` stays silent and eventually reports `GET https://registry.npmjs.org/pnpm: fetch failed` in the sandbox. The direct local invocation `node node_modules/prettier/bin/prettier.cjs --write <affected editor files>` succeeds without network access. Use the installed CLI for formatting; fix the pnpm shim's version lookup to use the locally installed pinned version offline.
 
-
 - **Reproduction:** Run pnpm commands from the restricted workspace process. Depending on the command, Corepack attempts to fetch the project pin or pnpm fails resolving `node_modules` with `EPERM`.
 - **Evidence:** `package.json` pins pnpm 10.33.3, matching the user's CMD. The restricted process sets an isolated `COREPACK_HOME` without that package-manager cache and denies `realpath` access to the workspace install. Pointing `COREPACK_HOME` to the user's cache resolves version lookup but not the filesystem restriction.
 - **Impact:** Installs and checks can stop before reaching project code in the restricted process.

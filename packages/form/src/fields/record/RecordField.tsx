@@ -114,7 +114,7 @@ export function RecordField({
               {keyOptions.length ? (
                 <TextField
                   id={index === 0 ? id : `${id}-${row.id}-key`}
-                    name={`${name}.${row.id}.key`}
+                  name={`${name}.${row.id}.key`}
                   label={keyLabel}
                   value={row.key}
                   suggestions={keyOptions}

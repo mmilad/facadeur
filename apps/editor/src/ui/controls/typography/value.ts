@@ -42,9 +42,7 @@ export function projectFontRefs(fonts: readonly Pick<FontFamily, 'uuid'>[]): str
 }
 
 /** Weights declared on the project fonts. Typography picks one of these numbers. */
-export function projectFontWeightOptions(
-  fonts: readonly Pick<FontFamily, 'value'>[],
-): string[] {
+export function projectFontWeightOptions(fonts: readonly Pick<FontFamily, 'value'>[]): string[] {
   return [...new Set(fonts.flatMap((font) => font.value.weights))]
     .sort((left, right) => left - right)
     .map(String);

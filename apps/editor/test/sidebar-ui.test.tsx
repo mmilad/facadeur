@@ -2,7 +2,11 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import type { InspectorSidebarModel, LayerSidebarModel, ProjectSidebarModel } from '../src/domain/sidebar/types';
+import type {
+  InspectorSidebarModel,
+  LayerSidebarModel,
+  ProjectSidebarModel,
+} from '../src/domain/sidebar/types';
 import { ProjectTree } from '../src/ui/sidebar/left/ProjectTree';
 import { CatalogLayersPanel } from '../src/ui/sidebar/left/CatalogLayersPanel';
 import { CatalogNodeInspector } from '../src/ui/sidebar/right/components/CatalogNodeInspector';
@@ -36,9 +40,17 @@ describe('sidebar UI contracts', () => {
       selectedRenderId: null,
       draggedNodeId: null,
       layers: {
-        id: 'root', address: 'node:root', label: 'root', type: 'layer', tagName: 'article',
-        children: [], virtual: false, documentId: 'asset-1', canDelete: false,
-        insertInside: [], insertBelow: [],
+        id: 'root',
+        address: 'node:root',
+        label: 'root',
+        type: 'layer',
+        tagName: 'article',
+        children: [],
+        virtual: false,
+        documentId: 'asset-1',
+        canDelete: false,
+        insertInside: [],
+        insertBelow: [],
       },
     };
     render(<CatalogLayersPanel model={layer} onIntent={onIntent} />);
@@ -49,10 +61,13 @@ describe('sidebar UI contracts', () => {
   it('renders inspector form DTOs and emits a typed field value', () => {
     const onChange = vi.fn();
     const inspector: InspectorSidebarModel = {
-      nodeId: 'root', formKey: 'asset-1:root', selectionKind: 'root',
+      nodeId: 'root',
+      formKey: 'asset-1:root',
+      selectionKind: 'root',
       headerFields: [{ type: 'text', name: 'definition.name', label: 'Name' }],
       tabs: [{ id: 'style', label: 'Style', sections: [] }],
-      values: { 'definition.name': 'Card' }, bindOptions: [],
+      values: { 'definition.name': 'Card' },
+      bindOptions: [],
     };
     render(<CatalogNodeInspector model={inspector} onChange={onChange} />);
     const name = screen.getByRole('textbox', { name: 'Name' });

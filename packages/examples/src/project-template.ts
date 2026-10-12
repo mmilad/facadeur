@@ -1,8 +1,4 @@
-import {
-  defaultBreakpoints,
-  type Breakpoint,
-  type TokenTree,
-} from '@facadeur/core';
+import { defaultBreakpoints, type Breakpoint, type TokenTree } from '@facadeur/core';
 import type { IconDefinition } from '@facadeur/domain';
 import { exampleCatalog } from './catalog';
 import { defaultIcons } from './catalog/icons';

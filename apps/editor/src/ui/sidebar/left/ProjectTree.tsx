@@ -4,7 +4,11 @@ import { createPortal } from 'react-dom';
 import { AssetContextMenu } from './AssetContextMenu';
 import { RenameAssetDialog } from './RenameAssetDialog';
 import { AssetRows } from './AssetRows';
-import type { ProjectSidebarModel, SidebarAsset, SidebarIntent } from '../../../domain/sidebar/types';
+import type {
+  ProjectSidebarModel,
+  SidebarAsset,
+  SidebarIntent,
+} from '../../../domain/sidebar/types';
 import {
   SIDEBAR_DESIGN_ITEMS,
   type DesignDomain,
@@ -71,7 +75,9 @@ export function ProjectTree({
   }, [assetContextMenu, model.assets]);
 
   useEffect(() => {
-    setAssetContextMenu((current) => (current && current.assetId !== model.openId ? null : current));
+    setAssetContextMenu((current) =>
+      current && current.assetId !== model.openId ? null : current,
+    );
   }, [model.openId]);
 
   useEffect(() => {

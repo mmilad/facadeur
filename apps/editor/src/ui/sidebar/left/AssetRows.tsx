@@ -54,7 +54,11 @@ export function AssetRows({
   });
 }
 
-function startAssetDrag(onIntent: (intent: SidebarIntent) => void, event: DragEvent, assetId: string) {
+function startAssetDrag(
+  onIntent: (intent: SidebarIntent) => void,
+  event: DragEvent,
+  assetId: string,
+) {
   event.dataTransfer.setData('text/plain', assetId);
   event.dataTransfer.effectAllowed = 'copy';
   onIntent({ type: 'asset.drag.start', id: assetId });

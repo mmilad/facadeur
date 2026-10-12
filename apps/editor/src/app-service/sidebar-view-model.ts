@@ -1,4 +1,9 @@
-import { getPath, type AutocompleteOption, type FormFieldConfig, type TransformableFieldOption } from '@facadeur/form';
+import {
+  getPath,
+  type AutocompleteOption,
+  type FormFieldConfig,
+  type TransformableFieldOption,
+} from '@facadeur/form';
 import type { InspectorViewModel } from './inspector';
 import { mapInspectorFormFields } from './map-inspector-form';
 import { transformableFieldOptions } from './transformable-field-options';
@@ -10,30 +15,49 @@ export function buildInspectorSidebarViewModel(
 ): InspectorSidebarModel {
   const propOptions = propBindingOptions(model);
   const fieldOptions = (_path: string, _label: string, color = false) =>
-    transformableFieldOptions({ props: propOptions, tokens: model.styleSuggestions.options, color });
+    transformableFieldOptions({
+      props: propOptions,
+      tokens: model.styleSuggestions.options,
+      color,
+    });
   const isRoot = model.selectionKind === 'root';
   const headerFields =
-    sectionFields(model, isRoot ? 'Asset' : 'Element', undefined, propOptions, fieldOptions)?.fields ?? [];
+    sectionFields(model, isRoot ? 'Asset' : 'Element', undefined, propOptions, fieldOptions)
+      ?.fields ?? [];
   const contentSection = sectionFields(model, 'Content', undefined, propOptions, fieldOptions);
   const styleSection = sectionFields(model, 'Layout & style', undefined, propOptions, fieldOptions);
-  const nodeDataSection = sectionFields(model, 'Properties', 'Node data', propOptions, fieldOptions);
+  const nodeDataSection = sectionFields(
+    model,
+    'Properties',
+    'Node data',
+    propOptions,
+    fieldOptions,
+  );
   const propertySections = [
     ...(contentSection ? [contentSection] : []),
     {
       label: 'HTML attributes',
-      fields: [{
-        type: 'record' as const,
-        name: 'node.attributes',
-        label: 'Attributes',
-        keyLabel: 'Attribute',
-        valueLabel: 'Value',
-        valueField: { type: 'transformable' as const, fieldOptions: fieldOptions('node.attributes', 'Value') },
-      }],
+      fields: [
+        {
+          type: 'record' as const,
+          name: 'node.attributes',
+          label: 'Attributes',
+          keyLabel: 'Attribute',
+          valueLabel: 'Value',
+          valueField: {
+            type: 'transformable' as const,
+            fieldOptions: fieldOptions('node.attributes', 'Value'),
+          },
+        },
+      ],
     },
     ...(model.selectionKind === 'element' && nodeDataSection ? [nodeDataSection] : []),
   ];
-  const componentDefaults = nodeDataSection ? { ...nodeDataSection, label: 'Component defaults' } : null;
-  const previewSections = model.selectionKind !== 'element' && componentDefaults ? [componentDefaults] : [];
+  const componentDefaults = nodeDataSection
+    ? { ...nodeDataSection, label: 'Component defaults' }
+    : null;
+  const previewSections =
+    model.selectionKind !== 'element' && componentDefaults ? [componentDefaults] : [];
   const tabs = [
     { id: 'style' as const, label: 'Style', sections: styleSection ? [styleSection] : [] },
     { id: 'properties' as const, label: 'Properties', sections: propertySections },
@@ -41,7 +65,10 @@ export function buildInspectorSidebarViewModel(
       ? [{ id: 'previewData' as const, label: 'Preview data', sections: previewSections }]
       : []),
   ];
-  const allFields = [...headerFields, ...tabs.flatMap((tab) => tab.sections.flatMap((section) => section.fields))];
+  const allFields = [
+    ...headerFields,
+    ...tabs.flatMap((tab) => tab.sections.flatMap((section) => section.fields)),
+  ];
   const names = flattenFields(allFields).map((field) => field.name);
   return {
     nodeId: model.nodeUuid,
@@ -70,8 +97,12 @@ function propBindingOptions(model: InspectorViewModel): AutocompleteOption[] {
   }));
 }
 
-function flattenFields(fields: readonly FormFieldConfig[]): Exclude<FormFieldConfig, { type: 'layout' }>[] {
-  return fields.flatMap((field) => field.type === 'layout' ? flattenFields(field.fields) : [field]);
+function flattenFields(
+  fields: readonly FormFieldConfig[],
+): Exclude<FormFieldConfig, { type: 'layout' }>[] {
+  return fields.flatMap((field) =>
+    field.type === 'layout' ? flattenFields(field.fields) : [field],
+  );
 }
 
 function sectionFields(
@@ -79,10 +110,22 @@ function sectionFields(
   title: string,
   label = title,
   componentOptions: readonly AutocompleteOption[] = [],
-  fieldOptions: (path: string, label: string, color?: boolean) => readonly TransformableFieldOption[],
+  fieldOptions: (
+    path: string,
+    label: string,
+    color?: boolean,
+  ) => readonly TransformableFieldOption[],
 ) {
   const section = model.fields.find((field) => field.type === 'section' && field.title === title);
   return section?.type === 'section'
-    ? { label, fields: mapInspectorFormFields(section.fields, model.styleSuggestions, componentOptions, fieldOptions) }
+    ? {
+        label,
+        fields: mapInspectorFormFields(
+          section.fields,
+          model.styleSuggestions,
+          componentOptions,
+          fieldOptions,
+        ),
+      }
     : null;
 }
