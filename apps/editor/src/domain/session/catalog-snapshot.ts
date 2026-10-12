@@ -4,6 +4,14 @@ import { catalogLayerTree } from '../catalog/layer-tree';
 import type { AssetSummary, EditorDrag, EditorNotice, EditorSnapshot, EditorTool } from './types';
 import type { DefaultKind } from '@facadeur/core';
 import type { StyleEditMode } from '../viewport/viewport-edit';
+import type { SidebarLayer } from '../sidebar/types';
+import { defaultNestingRules } from '@facadeur/core';
+import { findNodeByUuid } from '@facadeur/core';
+import {
+  catalogLayerInsertEntries,
+  catalogLayerInsertTarget,
+  catalogPlacementAllowed,
+} from '../catalog/catalog-layer-insert';
 
 export function buildCatalogEditorSnapshot(input: {
   core: CoreController;
@@ -31,8 +39,67 @@ export function buildCatalogEditorSnapshot(input: {
   const layers = openDefinition
     ? catalogLayerTree(openDefinition.uuid, openDefinition.root, input.core)
     : null;
+  const openKind = openDefinition?.kind ?? input.workspace;
+  const sidebarLayers = (item: typeof layers): SidebarLayer | null =>
+    item
+      ? {
+          id: item.id,
+          address: item.address,
+          label: item.name,
+          type: item.type,
+          tagName: item.tagName,
+          virtual: item.virtual,
+          documentId: item.documentId,
+          canDelete: Boolean(
+            openDefinition && !item.virtual && item.documentId === input.openId &&
+            item.id !== openDefinition.root.uuid,
+          ),
+          insertInside: sidebarInsertOptions(item, 'inside'),
+          insertBelow: sidebarInsertOptions(item, 'below'),
+          children: item.children.map((child) => sidebarLayers(child)!),
+        }
+      : null;
+  function sidebarInsertOptions(item: NonNullable<typeof layers>, placement: 'inside' | 'below') {
+    if (!openDefinition) return [];
+    const target = catalogLayerInsertTarget(openDefinition, item, placement);
+    const parent = target ? findNodeByUuid(openDefinition.root, target.parentUuid) : null;
+    if (!parent) return [];
+    return catalogLayerInsertEntries(openDefinition.kind, catalogAssets, input.openId)
+      .filter((entry) => entry.kind !== 'structural')
+      .filter((entry) => catalogPlacementAllowed(openDefinition.kind, parent, entry, catalogAssets))
+      .map((entry) => ({
+        kind: entry.kind,
+        value: entry.kind === 'instance' ? entry.assetId : entry.tool,
+        label: entry.label,
+      }));
+  }
+  const sidebar = {
+    project: {
+      assets: catalogAssets.map(({ id, name, slug, kind }) => ({ id, label: name, slug, kind })),
+      openId: input.openId,
+      draggableAssetIds: catalogAssets
+        .filter(
+          (asset) =>
+            asset.id !== input.openId &&
+            defaultNestingRules[openKind].instanceKinds.includes(asset.kind),
+        )
+        .map((asset) => asset.id),
+    },
+    layers: {
+      title: openDefinition
+        ? (input.core.getDefinitionDisplayName(openDefinition.uuid) ?? openDefinition.name)
+        : 'Design',
+      rootId: openDefinition?.root.uuid ?? null,
+      layers: sidebarLayers(layers),
+      selectedId: input.selectedNodeId,
+      selectedRenderId: input.selectedRenderId,
+      draggedNodeId: input.drag?.kind === 'node' ? input.drag.nodeId : null,
+    },
+    inspector: null,
+  } as const;
 
   return {
+    sidebar,
     workspace: input.workspace,
     openId: input.openId,
     assets,

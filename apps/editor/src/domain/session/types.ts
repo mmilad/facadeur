@@ -9,6 +9,7 @@ import type {
 import type { ProjectCatalog } from '@facadeur/domain';
 import type { LayerItem } from '../catalog/layer-tree';
 import type { StyleEditMode } from '../viewport/viewport-edit';
+import type { SidebarViewModel } from '../sidebar/types';
 
 export type EditorTool = 'select' | 'frame' | 'text' | 'image';
 
@@ -27,6 +28,7 @@ export interface EditorNotice {
 }
 
 export interface EditorSnapshot {
+  sidebar: SidebarViewModel;
   workspace: DefaultKind;
   openId: string;
   assets: AssetSummary[];

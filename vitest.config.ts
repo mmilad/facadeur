@@ -52,6 +52,8 @@ export default defineConfig({
       'apps/editor/test/viewport-edit.test.ts',
       'apps/editor/test/viewport-layers.test.tsx',
       'apps/editor/test/layers-navigation.test.tsx',
+      'apps/editor/test/sidebar-ui.test.tsx',
+      'apps/editor/test/sidebar-model.test.ts',
       'apps/editor/test/catalog-layer-insert.test.ts',
       'apps/editor/test/bound-field-values.test.tsx',
       'apps/editor/test/catalog-html-attributes.test.tsx',

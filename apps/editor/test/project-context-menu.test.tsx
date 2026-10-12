@@ -8,7 +8,7 @@ import { createExampleCatalog } from '@facadeur/examples';
 import { createAppService } from '../src/app-service';
 import { createInMemoryCatalogPort } from '../src/domain/project/in-memory-catalog-port';
 import { createEditorSession } from '../src/domain/session';
-import { ProjectTree } from '../src/ui/sidebar/layers/ProjectTree';
+import { ProjectTree } from '../src/ui/sidebar/left/ProjectTree';
 
 afterEach(cleanup);
 
@@ -22,12 +22,10 @@ it('opens the Catalog asset menu and creates a Catalog definition from the New a
   const asset = session.getSnapshot().catalog[0]!;
   const view = render(
     <ProjectTree
-      app={app}
-      session={session}
-      snap={session.getSnapshot()}
+      model={session.getSnapshot().sidebar.project}
       surface="editor"
-      onOpenAsset={(id) => session.openAsset(id)}
       onOpenDesignDomain={vi.fn()}
+      onIntent={(intent) => void app.dispatchSidebarIntent(intent)}
     />,
   );
   const row = view.container.querySelector<HTMLButtonElement>(`[data-asset-id="${asset.id}"]`)!;

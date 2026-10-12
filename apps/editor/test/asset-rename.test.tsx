@@ -6,7 +6,7 @@ import { createExampleCatalog, exampleIds } from '@facadeur/examples';
 import { createAppService } from '../src/app-service';
 import { createInMemoryCatalogPort } from '../src/domain/project/in-memory-catalog-port';
 import { createEditorSession } from '../src/domain/session';
-import { RenameAssetDialog } from '../src/ui/sidebar/layers/RenameAssetDialog';
+import { RenameAssetDialog } from '../src/ui/sidebar/left/RenameAssetDialog';
 
 afterEach(cleanup);
 
@@ -21,8 +21,8 @@ it('renames a Catalog definition while preserving its UUID', async () => {
   let closed = false;
   render(
     <RenameAssetDialog
-      app={app}
-      asset={session.getSnapshot().catalog.find((asset) => asset.id === definitionId)!}
+      asset={{ id: definitionId, label: 'Form input', kind: 'atom' }}
+      onRename={(id, name) => void app.dispatchSidebarIntent({ type: 'asset.rename', id, name })}
       onClose={() => {
         closed = true;
       }}

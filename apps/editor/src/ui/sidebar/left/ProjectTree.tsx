@@ -1,23 +1,17 @@
-import type { DefaultKind } from '@facadeur/core';
 import { SearchField } from '@facadeur/form';
-import type { AppService } from '../../../app-service';
-import {
-  assetKindToCatalogMap,
-  blankCatalogDefinition,
-} from '../../../domain/catalog/blank-definition';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { AssetContextMenu } from './AssetContextMenu';
 import { RenameAssetDialog } from './RenameAssetDialog';
 import { AssetRows } from './AssetRows';
-import type { EditorSession, EditorSnapshot } from '../../../domain/session';
+import type { ProjectSidebarModel, SidebarAsset, SidebarIntent } from '../../../domain/sidebar/types';
 import {
   SIDEBAR_DESIGN_ITEMS,
   type DesignDomain,
   type EditorSurface,
 } from '../../design/design-domain';
 
-const TREE_KINDS = ['atom', 'component', 'page'] as const satisfies readonly DefaultKind[];
+const TREE_KINDS = ['atom', 'component', 'page'] as const;
 
 const KIND_LABEL: Record<(typeof TREE_KINDS)[number], string> = {
   atom: 'Atoms',
@@ -26,19 +20,15 @@ const KIND_LABEL: Record<(typeof TREE_KINDS)[number], string> = {
 };
 
 export function ProjectTree({
-  app,
-  session,
-  snap,
+  model,
   surface,
-  onOpenAsset,
   onOpenDesignDomain,
+  onIntent,
 }: {
-  app: AppService;
-  session: EditorSession;
-  snap: EditorSnapshot;
+  model: ProjectSidebarModel;
   surface: EditorSurface;
-  onOpenAsset: (id: string) => void;
   onOpenDesignDomain: (domain: DesignDomain) => void;
+  onIntent: (intent: SidebarIntent) => void;
 }) {
   const [query, setQuery] = useState('');
   const [renameAssetId, setRenameAssetId] = useState<string | null>(null);
@@ -51,16 +41,16 @@ export function ProjectTree({
   const activeRef = useRef<HTMLButtonElement | null>(null);
   const contextMenuRef = useRef<HTMLDivElement | null>(null);
   const needle = query.trim().toLowerCase();
-  const openKind = snap.catalog.find((asset) => asset.id === snap.openId)?.kind;
+  const openKind = model.assets.find((asset) => asset.id === model.openId)?.kind;
 
   useEffect(() => {
     if (!openKind) return;
     setExpanded((prev) => (prev[openKind] === false ? { ...prev, [openKind]: true } : prev));
-  }, [openKind, snap.openId]);
+  }, [openKind, model.openId]);
 
   useEffect(() => {
     activeRef.current?.scrollIntoView?.({ block: 'nearest' });
-  }, [snap.openId, expanded, needle]);
+  }, [model.openId, expanded, needle]);
 
   useEffect(() => {
     if (!assetContextMenu) return;
@@ -75,14 +65,14 @@ export function ProjectTree({
   }, [assetContextMenu]);
 
   useEffect(() => {
-    if (assetContextMenu && !snap.catalog.some((asset) => asset.id === assetContextMenu.assetId)) {
+    if (assetContextMenu && !model.assets.some((asset) => asset.id === assetContextMenu.assetId)) {
       setAssetContextMenu(null);
     }
-  }, [assetContextMenu, snap.catalog]);
+  }, [assetContextMenu, model.assets]);
 
   useEffect(() => {
-    setAssetContextMenu((current) => (current && current.assetId !== snap.openId ? null : current));
-  }, [snap.openId]);
+    setAssetContextMenu((current) => (current && current.assetId !== model.openId ? null : current));
+  }, [model.openId]);
 
   useEffect(() => {
     if (!assetContextMenu) return;
@@ -112,7 +102,7 @@ export function ProjectTree({
   const groups = useMemo(
     () =>
       TREE_KINDS.map((kind) => {
-        const assets = snap.catalog.filter((asset) => asset.kind === kind);
+        const assets = model.assets.filter((asset) => asset.kind === kind);
         const labelHit = Boolean(needle) && KIND_LABEL[kind].toLowerCase().includes(needle);
         const visibleAssets =
           needle && !labelHit ? assets.filter((asset) => assetMatches(asset, needle)) : assets;
@@ -122,7 +112,7 @@ export function ProjectTree({
           show: !needle || labelHit || visibleAssets.length > 0,
         };
       }),
-    [needle, snap.catalog],
+    [needle, model.assets],
   );
 
   const empty =
@@ -133,20 +123,10 @@ export function ProjectTree({
     setExpanded((prev) => ({ ...prev, [id]: prev[id] === false }));
   }
 
-  async function create(kind: (typeof TREE_KINDS)[number]) {
-    const mapKind = assetKindToCatalogMap(kind);
-    if (!mapKind) return;
-    const definition = blankCatalogDefinition(kind, snap.catalog);
-    try {
-      await app.createDefinition(mapKind, definition);
-      setQuery('');
-      setExpanded((prev) => ({ ...prev, [kind]: true }));
-    } catch (failure) {
-      session.setNotice(
-        failure instanceof Error ? failure.message : 'Could not create asset',
-        'error',
-      );
-    }
+  function create(kind: (typeof TREE_KINDS)[number]) {
+    onIntent({ type: 'asset.create', kind });
+    setQuery('');
+    setExpanded((prev) => ({ ...prev, [kind]: true }));
   }
 
   function openAssetContext(assetId: string, anchorEl: HTMLElement) {
@@ -154,7 +134,7 @@ export function ProjectTree({
   }
 
   const contextAsset = assetContextMenu
-    ? snap.catalog.find((candidate) => candidate.id === assetContextMenu.assetId)
+    ? model.assets.find((candidate) => candidate.id === assetContextMenu.assetId)
     : undefined;
 
   return (
@@ -200,10 +180,10 @@ export function ProjectTree({
             >
               <AssetRows
                 assets={group.assets}
-                snap={snap}
-                session={session}
+                openId={model.openId}
+                draggableAssetIds={model.draggableAssetIds}
                 activeRef={activeRef}
-                onOpenAsset={onOpenAsset}
+                onIntent={onIntent}
                 contextAssetId={contextAssetId}
                 onContextAsset={openAssetContext}
               />
@@ -219,17 +199,10 @@ export function ProjectTree({
               anchor={assetContextMenu.anchor}
               menuRef={contextMenuRef}
               onRename={(id) => {
-                onOpenAsset(id);
+                onIntent({ type: 'asset.open', id });
                 setRenameAssetId(id);
               }}
-              onDelete={(id) => {
-                void app.deleteDefinition(id).catch((failure) => {
-                  session.setNotice(
-                    failure instanceof Error ? failure.message : 'Could not delete asset',
-                    'error',
-                  );
-                });
-              }}
+              onDelete={(id) => onIntent({ type: 'asset.delete', id })}
               onClose={() => setAssetContextMenu(null)}
             />,
             document.body,
@@ -238,8 +211,8 @@ export function ProjectTree({
       {renameAssetId ? (
         <RenameAssetDialog
           key={renameAssetId}
-          app={app}
-          asset={snap.catalog.find((asset) => asset.id === renameAssetId)!}
+          asset={model.assets.find((asset) => asset.id === renameAssetId)!}
+          onRename={(id, name) => onIntent({ type: 'asset.rename', id, name })}
           onClose={() => setRenameAssetId(null)}
         />
       ) : null}
@@ -293,9 +266,9 @@ function isOpen(id: string, needle: string, expanded: Record<string, boolean>): 
   return expanded[id] !== false;
 }
 
-function assetMatches(asset: { name: string; id: string; slug?: string }, needle: string): boolean {
+function assetMatches(asset: SidebarAsset, needle: string): boolean {
   return (
-    asset.name.toLowerCase().includes(needle) ||
+    asset.label.toLowerCase().includes(needle) ||
     asset.id.toLowerCase().includes(needle) ||
     (asset.slug?.toLowerCase().includes(needle) ?? false)
   );

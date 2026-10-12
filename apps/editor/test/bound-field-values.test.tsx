@@ -7,7 +7,7 @@ import { createExampleCatalog, exampleIds } from '@facadeur/examples';
 import { createEditorSession } from '../src/domain/session';
 import { createInMemoryCatalogPort } from '../src/domain/project/in-memory-catalog-port';
 import { createAppService } from '../src/app-service';
-import { CatalogNodeInspector } from '../src/ui/sidebar/properties/CatalogNodeInspector';
+import { CatalogNodeInspector } from '../src/ui/sidebar/right/components/CatalogNodeInspector';
 
 const definitionUuid = exampleIds.components.input.definition;
 const rootUuid = exampleIds.components.input.nodes.root;
@@ -52,7 +52,7 @@ describe('catalog inspector preview fields', () => {
       session,
       catalogPort: createInMemoryCatalogPort(() => session.core.getSnapshot().catalog),
     });
-    render(<CatalogNodeInspector app={app} nodeUuid={rootUuid} formKey={definitionUuid} />);
+    render(<CatalogNodeInspector model={app.getInspectorSidebarModel(rootUuid)} onChange={(nodeId, path, value) => void app.dispatchSidebarIntent({ type: 'inspector.change', nodeId, path, value })} />);
 
     fireEvent.click(screen.getByRole('tab', { name: 'Preview data' }));
     const placeholder = screen.getByRole('textbox', { name: 'placeholder' });

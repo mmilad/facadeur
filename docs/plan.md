@@ -37,6 +37,34 @@ completed change logs out of this file.
 
 ## Remaining follow-up
 
+- [ ] Refactor: decouple project/layer sidebar and inspector from Core.
+  - Evidence: `ui/sidebar/layers` and `ui/sidebar/properties` receive `AppService`,
+    `EditorSession`, or full `EditorSnapshot`; layer/asset controls compute Catalog rules and
+    invoke Core-backed workflows directly. The Inspector consumes a Core-derived model.
+  - Action: organize sidebar UI under `base/`, `left/`, and `right/`; add editor-owned flat
+    sidebar DTOs/adapters to the existing session snapshot; route minimal typed intents through
+    `AppService` for resolution, validation, persistence, selection, and drag operations. Build
+    Storybook/test DTOs from the canonical Examples Catalog.
+  - Scope: prerequisite for the current sidebar decoupling task; settings panels remain unchanged.
+  - Contracts: preserve asset create/open/rename/delete, layer selection/context actions/drop
+    zones and legal moves, inspector fields/tabs/form values, notices, and persistence behavior.
+  - Validation: DTO-only sidebar tests, Example adapter and service behavior tests, workspace
+    typecheck/full tests/Storybook build, import audit, candidate detector, and diff check.
+
+- [ ] Refactor: decouple project/layer sidebar and inspector from Core.
+  - Evidence: `ui/sidebar/layers` and `ui/sidebar/properties` receive `AppService`,
+    `EditorSession`, or full `EditorSnapshot`; layer/asset controls compute Catalog rules and
+    invoke Core-backed workflows directly. The Inspector consumes a Core-derived model.
+  - Action: organize sidebar UI under `base/`, `left/`, and `right/`; add editor-owned flat
+    sidebar DTOs/adapters to the existing session snapshot; route minimal typed intents through
+    `AppService` for resolution, validation, persistence, selection, and drag operations. Build
+    Storybook/test DTOs from the canonical Examples Catalog.
+  - Scope: prerequisite for the current sidebar decoupling task; settings panels remain unchanged.
+  - Contracts: preserve asset create/open/rename/delete, layer selection/context actions/drop
+    zones and legal moves, inspector fields/tabs/form values, notices, and persistence behavior.
+  - Validation: DTO-only sidebar tests, Example adapter and service behavior tests, workspace
+    typecheck/full tests/Storybook build, import audit, candidate detector, and diff check.
+
 - [x] Refactor: route Catalog queries through Core.
   - Evidence: Editor session, stage, schema/props panels, layer tree, and Inspector still read
     Catalog fields directly or pass the whole Catalog to helpers such as viewport-board creation,

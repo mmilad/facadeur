@@ -13,7 +13,7 @@ import { createAppService } from '../src/app-service';
 import { catalogLayerTree } from '../src/domain/catalog/layer-tree';
 import { createInMemoryCatalogPort } from '../src/domain/project/in-memory-catalog-port';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
-import { CatalogLayersPanel } from '../src/ui/sidebar/layers/CatalogLayersPanel';
+import { CatalogLayersPanel } from '../src/ui/sidebar/left/CatalogLayersPanel';
 
 const sessions: EditorSession[] = [];
 
@@ -32,7 +32,12 @@ function CatalogLayersView({ session }: { session: EditorSession }) {
     app.getSnapshot.bind(app),
     app.getSnapshot.bind(app),
   );
-  return <CatalogLayersPanel app={app} session={session} snap={snap} />;
+  return (
+    <CatalogLayersPanel
+      model={snap.sidebar.layers}
+      onIntent={(intent) => void app.dispatchSidebarIntent(intent)}
+    />
+  );
 }
 
 function setup() {

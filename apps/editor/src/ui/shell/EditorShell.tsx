@@ -21,9 +21,9 @@ import { CatalogSchemaStage } from '../stage/CatalogSchemaStage';
 import { CatalogDesignPropsPanel } from '../settings/catalog/CatalogDesignPropsPanel';
 import { CatalogSchemasPanel } from '../settings/catalog/CatalogSchemasPanel';
 import { DesignDomainStage } from '../stage/DesignDomainStage';
-import { CatalogLayersPanel } from '../sidebar/layers/CatalogLayersPanel';
-import { ProjectTree } from '../sidebar/layers/ProjectTree';
-import { RightRail } from '../sidebar/properties/RightRail';
+import { CatalogLayersPanel } from '../sidebar/left/CatalogLayersPanel';
+import { ProjectTree } from '../sidebar/left/ProjectTree';
+import { RightRail } from '../sidebar/right/RightRail';
 import { StageCanvas } from '../stage/StageCanvas';
 import { ResizableInspector } from './ResizableInspector';
 import { ResizableLeftRail } from './ResizableLeftRail';
@@ -129,34 +129,35 @@ export function EditorShell({
           {designSurface || surface === 'schemas' ? (
             <div className="design-project-navigation">
               <ProjectTree
-                app={app}
-                session={session}
-                snap={snap}
+                model={snap.sidebar.project}
                 surface={surface}
-                onOpenAsset={(id) => {
-                  session.openAsset(id, 'root');
-                  setSurface('editor');
-                }}
                 onOpenDesignDomain={setSurface}
+                onIntent={(intent) => {
+                  void app.dispatchSidebarIntent(intent);
+                  if (intent.type === 'asset.open') setSurface('editor');
+                }}
               />
             </div>
           ) : (
             <ResizableLeftRail
               project={
                 <ProjectTree
-                  app={app}
-                  session={session}
-                  snap={snap}
+                  model={snap.sidebar.project}
                   surface={surface}
-                  onOpenAsset={(id) => {
-                    session.openAsset(id, 'root');
-                    if (isDesignDomain(surface)) setSurface('editor');
-                  }}
                   onOpenDesignDomain={(domain) => setSurface(domain)}
+                  onIntent={(intent) => {
+                    void app.dispatchSidebarIntent(intent);
+                    if (intent.type === 'asset.open' && isDesignDomain(surface)) setSurface('editor');
+                  }}
                 />
               }
               layers={
-                editorCanvas ? <CatalogLayersPanel app={app} session={session} snap={snap} /> : null
+                editorCanvas ? (
+                  <CatalogLayersPanel
+                    model={snap.sidebar.layers}
+                    onIntent={(intent) => void app.dispatchSidebarIntent(intent)}
+                  />
+                ) : null
               }
             />
           )}
@@ -207,7 +208,12 @@ export function EditorShell({
         )}
         {designSurface || surface === 'schemas' || isCatalogDocumentView(surface) ? null : (
           <ResizableInspector>
-            <RightRail app={app} snap={snap} />
+            <RightRail
+              model={snap.sidebar.inspector}
+              onChange={(nodeId, path, value) =>
+                void app.dispatchSidebarIntent({ type: 'inspector.change', nodeId, path, value })
+              }
+            />
           </ResizableInspector>
         )}
       </div>

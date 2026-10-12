@@ -1,26 +1,25 @@
-import { defaultNestingRules, type DefaultKind } from '@facadeur/core';
 import type { DragEvent, MutableRefObject } from 'react';
-import type { AssetSummary, EditorSession, EditorSnapshot } from '../../../domain/session';
+import type { SidebarAsset, SidebarIntent } from '../../../domain/sidebar/types';
 
 export function AssetRows({
   assets,
-  snap,
-  session,
+  openId,
+  draggableAssetIds,
   activeRef,
-  onOpenAsset,
   contextAssetId,
   onContextAsset,
+  onIntent,
 }: {
-  assets: AssetSummary[];
-  snap: EditorSnapshot;
-  session: EditorSession;
+  assets: readonly SidebarAsset[];
+  openId: string;
+  draggableAssetIds: readonly string[];
   activeRef: MutableRefObject<HTMLButtonElement | null>;
-  onOpenAsset: (id: string) => void;
   contextAssetId: string | null;
   onContextAsset: (assetId: string, anchorEl: HTMLElement) => void;
+  onIntent: (intent: SidebarIntent) => void;
 }) {
   return assets.map((asset) => {
-    const open = asset.id === snap.openId;
+    const open = asset.id === openId;
     return (
       <div key={asset.id} className="asset-entry">
         <div className="asset-row">
@@ -32,10 +31,10 @@ export function AssetRows({
             aria-current={open ? 'true' : undefined}
             aria-haspopup="menu"
             aria-expanded={contextAssetId === asset.id}
-            draggable={canPlace(snap, asset.kind, asset.id)}
-            onDragStart={(event) => startAssetDrag(session, event, asset.id)}
-            onDragEnd={() => session.endDrag()}
-            onClick={() => onOpenAsset(asset.id)}
+            draggable={draggableAssetIds.includes(asset.id)}
+            onDragStart={(event) => startAssetDrag(onIntent, event, asset.id)}
+            onDragEnd={() => onIntent({ type: 'asset.drag.end' })}
+            onClick={() => onIntent({ type: 'asset.open', id: asset.id })}
             onKeyDown={(event) => {
               if ((event.shiftKey && event.key === 'F10') || event.key === 'ContextMenu') {
                 event.preventDefault();
@@ -47,7 +46,7 @@ export function AssetRows({
               onContextAsset(asset.id, event.currentTarget);
             }}
           >
-            <span className="asset-name">{asset.name}</span>
+            <span className="asset-name">{asset.label}</span>
           </button>
         </div>
       </div>
@@ -55,14 +54,8 @@ export function AssetRows({
   });
 }
 
-function canPlace(snap: EditorSnapshot, kind: DefaultKind, id: string): boolean {
-  if (id === snap.openId) return false;
-  const openKind = snap.openDefinition?.kind ?? snap.workspace;
-  return defaultNestingRules[openKind].instanceKinds.includes(kind);
-}
-
-function startAssetDrag(session: EditorSession, event: DragEvent, assetId: string) {
+function startAssetDrag(onIntent: (intent: SidebarIntent) => void, event: DragEvent, assetId: string) {
   event.dataTransfer.setData('text/plain', assetId);
   event.dataTransfer.effectAllowed = 'copy';
-  session.beginDrag({ kind: 'asset', assetId });
+  onIntent({ type: 'asset.drag.start', id: assetId });
 }

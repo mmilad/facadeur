@@ -1,16 +1,5 @@
 import { useLayoutEffect, useState, type RefObject } from 'react';
-import type { AppService } from '../../../app-service';
-import { catalogLayerInsertEntriesForLayer } from '../../../domain/catalog/catalog-layer-insert';
-import type { LayerInsertEntry } from '../../../domain/catalog/catalog-layer-insert';
-import type { LayerItem } from '../../../domain/catalog/layer-tree';
-import type { EditorSnapshot } from '../../../domain/session';
-import {
-  canDeleteCatalogLayer,
-  canInsertBelowCatalogLayer,
-  canInsertInsideCatalogLayer,
-  deleteCatalogLayer,
-  insertCatalogLayerEntry,
-} from './catalog-layer-context-actions';
+import type { SidebarInsertOption, SidebarLayer } from '../../../domain/sidebar/types';
 
 type InsertPlacement = 'inside' | 'below';
 
@@ -18,27 +7,25 @@ const MENU_MIN_WIDTH = 168;
 const FLYOUT_WIDTH = 148;
 
 export function CatalogLayerContextMenu({
-  app,
-  snap,
   item,
+  onInsert,
+  onDelete,
   anchor,
   menuRef,
   onClose,
 }: {
-  app: AppService;
-  snap: EditorSnapshot;
-  item: LayerItem;
+  item: SidebarLayer;
+  onInsert: (targetId: string, placement: InsertPlacement, option: SidebarInsertOption) => void;
+  onDelete: (id: string) => void;
   anchor: DOMRect;
   menuRef: RefObject<HTMLDivElement | null>;
   onClose: () => void;
 }) {
   const [openSubmenu, setOpenSubmenu] = useState<InsertPlacement | null>(null);
   const [flyoutSide, setFlyoutSide] = useState<'left' | 'right'>('right');
-  const showInside = canInsertInsideCatalogLayer(item, snap);
-  const showBelow = canInsertBelowCatalogLayer(item, snap);
-  const showDelete = canDeleteCatalogLayer(item, snap);
-  const insideEntries = showInside ? catalogLayerInsertEntriesForLayer(snap, item, 'inside') : [];
-  const belowEntries = showBelow ? catalogLayerInsertEntriesForLayer(snap, item, 'below') : [];
+  const showDelete = item.canDelete;
+  const insideEntries = item.insertInside;
+  const belowEntries = item.insertBelow;
   const hasInsert = insideEntries.length > 0 || belowEntries.length > 0;
   const insertLabel = 'Insert';
 
@@ -60,7 +47,7 @@ export function CatalogLayerContextMenu({
       className="asset-context-menu layer-context-menu-floating"
       style={{ top, left, minWidth: MENU_MIN_WIDTH }}
       role="menu"
-      aria-label={`${item.name} layer actions`}
+      aria-label={`${item.label} layer actions`}
       onMouseLeave={() => setOpenSubmenu(null)}
     >
       {insideEntries.length ? (
@@ -71,7 +58,8 @@ export function CatalogLayerContextMenu({
           open={openSubmenu === 'inside'}
           onOpen={() => setOpenSubmenu('inside')}
           onPick={(entry) => {
-            void insertCatalogLayerEntry(app, snap, item, entry, 'inside').then(onClose);
+            onInsert(item.id, 'inside', entry);
+            onClose();
           }}
         />
       ) : null}
@@ -83,7 +71,8 @@ export function CatalogLayerContextMenu({
           open={openSubmenu === 'below'}
           onOpen={() => setOpenSubmenu('below')}
           onPick={(entry) => {
-            void insertCatalogLayerEntry(app, snap, item, entry, 'below').then(onClose);
+            onInsert(item.id, 'below', entry);
+            onClose();
           }}
         />
       ) : null}
@@ -93,7 +82,8 @@ export function CatalogLayerContextMenu({
           role="menuitem"
           className="layer-context-menu-danger"
           onClick={() => {
-            void deleteCatalogLayer(app, snap, item).then(onClose);
+            onDelete(item.id);
+            onClose();
           }}
         >
           Delete layer
@@ -112,11 +102,11 @@ function InsertSubmenu({
   onPick,
 }: {
   label: string;
-  entries: readonly LayerInsertEntry[];
+  entries: readonly SidebarInsertOption[];
   flyoutSide: 'left' | 'right';
   open: boolean;
   onOpen: () => void;
-  onPick: (entry: LayerInsertEntry) => void;
+  onPick: (entry: SidebarInsertOption) => void;
 }) {
   return (
     <div className="context-menu-sub" onMouseEnter={onOpen} onFocus={onOpen}>
@@ -143,7 +133,7 @@ function InsertSubmenu({
         >
           {entries.map((entry) => (
             <button
-              key={entry.kind === 'instance' ? entry.assetId : entry.tool}
+              key={`${entry.kind}:${entry.value}`}
               type="button"
               role="menuitem"
               onClick={() => onPick(entry)}

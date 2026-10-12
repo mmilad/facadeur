@@ -2,35 +2,26 @@
 
 import { useEffect, useRef, useState, type DragEvent } from 'react';
 import { createPortal } from 'react-dom';
-import type { AppService } from '../../../app-service';
-import type { DropZone } from '../../../domain/catalog/catalog-layer-move';
-import type { LayerItem } from '../../../domain/catalog/layer-tree';
-import type { EditorSession, EditorSnapshot } from '../../../domain/session';
-import { catalogNodeDragLegal, dropCatalogLayerNode, layerDropZoneFor } from './catalog-layer-drag';
+import type { SidebarInsertOption, SidebarIntent, SidebarLayer, LayerSidebarModel } from '../../../domain/sidebar/types';
+import { layerDropZoneFor } from './catalog-layer-drag';
 import { CatalogLayerContextMenu } from './CatalogLayerContextMenu';
 import { findLayerByAddress } from './layer-tree';
 
 export function CatalogLayersPanel({
-  app,
-  session,
-  snap,
+  model,
+  onIntent,
 }: {
-  app: AppService;
-  session: EditorSession;
-  snap: EditorSnapshot;
+  model: LayerSidebarModel;
+  onIntent: (intent: SidebarIntent) => void;
 }) {
-  const layers = snap.layers;
-  const definition = snap.openDefinition;
-  const title = definition
-    ? (app.getDefinitionDisplayName(definition.uuid) ?? definition.name)
-    : 'Design';
-  const [over, setOver] = useState<{ id: string; zone: DropZone } | null>(null);
+  const layers = model.layers;
+  const [over, setOver] = useState<{ id: string; zone: 'before' | 'inside' | 'after' } | null>(null);
   const [contextLayer, setContextLayer] = useState<{
     address: string;
     anchor: DOMRect;
   } | null>(null);
   const contextMenuRef = useRef<HTMLDivElement | null>(null);
-  const contextItem = findLayerByAddress(snap.layers, contextLayer?.address ?? '');
+  const contextItem = findLayerByAddress(model.layers, contextLayer?.address ?? '');
 
   useEffect(() => {
     if (!contextLayer) return;
@@ -56,42 +47,41 @@ export function CatalogLayersPanel({
   return (
     <section className="side-block side-block-grow" aria-label="Layers">
       <h2>Layers</h2>
-      <strong className="layers-document-title">{title}</strong>
+      <strong className="layers-document-title">{model.title}</strong>
       <p className="side-note">
         Drag layers to reorder. Right-click to insert or delete. Root stays fixed.
       </p>
       <div className="side-scroll">
         {layers ? (
           <CatalogLayerRows
-            key={snap.openId}
-            session={session}
-            snap={snap}
+            key={model.title}
+            model={model}
+            onIntent={onIntent}
             item={layers}
             depth={0}
-            selectedId={snap.selectedNodeId}
-            selectedRenderId={snap.selectedRenderId}
+            selectedId={model.selectedId}
+            selectedRenderId={model.selectedRenderId}
             over={over}
             contextLayerAddress={contextLayer?.address ?? null}
             onOpenLayerContext={(layer, anchor) =>
               setContextLayer({ address: layer.address, anchor: anchor.getBoundingClientRect() })
             }
-            onSelect={(item) => session.selectNode(item.id)}
+            onSelect={(item) => onIntent({ type: 'layer.select', id: item.id })}
             onDragStart={(item, event) => {
-              if (item.virtual || item.id === snap.openDefinition?.root.uuid) return;
+              if (item.virtual || item.id === model.rootId) return;
               event.dataTransfer.setData('text/plain', item.id);
               event.dataTransfer.effectAllowed = 'move';
-              session.beginDrag({ kind: 'node', nodeId: item.id });
+              onIntent({ type: 'layer.drag.start', id: item.id });
             }}
             onDragEnd={() => {
-              session.endDrag();
+              onIntent({ type: 'layer.drag.end' });
               setOver(null);
             }}
             onDragOver={(item, event) => {
               if (item.virtual) return;
-              const drag = session.getSnapshot().drag;
-              if (!drag || drag.kind !== 'node') return;
+              const draggedId = model.draggedNodeId;
+              if (!draggedId) return;
               const zone = layerDropZoneFor(event, item);
-              if (!catalogNodeDragLegal(snap, drag.nodeId, item, zone)) return;
               event.preventDefault();
               event.stopPropagation();
               if (over?.id !== item.address || over.zone !== zone) {
@@ -100,20 +90,19 @@ export function CatalogLayersPanel({
             }}
             onDrop={(item, event) => {
               if (item.virtual) return;
-              const drag = session.getSnapshot().drag;
+              const draggedId = model.draggedNodeId;
               const zone = over?.id === item.address ? over.zone : layerDropZoneFor(event, item);
               setOver(null);
-              if (!drag || drag.kind !== 'node') return;
-              if (!catalogNodeDragLegal(snap, drag.nodeId, item, zone)) {
+              if (!draggedId) return;
+              if (item.virtual) {
                 event.preventDefault();
-                session.endDrag();
+                onIntent({ type: 'layer.drag.end' });
                 return;
               }
               event.preventDefault();
               event.stopPropagation();
-              void dropCatalogLayerNode(app, session, drag.nodeId, item, zone).then(() => {
-                session.endDrag();
-              });
+              onIntent({ type: 'layer.move', sourceId: draggedId, targetId: item.id, zone });
+              onIntent({ type: 'layer.drag.end' });
             }}
           />
         ) : (
@@ -123,9 +112,17 @@ export function CatalogLayersPanel({
       {contextLayer && contextItem
         ? createPortal(
             <CatalogLayerContextMenu
-              app={app}
-              snap={snap}
               item={contextItem}
+              onInsert={(targetId, placement, option) =>
+                onIntent({
+                  type: 'layer.insert',
+                  targetId,
+                  placement,
+                  kind: option.kind,
+                  value: option.value,
+                })
+              }
+              onDelete={(id) => onIntent({ type: 'layer.delete', id })}
               anchor={contextLayer.anchor}
               menuRef={contextMenuRef}
               onClose={() => setContextLayer(null)}
@@ -138,8 +135,8 @@ export function CatalogLayersPanel({
 }
 
 function CatalogLayerRows({
-  session,
-  snap,
+  model,
+  onIntent,
   item,
   depth,
   selectedId,
@@ -153,20 +150,20 @@ function CatalogLayerRows({
   onDragOver,
   onDrop,
 }: {
-  session: EditorSession;
-  snap: EditorSnapshot;
-  item: LayerItem;
+  model: LayerSidebarModel;
+  onIntent: (intent: SidebarIntent) => void;
+  item: SidebarLayer;
   depth: number;
   selectedId: string | null;
   selectedRenderId: string | null;
-  over: { id: string; zone: DropZone } | null;
+  over: { id: string; zone: 'before' | 'inside' | 'after' } | null;
   contextLayerAddress: string | null;
-  onOpenLayerContext: (item: LayerItem, anchor: HTMLElement) => void;
-  onSelect: (item: LayerItem) => void;
-  onDragStart: (item: LayerItem, event: DragEvent) => void;
+  onOpenLayerContext: (item: SidebarLayer, anchor: HTMLElement) => void;
+  onSelect: (item: SidebarLayer) => void;
+  onDragStart: (item: SidebarLayer, event: DragEvent) => void;
   onDragEnd: () => void;
-  onDragOver: (item: LayerItem, event: DragEvent) => void;
-  onDrop: (item: LayerItem, event: DragEvent) => void;
+  onDragOver: (item: SidebarLayer, event: DragEvent) => void;
+  onDrop: (item: SidebarLayer, event: DragEvent) => void;
 }) {
   const [expanded, setExpanded] = useState(true);
   useEffect(() => {
@@ -178,7 +175,7 @@ function CatalogLayerRows({
   const active = item.id === selectedId || item.address === selectedRenderId;
   const menuOpen = contextLayerAddress === item.address;
   const mark = over?.id === item.address ? over.zone : null;
-  const rootId = snap.openDefinition?.root.uuid;
+  const rootId = model.rootId;
   const draggable = !item.virtual && item.id !== rootId;
   const className = [
     'layer',
@@ -197,7 +194,7 @@ function CatalogLayerRows({
           <button
             type="button"
             className="layer-toggle"
-            aria-label={`${expanded ? 'Collapse' : 'Expand'} ${item.name}`}
+            aria-label={`${expanded ? 'Collapse' : 'Expand'} ${item.label}`}
             aria-expanded={expanded}
             onClick={() => setExpanded((open) => !open)}
           >
@@ -228,7 +225,7 @@ function CatalogLayerRows({
             onOpenLayerContext(item, event.currentTarget);
           }}
         >
-          <span className="layer-name">{item.name}</span>
+          <span className="layer-name">{item.label}</span>
           <span className="layer-type">{layerTypeLabel(item)}</span>
         </button>
       </div>
@@ -236,8 +233,8 @@ function CatalogLayerRows({
         ? item.children.map((child) => (
             <CatalogLayerRows
               key={child.address}
-              session={session}
-              snap={snap}
+              model={model}
+              onIntent={onIntent}
               item={child}
               depth={depth + 1}
               selectedId={selectedId}
@@ -257,12 +254,12 @@ function CatalogLayerRows({
   );
 }
 
-function layerTypeLabel(item: LayerItem) {
+function layerTypeLabel(item: SidebarLayer) {
   if (item.type === 'repeater' || item.type === 'switch') return 'Fragment';
   return item.tagName ?? '';
 }
 
-function containsLayer(item: LayerItem, id: string | null, address: string | null): boolean {
+function containsLayer(item: SidebarLayer, id: string | null, address: string | null): boolean {
   return (
     item.id === id ||
     item.address === address ||

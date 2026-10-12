@@ -7,7 +7,7 @@ import { createExampleCatalog, exampleIds } from '@facadeur/examples';
 import { createAppService } from '../src/app-service';
 import { createInMemoryCatalogPort } from '../src/domain/project/in-memory-catalog-port';
 import { createEditorSession } from '../src/domain/session';
-import { CatalogNodeInspector } from '../src/ui/sidebar/properties/CatalogNodeInspector';
+import { CatalogNodeInspector } from '../src/ui/sidebar/right/components/CatalogNodeInspector';
 
 const definitionUuid = exampleIds.components.formInput.definition;
 const rootUuid = exampleIds.components.formInput.nodes.root;
@@ -45,7 +45,7 @@ describe('catalog inspector HTML attributes', () => {
       session,
       catalogPort: createInMemoryCatalogPort(() => session.core.getSnapshot().catalog),
     });
-    render(<CatalogNodeInspector app={app} nodeUuid={rootUuid} formKey={definitionUuid} />);
+    render(<CatalogNodeInspector model={app.getInspectorSidebarModel(rootUuid)} onChange={(nodeId, path, value) => void app.dispatchSidebarIntent({ type: 'inspector.change', nodeId, path, value })} />);
 
     fireEvent.click(screen.getByRole('tab', { name: 'Properties' }));
     expect(screen.queryByTestId('preview-options-disclosure')).toBeNull();

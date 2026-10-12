@@ -2,19 +2,18 @@ import { useState } from 'react';
 import { TextField } from '@facadeur/form';
 import { Stack } from '../../components/layout';
 import { Modal } from '../../components/overlay';
-import type { AppService } from '../../../app-service';
-import type { AssetSummary } from '../../../domain/session';
+import type { SidebarAsset } from '../../../domain/sidebar/types';
 
 export function RenameAssetDialog({
-  app,
   asset,
+  onRename,
   onClose,
 }: {
-  app: AppService;
-  asset: AssetSummary;
+  asset: SidebarAsset;
+  onRename: (id: string, name: string) => void;
   onClose: () => void;
 }) {
-  const [name, setName] = useState(asset.name);
+  const [name, setName] = useState(asset.label);
   const [error, setError] = useState('');
 
   async function rename() {
@@ -23,12 +22,8 @@ export function RenameAssetDialog({
       setError('Enter a name');
       return;
     }
-    try {
-      await app.patchDefinition(asset.id, { name: trimmed });
-      onClose();
-    } catch (failure) {
-      setError(failure instanceof Error ? failure.message : 'Rename failed');
-    }
+    onRename(asset.id, trimmed);
+    onClose();
   }
 
   return (

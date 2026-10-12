@@ -1,5 +1,5 @@
 import { useLayoutEffect, type RefObject } from 'react';
-import type { AssetSummary } from '../../../domain/session';
+import type { SidebarAsset } from '../../../domain/sidebar/types';
 
 const MENU_MIN_WIDTH = 168;
 
@@ -11,7 +11,7 @@ export function AssetContextMenu({
   onDelete,
   onClose,
 }: {
-  asset: AssetSummary;
+  asset: SidebarAsset;
   anchor: DOMRect;
   menuRef: RefObject<HTMLDivElement | null>;
   onRename: (assetId: string) => void;
@@ -34,7 +34,7 @@ export function AssetContextMenu({
       className="asset-context-menu layer-context-menu-floating"
       style={{ top, left, minWidth: MENU_MIN_WIDTH }}
       role="menu"
-      aria-label={`${asset.name} actions`}
+      aria-label={`${asset.label} actions`}
     >
       <button
         type="button"
