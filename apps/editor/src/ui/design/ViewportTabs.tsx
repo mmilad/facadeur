@@ -1,21 +1,25 @@
 import { breakpointLabel, type Breakpoint } from '@facadeur/core';
-import type { EditorSession } from '../../domain/session';
+import type { EditorEvent } from '../../domain/sidebar/events';
+import { EditorEventType } from '../../domain/sidebar/events';
 
 /** Breakpoint tabs for the token list. The narrowest viewport writes the base layer. */
 export function ViewportTabs({
-  session,
+  onEvent,
   breakpoints,
   baseId,
   writingId,
 }: {
-  session: EditorSession;
+  onEvent: (event: EditorEvent) => void;
   breakpoints: readonly Breakpoint[];
   baseId: string | null;
   writingId: string | null;
 }) {
   const select = (id: string) => {
-    session.setFocusViewport(id);
-    session.setEditTarget(id === baseId ? 'base' : 'viewport');
+    onEvent({ type: EditorEventType.ViewportFocus, data: { breakpointId: id } });
+    onEvent({
+      type: EditorEventType.EditTargetSet,
+      data: { target: id === baseId ? 'base' : 'viewport' },
+    });
   };
   return (
     <div className="design-viewport-tabs" role="tablist" aria-label="Viewports">

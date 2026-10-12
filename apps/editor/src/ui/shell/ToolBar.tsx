@@ -1,6 +1,8 @@
 import type { IconDefinition } from '@facadeur/core';
+import type { EditorEvent } from '../../domain/sidebar/events';
+import { EditorEventType } from '../../domain/sidebar/events';
 import { refusalMessage, toolAllowed } from '../../domain/editing';
-import type { EditorSession, EditorTool } from '../../domain/session';
+import type { EditorTool } from '../../domain/session';
 
 const TOOLS = [
   ['select', 'Select', 'V'],
@@ -8,12 +10,12 @@ const TOOLS = [
 ] as const;
 
 export function ToolBar({
-  session,
+  onEvent,
   tool,
   kind,
   icons,
 }: {
-  session: EditorSession;
+  onEvent: (event: EditorEvent) => void;
   tool: EditorTool;
   kind: string;
   icons?: readonly IconDefinition[];
@@ -31,7 +33,7 @@ export function ToolBar({
             aria-label={label}
             disabled={!allowed}
             title={allowed ? `${label} (${key})` : refusalMessage(kind, id)}
-            onClick={() => session.setTool(id)}
+            onClick={() => onEvent({ type: EditorEventType.ToolSet, data: { tool: id } })}
           >
             <ToolGlyph tool={id} src={icons?.find((icon) => icon.id === id)?.src} />
             <span className="tool-key">{key}</span>

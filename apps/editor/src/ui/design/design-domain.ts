@@ -40,6 +40,14 @@ export function isDesignDomain(surface: EditorSurface): surface is DesignDomain 
   return DESIGN_DOMAIN_ITEMS.some((item) => item.id === surface);
 }
 
+export function isEditorSurfaceId(surface: string): surface is EditorSurface {
+  return (
+    surface === 'props' ||
+    DESIGN_DOMAIN_ITEMS.some((item) => item.id === surface) ||
+    EDITOR_VIEW_ITEMS.some((item) => item.id === surface)
+  );
+}
+
 export function isSettingsTokenDomain(surface: EditorSurface): surface is SettingsTokenDomain {
   return SETTINGS_TOKEN_DOMAIN_ITEMS.some((item) => item.id === surface);
 }

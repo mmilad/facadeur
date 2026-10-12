@@ -1,4 +1,5 @@
 import type { EditorSession, EditorSnapshot } from '../../domain/session';
+import type { EditorEvent } from '../../domain/sidebar/events';
 import { useMemo } from 'react';
 import { activeBreakpoints } from '@facadeur/core';
 import { renderDesignCss } from '@facadeur/style-engine';
@@ -21,12 +22,12 @@ export function DesignDomainStage({
   session,
   snap,
   domain,
-  onSelectDomain,
+  onEvent,
 }: {
   session: EditorSession;
   snap: EditorSnapshot;
   domain: DesignDomain;
-  onSelectDomain: (domain: EditorSurface) => void;
+  onEvent: (event: EditorEvent) => void;
 }) {
   const settingsView = isSettingsTokenDomain(domain);
   const title = settingsView ? 'Settings' : designDomainLabel(domain);
@@ -58,7 +59,7 @@ export function DesignDomainStage({
           <h1 className="design-domain-breadcrumb">
             {settingsView ? `${title} · ${designDomainLabel(domain)}` : `${title} · ${designTitle}`}
           </h1>
-          {settingsView ? <SettingsSections surface={domain} onSelect={onSelectDomain} /> : null}
+          {settingsView ? <SettingsSections surface={domain} onEvent={onEvent} /> : null}
         </div>
         {sharedResources ? (
           <span className="design-resource-scope">Shared project resources</span>
@@ -71,13 +72,13 @@ export function DesignDomainStage({
           breakpoints={ctx.breakpoints.slice()}
         >
           {domain === 'fonts' ? (
-            <FontsDomainPanel session={session} snap={snap} />
+            <FontsDomainPanel snap={snap} onEvent={onEvent} />
           ) : domain === 'icons' ? (
             <IconsDomainPanel session={session} snap={snap} />
           ) : domain === 'viewports' ? (
-            <ViewportsSettingsPanel session={session} snap={snap} />
+            <ViewportsSettingsPanel breakpoints={snap.design.breakpoints} onEvent={onEvent} />
           ) : (
-            <TokensDomainPanel key={domain} session={session} snap={snap} domain={domain} />
+            <TokensDomainPanel key={domain} snap={snap} domain={domain} onEvent={onEvent} />
           )}
         </TokenPreviewProvider>
       </div>

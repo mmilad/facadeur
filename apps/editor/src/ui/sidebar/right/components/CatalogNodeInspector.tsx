@@ -2,18 +2,28 @@
 
 import { useState } from 'react';
 import { Form } from '@facadeur/form';
+import type { FieldValue } from '@facadeur/domain';
 import type { InspectorSidebarModel } from '../../../../domain/sidebar/types';
+import type { EditorEvent } from '../../../../domain/sidebar/events';
+import { EditorEventType } from '../../../../domain/sidebar/events';
 
 export function CatalogNodeInspector({
   model,
-  onChange,
+  onEvent,
 }: {
   model: InspectorSidebarModel | null;
-  onChange: (nodeId: string, path: string, value: unknown) => void;
+  onEvent: (event: EditorEvent) => void;
 }) {
   const [activeTab, setActiveTab] = useState<'style' | 'properties' | 'previewData'>('style');
   if (!model) return <p className="inspector-empty">Select an element in the layer tree.</p>;
   const selectedTab = model.tabs.find((tab) => tab.id === activeTab) ?? model.tabs[0];
+  const emitFieldChange = (path: string, value: unknown) => {
+    if (value !== undefined && !isFieldValue(value)) return;
+    onEvent({
+      type: EditorEventType.InspectorFieldChange,
+      data: { nodeId: model.nodeId, path, value },
+    });
+  };
   return (
     <div key={model.formKey} className="inspector-form-stack" data-testid="catalog-node-inspector">
       <section className="inspector-element" aria-labelledby="inspector-element-title">
@@ -24,7 +34,7 @@ export function CatalogNodeInspector({
           value={model.values}
           fields={[...model.headerFields]}
           bindOptions={model.bindOptions}
-          onChange={(_, meta) => onChange(model.nodeId, meta.path, meta.next)}
+          onChange={(_, meta) => emitFieldChange(meta.path, meta.next)}
         />
       </section>
       <div className="inspector-tabs" role="tablist" aria-label="Element settings">
@@ -60,7 +70,7 @@ export function CatalogNodeInspector({
                   value={model.values}
                   fields={[...section.fields]}
                   bindOptions={model.bindOptions}
-                  onChange={(_, meta) => onChange(model.nodeId, meta.path, meta.next)}
+                  onChange={(_, meta) => emitFieldChange(meta.path, meta.next)}
                 />
               </section>
             ))}
@@ -68,5 +78,18 @@ export function CatalogNodeInspector({
         </section>
       ))}
     </div>
+  );
+}
+
+function isFieldValue(value: unknown): value is FieldValue {
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return true;
+  }
+  if (Array.isArray(value)) return value.every(isFieldValue);
+  if (typeof value !== 'object' || value === null) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return (
+    (prototype === Object.prototype || prototype === null) &&
+    Object.values(value).every(isFieldValue)
   );
 }

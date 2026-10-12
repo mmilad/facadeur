@@ -5,6 +5,8 @@ import { cleanup, fireEvent, render } from '@testing-library/react';
 import { useSyncExternalStore } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createExampleCatalog, exampleIds } from '@facadeur/examples';
+import { EditorEventType } from '../src/domain/sidebar/events';
+import type { EditorEvent } from '../src/domain/sidebar/events';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { EditorSubnav } from '../src/ui/shell/navigation/EditorSubnav';
 import { useEditorNavigation } from '../src/ui/shell/navigation/useEditorNavigation';
@@ -41,12 +43,18 @@ function NavigationHarness({
   const { surface, setSurface } = useEditorNavigation(session, snapshot, navigation);
   return (
     <>
-      <EditorSubnav surface={surface} onSelectSurface={setSurface} />
-      <SettingsSections surface={surface} onSelect={setSurface} />
+      <EditorSubnav surface={surface} onEvent={routeEvent} />
+      <SettingsSections surface={surface} onEvent={routeEvent} />
       <output data-testid="surface">{surface}</output>
       <output data-testid="selected-node">{snapshot.selectedNodeId}</output>
     </>
   );
+
+  function routeEvent(event: EditorEvent) {
+    if (event.type === EditorEventType.SurfaceNavigate) {
+      setSurface(event.data.surfaceId as Parameters<typeof setSurface>[0]);
+    }
+  }
 }
 
 describe('editor subnavigation', () => {

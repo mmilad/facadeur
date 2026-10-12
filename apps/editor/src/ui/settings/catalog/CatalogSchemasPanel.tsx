@@ -4,7 +4,8 @@ import { createCatalogUuid } from '@facadeur/core';
 import type { JsonSchemaObject } from '@facadeur/domain';
 import { useEffect, useMemo, useState } from 'react';
 import type { AppService } from '../../../app-service';
-import type { EditorSession } from '../../../domain/session';
+import type { EditorEvent } from '../../../domain/sidebar/events';
+import { EditorEventType } from '../../../domain/sidebar/events';
 import { Field } from '../../components/feedback';
 import { SearchInput, TextInput } from '../../controls/form-binding/index';
 import { JsonSchemaTypeEditor } from '../../schema/JsonSchemaTypeEditor';
@@ -15,14 +16,12 @@ import type { EditorSurface } from '../../design/design-domain';
 
 export function CatalogSchemasPanel({
   app,
-  session,
   surface,
-  onSelectSurface,
+  onEvent,
 }: {
   app: AppService;
-  session: EditorSession;
   surface: EditorSurface;
-  onSelectSurface: (surface: EditorSurface) => void;
+  onEvent: (event: EditorEvent) => void;
 }) {
   const schemas = app.getSchemas();
   const entries = useMemo(
@@ -67,14 +66,17 @@ export function CatalogSchemasPanel({
       properties: {},
       additionalProperties: false,
     };
-    app.upsertSchema(id, schema);
+    onEvent({ type: EditorEventType.SchemaUpsert, data: { uuid: id, schema } });
     setSelectedId(id);
     setQuery('');
   }
 
   function commitSchema(next: JsonSchemaObject) {
     if (!selectedId) return;
-    app.upsertSchema(selectedId, next);
+    onEvent({
+      type: EditorEventType.SchemaUpsert,
+      data: { uuid: selectedId, schema: next },
+    });
   }
 
   function renameTitle(name: string) {
@@ -86,31 +88,10 @@ export function CatalogSchemasPanel({
     });
   }
 
-  async function persistSchemas() {
-    try {
-      await app.saveSchemas();
-      session.setNotice('Schemas saved', 'info');
-    } catch (failure) {
-      session.setNotice(
-        failure instanceof Error ? failure.message : 'Could not save schemas',
-        'error',
-      );
-    }
-  }
-
-  async function removeSelected() {
+  function removeSelected() {
     if (!selectedId) return;
-    try {
-      app.removeSchema(selectedId);
-      await app.saveSchemas();
-      const next = app.getSchemas()[0]?.uuid;
-      setSelectedId(next ?? '');
-    } catch (failure) {
-      session.setNotice(
-        failure instanceof Error ? failure.message : 'Could not remove schema',
-        'error',
-      );
-    }
+    onEvent({ type: EditorEventType.SchemaRemove, data: { uuid: selectedId } });
+    setSelectedId(app.getSchemas()[0]?.uuid ?? '');
   }
 
   return (
@@ -118,7 +99,7 @@ export function CatalogSchemasPanel({
       <header className="design-domain-head">
         <div className="design-domain-head-main">
           <h1 className="design-domain-breadcrumb">Settings · Schemas</h1>
-          <SettingsSections surface={surface} onSelect={onSelectSurface} />
+          <SettingsSections surface={surface} onEvent={onEvent} />
         </div>
       </header>
       <div className="design-domain-body">
@@ -183,7 +164,10 @@ export function CatalogSchemasPanel({
               <p className="meta">
                 Changes apply to the catalog immediately. Save the project to persist.
               </p>
-              <button type="button" onClick={() => void persistSchemas()}>
+              <button
+                type="button"
+                onClick={() => onEvent({ type: EditorEventType.SchemasSave, data: {} })}
+              >
                 Save schemas to project
               </button>
             </div>

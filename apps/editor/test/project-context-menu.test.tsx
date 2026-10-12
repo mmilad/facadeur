@@ -9,6 +9,7 @@ import { createAppService } from '../src/app-service';
 import { createInMemoryCatalogPort } from '../src/domain/project/in-memory-catalog-port';
 import { createEditorSession } from '../src/domain/session';
 import { ProjectTree } from '../src/ui/sidebar/left/ProjectTree';
+import { createEditorEventHandler } from '../src/ui/shell/editor-event-handler';
 
 afterEach(cleanup);
 
@@ -24,8 +25,7 @@ it('opens the Catalog asset menu and creates a Catalog definition from the New a
     <ProjectTree
       model={session.getSnapshot().sidebar.project}
       surface="editor"
-      onOpenDesignDomain={vi.fn()}
-      onIntent={(intent) => void app.dispatchSidebarIntent(intent)}
+      onEvent={createEditorEventHandler({ app, session })}
     />,
   );
   const row = view.container.querySelector<HTMLButtonElement>(`[data-asset-id="${asset.id}"]`)!;

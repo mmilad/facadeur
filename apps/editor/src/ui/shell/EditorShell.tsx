@@ -8,13 +8,15 @@ import {
 } from '@facadeur/core';
 import type { NodeModel } from '@facadeur/core';
 import { refusalMessage, toolAllowed } from '../../domain/editing';
-import { useEffect, useMemo, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react';
 import { createAppService, type AppService } from '../../app-service/index';
 import { createInMemoryCatalogPort } from '../../domain/project/in-memory-catalog-port';
 import { download } from '../../domain/assets/files';
 import { isEditableTarget } from '../../domain/keyboard';
 import type { EditorSession } from '../../domain/session';
+import { EditorEventType } from '../../domain/sidebar/events';
 import { isCatalogDocumentView, isDesignDomain } from '../design/design-domain';
+import { createEditorEventHandler } from './editor-event-handler';
 import { CatalogCodeStage } from '../stage/CatalogCodeStage';
 import { CatalogPreviewDataStage } from '../stage/CatalogPreviewDataStage';
 import { CatalogSchemaStage } from '../stage/CatalogSchemaStage';
@@ -75,6 +77,17 @@ export function EditorShell({
   useEditorKeys(app, session, editorCanvas);
   const activeKind = snap.openDefinition?.kind ?? snap.workspace;
 
+  const handleEditorEvent = useMemo(
+    () =>
+      createEditorEventHandler({
+        app,
+        session,
+        getSurface: () => surface,
+        navigate: setSurface,
+      }),
+    [app, session, setSurface, surface],
+  );
+
   return (
     <div className="app">
       <header className="topbar">
@@ -82,7 +95,12 @@ export function EditorShell({
         <DocumentTitle app={app} snap={snap} />
         <KindBadge kind={activeKind} />
         {editorCanvas ? (
-          <ToolBar session={session} tool={snap.tool} kind={activeKind} icons={snap.design.icons} />
+          <ToolBar
+            onEvent={handleEditorEvent}
+            tool={snap.tool}
+            kind={activeKind}
+            icons={snap.design.icons}
+          />
         ) : null}
         <div className="topbar-spacer" />
         {connectionStatus ? (
@@ -90,9 +108,13 @@ export function EditorShell({
             {connectionStatus}
           </span>
         ) : null}
-        {editorCanvas ? <ZoomControls session={session} label={snap.zoomLabel} /> : null}
+        {editorCanvas ? <ZoomControls onEvent={handleEditorEvent} label={snap.zoomLabel} /> : null}
         {editorCanvas ? (
-          <button type="button" className="text-button" onClick={() => session.fit()}>
+          <button
+            type="button"
+            className="text-button"
+            onClick={() => handleEditorEvent({ type: EditorEventType.CanvasFit, data: {} })}
+          >
             Reset view
           </button>
         ) : null}
@@ -123,7 +145,7 @@ export function EditorShell({
           {snap.notice.text}
         </p>
       ) : null}
-      <EditorSubnav surface={surface} onSelectSurface={setSurface} />
+      <EditorSubnav surface={surface} onEvent={handleEditorEvent} />
       <div className="workspace">
         <aside className="side side-left">
           {designSurface || surface === 'schemas' ? (
@@ -131,11 +153,7 @@ export function EditorShell({
               <ProjectTree
                 model={snap.sidebar.project}
                 surface={surface}
-                onOpenDesignDomain={setSurface}
-                onIntent={(intent) => {
-                  void app.dispatchSidebarIntent(intent);
-                  if (intent.type === 'asset.open') setSurface('editor');
-                }}
+                onEvent={handleEditorEvent}
               />
             </div>
           ) : (
@@ -144,60 +162,39 @@ export function EditorShell({
                 <ProjectTree
                   model={snap.sidebar.project}
                   surface={surface}
-                  onOpenDesignDomain={(domain) => setSurface(domain)}
-                  onIntent={(intent) => {
-                    void app.dispatchSidebarIntent(intent);
-                    if (intent.type === 'asset.open' && isDesignDomain(surface))
-                      setSurface('editor');
-                  }}
+                  onEvent={handleEditorEvent}
                 />
               }
               layers={
                 editorCanvas ? (
-                  <CatalogLayersPanel
-                    model={snap.sidebar.layers}
-                    onIntent={(intent) => void app.dispatchSidebarIntent(intent)}
-                  />
+                  <CatalogLayersPanel model={snap.sidebar.layers} onEvent={handleEditorEvent} />
                 ) : null
               }
             />
           )}
         </aside>
         {surface === 'schemas' ? (
-          <CatalogSchemasPanel
-            app={app}
-            session={session}
-            surface={surface}
-            onSelectSurface={setSurface}
-          />
+          <CatalogSchemasPanel app={app} surface={surface} onEvent={handleEditorEvent} />
         ) : surface === 'props' ? (
-          <CatalogDesignPropsPanel
-            app={app}
-            session={session}
-            surface={surface}
-            onSelectSurface={setSurface}
-          />
+          <CatalogDesignPropsPanel app={app} surface={surface} onEvent={handleEditorEvent} />
         ) : isDesignDomain(surface) ? (
           <DesignDomainStage
             session={session}
             snap={snap}
             domain={surface}
-            onSelectDomain={setSurface}
+            onEvent={handleEditorEvent}
           />
         ) : surface === 'schema' ? (
-          <CatalogSchemaStage
-            app={app}
-            session={session}
-            onOpenSchemas={() => setSurface('schemas')}
-          />
+          <CatalogSchemaStage app={app} onEvent={handleEditorEvent} />
         ) : surface === 'code' ? (
           <CatalogCodeStage app={app} generation={snap.generation} />
         ) : surface === 'preview' ? (
-          <CatalogPreviewDataStage app={app} />
+          <CatalogPreviewDataStage app={app} onEvent={handleEditorEvent} />
         ) : (
           <StageCanvas
             app={app}
             session={session}
+            onEvent={handleEditorEvent}
             openId={snap.openId}
             generation={snap.generation}
             designRevision={snap.designRevision}
@@ -209,12 +206,7 @@ export function EditorShell({
         )}
         {designSurface || surface === 'schemas' || isCatalogDocumentView(surface) ? null : (
           <ResizableInspector>
-            <RightRail
-              model={snap.sidebar.inspector}
-              onChange={(nodeId, path, value) =>
-                void app.dispatchSidebarIntent({ type: 'inspector.change', nodeId, path, value })
-              }
-            />
+            <RightRail model={snap.sidebar.inspector} onEvent={handleEditorEvent} />
           </ResizableInspector>
         )}
       </div>

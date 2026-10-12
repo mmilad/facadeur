@@ -6,7 +6,9 @@ import {
   suggestedTokenPath,
   tokenMetadataFromPath,
 } from '../../../domain/edits/token-creation';
-import type { EditorSession, EditorSnapshot } from '../../../domain/session';
+import type { EditorSnapshot } from '../../../domain/session';
+import type { EditorEvent } from '../../../domain/sidebar/events';
+import { EditorEventType } from '../../../domain/sidebar/events';
 import { IconButton } from '../../components/IconButton';
 import { TokenAddAction } from './TokenAddAction';
 
@@ -20,13 +22,13 @@ const TOKEN_COPY: Record<DesignTokenFamily, { label: string; placeholder: string
 };
 
 export function TokenAddRow({
-  session,
   snap,
   family,
+  onEvent,
 }: {
-  session: EditorSession;
   snap: EditorSnapshot;
   family: DesignTokenFamily;
+  onEvent: (event: EditorEvent) => void;
 }) {
   const existingPaths = useMemo(
     () =>
@@ -39,23 +41,31 @@ export function TokenAddRow({
       const path = suggestedTokenPath(rawLabel, family, existingPaths);
       const metadata = tokenMetadataFromPath(path);
       const definition = defaultTokenValue(family);
-      session.executeDesign({
-        type: 'setToken',
-        family,
-        token: createDesignToken(
-          family,
-          metadata.label,
-          metadata.group,
-          definition.valueType,
-          definition.value,
-        ),
+      onEvent({
+        type: EditorEventType.DesignCommandExecute,
+        data: {
+          command: {
+            type: 'setToken',
+            family,
+            token: createDesignToken(
+              family,
+              metadata.label,
+              metadata.group,
+              definition.valueType,
+              definition.value,
+            ),
+          },
+        },
       });
       return true;
     } catch (error) {
-      session.setNotice(
-        error instanceof Error ? error.message : `Invalid ${TOKEN_COPY[family].label}`,
-        'error',
-      );
+      onEvent({
+        type: EditorEventType.NoticeSet,
+        data: {
+          text: error instanceof Error ? error.message : `Invalid ${TOKEN_COPY[family].label}`,
+          tone: 'error',
+        },
+      });
       return false;
     }
   }
@@ -75,26 +85,18 @@ export function TokenAddRow({
 }
 
 export function RemoveTokenButton({
-  session,
   family,
   uuid,
   label,
+  onEvent,
 }: {
-  session: EditorSession;
   family: DesignTokenFamily;
   uuid: string;
   label: string;
+  onEvent: (event: EditorEvent) => void;
 }) {
   function removeToken() {
-    const refs = session.core.getTokensReferencingUUID(uuid);
-    if (refs.length) {
-      session.setNotice(
-        `Cannot remove "${label}": {token:${uuid}} is referenced in ${refs.join(', ')}`,
-        'error',
-      );
-      return;
-    }
-    session.executeDesign({ type: 'removeToken', family, uuid });
+    onEvent({ type: EditorEventType.DesignTokenRemove, data: { family, uuid, label } });
   }
 
   return (

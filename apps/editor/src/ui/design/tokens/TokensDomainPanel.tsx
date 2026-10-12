@@ -8,7 +8,8 @@ import {
 } from '@facadeur/core';
 import { activeBreakpoints } from '@facadeur/core';
 import { useEffect, useMemo, useState } from 'react';
-import type { EditorSession, EditorSnapshot } from '../../../domain/session';
+import type { EditorSnapshot } from '../../../domain/session';
+import type { EditorEvent } from '../../../domain/sidebar/events';
 import { formatTokenValue } from '../../../domain/edits/token-edit';
 import { viewportEditContext } from '../../../domain/viewport/viewport-edit';
 import {
@@ -43,13 +44,13 @@ const DOMAIN_FAMILY: Record<TokenDomain, DesignTokenFamily> = {
 };
 
 export function TokensDomainPanel({
-  session,
   snap,
   domain,
+  onEvent,
 }: {
-  session: EditorSession;
   snap: EditorSnapshot;
   domain: TokenDomain;
+  onEvent: (event: EditorEvent) => void;
 }) {
   const resolve = useTokenResolver();
   const labelFor = useTokenLabel();
@@ -161,7 +162,7 @@ export function TokensDomainPanel({
   return (
     <div className="stack design-domain-panel">
       <ViewportTabs
-        session={session}
+        onEvent={onEvent}
         breakpoints={ctx.breakpoints}
         baseId={ctx.base?.uuid ?? null}
         writingId={writingId}
@@ -180,7 +181,7 @@ export function TokensDomainPanel({
           { id: 'actions', ariaLabel: 'Actions', width: '10%' },
         ]}
         context={writing ? `${domainTitle} overrides at ${breakpointLabel(writing)}` : undefined}
-        addAction={<TokenAddRow session={session} snap={snap} family={DOMAIN_FAMILY[domain]} />}
+        addAction={<TokenAddRow snap={snap} family={DOMAIN_FAMILY[domain]} onEvent={onEvent} />}
         emptyState={
           visible.length === 0 ? (
             <p className="inspector-empty">
@@ -206,7 +207,7 @@ export function TokensDomainPanel({
               }),
             rows: group.tokens.map((token) =>
               createTokenTableRow({
-                session,
+                onEvent,
                 snap,
                 token,
                 writingId,

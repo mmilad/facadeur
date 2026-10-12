@@ -1,10 +1,18 @@
 'use client';
 
 import type { AppService } from '../../app-service';
+import type { EditorEvent } from '../../domain/sidebar/events';
+import { EditorEventType } from '../../domain/sidebar/events';
 import { CatalogPreviewFields } from './CatalogPreviewFields';
 
 /** Edits definition-level preview defaults (`config.previewData.fields`). */
-export function CatalogPreviewDataStage({ app }: { app: AppService }) {
+export function CatalogPreviewDataStage({
+  app,
+  onEvent,
+}: {
+  app: AppService;
+  onEvent: (event: EditorEvent) => void;
+}) {
   const coreSnap = app.getCoreSnapshot();
   const definition = coreSnap.openDefinition;
   const { fields } = app.getInspectorInputs();
@@ -43,7 +51,12 @@ export function CatalogPreviewDataStage({ app }: { app: AppService }) {
             <CatalogPreviewFields
               fields={fields}
               previewFields={previewFields}
-              onWrite={(field, value) => void app.patchPreviewField(field.name, value)}
+              onWrite={(field, value) =>
+                onEvent({
+                  type: EditorEventType.PreviewFieldSet,
+                  data: { field: field.name, value },
+                })
+              }
             />
           </section>
         </div>

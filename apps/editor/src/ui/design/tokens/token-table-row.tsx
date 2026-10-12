@@ -1,6 +1,8 @@
 import { readTokenTree, tokenReferenceValue, tokenReferencesByType } from '@facadeur/core';
 import { TransformableField, TextField } from '@facadeur/form';
-import type { EditorSession, EditorSnapshot } from '../../../domain/session';
+import type { EditorSnapshot } from '../../../domain/session';
+import type { EditorEvent } from '../../../domain/sidebar/events';
+import { EditorEventType } from '../../../domain/sidebar/events';
 import { formatTokenValue } from '../../../domain/edits/token-edit';
 import type { viewportEditContext } from '../../../domain/viewport/viewport-edit';
 import { TextControl } from '../../controls/fields/index';
@@ -29,7 +31,7 @@ import {
 type ViewportContext = ReturnType<typeof viewportEditContext>;
 
 export function createTokenTableRow({
-  session,
+  onEvent,
   snap,
   token,
   writingId,
@@ -45,7 +47,7 @@ export function createTokenTableRow({
   onTransform,
   onTransformValue,
 }: {
-  session: EditorSession;
+  onEvent: (event: EditorEvent) => void;
   snap: EditorSnapshot;
   token: TableToken;
   writingId: string | null;
@@ -98,17 +100,22 @@ export function createTokenTableRow({
     if (next === text) return;
     if (writingId && (next === null || next.trim() === '')) {
       if (token.override !== undefined)
-        resetTokenBreakpoint(session, snap, token.family, token.uuid, writingId);
+        resetTokenBreakpoint(onEvent, snap, token.family, token.uuid, writingId);
       return;
     }
-    commitToken(session, snap, token.family, token.uuid, shownValue, next ?? '', writingId);
+    commitToken(onEvent, snap, token.family, token.uuid, shownValue, next ?? '', writingId);
   };
   const commitLabel = (next: string) => {
     if (next.trim() === displayLabel) return;
-    session.executeDesign({
-      type: 'setToken',
-      family: token.family,
-      token: withTokenLabel(snap.design.tokens, token.family, token.uuid, next),
+    onEvent({
+      type: EditorEventType.DesignCommandExecute,
+      data: {
+        command: {
+          type: 'setToken',
+          family: token.family,
+          token: withTokenLabel(snap.design.tokens, token.family, token.uuid, next),
+        },
+      },
     });
   };
   const pathParts = token.path.split('.');
@@ -117,10 +124,13 @@ export function createTokenTableRow({
     const suffix = next.trim().toLowerCase();
     if (!suffix || suffix === tokenPathSuffix) return;
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(suffix)) {
-      session.setNotice(
-        'Token name must use lowercase letters and numbers separated by hyphens',
-        'error',
-      );
+      onEvent({
+        type: EditorEventType.NoticeSet,
+        data: {
+          text: 'Token name must use lowercase letters and numbers separated by hyphens',
+          tone: 'error',
+        },
+      });
       return;
     }
     const segments = suffix.split('-');
@@ -135,16 +145,27 @@ export function createTokenTableRow({
       if (duplicate || indexed.groups.has(nextPath)) {
         throw new Error(`Token path "${nextPath}" already exists`);
       }
-      session.executeDesign({
-        type: 'setToken',
-        family: token.family,
-        token: withTokenMetadata(snap.design.tokens, token.family, token.uuid, {
-          label: nextLabel,
-          group: nextGroup,
-        }),
+      onEvent({
+        type: EditorEventType.DesignCommandExecute,
+        data: {
+          command: {
+            type: 'setToken',
+            family: token.family,
+            token: withTokenMetadata(snap.design.tokens, token.family, token.uuid, {
+              label: nextLabel,
+              group: nextGroup,
+            }),
+          },
+        },
       });
     } catch (error) {
-      session.setNotice(error instanceof Error ? error.message : 'Could not rename token', 'error');
+      onEvent({
+        type: EditorEventType.NoticeSet,
+        data: {
+          text: error instanceof Error ? error.message : 'Could not rename token',
+          tone: 'error',
+        },
+      });
     }
   };
   return {
@@ -217,11 +238,11 @@ export function createTokenTableRow({
             dimensionFieldOptions={shadowDimensionFieldOptions}
             colorFieldOptions={shadowColorFieldOptions}
             onCommit={(next) =>
-              commitRawToken(session, snap, token.family, token.uuid, next, writingId)
+              commitRawToken(onEvent, snap, token.family, token.uuid, next, writingId)
             }
             onReset={
               writingId && token.override !== undefined
-                ? () => resetTokenBreakpoint(session, snap, token.family, token.uuid, writingId)
+                ? () => resetTokenBreakpoint(onEvent, snap, token.family, token.uuid, writingId)
                 : undefined
             }
           />
@@ -241,11 +262,11 @@ export function createTokenTableRow({
               (candidate) => candidate !== ref,
             )}
             onCommit={(next) =>
-              commitRawToken(session, snap, token.family, token.uuid, next, writingId)
+              commitRawToken(onEvent, snap, token.family, token.uuid, next, writingId)
             }
             onReset={
               writingId && token.override !== undefined
-                ? () => resetTokenBreakpoint(session, snap, token.family, token.uuid, writingId)
+                ? () => resetTokenBreakpoint(onEvent, snap, token.family, token.uuid, writingId)
                 : undefined
             }
           />
@@ -300,10 +321,10 @@ export function createTokenTableRow({
             onCommit={(next) => {
               if (writingId && next.trim() === '') {
                 if (token.override !== undefined)
-                  resetTokenBreakpoint(session, snap, token.family, token.uuid, writingId);
+                  resetTokenBreakpoint(onEvent, snap, token.family, token.uuid, writingId);
                 return;
               }
-              commitToken(session, snap, token.family, token.uuid, shownValue, next, writingId);
+              commitToken(onEvent, snap, token.family, token.uuid, shownValue, next, writingId);
             }}
           />
         )}
@@ -316,7 +337,7 @@ export function createTokenTableRow({
             name={`reset-token-override-${token.uuid}`}
             onClick={() =>
               resetTokenBreakpoint(
-                session,
+                onEvent,
                 snap,
                 token.family,
                 token.uuid,
@@ -329,10 +350,10 @@ export function createTokenTableRow({
         ) : null}
         {token.family !== 'font' ? (
           <RemoveTokenButton
-            session={session}
             family={token.family}
             uuid={token.uuid}
             label={displayLabel}
+            onEvent={onEvent}
           />
         ) : null}
       </div>,

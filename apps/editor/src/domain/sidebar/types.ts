@@ -70,34 +70,3 @@ export interface SidebarViewModel {
   readonly layers: LayerSidebarModel;
   readonly inspector: InspectorSidebarModel | null;
 }
-
-export type SidebarIntent =
-  | { readonly type: 'asset.open'; readonly id: string }
-  | { readonly type: 'asset.create'; readonly kind: string }
-  | { readonly type: 'asset.rename'; readonly id: string; readonly name: string }
-  | { readonly type: 'asset.delete'; readonly id: string }
-  | { readonly type: 'asset.drag.start'; readonly id: string }
-  | { readonly type: 'asset.drag.end' }
-  | { readonly type: 'layer.select'; readonly id: string }
-  | { readonly type: 'layer.drag.start'; readonly id: string }
-  | { readonly type: 'layer.drag.end' }
-  | { readonly type: 'layer.delete'; readonly id: string }
-  | {
-      readonly type: 'layer.insert';
-      readonly targetId: string;
-      readonly placement: 'inside' | 'below';
-      readonly kind: string;
-      readonly value: string;
-    }
-  | {
-      readonly type: 'layer.move';
-      readonly sourceId: string;
-      readonly targetId: string;
-      readonly zone: 'before' | 'inside' | 'after';
-    }
-  | {
-      readonly type: 'inspector.change';
-      readonly nodeId: string;
-      readonly path: string;
-      readonly value: unknown;
-    };

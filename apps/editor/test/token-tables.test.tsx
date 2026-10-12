@@ -6,6 +6,8 @@ import { useSyncExternalStore } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createExampleCatalog, exampleIds, tokenRef } from '@facadeur/examples';
 import { readTokenTree, setTokenInTree, type JsonValue, type TokenTree } from '@facadeur/core';
+import { createAppService } from '../src/app-service';
+import { createInMemoryCatalogPort } from '../src/domain/project/in-memory-catalog-port';
 import {
   withTokenBreakpoint,
   withTokenLabel,
@@ -23,7 +25,15 @@ function TokenLabelProbe({ uuid }: { uuid: string }) {
   return <output data-testid="token-label">{label(tokenRef(uuid))}</output>;
 }
 
-function TokenTable({ session, domain }: { session: EditorSession; domain: TokenDomain }) {
+function TokenTable({
+  session,
+  domain,
+  app,
+}: {
+  session: EditorSession;
+  domain: TokenDomain;
+  app: ReturnType<typeof createAppService>;
+}) {
   const snap = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
   return (
     <TokenPreviewProvider
@@ -32,7 +42,11 @@ function TokenTable({ session, domain }: { session: EditorSession; domain: Token
       breakpointId={null}
       breakpoints={snap.design.breakpoints}
     >
-      <TokensDomainPanel session={session} snap={snap} domain={domain} />
+      <TokensDomainPanel
+        snap={snap}
+        domain={domain}
+        onEvent={(event) => void app.dispatchEditorEvent(event)}
+      />
       <TokenLabelProbe uuid={exampleIds.tokens.space.scale.step4} />
     </TokenPreviewProvider>
   );
@@ -83,16 +97,23 @@ function catalogWithReference(family: 'radius' | 'shadow' | 'type', targetUuid: 
 
 describe('design token tables', () => {
   let session: EditorSession | null = null;
+  let app: ReturnType<typeof createAppService> | null = null;
 
   afterEach(() => {
     cleanup();
     session?.destroy();
     session = null;
+    app = null;
   });
 
   function openDomain(domain: TokenDomain, projectCatalog = createExampleCatalog()) {
     session = createEditorSession({ projectCatalog });
-    return render(<TokenTable session={session} domain={domain} />);
+    app = createAppService({
+      core: session.core,
+      session,
+      catalogPort: createInMemoryCatalogPort(() => session!.core.getSnapshot().catalog),
+    });
+    return render(<TokenTable session={session} domain={domain} app={app} />);
   }
 
   it('sorts numeric token paths naturally and searches names and values', () => {
@@ -252,7 +273,7 @@ describe('design token tables', () => {
       fontSize: tokenRef(exampleIds.tokens.space.scale.step4),
     });
 
-    view.rerender(<TokenTable session={session!} domain="shadow" />);
+    view.rerender(<TokenTable session={session!} domain="shadow" app={app!} />);
     const shadowSummary = view.container.querySelector(
       'tr[data-token-path="shadow.Md"] .design-shadow-editor summary .meta',
     );
@@ -405,7 +426,12 @@ describe('design token tables', () => {
         scenario.override,
       ),
     });
-    const view = render(<TokenTable session={session} domain={scenario.domain} />);
+    app = createAppService({
+      core: session.core,
+      session,
+      catalogPort: createInMemoryCatalogPort(() => session!.core.getSnapshot().catalog),
+    });
+    const view = render(<TokenTable session={session} domain={scenario.domain} app={app} />);
     act(() => {
       session!.setFocusViewport(exampleIds.catalog.breakpoints.tablet);
       session!.setEditTarget('viewport');

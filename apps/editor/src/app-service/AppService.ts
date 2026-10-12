@@ -6,7 +6,8 @@ import type { CatalogDefinitionKind, EditorCatalogPort } from '../domain/project
 import { InspectorService } from './inspector';
 import { assetKindToCatalogMap, blankCatalogDefinition } from '../domain/catalog/blank-definition';
 import { catalogAssetSummaries } from '../domain/catalog/asset-list';
-import type { SidebarIntent } from '../domain/sidebar/types';
+import type { EditorEvent, EditorEventDataMap } from '../domain/sidebar/events';
+import { EditorEventType } from '../domain/sidebar/events';
 import { catalogLayerDropTarget } from '../domain/catalog/catalog-layer-move';
 import {
   catalogLayerInsertTarget,
@@ -136,62 +137,174 @@ export class AppService {
     return buildInspectorSidebarViewModel(model, formKey);
   }
 
-  async dispatchSidebarIntent(intent: SidebarIntent) {
+  async dispatchEditorEvent(event: EditorEvent) {
     try {
-      switch (intent.type) {
-        case 'asset.open':
-          this.session.openAsset(intent.id, 'root');
+      switch (event.type) {
+        case EditorEventType.AssetRename:
+          await this.patchDefinition(event.data.assetId, { name: event.data.name });
           return;
-        case 'asset.create':
-          await this.createAsset(intent.kind);
+        case EditorEventType.AssetDelete:
+          await this.deleteDefinition(event.data.assetId);
           return;
-        case 'asset.rename':
-          await this.patchDefinition(intent.id, { name: intent.name });
+        case EditorEventType.AssetDragStart:
+          this.session.beginDrag({ kind: 'asset', assetId: event.data.assetId });
           return;
-        case 'asset.delete':
-          await this.deleteDefinition(intent.id);
-          return;
-        case 'asset.drag.start':
-          this.session.beginDrag({ kind: 'asset', assetId: intent.id });
-          return;
-        case 'asset.drag.end':
+        case EditorEventType.AssetDragEnd:
           this.session.endDrag();
           return;
-        case 'layer.select':
-          this.session.selectNode(intent.id);
+        case EditorEventType.LayerSelect:
+          this.session.selectNode(event.data.nodeId);
           return;
-        case 'layer.drag.start':
-          this.session.beginDrag({ kind: 'node', nodeId: intent.id });
+        case EditorEventType.LayerDragStart:
+          this.session.beginDrag({ kind: 'node', nodeId: event.data.nodeId });
           return;
-        case 'layer.drag.end':
+        case EditorEventType.LayerDragEnd:
           this.session.endDrag();
           return;
-        case 'layer.delete':
-          await this.deleteSidebarLayer(intent.id);
+        case EditorEventType.LayerDelete:
+          await this.deleteSidebarLayer(event.data.nodeId);
           return;
-        case 'layer.insert':
-          await this.insertSidebarLayer(intent);
+        case EditorEventType.LayerInsert:
+          await this.insertSidebarLayer(event.data);
           return;
-        case 'layer.move':
-          await this.moveSidebarLayer(intent.sourceId, intent.targetId, intent.zone);
+        case EditorEventType.LayerMove:
+          await this.moveSidebarLayer(event.data.sourceId, event.data.targetId, event.data.zone);
           return;
-        case 'inspector.change':
+        case EditorEventType.InspectorFieldChange:
           this.inspector.updateField({
-            nodeUuid: intent.nodeId,
-            path: intent.path,
-            value: intent.value,
+            nodeUuid: event.data.nodeId,
+            path: event.data.path,
+            value: event.data.value,
           });
+          return;
+        case EditorEventType.SurfaceNavigate:
+          // Shell-only events share the same contract but have no AppService operation.
+          return;
+        case EditorEventType.ToolSet:
+          this.session.setTool(event.data.tool);
+          return;
+        case EditorEventType.ZoomBy:
+          this.session.zoomBy(event.data.factor);
+          return;
+        case EditorEventType.ZoomReset:
+          this.session.resetZoom();
+          return;
+        case EditorEventType.CanvasFit:
+          this.session.fit();
+          return;
+        case EditorEventType.ViewportFocus:
+          this.session.setFocusViewport(event.data.breakpointId);
+          return;
+        case EditorEventType.ViewportSelect:
+          this.session.selectViewport(event.data.breakpointId);
+          return;
+        case EditorEventType.EditTargetSet:
+          this.session.setEditTarget(event.data.target);
+          return;
+        case EditorEventType.CatalogPersist:
+          await this.persistCatalog();
+          return;
+        case EditorEventType.DesignPropsSave:
+          await this.persistCatalog();
+          this.session.setNotice('Props saved', 'info');
+          return;
+        case EditorEventType.SchemaUpsert:
+          this.upsertSchema(event.data.uuid, event.data.schema);
+          return;
+        case EditorEventType.SchemaRemove:
+          this.removeSchema(event.data.uuid);
+          await this.saveSchemas();
+          return;
+        case EditorEventType.SchemasSave:
+          await this.saveSchemas();
+          this.session.setNotice('Schemas saved', 'info');
+          return;
+        case EditorEventType.DefinitionSchemaSet:
+          await this.patchDefinition(event.data.definitionId, { schema: event.data.schema });
+          this.session.setNotice(
+            event.data.schema.kind === 'inline'
+              ? 'Using inline schema on this definition'
+              : 'Schema link updated',
+            'info',
+          );
+          return;
+        case EditorEventType.PreviewFieldSet:
+          await this.patchPreviewField(event.data.field, event.data.value);
+          return;
+        case EditorEventType.DesignPropUpsert:
+          this.upsertDesignProp(event.data.prop);
+          return;
+        case EditorEventType.DesignPropRemove:
+          this.removeDesignProp(event.data.uuid);
+          return;
+        case EditorEventType.DesignCommandExecute:
+          this.session.executeDesign(event.data.command);
+          return;
+        case EditorEventType.DesignTokenRemove: {
+          const refs = this.core.getTokensReferencingUUID(event.data.uuid);
+          if (refs.length) {
+            this.session.setNotice(
+              `Cannot remove "${event.data.label}": {token:${event.data.uuid}} is referenced in ${refs.join(', ')}`,
+              'error',
+            );
+            return;
+          }
+          this.session.executeDesign({
+            type: 'removeToken',
+            family: event.data.family,
+            uuid: event.data.uuid,
+          });
+          return;
+        }
+        case EditorEventType.BreakpointsSet: {
+          const breakpoints = [...event.data.breakpoints];
+          this.session.executeDesign({ type: 'setBreakpoints', breakpoints });
+          const active = this.core.getActiveBreakpoints();
+          const snapshot = this.session.getSnapshot();
+          if (
+            snapshot.focusViewportId &&
+            !active.some((item) => item.uuid === snapshot.focusViewportId)
+          ) {
+            this.session.setFocusViewport(active[0]?.uuid ?? null);
+            this.session.setEditTarget('base');
+          }
+          if (
+            snapshot.selectedViewportId &&
+            !active.some((item) => item.uuid === snapshot.selectedViewportId)
+          ) {
+            this.session.selectViewport(active[0]?.uuid ?? null);
+          }
+          if (event.data.focusBreakpointId) {
+            this.session.setFocusViewport(event.data.focusBreakpointId);
+            this.session.setEditTarget('viewport');
+          }
+          return;
+        }
+        case EditorEventType.NoticeSet:
+          this.session.setNotice(event.data.text, event.data.tone);
+          return;
+        case EditorEventType.NodeSelect:
+          this.session.selectNode(event.data.nodeId);
+          return;
+        case EditorEventType.NodeInsert:
+          this.insertCatalogNode(event.data.parentId, event.data.index, event.data.node);
+          return;
+        case EditorEventType.NodeMove:
+          this.moveCatalogNode(event.data.nodeId, event.data.parentId, event.data.index);
+          return;
+        case EditorEventType.NodeStyleRecordSet:
+          this.patchNodeStyleRecord(event.data.nodeId, event.data.style);
           return;
       }
     } catch (failure) {
       this.session.setNotice(
-        failure instanceof Error ? failure.message : 'Could not apply sidebar action',
+        failure instanceof Error ? failure.message : 'Could not apply editor action',
         'error',
       );
     }
   }
 
-  private async insertSidebarLayer(intent: Extract<SidebarIntent, { type: 'layer.insert' }>) {
+  private async insertSidebarLayer(intent: EditorEventDataMap[EditorEventType.LayerInsert]) {
     const snapshot = this.session.getSnapshot();
     const definition = snapshot.openDefinition;
     const item = findLayer(snapshot.layers, intent.targetId);
@@ -269,16 +382,15 @@ export class AppService {
     kind: CatalogDefinitionKind,
     definition: Omit<NodeDefinitionModel, 'uuid'> & { uuid?: string },
   ) {
-    const uuid = await this.core.createDefinitionFromPort(this.catalogPort, kind, definition);
-    if (uuid) this.session.openAsset(uuid);
+    return this.core.createDefinitionFromPort(this.catalogPort, kind, definition);
   }
 
   async createAsset(kind: string) {
-    if (kind !== 'atom' && kind !== 'component' && kind !== 'page') return;
+    if (kind !== 'atom' && kind !== 'component' && kind !== 'page') return null;
     const catalogKind = assetKindToCatalogMap(kind);
-    if (!catalogKind) return;
+    if (!catalogKind) return null;
     const definition = blankCatalogDefinition(kind, catalogAssetSummaries(this.core));
-    await this.createDefinition(catalogKind, definition);
+    return this.createDefinition(catalogKind, definition);
   }
 
   async patchDefinition(uuid: string, patch: Partial<NodeDefinitionModel>) {

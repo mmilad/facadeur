@@ -2,17 +2,19 @@
 
 import { useEffect, useRef, useState, type DragEvent } from 'react';
 import { createPortal } from 'react-dom';
-import type { SidebarIntent, SidebarLayer, LayerSidebarModel } from '../../../domain/sidebar/types';
+import type { EditorEvent } from '../../../domain/sidebar/events';
+import { EditorEventType } from '../../../domain/sidebar/events';
+import type { SidebarLayer, LayerSidebarModel } from '../../../domain/sidebar/types';
 import { layerDropZoneFor } from './catalog-layer-drag';
 import { CatalogLayerContextMenu } from './CatalogLayerContextMenu';
 import { findLayerByAddress } from './layer-tree';
 
 export function CatalogLayersPanel({
   model,
-  onIntent,
+  onEvent,
 }: {
   model: LayerSidebarModel;
-  onIntent: (intent: SidebarIntent) => void;
+  onEvent: (event: EditorEvent) => void;
 }) {
   const layers = model.layers;
   const [over, setOver] = useState<{ id: string; zone: 'before' | 'inside' | 'after' } | null>(
@@ -58,7 +60,7 @@ export function CatalogLayersPanel({
           <CatalogLayerRows
             key={model.title}
             model={model}
-            onIntent={onIntent}
+            onEvent={onEvent}
             item={layers}
             depth={0}
             selectedId={model.selectedId}
@@ -68,15 +70,17 @@ export function CatalogLayersPanel({
             onOpenLayerContext={(layer, anchor) =>
               setContextLayer({ address: layer.address, anchor: anchor.getBoundingClientRect() })
             }
-            onSelect={(item) => onIntent({ type: 'layer.select', id: item.id })}
+            onSelect={(item) =>
+              onEvent({ type: EditorEventType.LayerSelect, data: { nodeId: item.id } })
+            }
             onDragStart={(item, event) => {
               if (item.virtual || item.id === model.rootId) return;
               event.dataTransfer.setData('text/plain', item.id);
               event.dataTransfer.effectAllowed = 'move';
-              onIntent({ type: 'layer.drag.start', id: item.id });
+              onEvent({ type: EditorEventType.LayerDragStart, data: { nodeId: item.id } });
             }}
             onDragEnd={() => {
-              onIntent({ type: 'layer.drag.end' });
+              onEvent({ type: EditorEventType.LayerDragEnd, data: {} });
               setOver(null);
             }}
             onDragOver={(item, event) => {
@@ -98,13 +102,16 @@ export function CatalogLayersPanel({
               if (!draggedId) return;
               if (item.virtual) {
                 event.preventDefault();
-                onIntent({ type: 'layer.drag.end' });
+                onEvent({ type: EditorEventType.LayerDragEnd, data: {} });
                 return;
               }
               event.preventDefault();
               event.stopPropagation();
-              onIntent({ type: 'layer.move', sourceId: draggedId, targetId: item.id, zone });
-              onIntent({ type: 'layer.drag.end' });
+              onEvent({
+                type: EditorEventType.LayerMove,
+                data: { sourceId: draggedId, targetId: item.id, zone },
+              });
+              onEvent({ type: EditorEventType.LayerDragEnd, data: {} });
             }}
           />
         ) : (
@@ -116,15 +123,14 @@ export function CatalogLayersPanel({
             <CatalogLayerContextMenu
               item={contextItem}
               onInsert={(targetId, placement, option) =>
-                onIntent({
-                  type: 'layer.insert',
-                  targetId,
-                  placement,
-                  kind: option.kind,
-                  value: option.value,
+                onEvent({
+                  type: EditorEventType.LayerInsert,
+                  data: { targetId, placement, kind: option.kind, value: option.value },
                 })
               }
-              onDelete={(id) => onIntent({ type: 'layer.delete', id })}
+              onDelete={(id) =>
+                onEvent({ type: EditorEventType.LayerDelete, data: { nodeId: id } })
+              }
               anchor={contextLayer.anchor}
               menuRef={contextMenuRef}
               onClose={() => setContextLayer(null)}
@@ -138,7 +144,7 @@ export function CatalogLayersPanel({
 
 function CatalogLayerRows({
   model,
-  onIntent,
+  onEvent,
   item,
   depth,
   selectedId,
@@ -153,7 +159,7 @@ function CatalogLayerRows({
   onDrop,
 }: {
   model: LayerSidebarModel;
-  onIntent: (intent: SidebarIntent) => void;
+  onEvent: (event: EditorEvent) => void;
   item: SidebarLayer;
   depth: number;
   selectedId: string | null;
@@ -236,7 +242,7 @@ function CatalogLayerRows({
             <CatalogLayerRows
               key={child.address}
               model={model}
-              onIntent={onIntent}
+              onEvent={onEvent}
               item={child}
               depth={depth + 1}
               selectedId={selectedId}

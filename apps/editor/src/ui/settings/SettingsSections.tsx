@@ -1,11 +1,13 @@
+import type { EditorEvent } from '../../domain/sidebar/events';
+import { EditorEventType } from '../../domain/sidebar/events';
 import { SETTINGS_TOKEN_DOMAIN_ITEMS, type EditorSurface } from '../design/design-domain';
 
 export function SettingsSections({
   surface,
-  onSelect,
+  onEvent,
 }: {
   surface: EditorSurface;
-  onSelect: (surface: EditorSurface) => void;
+  onEvent: (event: EditorEvent) => void;
 }) {
   return (
     <nav className="design-settings-tabs" aria-label="Settings sections">
@@ -24,7 +26,9 @@ export function SettingsSections({
           className={surface === item.id ? 'design-settings-tab is-active' : 'design-settings-tab'}
           data-settings-tab={item.id}
           aria-current={surface === item.id ? 'page' : undefined}
-          onClick={() => onSelect(item.id)}
+          onClick={() =>
+            onEvent({ type: EditorEventType.SurfaceNavigate, data: { surfaceId: item.id } })
+          }
         >
           {item.label}
         </button>

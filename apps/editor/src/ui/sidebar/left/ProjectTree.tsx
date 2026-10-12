@@ -4,16 +4,10 @@ import { createPortal } from 'react-dom';
 import { AssetContextMenu } from './AssetContextMenu';
 import { RenameAssetDialog } from './RenameAssetDialog';
 import { AssetRows } from './AssetRows';
-import type {
-  ProjectSidebarModel,
-  SidebarAsset,
-  SidebarIntent,
-} from '../../../domain/sidebar/types';
-import {
-  SIDEBAR_DESIGN_ITEMS,
-  type DesignDomain,
-  type EditorSurface,
-} from '../../design/design-domain';
+import type { ProjectSidebarModel, SidebarAsset } from '../../../domain/sidebar/types';
+import type { EditorEvent } from '../../../domain/sidebar/events';
+import { EditorEventType } from '../../../domain/sidebar/events';
+import { SIDEBAR_DESIGN_ITEMS, type EditorSurface } from '../../design/design-domain';
 
 const TREE_KINDS = ['atom', 'component', 'page'] as const;
 
@@ -26,13 +20,11 @@ const KIND_LABEL: Record<(typeof TREE_KINDS)[number], string> = {
 export function ProjectTree({
   model,
   surface,
-  onOpenDesignDomain,
-  onIntent,
+  onEvent,
 }: {
   model: ProjectSidebarModel;
   surface: EditorSurface;
-  onOpenDesignDomain: (domain: DesignDomain) => void;
-  onIntent: (intent: SidebarIntent) => void;
+  onEvent: (event: EditorEvent) => void;
 }) {
   const [query, setQuery] = useState('');
   const [renameAssetId, setRenameAssetId] = useState<string | null>(null);
@@ -130,7 +122,7 @@ export function ProjectTree({
   }
 
   function create(kind: (typeof TREE_KINDS)[number]) {
-    onIntent({ type: 'asset.create', kind });
+    onEvent({ type: EditorEventType.AssetCreate, data: { kind } });
     setQuery('');
     setExpanded((prev) => ({ ...prev, [kind]: true }));
   }
@@ -169,7 +161,9 @@ export function ProjectTree({
             }
             data-design-domain={item.id}
             aria-pressed={surface === item.id}
-            onClick={() => onOpenDesignDomain(item.id)}
+            onClick={() =>
+              onEvent({ type: EditorEventType.SurfaceNavigate, data: { surfaceId: item.id } })
+            }
           >
             <span className="asset-name">{item.label}</span>
           </button>
@@ -189,7 +183,7 @@ export function ProjectTree({
                 openId={model.openId}
                 draggableAssetIds={model.draggableAssetIds}
                 activeRef={activeRef}
-                onIntent={onIntent}
+                onEvent={onEvent}
                 contextAssetId={contextAssetId}
                 onContextAsset={openAssetContext}
               />
@@ -205,10 +199,12 @@ export function ProjectTree({
               anchor={assetContextMenu.anchor}
               menuRef={contextMenuRef}
               onRename={(id) => {
-                onIntent({ type: 'asset.open', id });
+                onEvent({ type: EditorEventType.AssetOpen, data: { assetId: id } });
                 setRenameAssetId(id);
               }}
-              onDelete={(id) => onIntent({ type: 'asset.delete', id })}
+              onDelete={(id) =>
+                onEvent({ type: EditorEventType.AssetDelete, data: { assetId: id } })
+              }
               onClose={() => setAssetContextMenu(null)}
             />,
             document.body,
@@ -218,7 +214,9 @@ export function ProjectTree({
         <RenameAssetDialog
           key={renameAssetId}
           asset={model.assets.find((asset) => asset.id === renameAssetId)!}
-          onRename={(id, name) => onIntent({ type: 'asset.rename', id, name })}
+          onRename={(id, name) =>
+            onEvent({ type: EditorEventType.AssetRename, data: { assetId: id, name } })
+          }
           onClose={() => setRenameAssetId(null)}
         />
       ) : null}

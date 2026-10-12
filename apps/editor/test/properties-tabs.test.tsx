@@ -23,9 +23,7 @@ function renderInspector() {
   render(
     <CatalogNodeInspector
       model={app.getInspectorSidebarModel(rootUuid)}
-      onChange={(nodeId, path, value) =>
-        void app.dispatchSidebarIntent({ type: 'inspector.change', nodeId, path, value })
-      }
+      onEvent={(event) => void app.dispatchEditorEvent(event)}
     />,
   );
   return session;

@@ -1,6 +1,8 @@
 import { findNodeByUuid, findParentOfNode } from '@facadeur/core';
 import { useEffect, type RefObject } from 'react';
 import type { AppService } from '../../../app-service/AppService';
+import type { EditorEvent } from '../../../domain/sidebar/events';
+import { EditorEventType } from '../../../domain/sidebar/events';
 import type { SelectionController } from '../../../domain/selection/selection';
 import { createSelection } from '../../../domain/selection/selection';
 import { nodeUuidFromHit, createStagePlacement } from './stage-pointer-placement';
@@ -14,6 +16,7 @@ import { isEditableTarget } from '../../../domain/keyboard';
 export function useStagePointer({
   app,
   session,
+  onEvent,
   viewportRef,
   stageRef,
   boardRef,
@@ -24,6 +27,7 @@ export function useStagePointer({
 }: {
   app: AppService;
   session: EditorSession;
+  onEvent: (event: EditorEvent) => void;
   viewportRef: RefObject<HTMLDivElement | null>;
   stageRef: RefObject<HTMLDivElement | null>;
   boardRef: RefObject<ViewportBoard | null>;
@@ -55,6 +59,7 @@ export function useStagePointer({
     const placement = createStagePlacement({
       app,
       session,
+      onEvent,
       getBoard: () => boardRef.current,
       selection,
       stage,
@@ -99,7 +104,10 @@ export function useStagePointer({
       const hit = selection.hitAt(event.clientX, event.clientY);
       const uuid = authoredHit(frame, hit?.id);
       if (!uuid) {
-        session.selectNode(app.getCoreSnapshot().openDefinition?.root.uuid ?? null);
+        onEvent({
+          type: EditorEventType.NodeSelect,
+          data: { nodeId: app.getCoreSnapshot().openDefinition?.root.uuid ?? null },
+        });
         return;
       }
       const chain = chainTo(uuid);
@@ -117,7 +125,7 @@ export function useStagePointer({
         if (index >= 0 && index < chain.length - 1) target = chain[index + 1]!;
         else target = anchor ?? uuid;
       }
-      session.selectNode(target);
+      onEvent({ type: EditorEventType.NodeSelect, data: { nodeId: target } });
     }
 
     function claimsPan(event: PointerEvent): boolean {
@@ -156,10 +164,17 @@ export function useStagePointer({
       if (event.button !== 0) return;
       const frame = selection.frameAt(event.clientX, event.clientY);
       if (frame && claimsPan(event)) {
-        session.selectViewport(frame.breakpoint.uuid);
+        onEvent({
+          type: EditorEventType.ViewportSelect,
+          data: { breakpointId: frame.breakpoint.uuid },
+        });
         return;
       }
-      if (frame) session.setFocusViewport(frame.breakpoint.uuid);
+      if (frame)
+        onEvent({
+          type: EditorEventType.ViewportFocus,
+          data: { breakpointId: frame.breakpoint.uuid },
+        });
       if (claimsPan(event)) return;
       const hit = selection.hitAt(event.clientX, event.clientY);
       const tool = session.getSnapshot().tool;
@@ -219,7 +234,7 @@ export function useStagePointer({
       const drop = pending;
       pending = null;
       selection.showInsert(null);
-      session.endDrag();
+      onEvent({ type: EditorEventType.LayerDragEnd, data: {} });
       placement.applyDrop(drag, drop);
     };
 
@@ -265,17 +280,18 @@ export function useStagePointer({
       const step = event.shiftKey ? 10 : 1;
       const dx = event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0;
       const dy = event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0;
-      app.patchNodeStyleRecord(nodeUuid, {
-        ...node.style,
-        left: `${left + dx}px`,
-        top: `${top + dy}px`,
+      onEvent({
+        type: EditorEventType.NodeStyleRecordSet,
+        data: {
+          nodeId: nodeUuid,
+          style: {
+            ...node.style,
+            left: `${left + dx}px`,
+            top: `${top + dy}px`,
+          },
+        },
       });
-      void app.persistCatalog().catch((failure: unknown) => {
-        session.setNotice(
-          failure instanceof Error ? failure.message : 'Could not save catalog edit',
-          'error',
-        );
-      });
+      onEvent({ type: EditorEventType.CatalogPersist, data: {} });
     };
     const markTouched = () => {
       untouchedRef.current = false;
@@ -333,6 +349,7 @@ export function useStagePointer({
   }, [
     app,
     session,
+    onEvent,
     viewportRef,
     stageRef,
     boardRef,

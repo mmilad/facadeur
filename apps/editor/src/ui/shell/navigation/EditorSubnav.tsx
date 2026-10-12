@@ -3,14 +3,18 @@ import {
   isSettingsTokenDomain,
   type EditorSurface,
 } from '../../design/design-domain';
+import type { EditorEvent } from '../../../domain/sidebar/events';
+import { EditorEventType } from '../../../domain/sidebar/events';
 
 export function EditorSubnav({
   surface,
-  onSelectSurface,
+  onEvent,
 }: {
   surface: EditorSurface;
-  onSelectSurface: (surface: EditorSurface) => void;
+  onEvent: (event: EditorEvent) => void;
 }) {
+  const open = (surfaceId: EditorSurface) =>
+    onEvent({ type: EditorEventType.SurfaceNavigate, data: { surfaceId } });
   const settingsActive =
     isSettingsTokenDomain(surface) || surface === 'schemas' || surface === 'props';
 
@@ -21,7 +25,7 @@ export function EditorSubnav({
         className={settingsActive ? 'editor-subnav-item is-active' : 'editor-subnav-item'}
         aria-current={settingsActive ? 'page' : undefined}
         data-subnav="settings"
-        onClick={() => onSelectSurface(settingsActive ? surface : 'colors')}
+        onClick={() => open(settingsActive ? surface : 'colors')}
       >
         Settings
       </button>
@@ -30,7 +34,7 @@ export function EditorSubnav({
         data-surface="icons"
         className={surface === 'icons' ? 'editor-subnav-item is-active' : 'editor-subnav-item'}
         aria-current={surface === 'icons' ? 'page' : undefined}
-        onClick={() => onSelectSurface('icons')}
+        onClick={() => open('icons')}
       >
         Icons
       </button>
@@ -41,7 +45,7 @@ export function EditorSubnav({
           className={surface === item.id ? 'editor-subnav-item is-active' : 'editor-subnav-item'}
           aria-current={surface === item.id ? 'page' : undefined}
           data-surface={item.id}
-          onClick={() => onSelectSurface(item.id)}
+          onClick={() => open(item.id)}
         >
           {item.label}
         </button>

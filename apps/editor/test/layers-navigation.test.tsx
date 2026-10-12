@@ -35,7 +35,7 @@ function CatalogLayersView({ session }: { session: EditorSession }) {
   return (
     <CatalogLayersPanel
       model={snap.sidebar.layers}
-      onIntent={(intent) => void app.dispatchSidebarIntent(intent)}
+      onEvent={(event) => void app.dispatchEditorEvent(event)}
     />
   );
 }

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { insertModeCue, isInsertTool } from '../../domain/editing';
 import type { SelectionController } from '../../domain/selection/selection';
 import type { AppService } from '../../app-service';
+import type { EditorEvent } from '../../domain/sidebar/events';
 import type { EditorSession, EditorTool } from '../../domain/session';
 import type { StageController } from '../../domain/viewport/stage';
 import type { ViewportBoard } from '../../domain/viewport/board';
@@ -13,6 +14,7 @@ import { DynamicElement } from '../../domain/viewport/dynamic-element';
 export function StageCanvas({
   app,
   session,
+  onEvent,
   openId,
   generation,
   designRevision,
@@ -24,6 +26,7 @@ export function StageCanvas({
 }: {
   app: AppService;
   session: EditorSession;
+  onEvent: (event: EditorEvent) => void;
   openId: string;
   generation: number;
   designRevision: number;
@@ -44,6 +47,7 @@ export function StageCanvas({
   useStagePointer({
     app,
     session,
+    onEvent,
     viewportRef,
     stageRef,
     boardRef,

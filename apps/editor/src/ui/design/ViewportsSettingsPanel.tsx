@@ -1,19 +1,24 @@
 import { breakpointLabel, createCatalogUuid, type Breakpoint } from '@facadeur/core';
 import { activeBreakpoints, configuredBreakpoints, isBreakpointEnabled } from '@facadeur/core';
 import { NumberField, TextField } from '@facadeur/form';
-import type { EditorSession, EditorSnapshot } from '../../domain/session';
+import type { EditorEvent } from '../../domain/sidebar/events';
+import { EditorEventType } from '../../domain/sidebar/events';
 import { IconButton } from '../components/IconButton';
 
 export function ViewportsSettingsPanel({
-  session,
-  snap,
+  breakpoints: configured,
+  onEvent,
 }: {
-  session: EditorSession;
-  snap: EditorSnapshot;
+  breakpoints: readonly Breakpoint[];
+  onEvent: (event: EditorEvent) => void;
 }) {
-  const breakpoints = configuredBreakpoints(snap.design.breakpoints);
-  const active = activeBreakpoints(snap.design.breakpoints);
-  const commit = (next: Breakpoint[]) => commitDesignBreakpoints(session, snap, next);
+  const breakpoints = configuredBreakpoints(configured);
+  const active = activeBreakpoints(configured);
+  const commit = (next: Breakpoint[], focusBreakpointId?: string) =>
+    onEvent({
+      type: EditorEventType.BreakpointsSet,
+      data: { breakpoints: next, ...(focusBreakpointId ? { focusBreakpointId } : {}) },
+    });
   return (
     <div className="stack design-domain-panel viewport-settings">
       <p className="side-note">
@@ -42,7 +47,7 @@ export function ViewportsSettingsPanel({
                   value={breakpoint.label}
                   onChange={() => {}}
                   onCommit={(value) =>
-                    renameBreakpointLabel(session, snap, breakpoints, breakpoint.uuid, value)
+                    renameBreakpointLabel(onEvent, breakpoints, breakpoint.uuid, value)
                   }
                 />
               </label>
@@ -88,9 +93,7 @@ export function ViewportsSettingsPanel({
                         ? 'At least one viewport must stay active.'
                         : undefined
                     }
-                    onClick={() =>
-                      toggleBreakpointEnabled(session, snap, breakpoints, breakpoint.uuid)
-                    }
+                    onClick={() => toggleBreakpointEnabled(onEvent, breakpoints, breakpoint.uuid)}
                   >
                     {enabled ? <EyeOpenIcon /> : <EyeClosedIcon />}
                   </IconButton>
@@ -115,7 +118,7 @@ export function ViewportsSettingsPanel({
       <button
         type="button"
         className="text-button"
-        onClick={() => addViewport(session, snap, breakpoints)}
+        onClick={() => addViewport(commit, breakpoints)}
       >
         Add viewport
       </button>
@@ -165,24 +168,8 @@ function TrashIcon() {
   );
 }
 
-function commitDesignBreakpoints(session: EditorSession, snap: EditorSnapshot, next: Breakpoint[]) {
-  const sorted = configuredBreakpoints(next);
-  session.executeDesign({ type: 'setBreakpoints', breakpoints: sorted });
-  const active = activeBreakpoints(sorted);
-  const focus = snap.focusViewportId;
-  if (focus && !active.some((item) => item.uuid === focus)) {
-    session.setFocusViewport(active[0]?.uuid ?? null);
-    session.setEditTarget('base');
-  }
-  const selected = snap.selectedViewportId;
-  if (selected && !active.some((item) => item.uuid === selected)) {
-    session.selectViewport(active[0]?.uuid ?? null);
-  }
-}
-
 function toggleBreakpointEnabled(
-  session: EditorSession,
-  snap: EditorSnapshot,
+  onEvent: (event: EditorEvent) => void,
   current: readonly Breakpoint[],
   id: string,
 ) {
@@ -190,7 +177,10 @@ function toggleBreakpointEnabled(
   if (!target) return;
   const enabled = isBreakpointEnabled(target);
   if (enabled && current.filter(isBreakpointEnabled).length <= 1) {
-    session.setNotice('At least one viewport must stay active.', 'error');
+    onEvent({
+      type: EditorEventType.NoticeSet,
+      data: { text: 'At least one viewport must stay active.', tone: 'error' },
+    });
     return;
   }
   const next = current.map((item) => {
@@ -199,12 +189,11 @@ function toggleBreakpointEnabled(
     const { enabled: _enabled, ...rest } = item;
     return rest;
   });
-  commitDesignBreakpoints(session, snap, next);
+  onEvent({ type: EditorEventType.BreakpointsSet, data: { breakpoints: next } });
 }
 
 function renameBreakpointLabel(
-  session: EditorSession,
-  snap: EditorSnapshot,
+  onEvent: (event: EditorEvent) => void,
   current: readonly Breakpoint[],
   id: string,
   rawLabel: string,
@@ -213,32 +202,39 @@ function renameBreakpointLabel(
   const currentLabel = current.find((item) => item.uuid === id);
   if (!currentLabel || label === currentLabel.label) return;
   if (!label) {
-    session.setNotice('Viewport label is required.', 'error');
+    onEvent({
+      type: EditorEventType.NoticeSet,
+      data: { text: 'Viewport label is required.', tone: 'error' },
+    });
     return;
   }
   if (current.some((item) => item.uuid !== id && item.label.trim() === label)) {
-    session.setNotice(`Viewport label "${label}" is already in use.`, 'error');
+    onEvent({
+      type: EditorEventType.NoticeSet,
+      data: { text: `Viewport label "${label}" is already in use.`, tone: 'error' },
+    });
     return;
   }
-  commitDesignBreakpoints(
-    session,
-    snap,
-    current.map((item) => (item.uuid === id ? breakpointWithLabel(item, label) : item)),
-  );
+  onEvent({
+    type: EditorEventType.BreakpointsSet,
+    data: {
+      breakpoints: current.map((item) =>
+        item.uuid === id ? breakpointWithLabel(item, label) : item,
+      ),
+    },
+  });
 }
 
 function breakpointWithLabel(breakpoint: Breakpoint, label: string): Breakpoint {
   return { ...breakpoint, label };
 }
 
-function addViewport(session: EditorSession, snap: EditorSnapshot, current: readonly Breakpoint[]) {
+function addViewport(
+  commit: (next: Breakpoint[], focusBreakpointId?: string) => void,
+  current: readonly Breakpoint[],
+) {
   const max = current.reduce((value, item) => Math.max(value, item.minWidth), 0);
   const uuid = createCatalogUuid();
   const label = `Viewport ${current.length + 1}`;
-  commitDesignBreakpoints(session, snap, [
-    ...current,
-    { uuid, label, minWidth: max > 0 ? max + 320 : 1280 },
-  ]);
-  session.setFocusViewport(uuid);
-  session.setEditTarget('viewport');
+  commit([...current, { uuid, label, minWidth: max > 0 ? max + 320 : 1280 }], uuid);
 }

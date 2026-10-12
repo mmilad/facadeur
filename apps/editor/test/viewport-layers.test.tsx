@@ -27,7 +27,7 @@ describe('catalog viewport layers', () => {
     root = createRoot(host);
     await act(async () => {
       root?.render(
-        <CatalogLayersPanel model={session.getSnapshot().sidebar.layers} onIntent={() => {}} />,
+        <CatalogLayersPanel model={session.getSnapshot().sidebar.layers} onEvent={() => {}} />,
       );
     });
 

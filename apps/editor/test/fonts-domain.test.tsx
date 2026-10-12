@@ -6,26 +6,41 @@ import { useSyncExternalStore } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createExampleCatalog, exampleIds } from '@facadeur/examples';
 import { fontFamilyTokens } from '@facadeur/core';
+import { createAppService } from '../src/app-service';
+import { createInMemoryCatalogPort } from '../src/domain/project/in-memory-catalog-port';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
 import { FontsDomainPanel } from '../src/ui/design/FontsDomainPanel';
 
-function FontsPanel({ session }: { session: EditorSession }) {
+function FontsPanel({
+  session,
+  app,
+}: {
+  session: EditorSession;
+  app: ReturnType<typeof createAppService>;
+}) {
   const snap = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
-  return <FontsDomainPanel session={session} snap={snap} />;
+  return <FontsDomainPanel snap={snap} onEvent={(event) => void app.dispatchEditorEvent(event)} />;
 }
 
 describe('fonts domain panel', () => {
   let session: EditorSession | null = null;
+  let app: ReturnType<typeof createAppService> | null = null;
 
   afterEach(() => {
     cleanup();
     session?.destroy();
     session = null;
+    app = null;
   });
 
   function openFonts() {
     session = createEditorSession({ projectCatalog: createExampleCatalog() });
-    return render(<FontsPanel session={session} />);
+    app = createAppService({
+      core: session.core,
+      session,
+      catalogPort: createInMemoryCatalogPort(() => session!.core.getSnapshot().catalog),
+    });
+    return render(<FontsPanel session={session} app={app} />);
   }
 
   it('adds a font with a valid id and default stack', () => {

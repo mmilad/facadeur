@@ -37,7 +37,7 @@ completed change logs out of this file.
 
 ## Remaining follow-up
 
-- [ ] Refactor: decouple project/layer sidebar and inspector from Core.
+- [x] Refactor: decouple project/layer sidebar and inspector from Core.
   - Evidence: `ui/sidebar/layers` and `ui/sidebar/properties` receive `AppService`,
     `EditorSession`, or full `EditorSnapshot`; layer/asset controls compute Catalog rules and
     invoke Core-backed workflows directly. The Inspector consumes a Core-derived model.
@@ -45,25 +45,54 @@ completed change logs out of this file.
     sidebar DTOs/adapters to the existing session snapshot; route minimal typed intents through
     `AppService` for resolution, validation, persistence, selection, and drag operations. Build
     Storybook/test DTOs from the canonical Examples Catalog.
-  - Scope: prerequisite for the current sidebar decoupling task; settings panels remain unchanged.
+  - Scope: complete; settings panels remain unchanged.
   - Contracts: preserve asset create/open/rename/delete, layer selection/context actions/drop
     zones and legal moves, inspector fields/tabs/form values, notices, and persistence behavior.
   - Validation: DTO-only sidebar tests, Example adapter and service behavior tests, workspace
     typecheck/full tests/Storybook build, import audit, candidate detector, and diff check.
 
-- [ ] Refactor: decouple project/layer sidebar and inspector from Core.
-  - Evidence: `ui/sidebar/layers` and `ui/sidebar/properties` receive `AppService`,
-    `EditorSession`, or full `EditorSnapshot`; layer/asset controls compute Catalog rules and
-    invoke Core-backed workflows directly. The Inspector consumes a Core-derived model.
-  - Action: organize sidebar UI under `base/`, `left/`, and `right/`; add editor-owned flat
-    sidebar DTOs/adapters to the existing session snapshot; route minimal typed intents through
-    `AppService` for resolution, validation, persistence, selection, and drag operations. Build
-    Storybook/test DTOs from the canonical Examples Catalog.
-  - Scope: prerequisite for the current sidebar decoupling task; settings panels remain unchanged.
-  - Contracts: preserve asset create/open/rename/delete, layer selection/context actions/drop
-    zones and legal moves, inspector fields/tabs/form values, notices, and persistence behavior.
-  - Validation: DTO-only sidebar tests, Example adapter and service behavior tests, workspace
-    typecheck/full tests/Storybook build, import audit, candidate detector, and diff check.
+- [x] Refactor: standardize root-level sidebar events.
+  - Evidence: Sidebar controls currently expose `onIntent` and individual callbacks; service
+    dispatch is repeated in Shell, Storybook stories, and UI tests, so the event boundary is not
+    a single consistent contract.
+  - Action: define a string-valued `EditorEventType` enum and a payload map that derives a
+    discriminated `EditorEvent` union; pass one event callback to sidebars and dispatch events
+    only at the Shell/root boundary to `AppService`.
+  - Scope: complete as a follow-up to sidebar/Core decoupling; keep current behavior and service
+    ownership.
+  - Contracts: preserve minimal ID/action payloads, typed form values, selection, asset and
+    layer actions, drag zones, notices, and persistence behavior.
+  - Validation: DTO-only UI event assertions and integration coverage; workspace typecheck, full
+    tests, Storybook build, import audit, and candidate detector passed.
+
+- [x] Refactor: route editor UI actions through the root event boundary.
+  - Evidence: `EditorShell` handles sidebar events, while toolbars, viewport/font/token editors,
+    schema/props panels, and preview stages call `EditorSession` or `AppService` mutations
+    directly. This spreads action ownership and makes behavior harder to change consistently.
+  - Action: extend the single typed `EditorEvent` contract for user actions; child UI emits events
+    and keeps only presentation/draft state. `EditorShell` is the sole UI event coordinator:
+    it routes navigation locally and delegates data/catalog operations to `AppService`. Keep
+    AppService focused on editor operations, with no navigation responsibilities. Preserve the
+    existing AppService read/query API where needed; pointer/canvas interaction internals stay
+    with their dedicated stage controllers unless they cross the UI action boundary.
+  - Scope: current cleanup; do not change features or Core/persistence semantics.
+  - Contracts: preserve viewport, token/font, schema/props, preview, tool/zoom, sidebar actions,
+    keyboard behavior, notices, and save/persistence behavior. Maintain one public EditorEvent
+    union, without parallel action-event types.
+  - Validation: UI event assertions and behavior tests, editor typecheck, full suite (66 files,
+    235 tests), Storybook build, direct-mutation/import audit, detector rerun, and diff check.
+
+- [x] Refactor: reuse the root event boundary in Storybook compositions.
+  - Evidence: `left-sidebar.stories.tsx` reimplements navigation, asset opening/creation, and
+    AppService dispatch in a local handler; the context-menu test repeats part of that routing.
+  - Action: extract the root event coordinator as a focused Editor composition helper and reuse
+    it from `EditorShell`, Storybook stories, and focused composition tests. Keep navigation
+    injected by the composition root; AppService remains responsible for editor operations only.
+  - Scope: current follow-up; no feature or Core/persistence changes.
+  - Contracts: preserve the single EditorEvent union, navigation behavior, asset lifecycle, and
+    AppService operation ownership.
+  - Validation: focused tests (3 files, 8 tests), editor typecheck, Storybook build, detector
+    rerun, and diff check.
 
 - [x] Refactor: route Catalog queries through Core.
   - Evidence: Editor session, stage, schema/props panels, layer tree, and Inspector still read
@@ -88,7 +117,7 @@ completed change logs out of this file.
 
 ## Refactoring review
 
-The maintained-source candidate scan found two size signals; both are cohesive and should remain
+The maintained-source candidate scan found two size signals; all are cohesive and should remain
 intact unless their responsibilities change:
 
 - `packages/core/src/controller/project/controller.ts` (528 lines): the single Core catalog
@@ -96,6 +125,9 @@ intact unless their responsibilities change:
   adjacent `catalog/queries.ts` module.
 - `packages/examples/src/form-controls-section/dom.ts` (526 lines): one canonical reusable
   Catalog fixture tree.
+- `apps/editor/src/app-service/AppService.ts` (455 lines): one event-to-operation coordinator;
+  its switch is the single dispatch boundary and its private helpers own related Catalog actions.
+  Splitting cases into per-event services would scatter the operation contract again.
 
 ## Latest verification
 

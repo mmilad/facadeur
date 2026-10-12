@@ -4,7 +4,8 @@ import { createCatalogUuid } from '@facadeur/core';
 import type { DesignPropDefinition } from '@facadeur/domain';
 import { useState } from 'react';
 import type { AppService } from '../../../app-service';
-import type { EditorSession } from '../../../domain/session';
+import type { EditorEvent } from '../../../domain/sidebar/events';
+import { EditorEventType } from '../../../domain/sidebar/events';
 import { Stack } from '../../components/layout';
 import { Field } from '../../components/feedback';
 import { SearchInput, TextInput } from '../../controls/form-binding/index';
@@ -13,14 +14,12 @@ import type { EditorSurface } from '../../design/design-domain';
 
 export function CatalogDesignPropsPanel({
   app,
-  session,
   surface,
-  onSelectSurface,
+  onEvent,
 }: {
   app: AppService;
-  session: EditorSession;
   surface: EditorSurface;
-  onSelectSurface: (surface: EditorSurface) => void;
+  onEvent: (event: EditorEvent) => void;
 }) {
   const entries = app.getDesignProps().sort((left, right) => left.name.localeCompare(right.name));
   const [selectedId, setSelectedId] = useState(entries[0]?.uuid ?? '');
@@ -38,46 +37,31 @@ export function CatalogDesignPropsPanel({
 
   function addProp() {
     const uuid = createCatalogUuid();
-    try {
-      app.upsertDesignProp({ uuid, name: 'New prop', value: '' });
-      setSelectedId(uuid);
-      setQuery('');
-    } catch (failure) {
-      session.setNotice(failure instanceof Error ? failure.message : 'Could not add prop', 'error');
-    }
+    onEvent({
+      type: EditorEventType.DesignPropUpsert,
+      data: { prop: { uuid, name: 'New prop', value: '' } },
+    });
+    setSelectedId(uuid);
+    setQuery('');
   }
 
   function commitProp(patch: Partial<DesignPropDefinition>) {
     if (!selected) return;
-    try {
-      app.upsertDesignProp({
-        uuid: selected.uuid,
-        name: patch.name ?? selected.name,
-        value: patch.value ?? selected.value,
-      });
-    } catch (failure) {
-      session.setNotice(
-        failure instanceof Error ? failure.message : 'Could not save prop',
-        'error',
-      );
-    }
-  }
-
-  async function persist() {
-    try {
-      await app.persistCatalog();
-      session.setNotice('Props saved', 'info');
-    } catch (failure) {
-      session.setNotice(
-        failure instanceof Error ? failure.message : 'Could not save props',
-        'error',
-      );
-    }
+    onEvent({
+      type: EditorEventType.DesignPropUpsert,
+      data: {
+        prop: {
+          uuid: selected.uuid,
+          name: patch.name ?? selected.name,
+          value: patch.value ?? selected.value,
+        },
+      },
+    });
   }
 
   function removeSelected() {
     if (!selected) return;
-    app.removeDesignProp(selected.uuid);
+    onEvent({ type: EditorEventType.DesignPropRemove, data: { uuid: selected.uuid } });
     const next = app.getDesignProps()[0];
     setSelectedId(next?.uuid ?? '');
   }
@@ -87,7 +71,7 @@ export function CatalogDesignPropsPanel({
       <header className="design-domain-head">
         <div className="design-domain-head-main">
           <h1 className="design-domain-breadcrumb">Settings · Props</h1>
-          <SettingsSections surface={surface} onSelect={onSelectSurface} />
+          <SettingsSections surface={surface} onEvent={onEvent} />
         </div>
         <p className="meta">
           Semantic values bound in the inspector as <code>{'{prop:uuid}'}</code>. Save catalog to
@@ -101,7 +85,11 @@ export function CatalogDesignPropsPanel({
             <button type="button" onClick={addProp}>
               Add prop
             </button>
-            <button type="button" className="text-button" onClick={() => void persist()}>
+            <button
+              type="button"
+              className="text-button"
+              onClick={() => onEvent({ type: EditorEventType.DesignPropsSave, data: {} })}
+            >
               Save catalog
             </button>
           </div>

@@ -1,5 +1,7 @@
 import type { DragEvent, MutableRefObject } from 'react';
-import type { SidebarAsset, SidebarIntent } from '../../../domain/sidebar/types';
+import type { EditorEvent } from '../../../domain/sidebar/events';
+import { EditorEventType } from '../../../domain/sidebar/events';
+import type { SidebarAsset } from '../../../domain/sidebar/types';
 
 export function AssetRows({
   assets,
@@ -8,7 +10,7 @@ export function AssetRows({
   activeRef,
   contextAssetId,
   onContextAsset,
-  onIntent,
+  onEvent,
 }: {
   assets: readonly SidebarAsset[];
   openId: string;
@@ -16,7 +18,7 @@ export function AssetRows({
   activeRef: MutableRefObject<HTMLButtonElement | null>;
   contextAssetId: string | null;
   onContextAsset: (assetId: string, anchorEl: HTMLElement) => void;
-  onIntent: (intent: SidebarIntent) => void;
+  onEvent: (event: EditorEvent) => void;
 }) {
   return assets.map((asset) => {
     const open = asset.id === openId;
@@ -32,9 +34,11 @@ export function AssetRows({
             aria-haspopup="menu"
             aria-expanded={contextAssetId === asset.id}
             draggable={draggableAssetIds.includes(asset.id)}
-            onDragStart={(event) => startAssetDrag(onIntent, event, asset.id)}
-            onDragEnd={() => onIntent({ type: 'asset.drag.end' })}
-            onClick={() => onIntent({ type: 'asset.open', id: asset.id })}
+            onDragStart={(event) => startAssetDrag(onEvent, event, asset.id)}
+            onDragEnd={() => onEvent({ type: EditorEventType.AssetDragEnd, data: {} })}
+            onClick={() =>
+              onEvent({ type: EditorEventType.AssetOpen, data: { assetId: asset.id } })
+            }
             onKeyDown={(event) => {
               if ((event.shiftKey && event.key === 'F10') || event.key === 'ContextMenu') {
                 event.preventDefault();
@@ -54,12 +58,8 @@ export function AssetRows({
   });
 }
 
-function startAssetDrag(
-  onIntent: (intent: SidebarIntent) => void,
-  event: DragEvent,
-  assetId: string,
-) {
+function startAssetDrag(onEvent: (event: EditorEvent) => void, event: DragEvent, assetId: string) {
   event.dataTransfer.setData('text/plain', assetId);
   event.dataTransfer.effectAllowed = 'copy';
-  onIntent({ type: 'asset.drag.start', id: assetId });
+  onEvent({ type: EditorEventType.AssetDragStart, data: { assetId } });
 }

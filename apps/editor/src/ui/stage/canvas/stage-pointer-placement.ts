@@ -7,6 +7,8 @@ import {
   isInsideCatalogSubtree,
 } from '@facadeur/core';
 import type { AppService } from '../../../app-service/AppService';
+import type { EditorEvent } from '../../../domain/sidebar/events';
+import { EditorEventType } from '../../../domain/sidebar/events';
 import {
   emphasizeInsertLine,
   placeInParent,
@@ -32,6 +34,7 @@ export interface StageDrop {
 export function createStagePlacement({
   app,
   session,
+  onEvent,
   getBoard,
   selection,
   stage,
@@ -39,6 +42,7 @@ export function createStagePlacement({
 }: {
   app: AppService;
   session: EditorSession;
+  onEvent: (event: EditorEvent) => void;
   getBoard: () => ViewportBoard | null;
   selection: SelectionController;
   stage: StageController;
@@ -111,7 +115,10 @@ export function createStagePlacement({
     const rule = defaultNestingRules[definition.kind];
     if (!parent || !rule.nodeTypes.includes(toolName)) {
       if (selection.frameAt(clientX, clientY)) {
-        session.setNotice(`${definition.kind} cannot contain a ${toolName}.`, 'error');
+        onEvent({
+          type: EditorEventType.NoticeSet,
+          data: { text: `${definition.kind} cannot contain a ${toolName}.`, tone: 'error' },
+        });
       }
       return;
     }
@@ -127,14 +134,16 @@ export function createStagePlacement({
               dom: { tagName: 'img', attributes: { alt: '', src: '' } },
               style: { width: '120px', height: '80px' },
             };
-    app.insertCatalogNode(parentUuid, drop?.index ?? (parent.dom.children ?? []).length, node);
-    session.selectNode(node.uuid);
-    void app.persistCatalog().catch((failure: unknown) => {
-      session.setNotice(
-        failure instanceof Error ? failure.message : 'Could not save catalog edit',
-        'error',
-      );
+    onEvent({
+      type: EditorEventType.NodeInsert,
+      data: {
+        parentId: parentUuid,
+        index: drop?.index ?? (parent.dom.children ?? []).length,
+        node,
+      },
     });
+    onEvent({ type: EditorEventType.NodeSelect, data: { nodeId: node.uuid } });
+    onEvent({ type: EditorEventType.CatalogPersist, data: {} });
   }
 
   function applyDrop(drag: EditorDrag, drop: StageDrop | null): boolean {
@@ -142,8 +151,11 @@ export function createStagePlacement({
     if (!definition) return false;
     if (drag.kind === 'node') {
       if (!drop || definition.root.uuid === drag.nodeId) return false;
-      app.moveCatalogNode(drag.nodeId, drop.parentUuid, drop.index);
-      session.selectNode(drag.nodeId);
+      onEvent({
+        type: EditorEventType.NodeMove,
+        data: { nodeId: drag.nodeId, parentId: drop.parentUuid, index: drop.index },
+      });
+      onEvent({ type: EditorEventType.NodeSelect, data: { nodeId: drag.nodeId } });
     } else {
       const asset = session.getSnapshot().catalog.find((item) => item.id === drag.assetId);
       if (!asset || !drop) return false;
@@ -156,29 +168,25 @@ export function createStagePlacement({
         return false;
       const node = catalogNodeFromInsertEntry(entry);
       if (!node) return false;
-      app.insertCatalogNode(drop.parentUuid, drop.index, node);
-      session.selectNode(node.uuid);
+      onEvent({
+        type: EditorEventType.NodeInsert,
+        data: { parentId: drop.parentUuid, index: drop.index, node },
+      });
+      onEvent({ type: EditorEventType.NodeSelect, data: { nodeId: node.uuid } });
     }
-    void app.persistCatalog().catch((failure: unknown) => {
-      session.setNotice(
-        failure instanceof Error ? failure.message : 'Could not save catalog edit',
-        'error',
-      );
-    });
+    onEvent({ type: EditorEventType.CatalogPersist, data: {} });
     return true;
   }
 
   function applyReorderDrop(nodeUuid: string, drop: StageDrop) {
     const definition = app.getCoreSnapshot().openDefinition;
     if (!definition) return;
-    app.moveCatalogNode(nodeUuid, drop.parentUuid, drop.index);
-    session.selectNode(nodeUuid);
-    void app.persistCatalog().catch((failure: unknown) => {
-      session.setNotice(
-        failure instanceof Error ? failure.message : 'Could not save catalog edit',
-        'error',
-      );
+    onEvent({
+      type: EditorEventType.NodeMove,
+      data: { nodeId: nodeUuid, parentId: drop.parentUuid, index: drop.index },
     });
+    onEvent({ type: EditorEventType.NodeSelect, data: { nodeId: nodeUuid } });
+    onEvent({ type: EditorEventType.CatalogPersist, data: {} });
   }
 
   return { measure, placeTool, applyDrop, applyReorderDrop };
