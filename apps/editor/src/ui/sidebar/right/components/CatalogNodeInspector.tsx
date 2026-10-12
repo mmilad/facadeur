@@ -26,12 +26,13 @@ export function CatalogNodeInspector({
     });
   };
   return (
-    <div key={model.formKey} className="inspector-form-stack" data-testid="catalog-node-inspector">
+    <div className="inspector-form-stack" data-testid="catalog-node-inspector">
       <section className="inspector-element" aria-labelledby="inspector-element-title">
         <h2 id="inspector-element-title" className="inspector-element-title">
           {model.selectionKind === 'root' ? 'Asset' : 'Element'}
         </h2>
         <Form
+          key={`${model.formKey}:header`}
           value={model.values}
           fields={[...model.headerFields]}
           bindOptions={model.bindOptions}
@@ -68,6 +69,7 @@ export function CatalogNodeInspector({
               <section className="inspector-tab-section" key={section.label}>
                 <h3 className="inspector-tab-section-title">{section.label}</h3>
                 <Form
+                  key={`${model.formKey}:${tab.id}:${section.label}`}
                   value={model.values}
                   fields={[...section.fields]}
                   bindOptions={model.bindOptions}

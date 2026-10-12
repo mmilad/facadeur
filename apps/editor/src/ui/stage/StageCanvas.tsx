@@ -17,7 +17,6 @@ export function StageCanvas({
   session,
   onEvent,
   openId,
-  generation,
   designRevision,
   selectedRenderId,
   focusViewportId,
@@ -29,7 +28,6 @@ export function StageCanvas({
   session: EditorSession;
   onEvent: (event: EditorEvent) => void;
   openId: string;
-  generation: number;
   designRevision: number;
   selectedRenderId: string | null;
   focusViewportId: string | null;
@@ -42,19 +40,18 @@ export function StageCanvas({
   const boardRef = useRef<ViewportBoard | null>(null);
   const selectionRef = useRef<SelectionController | null>(null);
   const stageControllerRef = useRef<StageController | null>(null);
-  const untouchedRef = useRef(true);
   const fitRef = useRef<() => void>(() => {});
 
   useStagePointer({
     app,
     session,
+    openId,
     onEvent,
     viewportRef,
     stageRef,
     boardRef,
     selectionRef,
     stageControllerRef,
-    untouchedRef,
     fitRef,
   });
 
@@ -62,7 +59,6 @@ export function StageCanvas({
     app,
     session,
     openId,
-    generation,
     designRevision,
     selectedRenderId,
     focusViewportId,
@@ -71,16 +67,15 @@ export function StageCanvas({
     boardRef,
     selectionRef,
     stageControllerRef,
-    untouchedRef,
     fitRef,
   });
   const buildConfig = useMemo(
     () => (frames.length ? app.buildOpenDefinition() : null),
-    [app, frames, openId, generation, designRevision],
+    [app, frames, openId, designRevision],
   );
   const globalStyleCss = useMemo(
     () => renderGlobalStyleCss(app.getCatalog()),
-    [app, generation, designRevision],
+    [app, designRevision],
   );
   useEffect(() => {
     for (const frame of boardRef.current?.frames() ?? []) {
@@ -127,7 +122,7 @@ export function StageCanvas({
           ? insertModeCue(tool)
           : readOnly
             ? 'Scroll to zoom · drag the canvas to pan'
-            : 'Scroll to zoom · drag the canvas to pan · F T I insert · double-click selects the next nested layer'}
+            : 'Scroll to zoom · drag the canvas to pan · Click to select a layer · F T I insert'}
       </p>
     </div>
   );

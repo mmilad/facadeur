@@ -17,6 +17,7 @@ import type {
   EditorTool,
 } from './types';
 import type { StyleEditMode } from '../viewport/viewport-edit';
+import type { StageState } from '../viewport/stage';
 
 export function createEditorSession(options: EditorSessionOptions): EditorSession {
   const core = options.core ?? new CoreController(options.projectCatalog ?? emptyProjectCatalog());
@@ -28,10 +29,12 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   let selectedRenderId: string | null = null;
   let notice: EditorNotice | null = null;
   let zoomLabel = '100%';
+  const canvasTransforms = new Map<string, StageState>();
   let tool: EditorTool = 'select';
   let drag: EditorDrag | null = null;
   let generation = 0;
   let designRevision = 0;
+  let selectingNode = false;
   let revision = 0;
   let catalogBaseline = JSON.stringify(core.getSnapshot().catalog);
   function defaultFocusViewportId() {
@@ -112,7 +115,12 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   function applySelectNode(nodeId: string) {
     const definition = core.getSnapshot().openDefinition;
     if (definition && findNodeByUuid(definition.root, nodeId)) {
-      core.selectNode(nodeId);
+      selectingNode = true;
+      try {
+        core.selectNode(nodeId);
+      } finally {
+        selectingNode = false;
+      }
       selectedNodeId = nodeId;
       selectedRenderId = `node:${nodeId}`;
       publish();
@@ -130,7 +138,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
 
   const unsubCore = core.subscribe(() => {
     generation += 1;
-    designRevision += 1;
+    if (!selectingNode) designRevision += 1;
     if (openId && !core.getDefinition(openId)) {
       openId = '';
       selectedNodeId = null;
@@ -236,6 +244,12 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     },
     fit() {
       fitHandler?.();
+    },
+    getCanvasTransform(assetId) {
+      return canvasTransforms.get(assetId) ?? null;
+    },
+    rememberCanvasTransform(assetId, state) {
+      canvasTransforms.set(assetId, state);
     },
   };
 }

@@ -10,6 +10,7 @@ import type { ProjectCatalog } from '@facadeur/domain';
 import type { LayerItem } from '../catalog/layer-tree';
 import type { StyleEditMode } from '../viewport/viewport-edit';
 import type { SidebarViewModel } from '../sidebar/types';
+import type { StageState } from '../viewport/stage';
 
 export type EditorTool = 'select' | 'frame' | 'text' | 'image';
 
@@ -82,6 +83,8 @@ export interface EditorSession {
   resetZoom: () => void;
   setFitHandler: (handler: (() => void) | null) => void;
   fit: () => void;
+  getCanvasTransform: (assetId: string) => StageState | null;
+  rememberCanvasTransform: (assetId: string, state: StageState) => void;
 }
 
 export interface EditorSessionOptions {

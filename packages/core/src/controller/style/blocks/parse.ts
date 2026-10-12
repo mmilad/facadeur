@@ -106,7 +106,10 @@ function parseStyleRule(value: unknown, index: number) {
       throw new DocumentError('schema', `${label} has an unused or invalid binding ".${name}"`);
     }
     const nodeId = value.bindings[name];
-    if (typeof nodeId !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]*$/.test(nodeId)) {
+    if (
+      typeof nodeId !== 'string' ||
+      (!UUID_PATTERN.test(nodeId) && !/^[A-Za-z][A-Za-z0-9_-]*$/.test(nodeId))
+    ) {
       throw new DocumentError('schema', `${label} binding ".${name}" must target a node id`);
     }
     Object.defineProperty(bindings, name, {

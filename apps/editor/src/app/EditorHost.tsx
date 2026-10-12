@@ -100,7 +100,6 @@ export function EditorHost({
         session={session}
         onEvent={onEvent}
         openId={snap.openId}
-        generation={snap.generation}
         designRevision={snap.designRevision}
         selectedRenderId={snap.selectedRenderId}
         focusViewportId={snap.focusViewportId}

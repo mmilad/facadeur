@@ -1,5 +1,5 @@
 import { findNodeByUuid, findParentOfNode } from '@facadeur/core';
-import { useEffect, type RefObject } from 'react';
+import { useEffect, useRef, type RefObject } from 'react';
 import type { AppService } from '../../../app-service/AppService';
 import type { EditorEvent } from '../../../domain/sidebar/events';
 import { EditorEventType } from '../../../domain/sidebar/events';
@@ -16,26 +16,29 @@ import { isEditableTarget } from '../../../domain/keyboard';
 export function useStagePointer({
   app,
   session,
+  openId,
   onEvent,
   viewportRef,
   stageRef,
   boardRef,
   selectionRef,
   stageControllerRef,
-  untouchedRef,
   fitRef,
 }: {
   app: AppService;
   session: EditorSession;
+  openId: string;
   onEvent: (event: EditorEvent) => void;
   viewportRef: RefObject<HTMLDivElement | null>;
   stageRef: RefObject<HTMLDivElement | null>;
   boardRef: RefObject<ViewportBoard | null>;
   selectionRef: RefObject<SelectionController | null>;
   stageControllerRef: RefObject<StageController | null>;
-  untouchedRef: RefObject<boolean>;
   fitRef: RefObject<() => void>;
 }) {
+  const onEventRef = useRef(onEvent);
+  onEventRef.current = onEvent;
+
   useEffect(() => {
     const viewport = viewportRef.current;
     const stageEl = stageRef.current;
@@ -55,18 +58,18 @@ export function useStagePointer({
       nodeUuid: string | null;
       tool: Exclude<EditorTool, 'select'> | null;
     } | null = null;
-    let lastClick = { time: 0, x: 0, y: 0 };
     const placement = createStagePlacement({
       app,
       session,
-      onEvent,
+      onEvent: (event) => onEventRef.current(event),
       getBoard: () => boardRef.current,
       selection,
       stage,
       stageElement: stageEl,
     });
-    const stopZoom = stage.onChange(({ scale }) => {
-      session.setZoom(scale);
+    const stopZoom = stage.onChange((state) => {
+      if (boardRef.current) session.rememberCanvasTransform(openId, state);
+      session.setZoom(state.scale);
       selection.reposition();
     });
     const stopClick = stage.onClick((event) => {
@@ -82,50 +85,14 @@ export function useStagePointer({
       );
     }
 
-    function chainTo(uuid: string | null) {
-      const definition = app.getCoreSnapshot().openDefinition;
-      if (!definition || !uuid) return [] as string[];
-      const chain = [uuid];
-      let current = uuid;
-      while (current !== definition.root.uuid) {
-        const parent = findParentOfNode(definition.root, current)?.parent;
-        if (!parent) return [];
-        current = parent.uuid;
-        chain.push(current);
-      }
-      return chain.reverse();
-    }
-
-    function choose(
-      event: { clientX: number; clientY: number; ctrlKey?: boolean; metaKey?: boolean },
-      deeper = false,
-    ) {
+    function choose(event: { clientX: number; clientY: number }) {
       const frame = selection.frameAt(event.clientX, event.clientY);
       const hit = selection.hitAt(event.clientX, event.clientY);
       const uuid = authoredHit(frame, hit?.id);
-      if (!uuid) {
-        onEvent({
-          type: EditorEventType.NodeSelect,
-          data: { nodeId: app.getCoreSnapshot().openDefinition?.root.uuid ?? null },
-        });
-        return;
-      }
-      const chain = chainTo(uuid);
-      const snap = app.getCoreSnapshot();
-      const current = snap.selectedNodeUuid;
-      const mode = event.ctrlKey || event.metaKey ? 'deepest' : deeper ? 'deeper' : 'context';
-      let target = uuid;
-      if (mode === 'context') {
-        const context = current && chain.includes(current) ? current : chain[0];
-        const index = context ? chain.indexOf(context) : -1;
-        if (index >= 0 && index < chain.length - 1) target = chain[index + 1]!;
-      } else if (mode === 'deeper') {
-        const anchor = current && chain.includes(current) ? current : chain[0];
-        const index = anchor ? chain.indexOf(anchor) : -1;
-        if (index >= 0 && index < chain.length - 1) target = chain[index + 1]!;
-        else target = anchor ?? uuid;
-      }
-      onEvent({ type: EditorEventType.NodeSelect, data: { nodeId: target } });
+      onEventRef.current({
+        type: EditorEventType.NodeSelect,
+        data: { nodeId: uuid ?? app.getCoreSnapshot().openDefinition?.root.uuid ?? null },
+      });
     }
 
     function claimsPan(event: PointerEvent): boolean {
@@ -164,14 +131,14 @@ export function useStagePointer({
       if (event.button !== 0) return;
       const frame = selection.frameAt(event.clientX, event.clientY);
       if (frame && claimsPan(event)) {
-        onEvent({
+        onEventRef.current({
           type: EditorEventType.ViewportSelect,
           data: { breakpointId: frame.breakpoint.uuid },
         });
         return;
       }
       if (frame)
-        onEvent({
+        onEventRef.current({
           type: EditorEventType.ViewportFocus,
           data: { breakpointId: frame.breakpoint.uuid },
         });
@@ -201,11 +168,7 @@ export function useStagePointer({
           placement.placeTool(current.tool, event.clientX, event.clientY);
           return;
         }
-        const now = performance.now();
-        const distance = Math.hypot(event.clientX - lastClick.x, event.clientY - lastClick.y);
-        const deeper = now - lastClick.time < 400 && distance < 4;
-        lastClick = { time: now, x: event.clientX, y: event.clientY };
-        choose(event, deeper);
+        choose(event);
         return;
       }
       const drop = pending;
@@ -234,7 +197,7 @@ export function useStagePointer({
       const drop = pending;
       pending = null;
       selection.showInsert(null);
-      onEvent({ type: EditorEventType.LayerDragEnd, data: {} });
+      onEventRef.current({ type: EditorEventType.LayerDragEnd, data: {} });
       placement.applyDrop(drag, drop);
     };
 
@@ -280,7 +243,7 @@ export function useStagePointer({
       const step = event.shiftKey ? 10 : 1;
       const dx = event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0;
       const dy = event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0;
-      onEvent({
+      onEventRef.current({
         type: EditorEventType.NodeStyleRecordSet,
         data: {
           nodeId: nodeUuid,
@@ -291,10 +254,7 @@ export function useStagePointer({
           },
         },
       });
-      onEvent({ type: EditorEventType.CatalogPersist, data: {} });
-    };
-    const markTouched = () => {
-      untouchedRef.current = false;
+      onEventRef.current({ type: EditorEventType.CatalogPersist, data: {} });
     };
     const onStagePointerDown = (event: PointerEvent) => {
       if (
@@ -309,8 +269,6 @@ export function useStagePointer({
     viewport.addEventListener('pointerdown', onPointerDown);
     viewport.addEventListener('pointerup', endGesture);
     viewport.addEventListener('pointercancel', endGesture);
-    viewport.addEventListener('pointerdown', markTouched);
-    viewport.addEventListener('wheel', markTouched, { passive: true });
     viewport.addEventListener('dragover', onDragOver);
     viewport.addEventListener('drop', onDrop);
     viewport.addEventListener('dragleave', onDragLeave);
@@ -319,7 +277,6 @@ export function useStagePointer({
     stageEl.addEventListener('pointerdown', onStagePointerDown);
     session.setFitHandler(() => fitRef.current());
     session.setZoomByHandler((factor) => {
-      markTouched();
       stage.zoomBy(factor);
       selection.reposition();
     });
@@ -331,8 +288,6 @@ export function useStagePointer({
       viewport.removeEventListener('pointerdown', onPointerDown);
       viewport.removeEventListener('pointerup', endGesture);
       viewport.removeEventListener('pointercancel', endGesture);
-      viewport.removeEventListener('pointerdown', markTouched);
-      viewport.removeEventListener('wheel', markTouched);
       viewport.removeEventListener('dragover', onDragOver);
       viewport.removeEventListener('drop', onDrop);
       viewport.removeEventListener('dragleave', onDragLeave);
@@ -349,13 +304,12 @@ export function useStagePointer({
   }, [
     app,
     session,
-    onEvent,
+    openId,
     viewportRef,
     stageRef,
     boardRef,
     selectionRef,
     stageControllerRef,
-    untouchedRef,
     fitRef,
   ]);
 }

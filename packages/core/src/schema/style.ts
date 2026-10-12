@@ -54,7 +54,10 @@ export const styleRuleSchema = Type.Object(
   {
     id: idSchema,
     selector: Type.String({ minLength: 1 }),
-    bindings: Type.Record(Type.String({ pattern: '^[A-Za-z_][A-Za-z0-9_-]*$' }), idSchema),
+    bindings: Type.Record(
+      Type.String({ pattern: '^[A-Za-z_][A-Za-z0-9_-]*$' }),
+      Type.Union([idSchema, uuidSchema]),
+    ),
     declarations: Type.Optional(styleDeclarationsSchema),
     states: Type.Optional(styleStatesSchema),
     variants: Type.Optional(variantStyleSchema),

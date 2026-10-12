@@ -10,7 +10,6 @@ export function useStageViewportBoard({
   app,
   session,
   openId,
-  generation,
   designRevision,
   selectedRenderId,
   focusViewportId,
@@ -19,13 +18,11 @@ export function useStageViewportBoard({
   boardRef,
   selectionRef,
   stageControllerRef,
-  untouchedRef,
   fitRef,
 }: {
   app: AppService;
   session: EditorSession;
   openId: string;
-  generation: number;
   designRevision: number;
   selectedRenderId: string | null;
   focusViewportId: string | null;
@@ -34,16 +31,12 @@ export function useStageViewportBoard({
   boardRef: RefObject<ViewportBoard | null>;
   selectionRef: RefObject<SelectionController | null>;
   stageControllerRef: RefObject<StageController | null>;
-  untouchedRef: RefObject<boolean>;
   fitRef: RefObject<() => void>;
 }) {
   const currentRevisionRef = useRef(designRevision);
-  const currentGenerationRef = useRef(generation);
   const [, setBoardRevision] = useState(0);
   const renderedRevisionRef = useRef<number | null>(null);
-  const renderedGenerationRef = useRef<number | null>(null);
   currentRevisionRef.current = designRevision;
-  currentGenerationRef.current = generation;
   const breakpointSignature = JSON.stringify(app.getDesignSnapshot().breakpoints);
 
   useEffect(() => {
@@ -60,54 +53,40 @@ export function useStageViewportBoard({
     boardRef.current = board;
     setBoardRevision((revision) => revision + 1);
     renderedRevisionRef.current = currentRevisionRef.current;
-    renderedGenerationRef.current = currentGenerationRef.current;
     stageEl.classList.remove('is-ready');
     const fit = () => {
-      untouchedRef.current = true;
       board.syncHeights();
       stage.fit(board.element);
       stageEl.classList.add('is-ready');
     };
     fitRef.current = fit;
-    untouchedRef.current = true;
-    fit();
+    const savedTransform = session.getCanvasTransform(openId);
+    if (savedTransform) {
+      stage.setTransform(savedTransform.scale, savedTransform.tx, savedTransform.ty);
+      board.syncHeights();
+      stageEl.classList.add('is-ready');
+    } else {
+      fit();
+    }
     return () => {
       board.destroy();
       boardRef.current = null;
       renderedRevisionRef.current = null;
-      renderedGenerationRef.current = null;
     };
-  }, [
-    app,
-    session,
-    openId,
-    breakpointSignature,
-    stageRef,
-    boardRef,
-    stageControllerRef,
-    untouchedRef,
-    fitRef,
-  ]);
+  }, [app, session, openId, breakpointSignature, stageRef, boardRef, stageControllerRef, fitRef]);
 
   useEffect(() => {
     const board = boardRef.current;
-    if (
-      !board ||
-      (renderedRevisionRef.current === designRevision &&
-        renderedGenerationRef.current === generation)
-    )
-      return;
+    if (!board || renderedRevisionRef.current === designRevision) return;
     const title = app.getCoreSnapshot().openDefinition?.name;
     if (title) board.setTitle(title);
     renderedRevisionRef.current = designRevision;
-    renderedGenerationRef.current = generation;
     const frame = window.requestAnimationFrame(() => {
       if (boardRef.current !== board) return;
       board.syncHeights();
-      if (untouchedRef.current) stageControllerRef.current?.fit(board.element);
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [app, generation, designRevision, boardRef, stageControllerRef, untouchedRef]);
+  }, [app, designRevision, boardRef]);
 
   useEffect(() => {
     selectionRef.current?.show(selectedRenderId, focusViewportId);
@@ -122,7 +101,6 @@ export function useStageViewportBoard({
     focusViewportId,
     selectedViewportId,
     openId,
-    generation,
     designRevision,
     breakpointSignature,
     boardRef,
