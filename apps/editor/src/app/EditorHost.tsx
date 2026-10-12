@@ -65,7 +65,10 @@ export function EditorHost({
       }
       if (event.type === EditorEventType.CatalogPersist && persistPendingChanges) {
         void persistPendingChanges()
-          .then(() => session.markCatalogSaved())
+          .then(() => {
+            session.markCatalogSaved();
+            session.setNotice('Catalog JSON copied to clipboard', 'info');
+          })
           .catch((error) => {
             session.setNotice(
               error instanceof Error ? error.message : 'Could not save catalog',

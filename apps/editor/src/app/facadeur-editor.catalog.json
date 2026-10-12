@@ -148,11 +148,6 @@
                                 "dom": {
                                   "tagName": "div",
                                   "text": "Saved"
-                                },
-                                "style": {
-                                  "color": "#277c58",
-                                  "fontSize": "11px",
-                                  "display": "none"
                                 }
                               }
                             ]
@@ -250,17 +245,6 @@
                                 }
                               }
                             ]
-                          },
-                          "style": {
-                            "display": "flex",
-                            "alignItems": "center",
-                            "justifyContent": "center",
-                            "width": "36px",
-                            "height": "36px",
-                            "padding": "0",
-                            "backgroundColor": "#ffffff",
-                            "border": "1px solid #e8e6e2",
-                            "borderRadius": "8px"
                           }
                         }
                       ]
@@ -3331,7 +3315,58 @@
             }
           }
         }
-      }
+      },
+      "rules": [
+        {
+          "id": "layer-660e8400-e29b-41d4-a716-000000000c31",
+          "selector": ".saved-label",
+          "bindings": {
+            "saved-label": "660e8400-e29b-41d4-a716-000000000c31"
+          },
+          "declarations": {
+            "color": "#277c58",
+            "fontSize": "11px",
+            "display": "none"
+          },
+          "breakpoints": {
+            "650e8400-e29b-41d4-a716-000000000003": {
+              "declarations": {
+                "display": "block"
+              }
+            }
+          }
+        },
+        {
+          "id": "layer-660e8400-e29b-41d4-a716-000000000c2b",
+          "selector": ".open-navigation-menu",
+          "bindings": {
+            "open-navigation-menu": "660e8400-e29b-41d4-a716-000000000c2b"
+          },
+          "declarations": {
+            "display": "flex",
+            "alignItems": "center",
+            "justifyContent": "center",
+            "width": "36px",
+            "height": "36px",
+            "padding": "0",
+            "backgroundColor": "#ffffff",
+            "border": "1px solid #e8e6e2",
+            "borderRadius": "8px"
+          },
+          "breakpoints": {
+            "650e8400-e29b-41d4-a716-000000000004": {
+              "declarations": {
+                "display": "none"
+              }
+            },
+            "650e8400-e29b-41d4-a716-000000000003": {
+              "declarations": {
+                "display": "none"
+              }
+            }
+          }
+        }
+      ]
     },
     "breakpoints": [
       {

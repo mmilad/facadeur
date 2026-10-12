@@ -81,7 +81,7 @@ export function AppShell({
           data-save="catalog"
           onClick={() => onEvent({ type: EditorEventType.CatalogPersist, data: {} })}
         >
-          Save catalog
+          Copy catalog JSON
         </button>
       </header>
       {snap.notice ? (

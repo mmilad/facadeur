@@ -4,7 +4,6 @@ import { Suspense, useEffect, useMemo } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { validateProjectCatalog } from '@facadeur/core';
 import { facadeurWorkspace } from '@facadeur/examples';
-import { download } from '../domain/assets/files';
 import { createEditorSession } from '../domain/session/create-editor-session';
 import type { EditorSession } from '../domain/session';
 import { EditorHost } from './EditorHost';
@@ -40,12 +39,11 @@ function EditorNavigationHost({ session }: { session: EditorSession }) {
     <EditorHost
       session={session}
       navigation={navigation}
-      persistPendingChanges={async () =>
-        download(
-          'facadeur-editor.catalog.json',
-          JSON.stringify(session.core.getSnapshot().catalog, null, 2),
-        )
-      }
+      persistPendingChanges={async () => {
+        const clipboard = navigator.clipboard;
+        if (!clipboard?.writeText) throw new Error('Clipboard access is unavailable');
+        await clipboard.writeText(JSON.stringify(session.core.getSnapshot().catalog, null, 2));
+      }}
     />
   );
 }

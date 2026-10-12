@@ -184,6 +184,11 @@
 docs/plan.md` attempted to fetch pinned pnpm 10.33.3 and failed with `ENOTFOUND`; the same
   command through approved host execution ran successfully and identified formatting to fix. Use
   the approved host context for package-manager commands; no install or binary cleanup is needed.
+- **Update (2026-10-13, clipboard save):** Restricted editor typecheck and scoped lint/format
+  commands again selected Corepack without the host cache and failed fetching pinned pnpm 10.33.3
+  (`ENOTFOUND registry.npmjs.org`). The approved host-context editor typecheck and scoped ESLint
+  passed. Continue using the approved host context for pnpm checks; no install or pin change is
+  needed.
 
 ## Cloud verification process limits (2026-10-11)
 
