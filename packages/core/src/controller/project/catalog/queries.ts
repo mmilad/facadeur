@@ -38,6 +38,7 @@ export function definitionSummaries(catalog: ProjectCatalog) {
       uuid: definition.uuid,
       name: definitionDisplayName(catalog, definition),
       kind: kindByMapKey[kind],
+      ...(definition.category ? { category: definition.category } : {}),
     }))
     .sort((left, right) => left.name.localeCompare(right.name));
 }

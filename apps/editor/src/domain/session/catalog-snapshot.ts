@@ -77,7 +77,13 @@ export function buildCatalogEditorSnapshot(input: {
   }
   const sidebar = {
     project: {
-      assets: catalogAssets.map(({ id, name, slug, kind }) => ({ id, label: name, slug, kind })),
+      assets: catalogAssets.map(({ id, name, slug, kind, category }) => ({
+        id,
+        label: name,
+        slug,
+        kind,
+        category,
+      })),
       openId: input.openId,
       draggableAssetIds: catalogAssets
         .filter(

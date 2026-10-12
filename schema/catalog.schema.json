@@ -3,7 +3,11 @@
   "$id": "https://github.com/mmilad/facadeur/schema/project-catalog",
   "additionalProperties": false,
   "type": "object",
-  "required": ["atoms", "components", "pages"],
+  "required": [
+    "atoms",
+    "components",
+    "pages"
+  ],
   "properties": {
     "atoms": {
       "type": "object",
@@ -11,7 +15,13 @@
         "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
           "additionalProperties": false,
           "type": "object",
-          "required": ["uuid", "name", "kind", "schema", "root"],
+          "required": [
+            "uuid",
+            "name",
+            "kind",
+            "schema",
+            "root"
+          ],
           "properties": {
             "uuid": {
               "format": "uuid",
@@ -39,12 +49,20 @@
                 }
               ]
             },
+            "category": {
+              "minLength": 1,
+              "description": "Optional slash-delimited category path.",
+              "type": "string"
+            },
             "schema": {
               "anyOf": [
                 {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["kind", "uuid"],
+                  "required": [
+                    "kind",
+                    "uuid"
+                  ],
                   "properties": {
                     "kind": {
                       "const": "ref",
@@ -61,7 +79,10 @@
                 {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["kind", "schema"],
+                  "required": [
+                    "kind",
+                    "schema"
+                  ],
                   "properties": {
                     "kind": {
                       "const": "inline",
@@ -81,7 +102,10 @@
               "$id": "T1",
               "additionalProperties": false,
               "type": "object",
-              "required": ["uuid", "dom"],
+              "required": [
+                "uuid",
+                "dom"
+              ],
               "properties": {
                 "uuid": {
                   "format": "uuid",
@@ -96,7 +120,9 @@
                 "dom": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["tagName"],
+                  "required": [
+                    "tagName"
+                  ],
                   "properties": {
                     "tagName": {
                       "minLength": 1,
@@ -174,7 +200,10 @@
                     {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": ["kind", "uuid"],
+                      "required": [
+                        "kind",
+                        "uuid"
+                      ],
                       "properties": {
                         "kind": {
                           "const": "ref",
@@ -191,7 +220,10 @@
                     {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": ["kind", "schema"],
+                      "required": [
+                        "kind",
+                        "schema"
+                      ],
                       "properties": {
                         "kind": {
                           "const": "inline",
@@ -259,7 +291,9 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["mode"],
+                          "required": [
+                            "mode"
+                          ],
                           "properties": {
                             "mode": {
                               "const": "flat",
@@ -270,7 +304,9 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["mode"],
+                          "required": [
+                            "mode"
+                          ],
                           "properties": {
                             "mode": {
                               "const": "grouped",
@@ -285,7 +321,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["mode", "fields"],
+                          "required": [
+                            "mode",
+                            "fields"
+                          ],
                           "properties": {
                             "mode": {
                               "const": "manual",
@@ -311,7 +350,10 @@
             "style": {
               "additionalProperties": false,
               "type": "object",
-              "required": ["kind", "uuid"],
+              "required": [
+                "kind",
+                "uuid"
+              ],
               "properties": {
                 "kind": {
                   "const": "ref",
@@ -346,7 +388,9 @@
                     {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": ["mode"],
+                      "required": [
+                        "mode"
+                      ],
                       "properties": {
                         "mode": {
                           "const": "flat",
@@ -357,7 +401,9 @@
                     {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": ["mode"],
+                      "required": [
+                        "mode"
+                      ],
                       "properties": {
                         "mode": {
                           "const": "grouped",
@@ -372,7 +418,10 @@
                     {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": ["mode", "fields"],
+                      "required": [
+                        "mode",
+                        "fields"
+                      ],
                       "properties": {
                         "mode": {
                           "const": "manual",
@@ -403,7 +452,13 @@
         "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
           "additionalProperties": false,
           "type": "object",
-          "required": ["uuid", "name", "kind", "schema", "root"],
+          "required": [
+            "uuid",
+            "name",
+            "kind",
+            "schema",
+            "root"
+          ],
           "properties": {
             "uuid": {
               "format": "uuid",
@@ -431,12 +486,20 @@
                 }
               ]
             },
+            "category": {
+              "minLength": 1,
+              "description": "Optional slash-delimited category path.",
+              "type": "string"
+            },
             "schema": {
               "anyOf": [
                 {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["kind", "uuid"],
+                  "required": [
+                    "kind",
+                    "uuid"
+                  ],
                   "properties": {
                     "kind": {
                       "const": "ref",
@@ -453,7 +516,10 @@
                 {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["kind", "schema"],
+                  "required": [
+                    "kind",
+                    "schema"
+                  ],
                   "properties": {
                     "kind": {
                       "const": "inline",
@@ -473,7 +539,10 @@
               "$id": "T1",
               "additionalProperties": false,
               "type": "object",
-              "required": ["uuid", "dom"],
+              "required": [
+                "uuid",
+                "dom"
+              ],
               "properties": {
                 "uuid": {
                   "format": "uuid",
@@ -488,7 +557,9 @@
                 "dom": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["tagName"],
+                  "required": [
+                    "tagName"
+                  ],
                   "properties": {
                     "tagName": {
                       "minLength": 1,
@@ -566,7 +637,10 @@
                     {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": ["kind", "uuid"],
+                      "required": [
+                        "kind",
+                        "uuid"
+                      ],
                       "properties": {
                         "kind": {
                           "const": "ref",
@@ -583,7 +657,10 @@
                     {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": ["kind", "schema"],
+                      "required": [
+                        "kind",
+                        "schema"
+                      ],
                       "properties": {
                         "kind": {
                           "const": "inline",
@@ -651,7 +728,9 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["mode"],
+                          "required": [
+                            "mode"
+                          ],
                           "properties": {
                             "mode": {
                               "const": "flat",
@@ -662,7 +741,9 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["mode"],
+                          "required": [
+                            "mode"
+                          ],
                           "properties": {
                             "mode": {
                               "const": "grouped",
@@ -677,7 +758,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["mode", "fields"],
+                          "required": [
+                            "mode",
+                            "fields"
+                          ],
                           "properties": {
                             "mode": {
                               "const": "manual",
@@ -703,7 +787,10 @@
             "style": {
               "additionalProperties": false,
               "type": "object",
-              "required": ["kind", "uuid"],
+              "required": [
+                "kind",
+                "uuid"
+              ],
               "properties": {
                 "kind": {
                   "const": "ref",
@@ -738,7 +825,9 @@
                     {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": ["mode"],
+                      "required": [
+                        "mode"
+                      ],
                       "properties": {
                         "mode": {
                           "const": "flat",
@@ -749,7 +838,9 @@
                     {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": ["mode"],
+                      "required": [
+                        "mode"
+                      ],
                       "properties": {
                         "mode": {
                           "const": "grouped",
@@ -764,7 +855,10 @@
                     {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": ["mode", "fields"],
+                      "required": [
+                        "mode",
+                        "fields"
+                      ],
                       "properties": {
                         "mode": {
                           "const": "manual",
@@ -795,7 +889,13 @@
         "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
           "additionalProperties": false,
           "type": "object",
-          "required": ["uuid", "name", "kind", "schema", "root"],
+          "required": [
+            "uuid",
+            "name",
+            "kind",
+            "schema",
+            "root"
+          ],
           "properties": {
             "uuid": {
               "format": "uuid",
@@ -823,12 +923,20 @@
                 }
               ]
             },
+            "category": {
+              "minLength": 1,
+              "description": "Optional slash-delimited category path.",
+              "type": "string"
+            },
             "schema": {
               "anyOf": [
                 {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["kind", "uuid"],
+                  "required": [
+                    "kind",
+                    "uuid"
+                  ],
                   "properties": {
                     "kind": {
                       "const": "ref",
@@ -845,7 +953,10 @@
                 {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["kind", "schema"],
+                  "required": [
+                    "kind",
+                    "schema"
+                  ],
                   "properties": {
                     "kind": {
                       "const": "inline",
@@ -865,7 +976,10 @@
               "$id": "T1",
               "additionalProperties": false,
               "type": "object",
-              "required": ["uuid", "dom"],
+              "required": [
+                "uuid",
+                "dom"
+              ],
               "properties": {
                 "uuid": {
                   "format": "uuid",
@@ -880,7 +994,9 @@
                 "dom": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": ["tagName"],
+                  "required": [
+                    "tagName"
+                  ],
                   "properties": {
                     "tagName": {
                       "minLength": 1,
@@ -958,7 +1074,10 @@
                     {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": ["kind", "uuid"],
+                      "required": [
+                        "kind",
+                        "uuid"
+                      ],
                       "properties": {
                         "kind": {
                           "const": "ref",
@@ -975,7 +1094,10 @@
                     {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": ["kind", "schema"],
+                      "required": [
+                        "kind",
+                        "schema"
+                      ],
                       "properties": {
                         "kind": {
                           "const": "inline",
@@ -1043,7 +1165,9 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["mode"],
+                          "required": [
+                            "mode"
+                          ],
                           "properties": {
                             "mode": {
                               "const": "flat",
@@ -1054,7 +1178,9 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["mode"],
+                          "required": [
+                            "mode"
+                          ],
                           "properties": {
                             "mode": {
                               "const": "grouped",
@@ -1069,7 +1195,10 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": ["mode", "fields"],
+                          "required": [
+                            "mode",
+                            "fields"
+                          ],
                           "properties": {
                             "mode": {
                               "const": "manual",
@@ -1095,7 +1224,10 @@
             "style": {
               "additionalProperties": false,
               "type": "object",
-              "required": ["kind", "uuid"],
+              "required": [
+                "kind",
+                "uuid"
+              ],
               "properties": {
                 "kind": {
                   "const": "ref",
@@ -1130,7 +1262,9 @@
                     {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": ["mode"],
+                      "required": [
+                        "mode"
+                      ],
                       "properties": {
                         "mode": {
                           "const": "flat",
@@ -1141,7 +1275,9 @@
                     {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": ["mode"],
+                      "required": [
+                        "mode"
+                      ],
                       "properties": {
                         "mode": {
                           "const": "grouped",
@@ -1156,7 +1292,10 @@
                     {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": ["mode", "fields"],
+                      "required": [
+                        "mode",
+                        "fields"
+                      ],
                       "properties": {
                         "mode": {
                           "const": "manual",
@@ -1195,7 +1334,14 @@
     "tokens": {
       "additionalProperties": false,
       "type": "object",
-      "required": ["color", "space", "radius", "shadow", "type", "font"],
+      "required": [
+        "color",
+        "space",
+        "radius",
+        "shadow",
+        "type",
+        "font"
+      ],
       "properties": {
         "color": {
           "type": "object",
@@ -1203,7 +1349,13 @@
             "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
               "additionalProperties": false,
               "type": "object",
-              "required": ["uuid", "label", "group", "valueType", "value"],
+              "required": [
+                "uuid",
+                "label",
+                "group",
+                "valueType",
+                "value"
+              ],
               "properties": {
                 "uuid": {
                   "format": "uuid",
@@ -1345,7 +1497,13 @@
             "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
               "additionalProperties": false,
               "type": "object",
-              "required": ["uuid", "label", "group", "valueType", "value"],
+              "required": [
+                "uuid",
+                "label",
+                "group",
+                "valueType",
+                "value"
+              ],
               "properties": {
                 "uuid": {
                   "format": "uuid",
@@ -1487,7 +1645,13 @@
             "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
               "additionalProperties": false,
               "type": "object",
-              "required": ["uuid", "label", "group", "valueType", "value"],
+              "required": [
+                "uuid",
+                "label",
+                "group",
+                "valueType",
+                "value"
+              ],
               "properties": {
                 "uuid": {
                   "format": "uuid",
@@ -1629,7 +1793,13 @@
             "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
               "additionalProperties": false,
               "type": "object",
-              "required": ["uuid", "label", "group", "valueType", "value"],
+              "required": [
+                "uuid",
+                "label",
+                "group",
+                "valueType",
+                "value"
+              ],
               "properties": {
                 "uuid": {
                   "format": "uuid",
@@ -1771,7 +1941,13 @@
             "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
               "additionalProperties": false,
               "type": "object",
-              "required": ["uuid", "label", "group", "valueType", "value"],
+              "required": [
+                "uuid",
+                "label",
+                "group",
+                "valueType",
+                "value"
+              ],
               "properties": {
                 "uuid": {
                   "format": "uuid",
@@ -1913,7 +2089,13 @@
             "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
               "additionalProperties": false,
               "type": "object",
-              "required": ["uuid", "label", "group", "valueType", "value"],
+              "required": [
+                "uuid",
+                "label",
+                "group",
+                "valueType",
+                "value"
+              ],
               "properties": {
                 "uuid": {
                   "format": "uuid",
@@ -2057,7 +2239,11 @@
       "items": {
         "additionalProperties": false,
         "type": "object",
-        "required": ["id", "name", "src"],
+        "required": [
+          "id",
+          "name",
+          "src"
+        ],
         "properties": {
           "id": {
             "minLength": 1,
@@ -2086,7 +2272,11 @@
         "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
           "additionalProperties": false,
           "type": "object",
-          "required": ["uuid", "name", "value"],
+          "required": [
+            "uuid",
+            "name",
+            "value"
+          ],
           "properties": {
             "uuid": {
               "format": "uuid",
@@ -2257,7 +2447,7 @@
             "children": {
               "type": "object",
               "patternProperties": {
-                "^[A-Za-z][A-Za-z0-9_-]*(?:/[A-Za-z][A-Za-z0-9_-]*)*$": {
+                "^(?:[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}|[A-Za-z][A-Za-z0-9_-]*)(?:/(?:[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}|[A-Za-z][A-Za-z0-9_-]*))*$": {
                   "additionalProperties": false,
                   "type": "object",
                   "properties": {
@@ -2411,7 +2601,11 @@
               "items": {
                 "additionalProperties": false,
                 "type": "object",
-                "required": ["id", "selector", "bindings"],
+                "required": [
+                  "id",
+                  "selector",
+                  "bindings"
+                ],
                 "properties": {
                   "id": {
                     "minLength": 1,
@@ -2426,9 +2620,19 @@
                     "type": "object",
                     "patternProperties": {
                       "^[A-Za-z_][A-Za-z0-9_-]*$": {
-                        "minLength": 1,
-                        "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
-                        "type": "string"
+                        "anyOf": [
+                          {
+                            "minLength": 1,
+                            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+                            "type": "string"
+                          },
+                          {
+                            "format": "uuid",
+                            "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                            "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                            "type": "string"
+                          }
+                        ]
                       }
                     }
                   },
@@ -2609,7 +2813,11 @@
           "items": {
             "additionalProperties": false,
             "type": "object",
-            "required": ["uuid", "label", "minWidth"],
+            "required": [
+              "uuid",
+              "label",
+              "minWidth"
+            ],
             "properties": {
               "uuid": {
                 "format": "uuid",

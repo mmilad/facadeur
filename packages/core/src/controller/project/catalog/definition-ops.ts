@@ -45,11 +45,15 @@ export function patchCatalogDefinitionRecord(
           },
         }
       : patch;
-  (next[kind] as Record<string, NodeDefinition>)[uuid] = {
+  const nextDefinition = {
     ...existing,
     ...definitionPatch,
     uuid,
   };
+  if (Object.prototype.hasOwnProperty.call(patch, 'category') && patch.category === undefined) {
+    delete (nextDefinition as { category?: string }).category;
+  }
+  (next[kind] as Record<string, NodeDefinition>)[uuid] = nextDefinition;
   return next;
 }
 

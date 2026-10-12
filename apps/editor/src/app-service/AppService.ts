@@ -169,6 +169,9 @@ export class AppService {
         case EditorEventType.AssetRename:
           await this.patchDefinition(event.data.assetId, { name: event.data.name });
           return;
+        case EditorEventType.AssetCategorySet:
+          await this.patchDefinition(event.data.assetId, { category: event.data.category });
+          return;
         case EditorEventType.AssetDelete:
           await this.deleteDefinition(event.data.assetId);
           return;

@@ -8,6 +8,7 @@ export function AssetContextMenu({
   anchor,
   menuRef,
   onRename,
+  onSetCategory,
   onDelete,
   onClose,
 }: {
@@ -15,6 +16,7 @@ export function AssetContextMenu({
   anchor: DOMRect;
   menuRef: RefObject<HTMLDivElement | null>;
   onRename: (assetId: string) => void;
+  onSetCategory: (assetId: string) => void;
   onDelete: (assetId: string) => void;
   onClose: () => void;
 }) {
@@ -46,6 +48,18 @@ export function AssetContextMenu({
       >
         Rename
       </button>
+      {asset.kind === 'component' ? (
+        <button
+          type="button"
+          role="menuitem"
+          onClick={() => {
+            onSetCategory(asset.id);
+            onClose();
+          }}
+        >
+          Set category…
+        </button>
+      ) : null}
       <button
         type="button"
         role="menuitem"

@@ -21,6 +21,7 @@ export interface AssetSummary {
   slug?: string;
   name: string;
   kind: DefaultKind;
+  category?: string;
 }
 
 export interface EditorNotice {

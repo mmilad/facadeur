@@ -2,6 +2,7 @@ import { SearchField } from '@facadeur/form';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { AssetContextMenu } from './AssetContextMenu';
+import { AssetCategoryDialog } from './AssetCategoryDialog';
 import { RenameAssetDialog } from './RenameAssetDialog';
 import { AssetRows } from './AssetRows';
 import type { ProjectSidebarModel, SidebarAsset } from '../../../domain/sidebar/types';
@@ -28,6 +29,7 @@ export function ProjectTree({
 }) {
   const [query, setQuery] = useState('');
   const [renameAssetId, setRenameAssetId] = useState<string | null>(null);
+  const [categoryAssetId, setCategoryAssetId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [assetContextMenu, setAssetContextMenu] = useState<{
     assetId: string;
@@ -37,12 +39,27 @@ export function ProjectTree({
   const activeRef = useRef<HTMLButtonElement | null>(null);
   const contextMenuRef = useRef<HTMLDivElement | null>(null);
   const needle = query.trim().toLowerCase();
-  const openKind = model.assets.find((asset) => asset.id === model.openId)?.kind;
+  const openAsset = model.assets.find((asset) => asset.id === model.openId);
+  const openKind = openAsset?.kind;
+  const openCategoryPath =
+    openAsset?.kind === 'component' ? categorySegments(openAsset.category).join('/') : '';
 
   useEffect(() => {
     if (!openKind) return;
     setExpanded((prev) => (prev[openKind] === false ? { ...prev, [openKind]: true } : prev));
   }, [openKind, model.openId]);
+
+  useEffect(() => {
+    if (!openCategoryPath) return;
+    const parts = openCategoryPath.split('/');
+    setExpanded((prev) => {
+      const next = { ...prev };
+      for (let index = 1; index <= parts.length; index += 1) {
+        next[categoryGroupId(parts.slice(0, index).join('/'))] = true;
+      }
+      return next;
+    });
+  }, [model.openId, openCategoryPath]);
 
   useEffect(() => {
     activeRef.current?.scrollIntoView?.({ block: 'nearest' });
@@ -65,6 +82,12 @@ export function ProjectTree({
       setAssetContextMenu(null);
     }
   }, [assetContextMenu, model.assets]);
+
+  useEffect(() => {
+    if (categoryAssetId && !model.assets.some((asset) => asset.id === categoryAssetId)) {
+      setCategoryAssetId(null);
+    }
+  }, [categoryAssetId, model.assets]);
 
   useEffect(() => {
     setAssetContextMenu((current) =>
@@ -112,6 +135,11 @@ export function ProjectTree({
       }),
     [needle, model.assets],
   );
+  const componentCategoryTree = useMemo(
+    () =>
+      buildComponentCategoryTree(groups.find((group) => group.kind === 'component')?.assets ?? []),
+    [groups],
+  );
 
   const empty =
     needle.length > 0 && sidebarDesignItems.length === 0 && groups.every((group) => !group.show);
@@ -134,6 +162,37 @@ export function ProjectTree({
   const contextAsset = assetContextMenu
     ? model.assets.find((candidate) => candidate.id === assetContextMenu.assetId)
     : undefined;
+  const categoryAsset = categoryAssetId
+    ? model.assets.find((candidate) => candidate.id === categoryAssetId)
+    : undefined;
+
+  function categoryRows(nodes: readonly ComponentCategoryNode[]): ReactNode {
+    return nodes.map((node) => {
+      const id = categoryGroupId(node.path);
+      return (
+        <TreeGroup
+          key={id}
+          id={id}
+          label={node.label}
+          open={isOpen(id, needle, expanded)}
+          onToggle={() => toggle(id)}
+        >
+          {node.assets.length ? (
+            <AssetRows
+              assets={node.assets}
+              openId={model.openId}
+              draggableAssetIds={model.draggableAssetIds}
+              activeRef={activeRef}
+              onEvent={onEvent}
+              contextAssetId={contextAssetId}
+              onContextAsset={openAssetContext}
+            />
+          ) : null}
+          {categoryRows(node.children)}
+        </TreeGroup>
+      );
+    });
+  }
 
   return (
     <section className="side-block side-block-tree" aria-label="Project">
@@ -178,15 +237,39 @@ export function ProjectTree({
               onToggle={() => toggle(group.kind)}
               onCreate={() => void create(group.kind)}
             >
-              <AssetRows
-                assets={group.assets}
-                openId={model.openId}
-                draggableAssetIds={model.draggableAssetIds}
-                activeRef={activeRef}
-                onEvent={onEvent}
-                contextAssetId={contextAssetId}
-                onContextAsset={openAssetContext}
-              />
+              {group.kind === 'component' ? (
+                <>
+                  {categoryRows(componentCategoryTree.categories)}
+                  {componentCategoryTree.uncategorized.length ? (
+                    <TreeGroup
+                      id="component-uncategorized"
+                      label="Uncategorized"
+                      open={isOpen('component-uncategorized', needle, expanded)}
+                      onToggle={() => toggle('component-uncategorized')}
+                    >
+                      <AssetRows
+                        assets={componentCategoryTree.uncategorized}
+                        openId={model.openId}
+                        draggableAssetIds={model.draggableAssetIds}
+                        activeRef={activeRef}
+                        onEvent={onEvent}
+                        contextAssetId={contextAssetId}
+                        onContextAsset={openAssetContext}
+                      />
+                    </TreeGroup>
+                  ) : null}
+                </>
+              ) : (
+                <AssetRows
+                  assets={group.assets}
+                  openId={model.openId}
+                  draggableAssetIds={model.draggableAssetIds}
+                  activeRef={activeRef}
+                  onEvent={onEvent}
+                  contextAssetId={contextAssetId}
+                  onContextAsset={openAssetContext}
+                />
+              )}
             </TreeGroup>
           ) : null,
         )}
@@ -202,6 +285,7 @@ export function ProjectTree({
                 onEvent({ type: EditorEventType.AssetOpen, data: { assetId: id } });
                 setRenameAssetId(id);
               }}
+              onSetCategory={setCategoryAssetId}
               onDelete={(id) =>
                 onEvent({ type: EditorEventType.AssetDelete, data: { assetId: id } })
               }
@@ -218,6 +302,16 @@ export function ProjectTree({
             onEvent({ type: EditorEventType.AssetRename, data: { assetId: id, name } })
           }
           onClose={() => setRenameAssetId(null)}
+        />
+      ) : null}
+      {categoryAsset ? (
+        <AssetCategoryDialog
+          key={categoryAsset.id}
+          asset={categoryAsset}
+          onSetCategory={(assetId, category) =>
+            onEvent({ type: EditorEventType.AssetCategorySet, data: { assetId, category } })
+          }
+          onClose={() => setCategoryAssetId(null)}
         />
       ) : null}
     </section>
@@ -274,6 +368,62 @@ function assetMatches(asset: SidebarAsset, needle: string): boolean {
   return (
     asset.label.toLowerCase().includes(needle) ||
     asset.id.toLowerCase().includes(needle) ||
+    (asset.category?.toLowerCase().includes(needle) ?? false) ||
     (asset.slug?.toLowerCase().includes(needle) ?? false)
   );
+}
+
+interface ComponentCategoryNode {
+  label: string;
+  path: string;
+  assets: SidebarAsset[];
+  children: ComponentCategoryNode[];
+  childMap: Map<string, ComponentCategoryNode>;
+}
+
+function buildComponentCategoryTree(assets: readonly SidebarAsset[]) {
+  const categories = new Map<string, ComponentCategoryNode>();
+  const uncategorized: SidebarAsset[] = [];
+
+  for (const asset of assets) {
+    const parts = categorySegments(asset.category);
+    if (!parts.length) {
+      uncategorized.push(asset);
+      continue;
+    }
+    let currentPath = '';
+    let current: ComponentCategoryNode | undefined;
+    let siblings = categories;
+    for (const part of parts) {
+      currentPath = currentPath ? `${currentPath}/${part}` : part;
+      current = siblings.get(part);
+      if (!current) {
+        current = { label: part, path: currentPath, assets: [], children: [], childMap: new Map() };
+        siblings.set(part, current);
+      }
+      siblings = current.childMap;
+    }
+    current!.assets.push(asset);
+  }
+
+  const finalize = (nodes: Map<string, ComponentCategoryNode>) =>
+    [...nodes.values()]
+      .sort((left, right) => left.label.localeCompare(right.label))
+      .map((node) => {
+        node.children = finalize(node.childMap);
+        return node;
+      });
+
+  return { categories: finalize(categories), uncategorized };
+}
+
+function categorySegments(category: string | undefined) {
+  return (category ?? '')
+    .split('/')
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+function categoryGroupId(path: string) {
+  return `component-category:${path}`;
 }

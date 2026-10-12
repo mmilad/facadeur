@@ -6,5 +6,6 @@ export function catalogAssetSummaries(core: CoreController): AssetSummary[] {
     id: asset.uuid,
     name: asset.name,
     kind: asset.kind satisfies DefaultKind,
+    ...(asset.category ? { category: asset.category } : {}),
   }));
 }

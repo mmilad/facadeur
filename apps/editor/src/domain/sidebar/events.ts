@@ -8,6 +8,7 @@ export enum EditorEventType {
   AssetOpen = 'asset.open',
   AssetCreate = 'asset.create',
   AssetRename = 'asset.rename',
+  AssetCategorySet = 'asset.category.set',
   AssetDelete = 'asset.delete',
   AssetDragStart = 'asset.drag.start',
   AssetDragEnd = 'asset.drag.end',
@@ -53,6 +54,10 @@ export interface EditorEventDataMap {
   [EditorEventType.AssetOpen]: { readonly assetId: string };
   [EditorEventType.AssetCreate]: { readonly kind: 'atom' | 'component' | 'page' };
   [EditorEventType.AssetRename]: { readonly assetId: string; readonly name: string };
+  [EditorEventType.AssetCategorySet]: {
+    readonly assetId: string;
+    readonly category: string | undefined;
+  };
   [EditorEventType.AssetDelete]: { readonly assetId: string };
   [EditorEventType.AssetDragStart]: { readonly assetId: string };
   [EditorEventType.AssetDragEnd]: Record<never, never>;

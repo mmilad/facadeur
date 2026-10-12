@@ -6,6 +6,7 @@ export interface SidebarAsset {
   readonly label: string;
   readonly slug?: string;
   readonly kind: string;
+  readonly category?: string;
 }
 
 export interface SidebarLayer {
