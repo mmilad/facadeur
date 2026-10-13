@@ -42,6 +42,7 @@ export function isDesignDomain(surface: EditorSurface): surface is DesignDomain 
 
 export function isEditorSurfaceId(surface: string): surface is EditorSurface {
   return (
+    surface === 'schemas' ||
     surface === 'props' ||
     DESIGN_DOMAIN_ITEMS.some((item) => item.id === surface) ||
     EDITOR_VIEW_ITEMS.some((item) => item.id === surface)

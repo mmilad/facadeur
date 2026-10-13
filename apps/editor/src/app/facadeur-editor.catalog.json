@@ -2035,6 +2035,65 @@
           "backgroundColor": "#ffffff"
         }
       }
+    },
+    "76c5666b-70e4-43ad-bed7-5b682b749258": {
+      "uuid": "76c5666b-70e4-43ad-bed7-5b682b749258",
+      "name": "Icon Btn",
+      "kind": "component",
+      "schema": {
+        "kind": "ref",
+        "uuid": "1a60f254-fd8a-4e98-ac6c-22376fb19ba1"
+      },
+      "config": {
+        "previewData": {
+          "fields": {
+            "label": "Save project",
+            "icon": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23817f88%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M5%203h12l4%204v14H3V3h2Z%22%2F%3E%3Cpath%20d%3D%22M7%203v6h10V3M7%2021v-8h10v8%22%2F%3E%3C%2Fsvg%3E"
+          }
+        }
+      },
+      "root": {
+        "uuid": "f21f37f1-f570-4c61-8856-d2d942b280ba",
+        "name": "Icon button",
+        "dom": {
+          "tagName": "button",
+          "attributes": {
+            "type": "button",
+            "aria-label": "{props:678de36a-f6e6-4a5e-b31b-d6f9023bd495}"
+          },
+          "children": [
+            {
+              "uuid": "c4b6af9a-ad54-46e6-b209-09f70826b200",
+              "name": "Icon",
+              "dom": {
+                "tagName": "img",
+                "attributes": {
+                  "src": "{props:247d9011-871d-4f73-9967-8efb592a89f4}",
+                  "alt": ""
+                }
+              },
+              "style": {
+                "width": "18px",
+                "height": "18px",
+                "objectFit": "contain",
+                "flexShrink": "0"
+              }
+            }
+          ]
+        },
+        "style": {
+          "display": "flex",
+          "alignItems": "center",
+          "justifyContent": "center",
+          "width": "36px",
+          "height": "36px",
+          "padding": "0",
+          "backgroundColor": "#ffffff",
+          "border": "1px solid #e8e6e2",
+          "borderRadius": "8px"
+        }
+      },
+      "category": "ui"
     }
   },
   "pages": {
@@ -2625,7 +2684,28 @@
       }
     }
   },
-  "schemas": {},
+  "schemas": {
+    "1a60f254-fd8a-4e98-ac6c-22376fb19ba1": {
+      "type": "object",
+      "title": "Icon button",
+      "required": ["label", "icon"],
+      "properties": {
+        "label": {
+          "type": "string",
+          "title": "Accessible label",
+          "default": "Save project",
+          "x-facadeur-prop-id": "678de36a-f6e6-4a5e-b31b-d6f9023bd495"
+        },
+        "icon": {
+          "type": "string",
+          "title": "Icon source",
+          "default": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23817f88%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M5%203h12l4%204v14H3V3h2Z%22%2F%3E%3Cpath%20d%3D%22M7%203v6h10V3M7%2021v-8h10v8%22%2F%3E%3C%2Fsvg%3E",
+          "x-facadeur-prop-id": "247d9011-871d-4f73-9967-8efb592a89f4"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
   "tokens": {
     "color": {
       "550e8400-e29b-41d4-a716-000000000401": {
