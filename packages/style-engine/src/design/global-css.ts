@@ -5,7 +5,14 @@ import {
   tokenCustomProperty,
   typographyCustomProperty,
 } from '@facadeur/core';
-import type { LayerMap, Node, ProjectCatalog, StyleLayer, VariantStyleMap } from '@facadeur/domain';
+import type {
+  ElementBuildConfig,
+  LayerMap,
+  Node,
+  ProjectCatalog,
+  StyleLayer,
+  VariantStyleMap,
+} from '@facadeur/domain';
 
 const TYPOGRAPHY_FIELDS = [
   'fontFamily',
@@ -25,7 +32,7 @@ export function renderGlobalStyleCss(catalog: ProjectCatalog): string {
   const tokens = new Map(
     [...readTokenTree(catalog.tokens ?? {}).tokens].map(([uuid, token]) => [uuid, token]),
   );
-  const { selectorsByNode, nodeUuids } = indexCatalogNodes(catalog);
+  const { selectorsByNode, nodeUuids, rootUuidByNode } = indexCatalogNodes(catalog);
   const rules: string[] = [];
   if (block) emitLayer(rules, ':root', block, block.breakpoints, catalog, tokens);
 
@@ -40,6 +47,8 @@ export function renderGlobalStyleCss(catalog: ProjectCatalog): string {
   }
 
   for (const authored of block?.rules ?? []) {
+    const rootUuids = new Set<string>();
+    let referencesRoot = false;
     const selector = replaceSelectorClasses(authored.selector, (className) => {
       const uuid = authored.bindings?.[className];
       if (!uuid || !nodeUuids.has(uuid)) {
@@ -47,9 +56,18 @@ export function renderGlobalStyleCss(catalog: ProjectCatalog): string {
           `Global style rule "${authored.id}" has an unresolved binding ".${className}"`,
         );
       }
+      const rootUuid = rootUuidByNode.get(uuid);
+      if (rootUuid) {
+        rootUuids.add(rootUuid);
+        if (rootUuid === uuid) referencesRoot = true;
+      }
       return codegenNodeClass(uuid);
     });
-    emitLayer(rules, selector, authored, authored.breakpoints, catalog, tokens);
+    const scopedSelector =
+      rootUuids.size === 1 && !referencesRoot
+        ? `.${codegenNodeClass([...rootUuids][0]!)} ${selector}`
+        : selector;
+    emitLayer(rules, scopedSelector, authored, authored.breakpoints, catalog, tokens);
   }
 
   for (const [uuid, value] of Object.entries(tokenSets)) {
@@ -58,6 +76,40 @@ export function renderGlobalStyleCss(catalog: ProjectCatalog): string {
     rules.push(cssRule(':root', [[property, substitute(value, tokens)]]));
   }
 
+  return rules.join('\n\n');
+}
+
+/** Render resolved node styles as CSS so nested instance rules can participate in the cascade. */
+export function renderElementBuildStyleCss(
+  root: ElementBuildConfig,
+  catalog: ProjectCatalog,
+): string {
+  const tokens = new Map(
+    [...readTokenTree(catalog.tokens ?? {}).tokens].map(([uuid, token]) => [uuid, token]),
+  );
+  const rules: string[] = [];
+  const visit = (node: ElementBuildConfig, scopes: readonly string[]) => {
+    const styleUuids = node.styleNodeUuids?.length
+      ? [...new Set(node.styleNodeUuids)]
+      : node.nodeUuid
+        ? [node.nodeUuid]
+        : [];
+    const instanceRoot =
+      node.nodeUuid && styleUuids.length > 1 ? node.nodeUuid : undefined;
+    const selectorUuids = [...new Set([...scopes, ...(instanceRoot ? [instanceRoot] : [])])];
+    if (node.nodeUuid && node.style && Object.keys(node.style).length) {
+      const selector = [
+        ...selectorUuids.map((uuid) => `.${codegenNodeClass(uuid)}`),
+        ...(selectorUuids.includes(node.nodeUuid)
+          ? []
+          : [`.${codegenNodeClass(node.nodeUuid)}`]),
+      ].join(' ');
+      rules.push(cssRule(selector, declarations(node.style, tokens)));
+    }
+    const childScopes = instanceRoot ? [...scopes, instanceRoot] : scopes;
+    for (const child of node.children ?? []) visit(child, childScopes);
+  };
+  visit(root, []);
   return rules.join('\n\n');
 }
 
@@ -114,8 +166,10 @@ function emitLayer(
 function indexCatalogNodes(catalog: ProjectCatalog) {
   const selectorsByNode = new Map<string, string[]>();
   const nodeUuids = new Set<string>();
+  const rootUuidByNode = new Map<string, string>();
   const visit = (node: Node, rootUuid: string, path: readonly string[]) => {
     nodeUuids.add(node.uuid);
+    rootUuidByNode.set(node.uuid, rootUuid);
     if (path.length) {
       const key = path.join('/');
       selectorsByNode.set(key, [...(selectorsByNode.get(key) ?? []), pathSelector(rootUuid, path)]);
@@ -126,15 +180,11 @@ function indexCatalogNodes(catalog: ProjectCatalog) {
     for (const definition of Object.values(definitions))
       visit(definition.root, definition.root.uuid, []);
   }
-  return { selectorsByNode, nodeUuids };
+  return { selectorsByNode, nodeUuids, rootUuidByNode };
 }
 
 function pathSelector(rootUuid: string, path: readonly string[]) {
-  return [rootUuid, ...path].map(nodeSelector).join(' > ');
-}
-
-function nodeSelector(uuid: string) {
-  return `[data-facadeur-codegen-node="${uuid}"]`;
+  return [rootUuid, ...path].map((uuid) => `.${codegenNodeClass(uuid)}`).join(' > ');
 }
 
 function codegenNodeClass(uuid: string) {

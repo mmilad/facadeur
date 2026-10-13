@@ -29,7 +29,7 @@ export function DynamicElement({ config }: { config: ElementBuildConfig }) {
     dataset,
     nodeUuid,
     properties,
-    style,
+    styleNodeUuids,
     tagName,
     text,
   } = config;
@@ -60,13 +60,18 @@ export function DynamicElement({ config }: { config: ElementBuildConfig }) {
     }
   }
   if (nodeUuid) props['data-facadeur-node-uuid'] = nodeUuid;
-  if (nodeUuid) {
+  if (nodeUuid || styleNodeUuids?.length) {
     const currentClass = typeof props.className === 'string' ? props.className : '';
-    props.className = [currentClass, `facadeur-node-${nodeUuid}`].filter(Boolean).join(' ');
+    const styleClasses = new Set([...(styleNodeUuids ?? []), ...(nodeUuid ? [nodeUuid] : [])]);
+    props.className = [
+      currentClass,
+      ...[...styleClasses].map((uuid) => `facadeur-node-${uuid}`),
+    ]
+      .filter(Boolean)
+      .join(' ');
   }
-  if (style) props.style = reactStyle(style);
   if (attributeStyle)
-    props.style = { ...parseInlineStyle(attributeStyle), ...reactStyle(style ?? {}) };
+    props.style = parseInlineStyle(attributeStyle);
 
   useLayoutEffect(() => {
     const element = elementRef.current;
@@ -90,12 +95,6 @@ export function DynamicElement({ config }: { config: ElementBuildConfig }) {
     { ...props, ref: elementRef } as HTMLAttributes<HTMLElement> & RefAttributes<HTMLElement>,
     ...(isVoidHtmlTag(tagName) ? [] : renderedChildren),
   );
-}
-
-function reactStyle(style: Readonly<Record<string, string>>): CSSProperties {
-  return Object.fromEntries(
-    Object.entries(style).map(([name, value]) => [cssPropertyName(name), value]),
-  ) as CSSProperties;
 }
 
 function cssPropertyName(name: string) {

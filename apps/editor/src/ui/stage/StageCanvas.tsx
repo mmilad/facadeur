@@ -10,7 +10,7 @@ import type { ViewportBoard } from '../../domain/viewport/board';
 import { useStagePointer } from './canvas/useStagePointer';
 import { useStageViewportBoard } from './canvas/useStageViewportBoard';
 import { DynamicElement } from '../../domain/viewport/dynamic-element';
-import { renderGlobalStyleCss } from '@facadeur/style-engine';
+import { renderElementBuildStyleCss, renderGlobalStyleCss } from '@facadeur/style-engine';
 
 export function StageCanvas({
   app,
@@ -73,10 +73,15 @@ export function StageCanvas({
     () => (frames.length ? app.buildOpenDefinition() : null),
     [app, frames, openId, designRevision],
   );
-  const globalStyleCss = useMemo(
-    () => renderGlobalStyleCss(app.getCatalog()),
-    [app, designRevision],
-  );
+  const globalStyleCss = useMemo(() => {
+    const catalog = app.getCatalog();
+    return [
+      buildConfig ? renderElementBuildStyleCss(buildConfig, catalog) : '',
+      renderGlobalStyleCss(catalog),
+    ]
+      .filter(Boolean)
+      .join('\n\n');
+  }, [app, buildConfig, designRevision]);
   useEffect(() => {
     for (const frame of boardRef.current?.frames() ?? []) {
       if (!frame.host.element.isConnected) continue;

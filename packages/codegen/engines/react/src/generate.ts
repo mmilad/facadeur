@@ -213,13 +213,19 @@ function renderNode(
   };
   if (node.nodeUuid) {
     attributes['data-facadeur-codegen-node'] = node.nodeUuid;
+  }
+  const styleNodeUuids = new Set([
+    ...(node.styleNodeUuids ?? []),
+    ...(node.nodeUuid ? [node.nodeUuid] : []),
+  ]);
+  if (styleNodeUuids.size) {
     const classKey = Object.hasOwn(attributes, 'className') ? 'className' : 'class';
     const existingClass = attributes[classKey];
-    const generatedClass = `facadeur-node-${node.nodeUuid}`;
+    const generatedClasses = [...styleNodeUuids].map((nodeUuid) => `facadeur-node-${nodeUuid}`);
     attributes[classKey] =
       typeof existingClass === 'string' && existingClass.length
-        ? `${existingClass} ${generatedClass}`
-        : generatedClass;
+        ? `${existingClass} ${generatedClasses.join(' ')}`
+        : generatedClasses.join(' ');
   }
   if (declarations.length) {
     if (!node.nodeUuid) attributes.className = 'node';

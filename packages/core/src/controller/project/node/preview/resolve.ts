@@ -174,7 +174,10 @@ function resolveNodeToElementBuildConfig(
         instanceOverrides,
         resolveTokenText,
       );
-      return { ...built, nodeUuid: node.uuid };
+      const styleNodeUuids = new Set(built.styleNodeUuids ?? []);
+      if (built.nodeUuid) styleNodeUuids.add(built.nodeUuid);
+      styleNodeUuids.add(node.uuid);
+      return { ...built, nodeUuid: node.uuid, styleNodeUuids: [...styleNodeUuids] };
     }
   }
 
