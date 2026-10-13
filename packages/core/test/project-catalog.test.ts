@@ -116,10 +116,22 @@ describe('validateProjectCatalog', () => {
   it('validates optional project icon resources', () => {
     const catalog = validateProjectCatalog({
       ...createExampleCatalog(),
-      icons: [{ id: 'brand-mark', name: 'Brand mark', category: 'brand', src: '/brand.svg' }],
+      icons: [
+        {
+          id: 'brand-mark',
+          name: 'Brand mark',
+          category: 'brand',
+          data: { viewBox: '0 0 24 24', paths: ['M2 2h20v20H2z'] },
+        },
+      ],
     });
     expect(catalog.icons).toEqual([
-      { id: 'brand-mark', name: 'Brand mark', category: 'brand', src: '/brand.svg' },
+      {
+        id: 'brand-mark',
+        name: 'Brand mark',
+        category: 'brand',
+        data: { viewBox: '0 0 24 24', paths: ['M2 2h20v20H2z'] },
+      },
     ]);
     expect(() =>
       validateProjectCatalog({ ...createExampleCatalog(), icons: [{ id: 'bad' }] }),

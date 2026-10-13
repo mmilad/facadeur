@@ -15,12 +15,15 @@ export function buildInspectorSidebarViewModel(
   model: InspectorViewModel,
   formKey: string,
   layerStyle: InspectorLayerStyle,
+  icons: readonly AutocompleteOption[] = [],
 ): InspectorSidebarModel {
   const propOptions = propBindingOptions(model);
-  const fieldOptions = (_path: string, _label: string, color = false) =>
+  const iconOptions = model.formValue.node.tagName.toLowerCase() === 'svg' ? icons : [];
+  const fieldOptions = (path: string, _label: string, color = false) =>
     transformableFieldOptions({
       props: propOptions,
       tokens: model.styleSuggestions.options,
+      icons: path === 'node.attributes' ? iconOptions : [],
       color,
     });
   const isRoot = model.selectionKind === 'root';

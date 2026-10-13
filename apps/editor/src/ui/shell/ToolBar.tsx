@@ -3,6 +3,7 @@ import type { EditorEvent } from '../../domain/sidebar/events';
 import { EditorEventType } from '../../domain/sidebar/events';
 import { refusalMessage, toolAllowed } from '../../domain/editing';
 import type { EditorTool } from '../../domain/session';
+import { IconGraphic } from '../icons/IconGraphic';
 
 const TOOLS = [
   ['select', 'Select', 'V'],
@@ -24,6 +25,7 @@ export function ToolBar({
     <div className="topbar-tools" role="toolbar" aria-label="Tools">
       {TOOLS.map(([id, label, key]) => {
         const allowed = id === 'select' || toolAllowed(kind, id);
+        const icon = icons?.find((item) => item.id === id);
         return (
           <button
             key={id}
@@ -35,7 +37,7 @@ export function ToolBar({
             title={allowed ? `${label} (${key})` : refusalMessage(kind, id)}
             onClick={() => onEvent({ type: EditorEventType.ToolSet, data: { tool: id } })}
           >
-            <ToolGlyph tool={id} src={icons?.find((icon) => icon.id === id)?.src} />
+            {icon ? <IconGraphic icon={icon} className="tool-icon" /> : <ToolGlyph tool={id} />}
             <span className="tool-key">{key}</span>
           </button>
         );
@@ -44,9 +46,7 @@ export function ToolBar({
   );
 }
 
-function ToolGlyph({ tool, src }: { tool: (typeof TOOLS)[number][0]; src?: string }) {
-  if (src) return <img className="tool-icon" src={src} alt="" aria-hidden="true" />;
-
+function ToolGlyph({ tool }: { tool: (typeof TOOLS)[number][0] }) {
   return (
     <svg className="tool-icon" viewBox="0 0 24 24" aria-hidden="true">
       {tool === 'select' ? <path d="m5 3 13 11-5.6.7L9.3 20 5 3Z" /> : null}

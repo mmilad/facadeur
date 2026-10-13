@@ -1,5 +1,18 @@
 # Facadeur cleanup plan
 
+- [x] Catalog: bind SVG icons by catalog key and expose dynamic choices.
+  - Evidence: Icon Btn still stores a data URI, while icon geometry already lives in
+    `ProjectCatalog.icons`; the current transform menu only offers text, props, and tokens.
+  - Action: bind the SVG node's `data-icon` to the Icon Btn `icon` prop; resolve its final key to
+    catalog geometry in Core. Source choices dynamically from the catalog for both the prop field
+    and the SVG transform menu, with no copied enum list.
+  - Scope: requested reusable icon binding and editor selection; no custom icon upload flow.
+  - Contracts: keep icon IDs as strings, preserve authored SVG children when a key is missing, and
+    emit the existing declarative `ElementBuildConfig` shape.
+  - Validation: Form and Core typechecks, catalog JSON validation, candidate detector, and diff
+    check passed. Editor typecheck remains blocked by existing errors in Inline.tsx, Modal.tsx, and
+    Popover.tsx. No test was added or run; the earlier test had been discarded.
+
 Updated: 2026-10-12
 
 ## Goal and scope
@@ -89,6 +102,25 @@ Detailed implementation history is in Git and the existing [plan history](plan-h
 completed change logs out of this file.
 
 ## Remaining follow-up
+
+- [x] Icons: replace embedded preset SVG data URLs with local Font Awesome Free SVG assets.
+  - Evidence: `packages/examples/src/catalog/icons.ts` stores each shared icon as an encoded
+    data URL; the catalog is reused by project templates, the Facadeur fixture, and editor
+    navigation.
+  - Action: use Font Awesome Free Solid as a temporary source, store the selected vector geometry
+    in `packages/examples` as serializable `data.viewBox` and `data.paths`, retain the upstream
+    license and attribution there, and render the data directly as SVG. Keep the dev Editor's
+    runtime icon list in `facadeur-editor.catalog.json`; Examples supplies canonical data when
+    that snapshot is authored, while the Editor loads icons only from its catalog. Remove
+    temporary package and path-based assets. Keep IDs, names, categories, and the selected icon
+    set intact.
+  - Scope: current icon asset migration; no icon upload or preset editing behavior.
+  - Contracts: replace `IconDefinition.src` with serializable SVG path data; keep stable icon IDs
+    and Core validation. The Examples package owns preset geometry and the attribution file.
+  - Validation: Examples and Core typechecks passed; Editor typecheck reports existing errors in
+    `Inline.tsx`, `Modal.tsx`, and `Popover.tsx`; all 24 preset entries contain 23 unique SVG
+    geometries; browser confirmed each rendered inline SVG is visible; candidate detector and
+    `git diff --check` passed. Tests and build were not run.
 
 - [x] Refactor: separate Catalog subtree deepcopy from insertion.
   - Evidence: `tree-ops.ts` previously performed recursive ID replacement inline while also

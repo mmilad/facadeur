@@ -164,7 +164,12 @@ export class AppService {
         ]),
       ),
     };
-    return buildInspectorSidebarViewModel(model, formKey, layerStyle);
+    return buildInspectorSidebarViewModel(
+      model,
+      formKey,
+      layerStyle,
+      (catalog.icons ?? []).map((icon) => ({ value: icon.id, label: icon.name })),
+    );
   }
 
   async dispatchEditorEvent(event: EditorEvent) {

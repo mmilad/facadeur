@@ -69,7 +69,10 @@ export interface FontFamilyDefinition extends DesignTokenRecord<FontFamilyValue>
 export interface IconDefinition {
   readonly id: string;
   readonly name: string;
-  readonly src: string;
+  readonly data: {
+    readonly viewBox: string;
+    readonly paths: readonly string[];
+  };
   readonly category?: string;
 }
 

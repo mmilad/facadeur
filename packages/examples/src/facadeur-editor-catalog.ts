@@ -8,12 +8,14 @@ const facadeurIconIds = new Set([
   'assets',
   'colors',
   'components',
+  'frame',
   'global-styles',
   'menu',
   'radius',
   'save',
   'saved',
   'schema',
+  'select',
   'settings',
   'shadow',
   'spacing',
@@ -21,6 +23,8 @@ const facadeurIconIds = new Set([
   'viewport',
   'workspace',
 ]);
+
+export const facadeurEditorIcons = defaultIcons.filter((icon) => facadeurIconIds.has(icon.id));
 
 /** Build the app seed Catalog without the legacy Example atoms and pages. */
 export function createFacadeurEditorCatalog(): ProjectCatalog {
@@ -30,7 +34,7 @@ export function createFacadeurEditorCatalog(): ProjectCatalog {
     pages: facadeurDesignPages,
     schemas: {},
     tokens: exampleCatalog.tokens,
-    icons: defaultIcons.filter((icon) => facadeurIconIds.has(icon.id)),
+    icons: facadeurEditorIcons,
     globalStyles: exampleCatalog.globalStyles,
   } satisfies ProjectCatalog);
 }

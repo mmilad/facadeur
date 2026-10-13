@@ -115,7 +115,9 @@ export function TransformableField({
   }
 
   const control =
-    active.option.type === 'prop' || active.option.type === 'token' ? (
+    active.option.type === 'prop' ||
+    active.option.type === 'token' ||
+    active.option.type === 'icon' ? (
       <AutocompleteSelectField
         id={id}
         name={name}
@@ -234,7 +236,7 @@ export function TransformableField({
 function normalizeOptions(options: readonly TransformableFieldOption[]) {
   const normalized: TransformableFieldOption[] = [];
   for (const option of options) {
-    if (option.type === 'prop' || option.type === 'token') {
+    if (option.type === 'prop' || option.type === 'token' || option.type === 'icon') {
       if (option.items.length) normalized.push(option);
     } else if (option.type === 'set') {
       const items = normalizeOptions(option.items);
@@ -265,7 +267,7 @@ function locateValue(
       const nested = locateValue(option.items, value, path);
       if (nested) return nested;
     } else if (
-      (option.type === 'prop' || option.type === 'token') &&
+      (option.type === 'prop' || option.type === 'token' || option.type === 'icon') &&
       option.items.some((item) => item.value === value)
     ) {
       return { option, path };

@@ -60,7 +60,7 @@ export function createTokenTableRow({
   labelFor: (reference: string) => string;
   searchValue: (reference: string) => string | undefined;
   transformDraft?: { base: string; value: string };
-  onTransform: (type: 'text' | 'color' | 'prop' | 'token') => void;
+  onTransform: (type: 'text' | 'color' | 'prop' | 'token' | 'icon') => void;
   onTransformValue: (next: string) => void;
 }): TableRowData {
   const shownValue = token.effectiveValue;

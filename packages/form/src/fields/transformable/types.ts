@@ -3,7 +3,7 @@ import type { AutocompleteOption } from '../autocomplete/types';
 export type TransformableFieldOption =
   | { type: 'text'; label: string }
   | { type: 'color'; label: string }
-  | { type: 'prop' | 'token'; label: string; items: readonly AutocompleteOption[] }
+  | { type: 'prop' | 'token' | 'icon'; label: string; items: readonly AutocompleteOption[] }
   | { type: 'set'; label: string; items: readonly TransformableFieldOption[] };
 
 export type TransformableFieldConfig = {

@@ -3,10 +3,12 @@ import type { AutocompleteOption, TransformableFieldOption } from '@facadeur/for
 export function transformableFieldOptions({
   props,
   tokens,
+  icons = [],
   color = false,
 }: {
   props: readonly AutocompleteOption[];
   tokens: readonly AutocompleteOption[];
+  icons?: readonly AutocompleteOption[];
   color?: boolean;
 }): TransformableFieldOption[] {
   const tokenGroups = new Map<string, AutocompleteOption[]>();
@@ -21,6 +23,7 @@ export function transformableFieldOptions({
   return [
     { type: 'text', label: 'Text' },
     ...(props.length ? [{ type: 'prop' as const, label: 'Component props', items: props }] : []),
+    ...(icons.length ? [{ type: 'icon' as const, label: 'Icons', items: icons }] : []),
     ...(tokenGroups.size
       ? [
           {

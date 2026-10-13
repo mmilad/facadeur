@@ -21,7 +21,11 @@ export const prop = (value: number) => uuid(3000 + value);
 const iconsById = new Map(defaultIcons.map((icon) => [icon.id, icon]));
 
 export function iconSource(id: string) {
-  return iconsById.get(id)?.src ?? '';
+  const data = iconsById.get(id)?.data;
+  if (!data) return '';
+  const paths = data.paths.map((path) => `<path d="${path}"/>`).join('');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${data.viewBox}" fill="currentColor">${paths}</svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
 export const labelStyle: Node['style'] = {

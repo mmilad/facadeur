@@ -119,7 +119,17 @@ export function buildInspectorFormModel(
 
   const scopedDefinition = referencedDefinition ?? definition;
   const effective = effectiveSchemaForDefinition(catalog, scopedDefinition);
-  const schemaFields = effective.schema ? fieldsFromJsonSchema(effective.schema) : [];
+  const schemaFields = effective.schema
+    ? fieldsFromJsonSchema(effective.schema).map((field) =>
+        field.schema['x-facadeur-options-source'] === 'icons'
+          ? {
+              ...field,
+              type: 'enum' as const,
+              options: (catalog.icons ?? []).map((icon) => icon.id),
+            }
+          : field,
+      )
+    : [];
   const classSuggestions = collectClassSuggestions(definition.root);
   const tagOptions = htmlTagOptions(node.dom.tagName);
   const nodeInputs = inspectorInputsForNode(
