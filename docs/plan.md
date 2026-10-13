@@ -103,6 +103,18 @@ completed change logs out of this file.
 
 ## Remaining follow-up
 
+- [x] Catalog: clean global style references when deleting a layer.
+  - Evidence: `removeCatalogNode` removes the node tree but leaves `globalStyles.block.children`
+    paths and authored rule bindings that can point to deleted nodes; style-engine rejects those
+    references while rendering the editor.
+  - Action: collect UUIDs from the removed subtree and prune child-path entries and authored rules
+    bound to any removed UUID. Keep the existing Catalog tree operation cohesive in `tree-ops.ts`.
+  - Scope: prerequisite fix for layer deletion; no serialized schema or UI changes.
+  - Contracts: preserve unrelated styles, tokens, breakpoints, and Catalog definitions; failed or
+    root deletions remain no-ops.
+  - Validation: Core typecheck, candidate detector, and diff check passed. No tests run per the
+    current task instructions.
+
 - [x] Icons: replace embedded preset SVG data URLs with local Font Awesome Free SVG assets.
   - Evidence: `packages/examples/src/catalog/icons.ts` stores each shared icon as an encoded
     data URL; the catalog is reused by project templates, the Facadeur fixture, and editor

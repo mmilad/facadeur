@@ -35,14 +35,16 @@ export function catalogLayerInsertEntries(
     return catalogInstances(
       catalog,
       openId,
-      (asset) => asset.kind === 'section' || asset.kind === 'component',
+      (asset) => defaultNestingRules.page.instanceKinds.includes(asset.kind),
     );
   }
   return [
     { kind: 'primitive', tool: 'frame', label: 'Frame' },
     { kind: 'structural', tool: 'repeater', label: 'Repeater' },
     { kind: 'structural', tool: 'switch', label: 'Switch' },
-    ...catalogInstances(catalog, openId, (asset) => asset.kind === 'atom'),
+    ...catalogInstances(catalog, openId, (asset) =>
+      defaultNestingRules[kind].instanceKinds.includes(asset.kind),
+    ),
   ];
 }
 

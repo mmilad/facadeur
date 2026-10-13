@@ -193,6 +193,9 @@ export function removeCatalogNode(
   const located = findDefinition(catalog, definitionUuid);
   if (!located) return catalog;
   if (located.definition.root.uuid === nodeUuid) return catalog;
+  const removedNode = findNodeByUuid(located.definition.root, nodeUuid);
+  if (!removedNode) return catalog;
+  const removedUuids = collectSubtreeUuids(removedNode);
 
   const next = structuredClone(catalog) as ProjectCatalog;
   const definition = next[located.kind][definitionUuid]! as NodeDefinition;
@@ -203,5 +206,46 @@ export function removeCatalogNode(
   siblings.splice(parentInfo.index, 1);
   (parentInfo.parent.dom as { children?: Node[] }).children = siblings;
   (next[located.kind] as Record<string, NodeDefinition>)[definitionUuid] = definition;
-  return next;
+  return pruneRemovedNodeStyles(next, removedUuids);
+}
+
+function collectSubtreeUuids(root: Node) {
+  const uuids = new Set<string>();
+  const visit = (node: Node) => {
+    uuids.add(node.uuid);
+    for (const child of node.dom.children ?? []) visit(child);
+  };
+  visit(root);
+  return uuids;
+}
+
+function pruneRemovedNodeStyles(catalog: ProjectCatalog, removedUuids: ReadonlySet<string>) {
+  const currentBlock = catalog.globalStyles?.block;
+  if (!currentBlock) return catalog;
+
+  const children = Object.fromEntries(
+    Object.entries(currentBlock.children ?? {}).filter(
+      ([path]) => !path.split('/').some((uuid) => removedUuids.has(uuid)),
+    ),
+  );
+  const rules = (currentBlock.rules ?? []).filter(
+    (rule) => !Object.values(rule.bindings ?? {}).some((uuid) => removedUuids.has(uuid)),
+  );
+  if (
+    Object.keys(children).length === Object.keys(currentBlock.children ?? {}).length &&
+    rules.length === (currentBlock.rules ?? []).length
+  ) {
+    return catalog;
+  }
+
+  const block = { ...currentBlock };
+  if (Object.keys(children).length) block.children = children;
+  else delete block.children;
+  if (rules.length) block.rules = rules;
+  else delete block.rules;
+
+  const globalStyles = { ...catalog.globalStyles };
+  if (Object.keys(block).length) globalStyles.block = block;
+  else delete globalStyles.block;
+  return { ...catalog, globalStyles };
 }
