@@ -103,7 +103,7 @@ completed change logs out of this file.
 
 ## Remaining follow-up
 
-- [ ] Style Engine: nest referenced component styles under their definition root.
+- [x] Style Engine: nest referenced component styles under their definition root.
   - Evidence: resolving a `definitionRef` replaces its root `nodeUuid` with the instance UUID,
     while child-path styles still target the definition-root UUID and authored descendant rules
     are emitted as unscoped classes.
@@ -114,7 +114,7 @@ completed change logs out of this file.
   - Contracts: preserve existing authored selectors, breakpoint behavior, component reuse, and
     code generation output semantics.
   - Validation: Core, Style Engine, Editor, and Codegen typechecks; browser Preview, candidate
-    detector, and diff check. Do not run tests unless requested.
+    detector, and diff check passed.
 
 - [x] Catalog: clean global style references when deleting a layer.
   - Evidence: `removeCatalogNode` removes the node tree but leaves `globalStyles.block.children`

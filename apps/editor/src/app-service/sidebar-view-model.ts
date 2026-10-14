@@ -26,6 +26,7 @@ export function buildInspectorSidebarViewModel(
       icons: path === 'node.attributes' ? iconOptions : [],
       color,
     });
+  const styleValueOptions = fieldOptions('node.style', 'CSS value', true);
   const isRoot = model.selectionKind === 'root';
   const headerFields =
     sectionFields(model, isRoot ? 'Asset' : 'Element', undefined, propOptions, fieldOptions)
@@ -94,6 +95,7 @@ export function buildInspectorSidebarViewModel(
     tabs,
     values: Object.fromEntries(names.map((name) => [name, getPath(model.formValue, name)])),
     bindOptions: propOptions,
+    styleValueOptions,
   };
 }
 

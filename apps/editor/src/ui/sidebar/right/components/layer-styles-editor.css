@@ -40,6 +40,15 @@
   width: 100%;
 }
 
+.layer-style-value-control {
+  min-width: 0;
+  width: 100%;
+}
+
+.layer-style-value-control > * {
+  width: 100%;
+}
+
 .layer-style-remove,
 .layer-style-add {
   min-height: 30px;

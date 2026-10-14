@@ -1,4 +1,4 @@
-import type { FormFieldConfig } from '@facadeur/form';
+import type { FormFieldConfig, TransformableFieldOption } from '@facadeur/form';
 
 /** Editor-owned display data for the project and layer sidebar. */
 export interface SidebarAsset {
@@ -70,6 +70,7 @@ export interface InspectorSidebarModel {
     description?: string;
     group?: string;
   }[];
+  readonly styleValueOptions: readonly TransformableFieldOption[];
 }
 
 export interface SidebarViewModel {

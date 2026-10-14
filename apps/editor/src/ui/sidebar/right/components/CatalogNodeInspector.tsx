@@ -82,6 +82,7 @@ export function CatalogNodeInspector({
                 key={model.formKey}
                 nodeId={model.nodeId}
                 layerStyle={model.layerStyle}
+                valueFieldOptions={model.styleValueOptions}
                 onEvent={onEvent}
               />
             ) : null}

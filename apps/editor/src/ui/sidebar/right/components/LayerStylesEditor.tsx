@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { AutocompleteSelectField, TransformableField } from '@facadeur/form';
+import type { AutocompleteOption, TransformableFieldOption } from '@facadeur/form';
 import type { EditorEvent } from '../../../../domain/sidebar/events';
 import { EditorEventType } from '../../../../domain/sidebar/events';
 import type { InspectorSidebarModel } from '../../../../domain/sidebar/types';
@@ -11,16 +13,19 @@ import './layer-styles-editor.css';
 export function LayerStylesEditor({
   nodeId,
   layerStyle,
+  valueFieldOptions,
   onEvent,
 }: {
   nodeId: string;
   layerStyle: InspectorSidebarModel['layerStyle'];
+  valueFieldOptions: readonly TransformableFieldOption[];
   onEvent: (event: EditorEvent) => void;
 }) {
   const baseId = layerStyle.breakpoints[0]?.uuid ?? null;
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [property, setProperty] = useState('');
   const [value, setValue] = useState('');
+  const [supportedProperties, setSupportedProperties] = useState<AutocompleteOption[]>([]);
   const selectedViewport = layerStyle.breakpoints.find((item) => item.uuid === selectedId);
   const hasSelectedViewport = Boolean(selectedViewport);
   const writingBreakpointId =
@@ -28,11 +33,26 @@ export function LayerStylesEditor({
   useEffect(() => {
     if (selectedId && !hasSelectedViewport) setSelectedId(null);
   }, [selectedId, hasSelectedViewport]);
+  useEffect(() => {
+    const computed = window.getComputedStyle(document.documentElement);
+    const names = Array.from({ length: computed.length }, (_, index) => computed.item(index));
+    setSupportedProperties(
+      [...new Set(names.filter(Boolean))]
+        .sort((left, right) => left.localeCompare(right))
+        .map((name) => ({ value: name, label: name, group: 'CSS properties' })),
+    );
+  }, []);
   const declarations = {
     ...(writingBreakpointId
       ? (layerStyle.overrides[writingBreakpointId] ?? {})
       : layerStyle.declarations),
   };
+  const propertyOptions = [
+    ...supportedProperties,
+    ...Object.keys(declarations)
+      .filter((name) => !supportedProperties.some((option) => option.value === name))
+      .map((name) => ({ value: name, label: name, group: 'Used in this style' })),
+  ];
 
   const setDeclaration = (name: string, next: string | null) =>
     onEvent({
@@ -94,13 +114,17 @@ export function LayerStylesEditor({
                   value={name}
                   disabled
                 />
-                <TextInput
-                  aria-label={`CSS value for ${name}`}
-                  className="layer-style-value"
-                  name={`${nodeId}-${name}-value`}
-                  value={current}
-                  onCommit={(next) => setDeclaration(name, next || null)}
-                />
+                <div className="eu-control layer-style-value-control">
+                  <TransformableField
+                    id={`${nodeId}-${name}-value`}
+                    name={`${nodeId}-${name}-value`}
+                    label={`CSS value for ${name}`}
+                    value={current}
+                    fieldOptions={valueFieldOptions}
+                    onChange={() => {}}
+                    onCommit={(next) => setDeclaration(name, next || null)}
+                  />
+                </div>
                 <button
                   className="layer-style-remove"
                   type="button"
@@ -114,20 +138,29 @@ export function LayerStylesEditor({
           })}
         </div>
         <div className="layer-style-add-row">
-          <TextInput
-            aria-label="CSS property"
-            name={`${nodeId}-new-property`}
-            value={property}
-            placeholder="property"
-            onChange={setProperty}
-          />
-          <TextInput
-            aria-label="CSS value"
-            name={`${nodeId}-new-value`}
-            value={value}
-            placeholder="value"
-            onChange={setValue}
-          />
+          <div className="eu-control">
+            <AutocompleteSelectField
+              id={`${nodeId}-new-property`}
+              name={`${nodeId}-new-property`}
+              label="CSS property"
+              value={property}
+              options={propertyOptions}
+              placeholder="property"
+              onChange={setProperty}
+            />
+          </div>
+          <div className="layer-style-value-control">
+            <TransformableField
+              id={`${nodeId}-new-value`}
+              name={`${nodeId}-new-value`}
+              label="CSS value"
+              value={value}
+              fieldOptions={valueFieldOptions}
+              placeholder="value"
+              onChange={setValue}
+              onCommit={setValue}
+            />
+          </div>
           <button
             type="button"
             className="layer-style-add"
