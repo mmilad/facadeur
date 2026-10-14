@@ -1,10 +1,10 @@
 import { Value } from '@sinclair/typebox/value';
 import { DocumentError } from '../../../document/errors';
 import { projectCatalogSchema } from '../../../schema/node-model/index';
-import type { ProjectCatalog } from '@facadeur/domain';
+import type { Node, ProjectCatalog } from '@facadeur/domain';
 import { sanitizeProjectCatalog } from './sanitize-field-values';
-import { findDefinition, listCatalogDefinitions } from './ops';
-import { effectiveSchemaForDefinition } from './field-contract';
+import { findDefinition, listCatalogDefinitions, resolveJsonSchemaForDefinition } from './ops';
+import { effectiveSchemaForDefinition, inheritableSchemaForDefinition } from './field-contract';
 import { matchesSchemaValue } from '../../validation/json-schema-value';
 import { ensureCatalogFieldIds } from './field-ids';
 
@@ -71,14 +71,64 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
 
   for (const definition of definitions) {
     const effective = effectiveSchemaForDefinition(catalog, definition);
-    const definitionExposure = definition.config?.fieldExposure;
-    if (definitionExposure?.mode === 'manual') {
-      for (const sourcePath of Object.keys(definitionExposure.fields)) {
-        if (!schemaPathExists(effective.schema, sourcePath)) {
+    const ownSchema = resolveJsonSchemaForDefinition(catalog, definition);
+    for (const [field, config] of Object.entries(definition.config?.staticFields ?? {})) {
+      if (!config.isStatic || !schemaPathExists(ownSchema, field)) {
+        throw new DocumentError(
+          'schema',
+          `Static field config requires a field in the definition schema ("${field}")`,
+        );
+      }
+      if (config.value !== undefined) {
+        validateRecord({ [field]: config.value }, ownSchema, `static value for "${field}"`);
+      }
+    }
+    for (const [instanceUuid, fieldConfigs] of Object.entries(
+      definition.config?.instanceFieldConfigs ?? {},
+    )) {
+      const node = findDefinitionInstance(definition.root, instanceUuid);
+      const target = node?.config?.definitionRef
+        ? findDefinition(catalog, node.config.definitionRef)?.definition
+        : undefined;
+      const targetSchema = target ? inheritableSchemaForDefinition(catalog, target) : null;
+      if (!target) {
+        throw new DocumentError(
+          'schema',
+          `Static field config requires a definition instance (${instanceUuid})`,
+        );
+      }
+      for (const [field, config] of Object.entries(fieldConfigs)) {
+        if (!config.isStatic || !schemaPathExists(targetSchema, field)) {
           throw new DocumentError(
             'schema',
-            `Unknown default exposed field "${sourcePath}" on "${definition.name}"`,
+            `Static field config requires a field in the instance schema ("${field}")`,
           );
+        }
+        if (config.value !== undefined) {
+          validateRecord({ [field]: config.value }, targetSchema, `static value for "${field}"`);
+        }
+      }
+    }
+    for (const [nodeUuid, exposure] of Object.entries(definition.config?.fieldExposure ?? {})) {
+      const node = findDefinitionInstance(definition.root, nodeUuid);
+      const target = node?.config?.definitionRef
+        ? findDefinition(catalog, node.config.definitionRef)?.definition
+        : undefined;
+      if (!target) {
+        throw new DocumentError(
+          'schema',
+          `Field exposure requires a definition instance (${nodeUuid})`,
+        );
+      }
+      if (exposure.mode === 'manual') {
+        const targetSchema = inheritableSchemaForDefinition(catalog, target);
+        for (const sourcePath of Object.keys(exposure.fields)) {
+          if (!schemaPathExists(targetSchema, sourcePath)) {
+            throw new DocumentError(
+              'schema',
+              `Unknown exposed field "${sourcePath}" on instance "${node?.name ?? nodeUuid}"`,
+            );
+          }
         }
       }
     }
@@ -90,25 +140,8 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
     const visit = (node: (typeof definition)['root']) => {
       const ref = node.config?.definitionRef;
       const target = ref ? findDefinition(catalog, ref)?.definition : undefined;
-      if (!ref && node.config?.fieldExposure) {
-        throw new DocumentError(
-          'schema',
-          `Field exposure requires a definition instance (${node.uuid})`,
-        );
-      }
       if (target) {
         const targetSchema = effectiveSchemaForDefinition(catalog, target).schema;
-        const exposure = node.config?.fieldExposure ?? target.config?.fieldExposure;
-        if (exposure?.mode === 'manual') {
-          for (const sourcePath of Object.keys(exposure.fields)) {
-            if (!schemaPathExists(targetSchema, sourcePath)) {
-              throw new DocumentError(
-                'schema',
-                `Unknown exposed field "${sourcePath}" on instance "${node.name ?? node.uuid}"`,
-              );
-            }
-          }
-        }
         validateRecord(node.data, targetSchema, `instance "${node.name ?? node.uuid}"`);
         validateRecord(
           node.config?.previewData?.fields,
@@ -121,6 +154,16 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
     };
     visit(definition.root);
   }
+}
+
+function findDefinitionInstance(root: Node, uuid: string): Node | null {
+  if (root.uuid === uuid) return root.config?.definitionRef ? root : null;
+  if (root.config?.definitionRef) return null;
+  for (const child of root.dom.children ?? []) {
+    const found = findDefinitionInstance(child, uuid);
+    if (found) return found;
+  }
+  return null;
 }
 
 function isFieldBindingValue(value: unknown, schema: unknown) {

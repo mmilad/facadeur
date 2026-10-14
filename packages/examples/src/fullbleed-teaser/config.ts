@@ -1,6 +1,19 @@
 import type { NodeDefinition as NodeDefinitionModel } from '@facadeur/domain';
+import { ids as exampleFullbleedTeaserIds } from './idList';
 
 export const config: NodeDefinitionModel['config'] = {
+  fieldExposure: {
+    [exampleFullbleedTeaserIds.nodes.div1]: {
+      mode: 'manual',
+      fields: { src: 'imageSrc', alt: 'imageAlt' },
+    },
+    [exampleFullbleedTeaserIds.nodes.div3]: { mode: 'manual', fields: { text: 'title' } },
+    [exampleFullbleedTeaserIds.nodes.div4]: { mode: 'manual', fields: { text: 'body' } },
+    [exampleFullbleedTeaserIds.nodes.div5]: {
+      mode: 'manual',
+      fields: { label: 'ctaLabel', href: 'ctaHref' },
+    },
+  },
   previewData: {
     fields: {
       title: 'Build pages from clear contracts',

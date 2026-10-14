@@ -37,6 +37,23 @@ compatibility shims for them. A future server or persistence layer is a separate
 
 ## Completed cleanup
 
+- [x] Core: store field exposure on the embedding definition by node UUID.
+  - Evidence: `fieldExposure` was accepted both on `NodeConfig` and on `DefinitionConfig` as a
+    single definition-wide default. Node ownership made an embedded component decide how its
+    parent exposes fields, while a definition-wide value could not configure two instances
+    independently.
+  - Action: remove `fieldExposure` from `NodeConfig`; make `DefinitionConfig.fieldExposure` a
+    UUID-keyed per-instance map; resolve and write each instance's exposure through its parent
+    definition; migrate legacy node settings into that map and discard legacy scalar defaults;
+    move example mappings from nodes to their definition configs.
+  - Scope: preserve the existing per-instance Inspector controls and modes, with no visual UI
+    redesign. Remove the obsolete definition-wide default control. Unconfigured instances remain
+    flat, and later visited instances continue to win field collisions.
+  - Contracts: preserve required fields, preview defaults, recursive schema composition, and
+    manual/grouped mappings; map keys must identify reachable embedded definition nodes.
+  - Validation: 11 focused field-exposure tests and workspace typechecks passed; scoped ESLint,
+    Prettier, schema regeneration, candidate detector, and `git diff --check` passed.
+
 - [x] Design: make the Facadeur workspace and settings concepts responsive.
   - Evidence: `packages/examples/src/facadeur-editor.ts` fixes both root frames at 1280px, the
     workspace canvas at a 500px minimum, and preview/inspector/settings panels at fixed widths;
@@ -332,7 +349,7 @@ completed change logs out of this file.
 The maintained-source candidate scan found two size signals and one directory concentration
 signal. The review decisions are:
 
-- `packages/core/src/controller/project/controller.ts` (555 lines): the single Core catalog
+- `packages/core/src/controller/project/controller.ts` (518 lines): the single Core catalog
   coordination facade, including its public query surface. Query implementations live in the
   adjacent `catalog/queries.ts` module.
 - `packages/examples/src/form-controls-section/dom.ts` (526 lines): one canonical reusable
@@ -368,3 +385,17 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
     generated component's root equal to the clone, and do not alter the normal layer clipboard.
   - Validation: focused layer-navigation test (6 tests), Editor typecheck, ESLint, Prettier,
     candidate detector, and `git diff --check` passed.
+
+- [x] Editor/Core: configure static and exposed fields per embedded child from the root Config tab.
+  - Evidence: the Config tab previously listed only the definition's own schema fields; fields inherited from child definitions were controlled only by their `fieldExposure` mode, while static settings were keyed only by field name and could not distinguish repeated child instances.
+  - Action: add a per-instance field settings map keyed by embedding node UUID, derive each instance's available fields from its inheritable schema, and reuse the existing field settings control. Show the child label plus UUID context in Config so duplicate names remain independently editable. Apply instance-scoped static/expose settings in schema resolution, validation, and preview resolution.
+  - Scope: requested continuation of static defaults; preserve existing flat/grouped/manual `fieldExposure` behavior and the existing collision winner ordering.
+  - Contracts: child static values are defaults in the parent schema only when exposed; unexposed static fields are omitted; changing child schema remains reflected automatically; per-instance configuration does not mutate the child definition; preserve undo, catalog serialization, token values, and strict validation.
+  - Validation: Domain/Core/Form typechecks, schema JSON inspection, ESLint, Prettier, candidate detector, and `git diff --check` passed. Editor typecheck reports existing errors in `Inline.tsx`, `Modal.tsx`, and `Popover.tsx`; tests were not run.
+- [x] Refactor: isolate static field configuration and Config-tab field discovery.
+  - Evidence: static field transitions and Config-tab field discovery had been added to `controller.ts` and `inspector-view.ts`, which crossed the candidate detector threshold during this feature.
+  - Action: move static config transitions/default selection to a Catalog-owned helper, leaving `CoreController` to commit returned catalog snapshots. Move root Config field discovery to a private preview inspector helper; retain form layout and path mapping in `inspector-view.ts`.
+  - Scope: prerequisite cleanup within per-instance static field settings.
+  - Contracts: preserve UUID-keyed instance settings, preview clearing, child schema defaults, undo/commit behavior, inspector identity, and existing public APIs.
+  - Validation: Domain/Core/Form typechecks, ESLint, Prettier, detector rerun, and `git diff --check` passed. Editor typecheck reports the existing `Inline.tsx`, `Modal.tsx`, and `Popover.tsx` errors; tests were not run.
+  - Refactoring review: `CoreController` remains above the detector's 450-line signal because it is the cohesive catalog command coordinator; field config transitions now live in Catalog, and Config field discovery lives beside the preview inspector.

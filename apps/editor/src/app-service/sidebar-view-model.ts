@@ -74,11 +74,54 @@ export function buildInspectorSidebarViewModel(
     : null;
   const previewSections =
     model.selectionKind !== 'element' && componentDefaults ? [componentDefaults] : [];
+  const staticFieldNames = new Set(
+    model.configFields.filter(({ config }) => config?.isStatic).map(({ field }) => field.name),
+  );
   const tabs = [
     { id: 'style' as const, label: 'Style', sections: styleSection ? [styleSection] : [] },
     { id: 'properties' as const, label: 'Properties', sections: propertySections },
     ...(model.previewDataVisible && previewSections.length
-      ? [{ id: 'previewData' as const, label: 'Preview data', sections: previewSections }]
+      ? [
+          {
+            id: 'previewData' as const,
+            label: 'Preview data',
+            sections: previewSections.map((section) => ({
+              ...section,
+              fields: section.fields.map((field) => {
+                if (field.type === 'layout') return field;
+                const name = field.name.startsWith('props.') ? field.name.slice(6) : '';
+                return name && staticFieldNames.has(name) ? { ...field, disabled: true } : field;
+              }),
+            })),
+          },
+        ]
+      : []),
+    ...(isRoot
+      ? [
+          {
+            id: 'config' as const,
+            label: 'Config',
+            sections: [],
+            configFields: model.configFields.map(
+              ({ field, config, instanceUuid, instanceLabel }) => ({
+                field,
+                label: field.schema.title?.trim() || field.name,
+                instanceUuid,
+                instanceLabel,
+                isStatic: config?.isStatic === true,
+                value: config?.value,
+                exposed: config?.expose === true,
+                valueOptions: transformableFieldOptions({
+                  props: [],
+                  tokens: model.styleSuggestions.options,
+                  color: /color|colour|background/i.test(
+                    `${field.name} ${field.schema.title ?? ''}`,
+                  ),
+                }),
+              }),
+            ),
+          },
+        ]
       : []),
   ];
   const allFields = [

@@ -3,7 +3,7 @@
 import type { AppService } from '../../app-service';
 import type { EditorEvent } from '../../domain/sidebar/events';
 import { EditorEventType } from '../../domain/sidebar/events';
-import { CatalogPreviewFields } from './CatalogPreviewFields';
+import { CatalogPreviewFields, staticFieldConfigsForDefinition } from './CatalogPreviewFields';
 
 /** Edits definition-level preview defaults (`config.previewData.fields`). */
 export function CatalogPreviewDataStage({
@@ -51,6 +51,7 @@ export function CatalogPreviewDataStage({
             <CatalogPreviewFields
               fields={fields}
               previewFields={previewFields}
+              staticFields={staticFieldConfigsForDefinition(definition)}
               onWrite={(field, value) =>
                 onEvent({
                   type: EditorEventType.PreviewFieldSet,

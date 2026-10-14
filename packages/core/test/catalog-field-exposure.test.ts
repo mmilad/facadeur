@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import type { FieldExposure, FieldValue, NodeDefinition, ProjectCatalog } from '@facadeur/domain';
+import type {
+  FieldExposure,
+  FieldValue,
+  Node,
+  NodeDefinition,
+  ProjectCatalog,
+} from '@facadeur/domain';
 import { createExampleCatalog, exampleIds } from '@facadeur/examples';
 import { effectiveSchemaForDefinition } from '../src/controller/project/catalog/field-contract';
 import { CoreController } from '../src/controller/project/controller';
@@ -18,17 +24,15 @@ const imageId = exampleIds.components.image.definition;
 const cardId = testUuid8;
 
 function catalogWith(
-  exposure: FieldExposure,
-  imageInstanceExposure?: FieldExposure,
+  exposure?: FieldExposure,
   previewData: Record<string, FieldValue> = {},
 ): ProjectCatalog {
   const catalog = createExampleCatalog();
   const image = catalog.atoms[imageId]!;
-  const exposedImage: NodeDefinition = {
+  const imageWithDefaults: NodeDefinition = {
     ...image,
     config: {
       ...image.config,
-      fieldExposure: exposure,
       previewData: { fields: { src: 'asset-src', alt: 'asset-alt' } },
     },
   };
@@ -44,7 +48,10 @@ function catalogWith(
         additionalProperties: false,
       },
     },
-    config: { previewData: { fields: previewData } },
+    config: {
+      previewData: { fields: previewData },
+      ...(exposure ? { fieldExposure: { [testUuid11]: exposure } } : {}),
+    },
     root: {
       uuid: testUuid10,
       dom: {
@@ -54,10 +61,7 @@ function catalogWith(
             uuid: testUuid11,
             name: 'hero-media',
             dom: { tagName: 'div' },
-            config: {
-              definitionRef: imageId,
-              ...(imageInstanceExposure ? { fieldExposure: imageInstanceExposure } : {}),
-            },
+            config: { definitionRef: imageId },
           },
         ],
       },
@@ -65,14 +69,14 @@ function catalogWith(
   };
   return {
     ...catalog,
-    atoms: { ...catalog.atoms, [imageId]: exposedImage },
+    atoms: { ...catalog.atoms, [imageId]: imageWithDefaults },
     components: { ...catalog.components, [cardId]: card },
   };
 }
 
 describe('catalog field exposure', () => {
   it('adds nested fields and target preview defaults to the flat public contract', () => {
-    const catalog = catalogWith({ mode: 'flat' });
+    const catalog = catalogWith();
     const card = catalog.components[cardId]!;
     const effective = effectiveSchemaForDefinition(catalog, card);
 
@@ -90,7 +94,7 @@ describe('catalog field exposure', () => {
     });
   });
 
-  it('groups target fields under the instance name and lets the instance override the atom default', () => {
+  it('groups target fields under the instance name when configured on the parent definition', () => {
     const catalog = catalogWith({ mode: 'grouped' });
     const card = catalog.components[cardId]!;
     const grouped = effectiveSchemaForDefinition(catalog, card);
@@ -100,11 +104,13 @@ describe('catalog field exposure', () => {
     ]);
     expect(grouped.previewDefaults['hero-media']).toEqual({ src: 'asset-src', alt: 'asset-alt' });
 
-    const override = catalogWith({ mode: 'grouped' }, { mode: 'flat' });
+    const flat = catalogWith({ mode: 'flat' });
     expect(
       Object.keys(
-        effectiveSchemaForDefinition(override, override.components[cardId]!).schema
-          ?.properties as Record<string, unknown>,
+        effectiveSchemaForDefinition(flat, flat.components[cardId]!).schema?.properties as Record<
+          string,
+          unknown
+        >,
       ),
     ).toEqual(['eyebrow', 'src', 'alt', 'ratio']);
   });
@@ -139,7 +145,6 @@ describe('catalog field exposure', () => {
 
   it('maps manual aliases into the public contract and resolves the value on the referenced atom', () => {
     const catalog = catalogWith(
-      { mode: 'flat' },
       { mode: 'manual', fields: { src: 'eyebrow' } },
       { eyebrow: 'Bound by the parent' },
     );
@@ -160,7 +165,7 @@ describe('catalog field exposure', () => {
       name: 'Image source',
       value: 'bound-prop-src',
     };
-    const base = catalogWith({ mode: 'flat' });
+    const base = catalogWith();
     const image = base.atoms[imageId]!;
     (image.root.dom as { tagName: string; attributes?: Record<string, string> }).attributes = {
       src: `{prop:${prop.uuid}}`,
@@ -172,7 +177,6 @@ describe('catalog field exposure', () => {
     ).toBe('bound-prop-src');
 
     const overrideBase = catalogWith(
-      { mode: 'flat' },
       { mode: 'manual', fields: { src: 'eyebrow' } },
       { eyebrow: 'Parent supplied source' },
     );
@@ -241,7 +245,7 @@ describe('catalog field exposure', () => {
   });
 
   it('rejects recursive catalog composition', () => {
-    const cyclic = catalogWith({ mode: 'flat' });
+    const cyclic = catalogWith();
     const image = cyclic.atoms[imageId]!;
     (image.root.dom as { tagName: string; children?: (typeof image.root)[] }).children = [
       {
@@ -251,5 +255,136 @@ describe('catalog field exposure', () => {
       },
     ];
     expect(() => validateProjectCatalog(cyclic)).toThrow(/Cyclic catalog definition reference/);
+  });
+
+  it('configures two instances independently from the parent definition', () => {
+    const catalog = catalogWith({ mode: 'grouped' });
+    const card = catalog.components[cardId]!;
+    const first = card.root.dom.children?.[0];
+    if (!first) throw new Error('Expected the card to contain an image instance');
+    const second: Node = { ...first, uuid: testUuid13, name: 'secondary-image' };
+    const parent: NodeDefinition = {
+      ...card,
+      config: {
+        ...card.config,
+        fieldExposure: {
+          [first.uuid]: { mode: 'grouped', groupName: 'hero-media' },
+          [second.uuid]: { mode: 'manual', fields: { alt: 'secondaryAlt' } },
+        },
+      },
+      root: {
+        ...card.root,
+        dom: { ...card.root.dom, children: [first, second] },
+      },
+    };
+    const withTwoInstances = {
+      ...catalog,
+      components: { ...catalog.components, [cardId]: parent },
+    };
+
+    const effective = effectiveSchemaForDefinition(withTwoInstances, parent);
+    expect(Object.keys(effective.schema?.properties as Record<string, unknown>)).toEqual([
+      'eyebrow',
+      'hero-media',
+      'secondaryAlt',
+    ]);
+    expect(effective.origins.get('secondaryAlt')).toMatchObject({
+      kind: 'inherited',
+      instanceUuid: second.uuid,
+      fieldName: 'alt',
+    });
+    expect(() => validateProjectCatalog(withTwoInstances)).not.toThrow();
+  });
+
+  it('moves legacy node exposure to its parent map and ignores old definition defaults', () => {
+    const catalog = catalogWith();
+    const card = catalog.components[cardId]!;
+    const instance = card.root.dom.children?.[0];
+    if (!instance) throw new Error('Expected the card to contain an image instance');
+    const legacyInstance = {
+      ...instance,
+      config: {
+        ...instance.config,
+        fieldExposure: { mode: 'manual', fields: { src: 'eyebrow' } },
+      },
+      dom: {
+        ...instance.dom,
+        children: [
+          {
+            uuid: testUuid14,
+            dom: { tagName: 'span' },
+            config: { fieldExposure: { mode: 'grouped' } },
+          },
+        ],
+      },
+    } as unknown as Node;
+    const legacyCard: NodeDefinition = {
+      ...card,
+      root: {
+        ...card.root,
+        dom: { ...card.root.dom, children: [legacyInstance] },
+      },
+    };
+    const image = catalog.atoms[imageId]!;
+    const legacyImage = {
+      ...image,
+      config: {
+        ...image.config,
+        fieldExposure: { mode: 'grouped', groupName: 'legacy-default' },
+      },
+    } as unknown as NodeDefinition;
+    const legacyCatalog = {
+      ...catalog,
+      atoms: { ...catalog.atoms, [imageId]: legacyImage },
+      components: { ...catalog.components, [cardId]: legacyCard },
+    };
+
+    const normalized = validateProjectCatalog(legacyCatalog);
+    expect(normalized.components[cardId]!.config?.fieldExposure).toEqual({
+      [instance.uuid]: { mode: 'manual', fields: { src: 'eyebrow' } },
+    });
+    expect(normalized.components[cardId]!.root.dom.children?.[0]?.config).toEqual({
+      definitionRef: imageId,
+    });
+    expect(
+      normalized.components[cardId]!.root.dom.children?.[0]?.dom.children?.[0]?.config,
+    ).toBeUndefined();
+    expect(normalized.atoms[imageId]!.config?.fieldExposure).toBeUndefined();
+    expect(
+      Object.keys(
+        effectiveSchemaForDefinition(normalized, normalized.components[cardId]!).schema
+          ?.properties as Record<string, unknown>,
+      ),
+    ).toEqual(['eyebrow']);
+  });
+
+  it('writes Inspector exposure changes to the open definition by instance UUID', () => {
+    const catalog = catalogWith();
+    const core = new CoreController(catalog);
+    core.openDefinition(cardId);
+    core.node.preview.applyFormChange('node.fieldExposure.mode', 'manual', testUuid11);
+
+    const updated = core.getSnapshot().openDefinition!;
+    expect(updated.config?.fieldExposure?.[testUuid11]).toEqual({ mode: 'manual', fields: {} });
+    expect(updated.root.dom.children?.[0]?.config).toEqual({ definitionRef: imageId });
+  });
+
+  it('rejects parent exposure entries that do not target an embedded definition node', () => {
+    const catalog = catalogWith();
+    const card = catalog.components[cardId]!;
+    const invalid: ProjectCatalog = {
+      ...catalog,
+      components: {
+        ...catalog.components,
+        [cardId]: {
+          ...card,
+          config: { ...card.config, fieldExposure: { [card.root.uuid]: { mode: 'flat' } } },
+        },
+      },
+    };
+
+    expect(() => validateProjectCatalog(invalid)).toThrow(
+      /Field exposure requires a definition instance/,
+    );
   });
 });

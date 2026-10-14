@@ -2,8 +2,19 @@ import type { FieldValue } from '@facadeur/domain';
 
 export type InspectorFormChangeTarget =
   | { kind: 'definitionName'; value: string }
-  | { kind: 'definitionFieldExposureMode'; mode: 'flat' | 'grouped' | 'manual' }
-  | { kind: 'definitionFieldExposureFields'; value: Readonly<Record<string, string>> }
+  | {
+      kind: 'definitionStaticField';
+      field: string;
+      setting: 'isStatic' | 'value' | 'expose';
+      value: boolean | FieldValue;
+    }
+  | {
+      kind: 'definitionInstanceField';
+      instanceUuid: string;
+      field: string;
+      setting: 'isStatic' | 'value' | 'expose';
+      value: boolean | FieldValue;
+    }
   | { kind: 'nodeTagName'; nodeUuid: string; value: string }
   | { kind: 'nodeText'; nodeUuid: string; value: string }
   | { kind: 'nodeClassList'; nodeUuid: string; value: readonly string[] }

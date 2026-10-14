@@ -1,17 +1,28 @@
 'use client';
 
 import type { FieldValue, JsonSchemaField } from '@facadeur/core';
+import type { NodeDefinition, StaticFieldConfig } from '@facadeur/domain';
 import { fieldDisplayLabel } from '../controls/fields/field-label';
 import { SchemaValueForm } from '../controls/data/schema/SchemaValueForm';
 import { Stack } from '../components/layout';
 
+export function staticFieldConfigsForDefinition(definition: NodeDefinition) {
+  return Object.assign(
+    {},
+    definition.config?.staticFields,
+    ...Object.values(definition.config?.instanceFieldConfigs ?? {}),
+  );
+}
+
 export function CatalogPreviewFields({
   fields,
   previewFields,
+  staticFields = {},
   onWrite,
 }: {
   fields: readonly JsonSchemaField[];
   previewFields: Readonly<Record<string, FieldValue>>;
+  staticFields?: Readonly<Record<string, StaticFieldConfig>>;
   onWrite: (field: JsonSchemaField, value: FieldValue | undefined) => void;
 }) {
   if (!fields.length) {
@@ -28,7 +39,12 @@ export function CatalogPreviewFields({
         <PreviewField
           key={field.name}
           field={field}
-          value={previewFields[field.name]}
+          value={
+            staticFields[field.name]?.isStatic
+              ? staticFields[field.name]?.value
+              : previewFields[field.name]
+          }
+          disabled={staticFields[field.name]?.isStatic === true}
           onChange={(next) => onWrite(field, next)}
         />
       ))}
@@ -39,12 +55,22 @@ export function CatalogPreviewFields({
 function PreviewField({
   field,
   value,
+  disabled,
   onChange,
 }: {
   field: JsonSchemaField;
   value: FieldValue | undefined;
+  disabled: boolean;
   onChange: (value: FieldValue | undefined) => void;
 }) {
   const label = fieldDisplayLabel(field.name);
-  return <SchemaValueForm schema={field.schema} value={value} label={label} onChange={onChange} />;
+  return (
+    <SchemaValueForm
+      schema={field.schema}
+      value={value}
+      label={label}
+      disabled={disabled}
+      onChange={onChange}
+    />
+  );
 }

@@ -870,6 +870,22 @@ body.is-resizing-inspector {
   text-transform: uppercase;
 }
 
+.inspector-config-fields {
+  display: grid;
+  gap: 12px;
+}
+
+.inspector-config-field {
+  display: grid;
+  gap: 6px;
+}
+
+.inspector-config-field-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .property-subtabs {
   top: 36px;
   margin-top: 0;

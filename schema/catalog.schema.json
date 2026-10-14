@@ -285,8 +285,51 @@
                           }
                         }
                       }
-                    },
-                    "fieldExposure": {
+                    }
+                  }
+                }
+              }
+            },
+            "style": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "kind",
+                "uuid"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "ref",
+                  "type": "string"
+                },
+                "uuid": {
+                  "format": "uuid",
+                  "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                  "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                  "type": "string"
+                }
+              }
+            },
+            "config": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "previewData": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "properties": {
+                    "fields": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(.*)$": {}
+                      }
+                    }
+                  }
+                },
+                "fieldExposure": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
                       "anyOf": [
                         {
                           "additionalProperties": false,
@@ -344,101 +387,93 @@
                       ]
                     }
                   }
-                }
-              }
-            },
-            "style": {
-              "additionalProperties": false,
-              "type": "object",
-              "required": [
-                "kind",
-                "uuid"
-              ],
-              "properties": {
-                "kind": {
-                  "const": "ref",
-                  "type": "string"
                 },
-                "uuid": {
-                  "format": "uuid",
-                  "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
-                  "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
-                  "type": "string"
-                }
-              }
-            },
-            "config": {
-              "additionalProperties": false,
-              "type": "object",
-              "properties": {
-                "previewData": {
-                  "additionalProperties": false,
+                "staticFields": {
                   "type": "object",
-                  "properties": {
-                    "fields": {
+                  "patternProperties": {
+                    "^(.*)$": {
+                      "additionalProperties": false,
                       "type": "object",
-                      "patternProperties": {
-                        "^(.*)$": {}
+                      "required": [
+                        "isStatic"
+                      ],
+                      "properties": {
+                        "isStatic": {
+                          "const": true,
+                          "type": "boolean"
+                        },
+                        "value": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "array"
+                            },
+                            {
+                              "type": "object",
+                              "additionalProperties": true
+                            }
+                          ]
+                        },
+                        "expose": {
+                          "type": "boolean"
+                        }
                       }
                     }
                   }
                 },
-                "fieldExposure": {
-                  "anyOf": [
-                    {
-                      "additionalProperties": false,
+                "instanceFieldConfigs": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
                       "type": "object",
-                      "required": [
-                        "mode"
-                      ],
-                      "properties": {
-                        "mode": {
-                          "const": "flat",
-                          "type": "string"
-                        }
-                      }
-                    },
-                    {
-                      "additionalProperties": false,
-                      "type": "object",
-                      "required": [
-                        "mode"
-                      ],
-                      "properties": {
-                        "mode": {
-                          "const": "grouped",
-                          "type": "string"
-                        },
-                        "groupName": {
-                          "minLength": 1,
-                          "type": "string"
-                        }
-                      }
-                    },
-                    {
-                      "additionalProperties": false,
-                      "type": "object",
-                      "required": [
-                        "mode",
-                        "fields"
-                      ],
-                      "properties": {
-                        "mode": {
-                          "const": "manual",
-                          "type": "string"
-                        },
-                        "fields": {
+                      "patternProperties": {
+                        "^(.*)$": {
+                          "additionalProperties": false,
                           "type": "object",
-                          "patternProperties": {
-                            "^(.*)$": {
-                              "minLength": 1,
-                              "type": "string"
+                          "required": [
+                            "isStatic"
+                          ],
+                          "properties": {
+                            "isStatic": {
+                              "const": true,
+                              "type": "boolean"
+                            },
+                            "value": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "type": "array"
+                                },
+                                {
+                                  "type": "object",
+                                  "additionalProperties": true
+                                }
+                              ]
+                            },
+                            "expose": {
+                              "type": "boolean"
                             }
                           }
                         }
                       }
                     }
-                  ]
+                  }
                 }
               }
             }
@@ -722,8 +757,51 @@
                           }
                         }
                       }
-                    },
-                    "fieldExposure": {
+                    }
+                  }
+                }
+              }
+            },
+            "style": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "kind",
+                "uuid"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "ref",
+                  "type": "string"
+                },
+                "uuid": {
+                  "format": "uuid",
+                  "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                  "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                  "type": "string"
+                }
+              }
+            },
+            "config": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "previewData": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "properties": {
+                    "fields": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(.*)$": {}
+                      }
+                    }
+                  }
+                },
+                "fieldExposure": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
                       "anyOf": [
                         {
                           "additionalProperties": false,
@@ -781,101 +859,93 @@
                       ]
                     }
                   }
-                }
-              }
-            },
-            "style": {
-              "additionalProperties": false,
-              "type": "object",
-              "required": [
-                "kind",
-                "uuid"
-              ],
-              "properties": {
-                "kind": {
-                  "const": "ref",
-                  "type": "string"
                 },
-                "uuid": {
-                  "format": "uuid",
-                  "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
-                  "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
-                  "type": "string"
-                }
-              }
-            },
-            "config": {
-              "additionalProperties": false,
-              "type": "object",
-              "properties": {
-                "previewData": {
-                  "additionalProperties": false,
+                "staticFields": {
                   "type": "object",
-                  "properties": {
-                    "fields": {
+                  "patternProperties": {
+                    "^(.*)$": {
+                      "additionalProperties": false,
                       "type": "object",
-                      "patternProperties": {
-                        "^(.*)$": {}
+                      "required": [
+                        "isStatic"
+                      ],
+                      "properties": {
+                        "isStatic": {
+                          "const": true,
+                          "type": "boolean"
+                        },
+                        "value": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "array"
+                            },
+                            {
+                              "type": "object",
+                              "additionalProperties": true
+                            }
+                          ]
+                        },
+                        "expose": {
+                          "type": "boolean"
+                        }
                       }
                     }
                   }
                 },
-                "fieldExposure": {
-                  "anyOf": [
-                    {
-                      "additionalProperties": false,
+                "instanceFieldConfigs": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
                       "type": "object",
-                      "required": [
-                        "mode"
-                      ],
-                      "properties": {
-                        "mode": {
-                          "const": "flat",
-                          "type": "string"
-                        }
-                      }
-                    },
-                    {
-                      "additionalProperties": false,
-                      "type": "object",
-                      "required": [
-                        "mode"
-                      ],
-                      "properties": {
-                        "mode": {
-                          "const": "grouped",
-                          "type": "string"
-                        },
-                        "groupName": {
-                          "minLength": 1,
-                          "type": "string"
-                        }
-                      }
-                    },
-                    {
-                      "additionalProperties": false,
-                      "type": "object",
-                      "required": [
-                        "mode",
-                        "fields"
-                      ],
-                      "properties": {
-                        "mode": {
-                          "const": "manual",
-                          "type": "string"
-                        },
-                        "fields": {
+                      "patternProperties": {
+                        "^(.*)$": {
+                          "additionalProperties": false,
                           "type": "object",
-                          "patternProperties": {
-                            "^(.*)$": {
-                              "minLength": 1,
-                              "type": "string"
+                          "required": [
+                            "isStatic"
+                          ],
+                          "properties": {
+                            "isStatic": {
+                              "const": true,
+                              "type": "boolean"
+                            },
+                            "value": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "type": "array"
+                                },
+                                {
+                                  "type": "object",
+                                  "additionalProperties": true
+                                }
+                              ]
+                            },
+                            "expose": {
+                              "type": "boolean"
                             }
                           }
                         }
                       }
                     }
-                  ]
+                  }
                 }
               }
             }
@@ -1159,8 +1229,51 @@
                           }
                         }
                       }
-                    },
-                    "fieldExposure": {
+                    }
+                  }
+                }
+              }
+            },
+            "style": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "kind",
+                "uuid"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "ref",
+                  "type": "string"
+                },
+                "uuid": {
+                  "format": "uuid",
+                  "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
+                  "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
+                  "type": "string"
+                }
+              }
+            },
+            "config": {
+              "additionalProperties": false,
+              "type": "object",
+              "properties": {
+                "previewData": {
+                  "additionalProperties": false,
+                  "type": "object",
+                  "properties": {
+                    "fields": {
+                      "type": "object",
+                      "patternProperties": {
+                        "^(.*)$": {}
+                      }
+                    }
+                  }
+                },
+                "fieldExposure": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
                       "anyOf": [
                         {
                           "additionalProperties": false,
@@ -1218,101 +1331,93 @@
                       ]
                     }
                   }
-                }
-              }
-            },
-            "style": {
-              "additionalProperties": false,
-              "type": "object",
-              "required": [
-                "kind",
-                "uuid"
-              ],
-              "properties": {
-                "kind": {
-                  "const": "ref",
-                  "type": "string"
                 },
-                "uuid": {
-                  "format": "uuid",
-                  "pattern": "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$",
-                  "description": "RFC 4122 uuid for catalog entries, schema refs, and tree nodes.",
-                  "type": "string"
-                }
-              }
-            },
-            "config": {
-              "additionalProperties": false,
-              "type": "object",
-              "properties": {
-                "previewData": {
-                  "additionalProperties": false,
+                "staticFields": {
                   "type": "object",
-                  "properties": {
-                    "fields": {
+                  "patternProperties": {
+                    "^(.*)$": {
+                      "additionalProperties": false,
                       "type": "object",
-                      "patternProperties": {
-                        "^(.*)$": {}
+                      "required": [
+                        "isStatic"
+                      ],
+                      "properties": {
+                        "isStatic": {
+                          "const": true,
+                          "type": "boolean"
+                        },
+                        "value": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "array"
+                            },
+                            {
+                              "type": "object",
+                              "additionalProperties": true
+                            }
+                          ]
+                        },
+                        "expose": {
+                          "type": "boolean"
+                        }
                       }
                     }
                   }
                 },
-                "fieldExposure": {
-                  "anyOf": [
-                    {
-                      "additionalProperties": false,
+                "instanceFieldConfigs": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
                       "type": "object",
-                      "required": [
-                        "mode"
-                      ],
-                      "properties": {
-                        "mode": {
-                          "const": "flat",
-                          "type": "string"
-                        }
-                      }
-                    },
-                    {
-                      "additionalProperties": false,
-                      "type": "object",
-                      "required": [
-                        "mode"
-                      ],
-                      "properties": {
-                        "mode": {
-                          "const": "grouped",
-                          "type": "string"
-                        },
-                        "groupName": {
-                          "minLength": 1,
-                          "type": "string"
-                        }
-                      }
-                    },
-                    {
-                      "additionalProperties": false,
-                      "type": "object",
-                      "required": [
-                        "mode",
-                        "fields"
-                      ],
-                      "properties": {
-                        "mode": {
-                          "const": "manual",
-                          "type": "string"
-                        },
-                        "fields": {
+                      "patternProperties": {
+                        "^(.*)$": {
+                          "additionalProperties": false,
                           "type": "object",
-                          "patternProperties": {
-                            "^(.*)$": {
-                              "minLength": 1,
-                              "type": "string"
+                          "required": [
+                            "isStatic"
+                          ],
+                          "properties": {
+                            "isStatic": {
+                              "const": true,
+                              "type": "boolean"
+                            },
+                            "value": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "type": "array"
+                                },
+                                {
+                                  "type": "object",
+                                  "additionalProperties": true
+                                }
+                              ]
+                            },
+                            "expose": {
+                              "type": "boolean"
                             }
                           }
                         }
                       }
                     }
-                  ]
+                  }
                 }
               }
             }
@@ -2242,7 +2347,7 @@
         "required": [
           "id",
           "name",
-          "src"
+          "data"
         ],
         "properties": {
           "id": {
@@ -2254,9 +2359,27 @@
             "minLength": 1,
             "type": "string"
           },
-          "src": {
-            "minLength": 1,
-            "type": "string"
+          "data": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+              "viewBox",
+              "paths"
+            ],
+            "properties": {
+              "viewBox": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "paths": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              }
+            }
           },
           "category": {
             "minLength": 1,

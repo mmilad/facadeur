@@ -10,7 +10,6 @@ export interface PreviewData {
 export interface NodeConfig {
   readonly definitionRef?: Uuid;
   readonly previewData?: PreviewData;
-  readonly fieldExposure?: FieldExposure;
 }
 
 export type FieldExposure =
@@ -18,9 +17,23 @@ export type FieldExposure =
   | { readonly mode: 'grouped'; readonly groupName?: string }
   | { readonly mode: 'manual'; readonly fields: Readonly<Record<string, string>> };
 
+export interface StaticFieldConfig {
+  readonly isStatic: true;
+  readonly value?: FieldValue;
+  /** Static fields are private to the definition unless explicitly exposed. */
+  readonly expose?: boolean;
+}
+
 export interface DefinitionConfig {
   readonly previewData?: PreviewData;
-  readonly fieldExposure?: FieldExposure;
+  /** Per-instance field exposure, keyed by the embedding node UUID in this definition. */
+  readonly fieldExposure?: Readonly<Record<Uuid, FieldExposure>>;
+  /** Definition-owned static values, keyed by top-level schema field name. */
+  readonly staticFields?: Readonly<Record<string, StaticFieldConfig>>;
+  /** Static/exposed field settings for referenced components, keyed by embedding node UUID. */
+  readonly instanceFieldConfigs?: Readonly<
+    Record<Uuid, Readonly<Record<string, StaticFieldConfig>>>
+  >;
 }
 
 export interface Node {

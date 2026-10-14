@@ -213,25 +213,37 @@ export function FormField({
     }
     case 'object':
       return (
-        <ObjectField
-          label={field.label}
-          fields={field.fields}
-          value={isRecord(value) ? value : {}}
-          bindOptions={bindOptions}
-          onChange={(next, meta) => onChange(next, meta)}
-        />
+        <fieldset
+          disabled={field.disabled}
+          aria-disabled={field.disabled || undefined}
+          className={wrapperClassName}
+        >
+          <ObjectField
+            label={field.label}
+            fields={field.fields}
+            value={isRecord(value) ? value : {}}
+            bindOptions={bindOptions}
+            onChange={(next, meta) => onChange(next, meta)}
+          />
+        </fieldset>
       );
     case 'repeater':
       return (
-        <RepeaterField
-          label={field.label}
-          itemLabel={field.itemLabel}
-          itemFields={field.itemFields}
-          createItem={field.createItem}
-          value={Array.isArray(value) ? value.filter(isRecord) : []}
-          bindOptions={bindOptions}
-          onChange={(next, meta) => onChange(next, meta)}
-        />
+        <fieldset
+          disabled={field.disabled}
+          aria-disabled={field.disabled || undefined}
+          className={wrapperClassName}
+        >
+          <RepeaterField
+            label={field.label}
+            itemLabel={field.itemLabel}
+            itemFields={field.itemFields}
+            createItem={field.createItem}
+            value={Array.isArray(value) ? value.filter(isRecord) : []}
+            bindOptions={bindOptions}
+            onChange={(next, meta) => onChange(next, meta)}
+          />
+        </fieldset>
       );
   }
 }

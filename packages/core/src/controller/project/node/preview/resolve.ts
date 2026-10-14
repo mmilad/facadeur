@@ -1,7 +1,7 @@
 import type { FieldValue, Node, NodeDefinition, ProjectCatalog } from '@facadeur/domain';
 import type { ElementBuildConfig } from '@facadeur/domain';
 import { findDefinition } from '../../catalog/ops';
-import { mergePreviewFields } from './merge';
+import { lockedStaticFieldValues, mergePreviewFields, staticFieldValues } from './merge';
 import { effectiveSchemaForDefinition } from '../../catalog/field-contract';
 import { componentPropsForSchema } from '../../catalog/field-ids';
 import { readTokenTree } from '../../../style/tokens/global/tree';
@@ -144,27 +144,57 @@ function resolveNodeToElementBuildConfig(
       if (activeDefinitions.has(refDefinition.uuid)) {
         throw new Error(`Cyclic catalog definition reference at "${refDefinition.uuid}"`);
       }
-      const exposure = node.config?.fieldExposure ??
-        refDefinition.config?.fieldExposure ?? { mode: 'flat' as const };
+      const exposure = definition.config?.fieldExposure?.[node.uuid] ?? { mode: 'flat' as const };
+      const instanceFieldConfigs = definition.config?.instanceFieldConfigs?.[node.uuid] ?? {};
+      const hiddenStaticFields = new Set([
+        ...staticFieldsNotExposed(refDefinition),
+        ...Object.entries(instanceFieldConfigs)
+          .filter(([, config]) => config.isStatic && config.expose !== true)
+          .map(([field]) => field),
+      ]);
+      const inheritedFields = omitFields(parentFields, hiddenStaticFields);
       const exposureValues =
         exposure.mode === 'grouped'
-          ? objectField(parentFields[exposure.groupName || node.name || refDefinition.name])
+          ? omitFields(
+              objectField(inheritedFields[exposure.groupName || node.name || refDefinition.name]),
+              hiddenStaticFields,
+            )
           : exposure.mode === 'manual'
-            ? valuesMappedToChildFields(parentFields, exposure.fields)
-            : {};
+            ? omitMappedFields(
+                valuesMappedToChildFields(parentFields, exposure.fields),
+                hiddenStaticFields,
+                exposure.fields,
+              )
+            : inheritedFields;
       const instanceFields = {
-        ...(refDefinition.config?.previewData?.fields as Record<string, FieldValue> | undefined),
-        ...parentFields,
+        ...effectiveSchemaForDefinition(catalog, refDefinition).previewDefaults,
+        ...inheritedFields,
         ...exposureValues,
-        ...(node.config?.previewData?.fields as Record<string, FieldValue> | undefined),
-        ...(node.data as Record<string, FieldValue> | undefined),
+        ...omitFields(
+          node.config?.previewData?.fields as Record<string, FieldValue> | undefined,
+          staticFieldNames(refDefinition),
+        ),
+        ...omitFields(node.data as Record<string, FieldValue> | undefined, hiddenStaticFields),
       };
+      for (const [field, config] of Object.entries(instanceFieldConfigs)) {
+        if (!config.isStatic || config.value === undefined) continue;
+        if (config.expose !== true || !hasFieldPath(exposureValues, field)) {
+          instanceFields[field] = config.value;
+        }
+      }
       const instanceOverrides = {
-        ...parentFields,
+        ...inheritedFields,
         ...exposureValues,
-        ...(node.config?.previewData?.fields as Record<string, FieldValue> | undefined),
-        ...(node.data as Record<string, FieldValue> | undefined),
+        ...omitFields(
+          node.config?.previewData?.fields as Record<string, FieldValue> | undefined,
+          staticFieldNames(refDefinition),
+        ),
+        ...omitFields(node.data as Record<string, FieldValue> | undefined, hiddenStaticFields),
       };
+      for (const field of hiddenStaticFields) delete instanceOverrides[field];
+      for (const [field, config] of Object.entries(instanceFieldConfigs)) {
+        if (config.isStatic && config.expose !== true) delete instanceOverrides[field];
+      }
       const built = resolveNodeToElementBuildConfig(
         refDefinition.root,
         refDefinition,
@@ -183,10 +213,16 @@ function resolveNodeToElementBuildConfig(
 
   const definitionPreview = definition.config?.previewData?.fields ?? {};
   const fields = mergePreviewFields(
-    definitionPreview as Record<string, FieldValue>,
+    { ...(definitionPreview as Record<string, FieldValue>), ...staticFieldValues(definition) },
     node.data as Record<string, FieldValue> | undefined,
     parentFields,
   );
+  Object.assign(fields, lockedStaticFieldValues(definition));
+  const nodeOverrides = {
+    ...inheritedOverrides,
+    ...(node.data as Record<string, FieldValue> | undefined),
+  };
+  for (const field of staticFieldsNotExposed(definition)) delete nodeOverrides[field];
   const ctx: PreviewResolveContext = {
     catalog,
     fields,
@@ -194,10 +230,7 @@ function resolveNodeToElementBuildConfig(
       effectiveSchemaForDefinition(catalog, definition).schema,
       fields,
     ),
-    overrides: {
-      ...inheritedOverrides,
-      ...(node.data as Record<string, FieldValue> | undefined),
-    },
+    overrides: nodeOverrides,
   };
 
   const text = textFromNode(node, fields, ctx, resolveTokenText);
@@ -241,6 +274,51 @@ function resolveNodeToElementBuildConfig(
     ...(resolvedChildren.length ? { children: resolvedChildren } : {}),
     nodeUuid: node.uuid,
   };
+}
+
+function staticFieldNames(definition: NodeDefinition) {
+  return new Set(
+    Object.entries(definition.config?.staticFields ?? {})
+      .filter(([, field]) => field.isStatic)
+      .map(([name]) => name),
+  );
+}
+
+function staticFieldsNotExposed(definition: NodeDefinition) {
+  return new Set(
+    Object.entries(definition.config?.staticFields ?? {})
+      .filter(([, field]) => field.isStatic && field.expose !== true)
+      .map(([name]) => name),
+  );
+}
+
+function omitFields(
+  values: Readonly<Record<string, FieldValue>> | undefined,
+  fields: ReadonlySet<string>,
+) {
+  return Object.fromEntries(Object.entries(values ?? {}).filter(([name]) => !fields.has(name)));
+}
+
+function omitMappedFields(
+  values: Record<string, FieldValue>,
+  hiddenFields: ReadonlySet<string>,
+  mapping: Readonly<Record<string, string>>,
+) {
+  const hiddenAliases = new Set(
+    Object.entries(mapping)
+      .filter(([source]) => hiddenFields.has(source.split('.')[0]!))
+      .map(([, alias]) => alias),
+  );
+  return omitFields(values, hiddenAliases);
+}
+
+function hasFieldPath(values: Readonly<Record<string, FieldValue>>, path: string) {
+  let current: FieldValue | undefined = values;
+  for (const segment of path.split('.')) {
+    if (!current || typeof current !== 'object' || Array.isArray(current)) return false;
+    current = current[segment];
+  }
+  return current !== undefined;
 }
 
 function componentPropValues(

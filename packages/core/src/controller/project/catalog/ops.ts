@@ -5,6 +5,7 @@ import type {
   Node,
   NodeDefinition,
   ProjectCatalog,
+  StaticFieldConfig,
 } from '@facadeur/domain';
 import { isVoidHtmlTag } from '../../../document/html-tags';
 import { syncLayerStyleSelector } from './layer-styles';
@@ -182,17 +183,102 @@ export function patchNodeName(
   return syncLayerStyleSelector(renamed, nodeUuid, trimmed);
 }
 
-export function patchNodeFieldExposure(
+export function patchDefinitionFieldExposure(
   catalog: ProjectCatalog,
   definitionUuid: string,
   nodeUuid: string,
   fieldExposure: FieldExposure,
 ): ProjectCatalog {
-  return mutateNode(catalog, definitionUuid, nodeUuid, (node) => {
-    const config = { ...(node.config ?? {}) };
-    (config as { fieldExposure?: FieldExposure }).fieldExposure = fieldExposure;
-    (node as { config?: typeof config }).config = config;
-  });
+  const located = findDefinition(catalog, definitionUuid);
+  if (!located) return catalog;
+  const next = structuredClone(catalog) as ProjectCatalog;
+  const definition = next[located.kind][definitionUuid]!;
+  (next[located.kind] as Record<string, NodeDefinition>)[definitionUuid] = {
+    ...definition,
+    config: {
+      ...definition.config,
+      fieldExposure: {
+        ...definition.config?.fieldExposure,
+        [nodeUuid]: fieldExposure,
+      },
+    },
+  };
+  return next;
+}
+
+export function patchDefinitionStaticField(
+  catalog: ProjectCatalog,
+  definitionUuid: string,
+  fieldName: string,
+  config: StaticFieldConfig | undefined,
+  clearPreviewValue = false,
+): ProjectCatalog {
+  const located = findDefinition(catalog, definitionUuid);
+  if (!located) return catalog;
+  const next = structuredClone(catalog) as ProjectCatalog;
+  const definition = next[located.kind][definitionUuid]!;
+  const staticFields = { ...definition.config?.staticFields };
+  if (config) staticFields[fieldName] = config;
+  else delete staticFields[fieldName];
+
+  const previewData = previewDataAfterFieldChange(definition, fieldName, clearPreviewValue);
+  const nextConfig = { ...definition.config };
+  if (Object.keys(staticFields).length) nextConfig.staticFields = staticFields;
+  else delete nextConfig.staticFields;
+  if (previewData) nextConfig.previewData = previewData;
+  else delete nextConfig.previewData;
+  const nextDefinition = { ...definition };
+  if (Object.keys(nextConfig).length) nextDefinition.config = nextConfig;
+  else delete (nextDefinition as { config?: NodeDefinition['config'] }).config;
+  (next[located.kind] as Record<string, NodeDefinition>)[definitionUuid] = nextDefinition;
+  return next;
+}
+
+export function patchDefinitionInstanceField(
+  catalog: ProjectCatalog,
+  definitionUuid: string,
+  instanceUuid: string,
+  fieldName: string,
+  config: StaticFieldConfig | undefined,
+  clearPreviewValue = false,
+): ProjectCatalog {
+  const located = findDefinition(catalog, definitionUuid);
+  if (!located) return catalog;
+  const next = structuredClone(catalog) as ProjectCatalog;
+  const definition = next[located.kind][definitionUuid]!;
+  const instanceFields = { ...definition.config?.instanceFieldConfigs?.[instanceUuid] };
+  if (config) instanceFields[fieldName] = config;
+  else delete instanceFields[fieldName];
+  const instanceFieldConfigs = { ...definition.config?.instanceFieldConfigs };
+  if (Object.keys(instanceFields).length) instanceFieldConfigs[instanceUuid] = instanceFields;
+  else delete instanceFieldConfigs[instanceUuid];
+
+  const previewData = previewDataAfterFieldChange(definition, fieldName, clearPreviewValue);
+  const nextConfig = { ...definition.config };
+  if (Object.keys(instanceFieldConfigs).length)
+    nextConfig.instanceFieldConfigs = instanceFieldConfigs;
+  else delete nextConfig.instanceFieldConfigs;
+  if (previewData) nextConfig.previewData = previewData;
+  else delete nextConfig.previewData;
+  const nextDefinition = { ...definition };
+  if (Object.keys(nextConfig).length) nextDefinition.config = nextConfig;
+  else delete (nextDefinition as { config?: NodeDefinition['config'] }).config;
+  (next[located.kind] as Record<string, NodeDefinition>)[definitionUuid] = nextDefinition;
+  return next;
+}
+
+function previewDataAfterFieldChange(
+  definition: NodeDefinition,
+  fieldName: string,
+  clearPreviewValue: boolean,
+) {
+  const previewData = definition.config?.previewData;
+  if (!previewData || !clearPreviewValue) return previewData;
+  const { fields: _fields, ...extras } = previewData;
+  const fields = { ...previewData.fields };
+  delete fields[fieldName];
+  if (Object.keys(fields).length === 0 && Object.keys(extras).length === 0) return undefined;
+  return { ...extras, ...(Object.keys(fields).length ? { fields } : {}) };
 }
 
 export function resolveJsonSchemaForDefinition(

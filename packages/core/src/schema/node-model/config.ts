@@ -1,5 +1,6 @@
 import { Type } from '@sinclair/typebox';
 import { uuidSchema } from './uuid';
+import { fieldValueSchema } from '../fields';
 
 export const previewDataSchema = Type.Object(
   {
@@ -30,7 +31,6 @@ export const nodeConfigSchema = Type.Object(
   {
     definitionRef: Type.Optional(uuidSchema),
     previewData: Type.Optional(previewDataSchema),
-    fieldExposure: Type.Optional(fieldExposureSchema),
   },
   { additionalProperties: false },
 );
@@ -38,7 +38,36 @@ export const nodeConfigSchema = Type.Object(
 export const definitionConfigSchema = Type.Object(
   {
     previewData: Type.Optional(previewDataSchema),
-    fieldExposure: Type.Optional(fieldExposureSchema),
+    fieldExposure: Type.Optional(Type.Record(uuidSchema, fieldExposureSchema)),
+    staticFields: Type.Optional(
+      Type.Record(
+        Type.String({ minLength: 1 }),
+        Type.Object(
+          {
+            isStatic: Type.Literal(true),
+            value: Type.Optional(fieldValueSchema),
+            expose: Type.Optional(Type.Boolean()),
+          },
+          { additionalProperties: false },
+        ),
+      ),
+    ),
+    instanceFieldConfigs: Type.Optional(
+      Type.Record(
+        uuidSchema,
+        Type.Record(
+          Type.String({ minLength: 1 }),
+          Type.Object(
+            {
+              isStatic: Type.Literal(true),
+              value: Type.Optional(fieldValueSchema),
+              expose: Type.Optional(Type.Boolean()),
+            },
+            { additionalProperties: false },
+          ),
+        ),
+      ),
+    ),
   },
   { additionalProperties: false },
 );

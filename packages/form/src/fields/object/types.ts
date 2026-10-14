@@ -7,6 +7,7 @@ export type ObjectFieldConfig = {
   label: string;
   type: 'object';
   fields: readonly FormFieldConfig[];
+  disabled?: boolean;
 };
 
 export type ObjectFieldProps = {

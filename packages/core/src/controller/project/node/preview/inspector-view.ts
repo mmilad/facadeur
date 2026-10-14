@@ -1,9 +1,17 @@
-import type { FieldValue, Node, NodeDefinition, ProjectCatalog } from '@facadeur/domain';
+import type {
+  FieldValue,
+  Node,
+  NodeDefinition,
+  ProjectCatalog,
+  StaticFieldConfig,
+} from '@facadeur/domain';
 import { htmlTagOptions, isVoidHtmlTag } from '../../../../document/html-tags';
 import { fieldsFromJsonSchema } from '../../../../schema/json-schema-fields';
 import type { JsonSchemaField } from '../../../../schema/json-schema-fields';
 import { classListFromNode, findDefinition, findNodeByUuid } from '../../catalog/ops';
 import { effectiveSchemaForDefinition } from '../../catalog/field-contract';
+import { staticFieldValues } from './merge';
+import { configFieldsForDefinition } from './inspector-config-fields';
 import { inspectorInputsForNode } from '../config/inspector';
 import { designPropOptions, type DesignPropOption } from './prop-ref';
 import type { InspectorFormChangeTarget } from '../../inspector-form-change';
@@ -11,8 +19,6 @@ import type { InspectorFormChangeTarget } from '../../inspector-form-change';
 export type InspectorFormValue = {
   definition: {
     name: string;
-    fieldExposureMode: 'flat' | 'grouped' | 'manual';
-    fieldExposureFields: Record<string, string>;
   };
   node: {
     name: string;
@@ -54,6 +60,12 @@ export type InspectorFormModel = {
   nodeUuid: string;
   formValue: InspectorFormValue;
   fields: InspectorFormField[];
+  configFields: readonly {
+    readonly field: JsonSchemaField;
+    readonly config?: StaticFieldConfig;
+    readonly instanceUuid?: string;
+    readonly instanceLabel?: string;
+  }[];
   propOptions: readonly DesignPropOption[];
 };
 
@@ -114,11 +126,12 @@ export function buildInspectorFormModel(
   const referencedDefinition = node.config?.definitionRef
     ? findDefinition(catalog, node.config.definitionRef)?.definition
     : undefined;
-  const exposure = node.config?.fieldExposure ??
-    referencedDefinition?.config?.fieldExposure ?? { mode: 'flat' as const };
+  const exposure = definition.config?.fieldExposure?.[node.uuid] ?? { mode: 'flat' as const };
 
   const scopedDefinition = referencedDefinition ?? definition;
   const effective = effectiveSchemaForDefinition(catalog, scopedDefinition);
+  const configFields =
+    nodeUuid === definition.root.uuid ? configFieldsForDefinition(catalog, definition) : [];
   const schemaFields = effective.schema
     ? fieldsFromJsonSchema(effective.schema).map((field) =>
         field.schema['x-facadeur-options-source'] === 'icons'
@@ -138,16 +151,14 @@ export function buildInspectorFormModel(
     nodeUuid,
     referencedDefinition ? node.data : undefined,
   );
-  const previewFields = { ...effective.previewDefaults } as Record<string, FieldValue>;
+  const previewFields = { ...nodeInputs.values } as Record<string, FieldValue>;
+  if (nodeUuid === definition.root.uuid) {
+    Object.assign(previewFields, staticFieldValues(definition));
+  }
 
   const formValue: InspectorFormValue = {
     definition: {
       name: definition.name,
-      fieldExposureMode: definition.config?.fieldExposure?.mode ?? 'flat',
-      fieldExposureFields:
-        definition.config?.fieldExposure?.mode === 'manual'
-          ? { ...definition.config.fieldExposure.fields }
-          : {},
     },
     node: {
       name: node.name ?? '',
@@ -185,27 +196,6 @@ export function buildInspectorFormModel(
           label: 'Tag',
           options: tagOptions,
         },
-        ...(definition.kind === 'atom'
-          ? [
-              {
-                type: 'select' as const,
-                path: 'definition.fieldExposure.mode',
-                label: 'Default field exposure',
-                options: ['flat', 'grouped', 'manual'],
-              },
-              ...(definition.config?.fieldExposure?.mode === 'manual'
-                ? [
-                    {
-                      type: 'record' as const,
-                      path: 'definition.fieldExposure.fields',
-                      label: 'Default field mapping',
-                      keyLabel: 'Atom field',
-                      valueLabel: 'Exposed field',
-                    },
-                  ]
-                : []),
-            ]
-          : []),
       ],
     });
 
@@ -316,6 +306,7 @@ export function buildInspectorFormModel(
     nodeUuid,
     formValue,
     fields: sections,
+    configFields,
     propOptions: designPropOptions(catalog, effective.schema),
   };
 }
@@ -330,15 +321,38 @@ export function inspectorChangeTarget(
   if (path === 'definition.name') {
     return { kind: 'definitionName', value: String(value ?? '').trim() };
   }
-  if (path === 'definition.fieldExposure.mode') {
-    const mode = String(value ?? 'flat');
-    if (mode !== 'flat' && mode !== 'grouped' && mode !== 'manual') return null;
-    return { kind: 'definitionFieldExposureMode', mode };
-  }
-  if (path === 'definition.fieldExposure.fields') {
+  const staticFieldMatch =
+    /^definition\.staticFields\.([A-Za-z][A-Za-z0-9_-]*)\.(isStatic|value|expose)$/.exec(path);
+  if (staticFieldMatch) {
+    const [, field, setting] = staticFieldMatch;
+    if (!field || !setting) return null;
+    if (setting === 'isStatic' || setting === 'expose') {
+      return {
+        kind: 'definitionStaticField',
+        field,
+        setting,
+        value: value === true,
+      };
+    }
     return {
-      kind: 'definitionFieldExposureFields',
-      value: (value ?? {}) as Record<string, string>,
+      kind: 'definitionStaticField',
+      field,
+      setting: 'value',
+      value: value as FieldValue,
+    };
+  }
+  const instanceStaticFieldMatch =
+    /^definition\.instanceFieldConfigs\.([0-9a-f-]{36})\.(.+)\.(isStatic|value|expose)$/.exec(path);
+  if (instanceStaticFieldMatch) {
+    const [, instanceUuid, field, setting] = instanceStaticFieldMatch;
+    if (!instanceUuid || !field || !setting) return null;
+    return {
+      kind: 'definitionInstanceField',
+      instanceUuid,
+      field,
+      setting: setting as 'isStatic' | 'value' | 'expose',
+      value:
+        setting === 'isStatic' || setting === 'expose' ? value === true : (value as FieldValue),
     };
   }
   if (path === 'node.tagName') {

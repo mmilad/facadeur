@@ -1,3 +1,4 @@
+import type { FieldValue, JsonSchemaField } from '@facadeur/core';
 import type { FormFieldConfig, TransformableFieldOption } from '@facadeur/form';
 
 /** Editor-owned display data for the project and layer sidebar. */
@@ -56,11 +57,21 @@ export interface InspectorSidebarModel {
   };
   readonly headerFields: readonly FormFieldConfig[];
   readonly tabs: readonly {
-    readonly id: 'style' | 'properties' | 'previewData';
+    readonly id: 'style' | 'properties' | 'previewData' | 'config';
     readonly label: string;
     readonly sections: readonly {
       readonly label: string;
       readonly fields: readonly FormFieldConfig[];
+    }[];
+    readonly configFields?: readonly {
+      readonly field: JsonSchemaField;
+      readonly label: string;
+      readonly instanceUuid?: string;
+      readonly instanceLabel?: string;
+      readonly isStatic: boolean;
+      readonly value?: FieldValue;
+      readonly exposed: boolean;
+      readonly valueOptions: readonly TransformableFieldOption[];
     }[];
   }[];
   readonly values: Readonly<Record<string, unknown>>;

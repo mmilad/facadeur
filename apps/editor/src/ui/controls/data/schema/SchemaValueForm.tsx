@@ -35,18 +35,17 @@ export function SchemaValueForm({
   value,
   label,
   onChange,
+  disabled = false,
 }: {
   schema: JsonSchema;
   value: FieldValue | undefined;
   label: string;
   onChange: (value: FieldValue) => void;
+  disabled?: boolean;
 }) {
-  if (usesStructuralEditor(schema)) {
-    return (
-      <StructuralSchemaValueForm schema={schema} value={value} label={label} onChange={onChange} />
-    );
-  }
-  return (
+  const editor = usesStructuralEditor(schema) ? (
+    <StructuralSchemaValueForm schema={schema} value={value} label={label} onChange={onChange} />
+  ) : (
     <JsonSchemaContractEditor
       schema={schema}
       value={value}
@@ -54,6 +53,17 @@ export function SchemaValueForm({
       onChange={onChange}
       showAdvanced={schemaUsesAdvancedEditor(schema)}
     />
+  );
+  return disabled ? (
+    <fieldset
+      disabled
+      aria-disabled="true"
+      style={{ border: 0, margin: 0, minWidth: 0, opacity: 0.55, padding: 0 }}
+    >
+      {editor}
+    </fieldset>
+  ) : (
+    editor
   );
 }
 

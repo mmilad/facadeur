@@ -35,16 +35,32 @@ export function sanitizeFieldValueRecord(
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
-function sanitizeNode(node: Node): Node {
+function sanitizeNode(
+  node: Node,
+  legacyExposures: Record<string, unknown>,
+  collectExposure = true,
+): Node {
   const data = sanitizeFieldValueRecord(node.data as Record<string, unknown> | undefined);
   const properties = sanitizeFieldValueRecord(
     node.dom.properties as Record<string, unknown> | undefined,
   );
-  const children = node.dom.children?.map(sanitizeNode);
+  const children = node.dom.children?.map((child) =>
+    sanitizeNode(child, legacyExposures, collectExposure && !node.config?.definitionRef),
+  );
   const { properties: _properties, children: _children, ...domBase } = node.dom;
-  const { data: _data, ...nodeBase } = node;
+  const { data: _data, config: _nodeConfig, ...nodeBase } = node;
+  const originalConfig = node.config as Readonly<Record<string, unknown>> | undefined;
+  const nodeConfig = originalConfig ? { ...originalConfig } : undefined;
+  if (nodeConfig && Object.prototype.hasOwnProperty.call(nodeConfig, 'fieldExposure')) {
+    if (collectExposure && nodeConfig.fieldExposure !== undefined)
+      legacyExposures[node.uuid] = nodeConfig.fieldExposure;
+    delete nodeConfig.fieldExposure;
+  }
   return {
     ...nodeBase,
+    ...(nodeConfig && Object.keys(nodeConfig).length
+      ? { config: nodeConfig as Node['config'] }
+      : {}),
     ...(data ? { data } : {}),
     dom: {
       ...domBase,
@@ -55,28 +71,39 @@ function sanitizeNode(node: Node): Node {
 }
 
 function sanitizeDefinition(definition: NodeDefinition): NodeDefinition {
-  const root = sanitizeNode(definition.root);
-  const config = definition.config;
-  if (!config?.previewData) {
-    return root === definition.root ? definition : { ...definition, root };
+  const legacyExposures: Record<string, unknown> = {};
+  const root = sanitizeNode(definition.root, legacyExposures);
+  const originalConfig = definition.config as Readonly<Record<string, unknown>> | undefined;
+  const nextConfig = { ...(originalConfig ?? {}) };
+  const legacyDefinitionExposure = nextConfig.fieldExposure;
+  delete nextConfig.fieldExposure;
+  const rootExposureMap =
+    legacyDefinitionExposure &&
+    typeof legacyDefinitionExposure === 'object' &&
+    !Array.isArray(legacyDefinitionExposure) &&
+    !('mode' in legacyDefinitionExposure)
+      ? (legacyDefinitionExposure as Record<string, unknown>)
+      : {};
+  const fieldExposure = { ...legacyExposures, ...rootExposureMap };
+  if (Object.keys(fieldExposure).length) nextConfig.fieldExposure = fieldExposure;
+
+  const previewData = nextConfig.previewData as Readonly<Record<string, unknown>> | undefined;
+  if (previewData) {
+    const { fields: _fields, ...previewDataExtras } = previewData;
+    const fields = sanitizeFieldValueRecord(
+      previewData.fields as Record<string, unknown> | undefined,
+    );
+    const sanitizedPreviewData =
+      fields || Object.keys(previewDataExtras).length
+        ? { ...previewDataExtras, ...(fields ? { fields } : {}) }
+        : undefined;
+    if (sanitizedPreviewData) nextConfig.previewData = sanitizedPreviewData;
+    else delete nextConfig.previewData;
   }
-  const { fields: _fields, ...previewDataExtras } = config.previewData as Readonly<
-    Record<string, unknown>
-  >;
-  const fields = sanitizeFieldValueRecord(
-    config.previewData.fields as Record<string, unknown> | undefined,
-  );
-  const previewData =
-    fields || Object.keys(previewDataExtras).length
-      ? { ...previewDataExtras, ...(fields ? { fields } : {}) }
-      : undefined;
-  const nextConfig = { ...config };
-  if (previewData) nextConfig.previewData = previewData;
-  else delete nextConfig.previewData;
   return {
     ...definition,
     root,
-    config: nextConfig,
+    ...(Object.keys(nextConfig).length ? { config: nextConfig as NodeDefinition['config'] } : {}),
   };
 }
 

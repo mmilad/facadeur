@@ -10,7 +10,7 @@ import { Stack } from '../components/layout';
 import { Field } from '../components/feedback';
 import { Select } from '../controls/form-binding/index';
 import { JsonSchemaTypeEditor } from '../schema/JsonSchemaTypeEditor';
-import { CatalogPreviewFields } from './CatalogPreviewFields';
+import { CatalogPreviewFields, staticFieldConfigsForDefinition } from './CatalogPreviewFields';
 
 const INLINE_SCHEMA_VALUE = '__inline__';
 
@@ -257,6 +257,7 @@ export function CatalogSchemaStage({
                 <CatalogPreviewFields
                   fields={fields}
                   previewFields={previewFields}
+                  staticFields={staticFieldConfigsForDefinition(definition)}
                   onWrite={(field, value) => void writePreview(field, value)}
                 />
               </section>

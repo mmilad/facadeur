@@ -1,6 +1,15 @@
 import type { NodeDefinition as NodeDefinitionModel } from '@facadeur/domain';
+import { ids as exampleContentCardIds } from './idList';
 
 export const config: NodeDefinitionModel['config'] = {
+  fieldExposure: {
+    [exampleContentCardIds.nodes.div1]: {
+      mode: 'manual',
+      fields: { src: 'imageSrc', alt: 'imageAlt' },
+    },
+    [exampleContentCardIds.nodes.div3]: { mode: 'manual', fields: { text: 'title' } },
+    [exampleContentCardIds.nodes.div4]: { mode: 'manual', fields: { text: 'body' } },
+  },
   previewData: {
     fields: {
       title: 'Design with confidence',

@@ -9,6 +9,7 @@ export type { DomSpec } from './dom';
 export type {
   DefinitionConfig,
   FieldExposure,
+  StaticFieldConfig,
   Node,
   NodeConfig,
   NodeDefinition,

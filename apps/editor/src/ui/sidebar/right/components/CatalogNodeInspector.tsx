@@ -7,6 +7,7 @@ import type { InspectorSidebarModel } from '../../../../domain/sidebar/types';
 import type { EditorEvent } from '../../../../domain/sidebar/events';
 import { EditorEventType } from '../../../../domain/sidebar/events';
 import { LayerStylesEditor } from './LayerStylesEditor';
+import { DefinitionFieldSettings } from './DefinitionFieldSettings';
 
 export function CatalogNodeInspector({
   model,
@@ -15,7 +16,7 @@ export function CatalogNodeInspector({
   model: InspectorSidebarModel | null;
   onEvent: (event: EditorEvent) => void;
 }) {
-  const [activeTab, setActiveTab] = useState<'style' | 'properties' | 'previewData'>('style');
+  const [activeTab, setActiveTab] = useState<InspectorSidebarModel['tabs'][number]['id']>('style');
   if (!model) return <p className="inspector-empty">Select an element in the layer tree.</p>;
   const selectedTab = model.tabs.find((tab) => tab.id === activeTab) ?? model.tabs[0];
   const emitFieldChange = (path: string, value: unknown) => {
@@ -77,6 +78,33 @@ export function CatalogNodeInspector({
                 />
               </section>
             ))}
+            {tab.id === 'config'
+              ? groupConfigFields(tab.configFields ?? []).map((group) => (
+                  <section
+                    className="inspector-tab-section"
+                    aria-label={group.label}
+                    key={group.id}
+                  >
+                    <h3 className="inspector-tab-section-title">{group.label}</h3>
+                    <div className="inspector-config-fields">
+                      {group.fields.map((configField) => (
+                        <DefinitionFieldSettings
+                          key={`${configField.instanceUuid ?? 'root'}:${configField.field.name}`}
+                          configField={configField}
+                          onChange={(setting, value) =>
+                            emitFieldChange(
+                              configField.instanceUuid
+                                ? `definition.instanceFieldConfigs.${configField.instanceUuid}.${configField.field.name}.${setting}`
+                                : `definition.staticFields.${configField.field.name}.${setting}`,
+                              value,
+                            )
+                          }
+                        />
+                      ))}
+                    </div>
+                  </section>
+                ))
+              : null}
             {tab.id === 'style' ? (
               <LayerStylesEditor
                 key={model.formKey}
@@ -91,6 +119,35 @@ export function CatalogNodeInspector({
       ))}
     </div>
   );
+}
+
+function groupConfigFields(
+  fields: NonNullable<InspectorSidebarModel['tabs'][number]['configFields']>,
+) {
+  const groups = new Map<
+    string,
+    {
+      id: string;
+      label: string;
+      fields: (typeof fields)[number][];
+    }
+  >();
+  for (const field of fields) {
+    const id = field.instanceUuid ?? 'root';
+    let group = groups.get(id);
+    if (!group) {
+      group = {
+        id,
+        label: field.instanceUuid
+          ? `${field.instanceLabel} (${field.instanceUuid.slice(0, 8)})`
+          : 'Component fields',
+        fields: [],
+      };
+      groups.set(id, group);
+    }
+    group.fields.push(field);
+  }
+  return [...groups.values()];
 }
 
 function isFieldValue(value: unknown): value is FieldValue {

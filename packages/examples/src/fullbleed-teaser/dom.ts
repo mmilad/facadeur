@@ -20,7 +20,6 @@ export const root: Node = {
         },
         config: {
           definitionRef: exampleImageIds.definition,
-          fieldExposure: { mode: 'manual', fields: { src: 'imageSrc', alt: 'imageAlt' } },
         },
       },
       {
@@ -35,7 +34,6 @@ export const root: Node = {
               },
               config: {
                 definitionRef: exampleTextHeadingIds.definition,
-                fieldExposure: { mode: 'manual', fields: { text: 'title' } },
               },
             },
             {
@@ -45,7 +43,6 @@ export const root: Node = {
               },
               config: {
                 definitionRef: exampleTextBodyIds.definition,
-                fieldExposure: { mode: 'manual', fields: { text: 'body' } },
               },
             },
             {
@@ -55,10 +52,6 @@ export const root: Node = {
               },
               config: {
                 definitionRef: exampleLinkIds.definition,
-                fieldExposure: {
-                  mode: 'manual',
-                  fields: { label: 'ctaLabel', href: 'ctaHref' },
-                },
               },
             },
           ],

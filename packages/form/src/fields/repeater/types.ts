@@ -6,6 +6,7 @@ export type RepeaterFieldConfig = {
   name: string;
   label: string;
   type: 'repeater';
+  disabled?: boolean;
   itemLabel: string;
   itemFields: readonly FormFieldConfig[];
   createItem: Readonly<Record<string, unknown>>;

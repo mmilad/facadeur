@@ -1,7 +1,7 @@
 import type { FieldValue, NodeDefinition } from '@facadeur/domain';
 import { findNodeByUuid } from '../../catalog/ops';
 
-/** Defaults seed fields; inherited and node-level values override them in that order. */
+/** Merge preview defaults, inherited values, then node-level values. */
 export function mergePreviewFields(
   definitionPreview: Record<string, FieldValue> | undefined,
   nodeData: Record<string, FieldValue> | undefined,
@@ -17,9 +17,29 @@ export function previewFieldsForNode(
 ) {
   const node = findNodeByUuid(definition.root, nodeUuid) ?? definition.root;
   const definitionPreview = definition.config?.previewData?.fields ?? {};
-  return mergePreviewFields(
-    definitionPreview as Record<string, FieldValue>,
+  const resolved = mergePreviewFields(
+    { ...(definitionPreview as Record<string, FieldValue>), ...staticFieldValues(definition) },
     node.data as Record<string, FieldValue> | undefined,
     ancestorFields,
+  );
+  Object.assign(resolved, lockedStaticFieldValues(definition));
+  return resolved;
+}
+
+export function staticFieldValues(definition: NodeDefinition): Record<string, FieldValue> {
+  return Object.fromEntries(
+    Object.entries(definition.config?.staticFields ?? {}).flatMap(([name, field]) =>
+      field.isStatic && field.value !== undefined ? [[name, field.value]] : [],
+    ),
+  );
+}
+
+export function lockedStaticFieldValues(definition: NodeDefinition): Record<string, FieldValue> {
+  return Object.fromEntries(
+    Object.entries(definition.config?.staticFields ?? {}).flatMap(([name, field]) =>
+      field.isStatic && field.expose !== true && field.value !== undefined
+        ? [[name, field.value]]
+        : [],
+    ),
   );
 }

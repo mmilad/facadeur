@@ -23,13 +23,17 @@ import {
   findNodeByUuid,
   patchNodeData,
   patchNodeDataRecord,
-  patchNodeFieldExposure,
+  patchDefinitionFieldExposure,
   patchNodeName,
   patchNodeDomAttributes,
   patchNodeDomText,
   patchNodeStyleRecord,
   patchNodeTagName,
 } from './catalog/ops';
+import {
+  updateDefinitionInstanceField,
+  updateDefinitionStaticField,
+} from './catalog/static-fields';
 import {
   duplicateCatalogNode,
   insertCatalogNode,
@@ -235,7 +239,37 @@ export class CoreController implements CoreControllerHost {
   private patchNodeExposure(nodeUuid: string, exposure: FieldExposure) {
     if (!this.openDefinitionId) return;
     this.commitCatalog(
-      patchNodeFieldExposure(this.catalog, this.openDefinitionId, nodeUuid, exposure),
+      patchDefinitionFieldExposure(this.catalog, this.openDefinitionId, nodeUuid, exposure),
+    );
+  }
+
+  private patchStaticField(
+    field: string,
+    setting: 'isStatic' | 'value' | 'expose',
+    value: boolean | import('@facadeur/domain').FieldValue,
+  ) {
+    if (!this.openDefinitionId) return;
+    this.commitCatalog(
+      updateDefinitionStaticField(this.catalog, this.openDefinitionId, field, setting, value),
+    );
+  }
+
+  private patchInstanceStaticField(
+    instanceUuid: string,
+    field: string,
+    setting: 'isStatic' | 'value' | 'expose',
+    value: boolean | import('@facadeur/domain').FieldValue,
+  ) {
+    if (!this.openDefinitionId) return;
+    this.commitCatalog(
+      updateDefinitionInstanceField(
+        this.catalog,
+        this.openDefinitionId,
+        instanceUuid,
+        field,
+        setting,
+        value,
+      ),
     );
   }
 
@@ -318,6 +352,14 @@ export class CoreController implements CoreControllerHost {
   ) {
     const located = findDefinition(this.catalog, definitionUuid);
     if (!located) return;
+    if (located.definition.config?.staticFields?.[field]?.isStatic) return;
+    if (
+      Object.values(located.definition.config?.instanceFieldConfigs ?? {}).some(
+        (fields) => fields[field]?.isStatic,
+      )
+    ) {
+      return;
+    }
     const fields = {
       ...(located.definition.config?.previewData?.fields ?? {}),
     } as Record<string, import('@facadeur/domain').FieldValue>;
@@ -340,41 +382,17 @@ export class CoreController implements CoreControllerHost {
         this.patchDefinitionName(target.value);
         return;
       }
-      case 'definitionFieldExposureMode': {
-        const located = this.openDefinitionId
-          ? findDefinition(this.catalog, this.openDefinitionId)
-          : null;
-        if (!located || located.definition.kind !== 'atom') return;
-        const current = located.definition.config?.fieldExposure;
-        const fieldExposure: FieldExposure =
-          target.mode === 'manual'
-            ? {
-                mode: 'manual',
-                fields: current?.mode === 'manual' ? current.fields : {},
-              }
-            : { mode: target.mode };
-        this.patchDefinition(located.kind, located.definition.uuid, {
-          config: { ...located.definition.config, fieldExposure },
-        });
+      case 'definitionStaticField': {
+        this.patchStaticField(target.field, target.setting, target.value);
         return;
       }
-      case 'definitionFieldExposureFields': {
-        const located = this.openDefinitionId
-          ? findDefinition(this.catalog, this.openDefinitionId)
-          : null;
-        if (!located || located.definition.kind !== 'atom') return;
-        const fields: Record<string, string> = {};
-        for (const [atomField, exposedField] of Object.entries(target.value)) {
-          if (atomField.trim() && exposedField.trim()) {
-            fields[atomField.trim()] = exposedField.trim();
-          }
-        }
-        this.patchDefinition(located.kind, located.definition.uuid, {
-          config: {
-            ...located.definition.config,
-            fieldExposure: { mode: 'manual', fields },
-          },
-        });
+      case 'definitionInstanceField': {
+        this.patchInstanceStaticField(
+          target.instanceUuid,
+          target.field,
+          target.setting,
+          target.value,
+        );
         return;
       }
       case 'nodeTagName': {
@@ -406,7 +424,7 @@ export class CoreController implements CoreControllerHost {
         const definition = this.getSnapshot().openDefinition;
         const node = definition ? findNodeByUuid(definition.root, target.nodeUuid) : null;
         if (!node?.config?.definitionRef) return;
-        const current = node.config.fieldExposure;
+        const current = definition?.config?.fieldExposure?.[target.nodeUuid];
         let exposure: FieldExposure;
         if (target.mode === 'grouped') {
           const targetName = findDefinition(this.catalog, node.config.definitionRef)?.definition
