@@ -5,19 +5,14 @@ import {
   type TokenDefinition,
   type TokenTree,
 } from '@facadeur/core';
-import { createEditorSession } from '../src/domain/session';
-import { writeStyleDeclaration } from '../src/domain/edits/style-edit';
 import { withTokenBreakpoint } from '../src/domain/edits/token-edit';
 import { viewportEditContext } from '../src/domain/viewport/viewport-edit';
-import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
-import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
+import { exampleIds } from '@facadeur/examples';
 
-const documents = editorStandardCatalog();
-const phoneUuid = fixtureIds.catalog.breakpoints.phone;
-const tabletUuid = fixtureIds.catalog.breakpoints.tablet;
-const laptopUuid = fixtureIds.catalog.breakpoints.laptop;
-const desktopUuid = fixtureIds.catalog.breakpoints.desktop;
-const accentUuid = fixtureIds.tokens.color.accent.default;
+const phoneUuid = exampleIds.catalog.breakpoints.phone;
+const tabletUuid = exampleIds.catalog.breakpoints.tablet;
+const desktopUuid = exampleIds.catalog.breakpoints.desktop;
+const accentUuid = exampleIds.tokens.color.accent.default;
 
 describe('viewport edit context', () => {
   it('keeps writes on Base until a wider viewport is the edit target', () => {
@@ -45,49 +40,6 @@ describe('viewport edit context', () => {
     expect(
       viewportEditContext({ breakpoints, focusId: 'missing', editTarget: 'viewport' }).focus,
     ).toBeNull();
-  });
-
-  it('tracks focus without changing the edit target or the base style', () => {
-    const editor = createEditorSession({
-      documents,
-      design: editorStandardDesign(),
-    });
-    expect(editor.getSnapshot().focusViewportId).toBeNull();
-    expect(editor.getSnapshot().editTarget).toBe('base');
-    editor.openAsset('button', 'root');
-    editor.setFocusViewport(tabletUuid);
-    editor.selectNode('root');
-    expect(editor.getSnapshot().focusViewportId).toBe(tabletUuid);
-    expect(editor.getSnapshot().editTarget).toBe('base');
-    expect(editor.getSnapshot().selectedNodeId).toBe('root');
-
-    editor.setEditTarget('viewport');
-    const before = editor.getSnapshot().document;
-    const style = writeStyleDeclaration(
-      before.styles,
-      before.rootId,
-      { nodeId: before.rootId, breakpointId: tabletUuid },
-      'color',
-      'blue',
-    );
-    editor.execute({ type: 'setStyleBlock', style });
-    const after = editor.getSnapshot().document;
-    expect(after.styles?.declarations).toEqual(before.styles?.declarations);
-    expect(after.styles?.breakpoints?.[tabletUuid]?.declarations).toMatchObject({
-      paddingInline: fixtureTokenRef(fixtureIds.tokens.space.scale.step5),
-      color: 'blue',
-    });
-    expect(after.styles?.breakpoints?.[desktopUuid]).toBeUndefined();
-    const root = after.nodes.root;
-    expect(root && 'style' in root ? root.style : undefined).toBeUndefined();
-
-    editor.setEditTarget('base');
-    editor.execute({ type: 'setStyle', nodeId: 'root', property: 'color', value: 'red' });
-    const base = editor.getSnapshot().document;
-    const styled = base.nodes.root;
-    expect(styled && 'style' in styled ? styled.style : undefined).toEqual({ color: 'red' });
-    expect(base.styles?.breakpoints?.[tabletUuid]?.declarations?.color).toBe('blue');
-    expect(base.styles?.declarations?.color).toBe(fixtureTokenRef(testUuid36));
   });
 });
 

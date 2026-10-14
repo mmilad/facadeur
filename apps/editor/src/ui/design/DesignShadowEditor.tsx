@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   useTokenResolver,
   useTokenSearchValue,
-  useTokenValueLabel,
+  useTokenLabel,
 } from '../controls/fields/TokenPreviewContext';
 import {
   BooleanField,
@@ -10,7 +10,8 @@ import {
   TransformableField,
   type TransformableFieldOption,
 } from '@facadeur/form';
-import { Field, Inline, Stack } from '../form/index';
+import { Inline, Stack } from '../components/layout';
+import { Field } from '../components/feedback';
 import { ComboField, type ComboFieldItem } from '../combofield/ComboField';
 import {
   colorTransformOptions,
@@ -261,7 +262,7 @@ function ShadowObjectEditor({
 
 export function DesignShadowEditor(props: DesignShadowEditorProps) {
   const breakpoint = isBreakpoint(props);
-  const labelFor = useTokenValueLabel();
+  const labelFor = useTokenLabel();
   const searchValue = useTokenSearchValue();
   const resolvePreview = useTokenResolver();
   const [advancedDraft, setAdvancedDraft] = useState(() =>

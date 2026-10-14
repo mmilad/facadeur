@@ -8,7 +8,6 @@
   },
   "scripts": {
     "dev": "tsx scripts/dev.ts",
-    "dev:server": "pnpm --filter @facadeur/server dev",
     "dev:editor": "pnpm --filter @facadeur/editor dev",
     "build": "pnpm --filter @facadeur/editor build",
     "lint": "eslint . && prettier --check .",
@@ -18,10 +17,11 @@
     "test": "vitest run --passWithNoTests",
     "verify": "pnpm typecheck && pnpm lint && pnpm test",
     "schema": "tsx scripts/export-schema.ts",
-    "codegen": "echo \"codegen disabled until new catalog examples exist\" && exit 1",
+    "codegen": "pnpm --filter @facadeur/codegen codegen",
     "storybook": "pnpm --filter @facadeur/editor storybook"
   },
   "devDependencies": {
+    "@facadeur/examples": "workspace:*",
     "@sinclair/typebox": "^0.34.41",
     "@eslint/js": "^9.36.0",
     "@testing-library/jest-dom": "^7.0.1",

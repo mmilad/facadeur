@@ -9,9 +9,11 @@ export function AutocompleteSelectField({
   name,
   label,
   value,
+  selectedLabel,
   options,
   placeholder = 'Choose…',
   disabled,
+  invalid,
   onChange,
   onClear,
 }: AutocompleteSelectFieldProps) {
@@ -96,12 +98,13 @@ export function AutocompleteSelectField({
         type="button"
         disabled={disabled}
         aria-label={label}
+        aria-invalid={invalid || undefined}
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => (open ? setOpen(false) : showPicker())}
       >
         <span className={styles.selected}>
-          {selected?.label ?? placeholder}
+          {selectedLabel ?? selected?.label ?? placeholder}
           {selected?.description ? <small>{selected.description}</small> : null}
         </span>
         <span aria-hidden="true">▾</span>
@@ -162,6 +165,7 @@ export function AutocompleteSelectField({
                       role="option"
                       aria-selected={option.value === value}
                       data-highlighted={index === highlight || undefined}
+                      disabled={option.disabled}
                       onMouseEnter={() => setHighlight(index)}
                       onClick={() => select(option)}
                     >

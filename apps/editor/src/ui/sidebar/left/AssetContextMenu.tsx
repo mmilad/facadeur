@@ -1,0 +1,75 @@
+import { useLayoutEffect, type RefObject } from 'react';
+import type { SidebarAsset } from '../../../domain/sidebar/types';
+
+const MENU_MIN_WIDTH = 168;
+
+export function AssetContextMenu({
+  asset,
+  anchor,
+  menuRef,
+  onRename,
+  onSetCategory,
+  onDelete,
+  onClose,
+}: {
+  asset: SidebarAsset;
+  anchor: DOMRect;
+  menuRef: RefObject<HTMLDivElement | null>;
+  onRename: (assetId: string) => void;
+  onSetCategory: (assetId: string) => void;
+  onDelete: (assetId: string) => void;
+  onClose: () => void;
+}) {
+  const left = Math.min(Math.max(8, anchor.left), window.innerWidth - MENU_MIN_WIDTH - 8);
+  const top = Math.min(anchor.bottom + 4, window.innerHeight - 8);
+  useLayoutEffect(() => {
+    const menu = menuRef.current;
+    if (!menu) return;
+    const rect = menu.getBoundingClientRect();
+    menu.style.top = `${Math.max(8, Math.min(top, window.innerHeight - rect.height - 8))}px`;
+    menu.style.left = `${Math.max(8, Math.min(left, window.innerWidth - rect.width - 8))}px`;
+  }, [left, menuRef, top]);
+
+  return (
+    <div
+      ref={menuRef}
+      className="asset-context-menu layer-context-menu-floating"
+      style={{ top, left, minWidth: MENU_MIN_WIDTH }}
+      role="menu"
+      aria-label={`${asset.label} actions`}
+    >
+      <button
+        type="button"
+        role="menuitem"
+        onClick={() => {
+          onRename(asset.id);
+          onClose();
+        }}
+      >
+        Rename
+      </button>
+      {asset.kind === 'component' ? (
+        <button
+          type="button"
+          role="menuitem"
+          onClick={() => {
+            onSetCategory(asset.id);
+            onClose();
+          }}
+        >
+          Set category…
+        </button>
+      ) : null}
+      <button
+        type="button"
+        role="menuitem"
+        onClick={() => {
+          onDelete(asset.id);
+          onClose();
+        }}
+      >
+        Delete
+      </button>
+    </div>
+  );
+}

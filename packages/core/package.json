@@ -5,14 +5,13 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./legacy": "./src/legacy/index.ts",
-    "./node-model": "./src/schema/node-model/index.ts"
+    "./node-model": "./src/schema/node-model/index.ts",
+    "./default-breakpoint-ids": "./src/schema/default-breakpoint-ids.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@facadeur/examples": "workspace:*",
     "@facadeur/domain": "workspace:*",
     "@sinclair/typebox": "^0.34.41",
     "ajv": "^8.17.1"

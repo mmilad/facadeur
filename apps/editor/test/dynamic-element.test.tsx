@@ -1,8 +1,9 @@
 /** @vitest-environment jsdom */
 import { cleanup, render } from '@testing-library/react';
-import { emptyProjectCatalog, type ElementBuildConfig } from '@facadeur/core';
-import { act } from 'react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { CoreController, emptyProjectCatalog, type ElementBuildConfig } from '@facadeur/core';
+import { createPortal } from 'react-dom';
+import { act } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DynamicElement } from '../src/domain/viewport/dynamic-element';
 import { createViewportBoard } from '../src/domain/viewport/board';
 
@@ -11,9 +12,9 @@ import { createViewportBoard } from '../src/domain/viewport/board';
 let board: ReturnType<typeof createViewportBoard> | null = null;
 let boardHost: HTMLDivElement | null = null;
 
-afterEach(cleanup);
 afterEach(async () => {
-  if (board) await act(async () => board?.destroy());
+  await act(async () => cleanup());
+  if (board) board.destroy();
   board = null;
   boardHost?.remove();
   boardHost = null;
@@ -77,6 +78,48 @@ describe('DynamicElement', () => {
     expect(input?.value).toBe('after');
   });
 
+  it('normalizes lowercase HTML autocomplete attributes for React', () => {
+    const view = render(
+      <DynamicElement config={{ tagName: 'input', attributes: { autocomplete: 'off' } }} />,
+    );
+
+    expect(view.container.querySelector('input')?.getAttribute('autocomplete')).toBe('off');
+  });
+
+  it('renders controlled form elements as inert canvas previews', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const inputView = render(
+      <DynamicElement config={{ tagName: 'input', attributes: { value: 'Preview' } }} />,
+    );
+    const input = inputView.container.querySelector('input');
+    expect(input?.readOnly).toBe(true);
+
+    const textareaView = render(
+      <DynamicElement config={{ tagName: 'textarea', attributes: { value: 'Preview' } }} />,
+    );
+    expect(textareaView.container.querySelector('textarea')?.readOnly).toBe(true);
+
+    const selectView = render(
+      <DynamicElement
+        config={{
+          tagName: 'select',
+          attributes: { value: 'phone' },
+          children: [{ tagName: 'option', attributes: { value: 'phone' }, text: 'Phone' }],
+        }}
+      />,
+    );
+    expect(selectView.container.querySelector('select')?.value).toBe('phone');
+
+    const checkboxView = render(
+      <DynamicElement
+        config={{ tagName: 'input', attributes: { type: 'checkbox', checked: true } }}
+      />,
+    );
+    expect(checkboxView.container.querySelector('input')?.checked).toBe(true);
+    expect(error.mock.calls.flat().join(' ')).not.toContain('without an `onChange` handler');
+    error.mockRestore();
+  });
+
   it('updates bound text content without replacing the element', () => {
     const first: ElementBuildConfig = {
       tagName: 'h2',
@@ -103,16 +146,20 @@ describe('DynamicElement', () => {
     await act(async () => {
       board = createViewportBoard({
         parent: boardHost!,
-        buildConfig: first,
         title: 'Preview',
-        catalog: emptyProjectCatalog(),
+        breakpoints: new CoreController(emptyProjectCatalog()).getActiveBreakpoints(),
       });
     });
     const frameDocument = board!.frames()[0]!.host.contentDocument();
     expect(board!.frames()[0]!.host.element.style.pointerEvents).toBe('none');
+    const target = frameDocument.body;
+    const view = render(createPortal(<DynamicElement config={first} />, target));
     const image = frameDocument.querySelector('img');
     const next = { ...first, attributes: { src: '/next.png' } };
-    await act(async () => board?.updateBuildConfig(next, 'Updated preview'));
+    await act(async () => {
+      view.rerender(createPortal(<DynamicElement config={next} />, target));
+    });
+    board!.setTitle('Updated preview');
 
     expect(frameDocument.querySelector('img')).toBe(image);
     expect(image?.getAttribute('src')).toBe('/next.png');

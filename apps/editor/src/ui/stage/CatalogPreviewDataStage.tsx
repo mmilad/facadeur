@@ -1,21 +1,21 @@
 'use client';
 
 import type { AppService } from '../../app-service';
-import { catalogDefinitionDisplayName } from '../../domain/catalog/display-name';
-import type { EditorSession } from '../../domain/session';
+import type { EditorEvent } from '../../domain/sidebar/events';
+import { EditorEventType } from '../../domain/sidebar/events';
 import { CatalogPreviewFields } from './CatalogPreviewFields';
 
 /** Edits definition-level preview defaults (`config.previewData.fields`). */
 export function CatalogPreviewDataStage({
   app,
-  session,
+  onEvent,
 }: {
   app: AppService;
-  session: EditorSession;
+  onEvent: (event: EditorEvent) => void;
 }) {
   const coreSnap = app.getCoreSnapshot();
   const definition = coreSnap.openDefinition;
-  const { fields } = app.core.node.config.inspectorInputs();
+  const { fields } = app.getInspectorInputs();
   const previewFields = definition?.config?.previewData?.fields ?? {};
 
   if (!definition) {
@@ -26,7 +26,7 @@ export function CatalogPreviewDataStage({
     );
   }
 
-  const title = catalogDefinitionDisplayName(coreSnap.catalog, definition);
+  const title = app.getDefinitionDisplayName(definition.uuid) ?? definition.name;
 
   return (
     <section
@@ -51,8 +51,12 @@ export function CatalogPreviewDataStage({
             <CatalogPreviewFields
               fields={fields}
               previewFields={previewFields}
-              onWrite={(field, value) => void app.patchPreviewField(field.name, value)}
-              onInvalid={(message) => session.setNotice(message, 'error')}
+              onWrite={(field, value) =>
+                onEvent({
+                  type: EditorEventType.PreviewFieldSet,
+                  data: { field: field.name, value },
+                })
+              }
             />
           </section>
         </div>

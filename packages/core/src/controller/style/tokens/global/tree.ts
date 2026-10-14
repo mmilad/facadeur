@@ -7,23 +7,22 @@ import { UUID_PATTERN } from '../../../../document/ids';
 import type {
   DesignTokenFamily,
   DesignTokenRecord,
-  DesignTokenSet,
   DesignTokenUuid,
   FontFamilyDefinition,
 } from '@facadeur/domain';
 import { Value } from '@sinclair/typebox/value';
 import { assertBreakpointValue, assertTokenValue } from './values';
 import { tokenCssPropertyName } from './selector';
-import type {
-  TokenTier,
-  TokenTree,
-  TokenDefinition,
-  IndexedToken,
-  IndexedGroup,
-  TokenIndex,
-} from '../types';
+import type { TokenTier, TokenTree, TokenDefinition, IndexedToken, TokenIndex } from '../types';
 
-const FAMILIES: readonly DesignTokenFamily[] = ['color', 'space', 'radius', 'shadow', 'type', 'font'];
+const FAMILIES: readonly DesignTokenFamily[] = [
+  'color',
+  'space',
+  'radius',
+  'shadow',
+  'type',
+  'font',
+];
 const TIERS = new Set(['primitive', 'semantic', 'component']);
 const UUID_KEY = new RegExp(UUID_PATTERN.source, 'i');
 
@@ -101,14 +100,20 @@ export function readTokenTree(tree: unknown): TokenIndex {
 }
 
 export function setTokenInTree(tree: TokenTree, family: DesignTokenFamily, token: TokenDefinition) {
-  const next = structuredClone(tree) as Record<DesignTokenFamily, Record<string, DesignTokenRecord>>;
+  const next = structuredClone(tree) as Record<
+    DesignTokenFamily,
+    Record<string, DesignTokenRecord>
+  >;
   next[family][token.uuid] = canonicalToken(parseToken(family, token.uuid, token));
   readTokenTree(next);
   return next as TokenTree;
 }
 
 export function removeTokenFromTree(tree: TokenTree, family: DesignTokenFamily, uuid: string) {
-  const next = structuredClone(tree) as Record<DesignTokenFamily, Record<string, DesignTokenRecord>>;
+  const next = structuredClone(tree) as Record<
+    DesignTokenFamily,
+    Record<string, DesignTokenRecord>
+  >;
   const existing = next[family][uuid];
   if (!existing) throw new DocumentError('token-missing', `Token "${uuid}" does not exist`);
   delete next[family][uuid];
@@ -121,7 +126,10 @@ export function setGroupInTree(
   from: string,
   group: string,
 ): TokenTree {
-  const next = structuredClone(tree) as Record<DesignTokenFamily, Record<string, DesignTokenRecord>>;
+  const next = structuredClone(tree) as Record<
+    DesignTokenFamily,
+    Record<string, DesignTokenRecord>
+  >;
   for (const [uuid, token] of Object.entries(next[family])) {
     if (token.group === from) next[family][uuid] = { ...token, group };
   }
@@ -232,7 +240,10 @@ function readTier(extensions: unknown, uuid: string): TokenTier | undefined {
   const tier = extensions.facadeur.tier;
   if (tier === undefined) return undefined;
   if (typeof tier !== 'string' || !TIERS.has(tier)) {
-    throw new DocumentError('token-schema', `Token "${uuid}" tier must be primitive, semantic, or component`);
+    throw new DocumentError(
+      'token-schema',
+      `Token "${uuid}" tier must be primitive, semantic, or component`,
+    );
   }
   return tier as TokenTier;
 }

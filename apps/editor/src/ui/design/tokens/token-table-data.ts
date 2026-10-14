@@ -1,5 +1,5 @@
-import { previewDesignTokenCssVar } from '../../../domain/component-tokens';
-import { matchesSearch } from '../../form/types/options';
+import { previewDesignTokenCssVar } from '@facadeur/style-engine';
+import { matchesSearch } from './token-search';
 
 export interface TokenTableItem {
   path: string;

@@ -1,3 +1,5 @@
+import { renderBoxSizingReset } from '@facadeur/style-engine';
+
 /**
  * One same-origin iframe. Callers read the frame document only through this
  * object, so a later host can isolate the frame without changing the editor.
@@ -18,7 +20,6 @@ function contentHeight(frameDocument: Document): number {
   }
   return bottom;
 }
-
 const FRAME_SHELL_CSS = `
   html, body { margin: 0; background: #fffcf7; }
   body { overflow: hidden; }
@@ -58,8 +59,6 @@ export interface FrameHost {
   /** Window inside the frame, for hit testing and layout. */
   contentWindow(): Window;
   setWidth(width: number): void;
-  /** Preview alignment. Legacy innerPaddingPx is accepted but ignored. */
-  setPreviewChrome(options: { innerPaddingPx: number; contentAlign: 'start' | 'center' }): void;
   /** Grow the iframe to its content. Returns the applied height in CSS pixels. */
   syncHeight(): number;
   /** Insert the iframe and prepare its document. */
@@ -79,7 +78,6 @@ export function createFrameHost(options: FrameHostOptions): FrameHost {
   element.style.border = '0';
   element.style.width = `${options.width}px`;
   let width = options.width;
-  let previewChrome = { innerPaddingPx: 0, contentAlign: 'start' as 'start' | 'center' };
   let mounted = false;
   let destroyed = false;
   let observer: ResizeObserver | undefined;
@@ -117,24 +115,15 @@ export function createFrameHost(options: FrameHostOptions): FrameHost {
     if (frameDocument.getElementById(SHELL_ID)) return;
     const style = frameDocument.createElement('style');
     style.id = SHELL_ID;
-    style.textContent = FRAME_SHELL_CSS;
+    style.textContent = `${renderBoxSizingReset()}\n${FRAME_SHELL_CSS}`;
     head.append(style);
   }
 
-  function applyPreviewChrome(frameDocument: Document): void {
+  function applyFrameDefaults(frameDocument: Document): void {
     const body = frameDocument.body;
     if (!body) return;
     body.style.boxSizing = 'border-box';
     body.style.padding = '0px';
-    if (previewChrome.contentAlign === 'center') {
-      body.style.display = 'flex';
-      body.style.flexDirection = 'column';
-      body.style.alignItems = 'center';
-    } else {
-      body.style.display = '';
-      body.style.flexDirection = '';
-      body.style.alignItems = '';
-    }
   }
 
   function syncHeight(): number {
@@ -187,17 +176,8 @@ export function createFrameHost(options: FrameHostOptions): FrameHost {
       parent.append(element);
       mounted = true;
       ensureShell(contentDocument());
-      applyPreviewChrome(contentDocument());
+      applyFrameDefaults(contentDocument());
       watch(contentDocument());
-    },
-    setPreviewChrome(options) {
-      previewChrome = {
-        innerPaddingPx: 0,
-        contentAlign: options.contentAlign === 'center' ? 'center' : 'start',
-      };
-      if (!mounted || destroyed) return;
-      applyPreviewChrome(contentDocument());
-      syncHeight();
     },
     destroy() {
       if (destroyed) return;

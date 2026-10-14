@@ -1,137 +1,113 @@
 /**
  * @vitest-environment jsdom
  */
-import { act } from 'react';
-import { createRoot, type Root } from 'react-dom/client';
-import { fireEvent } from '@testing-library/react';
+import { cleanup, fireEvent, render } from '@testing-library/react';
+import { useSyncExternalStore } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
+import { createExampleCatalog, exampleIds } from '@facadeur/examples';
+import { fontFamilyTokens } from '@facadeur/core';
+import { createAppService } from '../src/app-service';
+import { createInMemoryCatalogPort } from '../src/domain/project/in-memory-catalog-port';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
-import { App } from '../src/ui/shell/EditorShell';
-import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
-import { openSettingsDomain } from './settings-navigation';
+import { FontsDomainPanel } from '../src/ui/design/FontsDomainPanel';
 
-const documents = editorStandardCatalog();
-
-function setInput(input: HTMLInputElement, value: string) {
-  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
-  setter?.call(input, value);
-  input.dispatchEvent(new Event('input', { bubbles: true }));
-  input.dispatchEvent(new Event('change', { bubbles: true }));
+function FontsPanel({
+  session,
+  app,
+}: {
+  session: EditorSession;
+  app: ReturnType<typeof createAppService>;
+}) {
+  const snap = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
+  return <FontsDomainPanel snap={snap} onEvent={(event) => void app.dispatchEditorEvent(event)} />;
 }
 
 describe('fonts domain panel', () => {
-  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
-  let root: Root | null = null;
-  let host: HTMLDivElement | null = null;
+  let session: EditorSession | null = null;
+  let app: ReturnType<typeof createAppService> | null = null;
 
   afterEach(() => {
-    act(() => {
-      root?.unmount();
-    });
-    host?.remove();
-    root = null;
-    host = null;
+    cleanup();
+    session?.destroy();
+    session = null;
+    app = null;
   });
 
-  async function openFonts(session: EditorSession) {
-    host = document.createElement('div');
-    document.body.append(host);
-    root = createRoot(host);
-    await act(async () => {
-      root?.render(<App session={session} />);
+  function openFonts() {
+    session = createEditorSession({ projectCatalog: createExampleCatalog() });
+    app = createAppService({
+      core: session.core,
+      session,
+      catalogPort: createInMemoryCatalogPort(() => session!.core.getSnapshot().catalog),
     });
-    await openSettingsDomain(host!, 'fonts');
+    return render(<FontsPanel session={session} app={app} />);
   }
 
-  it('adds a font with a valid id and default stack', async () => {
-    const session = createEditorSession({
-      documents,
-      design: editorStandardDesign(),
+  it('adds a font with a valid id and default stack', () => {
+    const view = openFonts();
+    fireEvent.click(view.container.querySelector('button[name="add-font-trigger"]')!);
+    fireEvent.change(document.querySelector('input[name="new-font-label"]')!, {
+      target: { value: 'Display' },
     });
-    await openFonts(session);
+    fireEvent.click(document.querySelector('button[name="add-font"]')!);
 
-    await act(async () => {
-      (host!.querySelector('button[name="add-font-trigger"]') as HTMLButtonElement).click();
-    });
-    const idInput = document.querySelector('input[name="new-font-id"]') as HTMLInputElement;
-    await act(async () => setInput(idInput, 'display'));
-    await act(async () => {
-      (document.querySelector('button[name="add-font"]') as HTMLButtonElement).click();
-    });
-
-    const snap = session.getSnapshot();
-    expect(snap.design.fonts.map((font) => font.id)).toContain('display');
-    const display = snap.design.fonts.find((font) => font.id === 'display');
-    expect(display).toMatchObject({
-      family: 'display',
+    const display = fontFamilyTokens(session!.getSnapshot().design.tokens).find(
+      (font) => font.label === 'Display',
+    );
+    expect(display?.value).toMatchObject({
+      family: 'Display',
       fallbacks: ['sans-serif'],
-      source: { type: 'google', family: 'display' },
+      source: { type: 'google', family: 'Display' },
     });
-    expect(host!.querySelector('input[name="font-display-family"]')).toBeInstanceOf(
+    expect(view.container.querySelector('input[name^="font-"][name$="-family"]')).toBeInstanceOf(
       HTMLInputElement,
     );
   });
 
-  it('blocks removing a font that typography tokens still reference', async () => {
-    const session = createEditorSession({
-      documents,
-      design: editorStandardDesign(),
-    });
-    await openFonts(session);
+  it('blocks removing a font that typography tokens still reference', () => {
+    const view = openFonts();
+    const uuid = exampleIds.tokens.font.inter;
+    fireEvent.click(view.container.querySelector(`button[name="remove-font-${uuid}"]`)!);
 
-    await act(async () => {
-      (host!.querySelector('button[name="remove-font-sans"]') as HTMLButtonElement).click();
-    });
-
-    expect(session.getSnapshot().design.fonts.map((font) => font.id)).toContain('sans');
-    expect(session.getSnapshot().notice?.tone).toBe('error');
-    expect(session.getSnapshot().notice?.text).toMatch(/\{font\.sans\}/);
-  });
-
-  it('rejects fallbacks that do not end on a generic family', async () => {
-    const session = createEditorSession({
-      documents,
-      design: editorStandardDesign(),
-    });
-    await openFonts(session);
-
-    await act(async () => {
-      (host!.querySelector('button[name="font-details-sans"]') as HTMLButtonElement).click();
-    });
-    const fallbacks = host!.querySelector('input[name="font-sans-fallbacks"]') as HTMLInputElement;
-    await act(async () => {
-      fireEvent.change(fallbacks, { target: { value: 'Helvetica' } });
-      fireEvent.blur(fallbacks);
-    });
-
-    expect(session.getSnapshot().design.fonts[0]?.fallbacks).toEqual(['system-ui', 'sans-serif']);
-    expect(session.getSnapshot().notice?.tone).toBe('error');
-    expect(session.getSnapshot().notice?.text).toMatch(/generic family/i);
-  });
-
-  it('searches resource metadata and expands the compact detail row', async () => {
-    const session = createEditorSession({
-      documents,
-      design: editorStandardDesign(),
-    });
-    await openFonts(session);
-
-    await act(async () => {
-      (host!.querySelector('button[name="font-details-sans"]') as HTMLButtonElement).click();
-    });
-    const search = host!.querySelector('input[name="font-search"]') as HTMLInputElement;
-    await act(async () => {
-      fireEvent.change(search, { target: { value: 'google' } });
-    });
-    expect(host!.querySelectorAll('.font-row')).toHaveLength(1);
-    expect(host!.textContent).toContain('Google · Inter');
-
-    await act(async () => {
-      (host!.querySelector('button[name="font-details-sans"]') as HTMLButtonElement).click();
-    });
-    expect(host!.querySelector('input[name="font-sans-fallbacks"]')).toBeNull();
     expect(
-      host!.querySelector('button[aria-label="Remove font sans"]')?.getAttribute('title'),
-    ).toBe('Remove font sans');
+      fontFamilyTokens(session!.getSnapshot().design.tokens).map((font) => font.uuid),
+    ).toContain(uuid);
+    expect(session!.getSnapshot().notice?.tone).toBe('error');
+    expect(session!.getSnapshot().notice?.text).toContain(uuid);
+  });
+
+  it('rejects fallbacks that do not end on a generic family', () => {
+    const view = openFonts();
+    const uuid = exampleIds.tokens.font.inter;
+    fireEvent.click(view.container.querySelector(`button[name="font-details-${uuid}"]`)!);
+    const fallbacks = view.container.querySelector<HTMLInputElement>(
+      `input[name="font-${uuid}-fallbacks"]`,
+    )!;
+    fireEvent.change(fallbacks, { target: { value: 'Helvetica' } });
+    fireEvent.blur(fallbacks);
+
+    expect(
+      fontFamilyTokens(session!.getSnapshot().design.tokens).find((font) => font.uuid === uuid)
+        ?.value.fallbacks,
+    ).toEqual(['system-ui', 'sans-serif']);
+    expect(session!.getSnapshot().notice?.tone).toBe('error');
+    expect(session!.getSnapshot().notice?.text).toMatch(/generic family/i);
+  });
+
+  it('searches resource metadata and expands the compact detail row', () => {
+    const view = openFonts();
+    const uuid = exampleIds.tokens.font.inter;
+    fireEvent.click(view.container.querySelector(`button[name="font-details-${uuid}"]`)!);
+    fireEvent.change(view.container.querySelector('input[name="font-search"]')!, {
+      target: { value: 'google' },
+    });
+    expect(view.container.querySelectorAll('.font-row')).toHaveLength(1);
+    expect(view.container.textContent).toContain('Google · Inter');
+
+    fireEvent.click(view.container.querySelector(`button[name="font-details-${uuid}"]`)!);
+    expect(view.container.querySelector(`input[name="font-${uuid}-fallbacks"]`)).toBeNull();
+    expect(view.container.querySelector(`button[name="remove-font-${uuid}"]`)?.title).toBe(
+      'Remove font Inter',
+    );
   });
 });

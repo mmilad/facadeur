@@ -62,7 +62,6 @@ export function Table({
   emptyState,
   tableClassName,
 }: TableProps) {
-  console.log('Table', rows, groups);
   return (
     <section className="settings-table">
       <div className="settings-table-toolbar">

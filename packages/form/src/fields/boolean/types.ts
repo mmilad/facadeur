@@ -1,3 +1,5 @@
+import type { InputHTMLAttributes } from 'react';
+
 export type BooleanFieldConfig = {
   name: string;
   label: string;
@@ -5,8 +7,13 @@ export type BooleanFieldConfig = {
   disabled?: boolean;
 };
 
-export type BooleanFieldProps = Omit<BooleanFieldConfig, 'label' | 'type'> & {
+export type BooleanFieldProps = Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  'id' | 'name' | 'type' | 'checked' | 'value' | 'onChange'
+> & {
   id: string;
+  name?: string;
   value: boolean;
+  invalid?: boolean;
   onChange: (next: boolean) => void;
 };

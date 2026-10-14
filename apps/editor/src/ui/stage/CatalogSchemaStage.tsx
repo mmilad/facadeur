@@ -2,12 +2,13 @@
 
 import type { FieldValue } from '@facadeur/core';
 import type { JsonSchemaObject } from '@facadeur/domain';
-import { useMemo } from 'react';
 import type { AppService } from '../../app-service';
-import { catalogDefinitionDisplayName } from '../../domain/catalog/display-name';
 import { catalogSchemaTitle } from '../../domain/catalog/schema-display';
-import type { EditorSession } from '../../domain/session';
-import { Field, Select, Stack } from '../form/index';
+import type { EditorEvent } from '../../domain/sidebar/events';
+import { EditorEventType } from '../../domain/sidebar/events';
+import { Stack } from '../components/layout';
+import { Field } from '../components/feedback';
+import { Select } from '../controls/form-binding/index';
 import { JsonSchemaTypeEditor } from '../schema/JsonSchemaTypeEditor';
 import { CatalogPreviewFields } from './CatalogPreviewFields';
 
@@ -61,34 +62,31 @@ function schemaPropertyRows(
 
 export function CatalogSchemaStage({
   app,
-  session,
-  onOpenSchemas,
+  onEvent,
 }: {
   app: AppService;
-  session: EditorSession;
-  onOpenSchemas: () => void;
+  onEvent: (event: EditorEvent) => void;
 }) {
   const coreSnap = app.getCoreSnapshot();
   const definition = coreSnap.openDefinition;
-  const resolved = app.core.node.schema.resolveForOpenDefinition();
-  const effective = app.core.node.schema.effectiveForOpenDefinition();
-  const { fields } = app.core.node.config.inspectorInputs();
+  const resolved = app.resolveSchemaForOpenDefinition();
+  const effective = app.effectiveSchemaForOpenDefinition();
+  const { fields } = app.getInspectorInputs();
   const previewFields = (effective?.previewDefaults ??
     definition?.config?.previewData?.fields ??
     {}) as Record<string, FieldValue>;
-  const title = definition ? catalogDefinitionDisplayName(coreSnap.catalog, definition) : 'Schema';
+  const title = definition ? (app.getDefinitionDisplayName(definition.uuid) ?? 'Schema') : 'Schema';
 
-  const schemaEntries = useMemo(
-    () =>
-      Object.entries(coreSnap.catalog.schemas ?? {}).sort(([idA, a], [idB, b]) =>
-        catalogSchemaTitle(a, idA).localeCompare(catalogSchemaTitle(b, idB)),
-      ),
-    [coreSnap.catalog.schemas],
-  );
+  const schemaEntries = app
+    .getSchemas()
+    .map(({ uuid, schema }) => [uuid, schema] as const)
+    .sort(([idA, a], [idB, b]) =>
+      catalogSchemaTitle(a, idA).localeCompare(catalogSchemaTitle(b, idB)),
+    );
 
   const schemaRef = definition?.schema.kind === 'ref' ? definition.schema.uuid : null;
   const selectValue = schemaRef ?? INLINE_SCHEMA_VALUE;
-  const selectedShared = schemaRef ? coreSnap.catalog.schemas?.[schemaRef] : undefined;
+  const selectedShared = schemaRef ? app.getSchema(schemaRef) : undefined;
   const propertyRows = schemaPropertyRows(effective?.schema ?? resolved, effective?.origins);
 
   if (!definition) {
@@ -99,57 +97,41 @@ export function CatalogSchemaStage({
     );
   }
 
-  async function bindSchema(next: string) {
-    try {
-      if (next === INLINE_SCHEMA_VALUE) {
-        const seed =
-          resolved ??
-          emptyObjectSchema(catalogDefinitionDisplayName(coreSnap.catalog, definition!));
-        await app.patchDefinition(definition!.uuid, {
-          schema: { kind: 'inline', schema: seed },
-        });
-        session.setNotice('Using inline schema on this definition', 'info');
-        return;
-      }
-      await app.patchDefinition(definition!.uuid, {
-        schema: { kind: 'ref', uuid: next },
-      });
-      session.setNotice('Schema link updated', 'info');
-    } catch (failure) {
-      session.setNotice(
-        failure instanceof Error ? failure.message : 'Could not update schema',
-        'error',
-      );
-    }
+  function bindSchema(next: string) {
+    const schema =
+      next === INLINE_SCHEMA_VALUE
+        ? {
+            kind: 'inline' as const,
+            schema:
+              resolved ??
+              emptyObjectSchema(app.getDefinitionDisplayName(definition!.uuid) ?? definition!.name),
+          }
+        : { kind: 'ref' as const, uuid: next };
+    onEvent({
+      type: EditorEventType.DefinitionSchemaSet,
+      data: { definitionId: definition!.uuid, schema },
+    });
   }
 
-  async function saveInlineSchema(next: JsonSchemaObject) {
+  function saveInlineSchema(next: JsonSchemaObject) {
     if (!definition || definition.schema.kind !== 'inline') return;
-    try {
-      await app.patchDefinition(definition.uuid, {
+    onEvent({
+      type: EditorEventType.DefinitionSchemaSet,
+      data: {
+        definitionId: definition.uuid,
         schema: { kind: 'inline', schema: next },
-      });
-      session.setNotice('Schema updated', 'info');
-    } catch (failure) {
-      session.setNotice(
-        failure instanceof Error ? failure.message : 'Could not save schema',
-        'error',
-      );
-    }
+      },
+    });
   }
 
-  async function writePreview(
+  function writePreview(
     field: (typeof fields)[number],
     value: Parameters<typeof app.patchPreviewField>[1],
   ) {
-    try {
-      await app.patchPreviewField(field.name, value);
-    } catch (failure) {
-      session.setNotice(
-        failure instanceof Error ? failure.message : 'Could not save preview value',
-        'error',
-      );
-    }
+    onEvent({
+      type: EditorEventType.PreviewFieldSet,
+      data: { field: field.name, value },
+    });
   }
 
   const schemaOptions = [
@@ -219,7 +201,16 @@ export function CatalogSchemaStage({
                     ) : (
                       <p className="inspector-empty">This schema has no properties yet.</p>
                     )}
-                    <button type="button" className="text-button" onClick={onOpenSchemas}>
+                    <button
+                      type="button"
+                      className="text-button"
+                      onClick={() =>
+                        onEvent({
+                          type: EditorEventType.SurfaceNavigate,
+                          data: { surfaceId: 'schemas' },
+                        })
+                      }
+                    >
                       Edit in Settings → Schemas
                     </button>
                     <details>
@@ -267,7 +258,6 @@ export function CatalogSchemaStage({
                   fields={fields}
                   previewFields={previewFields}
                   onWrite={(field, value) => void writePreview(field, value)}
-                  onInvalid={(message) => session.setNotice(message, 'error')}
                 />
               </section>
             </div>

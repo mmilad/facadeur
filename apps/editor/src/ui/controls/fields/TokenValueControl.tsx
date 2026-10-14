@@ -6,7 +6,7 @@ import {
   useTokenResolver,
   useTokenSearchValue,
 } from './TokenPreviewContext';
-import { tokenPath, tokenTitle } from '../token-presentation';
+import { tokenPath, tokenTitle } from './token-presentation';
 
 /** Token references are kept verbatim, including references not in the current catalog. */
 export function isTokenReference(value: string): boolean {
@@ -41,7 +41,6 @@ export function TokenValueControl({
   const labelFor = useTokenLabel();
   const resolve = useTokenResolver();
   const searchValue = useTokenSearchValue();
-  const directValue = reference ? directDraft : value;
   const tokenOptions = [...new Set(reference ? [value.trim(), ...tokens] : tokens)].map((token) => {
     const path = tokenPath(token);
     const category = path.split('.')[0];

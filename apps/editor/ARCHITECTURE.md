@@ -2,53 +2,47 @@
 
 The editor lives in `apps/editor` (npm name `@facadeur/editor`). This note documents the ownership model after the Next.js migration.
 
-## App shell (`src/app/`)
+## Local preview (`src/app/`)
 
 - Next.js App Router entry: `layout.tsx`, `page.tsx`, `globals.css`
-- `EditorBootstrap.tsx` — account gate and selected project workspace
-- `api/auth/`, `api/workspace/`, `api/projects/` — thin Next hosting adapters for `@facadeur/api/server`
-- Routes own HTTP parsing, cookies, origin checks and responses; controllers receive typed data and a trusted actor
-- `packages/api` — backend ownership: mock identity, memberships, permissions, invitations,
-  SQLite and JSON persistence; no SQL or management business rules live in editor modules
+- `EditorBootstrap.tsx` — example-backed in-memory editor preview
 
 **Routing:** design-domain vs properties uses the `?surface=` query segment (`properties` default; `colors`, `fonts`, etc. for design domains). The iframe stage is unchanged on `/`.
 
 ## Domain (`src/domain/`)
 
-Session, editing commands, selection, viewports, style/token edit helpers and frame host.
-`domain/api.ts` supplies one typed `@facadeur/api-client` HTTP client. Project connection state and browser
-recovery migration remain here; HTTP transport, schema reconciliation and file persistence
-are consumed through package public APIs. Account hooks subscribe to API session changes.
+Session, selection, viewport and tool state live in `src/domain/session/`. The session owns a
+`CoreController`; the active `ProjectCatalog` and open definition are read and mutated through
+that controller. `AppService` connects catalog persistence and definition operations to the
+`EditorCatalogPort`. React UI state such as selection, viewport focus, drag state and zoom remains
+in `EditorSession`.
 
-`session.project` owns live document state. Renderer stores are Core controller views;
-they hold history snapshots but no independent live document. Core changes publish after
-commit, so selection, dirty state, Undo and rendering observe the same state. The editor
-has no Yjs dependency or WebSocket transport. Retired integration files are preserved as
-text in `legacy/yjs/`; the separate server and adapter package remain optional legacy code.
+`EditorSnapshot.design` contains only the Catalog-backed token tree, optional icon definitions,
+and active breakpoints. The session reads and writes Catalog data directly through Core.
 
 ## UI (`src/ui/`)
 
-| Area     | Path               | Role                                                      |
-| -------- | ------------------ | --------------------------------------------------------- |
-| Shell    | `shell/`           | Top bar, `EditorShell`, tools                             |
-| Stage    | `stage/`           | Canvas + design-domain stage                              |
-| Form kit | `form/`            | Generic form components (unchanged contract)              |
-| Controls | `controls/<name>/` | Domain controls (`Component.tsx`, `value.ts`, `index.ts`) |
-| Sidebar  | `sidebar/`         | Chrome around the tree and inspector                      |
+| Area         | Path                     | Role                                                             |
+| ------------ | ------------------------ | ---------------------------------------------------------------- |
+| Shell        | `shell/`                 | Top bar, `EditorShell`, tools                                    |
+| Stage        | `stage/`                 | Catalog-backed canvas + design-domain stage                      |
+| Form binding | `controls/form-binding/` | Catalog/path adapters over reusable fields from `@facadeur/form` |
+| Controls     | `controls/<name>/`       | Editor controls composed from shared form fields                 |
+| Sidebar      | `sidebar/`               | Chrome around the Catalog tree and inspector                     |
 
 ### Properties inspector (`sidebar/properties/`)
 
-- `PropertiesPanel.tsx`, `RightRail.tsx`, `ViewportEditBar.tsx`
-- `content/` — Content tab fields + Data definitions (fields, variants, bindings)
-- `style/declarations/` — style block CSS declarations (`CssDeclarationsControl`)
-- `style/variants/` — per-layer variant styles
-- `style/overrides/` — per-node style overrides (color/typography/shadow controls)
-- `layout/` — layout control panel
+- `PropertiesPanel.tsx`, `RightRail.tsx`
+- Catalog-backed content and data controls live with their owning sidebar/settings domains.
+- The active inspector is `CatalogNodeInspector`. Active CSS declaration editing lives in
+  `controls/`.
 
-### Layers & design (`sidebar/layers/`, `sidebar/design/`)
+### Layers & design (`sidebar/layers/`, `design/`)
 
-Project tree, viewport list/options, token/font design panels.
+The project tree and viewport list/options live in `sidebar/layers/`; design-domain panels live in
+`design/`. Reusable form elements live in `@facadeur/form`; Editor controls may wrap them to bind
+catalog values and commits.
 
 ## Styles (`src/ui/styles/`)
 
-Co-located CSS chunks imported from `app/globals.css` (base, shell, design, stage, sidebar). `src/styles.css` is a stub.
+Co-located CSS chunks imported from `app/globals.css` (base, shell, design, stage, sidebar).

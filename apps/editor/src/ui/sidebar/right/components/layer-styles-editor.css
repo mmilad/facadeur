@@ -1,0 +1,65 @@
+.layer-style-tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--line);
+}
+
+.layer-style-tab {
+  flex: 0 0 auto;
+  padding: 7px 9px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.layer-style-tab.is-active {
+  border-bottom-color: var(--accent, #a84d2c);
+  color: var(--text, #292520);
+}
+
+.layer-style-declarations,
+.layer-style-add-row {
+  display: grid;
+  gap: 6px;
+}
+
+.layer-style-row,
+.layer-style-add-row {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 28px;
+  align-items: center;
+}
+
+.layer-style-row .eu-control,
+.layer-style-add-row .eu-control {
+  min-width: 0;
+  width: 100%;
+}
+
+.layer-style-value-control {
+  min-width: 0;
+  width: 100%;
+}
+
+.layer-style-value-control > * {
+  width: 100%;
+}
+
+.layer-style-remove,
+.layer-style-add {
+  min-height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--white);
+  color: var(--text, #292520);
+  cursor: pointer;
+}
+
+.layer-style-property:disabled {
+  color: var(--muted);
+  opacity: 1;
+}

@@ -7,9 +7,7 @@ const NOUN: Record<'atom' | 'component' | 'page', string> = {
   page: 'page',
 };
 
-export function assetKindToCatalogMap(
-  kind: DefaultKind,
-): 'atoms' | 'components' | 'pages' | null {
+export function assetKindToCatalogMap(kind: DefaultKind): 'atoms' | 'components' | 'pages' | null {
   if (kind === 'atom') return 'atoms';
   if (kind === 'component') return 'components';
   if (kind === 'page') return 'pages';
@@ -20,14 +18,17 @@ export function assetKindToCatalogMap(
 export function blankCatalogDefinition(
   kind: 'atom' | 'component' | 'page',
   taken: readonly AssetSummary[],
+  requestedName?: string,
 ): NodeDefinitionModel {
   const baseName = `New ${NOUN[kind]}`;
   const names = new Set(taken.map((asset) => asset.name));
-  let name = baseName;
-  let count = 2;
-  while (names.has(name)) {
-    name = `${baseName} ${count}`;
-    count += 1;
+  let name = requestedName?.trim() || baseName;
+  if (!requestedName?.trim()) {
+    let count = 2;
+    while (names.has(name)) {
+      name = `${baseName} ${count}`;
+      count += 1;
+    }
   }
   const uuid = createCatalogUuid();
   const rootUuid = createCatalogUuid();

@@ -1,24 +1,27 @@
 import { describe, expect, it } from 'vitest';
+import { CoreController } from '@facadeur/core';
 import { catalogAssetSummaries } from '../../src/domain/catalog/asset-list';
-import { IMAGE_ATOM_UUID, seedProjectCatalog } from '@facadeur/api/server';
+import { createExampleCatalog, exampleIds } from '@facadeur/examples';
+
+const imageAtomUuid = exampleIds.components.image.definition;
 
 describe('catalogAssetSummaries', () => {
-  it('lists seeded atoms with stable ids', () => {
-    const assets = catalogAssetSummaries(seedProjectCatalog());
-    expect(assets.some((asset) => asset.id === IMAGE_ATOM_UUID && asset.kind === 'atom')).toBe(true);
+  it('lists example atoms with stable ids', () => {
+    const assets = catalogAssetSummaries(new CoreController(createExampleCatalog()));
+    expect(assets.some((asset) => asset.id === imageAtomUuid && asset.kind === 'atom')).toBe(true);
   });
 
   it('uses schema title when stored name is a uuid', () => {
-    const catalog = seedProjectCatalog();
-    const atom = catalog.atoms[IMAGE_ATOM_UUID]!;
-    catalog.atoms[IMAGE_ATOM_UUID] = { ...atom, name: IMAGE_ATOM_UUID };
-    const assets = catalogAssetSummaries(catalog);
-    expect(assets.find((asset) => asset.id === IMAGE_ATOM_UUID)?.name).toBe('Image');
+    const catalog = createExampleCatalog();
+    const atom = catalog.atoms[imageAtomUuid]!;
+    catalog.atoms[imageAtomUuid] = { ...atom, name: imageAtomUuid };
+    const assets = catalogAssetSummaries(new CoreController(catalog));
+    expect(assets.find((asset) => asset.id === imageAtomUuid)?.name).toBe('Image');
   });
 
   it('sorts assets by display name', () => {
-    const catalog = seedProjectCatalog();
-    const assets = catalogAssetSummaries(catalog);
+    const catalog = createExampleCatalog();
+    const assets = catalogAssetSummaries(new CoreController(catalog));
     const names = assets.map((asset) => asset.name);
     expect([...names].sort((a, b) => a.localeCompare(b))).toEqual(names);
   });

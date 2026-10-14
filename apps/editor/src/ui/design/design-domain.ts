@@ -40,6 +40,15 @@ export function isDesignDomain(surface: EditorSurface): surface is DesignDomain 
   return DESIGN_DOMAIN_ITEMS.some((item) => item.id === surface);
 }
 
+export function isEditorSurfaceId(surface: string): surface is EditorSurface {
+  return (
+    surface === 'schemas' ||
+    surface === 'props' ||
+    DESIGN_DOMAIN_ITEMS.some((item) => item.id === surface) ||
+    EDITOR_VIEW_ITEMS.some((item) => item.id === surface)
+  );
+}
+
 export function isSettingsTokenDomain(surface: EditorSurface): surface is SettingsTokenDomain {
   return SETTINGS_TOKEN_DOMAIN_ITEMS.some((item) => item.id === surface);
 }
@@ -58,25 +67,4 @@ export function isCatalogDocumentView(surface: EditorSurface): boolean {
 
 export function designDomainLabel(domain: DesignDomain): string {
   return DESIGN_DOMAIN_ITEMS.find((item) => item.id === domain)?.label ?? domain;
-}
-
-export function tokenMatchesDomain(
-  path: string,
-  type: string,
-  domain: Exclude<DesignDomain, 'fonts' | 'icons' | 'viewports'>,
-): boolean {
-  switch (domain) {
-    case 'colors':
-      return type === 'color' || path.startsWith('color.');
-    case 'spacing':
-      return path.startsWith('space.');
-    case 'radius':
-      return path.startsWith('radius.');
-    case 'shadow':
-      return type === 'shadow' || path.startsWith('shadow.');
-    case 'typography':
-      return type === 'typography' || type === 'fontFamily' || path.startsWith('type.');
-    default:
-      return false;
-  }
 }

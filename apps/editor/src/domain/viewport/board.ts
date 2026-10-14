@@ -1,16 +1,6 @@
 /** Editor canvas: one iframe per active project breakpoint. */
-import {
-  breakpointLabel,
-  type Breakpoint,
-  type ElementBuildConfig,
-  type ProjectCatalogModel,
-} from '@facadeur/core';
-import { createElement } from 'react';
-import { createRoot } from 'react-dom/client';
-import type { Root } from 'react-dom/client';
-import { activeBreakpoints } from '@facadeur/tokens';
+import { breakpointLabel, type Breakpoint } from '@facadeur/core';
 import { createFrameHost, type FrameHost } from './frame-host';
-import { DynamicElement } from './dynamic-element';
 
 export interface ViewportFrame {
   breakpoint: Breakpoint;
@@ -19,32 +9,35 @@ export interface ViewportFrame {
   column: HTMLElement;
 }
 
+export interface RenderedNodeBox {
+  uuid: string;
+  rect: { left: number; top: number; width: number; height: number };
+}
+
 export interface ViewportBoard {
   /** The row of frames. Fit the stage to this element. */
   readonly element: HTMLElement;
   frames(): readonly ViewportFrame[];
-  /** Update the mounted React tree while keeping each iframe and element alive. */
-  updateBuildConfig(config: ElementBuildConfig, title?: string): void;
+  renderedNodes(frame: ViewportFrame): readonly RenderedNodeBox[];
+  setTitle(title: string): void;
   syncHeights(): void;
   destroy(): void;
 }
 
 export function createViewportBoard(options: {
   parent: HTMLElement;
-  buildConfig: ElementBuildConfig;
   title: string;
-  catalog: ProjectCatalogModel;
+  breakpoints: readonly Breakpoint[];
 }): ViewportBoard {
   const ownerDocument = options.parent.ownerDocument;
   const row = ownerDocument.createElement('div');
   row.className = 'viewport-frames';
   options.parent.append(row);
 
-  const breakpoints = activeBreakpoints(options.catalog.globalStyles?.breakpoints);
   const frames: ViewportFrame[] = [];
-  const roots: Root[] = [];
+  let destroyed = false;
 
-  for (const breakpoint of breakpoints) {
+  for (const breakpoint of options.breakpoints) {
     const column = ownerDocument.createElement('section');
     column.className = 'viewport-frame';
     column.dataset.breakpoint = breakpoint.uuid;
@@ -80,10 +73,6 @@ export function createViewportBoard(options: {
     body.append(screen);
     row.append(column);
     host.mount(screen);
-    const root = createRoot(host.contentDocument().body);
-    root.render(createElement(DynamicElement, { config: options.buildConfig }));
-    roots.push(root);
-
     frames.push({ breakpoint, host, column });
   }
 
@@ -92,17 +81,28 @@ export function createViewportBoard(options: {
     frames() {
       return frames;
     },
-    updateBuildConfig(config, title = options.title) {
-      frames.forEach((frame, index) => {
-        frame.host.element.title = `${title} — ${breakpointLabel(frame.breakpoint)}`;
-        roots[index]?.render(createElement(DynamicElement, { config }));
+    renderedNodes(frame) {
+      const nodes = frame.host
+        .contentDocument()
+        .querySelectorAll<HTMLElement>('[data-facadeur-node-uuid]');
+      return [...nodes].flatMap((node) => {
+        const uuid = node.dataset.facadeurNodeUuid;
+        if (!uuid) return [];
+        const { left, top, width, height } = node.getBoundingClientRect();
+        return [{ uuid, rect: { left, top, width, height } }];
       });
+    },
+    setTitle(title) {
+      for (const frame of frames) {
+        frame.host.element.title = `${title} — ${breakpointLabel(frame.breakpoint)}`;
+      }
     },
     syncHeights() {
       for (const frame of frames) frame.host.syncHeight();
     },
     destroy() {
-      for (const root of roots) root.unmount();
+      if (destroyed) return;
+      destroyed = true;
       for (const frame of frames) frame.host.destroy();
       row.remove();
     },

@@ -12,11 +12,19 @@ import type {
 } from '../../../schema/document';
 import { assertStyleSelector, selectorClassNames } from '../selectors';
 import { tokenReference } from '../tokens/syntax';
+import { isTokenPath } from '../tokens/path';
 
 export const CSS_PROPERTY = /^(--)?[A-Za-z_][\w-]*$/;
-const TOKEN_PATH = /^[a-z][a-z0-9]*(?:\.[a-z0-9]+)+$/;
 export const BREAKPOINT_ID = UUID_PATTERN;
 const STATE_NAMES = ['hover', 'focus-visible', 'disabled'] as const;
+
+export function canonicalizeStyleBlock(style: StyleBlock | undefined) {
+  return style ? parseStyleBlock(style) : undefined;
+}
+
+export function canonicalizeTokenInterface(value: TokenInterface | undefined) {
+  return value ? parseTokenInterface(value) : undefined;
+}
 
 /**
  * Gap, padding, and margin accept only a token reference. Longhands included.
@@ -98,7 +106,10 @@ function parseStyleRule(value: unknown, index: number) {
       throw new DocumentError('schema', `${label} has an unused or invalid binding ".${name}"`);
     }
     const nodeId = value.bindings[name];
-    if (typeof nodeId !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]*$/.test(nodeId)) {
+    if (
+      typeof nodeId !== 'string' ||
+      (!UUID_PATTERN.test(nodeId) && !/^[A-Za-z][A-Za-z0-9_-]*$/.test(nodeId))
+    ) {
       throw new DocumentError('schema', `${label} binding ".${name}" must target a node id`);
     }
     Object.defineProperty(bindings, name, {
@@ -150,7 +161,7 @@ export function parseTokenInterface(value: unknown): TokenInterface {
     }
     const sets: Record<string, string> = {};
     for (const path of Object.keys(record.sets).sort()) {
-      if (!UUID_PATTERN.test(path) && !TOKEN_PATH.test(path)) {
+      if (!UUID_PATTERN.test(path) && !isTokenPath(path)) {
         throw new DocumentError(
           'schema',
           `Invalid token UUID or component-token path "${path}" in sets`,

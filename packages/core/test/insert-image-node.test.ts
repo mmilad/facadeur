@@ -5,8 +5,8 @@ import { createCatalogUuid } from '../src/document/ids';
 import { sanitizeProjectCatalog } from '../src/controller/project/catalog/sanitize-field-values';
 import {
   CoreController,
-  definitionToElementBuildConfig,
   insertCatalogNode,
+  resolveDefinitionToElementBuildConfig,
   validateProjectCatalog,
 } from '../src/index';
 import { fieldValueSchema } from '../src/schema/fields';
@@ -127,7 +127,7 @@ describe('insert image node validation', () => {
         },
       },
     });
-    const config = definitionToElementBuildConfig(
+    const config = resolveDefinitionToElementBuildConfig(
       withInstance.components[componentUuid]!,
       withInstance,
     );

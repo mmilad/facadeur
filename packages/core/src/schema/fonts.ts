@@ -47,7 +47,13 @@ export const iconDefinitionSchema = Type.Object(
   {
     id: idSchema,
     name: Type.String({ minLength: 1 }),
-    src: Type.String({ minLength: 1 }),
+    data: Type.Object(
+      {
+        viewBox: Type.String({ minLength: 1 }),
+        paths: Type.Array(Type.String({ minLength: 1 }), { minItems: 1 }),
+      },
+      { additionalProperties: false },
+    ),
     category: Type.Optional(idSchema),
   },
   { additionalProperties: false },

@@ -1,5 +1,6 @@
 export { Form } from './form';
 export type { FormChangeMeta, FormProps } from './form';
+export { formatKey, getPath, joinPath, parsePath, resolvePath, setPath } from './form/path';
 export { LayoutField } from './fields/layout';
 export type { LayoutFieldConfig, LayoutFieldProps } from './fields/layout';
 export { AutocompleteSelectField } from './fields/autocomplete';
@@ -19,7 +20,23 @@ export type {
 export { BooleanField } from './fields/boolean';
 export type { BooleanFieldConfig } from './fields/boolean';
 export { ColorField } from './fields/color';
-export type { ColorFieldConfig } from './fields/color';
+export type {
+  ColorFieldConfig,
+  ColorFieldProps,
+  EyeDropperConstructor,
+  Rgba,
+  WindowWithEyeDropper,
+} from './fields/color';
+export {
+  clampAlpha,
+  clampChannel,
+  hexToRgba,
+  normalizeColor,
+  normalizeHex,
+  pickColorWithEyeDropper,
+  rgbaToHex,
+  supportsEyeDropper,
+} from './fields/color';
 export { ComboboxField } from './fields/combobox';
 export type { ComboboxFieldConfig, ComboboxFieldProps } from './fields/combobox';
 export { NumberField } from './fields/number';
@@ -32,6 +49,10 @@ export { SelectField } from './fields/select';
 export type { SelectFieldConfig, SelectOption } from './fields/select';
 export { SearchField } from './fields/search';
 export type { SearchFieldConfig, SearchFieldProps } from './fields/search';
+export { RadioGroupField } from './fields/radio';
+export type { RadioGroupFieldProps } from './fields/radio';
+export { SegmentedControlField } from './fields/segmented';
+export type { SegmentedControlFieldProps } from './fields/segmented';
 export { TextArea } from './fields/textarea';
 export type { TextAreaFieldConfig, TextAreaProps } from './fields/textarea';
 export { TextField } from './fields/text';

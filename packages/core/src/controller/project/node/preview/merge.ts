@@ -1,4 +1,4 @@
-import type { FieldValue, Node, NodeDefinition } from '@facadeur/domain';
+import type { FieldValue, NodeDefinition } from '@facadeur/domain';
 import { findNodeByUuid } from '../../catalog/ops';
 
 /** Defaults seed fields; inherited and node-level values override them in that order. */

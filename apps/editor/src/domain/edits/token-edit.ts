@@ -7,7 +7,9 @@ import {
   type TokenDefinition,
   type TokenTree,
 } from '@facadeur/core';
-import type { EditorSession, EditorSnapshot } from '../session';
+import type { EditorSnapshot } from '../session';
+import type { EditorEvent } from '../sidebar/events';
+import { EditorEventType } from '../sidebar/events';
 
 export function formatTokenValue(value: JsonValue | DesignTokenValue): string {
   if (typeof value === 'string') return value;
@@ -89,7 +91,7 @@ export function withTokenBreakpoint(
 }
 
 export function commitToken(
-  session: EditorSession,
+  onEvent: (event: EditorEvent) => void,
   snap: EditorSnapshot,
   family: DesignTokenFamily,
   uuid: string,
@@ -103,14 +105,20 @@ export function commitToken(
     const token = breakpointUuid
       ? withTokenBreakpoint(snap.design.tokens, family, uuid, breakpointUuid, value)
       : withTokenValue(snap.design.tokens, family, uuid, value);
-    session.executeDesign({ type: 'setToken', family, token });
+    onEvent({
+      type: EditorEventType.DesignCommandExecute,
+      data: { command: { type: 'setToken', family, token } },
+    });
   } catch (error) {
-    session.setNotice(error instanceof Error ? error.message : 'Invalid token', 'error');
+    onEvent({
+      type: EditorEventType.NoticeSet,
+      data: { text: error instanceof Error ? error.message : 'Invalid token', tone: 'error' },
+    });
   }
 }
 
 export function commitRawToken(
-  session: EditorSession,
+  onEvent: (event: EditorEvent) => void,
   snap: EditorSnapshot,
   family: DesignTokenFamily,
   uuid: string,
@@ -118,7 +126,7 @@ export function commitRawToken(
   breakpointUuid: string | null,
 ) {
   if (next === null || next === undefined) {
-    if (breakpointUuid) resetTokenBreakpoint(session, snap, family, uuid, breakpointUuid);
+    if (breakpointUuid) resetTokenBreakpoint(onEvent, snap, family, uuid, breakpointUuid);
     return;
   }
   try {
@@ -127,9 +135,15 @@ export function commitRawToken(
     const token = breakpointUuid
       ? withTokenBreakpoint(snap.design.tokens, family, uuid, breakpointUuid, value)
       : withTokenValue(snap.design.tokens, family, uuid, value);
-    session.executeDesign({ type: 'setToken', family, token });
+    onEvent({
+      type: EditorEventType.DesignCommandExecute,
+      data: { command: { type: 'setToken', family, token } },
+    });
   } catch (error) {
-    session.setNotice(error instanceof Error ? error.message : 'Invalid token', 'error');
+    onEvent({
+      type: EditorEventType.NoticeSet,
+      data: { text: error instanceof Error ? error.message : 'Invalid token', tone: 'error' },
+    });
   }
 }
 
@@ -142,7 +156,7 @@ function containsTokenReference(value: unknown, uuid: string): boolean {
 }
 
 export function resetTokenBreakpoint(
-  session: EditorSession,
+  onEvent: (event: EditorEvent) => void,
   snap: EditorSnapshot,
   family: DesignTokenFamily,
   uuid: string,
@@ -150,27 +164,22 @@ export function resetTokenBreakpoint(
 ) {
   if (!breakpointUuid) return;
   try {
-    session.executeDesign({
-      type: 'setToken',
-      family,
-      token: withTokenBreakpoint(snap.design.tokens, family, uuid, breakpointUuid, null),
+    onEvent({
+      type: EditorEventType.DesignCommandExecute,
+      data: {
+        command: {
+          type: 'setToken',
+          family,
+          token: withTokenBreakpoint(snap.design.tokens, family, uuid, breakpointUuid, null),
+        },
+      },
     });
   } catch (error) {
-    session.setNotice(error instanceof Error ? error.message : 'Invalid token', 'error');
+    onEvent({
+      type: EditorEventType.NoticeSet,
+      data: { text: error instanceof Error ? error.message : 'Invalid token', tone: 'error' },
+    });
   }
-}
-
-export function tokensReferencingUuid(tree: unknown, uuid: string): string[] {
-  const paths: string[] = [];
-  for (const token of readTokenTree(tree).tokens.values()) {
-    if (
-      containsTokenReference(token.value, uuid) ||
-      Object.values(token.breakpoints).some((value) => containsTokenReference(value, uuid))
-    ) {
-      paths.push(token.path);
-    }
-  }
-  return paths.sort((left, right) => left.localeCompare(right));
 }
 
 function tokenRecord(tree: TokenTree, family: DesignTokenFamily, uuid: string): TokenDefinition {

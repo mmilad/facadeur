@@ -1,25 +1,57 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
-import { authClient } from '../domain/auth/client';
-import { AuthScreen } from '../ui/management/AuthScreen';
-import { ProjectWorkspace } from '../ui/projects/ProjectWorkspace';
+import { Suspense, useEffect, useMemo } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { validateProjectCatalog } from '@facadeur/core';
+import { facadeurWorkspace } from '@facadeur/examples';
+import { createEditorSession } from '../domain/session/create-editor-session';
+import type { EditorSession } from '../domain/session';
+import { EditorHost } from './EditorHost';
+import type { EditorNavigationAdapter } from '../ui/shell/navigation/navigation-adapter';
+import facadeurEditorCatalog from './facadeur-editor.catalog.json';
 
 export function EditorBootstrap() {
-  const auth = authClient.useSession();
+  const session = useMemo(createInitialSession, []);
+
+  useEffect(() => () => session.destroy(), [session]);
+
+  return (
+    <Suspense fallback={<p className="boot-error">Loading editor…</p>}>
+      <EditorNavigationHost session={session} />
+    </Suspense>
+  );
+}
+
+function EditorNavigationHost({ session }: { session: EditorSession }) {
+  const pathname = usePathname();
   const params = useSearchParams();
-  if (auth.isPending)
-    return (
-      <main className="schema-stage">
-        <h1>Loading account…</h1>
-      </main>
-    );
-  if (!auth.data)
-    return (
-      <AuthScreen
-        onAuthenticated={() => void auth.refetch()}
-        invitationToken={params.get('invite') ?? undefined}
-      />
-    );
-  return <ProjectWorkspace key={auth.data.user.id} />;
+  const navigation = useMemo<EditorNavigationAdapter>(
+    () => ({
+      pathname,
+      search: params.toString(),
+      push: (href) => window.history.pushState(null, '', href),
+      replace: (href) => window.history.replaceState(null, '', href),
+    }),
+    [pathname, params],
+  );
+
+  return (
+    <EditorHost
+      session={session}
+      navigation={navigation}
+      persistPendingChanges={async () => {
+        const clipboard = navigator.clipboard;
+        if (!clipboard?.writeText) throw new Error('Clipboard access is unavailable');
+        await clipboard.writeText(JSON.stringify(session.core.getSnapshot().catalog, null, 2));
+      }}
+    />
+  );
+}
+
+function createInitialSession() {
+  const projectCatalog = validateProjectCatalog(structuredClone(facadeurEditorCatalog));
+  const session = createEditorSession({ projectCatalog });
+  session.openAsset(facadeurWorkspace.uuid);
+  session.selectNode(facadeurWorkspace.root.uuid);
+  return session;
 }

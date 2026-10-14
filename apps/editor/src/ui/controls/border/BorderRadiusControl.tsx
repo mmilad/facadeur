@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Grid, Stack } from '../../form/index';
-import '../../form/form.css';
+import { Grid, Stack } from '../../components/layout';
+import '../../styles/form.css';
 import { TokenValueControl } from '../fields/TokenValueControl';
 import type { BorderRadiusValue } from './value';
 import { expandRadiusValue, uniformRadiusValue } from './value';

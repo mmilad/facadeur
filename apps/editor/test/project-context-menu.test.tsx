@@ -2,90 +2,54 @@
  * @vitest-environment jsdom
  */
 import '@testing-library/jest-dom/vitest';
-import { act } from 'react';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it } from 'vitest';
-import type { DocumentFile } from '@facadeur/core';
-import { createProjectTemplateDocument } from '@facadeur/tokens';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, expect, it, vi } from 'vitest';
+import { createExampleCatalog } from '@facadeur/examples';
+import { createAppService } from '../src/app-service';
+import { createInMemoryCatalogPort } from '../src/domain/project/in-memory-catalog-port';
 import { createEditorSession } from '../src/domain/session';
-import { App } from '../src/ui/shell/EditorShell';
+import { ProjectTree } from '../src/ui/sidebar/left/ProjectTree';
+import { createEditorEventHandler } from '../src/ui/shell/editor-event-handler';
 
 afterEach(cleanup);
 
-(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
-
-function renderProject(documents: DocumentFile[]) {
-  const session = createEditorSession({
-    documents,
-    design: createProjectTemplateDocument(),
+it('opens the Catalog asset menu and creates a Catalog definition from the New action', async () => {
+  const session = createEditorSession({ projectCatalog: createExampleCatalog() });
+  const app = createAppService({
+    core: session.core,
+    session,
+    catalogPort: createInMemoryCatalogPort(() => session.core.getSnapshot().catalog),
   });
-  render(<App session={session} />);
-  return session;
-}
+  const asset = session.getSnapshot().catalog[0]!;
+  const view = render(
+    <ProjectTree
+      model={session.getSnapshot().sidebar.project}
+      surface="editor"
+      onEvent={createEditorEventHandler({ app, session })}
+    />,
+  );
+  const row = view.container.querySelector<HTMLButtonElement>(`[data-asset-id="${asset.id}"]`)!;
 
-function openContextMenu(name: string) {
-  fireEvent.contextMenu(screen.getByRole('button', { name }));
+  fireEvent.keyDown(row, { key: 'F10', shiftKey: true });
   expect(screen.getByRole('menu')).toBeVisible();
-}
+  expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeVisible();
+  expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeVisible();
+  expect(screen.queryByRole('menuitem', { name: 'Create variant' })).toBeNull();
+  expect(screen.queryByRole('menuitem', { name: 'Add to group' })).toBeNull();
 
-const input = (): DocumentFile => ({
-  version: 1,
-  id: 'input',
-  name: 'Input',
-  kind: 'atom',
-  root: { id: 'root', type: 'text', text: 'Input' },
-});
+  fireEvent.keyDown(window, { key: 'Escape' });
+  expect(screen.queryByRole('menu')).toBeNull();
 
-describe('project context menu', () => {
-  it('dismisses on outside pointer interactions and Escape', async () => {
-    const user = userEvent.setup();
-    const other: DocumentFile = { ...input(), id: 'other', name: 'Other' };
-    const session = renderProject([input(), other]);
-    openContextMenu('Input input');
+  fireEvent.contextMenu(row);
+  expect(screen.getByRole('menu')).toBeVisible();
+  fireEvent.pointerDown(screen.getByRole('heading', { name: 'Project' }));
+  expect(screen.queryByRole('menu')).toBeNull();
 
-    await user.click(screen.getByRole('button', { name: 'Other other' }));
-    expect(session.getSnapshot().openId).toBe('other');
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
-
-    openContextMenu('Other other');
-    await user.click(screen.getByRole('button', { name: 'Schema' }));
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
-
-    openContextMenu('Other other');
-    await user.click(screen.getByRole('heading', { name: 'Project' }));
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
-
-    openContextMenu('Other other');
-    fireEvent.keyDown(window, { key: 'Escape' });
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
-
-    openContextMenu('Other other');
-    fireEvent.blur(window);
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  fireEvent.click(view.container.querySelector<HTMLButtonElement>('[name="create-component"]')!);
+  await waitFor(() => {
+    expect(session.getSnapshot().catalog.some((item) => item.name === 'New component')).toBe(true);
   });
+  expect(session.getSnapshot().openId).not.toBeNull();
 
-  it('keeps menu actions working and supports Shift+F10', async () => {
-    const user = userEvent.setup();
-    const session = renderProject([input()]);
-    const row = screen.getByRole('button', { name: 'Input input' });
-
-    fireEvent.keyDown(row, { key: 'F10', shiftKey: true });
-    expect(screen.getByRole('menuitem', { name: 'Create variant' })).toBeVisible();
-    await user.click(screen.getByRole('menuitem', { name: 'Create variant' }));
-
-    expect(session.getSnapshot().document.variantPresets?.map((variant) => variant.name)).toEqual([
-      'variant-1',
-    ]);
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
-  });
-
-  it('dismisses a stale menu when another asset becomes open', () => {
-    const other: DocumentFile = { ...input(), id: 'other', name: 'Other' };
-    const session = renderProject([input(), other]);
-    openContextMenu('Input input');
-
-    act(() => session.openAsset('other'));
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
-  });
+  session.destroy();
 });

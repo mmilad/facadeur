@@ -6,12 +6,63 @@ import {
   type NodeDefinitionModel,
   type NodeModel,
 } from '@facadeur/core';
-import {
-  layerInsertEntries,
-  type LayerInsertEntry,
-} from '../layer-insert-policy';
-import type { LayerItem } from '../selection/selection-model';
+import type { DefaultKind } from '@facadeur/core';
+import type { LayerItem } from './layer-tree';
 import type { AssetSummary, EditorSnapshot } from '../session/types';
+
+/** Available catalog layer insertions for a definition kind. */
+export type LayerInsertEntry =
+  | { kind: 'primitive'; tool: 'frame' | 'text' | 'image'; label: string }
+  | { kind: 'structural'; tool: 'repeater' | 'switch'; label: string }
+  | { kind: 'instance'; assetId: string; label: string };
+
+const STANDARD_ATOM_IDS = [
+  'button',
+  'link',
+  'form-input',
+  'form-select',
+  'form-toggle',
+  'textarea',
+];
+
+export function catalogLayerInsertEntries(
+  kind: DefaultKind,
+  catalog: readonly AssetSummary[],
+  openId: string,
+): LayerInsertEntry[] {
+  if (kind === 'atom') return [];
+  if (kind === 'page') {
+    return catalogInstances(
+      catalog,
+      openId,
+      (asset) => defaultNestingRules.page.instanceKinds.includes(asset.kind),
+    );
+  }
+  return [
+    { kind: 'primitive', tool: 'frame', label: 'Frame' },
+    { kind: 'structural', tool: 'repeater', label: 'Repeater' },
+    { kind: 'structural', tool: 'switch', label: 'Switch' },
+    ...catalogInstances(catalog, openId, (asset) =>
+      defaultNestingRules[kind].instanceKinds.includes(asset.kind),
+    ),
+  ];
+}
+
+function catalogInstances(
+  catalog: readonly AssetSummary[],
+  openId: string,
+  include: (asset: AssetSummary) => boolean,
+) {
+  const order = new Map(STANDARD_ATOM_IDS.map((id, index) => [id, index]));
+  return catalog
+    .filter((asset) => include(asset) && asset.id !== openId)
+    .sort((left, right) => {
+      const leftRank = order.get(left.id) ?? 999;
+      const rightRank = order.get(right.id) ?? 999;
+      return leftRank - rightRank || left.name.localeCompare(right.name);
+    })
+    .map((asset) => ({ kind: 'instance' as const, assetId: asset.id, label: asset.name }));
+}
 
 export function catalogLayerInsertTarget(
   definition: NodeDefinitionModel,
@@ -58,7 +109,9 @@ export function catalogLayerInsertEntriesForLayer(
   if (!target) return [];
   const parent = findNodeByUuid(definition.root, target.parentUuid);
   if (!parent) return [];
-  const entries = layerInsertEntries(snap).filter((entry) => entry.kind !== 'structural');
+  const entries = catalogLayerInsertEntries(definition.kind, snap.catalog, snap.openId).filter(
+    (entry) => entry.kind !== 'structural',
+  );
   return entries.filter((entry) =>
     catalogPlacementAllowed(definition.kind, parent, entry, snap.catalog),
   );

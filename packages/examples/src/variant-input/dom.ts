@@ -10,9 +10,7 @@ export const root: Node = {
         uuid: exampleVariantInputIds.nodes.span1,
         dom: {
           tagName: 'span',
-          properties: {
-            textContent: 'Project name',
-          },
+          text: 'Project name',
         },
       },
       {
@@ -22,9 +20,7 @@ export const root: Node = {
           attributes: {
             type: 'email',
           },
-          properties: {
-            textContent: 'Component library',
-          },
+          text: 'Component library',
         },
       },
     ],

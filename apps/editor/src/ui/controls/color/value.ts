@@ -1,4 +1,4 @@
-const TOKEN_REF = /^\{[a-z0-9.]+\}$/;
+import { tokenReference } from '@facadeur/core';
 
 export const KNOWN_COLOR_STYLE_PROPERTIES = new Set([
   'color',
@@ -11,7 +11,7 @@ export const KNOWN_COLOR_STYLE_PROPERTIES = new Set([
 ]);
 
 export function isColorTokenRef(value: string): boolean {
-  return TOKEN_REF.test(value.trim());
+  return Boolean(tokenReference(value.trim()));
 }
 
 export type ColorControlMode = 'token' | 'custom';

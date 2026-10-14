@@ -11,9 +11,7 @@ export const root: Node = {
         uuid: exampleFormTextInputIds.nodes.span1,
         dom: {
           tagName: 'span',
-          properties: {
-            textContent: 'Work email',
-          },
+          text: 'Work email',
         },
       },
       {
@@ -46,9 +44,7 @@ export const root: Node = {
         uuid: exampleFormTextInputIds.nodes.span2,
         dom: {
           tagName: 'span',
-          properties: {
-            textContent: 'Use your work email address.',
-          },
+          text: 'Use your work email address.',
         },
       },
     ],

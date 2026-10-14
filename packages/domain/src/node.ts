@@ -40,6 +40,7 @@ export interface NodeDefinition {
   readonly uuid: Uuid;
   readonly name: string;
   readonly kind: NodeDefinitionKind;
+  readonly category?: string;
   readonly schema: SchemaSource;
   readonly root: Node;
   readonly style?: { readonly kind: 'ref'; readonly uuid: Uuid };

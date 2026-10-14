@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { FontFamily } from '@facadeur/core';
-import { fontStack } from '@facadeur/tokens';
+import { fontStack } from '@facadeur/core';
 import {
   createDefaultFont,
   editedFont,
@@ -9,23 +9,25 @@ import {
   parseFontWeights,
   type FontPatch,
 } from '../../domain/edits/font-edit';
-import { fontFamilies } from '../../domain/editing';
-import { tokensReferencingUuid } from '../../domain/edits/token-edit';
-import { documentsReferencingToken } from '../../domain/component-tokens';
-import type { EditorSession, EditorSnapshot } from '../../domain/session';
+import { fontFamilyTokens } from '@facadeur/core';
+import type { EditorSnapshot } from '../../domain/session';
+import type { EditorEvent } from '../../domain/sidebar/events';
+import { EditorEventType } from '../../domain/sidebar/events';
 import { Table, type TableRowData } from '../settings/Table';
 import { TextControl } from '../controls/fields/index';
-import { Field, Popover, TextInput } from '../form/index';
+import { Field } from '../components/feedback';
+import { Popover } from '../components/overlay';
+import { TextInput } from '../controls/form-binding/index';
 import './design-resources.css';
 
 export function FontsDomainPanel({
-  session,
   snap,
+  onEvent,
 }: {
-  session: EditorSession;
   snap: EditorSnapshot;
+  onEvent: (event: EditorEvent) => void;
 }) {
-  const fonts = useMemo(() => fontFamilies(snap.design.tokens), [snap.design.tokens]);
+  const fonts = useMemo(() => fontFamilyTokens(snap.design.tokens), [snap.design.tokens]);
   const [newFontLabel, setNewFontLabel] = useState('');
   const [addOpen, setAddOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -43,25 +45,25 @@ export function FontsDomainPanel({
 
   function commitFont(font: Font, patch: FontPatch) {
     try {
-      session.executeDesign({ type: 'setToken', family: 'font', token: editedFont(font, patch) });
+      onEvent({
+        type: EditorEventType.DesignCommandExecute,
+        data: {
+          command: { type: 'setToken', family: 'font', token: editedFont(font, patch) },
+        },
+      });
     } catch (error) {
-      session.setNotice(error instanceof Error ? error.message : 'Invalid font', 'error');
+      onEvent({
+        type: EditorEventType.NoticeSet,
+        data: { text: error instanceof Error ? error.message : 'Invalid font', tone: 'error' },
+      });
     }
   }
 
   function removeFont(font: Font) {
-    const refs = [
-      ...tokensReferencingUuid(snap.design.tokens, font.uuid),
-      ...documentsReferencingToken(session.boardDocuments(), font.uuid),
-    ];
-    if (refs.length) {
-      session.setNotice(
-        `Cannot remove "${font.label}": {token:${font.uuid}} is referenced in ${refs.join(', ')}`,
-        'error',
-      );
-      return;
-    }
-    session.executeDesign({ type: 'removeToken', family: 'font', uuid: font.uuid });
+    onEvent({
+      type: EditorEventType.DesignTokenRemove,
+      data: { family: 'font', uuid: font.uuid, label: font.label },
+    });
     setExpandedUuid((current) => (current === font.uuid ? null : current));
   }
 
@@ -69,21 +71,22 @@ export function FontsDomainPanel({
     try {
       const label = newFontLabel.trim();
       if (!label) throw new Error('Font label is required');
-      const group = '';
       if (fonts.some((font) => font.label.toLowerCase() === label.toLowerCase())) {
         throw new Error(`Font "${label}" already exists`);
       }
       const font = createDefaultFont(label);
-      session.executeDesign({
-        type: 'setToken',
-        family: 'font',
-        token: font,
+      onEvent({
+        type: EditorEventType.DesignCommandExecute,
+        data: { command: { type: 'setToken', family: 'font', token: font } },
       });
       setNewFontLabel('');
       setExpandedUuid(font.uuid);
       setAddOpen(false);
     } catch (error) {
-      session.setNotice(error instanceof Error ? error.message : 'Invalid font', 'error');
+      onEvent({
+        type: EditorEventType.NoticeSet,
+        data: { text: error instanceof Error ? error.message : 'Invalid font', tone: 'error' },
+      });
     }
   }
 
@@ -158,7 +161,13 @@ export function FontsDomainPanel({
             onRemove: () => removeFont(font),
             onCommit: (patch) => commitFont(font, patch),
             onError: (error) =>
-              session.setNotice(error instanceof Error ? error.message : 'Invalid font', 'error'),
+              onEvent({
+                type: EditorEventType.NoticeSet,
+                data: {
+                  text: error instanceof Error ? error.message : 'Invalid font',
+                  tone: 'error',
+                },
+              }),
           });
         })}
       />

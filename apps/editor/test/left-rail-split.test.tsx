@@ -4,16 +4,12 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { createEditorSession } from '../src/domain/session';
-import { App } from '../src/ui/shell/EditorShell';
-import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
+import { ResizableLeftRail } from '../src/ui/shell/ResizableLeftRail';
 import {
   LEFT_RAIL_PROJECT_COLLAPSED_HEIGHT,
   LEFT_RAIL_PROJECT_RATIO_DEFAULT,
   projectRatioFromPointer,
 } from '../src/ui/shell/useLeftRailSplit';
-
-const documents = editorStandardCatalog();
 
 describe('left rail split', () => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -35,15 +31,13 @@ describe('left rail split', () => {
   });
 
   async function mount() {
-    const session = createEditorSession({
-      documents,
-      design: editorStandardDesign(),
-    });
     host = document.createElement('div');
     document.body.append(host);
     root = createRoot(host);
     await act(async () => {
-      root?.render(<App session={session} />);
+      root?.render(
+        <ResizableLeftRail project={<div>Project tree</div>} layers={<div>Layer tree</div>} />,
+      );
     });
     return host;
   }

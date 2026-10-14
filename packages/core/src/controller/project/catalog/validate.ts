@@ -1,17 +1,12 @@
 import { Value } from '@sinclair/typebox/value';
 import { DocumentError } from '../../../document/errors';
-import { projectCatalogSchema, type ProjectCatalogModel } from '../../../schema/node-model/index';
+import { projectCatalogSchema } from '../../../schema/node-model/index';
+import type { ProjectCatalog } from '@facadeur/domain';
 import { sanitizeProjectCatalog } from './sanitize-field-values';
-import { findDefinition } from './ops';
+import { findDefinition, listCatalogDefinitions } from './ops';
 import { effectiveSchemaForDefinition } from './field-contract';
 import { matchesSchemaValue } from '../../validation/json-schema-value';
 import { ensureCatalogFieldIds } from './field-ids';
-import {
-  hasLegacyReferenceLocations,
-  migrateLegacyDesignLibraries,
-  migrateLegacyReferenceLocations,
-} from '../../style/tokens/global/legacy-migration';
-import { isPlainObject } from '../../../utils';
 
 function catalogSchemaErrorMessage(data: unknown): string {
   try {
@@ -25,13 +20,12 @@ function catalogSchemaErrorMessage(data: unknown): string {
   }
 }
 
-export function validateProjectCatalog(data: unknown): ProjectCatalogModel {
-  data = migrateProjectDesignLibraries(data);
+export function validateProjectCatalog(data: unknown): ProjectCatalog {
   const sanitized =
-    data && typeof data === 'object' ? sanitizeProjectCatalog(data as ProjectCatalogModel) : data;
+    data && typeof data === 'object' ? sanitizeProjectCatalog(data as ProjectCatalog) : data;
   const catalog =
     sanitized && typeof sanitized === 'object'
-      ? ensureCatalogFieldIds(sanitized as ProjectCatalogModel).catalog
+      ? ensureCatalogFieldIds(sanitized as ProjectCatalog).catalog
       : sanitized;
 
   try {
@@ -43,43 +37,13 @@ export function validateProjectCatalog(data: unknown): ProjectCatalogModel {
     throw new DocumentError('schema', catalogSchemaErrorMessage(catalog));
   }
 
-  assertCatalogRefIntegrity(catalog as ProjectCatalogModel);
-  assertEffectiveCatalogFields(catalog as ProjectCatalogModel);
-  return catalog as ProjectCatalogModel;
+  assertCatalogRefIntegrity(catalog as ProjectCatalog);
+  assertEffectiveCatalogFields(catalog as ProjectCatalog);
+  return catalog as ProjectCatalog;
 }
 
-function migrateProjectDesignLibraries(data: unknown) {
-  if (!isPlainObject(data)) return data;
-  const globalStyles = isPlainObject(data.globalStyles) ? data.globalStyles : undefined;
-  const migration = migrateLegacyDesignLibraries({
-    tokens: data.tokens,
-    fonts: data.fonts,
-    breakpoints: globalStyles?.breakpoints,
-  });
-  const hasLegacyLibraries =
-    migration.tokens !== undefined && (data.tokens === undefined || 'fonts' in data || migration.tokens !== data.tokens);
-  if (
-    !hasLegacyLibraries &&
-    !('fonts' in data) &&
-    migration.breakpoints === undefined &&
-    !hasLegacyReferenceLocations(data, migration.tokenIds, migration.breakpointIds)
-  ) return data;
-
-  const next = migrateLegacyReferenceLocations(data, migration.tokenIds, migration.breakpointIds) as Record<string, unknown>;
-  delete next.fonts;
-  if (migration.tokens) next.tokens = migration.tokens;
-  if (migration.breakpoints && globalStyles) {
-    next.globalStyles = { ...globalStyles, breakpoints: migration.breakpoints };
-  }
-  return next;
-}
-
-function assertEffectiveCatalogFields(catalog: ProjectCatalogModel) {
-  const definitions = [
-    ...Object.values(catalog.atoms),
-    ...Object.values(catalog.components),
-    ...Object.values(catalog.pages),
-  ];
+function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
+  const definitions = listCatalogDefinitions(catalog).map(({ definition }) => definition);
   const validateRecord = (
     values: Readonly<Record<string, unknown>> | undefined,
     schema: Record<string, unknown> | null,
@@ -198,7 +162,7 @@ function schemaPathExists(schema: Record<string, unknown> | null, path: string) 
 }
 
 /** Ensure schema refs and definitionRef targets exist in the catalog. */
-export function assertCatalogRefIntegrity(catalog: ProjectCatalogModel): void {
+export function assertCatalogRefIntegrity(catalog: ProjectCatalog): void {
   const schemaIds = new Set(Object.keys(catalog.schemas ?? {}));
   const definitionIds = new Set<string>([
     ...Object.keys(catalog.atoms),
@@ -243,7 +207,7 @@ export function assertCatalogRefIntegrity(catalog: ProjectCatalogModel): void {
   assertDefinitionRefsAcyclic(catalog);
 }
 
-function assertDefinitionRefsAcyclic(catalog: ProjectCatalogModel) {
+function assertDefinitionRefsAcyclic(catalog: ProjectCatalog) {
   const definitions = new Map([
     ...Object.entries(catalog.atoms),
     ...Object.entries(catalog.components),
@@ -272,6 +236,6 @@ function assertDefinitionRefsAcyclic(catalog: ProjectCatalogModel) {
   for (const uuid of definitions.keys()) visitDefinition(uuid);
 }
 
-export function emptyProjectCatalog(): ProjectCatalogModel {
+export function emptyProjectCatalog(): ProjectCatalog {
   return { atoms: {}, components: {}, pages: {} };
 }

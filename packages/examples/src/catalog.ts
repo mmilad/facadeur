@@ -5,6 +5,7 @@ import { definitions as pages } from './catalog/pages';
 import { globalStyles } from './catalog/global-styles';
 import { schemas } from './catalog/schemas';
 import { tokens } from './catalog/tokens';
+import { defaultIcons } from './catalog/icons';
 
 export const exampleCatalog = {
   atoms: nameDefinitions(atoms),
@@ -12,6 +13,7 @@ export const exampleCatalog = {
   pages: nameDefinitions(pages),
   schemas,
   tokens,
+  icons: defaultIcons,
   globalStyles,
 } satisfies ProjectCatalog;
 
@@ -66,7 +68,7 @@ function nameForNode(node: Node): string {
   const tag = node.dom.tagName.toLowerCase();
   const attrs = node.dom.attributes ?? {};
   const classes = attrs.class?.split(/\s+/).filter(Boolean) ?? [];
-  const content = node.dom.text ?? node.dom.properties?.textContent;
+  const content = node.dom.text;
   const hint = [
     node.dom.data?.name,
     node.data?.name,

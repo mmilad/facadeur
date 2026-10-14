@@ -1,1 +1,0 @@
-export { StyleController } from './controller';

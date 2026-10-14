@@ -1,12 +1,22 @@
-import {
-  findDefinition,
-  type FlatNode,
-  type NodeModel,
-  type ProjectCatalogModel,
-} from '@facadeur/core';
-import type { LayerItem } from '../selection/selection-model';
+import type { CoreController, NodeModel } from '@facadeur/core';
 
-function layerTypeForNode(node: NodeModel): FlatNode['type'] | 'layer' {
+export interface LayerItem {
+  id: string;
+  /** Catalog UUID render address. */
+  address: string;
+  /** Definition that owns the Catalog node. */
+  documentId: string;
+  name: string;
+  tagName?: string;
+  type: string;
+  children: LayerItem[];
+  virtual: boolean;
+  ownerNodeId?: string;
+  instancePath?: string;
+  fieldEditable: boolean;
+}
+
+function layerTypeForNode(node: NodeModel) {
   if (node.config?.definitionRef) return 'instance';
   return 'layer';
 }
@@ -14,8 +24,6 @@ function layerTypeForNode(node: NodeModel): FlatNode['type'] | 'layer' {
 function layerNameForNode(node: NodeModel, root: boolean): string {
   if (root) return 'root';
   if (node.name?.trim()) return node.name.trim();
-  const legacyName = node.data?.name ?? node.dom.data?.name;
-  if (typeof legacyName === 'string' && legacyName.trim()) return legacyName.trim();
   return node.dom.tagName;
 }
 
@@ -23,27 +31,18 @@ function layerNameForNode(node: NodeModel, root: boolean): string {
 export function catalogLayerTree(
   definitionUuid: string,
   root: NodeModel,
-  catalog: ProjectCatalogModel,
+  core: CoreController,
 ): LayerItem {
   const visit = (node: NodeModel, isRoot = false): LayerItem => ({
     id: node.uuid,
     address: `node:${node.uuid}`,
     documentId: definitionUuid,
     name: layerNameForNode(node, isRoot),
-    tagName: tagNameForNode(node, catalog),
+    tagName: core.getEffectiveNodeTagName(node.uuid) ?? node.dom.tagName,
     type: layerTypeForNode(node),
     children: (node.dom.children ?? []).map((child) => visit(child)),
     virtual: false,
     fieldEditable: false,
   });
   return visit(root, true);
-}
-
-function tagNameForNode(node: NodeModel, catalog: ProjectCatalogModel, seen = new Set<string>()) {
-  const definitionRef = node.config?.definitionRef;
-  if (!definitionRef || seen.has(definitionRef)) return node.dom.tagName;
-  const target = findDefinition(catalog, definitionRef)?.definition;
-  if (!target) return node.dom.tagName;
-  const nextSeen = new Set(seen).add(definitionRef);
-  return tagNameForNode(target.root, catalog, nextSeen);
 }

@@ -1,7 +1,14 @@
 import type { FieldDefinition, FieldValue, JsonSchema } from './document';
 
+export type JsonSchemaField = FieldDefinition & { schema: JsonSchema };
+
+/** Select the primary type declared by a JSON Schema node. */
+export function primaryJsonSchemaType(schema: JsonSchema) {
+  return Array.isArray(schema.type) ? schema.type[0] : schema.type;
+}
+
 /** Derive editor field definitions from a JSON Schema object contract. */
-export function fieldsFromJsonSchema(schema: JsonSchema): FieldDefinition[] {
+export function fieldsFromJsonSchema(schema: JsonSchema): JsonSchemaField[] {
   const branches = schema.anyOf ?? schema.oneOf ?? schema.allOf ?? [schema];
   const names = [...new Set(branches.flatMap((branch) => Object.keys(branch.properties ?? {})))];
   return names.map((name) => {
@@ -19,11 +26,9 @@ function fieldFromJsonSchemaProperty(
   name: string,
   schema: JsonSchema,
   required: boolean,
-): FieldDefinition {
+): JsonSchemaField {
   const branches = schema.anyOf ?? schema.oneOf ?? schema.allOf ?? [schema];
-  const types = branches.map((branch) =>
-    Array.isArray(branch.type) ? branch.type[0] : branch.type,
-  );
+  const types = branches.map(primaryJsonSchemaType);
   const enumValues = branches.flatMap(
     (branch) => branch.enum ?? ('const' in branch ? [branch.const] : []),
   );
@@ -62,7 +67,7 @@ function fieldFromJsonSchemaProperty(
 }
 
 function fieldTypeForSchema(schema: JsonSchema): FieldDefinition['type'] {
-  const type = Array.isArray(schema.type) ? schema.type[0] : schema.type;
+  const type = primaryJsonSchemaType(schema);
   if (type === 'number' || type === 'integer') return 'number';
   if (type === 'boolean') return 'boolean';
   if (type === 'array') return 'array';

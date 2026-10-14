@@ -1,24 +1,12 @@
-import { Type, type Static, type TSchema } from '@sinclair/typebox';
-import { exampleIds } from '@facadeur/examples/ids';
+import type { Static } from '@sinclair/typebox';
 import type { FontFamilyDefinition } from '@facadeur/domain';
-import { defaultKinds } from '../document/kinds';
-import { childFieldPathSchema, idSchema, kindSchema } from './common';
+import { defaultBreakpointIds } from './default-breakpoint-ids';
+import { childFieldPathSchema } from './common';
 import {
-  bindingSchema,
-  bindingTargetSchema,
-  bindingTargets,
-  displayOnSchema,
-  eventBindingSchema,
-  eventDefinitionSchema,
-  exposePathSchema,
-  exposeSchema,
   fieldDefinitionSchema,
   fieldTypeSchema,
   fieldTypes,
   fieldValueSchema,
-  repeatSchema,
-  variantRuleSchema,
-  type BindingTarget,
   type FieldType,
   type FieldValue,
 } from './fields';
@@ -50,7 +38,6 @@ import {
   tokenPathSchema,
   tokenRefSchema,
 } from './layout';
-import { nestedNodeSchema } from './nodes';
 import {
   styleBlockSchema,
   styleChildSchema,
@@ -59,41 +46,15 @@ import {
   styleStatesSchema,
   tokenInterfaceSchema,
 } from './style';
-import { componentTokensSchema } from './component-tokens';
-import {
-  basicSchemaTypes,
-  componentSchemaUseSchema,
-  schemaCatalogSchema,
-  schemaTypeRefSchema,
-  schemaFieldUseSchema,
-  namedSchemaSchema,
-  type BasicSchemaType,
-  type ComponentSchemaUse,
-  type JsonSchema,
-  type NamedSchema,
-  type SchemaCatalog,
-  type SchemaFieldUse,
-  type SchemaTypeRef,
-} from './contract';
-import {
-  variantAxisSchema,
-  variantInsertionSchema,
-  variantNodeOverrideSchema,
-  variantOverridesSchema,
-  variantPresetSchema,
-} from './variants';
+import type { JsonSchema } from './contract';
 
 export {
   fieldTypes,
   type FieldType,
-  bindingTargets,
-  type BindingTarget,
   childFieldPathSchema,
   type FieldValue,
   fieldValueSchema,
   fieldTypeSchema,
-  bindingTargetSchema,
-  kindSchema,
   tokenTypes,
   type TokenType,
   tokenTypeSchema,
@@ -104,12 +65,6 @@ export {
   fontFamilySchema,
   iconDefinitionSchema,
   breakpointSchema,
-  fieldDefinitionSchema,
-  eventDefinitionSchema,
-  exposePathSchema,
-  exposeSchema,
-  eventBindingSchema,
-  variantAxisSchema,
   tokenRefSchema,
   tokenPathSchema,
   marginBoxSchema,
@@ -126,103 +81,13 @@ export {
   styleChildSchema,
   styleBlockSchema,
   tokenInterfaceSchema,
-  bindingSchema,
-  displayOnSchema,
-  repeatSchema,
-  variantRuleSchema,
-  variantNodeOverrideSchema,
-  nestedNodeSchema,
-  variantInsertionSchema,
-  variantOverridesSchema,
-  variantPresetSchema,
   previewDataSchema,
   settingsSchema,
-  componentSchemaUseSchema,
-  basicSchemaTypes,
-  schemaCatalogSchema,
-  schemaTypeRefSchema,
-  schemaFieldUseSchema,
-  namedSchemaSchema,
 };
-
-export const DOCUMENT_SCHEMA_ID = 'https://github.com/mmilad/facadeur/schema/document.schema.json';
-
-export interface DocumentSchemaOptions {
-  kinds?: readonly string[];
-  schemaId?: string;
-}
-
-const documentSchemaMeta = {
-  additionalProperties: false,
-  title: 'Facadeur document',
-  description:
-    'Nested facadeur document. Nodes are frame, text, image, or instance. Design tokens use UUID-keyed family records. A style block paints the component. Instances override fields and variants, and their containing document may add sparse root appearance rules.',
-} as const;
-
-function documentProperties<Kind extends TSchema>(kind: Kind) {
-  return {
-    version: Type.Literal(1),
-    id: idSchema,
-    slug: Type.Optional(idSchema),
-    name: Type.String({ minLength: 1 }),
-    kind,
-    group: Type.Optional(Type.String({ minLength: 1 })),
-    fields: Type.Optional(Type.Array(fieldDefinitionSchema)),
-    previewData: Type.Optional(previewDataSchema),
-    /** Display names only; preset identifiers remain stable when renamed. */
-    variantLabels: Type.Optional(Type.Record(idSchema, Type.String({ minLength: 1 }))),
-    events: Type.Optional(Type.Array(eventDefinitionSchema)),
-    expose: Type.Optional(exposeSchema),
-    variants: Type.Optional(Type.Array(Type.Union([variantAxisSchema, variantPresetSchema]))),
-    settings: Type.Optional(settingsSchema),
-    icons: Type.Optional(Type.Array(iconDefinitionSchema, { minItems: 1 })),
-    tokens: Type.Optional(tokenTreeSchema),
-    styles: Type.Optional(styleBlockSchema),
-    tokenInterface: Type.Optional(tokenInterfaceSchema),
-    componentTokens: Type.Optional(componentTokensSchema),
-    schemaCatalog: Type.Optional(schemaCatalogSchema),
-    schemaUse: Type.Optional(componentSchemaUseSchema),
-    root: nestedNodeSchema,
-  };
-}
-
-/**
- * @deprecated Flat nested-document envelope. Prefer node-model `ProjectCatalog` for new persistence.
- */
-export const documentFileSchema = Type.Object(documentProperties(kindSchema), {
-  ...documentSchemaMeta,
-  $id: DOCUMENT_SCHEMA_ID,
-});
-
-/** JSON Schema for one nested document. Kinds default to atom, component, section, and page. */
-export function createDocumentSchema(options: DocumentSchemaOptions = {}) {
-  if (!options.kinds && !options.schemaId) return documentFileSchema;
-  return Type.Object(documentProperties(literalUnion(options.kinds ?? [...defaultKinds])), {
-    ...documentSchemaMeta,
-    $id: options.schemaId ?? DOCUMENT_SCHEMA_ID,
-  });
-}
 
 export type FieldDefinition = Static<typeof fieldDefinitionSchema>;
 export type ChildFieldOverrides = Record<string, Record<string, FieldValue>>;
 export type PreviewData = Static<typeof previewDataSchema>;
-export type EventDefinition = Static<typeof eventDefinitionSchema>;
-export type EventBinding = Static<typeof eventBindingSchema>;
-export type EventDataMapping = NonNullable<EventBinding['data']>[number];
-export type EventDataSource = EventDataMapping['source'];
-/** @deprecated Legacy parent-authored aliases; retained until child-contract inheritance migration. */
-export type Expose = Static<typeof exposeSchema>;
-/** @deprecated Legacy expose alias path; retained for document compatibility. */
-export type ExposePath = Static<typeof exposePathSchema>;
-export type VariantAxis = Static<typeof variantAxisSchema>;
-export type DisplayOn = Static<typeof displayOnSchema>;
-export type VariantRule = Static<typeof variantRuleSchema>;
-export type Repeat = Static<typeof repeatSchema>;
-export type VariantNodeOverride = Static<typeof variantNodeOverrideSchema>;
-export type VariantInsertion = Static<typeof variantInsertionSchema>;
-export type VariantOverrides = Static<typeof variantOverridesSchema>;
-export type VariantPreset = Static<typeof variantPresetSchema>;
-export type VariantDefinition = VariantAxis | VariantPreset;
 export type Layout = Static<typeof layoutSchema>;
 export type LayoutOverride = Static<typeof layoutOverrideSchema>;
 export type AxisSize = Static<typeof axisSizeSchema>;
@@ -238,64 +103,26 @@ export type StyleRule = Static<typeof styleRuleSchema>;
 export type StyleChild = Static<typeof styleChildSchema>;
 export type StyleBlock = Static<typeof styleBlockSchema>;
 export type TokenInterface = Static<typeof tokenInterfaceSchema>;
-export type Binding = Static<typeof bindingSchema>;
-export type NestedNode = Static<typeof nestedNodeSchema>;
-export type DocumentSettings = Static<typeof settingsSchema>;
-export type DocumentFile = Static<typeof documentFileSchema>;
-export type {
-  BasicSchemaType,
-  ComponentSchemaUse,
-  JsonSchema,
-  NamedSchema,
-  SchemaCatalog,
-  SchemaFieldUse,
-  SchemaTypeRef,
-};
+export type { JsonSchema };
+export type { IconDefinition } from '@facadeur/domain';
 export type FontStyle = Static<typeof fontStyleSchema>;
 export type FontFaceFile = Static<typeof fontFaceFileSchema>;
 export type FontSource = Static<typeof fontSourceSchema>;
 export type FontFamily = FontFamilyDefinition;
 export type FontFamilyValue = Static<typeof fontFamilySchema>;
-export type IconDefinition = Static<typeof iconDefinitionSchema>;
 export type Breakpoint = Static<typeof breakpointSchema>;
-
-export function isVariantAxis(variant: VariantDefinition): variant is VariantAxis {
-  return 'values' in variant;
-}
-
-export function isVariantPreset(variant: VariantDefinition): variant is VariantPreset {
-  return !isVariantAxis(variant);
-}
 
 /** Viewports used when a document does not set its own breakpoints. */
 export const defaultBreakpoints: Breakpoint[] = [
-  { uuid: exampleIds.catalog.breakpoints.phone, label: 'Phone', minWidth: 375 },
-  { uuid: exampleIds.catalog.breakpoints.tablet, label: 'Tablet', minWidth: 768 },
-  { uuid: exampleIds.catalog.breakpoints.laptop, label: 'Laptop', minWidth: 1024 },
-  { uuid: exampleIds.catalog.breakpoints.desktop, label: 'Desktop', minWidth: 1200 },
-  { uuid: exampleIds.catalog.breakpoints.wide, label: 'Wide', minWidth: 1440 },
-  { uuid: exampleIds.catalog.breakpoints.ultra, label: 'Ultra', minWidth: 1760 },
+  { uuid: defaultBreakpointIds.phone, label: 'Phone', minWidth: 375 },
+  { uuid: defaultBreakpointIds.tablet, label: 'Tablet', minWidth: 768 },
+  { uuid: defaultBreakpointIds.laptop, label: 'Laptop', minWidth: 1024 },
+  { uuid: defaultBreakpointIds.desktop, label: 'Desktop', minWidth: 1200 },
+  { uuid: defaultBreakpointIds.wide, label: 'Wide', minWidth: 1440 },
+  { uuid: defaultBreakpointIds.ultra, label: 'Ultra', minWidth: 1760 },
 ];
 
 /** Display name for a configured viewport. */
 export function breakpointLabel(breakpoint: Pick<Breakpoint, 'uuid' | 'label'>): string {
   return breakpoint.label;
-}
-
-function literalUnion(values: readonly string[]): TSchema {
-  const literals = values.map((value) => Type.Literal(value));
-  const first = literals[0];
-  if (!first) {
-    throw new Error('A schema union needs at least one value');
-  }
-  if (literals.length === 1) return first;
-  return Type.Union(literals as unknown as [TSchema, ...TSchema[]]);
-}
-
-/** Plain JSON Schema document for agents and Ajv, including the draft keyword. */
-export function documentJsonSchema(options: DocumentSchemaOptions = {}): Record<string, unknown> {
-  return {
-    $schema: 'https://json-schema.org/draft/2020-12/schema',
-    ...(createDocumentSchema(options) as unknown as Record<string, unknown>),
-  };
 }

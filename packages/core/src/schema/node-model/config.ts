@@ -1,5 +1,4 @@
 import { Type } from '@sinclair/typebox';
-import { fieldValueSchema } from '../fields';
 import { uuidSchema } from './uuid';
 
 export const previewDataSchema = Type.Object(

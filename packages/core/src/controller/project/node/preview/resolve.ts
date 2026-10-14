@@ -78,12 +78,7 @@ function textFromNode(
   resolveTokenText: (value: string) => string,
 ): string | undefined {
   const fieldText = stringField(fields.text);
-  const source =
-    fieldText ??
-    node.dom.text ??
-    (typeof node.dom.properties?.textContent === 'string'
-      ? node.dom.properties.textContent
-      : undefined);
+  const source = fieldText ?? node.dom.text;
   return source === undefined ? undefined : resolveTokenText(resolveTemplateString(source, ctx));
 }
 
@@ -114,7 +109,7 @@ function createTokenTextResolver(tokenTree: unknown) {
 
 /**
  * Walk a definition tree: merge field layers, resolve bindings, emit renderer-ready configs.
- * Repeaters / definitionRef expansion belong here later — not in buildElement.
+ * Repeaters / definitionRef expansion belong here later — not in the rendering component.
  */
 export function resolveDefinitionToElementBuildConfig(
   definition: NodeDefinition,
@@ -179,7 +174,10 @@ function resolveNodeToElementBuildConfig(
         instanceOverrides,
         resolveTokenText,
       );
-      return { ...built, nodeUuid: node.uuid };
+      const styleNodeUuids = new Set(built.styleNodeUuids ?? []);
+      if (built.nodeUuid) styleNodeUuids.add(built.nodeUuid);
+      styleNodeUuids.add(node.uuid);
+      return { ...built, nodeUuid: node.uuid, styleNodeUuids: [...styleNodeUuids] };
     }
   }
 
@@ -202,6 +200,10 @@ function resolveNodeToElementBuildConfig(
     },
   };
 
+  const text = textFromNode(node, fields, ctx, resolveTokenText);
+  const attributes = resolveStringRecord(node.dom.attributes, ctx) ?? {};
+  const iconId = node.dom.tagName.toLowerCase() === 'svg' ? attributes['data-icon'] : undefined;
+  const icon = iconId ? catalog.icons?.find((entry) => entry.id === iconId) : undefined;
   const children = (node.dom.children ?? []).map((child) =>
     resolveNodeToElementBuildConfig(
       child,
@@ -213,15 +215,21 @@ function resolveNodeToElementBuildConfig(
       resolveTokenText,
     ),
   );
+  const resolvedChildren =
+    node.dom.tagName.toLowerCase() === 'svg' && icon
+      ? icon.data.paths.map((path, index) => ({
+          tagName: 'path',
+          attributes: { d: path },
+          nodeUuid: `${node.uuid}-path-${index}`,
+        }))
+      : children;
 
-  const text = textFromNode(node, fields, ctx, resolveTokenText);
-  const attributes = resolveStringRecord(node.dom.attributes, ctx) ?? {};
+  if (icon) {
+    delete attributes['data-icon'];
+    attributes.viewBox = icon.data.viewBox;
+  }
   const style = resolveStringRecord(node.style, ctx);
-  const properties = node.dom.properties
-    ? Object.fromEntries(
-        Object.entries(node.dom.properties).filter(([name]) => name !== 'textContent'),
-      )
-    : undefined;
+  const properties = node.dom.properties;
 
   return {
     tagName: node.dom.tagName,
@@ -230,7 +238,7 @@ function resolveNodeToElementBuildConfig(
     ...(node.dom.data ? { dataset: { ...node.dom.data } } : {}),
     ...(style && Object.keys(style).length ? { style } : {}),
     ...(properties && Object.keys(properties).length ? { properties } : {}),
-    ...(children.length ? { children } : {}),
+    ...(resolvedChildren.length ? { children: resolvedChildren } : {}),
     nodeUuid: node.uuid,
   };
 }

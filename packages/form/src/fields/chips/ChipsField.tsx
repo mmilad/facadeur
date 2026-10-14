@@ -6,6 +6,7 @@ import type { ChipsFieldProps } from './types';
 export function ChipsField({
   id,
   name,
+  label,
   value,
   suggestions = [],
   placeholder = 'Add a value…',
@@ -49,6 +50,7 @@ export function ChipsField({
         className={`${controlStyles.control} ${styles.input}`}
         id={id}
         name={name}
+        aria-label={label}
         placeholder={placeholder}
         list={listId}
         value={draft}

@@ -1,54 +1,63 @@
 import { describe, expect, it } from 'vitest';
 import {
   CoreController,
-  definitionToElementBuildConfig,
+  resolveDefinitionToElementBuildConfig,
   previewFieldsForNode,
   inspectorInputsForNode,
+  readTokenTree,
   type InspectorFormField,
 } from '../src/index';
-const testUuid17 = globalThis.crypto.randomUUID();
-const testUuid18 = globalThis.crypto.randomUUID();
-const testUuid19 = globalThis.crypto.randomUUID();
+import { createExampleCatalog, exampleIds } from '@facadeur/examples';
 
-const schemaUuid = testUuid17;
-const atomUuid = testUuid18;
-const rootUuid = testUuid19;
+const atomUuid = exampleIds.components.image.definition;
+const rootUuid = exampleIds.components.image.nodes.root;
 
-const catalog = {
-  atoms: {
-    [atomUuid]: {
-      uuid: atomUuid,
-      name: 'Image',
-      kind: 'atom' as const,
-      schema: { kind: 'ref' as const, uuid: schemaUuid },
-      config: {
-        previewData: {
-          fields: { src: 'https://example.test/a.png', alt: 'A', ratio: '1 / 1' },
+function createControllerCatalog() {
+  const catalog = createExampleCatalog();
+  const image = catalog.atoms[atomUuid]!;
+  return {
+    ...catalog,
+    atoms: {
+      ...catalog.atoms,
+      [atomUuid]: {
+        ...image,
+        config: {
+          ...image.config,
+          previewData: {
+            fields: { src: 'https://example.test/a.png', alt: 'A', ratio: '1 / 1' },
+          },
         },
       },
-      root: {
-        uuid: rootUuid,
-        dom: { tagName: 'img', attributes: { src: '', alt: '' } },
-      },
     },
-  },
-  components: {},
-  pages: {},
-  schemas: {
-    [schemaUuid]: {
-      type: 'object',
-      required: ['src'],
-      properties: {
-        src: { type: 'string' },
-        alt: { type: 'string' },
-        ratio: { type: 'string' },
-      },
-    },
-  },
-};
+  };
+}
 
 describe('CoreController', () => {
+  it('answers Catalog and token queries through its controller API', () => {
+    const catalog = createControllerCatalog();
+    const core = new CoreController(catalog);
+    core.openDefinition(atomUuid);
+    const token = readTokenTree(catalog.tokens ?? {})
+      .tokens.values()
+      .next().value;
+
+    expect(core.getDefinition(atomUuid)?.definition.name).toBe('Image');
+    expect(core.getDefinitionDisplayName(atomUuid)).toBe('Image');
+    expect(core.getDefinitionSummaries()).toContainEqual({
+      uuid: atomUuid,
+      name: 'Image',
+      kind: 'atom',
+    });
+    expect(core.getEffectiveNodeTagName(rootUuid)).toBe('img');
+    expect(core.getActiveBreakpoints().length).toBeGreaterThan(0);
+    expect(token).toBeDefined();
+    expect(core.getTokenByUUID(token!.uuid)?.uuid).toBe(token!.uuid);
+    expect(core.getTokenByReference(`{token:${token!.uuid}}`)?.uuid).toBe(token!.uuid);
+    expect(core.getTokenByReference('not-a-token')).toBeUndefined();
+  });
+
   it('opens a definition and resolves preview fields', () => {
+    const catalog = createControllerCatalog();
     const core = new CoreController(catalog);
     core.openDefinition(atomUuid);
     expect(core.getSnapshot().openDefinition?.name).toBe('Image');
@@ -57,6 +66,7 @@ describe('CoreController', () => {
   });
 
   it('builds declarative element config for preview render', () => {
+    const catalog = createControllerCatalog();
     const core = new CoreController(catalog);
     core.openDefinition(atomUuid);
     const config = core.node.element.buildOpenDefinition();
@@ -66,18 +76,39 @@ describe('CoreController', () => {
   });
 
   it('patches instance data on the open definition', () => {
+    const catalog = createControllerCatalog();
     const core = new CoreController(catalog);
     core.openDefinition(atomUuid);
     core.patchNodeField('src', 'https://example.test/b.png');
     expect(previewFieldsForNode(core.getSnapshot().openDefinition!, rootUuid).src).toBe(
       'https://example.test/b.png',
     );
-    expect(definitionToElementBuildConfig(core.getSnapshot().openDefinition!).attributes?.src).toBe(
-      'https://example.test/b.png',
-    );
+    expect(
+      resolveDefinitionToElementBuildConfig(
+        core.getSnapshot().openDefinition!,
+        core.getSnapshot().catalog,
+      ).attributes?.src,
+    ).toBe('https://example.test/b.png');
+  });
+
+  it('preserves the caller-specific empty-string behavior for preview defaults', () => {
+    const core = new CoreController(createControllerCatalog());
+    core.openDefinition(atomUuid);
+
+    core.patchDefinitionPreviewField(atomUuid, 'alt', '');
+    expect(core.getSnapshot().openDefinition?.config?.previewData?.fields?.alt).toBe('');
+
+    core.applyInspectorFormChange({
+      kind: 'previewField',
+      definitionUuid: atomUuid,
+      field: 'alt',
+      value: '',
+    });
+    expect(core.getSnapshot().openDefinition?.config?.previewData?.fields?.alt).toBeUndefined();
   });
 
   it('calculates inspector field defs and merged values', () => {
+    const catalog = createControllerCatalog();
     const core = new CoreController(catalog);
     core.openDefinition(atomUuid);
     const inputs = inspectorInputsForNode(catalog, core.getSnapshot().openDefinition!, rootUuid);
@@ -91,6 +122,7 @@ describe('CoreController', () => {
   });
 
   it('builds a schema-driven inspector form model with presets', () => {
+    const catalog = createControllerCatalog();
     const core = new CoreController(catalog);
     core.openDefinition(atomUuid);
     const model = core.node.preview.inspectorForm(rootUuid);
@@ -98,14 +130,17 @@ describe('CoreController', () => {
     expect(model!.formValue.definition.name).toBe('Image');
     expect(model!.formValue.node.tagName).toBe('img');
     const flat = flattenInspectorFields(model!.fields);
-    expect(flat.some((field) => field.type === 'select' && field.path === 'node.tagName')).toBe(true);
-    expect(flat.some((field) => field.type === 'classList')).toBe(true);
-    expect(flat.some((field) => field.type === 'schemaField' && field.path === 'nodeData.src')).toBe(
+    expect(flat.some((field) => field.type === 'select' && field.path === 'node.tagName')).toBe(
       true,
     );
+    expect(flat.some((field) => field.type === 'classList')).toBe(true);
+    expect(
+      flat.some((field) => field.type === 'schemaField' && field.path === 'nodeData.src'),
+    ).toBe(true);
   });
 
   it('notifies subscribers after mutations', () => {
+    const catalog = createControllerCatalog();
     const core = new CoreController(catalog);
     let count = 0;
     core.subscribe(() => {

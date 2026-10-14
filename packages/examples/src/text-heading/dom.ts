@@ -8,8 +8,6 @@ export const root: Node = {
   },
   dom: {
     tagName: 'h2',
-    properties: {
-      textContent: 'Section title',
-    },
+    text: 'Section title',
   },
 };

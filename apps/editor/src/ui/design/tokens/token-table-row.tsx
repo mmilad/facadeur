@@ -1,7 +1,8 @@
-import { readTokenTree, tokenReferenceValue } from '@facadeur/core';
+import { readTokenTree, tokenReferenceValue, tokenReferencesByType } from '@facadeur/core';
 import { TransformableField, TextField } from '@facadeur/form';
-import { typographyTokenRefs } from '../../../domain/editing';
-import type { EditorSession, EditorSnapshot } from '../../../domain/session';
+import type { EditorSnapshot } from '../../../domain/session';
+import type { EditorEvent } from '../../../domain/sidebar/events';
+import { EditorEventType } from '../../../domain/sidebar/events';
 import { formatTokenValue } from '../../../domain/edits/token-edit';
 import type { viewportEditContext } from '../../../domain/viewport/viewport-edit';
 import { TextControl } from '../../controls/fields/index';
@@ -9,7 +10,7 @@ import { TokenValueControl } from '../../controls/fields/TokenValueControl';
 import type { TypographyCatalogs } from '../../controls/typography/index';
 import { DesignShadowEditor, type DesignShadowInput } from '../DesignShadowEditor';
 import { DesignTypographyEditor, type DesignTypographyValue } from '../DesignTypographyEditor';
-import { IconButton } from '../../form/components/shared/IconButton';
+import { IconButton } from '../../components/IconButton';
 import { RemoveTokenButton } from './TokenCrud';
 import {
   commitRawToken,
@@ -19,12 +20,9 @@ import {
 } from './token-breakpoint-helpers';
 import { TokenPreview } from './token-table-preview';
 import { ComboField } from '../../combofield/ComboField';
-import { tokenLeafLabel } from './token-labels';
+import { tokenLeafLabel } from '../../controls/fields/token-presentation';
 import { withTokenMetadata, withTokenLabel } from '../../../domain/edits/token-edit';
-import {
-  previewDesignTokenCssVar,
-  PROJECT_TOKEN_CSS_PREFIX,
-} from '../../../domain/component-tokens';
+import { DESIGN_TOKEN_CSS_PREFIX, previewDesignTokenCssVar } from '@facadeur/style-engine';
 import type { TableRowData } from '../../settings/Table';
 import {
   colorTransformOptions,
@@ -33,7 +31,7 @@ import {
 type ViewportContext = ReturnType<typeof viewportEditContext>;
 
 export function createTokenTableRow({
-  session,
+  onEvent,
   snap,
   token,
   writingId,
@@ -49,7 +47,7 @@ export function createTokenTableRow({
   onTransform,
   onTransformValue,
 }: {
-  session: EditorSession;
+  onEvent: (event: EditorEvent) => void;
   snap: EditorSnapshot;
   token: TableToken;
   writingId: string | null;
@@ -62,7 +60,7 @@ export function createTokenTableRow({
   labelFor: (reference: string) => string;
   searchValue: (reference: string) => string | undefined;
   transformDraft?: { base: string; value: string };
-  onTransform: (type: 'text' | 'color' | 'prop' | 'token') => void;
+  onTransform: (type: 'text' | 'color' | 'prop' | 'token' | 'icon') => void;
   onTransformValue: (next: string) => void;
 }): TableRowData {
   const shownValue = token.effectiveValue;
@@ -102,17 +100,22 @@ export function createTokenTableRow({
     if (next === text) return;
     if (writingId && (next === null || next.trim() === '')) {
       if (token.override !== undefined)
-        resetTokenBreakpoint(session, snap, token.family, token.uuid, writingId);
+        resetTokenBreakpoint(onEvent, snap, token.family, token.uuid, writingId);
       return;
     }
-    commitToken(session, snap, token.family, token.uuid, shownValue, next ?? '', writingId);
+    commitToken(onEvent, snap, token.family, token.uuid, shownValue, next ?? '', writingId);
   };
   const commitLabel = (next: string) => {
     if (next.trim() === displayLabel) return;
-    session.executeDesign({
-      type: 'setToken',
-      family: token.family,
-      token: withTokenLabel(snap.design.tokens, token.family, token.uuid, next),
+    onEvent({
+      type: EditorEventType.DesignCommandExecute,
+      data: {
+        command: {
+          type: 'setToken',
+          family: token.family,
+          token: withTokenLabel(snap.design.tokens, token.family, token.uuid, next),
+        },
+      },
     });
   };
   const pathParts = token.path.split('.');
@@ -121,10 +124,13 @@ export function createTokenTableRow({
     const suffix = next.trim().toLowerCase();
     if (!suffix || suffix === tokenPathSuffix) return;
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(suffix)) {
-      session.setNotice(
-        'Token name must use lowercase letters and numbers separated by hyphens',
-        'error',
-      );
+      onEvent({
+        type: EditorEventType.NoticeSet,
+        data: {
+          text: 'Token name must use lowercase letters and numbers separated by hyphens',
+          tone: 'error',
+        },
+      });
       return;
     }
     const segments = suffix.split('-');
@@ -139,16 +145,27 @@ export function createTokenTableRow({
       if (duplicate || indexed.groups.has(nextPath)) {
         throw new Error(`Token path "${nextPath}" already exists`);
       }
-      session.executeDesign({
-        type: 'setToken',
-        family: token.family,
-        token: withTokenMetadata(snap.design.tokens, token.family, token.uuid, {
-          label: nextLabel,
-          group: nextGroup,
-        }),
+      onEvent({
+        type: EditorEventType.DesignCommandExecute,
+        data: {
+          command: {
+            type: 'setToken',
+            family: token.family,
+            token: withTokenMetadata(snap.design.tokens, token.family, token.uuid, {
+              label: nextLabel,
+              group: nextGroup,
+            }),
+          },
+        },
       });
     } catch (error) {
-      session.setNotice(error instanceof Error ? error.message : 'Could not rename token', 'error');
+      onEvent({
+        type: EditorEventType.NoticeSet,
+        data: {
+          text: error instanceof Error ? error.message : 'Could not rename token',
+          tone: 'error',
+        },
+      });
     }
   };
   return {
@@ -169,7 +186,7 @@ export function createTokenTableRow({
         />
         <div className="token-path-editor">
           <span aria-hidden="true">
-            --{PROJECT_TOKEN_CSS_PREFIX}-{pathParts[0]}-
+            --{DESIGN_TOKEN_CSS_PREFIX}-{pathParts[0]}-
           </span>
           <TextField
             id={`token-path-${token.uuid}`}
@@ -221,11 +238,11 @@ export function createTokenTableRow({
             dimensionFieldOptions={shadowDimensionFieldOptions}
             colorFieldOptions={shadowColorFieldOptions}
             onCommit={(next) =>
-              commitRawToken(session, snap, token.family, token.uuid, next, writingId)
+              commitRawToken(onEvent, snap, token.family, token.uuid, next, writingId)
             }
             onReset={
               writingId && token.override !== undefined
-                ? () => resetTokenBreakpoint(session, snap, token.family, token.uuid, writingId)
+                ? () => resetTokenBreakpoint(onEvent, snap, token.family, token.uuid, writingId)
                 : undefined
             }
           />
@@ -241,15 +258,15 @@ export function createTokenTableRow({
             breakpointId={writingId}
             isOverride={Boolean(writingId)}
             catalogs={typographyCatalogs}
-            typographyTokens={typographyTokenRefs(snap.design.tokens).filter(
+            typographyTokens={tokenReferencesByType(snap.design.tokens, 'typography').filter(
               (candidate) => candidate !== ref,
             )}
             onCommit={(next) =>
-              commitRawToken(session, snap, token.family, token.uuid, next, writingId)
+              commitRawToken(onEvent, snap, token.family, token.uuid, next, writingId)
             }
             onReset={
               writingId && token.override !== undefined
-                ? () => resetTokenBreakpoint(session, snap, token.family, token.uuid, writingId)
+                ? () => resetTokenBreakpoint(onEvent, snap, token.family, token.uuid, writingId)
                 : undefined
             }
           />
@@ -304,10 +321,10 @@ export function createTokenTableRow({
             onCommit={(next) => {
               if (writingId && next.trim() === '') {
                 if (token.override !== undefined)
-                  resetTokenBreakpoint(session, snap, token.family, token.uuid, writingId);
+                  resetTokenBreakpoint(onEvent, snap, token.family, token.uuid, writingId);
                 return;
               }
-              commitToken(session, snap, token.family, token.uuid, shownValue, next, writingId);
+              commitToken(onEvent, snap, token.family, token.uuid, shownValue, next, writingId);
             }}
           />
         )}
@@ -320,7 +337,7 @@ export function createTokenTableRow({
             name={`reset-token-override-${token.uuid}`}
             onClick={() =>
               resetTokenBreakpoint(
-                session,
+                onEvent,
                 snap,
                 token.family,
                 token.uuid,
@@ -333,11 +350,10 @@ export function createTokenTableRow({
         ) : null}
         {token.family !== 'font' ? (
           <RemoveTokenButton
-            session={session}
-            snap={snap}
             family={token.family}
             uuid={token.uuid}
             label={displayLabel}
+            onEvent={onEvent}
           />
         ) : null}
       </div>,

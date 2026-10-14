@@ -1,4 +1,5 @@
-import { useEffect, useState, type KeyboardEvent } from 'react';
+import { useId } from 'react';
+import { TextArea, TextField } from '@facadeur/form';
 
 export function TextControl({
   label,
@@ -15,40 +16,34 @@ export function TextControl({
   multiline?: boolean;
   placeholder?: string;
 }) {
-  const [draft, setDraft] = useState(value);
-  useEffect(() => {
-    setDraft(value);
-  }, [value]);
-
-  function commit() {
-    if (draft !== value) onCommit(draft);
-  }
-
-  function onKeyDown(event: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) {
-    if (event.key === 'Enter' && !multiline) event.currentTarget.blur();
-  }
+  const id = useId();
 
   return (
     <label className="field">
       <span>{label}</span>
       {multiline ? (
-        <textarea
-          name={name}
+        <TextArea
+          id={id}
+          name={name ?? id}
           rows={3}
           placeholder={placeholder}
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          onBlur={commit}
-          onKeyDown={onKeyDown}
+          value={value}
+          onChange={() => undefined}
+          onCommit={(next) => {
+            if (next !== value) onCommit(next);
+          }}
         />
       ) : (
-        <input
-          name={name}
-          value={draft}
+        <TextField
+          id={id}
+          name={name ?? id}
+          label={label}
+          value={value}
           placeholder={placeholder}
-          onChange={(event) => setDraft(event.target.value)}
-          onBlur={commit}
-          onKeyDown={onKeyDown}
+          onChange={() => undefined}
+          onCommit={(next) => {
+            if (next !== value) onCommit(next);
+          }}
         />
       )}
     </label>

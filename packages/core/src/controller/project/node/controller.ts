@@ -3,13 +3,11 @@ import { ConfigController } from './config/controller';
 import { ElementController } from './element/controller';
 import { PreviewController } from './preview/controller';
 import { SchemaController } from './schema/controller';
-import { StyleController } from './style/controller';
 
-/** Orchestrates preview, config, element, schema, and style for the open definition tree. */
+/** Orchestrates preview, config, element, and schema for the open definition tree. */
 export class NodeController {
   readonly preview: PreviewController;
   readonly element: ElementController;
-  readonly style: StyleController;
   readonly config: ConfigController;
   readonly schema: SchemaController;
 
@@ -18,7 +16,6 @@ export class NodeController {
     this.element = new ElementController(this.preview);
     this.config = new ConfigController(core, this.preview);
     this.schema = new SchemaController(core);
-    this.style = new StyleController();
   }
 
   get openDefinitionId() {

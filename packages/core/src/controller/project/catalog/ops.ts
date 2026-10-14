@@ -7,6 +7,7 @@ import type {
   ProjectCatalog,
 } from '@facadeur/domain';
 import { isVoidHtmlTag } from '../../../document/html-tags';
+import { syncLayerStyleSelector } from './layer-styles';
 
 function nodeAcceptsChildren(tagName: string): boolean {
   return !isVoidHtmlTag(tagName);
@@ -21,6 +22,19 @@ export function findDefinition(
     return { kind: 'components', definition: catalog.components[uuid]! };
   if (catalog.pages[uuid]) return { kind: 'pages', definition: catalog.pages[uuid]! };
   return null;
+}
+
+export function listCatalogDefinitions(
+  catalog: ProjectCatalog,
+): { kind: CatalogMapKey; definition: NodeDefinition }[] {
+  return [
+    ...Object.values(catalog.atoms).map((definition) => ({ kind: 'atoms' as const, definition })),
+    ...Object.values(catalog.components).map((definition) => ({
+      kind: 'components' as const,
+      definition,
+    })),
+    ...Object.values(catalog.pages).map((definition) => ({ kind: 'pages' as const, definition })),
+  ];
 }
 
 export function findNodeByUuid(root: Node, uuid: string): Node | null {
@@ -162,9 +176,10 @@ export function patchNodeName(
 ): ProjectCatalog {
   const trimmed = name.trim();
   if (!trimmed) return catalog;
-  return mutateNode(catalog, definitionUuid, nodeUuid, (node) => {
+  const renamed = mutateNode(catalog, definitionUuid, nodeUuid, (node) => {
     (node as { name?: string }).name = trimmed;
   });
+  return syncLayerStyleSelector(renamed, nodeUuid, trimmed);
 }
 
 export function patchNodeFieldExposure(

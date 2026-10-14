@@ -2,15 +2,11 @@ import {
   CoreController,
   DocumentError,
   emptyProjectCatalog,
-  findDefinition,
   findNodeByUuid,
   type CatalogDesignCommand,
   type DefaultKind,
 } from '@facadeur/core';
-import type { DesignInput } from '@facadeur/tokens';
 import { catalogAssetSummaries } from '../catalog/asset-list';
-import { activeBreakpoints } from '@facadeur/tokens';
-import { createInMemoryCatalogPort } from '../project/in-memory-catalog-port';
 import { buildCatalogEditorSnapshot, initialCatalogAsset } from './catalog-snapshot';
 import type {
   EditorDrag,
@@ -21,11 +17,10 @@ import type {
   EditorTool,
 } from './types';
 import type { StyleEditMode } from '../viewport/viewport-edit';
+import type { StageState } from '../viewport/stage';
 
 export function createEditorSession(options: EditorSessionOptions): EditorSession {
   const core = options.core ?? new CoreController(options.projectCatalog ?? emptyProjectCatalog());
-  const catalogPort =
-    options.catalogPort ?? createInMemoryCatalogPort(() => core.getSnapshot().catalog);
 
   const listeners = new Set<() => void>();
   let workspace: DefaultKind = 'page';
@@ -34,14 +29,16 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   let selectedRenderId: string | null = null;
   let notice: EditorNotice | null = null;
   let zoomLabel = '100%';
+  const canvasTransforms = new Map<string, StageState>();
   let tool: EditorTool = 'select';
   let drag: EditorDrag | null = null;
   let generation = 0;
   let designRevision = 0;
+  let selectingNode = false;
   let revision = 0;
   let catalogBaseline = JSON.stringify(core.getSnapshot().catalog);
   function defaultFocusViewportId() {
-    const breakpoints = activeBreakpoints(core.getSnapshot().catalog.globalStyles?.breakpoints);
+    const breakpoints = core.getActiveBreakpoints();
     return breakpoints[0]?.uuid ?? null;
   }
   let focusViewportId: string | null = defaultFocusViewportId();
@@ -84,7 +81,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   }
 
   function openAssetCore(id: string) {
-    const located = findDefinition(core.getSnapshot().catalog, id);
+    const located = core.getDefinition(id);
     if (!located) {
       core.closeDefinition();
       notice = { tone: 'error', text: `Unknown catalog definition "${id}"` };
@@ -118,7 +115,12 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
   function applySelectNode(nodeId: string) {
     const definition = core.getSnapshot().openDefinition;
     if (definition && findNodeByUuid(definition.root, nodeId)) {
-      core.selectNode(nodeId);
+      selectingNode = true;
+      try {
+        core.selectNode(nodeId);
+      } finally {
+        selectingNode = false;
+      }
       selectedNodeId = nodeId;
       selectedRenderId = `node:${nodeId}`;
       publish();
@@ -126,7 +128,7 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     }
   }
 
-  const initial = initialCatalogAsset(catalogAssetSummaries(core.getSnapshot().catalog));
+  const initial = initialCatalogAsset(catalogAssetSummaries(core));
   if (initial) {
     workspace = initial.kind;
     openAssetCore(initial.id);
@@ -136,30 +138,20 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
 
   const unsubCore = core.subscribe(() => {
     generation += 1;
-    designRevision += 1;
-    if (openId && !findDefinition(core.getSnapshot().catalog, openId)) {
+    if (!selectingNode) designRevision += 1;
+    if (openId && !core.getDefinition(openId)) {
       openId = '';
       selectedNodeId = null;
       selectedRenderId = null;
     }
     if (
       focusViewportId &&
-      !activeBreakpoints(core.getSnapshot().catalog.globalStyles?.breakpoints).some(
-        (item) => item.uuid === focusViewportId,
-      )
+      !core.getActiveBreakpoints().some((item) => item.uuid === focusViewportId)
     ) {
       focusViewportId = defaultFocusViewportId();
     }
     publish();
   });
-
-  const refuseDocumentCommand = () => {
-    notice = {
-      tone: 'info',
-      text: 'Document commands are not available — edit catalog assets and design tokens only.',
-    };
-    publish();
-  };
 
   return {
     core,
@@ -175,6 +167,10 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       if (!snapshot) throw new DocumentError('schema', 'Editor session is not ready');
       return snapshot;
     },
+    markCatalogSaved() {
+      catalogBaseline = JSON.stringify(core.getSnapshot().catalog);
+      publish();
+    },
     setWorkspace(kind) {
       workspace = kind;
       publish();
@@ -182,8 +178,6 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     openAsset(id) {
       openAssetCore(id);
     },
-    drillToMaster: refuseDocumentCommand,
-    navigateDrillParent: refuseDocumentCommand,
     selectNode(nodeId) {
       if (!nodeId) {
         selectedNodeId = null;
@@ -197,7 +191,6 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       selectedRenderId = renderedId;
       publish();
     },
-    setNestedField: refuseDocumentCommand,
     setFocusViewport(id) {
       focusViewportId = id;
       publish();
@@ -206,12 +199,10 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       selectedViewportId = id;
       publish();
     },
-    setViewportChrome: refuseDocumentCommand,
     setEditTarget(target) {
       editTarget = target;
       publish();
     },
-    setActiveVariant: refuseDocumentCommand,
     setTool(next) {
       tool = next;
       publish();
@@ -224,17 +215,12 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
       drag = null;
       publish();
     },
-    execute: refuseDocumentCommand,
     executeDesign(command: CatalogDesignCommand) {
       core.applyDesignCommand(command);
       designRevision += 1;
       notice = null;
       publish();
     },
-    executeDocument: refuseDocumentCommand,
-    undo: refuseDocumentCommand,
-    redo: refuseDocumentCommand,
-    loadDocument: refuseDocumentCommand,
     setNotice(text, tone = 'info') {
       notice = { tone, text };
       publish();
@@ -259,47 +245,11 @@ export function createEditorSession(options: EditorSessionOptions): EditorSessio
     fit() {
       fitHandler?.();
     },
-    boardDocuments: () => [],
-    boardStores: () => [],
-    designInput(): DesignInput {
-      const catalog = core.getSnapshot().catalog;
-      const design = buildCatalogEditorSnapshot({
-        core,
-        workspace,
-        openId,
-        selectedNodeId,
-        selectedRenderId,
-        tool,
-        drag,
-        notice,
-        zoomLabel,
-        generation,
-        designRevision,
-        revision,
-        catalogDirty: catalogDirty(),
-        focusViewportId,
-        selectedViewportId,
-        editTarget,
-      }).design;
-      return {
-        tokens: design.tokens,
-        breakpoints: design.settings?.breakpoints,
-      };
+    getCanvasTransform(assetId) {
+      return canvasTransforms.get(assetId) ?? null;
     },
-    filenameFor: (id) => `${id}.json`,
-    fileHandle: () => undefined,
-    rememberHandle: () => {},
-    async saveOpenDocument() {
-      return false;
+    rememberCanvasTransform(assetId, state) {
+      canvasTransforms.set(assetId, state);
     },
-    async saveDesign() {
-      if (!catalogDirty()) return false;
-      await core.persist(catalogPort);
-      catalogBaseline = JSON.stringify(core.getSnapshot().catalog);
-      publish();
-      return true;
-    },
-    documentStores: () => [],
-    markDocumentSaved: () => publish(),
   };
 }

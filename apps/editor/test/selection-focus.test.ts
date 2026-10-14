@@ -7,7 +7,7 @@ import { createSelection } from '../src/domain/selection/selection';
 import type { ViewportFrame } from '../src/domain/viewport/board';
 import { exampleIds as fixtureIds } from '@facadeur/examples';
 
-function mountedFrame(id: string, minWidth: number): ViewportFrame {
+function mountedFrame(id: string, minWidth: number, authoredId?: string): ViewportFrame {
   const host = createFrameHost({ id, width: minWidth });
   const column = document.createElement('section');
   column.className = 'viewport-frame';
@@ -15,7 +15,13 @@ function mountedFrame(id: string, minWidth: number): ViewportFrame {
   host.mount(column);
   const node = host.contentDocument().createElement('div');
   node.dataset.facadeurNodeUuid = 'node-1';
+  if (authoredId) node.dataset.id = authoredId;
   host.contentDocument().body.append(node);
+  Object.defineProperty(host.element, 'getBoundingClientRect', {
+    configurable: true,
+    value: () => ({ left: 0, top: 0, right: minWidth, bottom: 640, width: minWidth, height: 640 }),
+  });
+  host.contentDocument().elementFromPoint = () => node;
   return {
     breakpoint: { id, minWidth },
     host,
@@ -24,6 +30,20 @@ function mountedFrame(id: string, minWidth: number): ViewportFrame {
 }
 
 describe('selection focus', () => {
+  it('uses the Catalog node UUID when a rendered node has an authored data-id', () => {
+    const stage = document.createElement('div');
+    document.body.append(stage);
+    const frame = mountedFrame(fixtureIds.catalog.breakpoints.phone, 375, 'author-supplied-id');
+    const selection = createSelection({ stage, getScale: () => 1, frames: () => [frame] });
+
+    expect(selection.hitAt(10, 10)).toEqual({ id: 'node:node-1' });
+
+    selection.destroy();
+    frame.host.destroy();
+    frame.column.remove();
+    stage.remove();
+  });
+
   it('paints the clicked frame as primary and the same node elsewhere as secondary', () => {
     const stage = document.createElement('div');
     document.body.append(stage);

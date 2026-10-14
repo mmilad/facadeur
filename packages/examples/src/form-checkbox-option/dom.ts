@@ -28,9 +28,7 @@ export const root: Node = {
         uuid: exampleFormCheckboxOptionIds.nodes.span1,
         dom: {
           tagName: 'span',
-          properties: {
-            textContent: 'Option',
-          },
+          text: 'Option',
         },
       },
     ],

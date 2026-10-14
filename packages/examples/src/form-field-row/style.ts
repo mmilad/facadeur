@@ -32,7 +32,7 @@ export const styles = {
     background: tokenRef(exampleTokenIds.color.bg.canvas),
     borderBottom: '1px solid ' + tokenRef(exampleTokenIds.color.border.default),
     font: tokenRef(exampleTokenIds.type.body),
-    paddingBlock: '{padding.y}',
-    paddingInline: '{padding.x}',
+    paddingBlock: tokenRef(exampleTokenIds.space.inset.sm),
+    paddingInline: tokenRef(exampleTokenIds.space.inset.md),
   },
 } satisfies Readonly<Record<string, NonNullable<Node['style']>>>;

@@ -1,13 +1,24 @@
-import type { DocumentFile, SchemaCatalog } from '@facadeur/core';
-import type { DesignInput } from '@facadeur/tokens';
+import type { ProjectCatalog } from '@facadeur/domain';
 
 export interface GenerateOptions {
-  documents: readonly DocumentFile[];
-  design?: DesignInput;
-  /** Component JSON Schemas from the project design catalog. */
-  schemaCatalog?: SchemaCatalog;
-  entries?: readonly string[];
-  engine?: 'react';
+  readonly catalog: ProjectCatalog;
+  /** Definition UUIDs to generate; referenced definitions are included automatically. */
+  readonly entries?: readonly string[];
 }
 
-export type GenerateReactOptions = Omit<GenerateOptions, 'engine'>;
+export interface GeneratedFile {
+  readonly path: string;
+  readonly contents: string;
+}
+
+export interface GenerateOutput {
+  readonly ui: readonly GeneratedFile[];
+  readonly stories: readonly GeneratedFile[];
+  readonly components: readonly GeneratedComponent[];
+}
+
+export interface GeneratedComponent {
+  readonly exportName: string;
+  readonly title: string;
+  readonly props: Readonly<Record<string, unknown>>;
+}

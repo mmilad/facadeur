@@ -1,6 +1,8 @@
-import type { EditorSession, EditorSnapshot } from '../../domain/session';
+import type { EditorSnapshot } from '../../domain/session';
+import type { EditorEvent } from '../../domain/sidebar/events';
 import { useMemo } from 'react';
-import { activeBreakpoints, renderDesignCss } from '@facadeur/tokens';
+import { activeBreakpoints } from '@facadeur/core';
+import { renderDesignCss } from '@facadeur/style-engine';
 import { FontsDomainPanel } from '../design/FontsDomainPanel';
 import { IconsDomainPanel } from '../design/IconsDomainPanel';
 import { TokensDomainPanel } from '../design/tokens/TokensDomainPanel';
@@ -14,22 +16,20 @@ import { ViewportsSettingsPanel } from '../design/ViewportsSettingsPanel';
 import { SettingsSections } from '../settings/SettingsSections';
 import { TokenPreviewProvider } from '../controls/fields/TokenPreviewContext';
 import { viewportEditContext } from '../../domain/viewport/viewport-edit';
-import '../form/form.css';
+import '../styles/form.css';
 
 export function DesignDomainStage({
-  session,
   snap,
   domain,
-  onSelectDomain,
+  onEvent,
 }: {
-  session: EditorSession;
   snap: EditorSnapshot;
   domain: DesignDomain;
-  onSelectDomain: (domain: EditorSurface) => void;
+  onEvent: (event: EditorEvent) => void;
 }) {
   const settingsView = isSettingsTokenDomain(domain);
   const title = settingsView ? 'Settings' : designDomainLabel(domain);
-  const designTitle = snap.design.name?.trim() || 'project design';
+  const designTitle = 'project design';
   const sharedResources = domain === 'fonts' || domain === 'icons';
   const tokenDomain = !sharedResources && domain !== 'viewports';
   const fontStyles = useMemo(
@@ -37,14 +37,14 @@ export function DesignDomainStage({
       renderDesignCss(
         {
           tokens: snap.design.tokens,
-          breakpoints: snap.design.settings.breakpoints,
+          breakpoints: snap.design.breakpoints,
         },
         { selector: '.design-domain-stage' },
       ),
-    [snap.design.tokens, snap.design.settings.breakpoints],
+    [snap.design.tokens, snap.design.breakpoints],
   );
   const ctx = viewportEditContext({
-    breakpoints: activeBreakpoints(snap.design.settings.breakpoints),
+    breakpoints: activeBreakpoints(snap.design.breakpoints),
     focusId: snap.focusViewportId,
     editTarget: snap.editTarget,
   });
@@ -57,7 +57,7 @@ export function DesignDomainStage({
           <h1 className="design-domain-breadcrumb">
             {settingsView ? `${title} · ${designDomainLabel(domain)}` : `${title} · ${designTitle}`}
           </h1>
-          {settingsView ? <SettingsSections surface={domain} onSelect={onSelectDomain} /> : null}
+          {settingsView ? <SettingsSections surface={domain} onEvent={onEvent} /> : null}
         </div>
         {sharedResources ? (
           <span className="design-resource-scope">Shared project resources</span>
@@ -66,18 +66,17 @@ export function DesignDomainStage({
       <div className="design-domain-body">
         <TokenPreviewProvider
           design={snap.design}
-          document={snap.design}
           breakpointId={tokenDomain ? ctx.writingBreakpointId : null}
           breakpoints={ctx.breakpoints.slice()}
         >
           {domain === 'fonts' ? (
-            <FontsDomainPanel session={session} snap={snap} />
+            <FontsDomainPanel snap={snap} onEvent={onEvent} />
           ) : domain === 'icons' ? (
-            <IconsDomainPanel session={session} snap={snap} />
+            <IconsDomainPanel snap={snap} />
           ) : domain === 'viewports' ? (
-            <ViewportsSettingsPanel session={session} snap={snap} />
+            <ViewportsSettingsPanel breakpoints={snap.design.breakpoints} onEvent={onEvent} />
           ) : (
-            <TokensDomainPanel key={domain} session={session} snap={snap} domain={domain} />
+            <TokensDomainPanel key={domain} snap={snap} domain={domain} onEvent={onEvent} />
           )}
         </TokenPreviewProvider>
       </div>

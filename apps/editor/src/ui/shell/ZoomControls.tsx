@@ -1,7 +1,14 @@
 import { ZOOM_STEP_FACTOR } from '../../domain/viewport/stage';
-import type { EditorSession } from '../../domain/session';
+import type { EditorEvent } from '../../domain/sidebar/events';
+import { EditorEventType } from '../../domain/sidebar/events';
 
-export function ZoomControls({ session, label }: { session: EditorSession; label: string }) {
+export function ZoomControls({
+  onEvent,
+  label,
+}: {
+  onEvent: (event: EditorEvent) => void;
+  label: string;
+}) {
   return (
     <div className="zoom-controls" role="group" aria-label="Zoom">
       <button
@@ -9,7 +16,12 @@ export function ZoomControls({ session, label }: { session: EditorSession; label
         className="zoom-step"
         aria-label="Zoom out"
         title="Zoom out"
-        onClick={() => session.zoomBy(1 / ZOOM_STEP_FACTOR)}
+        onClick={() =>
+          onEvent({
+            type: EditorEventType.ZoomBy,
+            data: { factor: 1 / ZOOM_STEP_FACTOR },
+          })
+        }
       >
         −
       </button>
@@ -19,7 +31,7 @@ export function ZoomControls({ session, label }: { session: EditorSession; label
         aria-live="polite"
         aria-label="Zoom to 100%"
         title="Zoom to 100%"
-        onClick={() => session.resetZoom()}
+        onClick={() => onEvent({ type: EditorEventType.ZoomReset, data: {} })}
       >
         {label}
       </button>
@@ -28,7 +40,9 @@ export function ZoomControls({ session, label }: { session: EditorSession; label
         className="zoom-step"
         aria-label="Zoom in"
         title="Zoom in"
-        onClick={() => session.zoomBy(ZOOM_STEP_FACTOR)}
+        onClick={() =>
+          onEvent({ type: EditorEventType.ZoomBy, data: { factor: ZOOM_STEP_FACTOR } })
+        }
       >
         +
       </button>

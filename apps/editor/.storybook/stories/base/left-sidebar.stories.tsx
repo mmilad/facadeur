@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { card } from '@facadeur/examples';
 import { createStorybookEditor } from '../../fixtures/editor';
-import { CatalogLayersPanel } from '../../../src/ui/sidebar/layers/CatalogLayersPanel';
-import { ProjectTree } from '../../../src/ui/sidebar/layers/ProjectTree';
-import type { EditorSurface } from '../../../src/ui/sidebar/design/design-domain';
+import { createEditorEventHandler } from '../../../src/ui/shell/editor-event-handler';
+import { CatalogLayersPanel } from '../../../src/ui/sidebar/left/CatalogLayersPanel';
+import { ProjectTree } from '../../../src/ui/sidebar/left/ProjectTree';
+import type { EditorSurface } from '../../../src/ui/design/design-domain';
 import { ResizableLeftRail } from '../../../src/ui/shell/ResizableLeftRail';
 
 function LeftSidebarPreview() {
@@ -16,26 +17,22 @@ function LeftSidebarPreview() {
 
   useEffect(() => () => editor.session.destroy(), [editor.session]);
 
-  const openAsset = useCallback(
-    (assetId: string) => {
-      editor.session.openAsset(assetId, 'root');
-      setSurface('editor');
-    },
-    [editor.session],
-  );
+  const handleSidebarEvent = createEditorEventHandler({
+    app: editor.app,
+    session: editor.session,
+    getSurface: () => surface,
+    navigate: setSurface,
+  });
 
   return (
     <aside className="side side-left" style={{ height: 720 }}>
       <ResizableLeftRail
-        layers={<CatalogLayersPanel app={editor.app} session={editor.session} snap={snap} />}
+        layers={<CatalogLayersPanel model={snap.sidebar.layers} onEvent={handleSidebarEvent} />}
         project={
           <ProjectTree
-            app={editor.app}
-            session={editor.session}
-            snap={snap}
+            model={snap.sidebar.project}
             surface={surface}
-            onOpenAsset={openAsset}
-            onOpenDesignDomain={setSurface}
+            onEvent={handleSidebarEvent}
           />
         }
       />

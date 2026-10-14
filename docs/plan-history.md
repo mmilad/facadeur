@@ -69,7 +69,7 @@ Remaining design serialization/core selector/cascade decisions are documented in
 - [x] Add optional local styleName to every node, unique per document; derive
       readable fallback classes for legacy nodes and show the name in the inspector.
       Bind rule class references to node IDs so renaming preserves meaning. Maintain
-      flat/nested conversion, JSON/Yjs round trips, sparse variants and Undo.
+      flat/nested conversion, JSON/legacy collaboration system round trips, sparse variants and Undo.
 - [x] Add ordered selector rules to styles, scoped to the owning component.
       Support checked/adjacent siblings, functional pseudo-classes and pseudo-elements,
       preserve token substitution and breakpoint/variant layers, and prune dangling
@@ -182,7 +182,7 @@ label persistence and unchanged codegen, then inspect the live editor.
 Completion: `tokenDisplayLabel` prefers saved labels; `TokenValueLabelProvider` scopes inherited
 instance values (manual CSS, border compounds, layout gap/padding/margin/size) while pickers stay
 owner-scoped. Component token tab and design tables use `TokenPreviewProvider` / controlled label
-inputs. Focused editor, core, store-yjs and codegen-react tests pass (24+). Schema already
+inputs. Focused editor, core, retired adapter and codegen-react tests pass (24+). Schema already
 exports optional `componentTokens.label`; unrelated full-suite example failures remain outside
 this change.
 
@@ -270,13 +270,13 @@ confirm all six iframe widths remain exact (375–1760px), with 20px chrome padd
 
 ### Product Card workflow (2026-10-02)
 
-- [x] Move the adapter-specific component-token test from core to store-yjs; retain pure Core tests.
+- [x] Move the adapter-specific component-token test from core to retired adapter; retain pure Core tests.
 - [x] Add Product Card fields, composed Button, image, price, preview data and sparse Compact preset.
 - [x] Include it in codegen and verify generated React/Storybook output and rendered variants.
 - [x] Exercise API edits, shared editor state, Save and restart on a disposable project copy.
 
-Boundary decision: Core tests currently import its Yjs adapter, creating an undeclared reverse
-dependency. Relocate only that adapter behavior test to store-yjs instead of adding a cyclic dev
+Boundary decision: Core tests currently import its legacy collaboration system adapter, creating an undeclared reverse
+dependency. Relocate only that adapter behavior test to retired adapter instead of adding a cyclic dev
 dependency. Preserve coverage and strengthen actual Undo/Redo assertions. Product Card belongs in
 examples; reuse current DSL/renderer/codegen contracts, no new runtime helpers or public API changes.
 Retain the cohesive server repository (461 lines); no extension is planned. Preserve all staged
@@ -298,7 +298,7 @@ Refactoring prerequisite: the project adapter currently owns registration and pe
 place multiplexed socket lifecycle in a private domain/project module before integration. Keep the
 session coordinator (478 lines) cohesive; remote catalog registration belongs beside session document
 registration, not in UI controls. Keep the repository (461 lines) unchanged unless required: HTTP owns
-wire publication, not persistence. Preserve current API routes, Core commands, Yjs identity, local Undo,
+wire publication, not persistence. Preserve current API routes, Core commands, prior document identity, local Undo,
 selection and user changes (including examples/specimen-page.json). No deployment/auth or replacement
 imports in this task. Validate focused behavior, full tests, type/lint and an actual two-tab browser run.
 
@@ -316,12 +316,12 @@ catch-up. Browser on an isolated copy: new component in tab A immediately appear
 navigation/reload; API text appeared in both, Save in B succeeded, and a fresh view rendered it.
 Stopped isolated preview servers and removed temporary Next configuration changes. Local default
 server restarted with the new channel. Remaining local-only/auth/import/schema-library boundaries
-are unchanged and documented in project-api.md.
+are unchanged. The project API guide was removed with the retired API workspace.
 Final validation cleanup: full lint also exposed unused imports/parameters from existing refactors.
 Remove imports or prefix unused parameters while preserving signatures and runtime behavior; no
 additional decomposition or DSL change. Discard only the generated isolated Next verification cache.
 Broader existing gates remain separate: workspace typecheck fails because core's component-token
-test imports undeclared store-yjs (10 packages pass, core fails); global Prettier reports widespread
+test imports undeclared retired adapter (10 packages pass, core fails); global Prettier reports widespread
 existing formatting deviations.
 Do not add a cyclic dev dependency or reformat the repository silently. Editor/server typechecks,
 changed-source formatting, ESLint and the complete behavioral test suite are the completion gates
@@ -340,12 +340,12 @@ formatting passes, and the detector retains only the cohesive 493-line session c
 - Validation: skill validator, temporary Git/non-Git projects, path/exclusion/threshold
   regression tests, and a read-only scan against this repository.
 
-### Shared Yjs project server and save/edit API (2026-10-02)
+### Shared legacy collaboration system project server and save/edit API (2026-10-02)
 
 - [x] Add durable project document storage with server-owned Y.Docs and validated commands.
 - [x] Add local HTTP load/edit/save endpoints and a WebSocket update channel; acknowledge
       edits only after persistence, reject stale revisions and externally changed JSON exports.
-- [x] Hydrate editor stores from the server's Yjs history, synchronize remote edits and local
+- [x] Hydrate editor stores from the server's prior document history, synchronize remote edits and local
       Undo/Redo, and separate remote transaction origins from local Undo history.
 - [x] Load the editor through the project API, save shared snapshots without a file picker,
       expose JSON export explicitly and show connection/persistence failures.
@@ -354,8 +354,8 @@ formatting passes, and the detector retains only the cohesive 493-line session c
 
 Refactoring decisions: `create-editor-session.ts` (455 lines) remains the session coordinator;
 new transport and persistence responsibility belongs in a private `domain/project/` adapter.
-The shell directory remains one cohesive UI domain. Extract remote Yjs update observation
-within `store-yjs` before adding transport. A new `apps/server` owns independent server
+The shell directory remains one cohesive UI domain. Extract remote legacy collaboration system update observation
+within `retired adapter` before adding transport. A new `apps/server` owns independent server
 runtime, disk persistence and HTTP/WebSocket lifecycle; it consumes package public APIs.
 Preserve existing staged changes, the user's chrome-body padding, JSON/command contracts,
 sparse overrides, token resolution and local Undo. Runtime sync state is stored separately
@@ -372,7 +372,8 @@ Browser verification used a disposable copy of examples: Save wrote Card without
 HTTP preview-data edits appeared live, a second tab hydrated the unsaved shared state, and
 server outage produced an explicit save error. Reconnection after restart retained the API
 edit and Save succeeded. No project example or user padding was modified in this verification.
-See [project-api.md](project-api.md) for endpoint contracts and local-only boundaries.
+The endpoint contracts described in this historical section belonged to the API workspace,
+which was removed on 2026-10-12.
 Live catalog additions in other tabs, replacement imports, shared schema-library management,
 authentication and a browser-durable offline outbox are intentionally not included.
 Existing full-suite deviations: generated schema lacks the component-token label, the
@@ -405,7 +406,7 @@ pass; changed TypeScript sources pass lint, and before/after scans have no candi
 Browser: Card and Sign in render across all six viewports, Compact retains sample content,
 all chrome/body/screen/iframe padding is zero, and frame widths match at 20% zoom. Screenshot
 checked at 52% zoom. Temporary inspector resizing was restored.
-Existing validation failures outside this change: `store-yjs/src/codec.ts:58` casts
+Existing validation failures outside this change: `retired adapter source codec:58` casts
 `ComponentTokenMap` directly to a JSON record; the committed JSON Schema is missing the
 component-token `label` property. The schema-sync assertion was excluded from the targeted
 passing run after confirming its failure separately; catalog/roundtrip checks pass.
@@ -428,7 +429,7 @@ module before extending Session, Layers, and Stage. Local node IDs and render ad
 distinct; `nested-selection` owns their resolution and tree projection while Session remains the
 coordinator. Sparse `childFields` on instances add local overrides for unexposed inner input fields.
 Paths contain instance IDs rather than copies of masters. Field-only commands, reset, and validation
-preserve atomic rejection, Undo, and round trips. Renderer, variants, Yjs, and codegen share this
+preserve atomic rejection, Undo, and round trips. Renderer, variants, legacy collaboration system, and codegen share this
 contract; portable path/overlay semantics belong to Core, while DOM/code output stays in adapters.
 
 The inspector shows field origin, inherited values, and reset. Nested selections have no style,
@@ -442,7 +443,7 @@ change is limited to the justified optional field-override map, with no migratio
 `nested-selection/` separates address resolution, field context, and virtual-tree projection;
 `InstanceFieldOverride` is shared by direct and nested inspectors. Core owns shared path/merge
 semantics; codegen owns a private transport emitter. Schema/Flat and output/Session coordinators
-remain cohesive. The Yjs codec separates encode, decode, and shared helpers while `codec.ts` keeps
+remain cohesive. The legacy collaboration system codec separates encode, decode, and shared helpers while `codec.ts` keeps
 `patchDocument`, `readDocument`, and `ensureDocumentMaps`. Round trips and Undo remain unchanged.
 `packages/tokens/src/resolve.ts` remains a cohesive resolution/output algorithm, and Content Inspector
 files remain one UI domain. Validation: 116 test files / 569 tests, typechecks for five affected
@@ -499,31 +500,30 @@ Erster Größen-Scan vom 2026-10-01. Offene Einträge sind **Prüfaufträge**, k
 Refactors. Vor Umsetzung konkrete Verantwortlichkeiten, Grenzen und Verhaltenstests festlegen.
 Bei zusammenhängendem Code darf die Entscheidung ausdrücklich „beibehalten“ lauten.
 
-| Status                    | Kandidat                                                         | Ergebnis / nächste Prüfung                                                                               |
-| ------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Erledigt                  | `packages/core/src/validate.ts`                                  | Schema, lokale Regeln und Catalog-Contracts extrahiert; Exports und Invarianten erhalten.                |
-| Erledigt                  | `packages/core/src/commands/commands.ts`                         | Kleiner Dispatcher und Mutation-Familien; atomare Validierung und Undo-Vertrag erhalten.                 |
-| Erledigt                  | `packages/store-yjs/src/codec.ts`                                | Encode, Decode und gemeinsame Yjs-Helfer extrahiert; öffentliche Funktionen bleiben in `codec.ts`.       |
-| Erledigt                  | `packages/core/src/variants/variants.ts`                         | Resolver, Preset-Ableitung und Node-Deltas getrennt; Sparse-Override-Verhalten erhalten.                 |
-| Erledigt                  | `packages/core/src/document/schema.ts`                           | Schemafamilien unter `document/schemas/`; `schema.ts` behält die öffentlichen Exports.                   |
-| Erledigt                  | `apps/editor/src/ui/stage/StageCanvas.tsx`                       | Zeigerinteraktion und Board-Mount liegen in `stage/canvas/`; `StageCanvas` bleibt die Komponente.        |
-| Erledigt                  | `packages/core/src/token-tree.ts`                                | Werteprüfungen, Lesen und Baummutation getrennt; öffentliche Funktionen bleiben in `token-tree.ts`.      |
-| Erledigt                  | `packages/codegen-react/src/component/render.ts`                 | Ereignisse, Datenausdrücke, Bindings und Instanzen extrahiert; `renderNode` bleibt öffentlich.           |
-| Erledigt                  | `packages/core/src/document/flat.ts`                             | Klonen und Baumabfragen unter `document/flat/`; Umwandlung bleibt in `flat.ts`.                          |
-| Erledigt                  | `packages/core/src/styles/style-block.ts`                        | Parser nach `style-block-parse.ts`; Canonicalize, Prune und Contract bleiben zusammen.                   |
-| Erledigt                  | `packages/tokens/src/resolve.ts`                                 | CSS-Ausgabe nach `css-properties.ts`; `loadTokens` und die öffentlichen Exports bleiben in `resolve.ts`. |
-| Erledigt                  | `apps/editor/src/ui/sidebar/layers/ProjectTree.tsx`              | Zeilen und Kontextmenü in `AssetRows.tsx`; Suche und Anlegen bleiben im Baum.                            |
-| Erledigt                  | `apps/editor/src/domain/session/create-editor-session.ts`        | Katalog, Snapshot und Befehle liegen daneben; `createEditorSession` bleibt der Koordinator.              |
-| Erledigt                  | `packages/codegen-react/src/component/catalog.ts`                | Feldtypen und Defaults nach `catalog-fields.ts`; `assignCatalog` bleibt der Katalogdurchlauf.            |
-| Erledigt                  | `apps/editor/src/ui/sidebar/design/tokens/TokensDomainPanel.tsx` | Zeile, Vorschau und Breakpoint-Helfer extrahiert; Token-Cluster liegt unter `design/tokens/`.            |
-| Beibehalten nach Refactor | `packages/renderer-dom/src/render.ts`                            | Rendering/Reconciliation bleibt zusammen; Resolution, Presentation und Contracts wurden extrahiert.      |
+| Status                    | Kandidat                                                         | Ergebnis / nächste Prüfung                                                                                                 |
+| ------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Erledigt                  | `packages/core/src/validate.ts`                                  | Schema, lokale Regeln und Catalog-Contracts extrahiert; Exports und Invarianten erhalten.                                  |
+| Erledigt                  | `packages/core/src/commands/commands.ts`                         | Kleiner Dispatcher und Mutation-Familien; atomare Validierung und Undo-Vertrag erhalten.                                   |
+| Erledigt                  | `retired adapter source codec`                                   | Encode, Decode und gemeinsame legacy collaboration system-Helfer extrahiert; öffentliche Funktionen bleiben in `codec.ts`. |
+| Erledigt                  | `packages/core/src/variants/variants.ts`                         | Resolver, Preset-Ableitung und Node-Deltas getrennt; Sparse-Override-Verhalten erhalten.                                   |
+| Erledigt                  | `packages/core/src/document/schema.ts`                           | Schemafamilien unter `document/schemas/`; `schema.ts` behält die öffentlichen Exports.                                     |
+| Erledigt                  | `apps/editor/src/ui/stage/StageCanvas.tsx`                       | Zeigerinteraktion und Board-Mount liegen in `stage/canvas/`; `StageCanvas` bleibt die Komponente.                          |
+| Erledigt                  | `packages/core/src/token-tree.ts`                                | Werteprüfungen, Lesen und Baummutation getrennt; öffentliche Funktionen bleiben in `token-tree.ts`.                        |
+| Erledigt                  | `packages/codegen-react/src/component/render.ts`                 | Ereignisse, Datenausdrücke, Bindings und Instanzen extrahiert; `renderNode` bleibt öffentlich.                             |
+| Erledigt                  | `packages/core/src/document/flat.ts`                             | Klonen und Baumabfragen unter `document/flat/`; Umwandlung bleibt in `flat.ts`.                                            |
+| Erledigt                  | `packages/core/src/styles/style-block.ts`                        | Parser nach `style-block-parse.ts`; Canonicalize, Prune und Contract bleiben zusammen.                                     |
+| Erledigt                  | `packages/tokens/src/resolve.ts`                                 | CSS-Ausgabe nach `css-properties.ts`; `loadTokens` und die öffentlichen Exports bleiben in `resolve.ts`.                   |
+| Erledigt                  | `apps/editor/src/ui/sidebar/layers/ProjectTree.tsx`              | Zeilen und Kontextmenü in `AssetRows.tsx`; Suche und Anlegen bleiben im Baum.                                              |
+| Erledigt                  | `apps/editor/src/domain/session/create-editor-session.ts`        | Katalog, Snapshot und Befehle liegen daneben; `createEditorSession` bleibt der Koordinator.                                |
+| Erledigt                  | `packages/codegen-react/src/component/catalog.ts`                | Feldtypen und Defaults nach `catalog-fields.ts`; `assignCatalog` bleibt der Katalogdurchlauf.                              |
+| Erledigt                  | `apps/editor/src/ui/sidebar/design/tokens/TokensDomainPanel.tsx` | Zeile, Vorschau und Breakpoint-Helfer extrahiert; Token-Cluster liegt unter `design/tokens/`.                              |
+| Beibehalten nach Refactor | `packages/renderer-dom/src/render.ts`                            | Rendering/Reconciliation bleibt zusammen; Resolution, Presentation und Contracts wurden extrahiert.                        |
 
 `apps/editor/src/domain` ist nach `schema/`, `edits/`, `viewport/`, `selection/`, `navigation/`
 und `assets/` gruppiert. Token-Panels liegen unter `sidebar/design/tokens/`. Komponenten-Editoren
 des Content-Inspectors liegen unter `properties/content/component/`. `controls/data` und `shell`
 bleiben flach, jeweils eine UI-Domäne. Keine `shared/`- oder `utils`-Ordner. Der DOM-Renderer
 behält Paint und Kind-Abgleich zusammen, weil beide sich gegenseitig aufrufen.
-
 
 ## Completed implementation reports (2026-10-06 to 2026-10-09)
 
@@ -606,7 +606,7 @@ The scoped detector has no candidates.
   with project uniqueness validation, a guarded Core command and an editor rename dialog; old
   documents fall back to their existing ID. New asset creation reserves IDs and public identifiers.
 - Contracts: maintain legacy imports/events/variant data, generated CSS scope, repeated instance
-  styling, clone isolation, JSON/Yjs/Undo, class order and arbitrary non-whitespace utility tokens.
+  styling, clone isolation, JSON/legacy collaboration system/Undo, class order and arbitrary non-whitespace utility tokens.
 - Retain cohesive node construction (480 lines); the unrelated declaration editor stays unchanged.
 - Validate class commands/round trips, instance/native rendering and generated literals, badge
   interactions, legacy-panel removal, relevant types/lint and visual editing checks.
@@ -878,7 +878,7 @@ its mode is not persisted as a schema or node-config field in this first pass.
 - [x] `core`: Typen und Schema für Dokument, Knoten (`frame`, `text`, `image`, `instance`), `kind`, Verschachtelungsregeln
 - [x] `core`: flaches Modell (Knoten-Map nach ID, Kinder als ID-Listen) und verlustfreie Umwandlung von/zu verschachteltem Dateiformat, mit Tests
 - [x] `core`: `DocumentStore`-Schnittstelle und Befehls-Typen
-- [x] `store-yjs`: Yjs-Implementierung von `DocumentStore`, Befehle als Transaktionen, `Y.UndoManager`, Tests
+- [x] `retired adapter`: legacy implementation von `DocumentStore`, Befehle als Transaktionen, `undo manager`, Tests
 - [x] JSON-Schema-Export und Validierung (Ajv), Beispiele unter `examples/` validieren im Test
 - [x] `docs/dsl.md` auf das neue Modell aktualisieren
 - [x] CI (GitHub Actions): Lint, Typecheck, Tests
@@ -906,7 +906,7 @@ its mode is not persisted as a schema or node-config field in this first pass.
 ### M5 – Editor foundation
 
 - [x] React-Shell: Bühne, Ebenenliste, Eigenschaften-Panel, Asset-Liste (Atome/Komponenten/Sektionen/Pages), Token- und Schriften-Bereich
-- [x] Befehle über `store-yjs` anbinden, Undo/Redo (Strg+Z / Strg+Shift+Z)
+- [x] Befehle über `retired adapter` anbinden, Undo/Redo (Strg+Z / Strg+Shift+Z)
 - [x] Renderer und Style-Engine abonnieren Änderungen des Stores und aktualisieren gezielt
 - [x] Laden/Speichern der JSON-Dateien (File System Access API oder kleiner Dev-Server)
 - [x] Arbeitsbereiche pro `kind`
@@ -942,13 +942,13 @@ its mode is not persisted as a schema or node-config field in this first pass.
 ## Decision log
 
 - 2026-09-24: Grundsatzentscheidungen oben festgehalten (iframes pro Viewport, Auto Layout als Standard, Abstände nur über Tokens, Instanzen ohne Detach, Vite + React statt Next.js für den Editor).
-- 2026-09-24: Yjs von Anfang an als lokaler Store mit flachem Datenmodell, damit Echtzeit-Zusammenarbeit später nur einen Sync-Server braucht. Sync-Dienst läuft getrennt von Next.js/Vercel.
+- 2026-09-24: legacy collaboration system von Anfang an als lokaler Store mit flachem Datenmodell, damit Echtzeit-Zusammenarbeit später nur einen Sync-Server braucht. Sync-Dienst läuft getrennt von Next.js/Vercel.
 - 2026-09-24: Schema in `core` mit TypeBox (Draft 2020-12), Validierung mit Ajv. TypeBox ist das Schema, das wir exportieren; ein zweites Zod-Modell würde nur driften.
 - 2026-09-24: POC liegt in `packages/renderer-dom` und `packages/editor` (Vite, noch ohne React). Die React-Shell bleibt M5. Die Bühne (Pan/Zoom, Raster, Auswahl) ist die bisherige, auf das neue Dokument umgestellt.
 - 2026-09-24: Dateiformat hat ein verschachteltes `root`. Das Wurzel-Frame ist die Arbeitsfläche des Dokuments; Verschachtelungsregeln gelten für alles darunter. Eine Page enthält deshalb als Kinder nur Sektions-Instanzen, das Wurzel-Frame selbst ist der Canvas und kein Inhalt. „Atome enthalten nur Grundbausteine“ heißt: `frame`, `text`, `image`, keine Instanzen. Instanzen sind das Mittel, um Atome und Komponenten einzusetzen.
 - 2026-09-24: Felder und Varianten-Achsen stehen im Schema an Atom und Komponente (der Button ist ein Atom und braucht `label`, `tone`, `size`). Instanzen haben keine Kinder, keine Attribute und keinen Stil; nur `layout` plus Feld- und Variantenwerte. Die alte Sign-in-Karte mit Kindern an der Instanz ist eine eigene Komponente `sign-in`.
 - 2026-09-24: `style` an Primitiv-Knoten ist Daten (`setStyle`). Anwenden macht die Style-Engine in M3. Die Specimen-Bühne zeigt Varianten über `data-variant-*`, damit der POC-Look ohne Style-Engine bleibt. Abstände (gap, padding, margin) fehlen im Schema, damit keine freien Zahlen die Token-Regel unterlaufen. Absolute Platzierung (`x`, `y`, `width`, `height`) ist drin, weil die Bühne und die freie Position sie brauchen.
-- 2026-09-24: `undo`/`redo` gehören zur `DocumentStore`-Schnittstelle, damit die UI den `Y.UndoManager` nicht anfasst. Nur Transaktionen mit Origin `facadeur` landen im Undo-Stack (`captureTimeout: 0`, ein Befehl = ein Schritt). Laden ist nicht rückgängig zu machen. `tokens` und `fonts` sind leere Y.Maps, reserviert für M2.
+- 2026-09-24: `undo`/`redo` gehören zur `DocumentStore`-Schnittstelle, damit die UI den `undo manager` nicht anfasst. Nur Transaktionen mit Origin `facadeur` landen im Undo-Stack (`captureTimeout: 0`, ein Befehl = ein Schritt). Laden ist nicht rückgängig zu machen. `tokens` und `fonts` sind leere Y.Maps, reserviert für M2.
 - 2026-09-24: Standard-Kinds sind `atom | component | section | page`. `defaultNestingRules` ist austauschbar; `createDocumentSchema({ kinds })` baut ein Schema für eine andere Liste. Das committete JSON Schema zählt die vier Standard-Kinds.
 - 2026-09-24: M2. Der DTCG-Baum liegt im Dokument unter `tokens`. Ein Objekt mit `$value` ist ein Token, sonst eine Gruppe. `$type` und `facadeur.tier` werden von der Gruppe vererbt; ein eigenes `$type` oder `tier` gewinnt. Referenzen bleiben im Y-Dokument unaufgelöst, CSS macht daraus `var(--…)`. Der Store lehnt Zyklen und fehlende Ziele ab, bevor die Transaktion schreibt.
 - 2026-09-24: CSS-Name ist `--` plus Pfadsegmente, verbunden mit `-` (`color.blue.500` → `--color-blue-500`). Segmente sind `[a-z0-9]+`, damit jeder Pfad genau einen Namen hat. Typografie wird pro Feld aufgefächert, das Feld mit doppeltem Bindestrich (`--type-body--font-size`): ein Token-Pfad kann `--` nicht enthalten, also kollidiert das Feld nicht mit einem anderen Token.

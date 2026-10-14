@@ -9,5 +9,7 @@ export interface ElementBuildConfig {
   readonly style?: Readonly<Record<string, string>>;
   readonly properties?: Readonly<Record<string, unknown>>;
   readonly children?: readonly ElementBuildConfig[];
+  /** Catalog nodes whose styles apply to this rendered root, including referenced definition roots. */
+  readonly styleNodeUuids?: readonly Uuid[];
   readonly nodeUuid?: Uuid;
 }

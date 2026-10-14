@@ -5,7 +5,9 @@ Working notes for a major reshape. **DB and examples may be reset**; do not pres
 ### Phase status
 
 1. **Done:** Legacy `examples/*.json` removed; v2 TypeBox in `@facadeur/core/node-model`; starter project = design + section only; **tests paused** (`vitest` empty include); **legacy inspector removed**; right rail = placeholder UI.
-2. **Next:** Catalog API + seed atoms; preview resolver (top-down); renderer v2 ([packages/renderer-dom/V2-RENDERER.md](../packages/renderer-dom/V2-RENDERER.md)); new properties UI on dom/style/schema/data/config.
+2. **Shipped since this draft:** Catalog controller and preview resolver; React `DynamicElement`
+   renders Core's `ElementBuildConfig`. The former standalone `packages/renderer-dom` package was
+   retired as unused compatibility code.
 
 ### TypeBox vs JSON Schema (Ajv)
 
@@ -19,12 +21,12 @@ Pre-commit inspector under `apps/editor/src/inspector` targeted the **legacy** d
 
 ### Single contract (target)
 
-| Bucket | Package entry |
-|--------|----------------|
-| Types + JSON Schema | `@facadeur/core/node-model` |
-| Legacy documents | `documentFileSchema` — **frozen**, replace usages incrementally |
-| Render | `renderer-dom` → consume v2 `Node` + catalog refs |
-| Persist | API `ProjectCatalog` only (no duplicate JSON shapes) |
+| Bucket              | Package entry                                                             |
+| ------------------- | ------------------------------------------------------------------------- |
+| Types + JSON Schema | `@facadeur/core/node-model`                                               |
+| Legacy documents    | `documentFileSchema` — **frozen**, replace usages incrementally           |
+| Render              | Editor React canvas (`DynamicElement`) consumes Core `ElementBuildConfig` |
+| Persist             | API `ProjectCatalog` only (no duplicate JSON shapes)                      |
 
 ## Refs only — no duplication
 
@@ -81,9 +83,7 @@ type Node = {
 ### Schema source (discriminated — no copied schema blobs on instances)
 
 ```ts
-type SchemaSource =
-  | { kind: 'ref'; uuid: Uuid }
-  | { kind: 'inline'; schema: JsonSchema };
+type SchemaSource = { kind: 'ref'; uuid: Uuid } | { kind: 'inline'; schema: JsonSchema };
 ```
 
 - **`NodeDefinition.schema`**: required — ref to shared schema or inline for this entry only.
@@ -91,12 +91,12 @@ type SchemaSource =
 
 ## Target: one node, four buckets (tree **`Node`**)
 
-| Bucket | Purpose |
-|--------|---------|
-| **`dom`** | How this layer maps to HTML/DOM |
-| **`style`** | Authoring-time CSS declarations (camelCase keys) |
-| **`schema`** | Trustworthy contract: JSON Schema (or `$ref`) — shape, types, required, titles. **Not** editor samples. |
-| **`data`** | Values that **validate against `schema`** (instance overrides, authored props). Runtime / composition truth. |
+| Bucket       | Purpose                                                                                                                  |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| **`dom`**    | How this layer maps to HTML/DOM                                                                                          |
+| **`style`**  | Authoring-time CSS declarations (camelCase keys)                                                                         |
+| **`schema`** | Trustworthy contract: JSON Schema (or `$ref`) — shape, types, required, titles. **Not** editor samples.                  |
+| **`data`**   | Values that **validate against `schema`** (instance overrides, authored props). Runtime / composition truth.             |
 | **`config`** | Framework & editor: layout, binds, **`componentRef`**, repeat/switch, **`previewData`**, variant preview overrides, etc. |
 
 **`dom.children: Node[]`** is the tree; layer **`uuid`** is the graph identity (≠ HTML `dom.attributes.id`).

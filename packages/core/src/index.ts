@@ -1,18 +1,4 @@
-export {
-  assertComponentTokenDefault,
-  componentTokenPaths,
-  componentTokenPublicPath,
-  componentTokensByPath,
-  findComponentTokenByPath,
-  globalRefInComponentTokenDefault,
-  isLocalComponentTokenPath,
-  listComponentTokens,
-  type ComponentToken,
-  type ComponentTokenMap,
-  type ListedComponentToken,
-} from './controller/style/tokens/component/contract';
 export { DocumentError } from './document/errors';
-export { StyleController } from './controller/style/controller';
 export { CoreController } from './controller/project/index';
 export type {
   BreakpointUuid,
@@ -30,26 +16,30 @@ export type {
 export { NodeController } from './controller/project/node/index';
 export {
   PreviewController,
-  definitionToElementBuildConfig,
-  nodeToElementBuildConfig,
   mergePreviewFields,
   previewFieldsForNode,
+  resolveDefinitionToElementBuildConfig,
 } from './controller/project/node/preview/index';
-export { fieldsFromJsonSchema } from './schema/json-schema-fields';
+export {
+  fieldsFromJsonSchema,
+  primaryJsonSchemaType,
+  type JsonSchemaField,
+} from './schema/json-schema-fields';
 export {
   inspectorInputsForNode,
   type InspectorInputs,
 } from './controller/project/node/config/inspector';
 export type {
-  InspectorFormChangeTarget,
   InspectorFormField,
   InspectorFormModel,
   InspectorFormValue,
 } from './controller/project/node/preview/inspector-view';
+export type { InspectorFormChangeTarget } from './controller/project/inspector-form-change';
 export {
   buildInspectorFormModel,
   inspectorChangeTarget,
 } from './controller/project/node/preview/inspector-view';
+export { componentPropsForSchema } from './controller/project/catalog/field-ids';
 export {
   designPropOptions,
   encodePropRef,
@@ -59,6 +49,7 @@ export {
 } from './controller/project/node/preview/prop-ref';
 export {
   findDefinition,
+  listCatalogDefinitions,
   findNodeByUuid,
   findParentOfNode,
   canAcceptCatalogChildren,
@@ -78,7 +69,6 @@ export {
   emptyProjectCatalog,
   assertCatalogRefIntegrity,
   applyCatalogDesignCommand,
-  designSliceFromCatalog,
   catalogKindForDefinition,
   createCatalogDefinition,
   deleteCatalogDefinitionRecord,
@@ -88,32 +78,11 @@ export {
   upsertCatalogDesignProp,
   removeCatalogDesignProp,
   type CatalogDesignCommand,
+  layerSelectorForName,
 } from './controller/project/catalog/index';
 export type { CoreControllerHost } from './types/index';
-export type { CatalogPort, CoreSnapshot } from '@facadeur/domain';
-/** @deprecated Use mergePreviewFields */
-export { mergePreviewFields as mergePreviewData } from './controller/project/node/preview/index';
-/** @deprecated Flat document stack — prefer `@facadeur/core/legacy` for new imports. */
-export {
-  ProjectController,
-  applyCommand,
-  createControllerStore,
-  deriveVariantPreset,
-  resolvePreviewData,
-  resolveVariantDocument,
-  variantPresets,
-  withPreviewData,
-  type Command,
-  type CommandContext,
-  type ControllerDocumentStore,
-  type DocumentChange,
-  type DocumentCommandExecutor,
-  type DocumentStore,
-  type InsertNode,
-  type NodeProp,
-  type ProjectChange,
-  type ProjectControllerOptions,
-} from './legacy/index';
+export type { CatalogDefinitionPort } from './types/index';
+export type { CatalogPort, CoreSnapshot } from './types/core-contracts';
 export { canonicalizeJson, isJsonValue, isPlainObject, type JsonValue } from './utils';
 export {
   childOverridePath,
@@ -122,25 +91,6 @@ export {
 } from './document/child-fields';
 export { assertBreakpoints } from './controller/style/breakpoints';
 export { assertFont, assertFonts, fontStyles } from './controller/style/fonts';
-export {
-  canonicalizeFlat,
-  collectSubtree,
-  findParent,
-  flattenSubtree,
-  isInsideSubtree,
-  makeFlatNode,
-  toFlat,
-  toNested,
-  type FlatDocument,
-  type FlatNode,
-  type FrameNode,
-  type ImageNode,
-  type InstanceNode,
-  type RepeaterNode,
-  type SwitchNode,
-  type StructuralNode,
-  type TextNode,
-} from './document/flat';
 export { createCatalogUuid, createId, ID_PATTERN, TAG_PATTERN } from './document/ids';
 export {
   DEFAULT_HTML_TAG_OPTIONS,
@@ -150,13 +100,13 @@ export {
 } from './document/html-tags';
 export { canonicalizeLayout, layoutTokenRefs, parseLayout } from './controller/style/layout';
 export {
+  appendStyleSelectorSuffix,
   assertStyleSelector,
   bindStyleRuleSelector,
   renderStyleRuleSelector,
   replaceSelectorClasses,
   selectorClassNames,
 } from './controller/style/selectors';
-export { documentClassNames } from './controller/style/class-names';
 export {
   defaultKinds,
   defaultNestingRules,
@@ -166,55 +116,18 @@ export {
   type NodeType,
 } from './document/kinds';
 export {
-  DOCUMENT_SCHEMA_ID,
-  bindingTargets,
-  createDocumentSchema,
-  documentFileSchema,
   childFieldPathSchema,
-  documentJsonSchema,
-  displayOnSchema,
-  eventBindingSchema,
-  eventDefinitionSchema,
-  exposePathSchema,
-  exposeSchema,
-  isVariantAxis,
-  isVariantPreset,
-  variantInsertionSchema,
-  variantNodeOverrideSchema,
-  variantOverridesSchema,
-  variantPresetSchema,
   fieldTypes,
   previewDataSchema,
   type PreviewData,
-  type Binding,
-  type BindingTarget,
   breakpointLabel,
   defaultBreakpoints,
-  basicSchemaTypes,
-  type BasicSchemaType,
   type Breakpoint,
-  type ComponentSchemaUse,
-  type DocumentFile,
-  type DocumentSchemaOptions,
-  type DocumentSettings,
-  type DisplayOn,
-  type VariantRule,
-  type Repeat,
-  type EventDefinition,
-  type EventBinding,
-  type EventDataMapping,
-  type EventDataSource,
-  type Expose,
-  type ExposePath,
   type FieldDefinition,
   type ChildFieldOverrides,
   type FieldType,
   type FieldValue,
   type JsonSchema,
-  type NamedSchema,
-  type SchemaCatalog,
-  type SchemaFieldUse,
-  type SchemaTypeRef,
   type FontFaceFile,
   type FontFamily,
   type FontFamilyValue,
@@ -226,7 +139,6 @@ export {
   type LayoutOverride,
   type Margin,
   type MarginBox,
-  type NestedNode,
   type SizeValue,
   type Spacing,
   type SpacingBox,
@@ -238,12 +150,6 @@ export {
   type StyleStates,
   type TokenInterface,
   type TokenType,
-  type VariantAxis,
-  type VariantDefinition,
-  type VariantInsertion,
-  type VariantNodeOverride,
-  type VariantOverrides,
-  type VariantPreset,
 } from './schema/document';
 export {
   canonicalizeTokenTree,
@@ -252,12 +158,22 @@ export {
   removeTokenFromTree,
   setTokenInTree,
 } from './controller/style/tokens/global/tree';
+export { fontFamilyTokens, tokenReferencesByType } from './controller/style/tokens/global/query';
 export { tokenReference, tokenReferenceValue } from './controller/style/tokens/syntax';
-export {
-  migrateLegacyDesignLibraries,
-  migrateLegacyReferenceLocations,
-} from './controller/style/tokens/global/legacy-migration';
 export { tokenCssPropertyName } from './controller/style/tokens/global/selector';
+export { tokenCustomProperty, typographyCustomProperty } from './tokens/names';
+export {
+  activeBreakpoints,
+  configuredBreakpoints,
+  fontStack,
+  isBreakpointEnabled,
+  loadTokens,
+  quoteFamily,
+  type CssProperty,
+  type DesignInput,
+  type ParsedToken,
+  type ResolvedDesign,
+} from './tokens/resolve';
 export {
   type IndexedGroup,
   type IndexedToken,
@@ -268,68 +184,13 @@ export {
   type TokenTree,
 } from './controller/style/tokens/types';
 export {
-  assertStyleContract,
-  assertStyleMap,
-  assertStyleNameAvailable,
   canonicalizeStyleBlock,
   canonicalizeTokenInterface,
-} from './controller/style/blocks/contract';
-export {
-  collectTokenRefs,
-  refsInText,
-} from './controller/style/references/collect';
+} from './controller/style/blocks/parse';
+export { refsInText } from './controller/style/references/text';
 export { omitVariantAxis, omitVariantValues } from './controller/style/blocks/edit';
 export { parseStyleBlock, parseTokenInterface } from './controller/style/blocks/parse';
-export {
-  assertDefinitionKind,
-  assertDisplayOn,
-  assertEventBindings,
-  assertChildFields,
-  assertEventDefinition,
-  eventDataMappings,
-  eventDataSchema,
-  assertFieldBindings,
-  assertExpose,
-  assertFieldDefinition,
-  assertRepeat,
-  assertVariantPreset,
-  assertVariantAxis,
-  compileDocumentValidator,
-  validateCatalog,
-  resolveChildFieldDefinition,
-  automaticFieldGroupsFor,
-  exposedFields,
-  publicFieldsFor,
-  resolveComponentContract,
-  componentDataSchema,
-  matchesSchemaValue,
-  matchingSchemaIndex,
-  selectStructuralChild,
-  structuralCaseValue,
-  structuralChildSchemas,
-  structuralNodeFields,
-  structuralNodeSchema,
-  structuralScopeFields,
-  type AutomaticFieldGroup,
-  type ContractCatalog,
-  type ContractDocument,
-  type ContractResolverInput,
-  type SchemaResolverContext,
-  type StructuralChildSchema,
-  type StructuralInstance,
-  type StructuralSelection,
-  type StructuralNodeInput,
-  type ValidateCatalogOptions,
-  validateDefinitions,
-  validateDocumentFile,
-  validateLibraries,
-  validateTree,
-  assertValueMatches,
-  type ValidateOptions,
-} from './controller/validation/index';
-
-export { fieldDataSchema } from './controller/validation/field-data-schema';
-
+export { matchesSchemaValue } from './controller/validation/index';
 export {
   uuidSchema,
   schemaSourceSchema,
@@ -348,5 +209,4 @@ export {
   projectCatalogJsonSchema,
   type NodeModel,
   type NodeDefinitionModel,
-  type ProjectCatalogModel,
 } from './schema/node-model/index';

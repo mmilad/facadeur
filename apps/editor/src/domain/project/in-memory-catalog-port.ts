@@ -2,38 +2,22 @@ import {
   createCatalogDefinition,
   createCatalogUuid,
   deleteCatalogDefinitionRecord,
-  patchCatalogDefinitionRecord,
-  validateProjectCatalog,
   type NodeDefinitionModel,
-  type ProjectCatalogModel,
 } from '@facadeur/core';
+import type { ProjectCatalog } from '@facadeur/domain';
 import type { EditorCatalogPort } from './catalog-port';
 
-/** In-memory transport for tests and local-only sessions. */
-export function createInMemoryCatalogPort(
-  getCatalog: () => ProjectCatalogModel,
-  setCatalog?: (catalog: ProjectCatalogModel) => void,
-): EditorCatalogPort {
-  const commit = (catalog: ProjectCatalogModel) => {
-    const validated = validateProjectCatalog(catalog) as ProjectCatalogModel;
-    setCatalog?.(validated);
-    return validated;
-  };
+/** In-memory catalog port for Storybook and the local editor preview. */
+export function createInMemoryCatalogPort(getCatalog: () => ProjectCatalog): EditorCatalogPort {
   return {
-    load: async () => structuredClone(getCatalog()) as ProjectCatalogModel,
-    save: async (catalog) => commit(catalog),
+    save: async (catalog) => catalog,
     createDefinition: async (kind, definition) => {
       const uuid = definition.uuid ?? createCatalogUuid();
-      return commit(
-        createCatalogDefinition(getCatalog(), kind, {
-          ...definition,
-          uuid,
-        } as NodeDefinitionModel),
-      );
+      return createCatalogDefinition(getCatalog(), kind, {
+        ...definition,
+        uuid,
+      } as NodeDefinitionModel);
     },
-    patchDefinition: async (kind, uuid, patch) =>
-      commit(patchCatalogDefinitionRecord(getCatalog(), kind, uuid, patch)),
-    deleteDefinition: async (kind, uuid) =>
-      commit(deleteCatalogDefinitionRecord(getCatalog(), kind, uuid)),
+    deleteDefinition: async (kind, uuid) => deleteCatalogDefinitionRecord(getCatalog(), kind, uuid),
   };
 }

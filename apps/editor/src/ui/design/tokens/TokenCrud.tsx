@@ -6,10 +6,10 @@ import {
   suggestedTokenPath,
   tokenMetadataFromPath,
 } from '../../../domain/edits/token-creation';
-import { tokensReferencingUuid } from '../../../domain/edits/token-edit';
-import { documentsReferencingToken } from '../../../domain/component-tokens';
-import type { EditorSession, EditorSnapshot } from '../../../domain/session';
-import { IconButton } from '../../form/components/shared/IconButton';
+import type { EditorSnapshot } from '../../../domain/session';
+import type { EditorEvent } from '../../../domain/sidebar/events';
+import { EditorEventType } from '../../../domain/sidebar/events';
+import { IconButton } from '../../components/IconButton';
 import { TokenAddAction } from './TokenAddAction';
 
 const TOKEN_COPY: Record<DesignTokenFamily, { label: string; placeholder: string }> = {
@@ -22,38 +22,50 @@ const TOKEN_COPY: Record<DesignTokenFamily, { label: string; placeholder: string
 };
 
 export function TokenAddRow({
-  session,
   snap,
   family,
+  onEvent,
 }: {
-  session: EditorSession;
   snap: EditorSnapshot;
   family: DesignTokenFamily;
+  onEvent: (event: EditorEvent) => void;
 }) {
   const existingPaths = useMemo(
-    () => new Set([...readTokenTree(snap.design.tokens).tokens.values()].map((token) => token.path)),
+    () =>
+      new Set([...readTokenTree(snap.design.tokens).tokens.values()].map((token) => token.path)),
     [snap.design.tokens],
   );
 
   function addToken(rawLabel: string): true | false {
     try {
       const path = suggestedTokenPath(rawLabel, family, existingPaths);
-      const metadata = tokenMetadataFromPath(path, family);
+      const metadata = tokenMetadataFromPath(path);
       const definition = defaultTokenValue(family);
-      session.executeDesign({
-        type: 'setToken',
-        family,
-        token: createDesignToken(
-          family,
-          metadata.label,
-          metadata.group,
-          definition.valueType,
-          definition.value,
-        ),
+      onEvent({
+        type: EditorEventType.DesignCommandExecute,
+        data: {
+          command: {
+            type: 'setToken',
+            family,
+            token: createDesignToken(
+              family,
+              metadata.label,
+              metadata.group,
+              definition.valueType,
+              definition.value,
+            ),
+          },
+        },
       });
       return true;
     } catch (error) {
-      session.setNotice(error instanceof Error ? error.message : `Invalid ${TOKEN_COPY[family].label}`, 'error');
+      onEvent({
+        type: EditorEventType.NoticeSet,
+        data: {
+          text: error instanceof Error ? error.message : `Invalid ${TOKEN_COPY[family].label}`,
+          tone: 'error',
+        },
+      });
       return false;
     }
   }
@@ -73,31 +85,18 @@ export function TokenAddRow({
 }
 
 export function RemoveTokenButton({
-  session,
-  snap,
   family,
   uuid,
   label,
+  onEvent,
 }: {
-  session: EditorSession;
-  snap: EditorSnapshot;
   family: DesignTokenFamily;
   uuid: string;
   label: string;
+  onEvent: (event: EditorEvent) => void;
 }) {
   function removeToken() {
-    const refs = [
-      ...tokensReferencingUuid(snap.design.tokens, uuid),
-      ...documentsReferencingToken(session.boardDocuments(), uuid),
-    ];
-    if (refs.length) {
-      session.setNotice(
-        `Cannot remove "${label}": {token:${uuid}} is referenced in ${refs.join(', ')}`,
-        'error',
-      );
-      return;
-    }
-    session.executeDesign({ type: 'removeToken', family, uuid });
+    onEvent({ type: EditorEventType.DesignTokenRemove, data: { family, uuid, label } });
   }
 
   return (

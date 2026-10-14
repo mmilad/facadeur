@@ -1,11 +1,12 @@
 import type { FieldValue, Node, NodeDefinition, ProjectCatalog } from '@facadeur/domain';
 import { htmlTagOptions, isVoidHtmlTag } from '../../../../document/html-tags';
 import { fieldsFromJsonSchema } from '../../../../schema/json-schema-fields';
-import type { FieldDefinition } from '../../../../schema/document';
+import type { JsonSchemaField } from '../../../../schema/json-schema-fields';
 import { classListFromNode, findDefinition, findNodeByUuid } from '../../catalog/ops';
 import { effectiveSchemaForDefinition } from '../../catalog/field-contract';
 import { inspectorInputsForNode } from '../config/inspector';
 import { designPropOptions, type DesignPropOption } from './prop-ref';
+import type { InspectorFormChangeTarget } from '../../inspector-form-change';
 
 export type InspectorFormValue = {
   definition: {
@@ -44,7 +45,7 @@ export type InspectorFormField =
   | {
       type: 'schemaField';
       path: string;
-      field: FieldDefinition;
+      field: JsonSchemaField;
       label: string;
       propBindable?: boolean;
     };
@@ -86,7 +87,7 @@ function recordFromFieldValues(
 function schemaFieldSections(
   prefix: 'previewData' | 'nodeData',
   title: string,
-  fields: FieldDefinition[],
+  fields: JsonSchemaField[],
 ): InspectorFormField | null {
   if (!fields.length) return null;
   return {
@@ -118,7 +119,17 @@ export function buildInspectorFormModel(
 
   const scopedDefinition = referencedDefinition ?? definition;
   const effective = effectiveSchemaForDefinition(catalog, scopedDefinition);
-  const schemaFields = effective.schema ? fieldsFromJsonSchema(effective.schema) : [];
+  const schemaFields = effective.schema
+    ? fieldsFromJsonSchema(effective.schema).map((field) =>
+        field.schema['x-facadeur-options-source'] === 'icons'
+          ? {
+              ...field,
+              type: 'enum' as const,
+              options: (catalog.icons ?? []).map((icon) => icon.id),
+            }
+          : field,
+      )
+    : [];
   const classSuggestions = collectClassSuggestions(definition.root);
   const tagOptions = htmlTagOptions(node.dom.tagName);
   const nodeInputs = inspectorInputsForNode(
@@ -141,11 +152,7 @@ export function buildInspectorFormModel(
     node: {
       name: node.name ?? '',
       tagName: node.dom.tagName,
-      text:
-        node.dom.text ??
-        (typeof node.dom.properties?.textContent === 'string'
-          ? node.dom.properties.textContent
-          : ''),
+      text: node.dom.text ?? '',
       classList: classListFromNode(node),
       style: { ...(node.style ?? {}) },
       data: recordFromFieldValues(node.data ?? {}),
@@ -312,26 +319,6 @@ export function buildInspectorFormModel(
     propOptions: designPropOptions(catalog, effective.schema),
   };
 }
-
-export type InspectorFormChangeTarget =
-  | { kind: 'definitionName'; value: string }
-  | { kind: 'definitionFieldExposureMode'; mode: 'flat' | 'grouped' | 'manual' }
-  | { kind: 'definitionFieldExposureFields'; value: Readonly<Record<string, string>> }
-  | { kind: 'nodeTagName'; nodeUuid: string; value: string }
-  | { kind: 'nodeText'; nodeUuid: string; value: string }
-  | { kind: 'nodeClassList'; nodeUuid: string; value: readonly string[] }
-  | { kind: 'nodeStyle'; nodeUuid: string; value: Readonly<Record<string, string>> }
-  | { kind: 'nodeDataRecord'; nodeUuid: string; value: Readonly<Record<string, string>> }
-  | { kind: 'nodeFieldExposureMode'; nodeUuid: string; mode: 'flat' | 'grouped' | 'manual' }
-  | { kind: 'nodeFieldExposureGroupName'; nodeUuid: string; value: string }
-  | { kind: 'nodeFieldExposureFields'; nodeUuid: string; value: Readonly<Record<string, string>> }
-  | {
-      kind: 'previewField';
-      definitionUuid: string;
-      field: string;
-      value: FieldValue | undefined;
-    }
-  | { kind: 'nodeSchemaField'; nodeUuid: string; field: string; value: FieldValue | undefined };
 
 /** Map a form path + value to a typed catalog mutation target. */
 export function inspectorChangeTarget(

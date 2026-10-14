@@ -10,9 +10,7 @@ export const root: Node = {
         uuid: exampleTextareaIds.nodes.span1,
         dom: {
           tagName: 'span',
-          properties: {
-            textContent: 'Message',
-          },
+          text: 'Message',
         },
       },
       {
@@ -26,9 +24,7 @@ export const root: Node = {
             name: 'message',
             rows: '3',
           },
-          properties: {
-            textContent: '',
-          },
+          text: '',
         },
       },
     ],

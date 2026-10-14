@@ -2,86 +2,66 @@
 
 import { createCatalogUuid } from '@facadeur/core';
 import type { DesignPropDefinition } from '@facadeur/domain';
-import { useMemo, useState } from 'react';
-import type { AppService } from '../../../app-service';
-import type { EditorSession } from '../../../domain/session';
-import { Field, SearchInput, Stack, TextInput } from '../../form/index';
+import { useState } from 'react';
+import type { EditorEvent } from '../../../domain/sidebar/events';
+import { EditorEventType } from '../../../domain/sidebar/events';
+import { Stack } from '../../components/layout';
+import { Field } from '../../components/feedback';
+import { SearchInput, TextInput } from '../../controls/form-binding/index';
 import { SettingsSections } from '../SettingsSections';
 import type { EditorSurface } from '../../design/design-domain';
 
 export function CatalogDesignPropsPanel({
-  app,
-  session,
+  entries,
   surface,
-  onSelectSurface,
+  onEvent,
 }: {
-  app: AppService;
-  session: EditorSession;
+  entries: readonly DesignPropDefinition[];
   surface: EditorSurface;
-  onSelectSurface: (surface: EditorSurface) => void;
+  onEvent: (event: EditorEvent) => void;
 }) {
-  const catalog = app.getCoreSnapshot().catalog;
-  const entries = useMemo(
-    () =>
-      Object.values(catalog.props ?? {}).sort((left, right) => left.name.localeCompare(right.name)),
-    [catalog.props],
-  );
-  const [selectedId, setSelectedId] = useState(entries[0]?.uuid ?? '');
+  const sortedEntries = [...entries].sort((left, right) => left.name.localeCompare(right.name));
+  const [selectedId, setSelectedId] = useState(sortedEntries[0]?.uuid ?? '');
   const [query, setQuery] = useState('');
 
   const needle = query.trim().toLowerCase();
   const visible = needle
-    ? entries.filter(
+    ? sortedEntries.filter(
         (prop) =>
           prop.name.toLowerCase().includes(needle) || prop.uuid.toLowerCase().includes(needle),
       )
-    : entries;
+    : sortedEntries;
 
-  const selected = entries.find((prop) => prop.uuid === selectedId);
+  const selected = sortedEntries.find((prop) => prop.uuid === selectedId);
 
   function addProp() {
     const uuid = createCatalogUuid();
-    try {
-      app.upsertDesignProp({ uuid, name: 'New prop', value: '' });
-      setSelectedId(uuid);
-      setQuery('');
-    } catch (failure) {
-      session.setNotice(failure instanceof Error ? failure.message : 'Could not add prop', 'error');
-    }
+    onEvent({
+      type: EditorEventType.DesignPropUpsert,
+      data: { prop: { uuid, name: 'New prop', value: '' } },
+    });
+    setSelectedId(uuid);
+    setQuery('');
   }
 
   function commitProp(patch: Partial<DesignPropDefinition>) {
     if (!selected) return;
-    try {
-      app.upsertDesignProp({
-        uuid: selected.uuid,
-        name: patch.name ?? selected.name,
-        value: patch.value ?? selected.value,
-      });
-    } catch (failure) {
-      session.setNotice(
-        failure instanceof Error ? failure.message : 'Could not save prop',
-        'error',
-      );
-    }
-  }
-
-  async function persist() {
-    try {
-      await app.persistCatalog();
-      session.setNotice('Props saved', 'info');
-    } catch (failure) {
-      session.setNotice(
-        failure instanceof Error ? failure.message : 'Could not save props',
-        'error',
-      );
-    }
+    onEvent({
+      type: EditorEventType.DesignPropUpsert,
+      data: {
+        prop: {
+          uuid: selected.uuid,
+          name: patch.name ?? selected.name,
+          value: patch.value ?? selected.value,
+        },
+      },
+    });
   }
 
   function removeSelected() {
     if (!selected) return;
-    app.removeDesignProp(selected.uuid);
-    const next = Object.values(app.getCoreSnapshot().catalog.props ?? {})[0];
+    onEvent({ type: EditorEventType.DesignPropRemove, data: { uuid: selected.uuid } });
+    const next = sortedEntries.find((prop) => prop.uuid !== selected.uuid);
     setSelectedId(next?.uuid ?? '');
   }
 
@@ -90,7 +70,7 @@ export function CatalogDesignPropsPanel({
       <header className="design-domain-head">
         <div className="design-domain-head-main">
           <h1 className="design-domain-breadcrumb">Settings · Props</h1>
-          <SettingsSections surface={surface} onSelect={onSelectSurface} />
+          <SettingsSections surface={surface} onEvent={onEvent} />
         </div>
         <p className="meta">
           Semantic values bound in the inspector as <code>{'{prop:uuid}'}</code>. Save catalog to
@@ -104,11 +84,15 @@ export function CatalogDesignPropsPanel({
             <button type="button" onClick={addProp}>
               Add prop
             </button>
-            <button type="button" className="text-button" onClick={() => void persist()}>
+            <button
+              type="button"
+              className="text-button"
+              onClick={() => onEvent({ type: EditorEventType.DesignPropsSave, data: {} })}
+            >
               Save catalog
             </button>
           </div>
-          <ul className="schema-library-list">
+          <ul>
             {visible.map((prop) => (
               <li key={prop.uuid}>
                 <button

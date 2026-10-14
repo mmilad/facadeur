@@ -16,7 +16,7 @@ describe('color control value', () => {
 
   it('infers mode from value', () => {
     expect(inferColorMode('')).toBe('custom');
-    expect(inferColorMode(fixtureTokenRef(testUuid4))).toBe('token');
+    expect(inferColorMode(fixtureTokenRef(fixtureIds.tokens.color.accent.default))).toBe('token');
     expect(inferColorMode('#112233')).toBe('custom');
   });
 
@@ -28,7 +28,7 @@ describe('color control value', () => {
   });
 
   it('strips token refs from custom color draft', () => {
-    expect(customColorDraft(fixtureTokenRef(testUuid4))).toBe('');
+    expect(customColorDraft(fixtureTokenRef(fixtureIds.tokens.color.accent.default))).toBe('');
     expect(customColorDraft('#AABBCCFF')).toBe('#AABBCCFF');
   });
 });

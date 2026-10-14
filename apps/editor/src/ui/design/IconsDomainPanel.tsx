@@ -1,15 +1,11 @@
 import { useMemo, useState } from 'react';
-import type { EditorSession, EditorSnapshot } from '../../domain/session';
-import { Field, TextInput } from '../form/index';
+import type { EditorSnapshot } from '../../domain/session';
+import { Field } from '../components/feedback';
+import { TextInput } from '../controls/form-binding/index';
+import { IconGraphic } from '../icons/IconGraphic';
 import './design-resources.css';
 
-export function IconsDomainPanel({
-  session: _session,
-  snap,
-}: {
-  session: EditorSession;
-  snap: EditorSnapshot;
-}) {
+export function IconsDomainPanel({ snap }: { snap: EditorSnapshot }) {
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(snap.design.icons?.[0]?.id ?? null);
   const needle = query.trim().toLowerCase();
@@ -63,7 +59,7 @@ export function IconsDomainPanel({
                   onClick={() => setSelectedId(icon.id)}
                 >
                   <span className="icon-preview">
-                    <img src={icon.src} alt="" aria-hidden="true" />
+                    <IconGraphic icon={icon} />
                   </span>
                   <strong>{icon.name}</strong>
                   <span>{icon.id}</span>
@@ -82,7 +78,7 @@ function IconDetails({ icon }: { icon: NonNullable<EditorSnapshot['design']['ico
   return (
     <aside className="icon-details" aria-label="Selected icon details">
       <div className="icon-details-preview">
-        <img src={icon.src} alt="" aria-hidden="true" />
+        <IconGraphic icon={icon} />
       </div>
       <div className="icon-details-copy">
         <h2>{icon.name}</h2>
@@ -98,10 +94,11 @@ function IconDetails({ icon }: { icon: NonNullable<EditorSnapshot['design']['ico
             <dd>{icon.category ? titleCase(icon.category) : 'Uncategorized'}</dd>
           </div>
           <div>
-            <dt>Source</dt>
+            <dt>Data</dt>
             <dd>
-              <code className="icon-source" title={icon.src}>
-                {icon.src}
+              <code className="icon-source" title={icon.data.viewBox}>
+                viewBox {icon.data.viewBox} · {icon.data.paths.length} path
+                {icon.data.paths.length === 1 ? '' : 's'}
               </code>
             </dd>
           </div>

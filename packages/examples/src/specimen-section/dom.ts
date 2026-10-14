@@ -19,28 +19,21 @@ export const root: Node = {
               uuid: exampleSpecimenSectionIds.nodes.p1,
               dom: {
                 tagName: 'p',
-                properties: {
-                  textContent: 'facadeur',
-                },
+                text: 'facadeur',
               },
             },
             {
               uuid: exampleSpecimenSectionIds.nodes.h11,
               dom: {
                 tagName: 'h1',
-                properties: {
-                  textContent: 'Specimen',
-                },
+                text: 'Specimen',
               },
             },
             {
               uuid: exampleSpecimenSectionIds.nodes.p2,
               dom: {
                 tagName: 'p',
-                properties: {
-                  textContent:
-                    'Auto layout, token styles, and a sign-in card that overrides the input border for its children.',
-                },
+                text: 'Auto layout, token styles, and a sign-in card that overrides the input border for its children.',
               },
             },
           ],
@@ -55,9 +48,7 @@ export const root: Node = {
               uuid: exampleSpecimenSectionIds.nodes.p3,
               dom: {
                 tagName: 'p',
-                properties: {
-                  textContent: 'Button',
-                },
+                text: 'Button',
               },
             },
             {
@@ -136,9 +127,7 @@ export const root: Node = {
               uuid: exampleSpecimenSectionIds.nodes.p4,
               dom: {
                 tagName: 'p',
-                properties: {
-                  textContent: 'Input',
-                },
+                text: 'Input',
               },
             },
             {
@@ -193,9 +182,7 @@ export const root: Node = {
               uuid: exampleSpecimenSectionIds.nodes.p5,
               dom: {
                 tagName: 'p',
-                properties: {
-                  textContent: 'Card',
-                },
+                text: 'Card',
               },
             },
             {

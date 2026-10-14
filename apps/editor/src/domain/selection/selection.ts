@@ -240,7 +240,7 @@ function queryRenderedNode(doc: Document, renderedId: string): HTMLElement | nul
 }
 
 function renderedIdFromElement(node: HTMLElement): string | null {
-  if (node.dataset.id) return node.dataset.id;
   const uuid = node.dataset.facadeurNodeUuid;
-  return uuid ? `node:${uuid}` : null;
+  if (uuid) return `node:${uuid}`;
+  return node.dataset.id || null;
 }

@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react';
-import { Field, Select } from '../../form/index';
+import { Field } from '../../components/feedback';
+import { Select } from '../form-binding/index';
 import { ColorControl } from '../color/index';
 import { ShadowControl } from '../shadow/index';
 import { TextControl } from '../fields/index';
 import { TypographyStyleControl, type TypographyCatalogs } from '../typography/index';
-import { TokenValueControl, isTokenReference } from '../fields/TokenValueControl';
+import { TokenValueControl } from '../fields/TokenValueControl';
 import {
   enumOptionLabel,
   enumOptionsForProperty,

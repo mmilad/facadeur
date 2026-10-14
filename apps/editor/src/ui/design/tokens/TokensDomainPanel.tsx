@@ -1,21 +1,15 @@
 import {
   breakpointLabel,
+  fontFamilyTokens,
   readTokenTree,
+  tokenReferencesByType,
   tokenReferenceValue,
   type DesignTokenFamily,
 } from '@facadeur/core';
-import { activeBreakpoints } from '@facadeur/tokens';
+import { activeBreakpoints } from '@facadeur/core';
 import { useEffect, useMemo, useState } from 'react';
-import {
-  colorTokenRefs,
-  dimensionTokenRefs,
-  fontFamilyTokenRefs,
-  fontFamilies,
-  fontWeightTokenRefs,
-  numberTokenRefs,
-  shadowTokenRefs,
-} from '../../../domain/editing';
-import type { EditorSession, EditorSnapshot } from '../../../domain/session';
+import type { EditorSnapshot } from '../../../domain/session';
+import type { EditorEvent } from '../../../domain/sidebar/events';
 import { formatTokenValue } from '../../../domain/edits/token-edit';
 import { viewportEditContext } from '../../../domain/viewport/viewport-edit';
 import {
@@ -24,14 +18,13 @@ import {
   type TypographyCatalogs,
 } from '../../controls/typography/index';
 import type { DesignDomain } from '../design-domain';
-import { designDomainLabel, tokenMatchesDomain } from '../design-domain';
+import { designDomainLabel } from '../design-domain';
 import { Table } from '../../settings/Table';
 import { ViewportTabs } from '../ViewportTabs';
 import { TokenAddRow } from './TokenCrud';
 import { effectiveBreakpointValue, groupTokens, type TableToken } from './token-breakpoint-helpers';
 import { createTokenTableRow } from './token-table-row';
-import { tokenLeafLabel, tokenTitle } from './token-labels';
-import { tokenDisplayLabel } from '../../controls/token-presentation';
+import { tokenLeafLabel, tokenTitle } from '../../controls/fields/token-presentation';
 import {
   useTokenLabel,
   useTokenResolver,
@@ -51,13 +44,13 @@ const DOMAIN_FAMILY: Record<TokenDomain, DesignTokenFamily> = {
 };
 
 export function TokensDomainPanel({
-  session,
   snap,
   domain,
+  onEvent,
 }: {
-  session: EditorSession;
   snap: EditorSnapshot;
   domain: TokenDomain;
+  onEvent: (event: EditorEvent) => void;
 }) {
   const resolve = useTokenResolver();
   const labelFor = useTokenLabel();
@@ -74,22 +67,28 @@ export function TokensDomainPanel({
       .sort((left, right) => naturalTokenCompare(left.path, right.path));
   }, [snap.design.tokens, domain]);
   const ctx = viewportEditContext({
-    breakpoints: activeBreakpoints(snap.design.settings.breakpoints),
+    breakpoints: activeBreakpoints(snap.design.breakpoints),
     focusId: snap.focusViewportId,
     editTarget: snap.editTarget,
   });
   const writingId = ctx.writingBreakpointId;
-  const colorTokens = useMemo(() => colorTokenRefs(snap.design.tokens), [snap.design.tokens]);
-  const shadowTokens = useMemo(() => shadowTokenRefs(snap.design.tokens), [snap.design.tokens]);
+  const colorTokens = useMemo(
+    () => tokenReferencesByType(snap.design.tokens, 'color'),
+    [snap.design.tokens],
+  );
+  const shadowTokens = useMemo(
+    () => tokenReferencesByType(snap.design.tokens, 'shadow'),
+    [snap.design.tokens],
+  );
   const typographyCatalogs = useMemo<TypographyCatalogs>(() => {
-    const fonts = fontFamilies(snap.design.tokens);
+    const fonts = fontFamilyTokens(snap.design.tokens);
     return {
       fontRefs: projectFontRefs(fonts),
-      fontFamilyTokens: fontFamilyTokenRefs(snap.design.tokens),
+      fontFamilyTokens: tokenReferencesByType(snap.design.tokens, 'fontFamily'),
       fontWeights: projectFontWeightOptions(fonts),
-      fontWeightTokens: fontWeightTokenRefs(snap.design.tokens),
-      dimensionTokens: dimensionTokenRefs(snap.design.tokens),
-      numberTokens: numberTokenRefs(snap.design.tokens),
+      fontWeightTokens: tokenReferencesByType(snap.design.tokens, 'fontWeight'),
+      dimensionTokens: tokenReferencesByType(snap.design.tokens, 'dimension'),
+      numberTokens: tokenReferencesByType(snap.design.tokens, 'number'),
     };
   }, [snap.design.tokens]);
   const tableTokens = useMemo<TableToken[]>(
@@ -163,7 +162,7 @@ export function TokensDomainPanel({
   return (
     <div className="stack design-domain-panel">
       <ViewportTabs
-        session={session}
+        onEvent={onEvent}
         breakpoints={ctx.breakpoints}
         baseId={ctx.base?.uuid ?? null}
         writingId={writingId}
@@ -182,7 +181,7 @@ export function TokensDomainPanel({
           { id: 'actions', ariaLabel: 'Actions', width: '10%' },
         ]}
         context={writing ? `${domainTitle} overrides at ${breakpointLabel(writing)}` : undefined}
-        addAction={<TokenAddRow session={session} snap={snap} family={DOMAIN_FAMILY[domain]} />}
+        addAction={<TokenAddRow snap={snap} family={DOMAIN_FAMILY[domain]} onEvent={onEvent} />}
         emptyState={
           visible.length === 0 ? (
             <p className="inspector-empty">
@@ -208,7 +207,7 @@ export function TokensDomainPanel({
               }),
             rows: group.tokens.map((token) =>
               createTokenTableRow({
-                session,
+                onEvent,
                 snap,
                 token,
                 writingId,

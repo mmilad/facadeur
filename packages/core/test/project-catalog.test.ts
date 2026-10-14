@@ -62,9 +62,28 @@ describe('validateProjectCatalog', () => {
 
     expect(colors.length).toBeGreaterThan(0);
     expect(fonts.some((font) => font.valueType === 'fontFamily')).toBe(true);
+    expect(catalog.icons?.map((icon) => icon.id)).toContain('select');
     for (const family of Object.values(catalog.tokens ?? {})) {
       for (const token of Object.values(family)) expect(token.uuid).toBeTruthy();
     }
+  });
+
+  it('rejects legacy token library shapes instead of migrating them in current Catalog validation', () => {
+    const catalog = createExampleCatalog();
+    expect(() =>
+      validateProjectCatalog({
+        ...catalog,
+        tokens: {
+          color: {
+            blue: {
+              $type: 'color',
+              500: { $value: '#2563eb' },
+            },
+          },
+        },
+      }),
+    ).toThrow('/tokens/');
+    expect(() => validateProjectCatalog({ ...catalog, fonts: [] })).toThrow(/\/fonts\b/);
   });
 
   it('accepts global styles with breakpoints and a style block', () => {
@@ -92,6 +111,31 @@ describe('validateProjectCatalog', () => {
     });
     expect(catalog.globalStyles?.block?.rules).toHaveLength(1);
     expect(catalog.globalStyles?.breakpoints).toEqual(exampleCatalog.globalStyles?.breakpoints);
+  });
+
+  it('validates optional project icon resources', () => {
+    const catalog = validateProjectCatalog({
+      ...createExampleCatalog(),
+      icons: [
+        {
+          id: 'brand-mark',
+          name: 'Brand mark',
+          category: 'brand',
+          data: { viewBox: '0 0 24 24', paths: ['M2 2h20v20H2z'] },
+        },
+      ],
+    });
+    expect(catalog.icons).toEqual([
+      {
+        id: 'brand-mark',
+        name: 'Brand mark',
+        category: 'brand',
+        data: { viewBox: '0 0 24 24', paths: ['M2 2h20v20H2z'] },
+      },
+    ]);
+    expect(() =>
+      validateProjectCatalog({ ...createExampleCatalog(), icons: [{ id: 'bad' }] }),
+    ).toThrow(DocumentError);
   });
 
   it('rejects missing schema ref', () => {

@@ -1,48 +1,44 @@
-import { useEffect, type RefObject } from 'react';
-import { writeLayoutFields } from '../../../domain/editing';
-import { isEditableTarget } from '../../../domain/keyboard';
-import {
-  dataIdSelector,
-  createSelection,
-  type SelectionController,
-} from '../../../domain/selection/selection';
-import {
-  documentChain,
-  nodeIdForHit,
-  renderIdForNode,
-  resolveClick,
-  type SelectMode,
-} from '../../../domain/selection/selection-model';
-import type { EditorSession, EditorSnapshot } from '../../../domain/session';
+import { findNodeByUuid, findParentOfNode } from '@facadeur/core';
+import { useEffect, useRef, type RefObject } from 'react';
+import type { AppService } from '../../../app-service/AppService';
+import type { EditorEvent } from '../../../domain/sidebar/events';
+import { EditorEventType } from '../../../domain/sidebar/events';
+import type { SelectionController } from '../../../domain/selection/selection';
+import { createSelection } from '../../../domain/selection/selection';
+import { nodeUuidFromHit, createStagePlacement } from './stage-pointer-placement';
+import type { EditorSession, EditorTool } from '../../../domain/session';
 import { createStage, type StageController } from '../../../domain/viewport/stage';
 import type { ViewportBoard } from '../../../domain/viewport/board';
-import {
-  createStagePlacement,
-  dragSubject,
-  gestureSubject,
-  type StageDrop,
-  type StageGesture,
-} from './stage-pointer-placement';
+import type { ViewportFrame } from '../../../domain/viewport/board';
+import { catalogNodeUuidForRenderedHit } from '../../../domain/catalog/rendered-hit';
+import { isEditableTarget } from '../../../domain/keyboard';
 
 export function useStagePointer({
+  app,
   session,
+  openId,
+  onEvent,
   viewportRef,
   stageRef,
   boardRef,
   selectionRef,
   stageControllerRef,
-  untouchedRef,
   fitRef,
 }: {
+  app: AppService;
   session: EditorSession;
+  openId: string;
+  onEvent: (event: EditorEvent) => void;
   viewportRef: RefObject<HTMLDivElement | null>;
   stageRef: RefObject<HTMLDivElement | null>;
   boardRef: RefObject<ViewportBoard | null>;
   selectionRef: RefObject<SelectionController | null>;
   stageControllerRef: RefObject<StageController | null>;
-  untouchedRef: RefObject<boolean>;
   fitRef: RefObject<() => void>;
 }) {
+  const onEventRef = useRef(onEvent);
+  onEventRef.current = onEvent;
+
   useEffect(() => {
     const viewport = viewportRef.current;
     const stageEl = stageRef.current;
@@ -50,114 +46,64 @@ export function useStagePointer({
 
     const stage = createStage(viewport, stageEl);
     stageControllerRef.current = stage;
-    const selection = createSelection({
-      stage: stageEl,
-      getScale: () => stage.getScale(),
-      frames: () => boardRef.current?.frames() ?? [],
-    });
+    const selection = createSelectionForStage(stageEl, stage, boardRef);
     selectionRef.current = selection;
 
-    let pending: StageDrop | null = null;
-    let gesture: StageGesture | null = null;
-    let lastClick = { time: 0, x: 0, y: 0 };
-
-    function isNestedRenderedId(snap: EditorSnapshot, renderedId: string): boolean {
-      const local = nodeIdForHit(snap.document, renderedId, snap.paintRoot);
-      if (!local) return false;
-      return renderIdForNode(snap.document, local, snap.paintRoot) !== renderedId;
-    }
-
+    let pending: ReturnType<ReturnType<typeof createStagePlacement>['measure']> = null;
+    let gesture: {
+      pointerId: number;
+      startX: number;
+      startY: number;
+      moved: boolean;
+      nodeUuid: string | null;
+      tool: Exclude<EditorTool, 'select'> | null;
+    } | null = null;
     const placement = createStagePlacement({
+      app,
       session,
+      onEvent: (event) => onEventRef.current(event),
       getBoard: () => boardRef.current,
       selection,
       stage,
       stageElement: stageEl,
-      isNestedRenderedId,
     });
-
-    const stopZoom = stage.onChange(({ scale }) => {
-      session.setZoom(scale);
+    const stopZoom = stage.onChange((state) => {
+      if (boardRef.current) session.rememberCanvasTransform(openId, state);
+      session.setZoom(state.scale);
       selection.reposition();
     });
     const stopClick = stage.onClick((event) => {
-      const snap = session.getSnapshot();
-      if (snap.tool !== 'select') return;
-      choose(event, event.ctrlKey || event.metaKey ? 'deepest' : 'context');
+      if (session.getSnapshot().tool === 'select') choose(event);
     });
 
-    stage.setClaimsPan((event) => claimsPan(event));
+    function authoredHit(frame: ViewportFrame | null, id: string | undefined) {
+      const definition = app.getCoreSnapshot().openDefinition;
+      return catalogNodeUuidForRenderedHit(
+        frame,
+        id ? nodeUuidFromHit(id) : null,
+        definition?.root,
+      );
+    }
+
+    function choose(event: { clientX: number; clientY: number }) {
+      const frame = selection.frameAt(event.clientX, event.clientY);
+      const hit = selection.hitAt(event.clientX, event.clientY);
+      const uuid = authoredHit(frame, hit?.id);
+      onEventRef.current({
+        type: EditorEventType.NodeSelect,
+        data: { nodeId: uuid ?? app.getCoreSnapshot().openDefinition?.root.uuid ?? null },
+      });
+    }
 
     function claimsPan(event: PointerEvent): boolean {
       if (event.button !== 0) return true;
-      const snap = session.getSnapshot();
-      if (snap.tool !== 'select') return false;
+      if (session.getSnapshot().tool !== 'select') return false;
+      const frame = selection.frameAt(event.clientX, event.clientY);
       const hit = selection.hitAt(event.clientX, event.clientY);
-      if (!hit) return true;
-      const chain = documentChain(snap.document, hit.id, snap.paintRoot);
-      const target = resolveClick({
-        doc: snap.document,
-        chain,
-        selectedId: snap.selectedNodeId,
-        mode: 'context',
-      });
-      return !target || target === snap.document.rootId;
+      const uuid = authoredHit(frame, hit?.id);
+      return !uuid || uuid === app.getCoreSnapshot().openDefinition?.root.uuid;
     }
-
-    function choose(event: { clientX: number; clientY: number }, mode: SelectMode) {
-      const snap = session.getSnapshot();
-      const hit = selection.hitAt(event.clientX, event.clientY);
-      if (hit) {
-        if (hit.id.startsWith('node:')) {
-          session.selectNode(hit.id.slice('node:'.length));
-          return;
-        }
-        const targetAddress = renderedAddressForClick(snap, hit.id, mode);
-        if (targetAddress) {
-          session.selectRendered(targetAddress);
-          return;
-        }
-      }
-      const chain = hit ? documentChain(snap.document, hit.id, snap.paintRoot) : [];
-      const target = resolveClick({
-        doc: snap.document,
-        chain,
-        selectedId: snap.selectedNodeId,
-        mode,
-      });
-      session.selectNode(target);
-    }
-
-    function renderedAddressForClick(
-      snap: EditorSnapshot,
-      renderedId: string,
-      mode: SelectMode,
-    ): string | null {
-      const chain = documentChain(snap.document, renderedId, snap.paintRoot);
-      const localDeepest = chain[chain.length - 1] ?? null;
-      const localAddress = localDeepest
-        ? renderIdForNode(snap.document, localDeepest, snap.paintRoot)
-        : null;
-      if (mode === 'deepest') return renderedId;
-      const selected = snap.selectedRenderId;
-      if (!selected || selected === renderedId || !renderedId.startsWith(`${selected}/`)) {
-        return localAddress;
-      }
-      if (mode === 'context') return selected;
-      const remainder = renderedId.slice(selected.length + 1);
-      const next = remainder.split('/')[0];
-      return next ? `${selected}/${next}` : selected;
-    }
-
-    function readOffset(nodeId: string): { x: number; y: number } {
-      const snap = session.getSnapshot();
-      const renderId = renderIdForNode(snap.document, nodeId, snap.paintRoot);
-      const frame = boardRef.current?.frames()[0];
-      if (!renderId || !frame) return { x: 0, y: 0 };
-      const el = frame.host.contentDocument().querySelector(dataIdSelector(renderId));
-      if (!isElement(el)) return { x: 0, y: 0 };
-      return { x: el.offsetLeft, y: el.offsetTop };
-    }
+    stage.setClaimsPan(claimsPan);
 
     const onPointerMove = (event: PointerEvent) => {
       if (stage.isPanning()) {
@@ -170,67 +116,42 @@ export function useStagePointer({
         if (!gesture.moved && distance < 4) return;
         gesture.moved = true;
         selection.clearHover();
-        const ignore = gesture.mode === 'reorder' ? gesture.nodeId : null;
-        const subject = gestureSubject(session.getSnapshot(), gesture);
-        pending = subject ? placement.measure(event.clientX, event.clientY, ignore, subject) : null;
+        pending = placement.measure(event.clientX, event.clientY, gesture.nodeUuid);
         selection.showInsert(pending?.line ?? null);
         return;
       }
       if (session.getSnapshot().drag) return;
-      const hit = selection.hitAt(event.clientX, event.clientY);
       const frame = selection.frameAt(event.clientX, event.clientY);
-      if (!hit || !frame) {
-        selection.hoverRendered(null, null);
-        return;
-      }
-      const snap = session.getSnapshot();
-      if (hit.id.startsWith('node:')) {
-        selection.hoverRendered(hit.id, frame.host.id);
-        return;
-      }
-      const chain = documentChain(snap.document, hit.id, snap.paintRoot);
-      const mode = event.ctrlKey || event.metaKey ? 'deepest' : 'context';
-      const target = resolveClick({
-        doc: snap.document,
-        chain,
-        selectedId: snap.selectedNodeId,
-        mode,
-      });
-      const renderId = target ? renderIdForNode(snap.document, target, snap.paintRoot) : null;
-      const address = renderedAddressForClick(snap, hit.id, mode);
-      selection.hoverRendered(address ?? renderId, frame.host.id);
+      const hit = selection.hitAt(event.clientX, event.clientY);
+      const uuid = authoredHit(frame, hit?.id);
+      selection.hoverRendered(uuid ? `node:${uuid}` : null, frame?.host.id ?? null);
     };
 
     const onPointerDown = (event: PointerEvent) => {
       if (event.button !== 0) return;
       const frame = selection.frameAt(event.clientX, event.clientY);
       if (frame && claimsPan(event)) {
-        session.selectViewport(frame.breakpoint.uuid);
+        onEventRef.current({
+          type: EditorEventType.ViewportSelect,
+          data: { breakpointId: frame.breakpoint.uuid },
+        });
         return;
       }
-      if (frame) session.setFocusViewport(frame.breakpoint.uuid);
+      if (frame)
+        onEventRef.current({
+          type: EditorEventType.ViewportFocus,
+          data: { breakpointId: frame.breakpoint.uuid },
+        });
       if (claimsPan(event)) return;
-      const snap = session.getSnapshot();
       const hit = selection.hitAt(event.clientX, event.clientY);
-      const chain = hit ? documentChain(snap.document, hit.id, snap.paintRoot) : [];
-      const target = resolveClick({
-        doc: snap.document,
-        chain,
-        selectedId: snap.selectedNodeId,
-        mode: 'context',
-      });
+      const tool = session.getSnapshot().tool;
       gesture = {
         pointerId: event.pointerId,
         startX: event.clientX,
         startY: event.clientY,
         moved: false,
-        mode: snap.tool === 'select' ? 'reorder' : 'insert',
-        nodeId:
-          snap.tool === 'select' &&
-          !snap.nestedSelection &&
-          (!hit || !isNestedRenderedId(snap, hit.id))
-            ? target
-            : null,
+        nodeUuid: tool === 'select' ? authoredHit(frame, hit?.id) : null,
+        tool: tool === 'select' ? null : tool,
       };
       viewport.setPointerCapture(event.pointerId);
     };
@@ -242,31 +163,17 @@ export function useStagePointer({
       if (viewport.hasPointerCapture(event.pointerId))
         viewport.releasePointerCapture(event.pointerId);
       selection.showInsert(null);
-      const snap = session.getSnapshot();
       if (!current.moved) {
-        if (snap.tool === 'frame' || snap.tool === 'text' || snap.tool === 'image') {
-          placement.placeTool(snap.tool, event.clientX, event.clientY, false);
+        if (current.tool) {
+          placement.placeTool(current.tool, event.clientX, event.clientY);
           return;
         }
-        const now = performance.now();
-        const distance = Math.hypot(event.clientX - lastClick.x, event.clientY - lastClick.y);
-        const deeper = now - lastClick.time < 400 && distance < 4;
-        lastClick = { time: now, x: event.clientX, y: event.clientY };
-        const mode: SelectMode =
-          event.ctrlKey || event.metaKey ? 'deepest' : deeper ? 'deeper' : 'context';
-        choose(event, mode);
+        choose(event);
         return;
       }
       const drop = pending;
       pending = null;
-      if (!drop) return;
-      if (current.mode === 'reorder' && current.nodeId) {
-        placement.applyReorderDrop(current.nodeId, drop);
-        return;
-      }
-      if (snap.tool === 'frame' || snap.tool === 'text' || snap.tool === 'image') {
-        placement.placeTool(snap.tool, event.clientX, event.clientY, true);
-      }
+      if (drop && current.nodeUuid) placement.applyReorderDrop(current.nodeUuid, drop);
     };
 
     const onDragOver = (event: DragEvent) => {
@@ -275,9 +182,11 @@ export function useStagePointer({
       event.preventDefault();
       if (event.dataTransfer)
         event.dataTransfer.dropEffect = drag.kind === 'node' ? 'move' : 'copy';
-      const ignore = drag.kind === 'node' ? drag.nodeId : null;
-      const subject = dragSubject(session.getSnapshot(), drag);
-      pending = subject ? placement.measure(event.clientX, event.clientY, ignore, subject) : null;
+      pending = placement.measure(
+        event.clientX,
+        event.clientY,
+        drag.kind === 'node' ? drag.nodeId : null,
+      );
       selection.showInsert(pending?.line ?? null);
     };
 
@@ -288,8 +197,8 @@ export function useStagePointer({
       const drop = pending;
       pending = null;
       selection.showInsert(null);
-      session.endDrag();
-      placement.applyDrop(drag, drop, event.clientX, event.clientY);
+      onEventRef.current({ type: EditorEventType.LayerDragEnd, data: {} });
+      placement.applyDrop(drag, drop);
     };
 
     const onDragLeave = (event: DragEvent) => {
@@ -297,44 +206,55 @@ export function useStagePointer({
       selection.showInsert(null);
       pending = null;
     };
-
     const onWindowDragEnd = () => {
       selection.showInsert(null);
       pending = null;
     };
-
-    const onKey = (event: KeyboardEvent) => {
-      if (isEditableTarget(event.target)) return;
-      const target = event.target;
-      if (isElement(target) && (target.tagName === 'BUTTON' || target.tagName === 'A')) return;
+    const onKeyDown = (event: KeyboardEvent) => {
       if (
-        event.key !== 'ArrowLeft' &&
-        event.key !== 'ArrowRight' &&
-        event.key !== 'ArrowUp' &&
-        event.key !== 'ArrowDown'
-      ) {
+        (event.key !== 'ArrowLeft' &&
+          event.key !== 'ArrowRight' &&
+          event.key !== 'ArrowUp' &&
+          event.key !== 'ArrowDown') ||
+        isEditableTarget(event.target) ||
+        (event.target instanceof Element && event.target.closest('button, a'))
+      )
         return;
-      }
-      const snap = session.getSnapshot();
-      if (snap.nestedSelection) return;
-      const node = snap.selectedNode;
-      if (!node?.layout || node.layout.position !== 'absolute') return;
+      const definition = app.getCoreSnapshot().openDefinition;
+      const nodeUuid = app.getCoreSnapshot().selectedNodeUuid;
+      if (!definition || !nodeUuid) return;
+      const node = findNodeByUuid(definition.root, nodeUuid);
+      if (!node || node.style?.position !== 'absolute') return;
       event.preventDefault();
+      const frame = boardRef.current?.frames()[0];
+      const rendered =
+        frame && boardRef.current?.renderedNodes(frame).find((item) => item.uuid === nodeUuid);
+      const parentUuid = findParentOfNode(definition.root, nodeUuid)?.parent.uuid;
+      const parent =
+        parentUuid &&
+        frame &&
+        boardRef.current?.renderedNodes(frame).find((item) => item.uuid === parentUuid);
+      const left =
+        numericCssValue(node.style.left) ??
+        (rendered && parent ? rendered.rect.left - parent.rect.left : 0);
+      const top =
+        numericCssValue(node.style.top) ??
+        (rendered && parent ? rendered.rect.top - parent.rect.top : 0);
       const step = event.shiftKey ? 10 : 1;
       const dx = event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0;
       const dy = event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0;
-      const seeded =
-        node.layout.x === undefined || node.layout.y === undefined ? readOffset(node.id) : null;
-      const layout = writeLayoutFields(node.layout, null, {
-        x: (node.layout.x ?? seeded?.x ?? 0) + dx,
-        y: (node.layout.y ?? seeded?.y ?? 0) + dy,
+      onEventRef.current({
+        type: EditorEventType.NodeStyleRecordSet,
+        data: {
+          nodeId: nodeUuid,
+          style: {
+            ...node.style,
+            left: `${left + dx}px`,
+            top: `${top + dy}px`,
+          },
+        },
       });
-      if (!layout) return;
-      session.execute({ type: 'setProp', nodeId: node.id, prop: 'layout', value: layout });
-    };
-
-    const markTouched = () => {
-      untouchedRef.current = false;
+      onEventRef.current({ type: EditorEventType.CatalogPersist, data: {} });
     };
     const onStagePointerDown = (event: PointerEvent) => {
       if (
@@ -349,17 +269,14 @@ export function useStagePointer({
     viewport.addEventListener('pointerdown', onPointerDown);
     viewport.addEventListener('pointerup', endGesture);
     viewport.addEventListener('pointercancel', endGesture);
-    viewport.addEventListener('pointerdown', markTouched);
-    viewport.addEventListener('wheel', markTouched, { passive: true });
     viewport.addEventListener('dragover', onDragOver);
     viewport.addEventListener('drop', onDrop);
     viewport.addEventListener('dragleave', onDragLeave);
     window.addEventListener('dragend', onWindowDragEnd);
-    window.addEventListener('keydown', onKey);
+    window.addEventListener('keydown', onKeyDown);
     stageEl.addEventListener('pointerdown', onStagePointerDown);
     session.setFitHandler(() => fitRef.current());
     session.setZoomByHandler((factor) => {
-      markTouched();
       stage.zoomBy(factor);
       selection.reposition();
     });
@@ -371,13 +288,11 @@ export function useStagePointer({
       viewport.removeEventListener('pointerdown', onPointerDown);
       viewport.removeEventListener('pointerup', endGesture);
       viewport.removeEventListener('pointercancel', endGesture);
-      viewport.removeEventListener('pointerdown', markTouched);
-      viewport.removeEventListener('wheel', markTouched);
       viewport.removeEventListener('dragover', onDragOver);
       viewport.removeEventListener('drop', onDrop);
       viewport.removeEventListener('dragleave', onDragLeave);
       window.removeEventListener('dragend', onWindowDragEnd);
-      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('keydown', onKeyDown);
       stageEl.removeEventListener('pointerdown', onStagePointerDown);
       session.setFitHandler(null);
       session.setZoomByHandler(null);
@@ -387,22 +302,32 @@ export function useStagePointer({
       stageControllerRef.current = null;
     };
   }, [
+    app,
     session,
+    openId,
     viewportRef,
     stageRef,
     boardRef,
     selectionRef,
     stageControllerRef,
-    untouchedRef,
     fitRef,
   ]);
 }
 
-function isElement(value: unknown): value is HTMLElement {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'nodeType' in value &&
-    (value as Node).nodeType === Node.ELEMENT_NODE
-  );
+function numericCssValue(value: string | undefined) {
+  if (!value) return null;
+  const match = /^(-?(?:\d+\.?\d*|\.\d+))(?:px)?$/.exec(value.trim());
+  return match ? Number(match[1]) : null;
+}
+
+function createSelectionForStage(
+  stageElement: HTMLDivElement,
+  stage: StageController,
+  boardRef: RefObject<ViewportBoard | null>,
+) {
+  return createSelection({
+    stage: stageElement,
+    getScale: () => stage.getScale(),
+    frames: () => boardRef.current?.frames() ?? [],
+  });
 }

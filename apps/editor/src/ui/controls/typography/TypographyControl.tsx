@@ -1,6 +1,8 @@
 import { TokenValueControl } from '../fields/TokenValueControl';
-import { Field, Stack, TextInput } from '../../form/index';
-import '../../form/form.css';
+import { Stack } from '../../components/layout';
+import { Field } from '../../components/feedback';
+import { TextInput } from '../form-binding/index';
+import '../../styles/form.css';
 import {
   formatTypographyFieldValue,
   parseTypographyFieldValue,

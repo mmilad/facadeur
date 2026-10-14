@@ -1,23 +1,35 @@
-import { createCatalogUuid, type DesignTokenFamily, type DesignTokenRecord, type DesignTokenValue, type DesignTokenValueType } from '@facadeur/core';
+import {
+  createCatalogUuid,
+  tokenCustomProperty,
+  type DesignTokenFamily,
+  type DesignTokenRecord,
+  type DesignTokenValue,
+  type DesignTokenValueType,
+} from '@facadeur/core';
 
 export function suggestedTokenPath(
   label: string,
   family: DesignTokenFamily,
   existingPaths: ReadonlySet<string>,
 ): string {
-  const segments = label.trim().toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+  const segments = label
+    .trim()
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
   if (!segments.length) throw new Error('Label is required');
   if (segments.length > 1 && segments[segments.length - 1] === family) segments.pop();
   const base = [family, ...segments].join('.');
-  if (!existingPaths.has(base)) return base;
+  const existingProperties = new Set([...existingPaths].map(tokenCustomProperty));
+  if (!existingProperties.has(tokenCustomProperty(base))) return base;
   for (let index = 2; index < 10_000; index += 1) {
     const candidate = `${base}${index}`;
-    if (!existingPaths.has(candidate)) return candidate;
+    if (!existingProperties.has(tokenCustomProperty(candidate))) return candidate;
   }
   throw new Error(`Could not suggest a ${family} token name`);
 }
 
-export function tokenMetadataFromPath(path: string, family: DesignTokenFamily) {
+export function tokenMetadataFromPath(path: string) {
   const [, ...parts] = path.split('.');
   const label = parts.pop();
   if (!label) throw new Error('Token label is required');

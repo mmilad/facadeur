@@ -1,0 +1,32 @@
+.group {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid var(--eu-border, #b7aa9a);
+  border-radius: var(--eu-radius, 6px);
+}
+
+.group button {
+  border: 0;
+  border-right: 1px solid var(--eu-border, #b7aa9a);
+  background: var(--eu-bg, #f6f1ea);
+  padding: 4px 10px;
+  color: var(--eu-fg-muted, #6b6258);
+  font: inherit;
+  font-size: var(--eu-label-size, 11px);
+  cursor: pointer;
+}
+
+.group button:last-child {
+  border-right: 0;
+}
+
+.group button[aria-pressed='true'] {
+  background: var(--eu-bg-elevated, #fffdf9);
+  color: var(--eu-fg, #2a241c);
+  font-weight: 600;
+}
+
+.group button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

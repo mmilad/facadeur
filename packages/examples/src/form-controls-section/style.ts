@@ -203,7 +203,7 @@ export const styles = {
     width: '100%',
     height: 'auto',
     border: '1px solid ' + tokenRef(exampleTokenIds.color.border.default),
-    borderRadius: '{shape.radius}',
+    borderRadius: tokenRef(exampleTokenIds.radius.md),
   },
   [exampleFormControlsSectionIds.nodes.div22]: {
     width: 'auto',

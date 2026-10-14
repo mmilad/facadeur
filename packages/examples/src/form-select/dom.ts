@@ -10,9 +10,7 @@ export const root: Node = {
         uuid: exampleFormSelectIds.nodes.span1,
         dom: {
           tagName: 'span',
-          properties: {
-            textContent: 'Property',
-          },
+          text: 'Property',
         },
       },
       {
@@ -24,9 +22,7 @@ export const root: Node = {
               uuid: exampleFormSelectIds.nodes.span2,
               dom: {
                 tagName: 'span',
-                properties: {
-                  textContent: 'Background',
-                },
+                text: 'Background',
               },
             },
             {

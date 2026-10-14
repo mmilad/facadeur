@@ -14,9 +14,12 @@ const REACT_ATTRIBUTE_NAMES: Readonly<Record<string, string>> = {
   rowspan: 'rowSpan',
   srcset: 'srcSet',
   crossorigin: 'crossOrigin',
+  autocomplete: 'autoComplete',
   acceptcharset: 'acceptCharset',
   'http-equiv': 'httpEquiv',
 };
+
+const ignorePreviewChange = () => {};
 
 export function DynamicElement({ config }: { config: ElementBuildConfig }) {
   const elementRef = useRef<HTMLElement | null>(null);
@@ -26,12 +29,12 @@ export function DynamicElement({ config }: { config: ElementBuildConfig }) {
     dataset,
     nodeUuid,
     properties,
-    style,
+    styleNodeUuids,
     tagName,
     text,
   } = config;
-  const { textContent: legacyTextContent, ...domProperties } = properties ?? {};
-  const content = text ?? (typeof legacyTextContent === 'string' ? legacyTextContent : undefined);
+  const domProperties = properties ?? {};
+  const content = text;
   const attributeStyle = attributes.style;
   const props: Record<string, unknown> = {};
 
@@ -42,10 +45,33 @@ export function DynamicElement({ config }: { config: ElementBuildConfig }) {
   for (const [name, value] of Object.entries(dataset ?? {})) {
     props[`data-${name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`] = value;
   }
+  const normalizedTagName = tagName.toLowerCase();
+  if (
+    ['input', 'select', 'textarea'].includes(normalizedTagName) &&
+    props.onChange === undefined &&
+    (props.value !== undefined || props.checked !== undefined)
+  ) {
+    props.onChange = ignorePreviewChange;
+    if (
+      (normalizedTagName === 'input' || normalizedTagName === 'textarea') &&
+      props.value !== undefined
+    ) {
+      props.readOnly = true;
+    }
+  }
   if (nodeUuid) props['data-facadeur-node-uuid'] = nodeUuid;
-  if (style) props.style = reactStyle(style);
+  if (nodeUuid || styleNodeUuids?.length) {
+    const currentClass = typeof props.className === 'string' ? props.className : '';
+    const styleClasses = new Set([...(styleNodeUuids ?? []), ...(nodeUuid ? [nodeUuid] : [])]);
+    props.className = [
+      currentClass,
+      ...[...styleClasses].map((uuid) => `facadeur-node-${uuid}`),
+    ]
+      .filter(Boolean)
+      .join(' ');
+  }
   if (attributeStyle)
-    props.style = { ...parseInlineStyle(attributeStyle), ...reactStyle(style ?? {}) };
+    props.style = parseInlineStyle(attributeStyle);
 
   useLayoutEffect(() => {
     const element = elementRef.current;
@@ -69,12 +95,6 @@ export function DynamicElement({ config }: { config: ElementBuildConfig }) {
     { ...props, ref: elementRef } as HTMLAttributes<HTMLElement> & RefAttributes<HTMLElement>,
     ...(isVoidHtmlTag(tagName) ? [] : renderedChildren),
   );
-}
-
-function reactStyle(style: Readonly<Record<string, string>>): CSSProperties {
-  return Object.fromEntries(
-    Object.entries(style).map(([name, value]) => [cssPropertyName(name), value]),
-  ) as CSSProperties;
 }
 
 function cssPropertyName(name: string) {

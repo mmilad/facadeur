@@ -3,7 +3,7 @@ import { TransformableField, type TransformableFieldOption } from '@facadeur/for
 import {
   useTokenResolver,
   useTokenSearchValue,
-  useTokenValueLabel,
+  useTokenLabel,
 } from '../controls/fields/TokenPreviewContext';
 import {
   formatTypographyFieldValue,
@@ -12,7 +12,8 @@ import {
   type TypographyCatalogs,
   type TypographyValue,
 } from '../controls/typography/index';
-import { Field, Inline } from '../form/index';
+import { Inline } from '../components/layout';
+import { Field } from '../components/feedback';
 import { ComboField, type ComboFieldItem } from '../combofield/ComboField';
 import { tokenTransformOptions } from '../settings/config/token-transform-options';
 
@@ -199,7 +200,7 @@ function previewText(value: unknown): string {
 export function DesignTypographyEditor(props: DesignTypographyEditorProps) {
   const { catalogs } = props;
   const resolvePreview = useTokenResolver();
-  const labelFor = useTokenValueLabel();
+  const labelFor = useTokenLabel();
   const searchValue = useTokenSearchValue();
   const [error, setError] = useState<string | null>(null);
   const [aliasDraft, setAliasDraft] = useState(() =>

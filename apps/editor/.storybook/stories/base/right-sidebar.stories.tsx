@@ -2,8 +2,9 @@ import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { card, exampleCatalogDefinitions, exampleCatalogLayers } from '@facadeur/examples';
 import { ResizableInspector } from '../../../src/ui/shell/ResizableInspector';
-import { RightRail } from '../../../src/ui/sidebar/properties/RightRail';
+import { RightRail } from '../../../src/ui/sidebar/right/RightRail';
 import { createStorybookEditor } from '../../fixtures/editor';
+import { createEditorEventHandler } from '../../../src/ui/shell/editor-event-handler';
 import {
   STORYBOOK_SCHEMA_FORM_PARAMETER,
   type StorybookSchemaFormConfig,
@@ -56,11 +57,16 @@ function RightSidebarPreview({ assetId, layerUuid }: { assetId: string; layerUui
 
   useEffect(() => () => editor.session.destroy(), [editor.session]);
 
+  const handleSidebarEvent = createEditorEventHandler({
+    app: editor.app,
+    session: editor.session,
+  });
+
   return (
     <div style={{ minHeight: 620, padding: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'flex-end', minHeight: 560 }}>
         <ResizableInspector>
-          <RightRail app={editor.app} session={editor.session} snap={snap} surface="editor" />
+          <RightRail model={snap.sidebar.inspector} onEvent={handleSidebarEvent} />
         </ResizableInspector>
       </div>
     </div>

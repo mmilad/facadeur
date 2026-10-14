@@ -3,43 +3,43 @@
 import { createCatalogUuid } from '@facadeur/core';
 import type { JsonSchemaObject } from '@facadeur/domain';
 import { useEffect, useMemo, useState } from 'react';
-import type { AppService } from '../../../app-service';
-import type { EditorSession } from '../../../domain/session';
-import { Field, SearchInput, TextInput } from '../../form/index';
+import type { EditorEvent } from '../../../domain/sidebar/events';
+import { EditorEventType } from '../../../domain/sidebar/events';
+import { Field } from '../../components/feedback';
+import { SearchInput, TextInput } from '../../controls/form-binding/index';
 import { JsonSchemaTypeEditor } from '../../schema/JsonSchemaTypeEditor';
-import styles from '../../stage/SchemaLibraryStage.module.css';
+import styles from '../../schema/schema-editor.module.css';
 import { catalogSchemaTitle } from '../../../domain/catalog/schema-display';
 import { SettingsSections } from '../SettingsSections';
 import type { EditorSurface } from '../../design/design-domain';
 
 export function CatalogSchemasPanel({
-  app,
-  session,
+  schemas,
   surface,
-  onSelectSurface,
+  onEvent,
 }: {
-  app: AppService;
-  session: EditorSession;
+  schemas: readonly { uuid: string; schema: JsonSchemaObject }[];
   surface: EditorSurface;
-  onSelectSurface: (surface: EditorSurface) => void;
+  onEvent: (event: EditorEvent) => void;
 }) {
-  const catalog = app.getCoreSnapshot().catalog;
   const entries = useMemo(
     () =>
-      Object.entries(catalog.schemas ?? {}).sort(([idA, a], [idB, b]) =>
-        catalogSchemaTitle(a, idA).localeCompare(catalogSchemaTitle(b, idB)),
-      ),
-    [catalog.schemas],
+      schemas
+        .map(({ uuid, schema }) => [uuid, schema] as const)
+        .sort(([idA, a], [idB, b]) =>
+          catalogSchemaTitle(a, idA).localeCompare(catalogSchemaTitle(b, idB)),
+        ),
+    [schemas],
   );
   const [selectedId, setSelectedId] = useState(entries[0]?.[0] ?? '');
   const [query, setQuery] = useState('');
 
   useEffect(() => {
     if (!selectedId && entries[0]?.[0]) setSelectedId(entries[0][0]);
-    if (selectedId && !catalog.schemas?.[selectedId] && entries[0]?.[0]) {
+    if (selectedId && !schemas.some(({ uuid }) => uuid === selectedId) && entries[0]?.[0]) {
       setSelectedId(entries[0][0]);
     }
-  }, [entries, selectedId, catalog.schemas]);
+  }, [entries, selectedId, schemas]);
 
   const needle = query.trim().toLowerCase();
   const visibleEntries = useMemo(
@@ -54,7 +54,7 @@ export function CatalogSchemasPanel({
     [entries, needle],
   );
 
-  const selected = selectedId ? catalog.schemas?.[selectedId] : undefined;
+  const selected = schemas.find(({ uuid }) => uuid === selectedId)?.schema;
 
   function addSchema() {
     const id = createCatalogUuid();
@@ -64,14 +64,17 @@ export function CatalogSchemasPanel({
       properties: {},
       additionalProperties: false,
     };
-    app.upsertSchema(id, schema);
+    onEvent({ type: EditorEventType.SchemaUpsert, data: { uuid: id, schema } });
     setSelectedId(id);
     setQuery('');
   }
 
   function commitSchema(next: JsonSchemaObject) {
     if (!selectedId) return;
-    app.upsertSchema(selectedId, next);
+    onEvent({
+      type: EditorEventType.SchemaUpsert,
+      data: { uuid: selectedId, schema: next },
+    });
   }
 
   function renameTitle(name: string) {
@@ -83,31 +86,10 @@ export function CatalogSchemasPanel({
     });
   }
 
-  async function persistSchemas() {
-    try {
-      await app.saveSchemas();
-      session.setNotice('Schemas saved', 'info');
-    } catch (failure) {
-      session.setNotice(
-        failure instanceof Error ? failure.message : 'Could not save schemas',
-        'error',
-      );
-    }
-  }
-
-  async function removeSelected() {
+  function removeSelected() {
     if (!selectedId) return;
-    try {
-      app.removeSchema(selectedId);
-      await app.saveSchemas();
-      const next = Object.keys(app.getCoreSnapshot().catalog.schemas ?? {})[0];
-      setSelectedId(next ?? '');
-    } catch (failure) {
-      session.setNotice(
-        failure instanceof Error ? failure.message : 'Could not remove schema',
-        'error',
-      );
-    }
+    onEvent({ type: EditorEventType.SchemaRemove, data: { uuid: selectedId } });
+    setSelectedId(schemas.find(({ uuid }) => uuid !== selectedId)?.uuid ?? '');
   }
 
   return (
@@ -115,7 +97,7 @@ export function CatalogSchemasPanel({
       <header className="design-domain-head">
         <div className="design-domain-head-main">
           <h1 className="design-domain-breadcrumb">Settings · Schemas</h1>
-          <SettingsSections surface={surface} onSelect={onSelectSurface} />
+          <SettingsSections surface={surface} onEvent={onEvent} />
         </div>
       </header>
       <div className="design-domain-body">
@@ -180,7 +162,10 @@ export function CatalogSchemasPanel({
               <p className="meta">
                 Changes apply to the catalog immediately. Save the project to persist.
               </p>
-              <button type="button" onClick={() => void persistSchemas()}>
+              <button
+                type="button"
+                onClick={() => onEvent({ type: EditorEventType.SchemasSave, data: {} })}
+              >
                 Save schemas to project
               </button>
             </div>

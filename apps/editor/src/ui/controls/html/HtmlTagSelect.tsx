@@ -1,5 +1,6 @@
-import { Field, Select } from '../../form/index';
-import '../../form/form.css';
+import { Field } from '../../components/feedback';
+import { Select } from '../form-binding/index';
+import '../../styles/form.css';
 import { HTML_TAG_OPTIONS } from './value';
 
 export function HtmlTagSelect({

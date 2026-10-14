@@ -1,25 +1,58 @@
 /**
  * @vitest-environment jsdom
  */
+import { act, fireEvent, render } from '@testing-library/react';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { act } from 'react';
-import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { findNodeByUuid } from '@facadeur/core';
+import { createExampleCatalog, exampleIds } from '@facadeur/examples';
 import { createEditorSession, type EditorSession } from '../src/domain/session';
-import { App } from '../src/ui/shell/EditorShell';
-import { editorStandardCatalog, editorStandardDesign } from './fixtures/example-catalog';
-import { tokenAtPath } from './fixtures/token-tree';
-import { openSettingsDomain } from './settings-navigation';
-import { exampleIds as fixtureIds } from '@facadeur/examples';
+import { EditorHost } from '../src/app/EditorHost';
+import type { EditorNavigationAdapter } from '../src/ui/shell/navigation/navigation-adapter';
 
-const documents = editorStandardCatalog();
+const sessions: EditorSession[] = [];
 
-describe('editor shell', () => {
-  const stylesDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '../src/ui/styles');
+(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-  it('uses viewport-height shell layout and independent sidebar scroll styles', () => {
+function createSession() {
+  const session = createEditorSession({ projectCatalog: createExampleCatalog() });
+  sessions.push(session);
+  return session;
+}
+
+function createTestNavigation(initialSearch = ''): EditorNavigationAdapter {
+  let search = initialSearch;
+  const updateSearch = (href: string) => {
+    search = href.includes('?') ? href.slice(href.indexOf('?') + 1) : '';
+  };
+  return {
+    pathname: '/',
+    get search() {
+      return search;
+    },
+    push: updateSearch,
+    replace: updateSearch,
+  };
+}
+
+async function pressKey(event: KeyboardEventInit) {
+  await act(async () => {
+    fireEvent.keyDown(window, event);
+    await new Promise<void>((resolve) => {
+      window.requestAnimationFrame(() => window.requestAnimationFrame(() => resolve()));
+    });
+  });
+}
+
+describe('catalog editor shell', () => {
+  afterEach(() => {
+    sessions.splice(0).forEach((session) => session.destroy());
+  });
+
+  it('uses viewport-height shell layout and independent sidebar scrolling', () => {
+    const stylesDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '../src/ui/styles');
     const baseCss = readFileSync(path.join(stylesDir, 'base.css'), 'utf8');
     const shellCss = readFileSync(path.join(stylesDir, 'shell.css'), 'utf8');
     const sidebarCss = readFileSync(path.join(stylesDir, 'sidebar.css'), 'utf8');
@@ -33,439 +66,75 @@ describe('editor shell', () => {
     expect(sidebarCss).toMatch(/\.side-scroll\s*\{[\s\S]*?overflow:\s*auto/);
   });
 
-  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
-  let root: Root | null = null;
-  let host: HTMLDivElement | null = null;
+  it('renders the shell and selected design surface around the canonical catalog', () => {
+    const session = createSession();
+    const view = render(
+      <EditorHost session={session} navigation={createTestNavigation('surface=colors')} />,
+    );
 
-  afterEach(() => {
-    act(() => {
-      root?.unmount();
-    });
-    host?.remove();
-    root = null;
-    host = null;
+    expect(view.container.querySelector('.app')).not.toBeNull();
+    expect(view.container.querySelector('.workspace')).not.toBeNull();
+    expect(view.container.querySelector('aside.side-left')).not.toBeNull();
+    expect(view.container.querySelector('[data-testid="editor-subnav"]')).not.toBeNull();
+    expect(
+      view.container.querySelector('.design-domain-stage[data-design-domain="colors"]'),
+    ).not.toBeNull();
+    expect(
+      view.container.querySelector(`[data-asset-id="${exampleIds.components.card.definition}"]`),
+    ).not.toBeNull();
   });
 
-  it('renders shell regions that participate in the height layout', async () => {
-    const session: EditorSession = createEditorSession({
-      documents,
-      design: editorStandardDesign(),
-    });
-    host = document.createElement('div');
-    document.body.append(host);
-    root = createRoot(host);
-    await act(async () => {
-      root?.render(<App session={session} />);
-    });
+  it('removes a selected catalog node from the shell keyboard shortcut', async () => {
+    const session = createSession();
+    vi.spyOn(session.core, 'persist').mockResolvedValue();
+    session.openAsset(exampleIds.components.card.definition);
+    session.selectNode(exampleIds.components.card.nodes.title);
+    render(<EditorHost session={session} navigation={createTestNavigation()} />);
 
-    expect(host.querySelector('.app')).toBeInstanceOf(HTMLDivElement);
-    expect(host.querySelector('.workspace')).toBeInstanceOf(HTMLDivElement);
-    expect(host.querySelector('aside.side-left')).toBeInstanceOf(HTMLElement);
-    expect(host.querySelector('aside.side-right.inspector-rail')).toBeInstanceOf(HTMLElement);
-    expect(host.querySelector('.side-scroll')).toBeInstanceOf(HTMLDivElement);
+    await pressKey({ key: 'Delete' });
+
+    expect(
+      findNodeByUuid(
+        session.core.getSnapshot().openDefinition!.root,
+        exampleIds.components.card.nodes.title,
+      ),
+    ).toBeNull();
   });
 
-  it('follows the store from the panels and undoes with Ctrl+Z', async () => {
-    const session: EditorSession = createEditorSession({
-      documents,
-      design: editorStandardDesign(),
-    });
-    host = document.createElement('div');
-    document.body.append(host);
-    root = createRoot(host);
-    await act(async () => {
-      root?.render(<App session={session} />);
-    });
+  it('wraps a selected catalog node using Core tree operations', async () => {
+    const session = createSession();
+    vi.spyOn(session.core, 'persist').mockResolvedValue();
+    session.openAsset(exampleIds.components.card.definition);
+    session.selectNode(exampleIds.components.card.nodes.title);
+    render(<EditorHost session={session} navigation={createTestNavigation()} />);
 
-    expect(host.textContent).toContain('Specimen');
-    expect(host.querySelector('.kind-badge')?.textContent).toBe('page');
-    expect(host.querySelector('[data-testid="inspector-context"]')?.textContent).toContain(
-      'Specimen',
-    );
-    expect(host.textContent).toContain('specimen-section');
-    expect(host.querySelector('nav.workspaces')).toBeNull();
-    expect(host.querySelector('[data-asset-id="button"]')).toBeInstanceOf(HTMLButtonElement);
-    expect(host.querySelector('[data-asset-id="card"]')).toBeInstanceOf(HTMLButtonElement);
-    expect(host.querySelector('[data-asset-id="specimen"]')).toBeInstanceOf(HTMLButtonElement);
-    expect(host.querySelector('[data-surface="icons"]')?.textContent).toContain('Icons');
-    expect(host.querySelector('.side-left [data-design-domain="icons"]')).toBeNull();
-    expect(host.querySelector('[data-design-domain="colors"]')).toBeNull();
-    expect(host.querySelector('[data-subnav="settings"]')?.textContent).toContain('Settings');
-    const sectionRow = host.querySelector('[data-asset-id="specimen-section"]');
-    expect(sectionRow).toBeInstanceOf(HTMLButtonElement);
-    expect((sectionRow as HTMLButtonElement).draggable).toBe(true);
-    expect((host.querySelector('[data-asset-id="button"]') as HTMLButtonElement).draggable).toBe(
-      false,
-    );
-    await act(async () => {
-      const event = new Event('dragstart', { bubbles: true });
-      Object.defineProperty(event, 'dataTransfer', {
-        value: {
-          setData() {},
-          effectAllowed: 'copy',
-        },
-      });
-      sectionRow?.dispatchEvent(event);
-    });
-    expect(session.getSnapshot().drag).toEqual({ kind: 'asset', assetId: 'specimen-section' });
-    await act(async () => {
-      sectionRow?.dispatchEvent(new Event('dragend', { bubbles: true }));
-    });
-    expect(session.getSnapshot().drag).toBeNull();
+    await pressKey({ key: 'g', ctrlKey: true, altKey: true });
 
-    const frameTool = host.querySelector('.topbar-tools button.tool[aria-label="Frame"]');
-    expect(frameTool).toBeInstanceOf(HTMLButtonElement);
-    expect((frameTool as HTMLButtonElement).disabled).toBe(true);
-
-    const sectionsToggle = host.querySelector('button[name="toggle-section"]');
-    await act(async () => {
-      (sectionsToggle as HTMLButtonElement).click();
-    });
-    expect(host.querySelector('[data-asset-id="specimen-section"]')).toBeNull();
-    const sectionLayer = [...host.querySelectorAll('button.layer')].find((button) =>
-      button.textContent?.includes('specimen-section'),
-    );
-    await act(async () => {
-      sectionLayer?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
-    });
-    expect(session.getSnapshot().openId).toBe('specimen');
-    expect(session.getSnapshot().selectedNodeId).toBe('specimen-section');
-    expect(session.getSnapshot().nestedSelection).toBeNull();
-    await act(async () => {
-      session.drillToMaster('specimen-section');
-    });
-    expect(session.getSnapshot().openId).toBe('specimen-section');
-    expect(session.getSnapshot().selectedNodeId).toBe('root');
-    const revealed = host.querySelector('[data-asset-id="specimen-section"]');
-    expect(revealed?.className).toContain('is-active');
-    expect(host.querySelector('[data-asset-id="button"]')).toBeInstanceOf(HTMLButtonElement);
-    expect(host.querySelector('[data-asset-id="specimen"]')).toBeInstanceOf(HTMLButtonElement);
-
-    const buttonAsset = host.querySelector('[data-asset-id="button"]');
-    await act(async () => {
-      (buttonAsset as HTMLButtonElement).click();
-    });
-    expect(session.getSnapshot().openId).toBe('button');
-    expect(host.querySelector('.kind-badge')?.textContent).toBe('atom');
-    expect(host.querySelector('.layers-document-title')?.textContent).toBe('Button');
-
-    await act(async () => {
-      session.selectNode('root');
-    });
-    expect(host.querySelector('[data-testid="inspector-context"]')?.textContent).toContain(
-      'Button',
-    );
-    const tag = host.querySelector('select[name="tag"]');
-    expect(tag).toBeInstanceOf(HTMLSelectElement);
-    expect((tag as HTMLSelectElement).value).toBe('button');
-    await act(async () => {
-      host!
-        .querySelector('button[name="property-tab-style"]')
-        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-    const direction = host.querySelector('button[aria-label="Horizontal"]');
-    expect(direction).toBeInstanceOf(HTMLButtonElement);
-    expect(direction?.getAttribute('aria-pressed')).toBe('true');
-
-    await act(async () => {
-      session.openAsset('card', 'root');
-      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'f', bubbles: true }));
-    });
-    expect(session.getSnapshot().tool).toBe('frame');
-    const insertCue = () => host!.querySelector('[data-testid="insert-mode-cue"]');
-    expect(insertCue()?.textContent).toContain('Frame tool');
-    expect(insertCue()?.textContent).toContain('Esc or V (Select)');
-    expect(host!.querySelector('[data-testid="stage-hint"]')).toBeNull();
-    await act(async () => {
-      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-    });
-    expect(session.getSnapshot().tool).toBe('select');
-    expect(insertCue()).toBeNull();
-    expect(host!.querySelector('[data-testid="stage-hint"]')?.textContent).toContain(
-      'F T I insert',
-    );
-
-    await act(async () => {
-      window.dispatchEvent(new KeyboardEvent('keydown', { key: 't', bubbles: true }));
-    });
-    expect(insertCue()?.textContent).toContain('Text tool');
-    await act(async () => {
-      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'v', bubbles: true }));
-    });
-    expect(session.getSnapshot().tool).toBe('select');
-    expect(insertCue()).toBeNull();
-
-    await act(async () => {
-      session.openAsset('button', 'root');
-      host!
-        .querySelector('button[name="property-tab-content"]')
-        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    await act(async () => {
-      session.execute({
-        type: 'setPreviewData',
-        previewData: { fields: { label: 'Go' } },
-      });
-    });
-    expect(session.getSnapshot().document.previewData?.fields?.label).toBe('Go');
-    await act(async () => {
-      host!
-        .querySelector('button[data-surface="schema"]')
-        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-    expect(host.querySelector('input[name="new-field-name"]')).toBeNull();
-
-    await act(async () => {
-      window.dispatchEvent(
-        new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }),
-      );
-    });
-    await act(async () => {
-      host!
-        .querySelector('button[data-surface="editor"]')
-        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-    expect(session.getSnapshot().document.name).toBe('Button');
+    const definition = session.core.getSnapshot().openDefinition!;
+    const wrapper = findNodeByUuid(definition.root, session.getSnapshot().selectedNodeId!);
+    expect(wrapper?.dom.children?.map((node) => node.uuid)).toEqual([
+      exampleIds.components.card.nodes.title,
+    ]);
   });
 
-  it('zooms from the topbar without changing reset view', async () => {
-    const session: EditorSession = createEditorSession({
-      documents,
-      design: editorStandardDesign(),
+  it('nudges an absolutely positioned catalog node through its style record', async () => {
+    const session = createSession();
+    vi.spyOn(session.core, 'persist').mockResolvedValue();
+    session.openAsset(exampleIds.components.card.definition);
+    session.core.patchNodeStyleRecord(exampleIds.components.card.nodes.title, {
+      position: 'absolute',
+      left: '10px',
+      top: '20px',
     });
-    host = document.createElement('div');
-    document.body.append(host);
-    root = createRoot(host);
-    await act(async () => {
-      root?.render(<App session={session} />);
-    });
+    session.selectNode(exampleIds.components.card.nodes.title);
+    render(<EditorHost session={session} navigation={createTestNavigation()} />);
 
-    expect(host.querySelector('.zoom-controls .zoom-readout')?.textContent).toBe('100%');
-    const viewport = host.querySelector('.viewport');
-    expect(viewport).toBeInstanceOf(HTMLDivElement);
-    Object.defineProperty(viewport, 'clientWidth', { value: 800, configurable: true });
-    Object.defineProperty(viewport, 'clientHeight', { value: 600, configurable: true });
-    const zoomIn = host.querySelector('.zoom-controls button[aria-label="Zoom in"]');
-    expect(zoomIn).toBeInstanceOf(HTMLButtonElement);
-    await act(async () => {
-      (zoomIn as HTMLButtonElement).click();
-    });
-    expect(session.getSnapshot().zoomLabel).toBe('110%');
+    await pressKey({ key: 'ArrowRight' });
 
-    const resetView = [...host.querySelectorAll('.topbar button.text-button')].find((button) =>
-      button.textContent?.includes('Reset view'),
+    const node = findNodeByUuid(
+      session.core.getSnapshot().openDefinition!.root,
+      exampleIds.components.card.nodes.title,
     );
-    expect(resetView).toBeInstanceOf(HTMLButtonElement);
-  });
-
-  it('shows unsaved badges for document and design edits', async () => {
-    const session: EditorSession = createEditorSession({
-      documents,
-      design: editorStandardDesign(),
-    });
-    host = document.createElement('div');
-    document.body.append(host);
-    root = createRoot(host);
-    await act(async () => {
-      root?.render(<App session={session} />);
-    });
-
-    expect(host.querySelector('[data-unsaved="document"]')).toBeNull();
-    expect(host.querySelector('[data-unsaved="design"]')).toBeNull();
-
-    await act(async () => {
-      session.openAsset('specimen-section');
-      session.execute({ type: 'setProp', nodeId: 'heading', prop: 'text', value: 'Dirty' });
-    });
-    expect(host.querySelector('[data-unsaved="document"]')).toBeTruthy();
-    expect(host.querySelector('[data-unsaved="document"]')?.textContent).toContain('Document');
-    expect(host.querySelector('[data-unsaved="design"]')).toBeNull();
-
-    await act(async () => {
-      session.executeDesign({
-        type: 'setToken',
-        family: 'color',
-        token: {
-          ...tokenAtPath(session.getSnapshot().design.tokens, 'color.accent.default')!,
-          value: '#abcdef',
-        },
-      });
-    });
-    expect(host.querySelector('[data-unsaved="design"]')?.textContent).toContain('Design');
-  });
-
-  it('searches the tree, opens design domains on the stage, and creates an asset', async () => {
-    const session: EditorSession = createEditorSession({
-      documents,
-      design: editorStandardDesign(),
-    });
-    const view = document.createElement('div');
-    host = view;
-    document.body.append(view);
-    root = createRoot(view);
-    await act(async () => {
-      root?.render(<App session={session} />);
-    });
-
-    const search = view.querySelector('input[name="asset-search"]');
-    expect(search).toBeInstanceOf(HTMLInputElement);
-    await act(async () => {
-      setInput(search as HTMLInputElement, 'card');
-    });
-    expect(view.querySelector('[data-asset-id="card"]')).toBeInstanceOf(HTMLButtonElement);
-    expect(view.querySelector('[data-asset-id="button"]')).toBeNull();
-    expect(view.querySelector('[data-asset-id="specimen"]')).toBeNull();
-    expect(view.querySelector('[data-design-domain="colors"]')).toBeNull();
-
-    await act(async () => {
-      setInput(search as HTMLInputElement, '');
-    });
-    await openSettingsDomain(view, 'colors');
-    expect(view.querySelector('.design-domain-stage[data-design-domain="colors"]')).toBeTruthy();
-    expect(view.querySelector('input[name="token-filter"]')).toBeInstanceOf(HTMLInputElement);
-    expect(view.querySelector('iframe')).toBeNull();
-    expect(session.getSnapshot().openId).toBe('specimen');
-
-    await openSettingsDomain(view, 'fonts', { alreadyOpen: true });
-    expect(view.querySelector('.design-domain-stage[data-design-domain="fonts"]')).toBeTruthy();
-    await act(async () => {
-      (view.querySelector('button[name="font-details-sans"]') as HTMLButtonElement).click();
-    });
-    expect(view.querySelector('input[name="font-sans-family"]')).toBeInstanceOf(HTMLInputElement);
-
-    await act(async () => {
-      (view.querySelector('button[name="create-atom"]') as HTMLButtonElement).click();
-    });
-    const created = session.getSnapshot();
-    expect(created.openId).toBe('new-atom');
-    expect(created.document.kind).toBe('atom');
-    expect(created.document.name).toBe('New atom');
-    expect(view.querySelector('[data-asset-id="new-atom"]')?.className).toContain('is-active');
-    expect(view.querySelector('input[name="token-filter"]')).toBeNull();
-  });
-
-  it('keeps native text controls in the form component group', async () => {
-    const session: EditorSession = createEditorSession({
-      documents,
-      design: editorStandardDesign(),
-    });
-    host = document.createElement('div');
-    document.body.append(host);
-    root = createRoot(host);
-    await act(async () => {
-      root?.render(<App session={session} />);
-    });
-
-    expect(host.querySelector('[data-group="atom"] [data-asset-id="input"]')).toBeNull();
-    const formGroup = host.querySelector('[data-group="component:form"]');
-    expect(formGroup).toBeInstanceOf(HTMLElement);
-    expect(formGroup?.querySelector('[data-asset-id="input"]')).toBeInstanceOf(HTMLButtonElement);
-    expect(formGroup?.querySelector('[data-asset-id="textarea"]')).toBeInstanceOf(
-      HTMLButtonElement,
-    );
-  });
-
-  it('shows a primary focus cue and writes a viewport style override from the inspector', async () => {
-    const session: EditorSession = createEditorSession({
-      documents,
-      design: editorStandardDesign(),
-    });
-    host = document.createElement('div');
-    document.body.append(host);
-    root = createRoot(host);
-    await act(async () => {
-      root?.render(<App session={session} />);
-    });
-    await act(async () => {
-      session.openAsset('button', 'root');
-      session.setFocusViewport(fixtureIds.catalog.breakpoints.tablet);
-    });
-
-    expect(host.querySelector('button[name="edit-base"]')?.getAttribute('aria-pressed')).toBe(
-      'true',
-    );
-    const viewportButton = host.querySelector('button[name="edit-viewport"]');
-    expect(viewportButton?.textContent).toContain('Tablet · 768');
-
-    const styleTab = host.querySelector('button[name="property-tab-style"]');
-    await act(async () => {
-      styleTab?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-    const manualCss = [...host.querySelectorAll('.eu-section__title--collapsible')].find(
-      (title) => title.textContent === 'Manual CSS properties',
-    );
-    await act(async () => {
-      manualCss?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-    const padding = host.querySelector(
-      'button[name="style-root-base-base-paddingInline"]',
-    ) as HTMLButtonElement;
-    expect(padding.textContent).toContain('Padding X');
-
-    await act(async () => {
-      viewportButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-    expect(session.getSnapshot().editTarget).toBe('viewport');
-    expect(padding.textContent).toBe('5');
-    expect(host.textContent).toContain('Override at 768');
-
-    const reset = [
-      ...padding.closest('.declaration-row')!.querySelectorAll('.override-cue button'),
-    ].find((button) => button.textContent?.includes('Reset'));
-    await act(async () => {
-      reset?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-    const styles = session.getSnapshot().document.styles;
-    expect(styles?.declarations?.paddingInline).toBe('{padding.x}');
-    expect(styles?.breakpoints?.[fixtureIds.catalog.breakpoints.tablet]).toBeUndefined();
-    expect(styles?.breakpoints?.[fixtureIds.catalog.breakpoints.ultra]).toBeUndefined();
-  });
-
-  it('shows a drill breadcrumb and clears it when opening from the tree', async () => {
-    const session: EditorSession = createEditorSession({
-      documents,
-      design: editorStandardDesign(),
-    });
-    host = document.createElement('div');
-    document.body.append(host);
-    root = createRoot(host);
-    await act(async () => {
-      root?.render(<App session={session} />);
-    });
-    const view = host;
-
-    expect(view.querySelector('.topbar-breadcrumb')).toBeNull();
-    await act(async () => {
-      session.selectNode('specimen-section');
-      session.drillToMaster('specimen-section');
-    });
-    const trail = view.querySelector('.topbar-breadcrumb');
-    expect(trail?.textContent).toContain('Specimen');
-    expect(trail?.textContent).toContain('›');
-    expect(trail?.textContent).toContain('Specimen section');
-    expect(view.querySelectorAll('.topbar-breadcrumb-parent')).toHaveLength(1);
-    expect(view.querySelector('.topbar-breadcrumb-current')?.textContent).toBe('Specimen section');
-    expect(view.querySelector('.kind-badge')?.textContent).toBe('section');
-
-    await act(async () => {
-      (view.querySelector('.topbar-breadcrumb-parent') as HTMLButtonElement).click();
-    });
-    expect(session.getSnapshot().openId).toBe('specimen');
-    expect(session.getSnapshot().selectedNodeId).toBe('specimen-section');
-    expect(view.querySelector('.topbar-breadcrumb')).toBeNull();
-
-    await act(async () => {
-      session.selectNode('specimen-section');
-      session.drillToMaster('specimen-section');
-      (view.querySelector('[data-asset-id="button"]') as HTMLButtonElement).click();
-    });
-    expect(view.querySelector('.topbar-breadcrumb')).toBeNull();
+    expect(node?.style).toMatchObject({ left: '11px', top: '20px' });
   });
 });
-
-function setInput(input: HTMLInputElement, value: string) {
-  const prototype = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
-  prototype?.set?.call(input, value);
-  input.dispatchEvent(new Event('input', { bubbles: true }));
-}

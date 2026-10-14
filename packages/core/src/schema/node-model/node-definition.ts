@@ -16,6 +16,9 @@ export const nodeDefinitionSchema = Type.Object(
     uuid: uuidSchema,
     name: Type.String({ minLength: 1 }),
     kind: nodeDefinitionKindSchema,
+    category: Type.Optional(
+      Type.String({ minLength: 1, description: 'Optional slash-delimited category path.' }),
+    ),
     schema: schemaSourceSchema,
     root: nodeSchema,
     style: Type.Optional(styleRulesRefSchema),

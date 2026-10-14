@@ -1,0 +1,160 @@
+import {
+  matchesSchemaValue,
+  primaryJsonSchemaType,
+  type FieldValue,
+  type JsonSchema,
+} from '@facadeur/core';
+import { isFieldRecord, isFieldValue } from '../../../../domain/field-values';
+
+export function schemaMatches(value: FieldValue, schema: JsonSchema): boolean {
+  return matchesSchemaValue(value, schema);
+}
+
+export function caseEnvelope(value: FieldValue): { type: string; props: FieldValue } | undefined {
+  if (!isFieldRecord(value) || typeof value.type !== 'string' || !Object.hasOwn(value, 'props'))
+    return undefined;
+  const props = value.props;
+  return isFieldValue(props) ? { type: value.type, props } : undefined;
+}
+
+export function payloadForValue(value: FieldValue) {
+  return caseEnvelope(value)?.props ?? value;
+}
+
+export function makeCaseValue(choice: { caseValue?: string }, payload: FieldValue): FieldValue {
+  return choice.caseValue ? { type: choice.caseValue, props: payload } : payload;
+}
+
+/** Build a useful editable value without weakening or rewriting its source schema. */
+export function initialValueForSchema(
+  schema: JsonSchema,
+  includeOptionalFields = false,
+): FieldValue | undefined {
+  if (
+    'default' in schema &&
+    isFieldValue(schema.default) &&
+    matchesSchemaValue(schema.default, schema)
+  )
+    return schema.default;
+  if ('const' in schema && isFieldValue(schema.const) && matchesSchemaValue(schema.const, schema))
+    return schema.const;
+  if (schema.enum?.length) {
+    const value = schema.enum.find(
+      (entry) => isFieldValue(entry) && matchesSchemaValue(entry, schema),
+    );
+    if (isFieldValue(value)) return value;
+  }
+
+  const alternatives = schema.oneOf ?? schema.anyOf;
+  if (alternatives?.length) {
+    for (const alternative of alternatives) {
+      const value = initialValueForSchema(alternative, includeOptionalFields);
+      if (value !== undefined && matchesSchemaValue(value, schema)) return value;
+    }
+    return undefined;
+  }
+
+  const type = primaryJsonSchemaType(schema);
+  if (type === 'object' || schema.properties) {
+    const value: Record<string, FieldValue> = {};
+    for (const name of includeOptionalFields
+      ? Object.keys(schema.properties ?? {})
+      : (schema.required ?? [])) {
+      const child = schema.properties?.[name];
+      if (!child) continue;
+      const initial = initialValueForSchema(child, includeOptionalFields);
+      if (initial === undefined) {
+        if ((schema.required ?? []).includes(name)) return undefined;
+        continue;
+      }
+      value[name] = initial;
+    }
+    if (matchesSchemaValue(value, schema)) return value;
+    return undefined;
+  }
+  if (type === 'array') {
+    const value: FieldValue[] = [];
+    return matchesSchemaValue(value, schema) ? value : undefined;
+  }
+  if (type === 'boolean') return matchesSchemaValue(false, schema) ? false : undefined;
+  if (type === 'integer' || type === 'number') {
+    const minimum = typeof schema.minimum === 'number' ? schema.minimum : undefined;
+    const exclusiveMinimum =
+      typeof schema.exclusiveMinimum === 'number' ? schema.exclusiveMinimum : undefined;
+    const candidate = minimum ?? (exclusiveMinimum !== undefined ? exclusiveMinimum + 1 : 0);
+    const step =
+      typeof schema.multipleOf === 'number' && schema.multipleOf > 0 ? schema.multipleOf : 1;
+    for (let offset = 0; offset < 100; offset++) {
+      const value = candidate + step * offset;
+      if ((type !== 'integer' || Number.isInteger(value)) && matchesSchemaValue(value, schema))
+        return value;
+    }
+    return undefined;
+  }
+  if (type === 'string') {
+    const candidates = [
+      '',
+      'value',
+      'item',
+      'a'.repeat(typeof schema.minLength === 'number' ? schema.minLength : 0),
+    ];
+    return candidates.find((value) => matchesSchemaValue(value, schema));
+  }
+  return undefined;
+}
+
+/** A provisional editable value for constraints that cannot be satisfied without user input. */
+export function initialDraftForSchema(schema: JsonSchema): FieldValue {
+  if ('default' in schema && isFieldValue(schema.default)) return schema.default;
+  if ('const' in schema && isFieldValue(schema.const)) return schema.const;
+  if (schema.enum?.length) {
+    const value = schema.enum.find(isFieldValue);
+    if (isFieldValue(value)) return value;
+  }
+  const alternatives = schema.oneOf ?? schema.anyOf;
+  if (alternatives?.length) return initialDraftForSchema(alternatives[0]!);
+
+  const type = primaryJsonSchemaType(schema);
+  if (type === 'object' || schema.properties) {
+    const value: Record<string, FieldValue> = {};
+    for (const [name, child] of Object.entries(schema.properties ?? {})) {
+      if ((schema.required ?? []).includes(name)) value[name] = initialDraftForSchema(child);
+    }
+    return value;
+  }
+  if (type === 'array') return [];
+  if (type === 'boolean') return false;
+  if (type === 'integer' || type === 'number') {
+    return typeof schema.minimum === 'number' ? schema.minimum : 0;
+  }
+  if (type === 'string') {
+    return 'a'.repeat(typeof schema.minLength === 'number' ? schema.minLength : 0);
+  }
+  return {};
+}
+
+export function setAtPath(
+  value: FieldValue,
+  path: readonly (string | number)[],
+  next: FieldValue | undefined,
+): FieldValue {
+  if (!path.length) return next ?? value;
+  const [head, ...tail] = path;
+  if (typeof head === 'number' && Array.isArray(value)) {
+    const result = [...value];
+    if (tail.length)
+      result[head] = setAtPath(result[head] ?? (typeof tail[0] === 'number' ? [] : {}), tail, next);
+    else if (next === undefined) result.splice(head, 1);
+    else result[head] = next;
+    return result;
+  }
+  if (typeof head === 'string' && isFieldRecord(value)) {
+    const result: Record<string, FieldValue> = { ...value } as Record<string, FieldValue>;
+    if (tail.length)
+      result[head] = setAtPath(result[head] ?? (typeof tail[0] === 'number' ? [] : {}), tail, next);
+    else if (next === undefined) delete result[head];
+    else result[head] = next;
+    return result;
+  }
+  return value;
+}

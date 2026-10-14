@@ -1,0 +1,29 @@
+export type FormDensity = 'compact' | 'comfortable';
+
+export type FormChangeMeta = {
+  path: string;
+  previous: unknown;
+  next: unknown;
+};
+
+import type { DesignPropOption } from '@facadeur/core';
+import type { ReactNode } from 'react';
+
+export type FormProps<T extends object> = {
+  value: T;
+  onChange: (next: T, meta: FormChangeMeta) => void;
+  onCommit?: (next: T, meta: FormChangeMeta) => void;
+  disabled?: boolean;
+  density?: FormDensity;
+  designPropOptions?: readonly DesignPropOption[];
+  children: ReactNode;
+};
+
+export type FormContextValue<T extends object = object> = {
+  value: T;
+  disabled: boolean;
+  density: FormDensity;
+  pathPrefix: string;
+  designPropOptions: readonly DesignPropOption[];
+  emitChange: (path: string, next: unknown, options?: { commit?: boolean }) => void;
+};

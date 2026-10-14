@@ -1,89 +1,36 @@
-# Editor form kit (v1)
+# Editor form integration
 
-Reusable controlled form primitives for editor chrome (inspector, sidebars, popovers). Lives under `apps/editor/src/ui/form/`.
+Reusable form elements belong to `@facadeur/form`. Editor code may wrap those elements to bind
+catalog paths, supply prop/token options, and connect live changes and commits to the editor
+session. It must not implement replacement native inputs.
 
-## Folder map
+## Current ownership
 
-| Path                    | Purpose                                                        |
-| ----------------------- | -------------------------------------------------------------- |
-| `types/`                | `FormChangeMeta`, density, option types                        |
-| `schema/`               | `getPath` / `setPath`, declarative `FieldConfig`, `SchemaForm` |
-| `const/`                | Density defaults and gap tokens                                |
-| `components/layout/`    | `Stack`, `Inline`, `Grid`, `Section`, `Divider`                |
-| `components/input/`     | Text, number, search, **ColorInput**                           |
-| `components/selection/` | Select, Combobox, segmented, checkbox, toggle, radio           |
-| `components/feedback/`  | `Field`, `InlineError`, `HelpHint`                             |
-| `components/overlay/`   | `Popover`, `Modal`, `AddPopover` (Radix Popover + Dialog only) |
-| `components/dynamic/`   | `ArrayField`, `RecordField`                                    |
-| `Form.tsx`              | Root controlled form                                           |
-| `index.ts`              | Public exports                                                 |
+- `packages/form/src/fields/`: reusable controls, including text, textarea, number, search, color,
+  select, autocomplete, radio, boolean, chips, record, repeater, and transformable fields.
+- `apps/editor/src/ui/controls/form-binding/`: editor integration that binds package fields to
+  catalog paths and editor session changes. It also contains recursive schema array composition.
+- `apps/editor/src/ui/controls/data/schema/`: schema-value interpretation and structural editing.
+  `schema/form/` owns the editor-only field configuration/rendering adapter, composed from package
+  form fields and editor binding controls.
+- `apps/editor/src/ui/components/IconButton.tsx`: shared editor button primitive used by controls,
+  design settings, token editing, and inspectors.
 
-Dev demo: run `pnpm --filter @facadeur/editor dev` and open `/form-demo.html`.
+## Form change contract
 
-## Form change API
+The editor form context resolves dotted paths and array indices, then sends value updates through
+`emitChange`. A live edit updates the draft; a commit marks a user action for editor undo/history.
+Adapters must preserve both callbacks, disabled/error state, accessible labels, stable references,
+and existing keyboard behavior.
 
-```ts
-type FormChangeMeta = {
-  path: string; // e.g. "label", "tags.0.name", "declarations.padding"
-  previous: unknown;
-  next: unknown;
-};
+Catalog paths, schema field configuration, prop bindings, token choices, and session writes remain
+editor-owned. Generic field behavior and native input rendering remain package-owned. Use only the
+package public API from outside `packages/form`.
 
-<Form
-  value={state}
-  onChange={(next, meta) => setState(next)}
-  onCommit={(next, meta) => issueUndoCommand(next, meta)}
-/>
-```
+## Verification and migration
 
-### Path rules
-
-- Dot segments; array indices are numeric (`items.0.name`).
-- Record keys that contain `.` use bracket segments: `declarations["padding.top"]`.
-- Helpers: `getPath`, `setPath`, `formatKey`, `resolvePath` (see `schema/path.ts`).
-
-### `onChange` vs `onCommit`
-
-| Control                                              | `onChange`                 | `onCommit` (when provided)            |
-| ---------------------------------------------------- | -------------------------- | ------------------------------------- |
-| Text, textarea, number, search, color                | Each keystroke / live drag | Blur or Enter                         |
-| Toggle, checkbox, select, combobox, segmented, radio | Immediate                  | Immediate (one click = one undo step) |
-| Array / record + / ×                                 | Immediate                  | Immediate                             |
-
-Primitives accept standalone `value` / `onChange` props, or a `name` when nested inside `<Form>`.
-
-## Dynamic groups
-
-### ArrayField
-
-```tsx
-<ArrayField name="tags" defaultItem={() => ({ name: '' })}>
-  {(_, index) => (
-    <Field label={`Tag ${index + 1}`}>
-      <TextInput name="name" />
-    </Field>
-  )}
-</ArrayField>
-```
-
-Built-in **+** (append `defaultItem`) and **×** (remove row). Paths look like `tags.0.name`.
-
-### RecordField
-
-`Record<string, string>` editor for CSS-like maps. **+** adds a row; committing a non-empty key writes into the record. **×** removes a key.
-
-## ColorInput
-
-- **Public value:** normalized `#RRGGBBAA` (uppercase hex; alpha `FF` when opaque).
-- Popover: hex field, RGB channels (0–255), alpha **0–1**, native swatch, eyedropper when `window.EyeDropper` exists (hidden/disabled otherwise).
-- Utilities: `normalizeColor`, `hexToRgba`, `rgbaToHex`.
-
-## Styling
-
-`form.css` defines editor-ui tokens (`--eu-bg`, `--eu-border`, `--eu-accent`, density gaps, focus ring). These are **chrome-only** and separate from design tokens rendered in document iframes.
-
-## Domain controls
-
-Domain controls under `apps/editor/src/ui/controls/` compose these primitives and `Form` / `SchemaForm` rather than reimplementing inputs. Keep document commands in panel code; pass `onCommit` from the panel when a change should create an undo step.
-
-Domain controls read from `EditorSnapshot` and write through `session.execute` or `executeDesign`; catalogs are passed as props, and controls do not access the store directly.
+The root Vitest configuration includes the maintained Editor suites, including the integration
+and color tests under `apps/editor/test/form`. Retired, unreferenced controls and tests have been
+removed rather than adapted. Presentation primitives live under `apps/editor/src/ui/components`,
+and token search lives with the token UI. The active checklist and remaining ownership work are in
+[the repository plan](plan.md#editor-form-ownership-cleanup).

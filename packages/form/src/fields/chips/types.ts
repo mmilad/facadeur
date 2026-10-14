@@ -9,6 +9,7 @@ export type ChipsFieldConfig = {
 
 export type ChipsFieldProps = Omit<ChipsFieldConfig, 'label' | 'type'> & {
   id: string;
+  label?: string;
   value: readonly string[];
   onChange: (next: string[]) => void;
 };

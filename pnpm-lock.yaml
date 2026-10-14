@@ -11,6 +11,9 @@ importers:
       '@eslint/js':
         specifier: ^9.36.0
         version: 9.39.5
+      '@facadeur/examples':
+        specifier: workspace:*
+        version: link:packages/examples
       '@sinclair/typebox':
         specifier: ^0.34.41
         version: 0.34.52
@@ -50,33 +53,21 @@ importers:
 
   apps/editor:
     dependencies:
-      '@facadeur/api':
-        specifier: workspace:*
-        version: link:../../packages/api
-      '@facadeur/api-client':
-        specifier: workspace:*
-        version: link:../../packages/api-client
-      '@facadeur/codegen':
-        specifier: workspace:*
-        version: link:../../packages/codegen
       '@facadeur/core':
         specifier: workspace:*
         version: link:../../packages/core
       '@facadeur/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@facadeur/examples':
+        specifier: workspace:*
+        version: link:../../packages/examples
       '@facadeur/form':
         specifier: workspace:*
         version: link:../../packages/form
-      '@facadeur/renderer-dom':
-        specifier: workspace:*
-        version: link:../../packages/renderer-dom
       '@facadeur/style-engine':
         specifier: workspace:*
         version: link:../../packages/style-engine
-      '@facadeur/tokens':
-        specifier: workspace:*
-        version: link:../../packages/tokens
       '@radix-ui/react-dialog':
         specifier: ^1.1.23
         version: 1.1.23(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -96,9 +87,6 @@ importers:
         specifier: ^19.1.1
         version: 19.3.0(react@19.3.0)
     devDependencies:
-      '@facadeur/examples':
-        specifier: workspace:*
-        version: link:../../packages/examples
       '@storybook/nextjs-vite':
         specifier: 10.6.1
         version: 10.6.1(@babel/core@7.29.7)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(next@15.5.26(@babel/core@7.29.7)(@types/node@22.20.4)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(rollup@4.63.5)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.9.9)(react@19.3.0))(typescript@5.9.3)(vite@7.3.6(@types/node@22.20.4)(tsx@4.23.15))
@@ -118,89 +106,17 @@ importers:
         specifier: ^5.9.2
         version: 5.9.3
 
-  apps/server:
-    dependencies:
-      '@facadeur/core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      '@facadeur/store-yjs':
-        specifier: workspace:*
-        version: link:../../packages/store-yjs
-      '@facadeur/tokens':
-        specifier: workspace:*
-        version: link:../../packages/tokens
-      ws:
-        specifier: ^8.21.3
-        version: 8.21.3
-      yjs:
-        specifier: ^13.6.27
-        version: 13.6.33
-    devDependencies:
-      '@facadeur/examples':
-        specifier: workspace:*
-        version: link:../../packages/examples
-      '@types/node':
-        specifier: ^22.19.0
-        version: 22.20.4
-      '@types/ws':
-        specifier: ^8.18.1
-        version: 8.18.2
-      tsx:
-        specifier: ^4.20.5
-        version: 4.23.15
-      typescript:
-        specifier: ^5.9.2
-        version: 5.9.3
-
-  packages/api:
-    dependencies:
-      '@facadeur/core':
-        specifier: workspace:*
-        version: link:../core
-      '@facadeur/domain':
-        specifier: workspace:*
-        version: link:../domain
-      '@facadeur/examples':
-        specifier: workspace:*
-        version: link:../examples
-      '@facadeur/tokens':
-        specifier: workspace:*
-        version: link:../tokens
-    devDependencies:
-      '@types/node':
-        specifier: ^22.19.0
-        version: 22.20.4
-      typescript:
-        specifier: ^5.9.2
-        version: 5.9.3
-
-  packages/api-client:
-    dependencies:
-      '@facadeur/api':
-        specifier: workspace:*
-        version: link:../api
-      '@facadeur/domain':
-        specifier: workspace:*
-        version: link:../domain
-    devDependencies:
-      '@types/node':
-        specifier: ^22.19.0
-        version: 22.20.4
-      typescript:
-        specifier: ^5.9.2
-        version: 5.9.3
-
   packages/codegen:
     dependencies:
       '@facadeur/core':
         specifier: workspace:*
         version: link:../core
+      '@facadeur/domain':
+        specifier: workspace:*
+        version: link:../domain
       '@facadeur/style-engine':
         specifier: workspace:*
         version: link:../style-engine
-      '@facadeur/tokens':
-        specifier: workspace:*
-        version: link:../tokens
     devDependencies:
       '@facadeur/examples':
         specifier: workspace:*
@@ -208,15 +124,9 @@ importers:
       '@types/node':
         specifier: ^22.19.0
         version: 22.20.4
-      prettier:
-        specifier: ^3.6.2
-        version: 3.9.9
-      react:
-        specifier: ^19.1.1
-        version: 19.3.0
-      react-dom:
-        specifier: ^19.1.1
-        version: 19.3.0(react@19.3.0)
+      tsx:
+        specifier: ^4.20.5
+        version: 4.23.15
       typescript:
         specifier: ^5.9.2
         version: 5.9.3
@@ -226,9 +136,6 @@ importers:
       '@facadeur/domain':
         specifier: workspace:*
         version: link:../domain
-      '@facadeur/examples':
-        specifier: workspace:*
-        version: link:../examples
       '@sinclair/typebox':
         specifier: ^0.34.41
         version: 0.34.52
@@ -251,6 +158,9 @@ importers:
 
   packages/examples:
     dependencies:
+      '@facadeur/core':
+        specifier: workspace:*
+        version: link:../core
       '@facadeur/domain':
         specifier: workspace:*
         version: link:../domain
@@ -272,7 +182,7 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
-  packages/renderer-dom:
+  packages/style-engine:
     dependencies:
       '@facadeur/core':
         specifier: workspace:*
@@ -284,60 +194,6 @@ importers:
       '@facadeur/examples':
         specifier: workspace:*
         version: link:../examples
-      typescript:
-        specifier: ^5.9.2
-        version: 5.9.3
-
-  packages/store-yjs:
-    dependencies:
-      '@facadeur/core':
-        specifier: workspace:*
-        version: link:../core
-      '@facadeur/tokens':
-        specifier: workspace:*
-        version: link:../tokens
-      yjs:
-        specifier: ^13.6.27
-        version: 13.6.33
-    devDependencies:
-      '@facadeur/examples':
-        specifier: workspace:*
-        version: link:../examples
-      typescript:
-        specifier: ^5.9.2
-        version: 5.9.3
-
-  packages/style-engine:
-    dependencies:
-      '@facadeur/core':
-        specifier: workspace:*
-        version: link:../core
-      '@facadeur/tokens':
-        specifier: workspace:*
-        version: link:../tokens
-    devDependencies:
-      '@facadeur/examples':
-        specifier: workspace:*
-        version: link:../examples
-      '@facadeur/renderer-dom':
-        specifier: workspace:*
-        version: link:../renderer-dom
-      '@facadeur/store-yjs':
-        specifier: workspace:*
-        version: link:../store-yjs
-      typescript:
-        specifier: ^5.9.2
-        version: 5.9.3
-
-  packages/tokens:
-    dependencies:
-      '@facadeur/core':
-        specifier: workspace:*
-        version: link:../core
-      '@facadeur/examples':
-        specifier: workspace:*
-        version: link:../examples
-    devDependencies:
       typescript:
         specifier: ^5.9.2
         version: 5.9.3
@@ -1738,9 +1594,6 @@ packages:
   '@types/trusted-types@2.0.7':
     resolution: {integrity: sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==}
 
-  '@types/ws@8.18.2':
-    resolution: {integrity: sha512-67MQl+fpWKVTT1NYdnmo3U4sc/xPo/zQBncVnI74qmQa0z/b+1g6iYqNmGCPbxO+zz2aklb08a0oHfegiVd0/w==}
-
   '@typescript-eslint/eslint-plugin@8.70.1':
     resolution: {integrity: sha512-nDNrUQ/4ruSNYbu749TRY7cfrzPtoLHEXSNBI8aaNY32LlZCajixqRf3FqcKC4p5Cam4VOHYx/t+i5+nKXvrqA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
@@ -2309,9 +2162,6 @@ packages:
   isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
 
-  isomorphic.js@0.2.5:
-    resolution: {integrity: sha512-PIeMbHqMt4DnUP3MA/Flc0HElYjMXArsw1qwJZcm9sqR8mq3l8NYizFMty0pWwE/tzIGH3EKK5+jes5mAr85yw==}
-
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
@@ -2369,11 +2219,6 @@ packages:
   levn@0.4.1:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
-
-  lib0@0.2.117:
-    resolution: {integrity: sha512-DeXj9X5xDCjgKLU/7RR+/HQEVzuuEUiwldwOGsHK/sfAfELGWEyTcf0x+uOvCvK3O2zPmZePXWL85vtia6GyZw==}
-    engines: {node: '>=16'}
-    hasBin: true
 
   locate-path@6.0.0:
     resolution: {integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==}
@@ -3059,10 +2904,6 @@ packages:
 
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
-
-  yjs@13.6.33:
-    resolution: {integrity: sha512-q/UYvr1gOk4XII+Cu1CW2dINjYqJJFifTzogEaIARznrvX7uOlHsdTEXcnOBMuIsrCGEEKdNxi74kyMLZlKVfw==}
-    engines: {node: '>=16.0.0', npm: '>=8.0.0'}
 
   yocto-queue@0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
@@ -4192,10 +4033,6 @@ snapshots:
   '@types/trusted-types@2.0.7':
     optional: true
 
-  '@types/ws@8.18.2':
-    dependencies:
-      '@types/node': 22.20.4
-
   '@typescript-eslint/eslint-plugin@8.70.1(@typescript-eslint/parser@8.70.1(eslint@9.39.5)(typescript@5.9.3))(eslint@9.39.5)(typescript@5.9.3)':
     dependencies:
       '@eslint-community/regexpp': 4.12.2
@@ -4776,8 +4613,6 @@ snapshots:
 
   isexe@2.0.0: {}
 
-  isomorphic.js@0.2.5: {}
-
   js-tokens@4.0.0: {}
 
   js-tokens@9.0.1: {}
@@ -4852,10 +4687,6 @@ snapshots:
     dependencies:
       prelude-ls: 1.2.1
       type-check: 0.4.0
-
-  lib0@0.2.117:
-    dependencies:
-      isomorphic.js: 0.2.5
 
   locate-path@6.0.0:
     dependencies:
@@ -5579,10 +5410,6 @@ snapshots:
   xmlchars@2.2.0: {}
 
   yallist@3.1.1: {}
-
-  yjs@13.6.33:
-    dependencies:
-      lib0: 0.2.117
 
   yocto-queue@0.1.0: {}
 

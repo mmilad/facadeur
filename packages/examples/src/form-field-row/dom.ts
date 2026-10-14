@@ -10,27 +10,21 @@ export const root: Node = {
         uuid: exampleFormFieldRowIds.nodes.span1,
         dom: {
           tagName: 'span',
-          properties: {
-            textContent: 'label',
-          },
+          text: 'label',
         },
       },
       {
         uuid: exampleFormFieldRowIds.nodes.span2,
         dom: {
           tagName: 'span',
-          properties: {
-            textContent: 'Text',
-          },
+          text: 'Text',
         },
       },
       {
         uuid: exampleFormFieldRowIds.nodes.span3,
         dom: {
           tagName: 'span',
-          properties: {
-            textContent: 'Continue',
-          },
+          text: 'Continue',
         },
       },
     ],

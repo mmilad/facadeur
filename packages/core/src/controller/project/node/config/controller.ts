@@ -16,8 +16,7 @@ export class ConfigController {
     const snap = this.core.getSnapshot();
     const definition = snap.openDefinition;
     if (!definition) return { fields: [], values: {} };
-    const target =
-      nodeUuid ?? snap.selectedNodeUuid ?? definition.root.uuid;
+    const target = nodeUuid ?? snap.selectedNodeUuid ?? definition.root.uuid;
     return inspectorInputsForNode(snap.catalog, definition, target);
   }
 }
