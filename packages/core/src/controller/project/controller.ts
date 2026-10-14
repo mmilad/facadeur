@@ -22,6 +22,7 @@ import {
   findDefinition,
   findNodeByUuid,
   patchNodeData,
+  patchCatalogDefinitionPreviewField,
   patchNodeDataRecord,
   patchDefinitionFieldExposure,
   patchNodeName,
@@ -360,18 +361,14 @@ export class CoreController implements CoreControllerHost {
     ) {
       return;
     }
-    const fields = {
-      ...(located.definition.config?.previewData?.fields ?? {}),
-    } as Record<string, import('@facadeur/domain').FieldValue>;
-    if (value === undefined || (emptyStringRemoves && value === '')) delete fields[field];
-    else fields[field] = value;
     this.commitCatalog(
-      patchCatalogDefinitionRecord(this.catalog, located.kind, definitionUuid, {
-        config: {
-          ...located.definition.config,
-          previewData: { fields },
-        },
-      }),
+      patchCatalogDefinitionPreviewField(
+        this.catalog,
+        definitionUuid,
+        field,
+        value,
+        emptyStringRemoves,
+      ),
     );
   }
 
@@ -446,13 +443,12 @@ export class CoreController implements CoreControllerHost {
         return;
       }
       case 'nodeFieldExposureGroupName': {
-        if (!target.value) return;
         const definition = this.getSnapshot().openDefinition;
         const node = definition ? findNodeByUuid(definition.root, target.nodeUuid) : null;
         if (!node?.config?.definitionRef) return;
         this.patchNodeExposure(target.nodeUuid, {
           mode: 'grouped',
-          groupName: target.value,
+          ...(target.value ? { groupName: target.value } : {}),
         });
         return;
       }

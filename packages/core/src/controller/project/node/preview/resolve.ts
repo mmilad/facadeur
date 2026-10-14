@@ -146,6 +146,18 @@ function resolveNodeToElementBuildConfig(
       }
       const exposure = definition.config?.fieldExposure?.[node.uuid] ?? { mode: 'flat' as const };
       const instanceFieldConfigs = definition.config?.instanceFieldConfigs?.[node.uuid] ?? {};
+      const parentComponentProps = componentPropValues(
+        effectiveSchemaForDefinition(catalog, definition).schema,
+        parentFields,
+      );
+      const instancePreviewData = resolveParentPropBindings(
+        node.config?.previewData?.fields as Record<string, FieldValue> | undefined,
+        parentComponentProps,
+      );
+      const instanceData = resolveParentPropBindings(
+        node.data as Record<string, FieldValue> | undefined,
+        parentComponentProps,
+      );
       const hiddenStaticFields = new Set([
         ...staticFieldsNotExposed(refDefinition),
         ...Object.entries(instanceFieldConfigs)
@@ -168,13 +180,10 @@ function resolveNodeToElementBuildConfig(
             : inheritedFields;
       const instanceFields = {
         ...effectiveSchemaForDefinition(catalog, refDefinition).previewDefaults,
+        ...omitFields(instancePreviewData, staticFieldNames(refDefinition)),
+        ...omitFields(instanceData, hiddenStaticFields),
         ...inheritedFields,
         ...exposureValues,
-        ...omitFields(
-          node.config?.previewData?.fields as Record<string, FieldValue> | undefined,
-          staticFieldNames(refDefinition),
-        ),
-        ...omitFields(node.data as Record<string, FieldValue> | undefined, hiddenStaticFields),
       };
       for (const [field, config] of Object.entries(instanceFieldConfigs)) {
         if (!config.isStatic || config.value === undefined) continue;
@@ -183,13 +192,10 @@ function resolveNodeToElementBuildConfig(
         }
       }
       const instanceOverrides = {
+        ...omitFields(instancePreviewData, staticFieldNames(refDefinition)),
+        ...omitFields(instanceData, hiddenStaticFields),
         ...inheritedFields,
         ...exposureValues,
-        ...omitFields(
-          node.config?.previewData?.fields as Record<string, FieldValue> | undefined,
-          staticFieldNames(refDefinition),
-        ),
-        ...omitFields(node.data as Record<string, FieldValue> | undefined, hiddenStaticFields),
       };
       for (const field of hiddenStaticFields) delete instanceOverrides[field];
       for (const [field, config] of Object.entries(instanceFieldConfigs)) {
@@ -336,6 +342,47 @@ function componentPropValues(
     if (value !== undefined) values[prop.uuid] = value;
   }
   return values;
+}
+
+function resolveParentPropBindings(
+  fields: Readonly<Record<string, FieldValue>> | undefined,
+  parentProps: Readonly<Record<string, FieldValue>>,
+) {
+  if (!fields) return undefined;
+  return Object.fromEntries(
+    Object.entries(fields).map(([name, value]) => [
+      name,
+      resolveParentPropBinding(value, parentProps),
+    ]),
+  );
+}
+
+function resolveParentPropBinding(
+  value: FieldValue,
+  parentProps: Readonly<Record<string, FieldValue>>,
+  activeProps = new Set<string>(),
+): FieldValue {
+  if (typeof value === 'string') {
+    const match = value.match(COMPONENT_PROP_REF);
+    const uuid = match?.[1];
+    if (!uuid || activeProps.has(uuid)) return value;
+    const parentValue = parentProps[uuid];
+    if (parentValue === undefined) return value;
+    const nextActive = new Set(activeProps).add(uuid);
+    return resolveParentPropBinding(parentValue, parentProps, nextActive);
+  }
+  if (Array.isArray(value)) {
+    return value.map((entry) => resolveParentPropBinding(entry, parentProps, activeProps));
+  }
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([name, entry]) => [
+        name,
+        resolveParentPropBinding(entry, parentProps, activeProps),
+      ]),
+    );
+  }
+  return value;
 }
 
 function objectField(value: FieldValue | undefined): Record<string, FieldValue> {

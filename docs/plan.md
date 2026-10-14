@@ -349,9 +349,9 @@ completed change logs out of this file.
 The maintained-source candidate scan found two size signals and one directory concentration
 signal. The review decisions are:
 
-- `packages/core/src/controller/project/controller.ts` (518 lines): the single Core catalog
+- `packages/core/src/controller/project/controller.ts` (569 lines): the single Core catalog
   coordination facade, including its public query surface. Query implementations live in the
-  adjacent `catalog/queries.ts` module.
+  adjacent `catalog/queries.ts` module; nested preview updates delegate to a Catalog operation.
 - `packages/examples/src/form-controls-section/dom.ts` (526 lines): one canonical reusable
   Catalog fixture tree.
 - `apps/editor/src/app-service/AppService.ts` (565 lines): one event-to-operation coordinator;
@@ -388,7 +388,7 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
 
 - [x] Editor/Core: configure static and exposed fields per embedded child from the root Config tab.
   - Evidence: the Config tab previously listed only the definition's own schema fields; fields inherited from child definitions were controlled only by their `fieldExposure` mode, while static settings were keyed only by field name and could not distinguish repeated child instances.
-  - Action: add a per-instance field settings map keyed by embedding node UUID, derive each instance's available fields from its inheritable schema, and reuse the existing field settings control. Show the child label plus UUID context in Config so duplicate names remain independently editable. Apply instance-scoped static/expose settings in schema resolution, validation, and preview resolution.
+  - Action: add a per-instance field settings map keyed by embedding node UUID, derive each instance's available fields from its inheritable schema, and reuse the existing field settings control. Show the child label plus UUID context in Config so duplicate names remain independently editable. Apply instance-scoped static/expose settings in schema resolution, validation, and preview resolution. Put flat/grouped/manual exposure controls in each child group on the root Config tab, including the configurable group name, and remove them from individual node selection.
   - Scope: requested continuation of static defaults; preserve existing flat/grouped/manual `fieldExposure` behavior and the existing collision winner ordering.
   - Contracts: child static values are defaults in the parent schema only when exposed; unexposed static fields are omitted; changing child schema remains reflected automatically; per-instance configuration does not mutate the child definition; preserve undo, catalog serialization, token values, and strict validation.
   - Validation: Domain/Core/Form typechecks, schema JSON inspection, ESLint, Prettier, candidate detector, and `git diff --check` passed. Editor typecheck reports existing errors in `Inline.tsx`, `Modal.tsx`, and `Popover.tsx`; tests were not run.
@@ -399,3 +399,17 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
   - Contracts: preserve UUID-keyed instance settings, preview clearing, child schema defaults, undo/commit behavior, inspector identity, and existing public APIs.
   - Validation: Domain/Core/Form typechecks, ESLint, Prettier, detector rerun, and `git diff --check` passed. Editor typecheck reports the existing `Inline.tsx`, `Modal.tsx`, and `Popover.tsx` errors; tests were not run.
   - Refactoring review: `CoreController` remains above the detector's 450-line signal because it is the cohesive catalog command coordinator; field config transitions now live in Catalog, and Config field discovery lives beside the preview inspector.
+
+- [x] Core/Editor: offer the open component's props when binding a selected child instance.
+  - Evidence: `buildInspectorFormModel` scopes the selected child to its referenced definition for the inspector fields and also passes that child schema to `designPropOptions`. This makes the binding picker list the child component's own `props.*` fields, while grouped fields exposed by the open parent component are absent.
+  - Action: keep the selected child's schema for its preview and property fields, but derive component binding options from the open definition's effective schema. The existing recursive `componentPropsForSchema` already produces UUID-backed paths for nested/grouped properties.
+  - Scope: fix the binding context for the current grouped exposure workflow; keep UUID references, field resolution, and preview defaults unchanged.
+  - Contracts: offer the same fields in the open definition's effective schema, including nested group paths; retain catalog design-prop options and existing component prop reference encoding.
+  - Validation: Core typecheck, candidate detector, and `git diff --check` passed. The active editor was not reloaded for a visual check.
+
+- [x] Core/Editor: make grouped parent fields editable and binding state identifiable.
+  - Evidence: nested object controls emit paths such as `nodeData.menuBtn.label`, but `patchNodeData` stores the entire suffix as one field key, so the schema-backed value does not change. Also, two instances of the same definition inherit the same schema property UUIDs; `componentPropsForSchema` deduplicates by UUID, so grouped fields can disappear or collide in the binding picker. A stale component-prop binding is rendered with a design-prop fallback and can therefore appear blank. At runtime, explicit instance data was merged after grouped parent values, so it masked parent edits; effective grouped defaults also ignored the embedding node's own values.
+  - Action: apply node data and preview field changes by nested path, preserving sibling values. Give inherited schema properties stable UUID identities scoped to the embedding instance and source field, so repeated instances expose distinct bindings while repeated schema resolution stays stable. Resolve child instance bindings against the containing component's effective props and display a clear missing-binding option when a stored reference is not present in the current picker options. Derive inherited preview defaults from the embedding node and let explicit parent exposure values win over child preview defaults and instance data.
+  - Scope: make grouped parent preview fields editable and independently bindable; retain existing field names, grouped defaults, flat/manual exposure, and prop-reference format.
+  - Contracts: nested preview data remains an object in Catalog; inherited prop refs remain UUID-backed and resolve to the correct instance field; direct child prop IDs remain unchanged.
+  - Validation: Core and Editor typechecks, Prettier, candidate detector review, and `git diff --check` passed. Tests were not run.

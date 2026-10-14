@@ -1,6 +1,6 @@
 'use client';
 
-import { encodePropRef, parsePropRef, type DesignPropOption } from '@facadeur/core';
+import { parsePropRef, type DesignPropOption } from '@facadeur/core';
 import { useEffect, useState } from 'react';
 import { IconButton } from '../../../../components/IconButton';
 import { Inline } from '../../../../components/layout/Inline';
@@ -28,30 +28,28 @@ export function PropBindableInput({
 }) {
   const boundUuid = parsePropRef(value);
   const hasProps = propOptions.length > 0;
+  const boundOption = boundUuid ? propOptions.find((prop) => prop.uuid === boundUuid) : undefined;
   const [mode, setMode] = useState<'literal' | 'prop'>(boundUuid ? 'prop' : 'literal');
 
   useEffect(() => {
     setMode(parsePropRef(value) ? 'prop' : 'literal');
   }, [value]);
 
-  if (mode === 'prop' && (showBindToggle || hasProps)) {
+  if (mode === 'prop' && (showBindToggle || hasProps || boundUuid)) {
     const selectedRef =
-      boundUuid && hasProps
-        ? (propOptions.find((prop) => prop.uuid === boundUuid)?.ref ?? encodePropRef(boundUuid))
-        : hasProps
-          ? propOptions[0]!.ref
-          : '';
+      boundOption?.ref ?? (boundUuid ? value : hasProps ? propOptions[0]!.ref : '');
+    const options = [
+      ...(boundUuid && !boundOption ? [{ value, label: `Missing binding (${boundUuid})` }] : []),
+      ...propOptions.map((prop) => ({ value: prop.ref, label: prop.name })),
+    ];
     return (
       <Inline gap={6} className="eu-prop-bind">
-        {hasProps ? (
+        {hasProps || boundUuid ? (
           <Select
             aria-label={`${ariaLabel} prop binding`}
             value={selectedRef}
             disabled={disabled}
-            options={propOptions.map((prop) => ({
-              value: prop.ref,
-              label: prop.name,
-            }))}
+            options={options}
             onCommit={(next) => onCommit(next)}
           />
         ) : (

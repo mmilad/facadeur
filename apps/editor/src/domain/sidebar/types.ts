@@ -68,6 +68,7 @@ export interface InspectorSidebarModel {
       readonly label: string;
       readonly instanceUuid?: string;
       readonly instanceLabel?: string;
+      readonly exposure?: import('@facadeur/domain').FieldExposure;
       readonly isStatic: boolean;
       readonly value?: FieldValue;
       readonly exposed: boolean;

@@ -7,6 +7,7 @@ import type {
   ProjectCatalog,
 } from '@facadeur/domain';
 import { findDefinition, resolveJsonSchemaForDefinition } from './ops';
+import { scopeComponentPropIds } from './field-ids';
 
 export type EffectiveFieldOrigin =
   | { readonly kind: 'local' }
@@ -96,11 +97,16 @@ function resolveEffectiveSchema(
         );
         const instanceFieldConfigs = definition.config?.instanceFieldConfigs?.[node.uuid] ?? {};
         const childSchema = applyInstanceFieldConfigs(definitionChildSchema, instanceFieldConfigs);
-        const inheritableSchema = childSchema;
-        const childProperties = childSchema?.properties ?? {};
-        const childRequired = childSchema?.required ?? [];
+        const inheritableSchema = scopeComponentPropIds(
+          childSchema,
+          node.uuid,
+        ) as ObjectSchema | null;
+        const childProperties = inheritableSchema?.properties ?? {};
+        const childRequired = inheritableSchema?.required ?? [];
         const childPreviewDefaults = {
           ...child.previewDefaults,
+          ...(node.config?.previewData?.fields ?? {}),
+          ...(node.data ?? {}),
           ...Object.fromEntries(
             Object.entries(instanceFieldConfigs)
               .filter(

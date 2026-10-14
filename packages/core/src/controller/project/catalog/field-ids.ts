@@ -75,6 +75,54 @@ export function componentPropIdFromSchemaProperty(value: unknown): string | null
   return typeof id === 'string' ? id : null;
 }
 
+/** Give inherited field props a stable identity for this embedding instance. */
+export function scopeComponentPropIds(schema: unknown, instanceUuid: string): unknown {
+  const scope = uuidBytes(instanceUuid);
+  if (!scope) return schema;
+  const visit = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(visit);
+    if (!value || typeof value !== 'object') return value;
+    const record = value as Record<string, unknown>;
+    const output: Record<string, unknown> = { ...record };
+    if (record.properties && typeof record.properties === 'object') {
+      output.properties = Object.fromEntries(
+        Object.entries(record.properties as Record<string, unknown>).map(([name, property]) => {
+          const normalized = visit(property);
+          if (!normalized || typeof normalized !== 'object' || Array.isArray(normalized)) {
+            return [name, normalized];
+          }
+          const field = { ...(normalized as Record<string, unknown>) };
+          const propId = componentPropIdFromSchemaProperty(field);
+          const propBytes = propId ? uuidBytes(propId) : null;
+          if (propBytes) field[COMPONENT_PROP_ID] = derivedPropUuid(scope, propBytes);
+          return [name, field];
+        }),
+      );
+    }
+    for (const key of ['items', 'anyOf', 'oneOf', 'allOf', 'not', 'additionalProperties']) {
+      if (key in record) output[key] = visit(record[key]);
+    }
+    return output;
+  };
+  return visit(schema);
+}
+
+function uuidBytes(value: string): number[] | null {
+  const hex = value.replaceAll('-', '');
+  if (!/^[0-9a-f]{32}$/i.test(hex)) return null;
+  return Array.from({ length: 16 }, (_, index) =>
+    Number.parseInt(hex.slice(index * 2, index * 2 + 2), 16),
+  );
+}
+
+function derivedPropUuid(scope: readonly number[], source: readonly number[]) {
+  const bytes = scope.map((value, index) => value ^ source[index]!);
+  bytes[6] = (bytes[6]! & 0x0f) | 0x50;
+  bytes[8] = (bytes[8]! & 0x3f) | 0x80;
+  const hex = bytes.map((value) => value.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
 /** Carry ids across schema edits if a JSON Schema editor omits unknown field metadata. */
 export function preserveFieldIds(previous: unknown, next: unknown): unknown {
   if (Array.isArray(next)) {

@@ -103,11 +103,12 @@ export function buildInspectorSidebarViewModel(
             label: 'Config',
             sections: [],
             configFields: model.configFields.map(
-              ({ field, config, instanceUuid, instanceLabel }) => ({
+              ({ field, config, instanceUuid, instanceLabel, exposure }) => ({
                 field,
                 label: field.schema.title?.trim() || field.name,
                 instanceUuid,
                 instanceLabel,
+                exposure,
                 isStatic: config?.isStatic === true,
                 value: config?.value,
                 exposed: config?.expose === true,

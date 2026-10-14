@@ -115,7 +115,7 @@ describe('catalog field exposure', () => {
     ).toEqual(['eyebrow', 'src', 'alt', 'ratio']);
   });
 
-  it('shows inherited fields in Preview Data and exposes the editable group name on the instance', () => {
+  it('shows inherited fields in Preview Data and stores the group name on the root instance config', () => {
     const catalog = catalogWith({ mode: 'grouped' });
     const card = catalog.components[cardId]!;
     const rootModel = buildInspectorFormModel(catalog, card, card.root.uuid)!;
@@ -130,17 +130,11 @@ describe('catalog field exposure', () => {
     ).toContain('hero-media');
 
     const instanceUuid = card.root.dom.children?.[0]?.uuid;
-    const instanceModel = buildInspectorFormModel(catalog, card, instanceUuid!)!;
-    expect(instanceModel.formValue.previewData).toEqual({ src: 'asset-src', alt: 'asset-alt' });
-    expect(Object.keys(instanceModel.formValue.nodeData)).toEqual(['src', 'alt', 'ratio']);
-    const elementSection = instanceModel.fields.find(
-      (field) => field.type === 'section' && field.title === 'Element',
+    const instanceFields = rootModel.configFields.filter(
+      (field) => field.instanceUuid === instanceUuid,
     );
-    expect(
-      elementSection?.type === 'section' &&
-        elementSection.fields.map((field) => (field.type === 'text' ? field.path : '')),
-    ).toContain('node.fieldExposure.groupName');
-    expect(instanceModel.formValue.node.fieldExposureGroupName).toBe('hero-media');
+    expect(instanceFields.length).toBeGreaterThan(0);
+    expect(instanceFields[0]?.exposure).toEqual({ mode: 'grouped', groupName: 'hero-media' });
   });
 
   it('maps manual aliases into the public contract and resolves the value on the referenced atom', () => {
@@ -362,7 +356,11 @@ describe('catalog field exposure', () => {
     const catalog = catalogWith();
     const core = new CoreController(catalog);
     core.openDefinition(cardId);
-    core.node.preview.applyFormChange('node.fieldExposure.mode', 'manual', testUuid11);
+    core.node.preview.applyFormChange(
+      `definition.fieldExposure.${testUuid11}.mode`,
+      'manual',
+      testUuid10,
+    );
 
     const updated = core.getSnapshot().openDefinition!;
     expect(updated.config?.fieldExposure?.[testUuid11]).toEqual({ mode: 'manual', fields: {} });

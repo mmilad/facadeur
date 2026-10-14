@@ -1,5 +1,6 @@
 import type {
   CatalogMapKey,
+  FieldValue,
   FieldExposure,
   JsonSchemaObject,
   Node,
@@ -80,18 +81,75 @@ export function patchNodeData(
   value: unknown,
 ): ProjectCatalog {
   return mutateNode(catalog, definitionUuid, nodeUuid, (node) => {
-    const next = { ...(node.data ?? {}) } as Record<string, unknown>;
-    if (value === null || value === undefined || value === '') {
-      delete next[field];
-    } else {
-      next[field] = value;
-    }
+    const next = patchRecordPath(
+      node.data as Record<string, unknown> | undefined,
+      field,
+      value,
+      value === null || value === undefined || value === '',
+    );
     if (Object.keys(next).length > 0) {
       (node as { data?: Record<string, unknown> }).data = next;
     } else {
       delete (node as { data?: Record<string, unknown> }).data;
     }
   });
+}
+
+export function patchCatalogDefinitionPreviewField(
+  catalog: ProjectCatalog,
+  definitionUuid: string,
+  field: string,
+  value: unknown,
+  emptyStringRemoves = false,
+): ProjectCatalog {
+  const located = findDefinition(catalog, definitionUuid);
+  if (!located) return catalog;
+  const next = structuredClone(catalog) as ProjectCatalog;
+  const definition = next[located.kind][definitionUuid]!;
+  const previewData = definition.config?.previewData ?? {};
+  const fields = patchRecordPath(
+    previewData.fields as Record<string, unknown> | undefined,
+    field,
+    value,
+    value === null || value === undefined || (emptyStringRemoves && value === ''),
+  );
+  const nextPreviewData = { ...previewData };
+  if (Object.keys(fields).length) nextPreviewData.fields = fields as Record<string, FieldValue>;
+  else delete nextPreviewData.fields;
+  const nextConfig = { ...definition.config };
+  if (Object.keys(nextPreviewData).length) nextConfig.previewData = nextPreviewData;
+  else delete nextConfig.previewData;
+  const nextDefinition = { ...definition };
+  if (Object.keys(nextConfig).length) nextDefinition.config = nextConfig;
+  else delete (nextDefinition as { config?: NodeDefinition['config'] }).config;
+  (next[located.kind] as Record<string, NodeDefinition>)[definitionUuid] = nextDefinition;
+  return next;
+}
+
+function patchRecordPath(
+  record: Readonly<Record<string, unknown>> | undefined,
+  path: string,
+  value: unknown,
+  removeValue: boolean,
+): Record<string, unknown> {
+  const segments = path.split('.').filter(Boolean);
+  if (!segments.length) return { ...(record ?? {}) };
+  const [segment, ...remaining] = segments;
+  const next = { ...(record ?? {}) };
+  if (!remaining.length) {
+    if (removeValue) delete next[segment!];
+    else next[segment!] = value;
+    return next;
+  }
+  const current = next[segment!];
+  const nested =
+    current && typeof current === 'object' && !Array.isArray(current)
+      ? (current as Record<string, unknown>)
+      : {};
+  const updated = patchRecordPath(nested, remaining.join('.'), value, removeValue);
+  if (removeValue && Object.keys(updated).length === 0) delete next[segment!];
+  else next[segment!] = updated;
+  return next;
 }
 
 export function patchNodeDataRecord(

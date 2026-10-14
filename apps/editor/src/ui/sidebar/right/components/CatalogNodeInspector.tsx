@@ -86,6 +86,54 @@ export function CatalogNodeInspector({
                     key={group.id}
                   >
                     <h3 className="inspector-tab-section-title">{group.label}</h3>
+                    {group.instanceUuid ? (
+                      <Form
+                        key={`${model.formKey}:exposure:${group.instanceUuid}`}
+                        value={{
+                          mode: group.exposure?.mode ?? 'flat',
+                          groupName: group.groupName,
+                          fields: group.exposure?.mode === 'manual' ? group.exposure.fields : {},
+                        }}
+                        fields={[
+                          {
+                            type: 'select',
+                            name: 'mode',
+                            label: 'Exposed fields',
+                            options: [
+                              { value: 'flat', label: 'Direct' },
+                              { value: 'grouped', label: 'Grouped' },
+                              { value: 'manual', label: 'Manual mapping' },
+                            ],
+                          },
+                          ...(group.exposure?.mode === 'grouped'
+                            ? [{ type: 'text' as const, name: 'groupName', label: 'Group name' }]
+                            : []),
+                          ...(group.exposure?.mode === 'manual'
+                            ? [
+                                {
+                                  type: 'record' as const,
+                                  name: 'fields',
+                                  label: 'Field mapping',
+                                  keyLabel: 'Child field',
+                                  valueLabel: 'Parent field',
+                                },
+                              ]
+                            : []),
+                        ]}
+                        onChange={(_, meta) => {
+                          if (
+                            meta.path !== 'mode' &&
+                            meta.path !== 'groupName' &&
+                            meta.path !== 'fields'
+                          )
+                            return;
+                          emitFieldChange(
+                            `definition.fieldExposure.${group.instanceUuid}.${meta.path}`,
+                            meta.next,
+                          );
+                        }}
+                      />
+                    ) : null}
                     <div className="inspector-config-fields">
                       {group.fields.map((configField) => (
                         <DefinitionFieldSettings
@@ -129,6 +177,9 @@ function groupConfigFields(
     {
       id: string;
       label: string;
+      instanceUuid?: string;
+      groupName?: string;
+      exposure?: (typeof fields)[number]['exposure'];
       fields: (typeof fields)[number][];
     }
   >();
@@ -138,9 +189,15 @@ function groupConfigFields(
     if (!group) {
       group = {
         id,
+        instanceUuid: field.instanceUuid,
         label: field.instanceUuid
-          ? `${field.instanceLabel} (${field.instanceUuid.slice(0, 8)})`
+          ? `${field.instanceLabel ?? 'Child component'} (${field.instanceUuid.slice(0, 8)})`
           : 'Component fields',
+        groupName:
+          field.instanceUuid && field.exposure?.mode === 'grouped'
+            ? field.exposure.groupName
+            : undefined,
+        exposure: field.exposure,
         fields: [],
       };
       groups.set(id, group);

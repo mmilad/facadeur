@@ -1,4 +1,10 @@
-import type { Node, NodeDefinition, ProjectCatalog, StaticFieldConfig } from '@facadeur/domain';
+import type {
+  FieldExposure,
+  Node,
+  NodeDefinition,
+  ProjectCatalog,
+  StaticFieldConfig,
+} from '@facadeur/domain';
 import { fieldsFromJsonSchema, type JsonSchemaField } from '../../../../schema/json-schema-fields';
 import { findDefinition, resolveJsonSchemaForDefinition } from '../../catalog/ops';
 import { inheritableSchemaForDefinition } from '../../catalog/field-contract';
@@ -16,6 +22,7 @@ export function configFieldsForDefinition(catalog: ProjectCatalog, definition: N
     config?: StaticFieldConfig;
     instanceUuid: string;
     instanceLabel: string;
+    exposure: FieldExposure;
   }[] = [];
   const visit = (node: Node) => {
     const target = node.config?.definitionRef
@@ -31,6 +38,7 @@ export function configFieldsForDefinition(catalog: ProjectCatalog, definition: N
           config: definition.config?.instanceFieldConfigs?.[node.uuid]?.[field.name],
           instanceUuid: node.uuid,
           instanceLabel: node.name?.trim() || target.name,
+          exposure: definition.config?.fieldExposure?.[node.uuid] ?? { mode: 'flat' },
         });
       }
       return;

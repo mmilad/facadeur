@@ -1,4 +1,5 @@
 import type {
+  FieldExposure,
   FieldValue,
   Node,
   NodeDefinition,
@@ -24,9 +25,6 @@ export type InspectorFormValue = {
     name: string;
     tagName: string;
     text: string;
-    fieldExposureMode: 'flat' | 'grouped' | 'manual';
-    fieldExposureGroupName: string;
-    fieldExposureFields: Record<string, string>;
     classList: string[];
     style: Record<string, string>;
     data: Record<string, string>;
@@ -65,6 +63,7 @@ export type InspectorFormModel = {
     readonly config?: StaticFieldConfig;
     readonly instanceUuid?: string;
     readonly instanceLabel?: string;
+    readonly exposure?: FieldExposure;
   }[];
   propOptions: readonly DesignPropOption[];
 };
@@ -126,10 +125,10 @@ export function buildInspectorFormModel(
   const referencedDefinition = node.config?.definitionRef
     ? findDefinition(catalog, node.config.definitionRef)?.definition
     : undefined;
-  const exposure = definition.config?.fieldExposure?.[node.uuid] ?? { mode: 'flat' as const };
-
   const scopedDefinition = referencedDefinition ?? definition;
   const effective = effectiveSchemaForDefinition(catalog, scopedDefinition);
+  const componentEffective =
+    scopedDefinition === definition ? effective : effectiveSchemaForDefinition(catalog, definition);
   const configFields =
     nodeUuid === definition.root.uuid ? configFieldsForDefinition(catalog, definition) : [];
   const schemaFields = effective.schema
@@ -167,12 +166,6 @@ export function buildInspectorFormModel(
       classList: classListFromNode(node),
       style: { ...(node.style ?? {}) },
       data: recordFromFieldValues(node.data ?? {}),
-      fieldExposureMode: exposure.mode,
-      fieldExposureGroupName:
-        exposure.mode === 'grouped'
-          ? (exposure.groupName ?? node.name ?? referencedDefinition?.name ?? '')
-          : (node.name ?? referencedDefinition?.name ?? ''),
-      fieldExposureFields: exposure.mode === 'manual' ? { ...exposure.fields } : {},
     },
     previewData: { ...previewFields },
     nodeData: { ...nodeInputs.values },
@@ -200,42 +193,11 @@ export function buildInspectorFormModel(
     });
 
   if (nodeUuid !== definition.root.uuid) {
-    const targetDefinition = referencedDefinition;
     sections.push({
       type: 'section',
       title: 'Element',
       fields: [
         { type: 'text', path: 'node.name', label: 'Name', hint: 'Layer label' },
-        ...(targetDefinition
-          ? [
-              {
-                type: 'select' as const,
-                path: 'node.fieldExposure.mode',
-                label: 'Exposed fields',
-                options: ['flat', 'grouped', 'manual'],
-              },
-              ...(exposure.mode === 'grouped'
-                ? [
-                    {
-                      type: 'text' as const,
-                      path: 'node.fieldExposure.groupName',
-                      label: 'Group name',
-                    },
-                  ]
-                : []),
-              ...(exposure.mode === 'manual'
-                ? [
-                    {
-                      type: 'record' as const,
-                      path: 'node.fieldExposure.fields',
-                      label: 'Field mapping',
-                      keyLabel: 'Child field',
-                      valueLabel: 'Parent field',
-                    },
-                  ]
-                : []),
-            ]
-          : []),
         ...(!node.config?.definitionRef
           ? [
               {
@@ -307,7 +269,7 @@ export function buildInspectorFormModel(
     formValue,
     fields: sections,
     configFields,
-    propOptions: designPropOptions(catalog, effective.schema),
+    propOptions: designPropOptions(catalog, componentEffective.schema),
   };
 }
 
@@ -320,6 +282,29 @@ export function inspectorChangeTarget(
 ): InspectorFormChangeTarget | null {
   if (path === 'definition.name') {
     return { kind: 'definitionName', value: String(value ?? '').trim() };
+  }
+  const definitionExposureMatch =
+    /^definition\.fieldExposure\.([0-9a-f-]{36})\.(mode|groupName|fields)$/.exec(path);
+  if (definitionExposureMatch) {
+    const [, instanceUuid, setting] = definitionExposureMatch;
+    if (!instanceUuid || !setting) return null;
+    if (setting === 'mode') {
+      const mode = String(value ?? 'flat');
+      if (mode !== 'flat' && mode !== 'grouped' && mode !== 'manual') return null;
+      return { kind: 'nodeFieldExposureMode', nodeUuid: instanceUuid, mode };
+    }
+    if (setting === 'groupName') {
+      return {
+        kind: 'nodeFieldExposureGroupName',
+        nodeUuid: instanceUuid,
+        value: String(value ?? '').trim(),
+      };
+    }
+    return {
+      kind: 'nodeFieldExposureFields',
+      nodeUuid: instanceUuid,
+      value: (value ?? {}) as Record<string, string>,
+    };
   }
   const staticFieldMatch =
     /^definition\.staticFields\.([A-Za-z][A-Za-z0-9_-]*)\.(isStatic|value|expose)$/.exec(path);
@@ -378,21 +363,6 @@ export function inspectorChangeTarget(
   if (path === 'node.data') {
     return {
       kind: 'nodeDataRecord',
-      nodeUuid,
-      value: (value ?? {}) as Record<string, string>,
-    };
-  }
-  if (path === 'node.fieldExposure.mode') {
-    const mode = String(value ?? 'flat');
-    if (mode !== 'flat' && mode !== 'grouped' && mode !== 'manual') return null;
-    return { kind: 'nodeFieldExposureMode', nodeUuid, mode };
-  }
-  if (path === 'node.fieldExposure.groupName') {
-    return { kind: 'nodeFieldExposureGroupName', nodeUuid, value: String(value ?? '').trim() };
-  }
-  if (path === 'node.fieldExposure.fields') {
-    return {
-      kind: 'nodeFieldExposureFields',
       nodeUuid,
       value: (value ?? {}) as Record<string, string>,
     };
