@@ -120,6 +120,24 @@ completed change logs out of this file.
 
 ## Remaining follow-up
 
+- [x] Catalog: remove legacy node and path style formats after migrating stored catalogs.
+  - Evidence: `Node.style` and `globalStyles.block.children` duplicated UUID-bound style rules and
+    kept import-time conversion, path parsing, and pruning branches alive after the editor moved to
+    bound rules.
+  - Action: migrate the checked-in editor Catalog and example fixtures to UUID-bound rules; remove
+    the migration helper, legacy schema/type fields, path parser/editing/pruning branches, and
+    assertions for retired formats. Keep component prop bindings ephemeral on build config.
+  - Scope: finish the requested style-model transition; no Inspector redesign.
+  - Contracts: preserve selector bindings, CSS cascade/scoping, tokens, responsive rules, Undo,
+    and codegen output. Keep UUID-bound rule cleanup coverage.
+  - Validation: workspace typecheck, candidate detector, and `git diff --check` passed. Tests were
+    updated for the canonical rule format and were not run in this pass.
+  - Refactoring review: `packages/examples/src/facadeur-editor/components.ts` (685 lines) and
+    `packages/examples/src/form-controls-section/dom.ts` (526 lines) remain cohesive fixture trees;
+    this migration adds no independent responsibility to either. The 13-file Catalog controller
+    directory keeps related Catalog queries, validation, tree, definition, and style operations at
+    their current package boundary.
+
 - [x] Style Engine: nest referenced component styles under their definition root.
   - Evidence: resolving a `definitionRef` replaces its root `nodeUuid` with the instance UUID,
     while child-path styles still target the definition-root UUID and authored descendant rules
@@ -142,8 +160,8 @@ completed change logs out of this file.
   - Scope: prerequisite fix for layer deletion; no serialized schema or UI changes.
   - Contracts: preserve unrelated styles, tokens, breakpoints, and Catalog definitions; failed or
     root deletions remain no-ops.
-  - Validation: Core typecheck, candidate detector, and diff check passed. No tests run per the
-    current task instructions.
+  - Validation: Core typecheck, regression coverage for removed subtree paths/bindings and
+    unrelated-style preservation, candidate detector, and diff check passed.
 
 - [x] Icons: replace embedded preset SVG data URLs with local Font Awesome Free SVG assets.
   - Evidence: `packages/examples/src/catalog/icons.ts` stores each shared icon as an encoded
@@ -331,16 +349,15 @@ completed change logs out of this file.
       at the Style Engine boundary and cover both labels and compiled CSS with focused tests.
 
 - [x] Editor: edit layer styles through name-derived global class rules.
-  - Evidence: the Inspector previously exposed `node.style` declarations, while Catalog global
-    style rules already supported selectors, node bindings, and sparse breakpoint overrides; the
-    preview did not apply those global rules.
+  - Evidence: the Inspector previously exposed per-node `node.style` declarations, while Catalog
+    global style rules support selectors, node bindings, and sparse breakpoint overrides.
   - Action: derive a valid class selector from each layer name, group its CSS controls in a
     collapsible layer section, and edit base or per-viewport declarations through global style
-    rules. Apply compiled rules in iframe previews. On first edit, migrate that layer's legacy
-    `node.style` declarations into its class rule; keep the selector synchronized with renames.
+    rules. Apply compiled rules in iframe previews and keep selectors synchronized with renames.
+    Catalog definitions now store style only as UUID-bound rules; `Node` has no style property.
   - Scope: Editor inspector style workflow; no second style format or dependency.
   - Contracts: preserve selector bindings, token/raw CSS values, sparse breakpoint overrides,
-    undo/history, legacy catalog style values, and generated CSS behavior.
+    undo/history, canonical catalog style rules, and generated CSS behavior.
   - Validation: Core and Editor typechecks, candidate detector rerun, formatting, and
     `git diff --check` passed. Tests were not run because they were not requested.
 

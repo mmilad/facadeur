@@ -49,7 +49,6 @@ export enum EditorEventType {
   NodeSelect = 'editor.node.select',
   NodeInsert = 'catalog.node.insert',
   NodeMove = 'catalog.node.move',
-  NodeStyleRecordSet = 'catalog.node.style-record.set',
 }
 
 /** Data payloads stay flat and contain only UI values and stable identifiers. */
@@ -149,10 +148,6 @@ export interface EditorEventDataMap {
     readonly nodeId: string;
     readonly parentId: string;
     readonly index: number;
-  };
-  [EditorEventType.NodeStyleRecordSet]: {
-    readonly nodeId: string;
-    readonly style: Readonly<Record<string, string>>;
   };
 }
 

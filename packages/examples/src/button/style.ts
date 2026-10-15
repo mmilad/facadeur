@@ -1,4 +1,4 @@
-import type { Node } from '@facadeur/domain';
+import type { ExampleStyleMap } from '../register-example-styles';
 import { tokenIds as exampleTokenIds } from '../catalog/tokens/idList';
 import { ids as exampleButtonIds } from './idList';
 import { tokenRef } from '../references';
@@ -25,4 +25,4 @@ export const styles = {
     paddingInline: tokenRef(exampleTokenIds.space.inset.md),
     whiteSpace: 'nowrap',
   },
-} satisfies Readonly<Record<string, NonNullable<Node['style']>>>;
+} satisfies ExampleStyleMap;

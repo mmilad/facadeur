@@ -3,6 +3,7 @@ import type {
   DesignLibraryCommand,
   GlobalTokenCommand,
   LayerStyleCommand,
+  LayerStyleDeclarationsCommand,
 } from '../../style/types';
 import { assertBreakpoints, cloneBreakpoints } from '../../style/breakpoints';
 import {
@@ -11,9 +12,13 @@ import {
   setTokenInTree,
 } from '../../style/tokens/global/tree';
 import { validateProjectCatalog } from './validate';
-import { setLayerStyleDeclaration } from './layer-styles';
+import { setLayerStyleDeclaration, setLayerStyleDeclarations } from './layer-styles';
 
-export type CatalogDesignCommand = GlobalTokenCommand | DesignLibraryCommand | LayerStyleCommand;
+export type CatalogDesignCommand =
+  | GlobalTokenCommand
+  | DesignLibraryCommand
+  | LayerStyleCommand
+  | LayerStyleDeclarationsCommand;
 
 export function applyCatalogDesignCommand(
   catalog: ProjectCatalog,
@@ -21,6 +26,9 @@ export function applyCatalogDesignCommand(
 ): ProjectCatalog {
   if (command.type === 'setLayerStyleDeclaration') {
     return validateProjectCatalog(setLayerStyleDeclaration(catalog, command)) as ProjectCatalog;
+  }
+  if (command.type === 'setLayerStyleDeclarations') {
+    return validateProjectCatalog(setLayerStyleDeclarations(catalog, command)) as ProjectCatalog;
   }
   if (command.type === 'setToken') {
     const tokens = setTokenInTree(

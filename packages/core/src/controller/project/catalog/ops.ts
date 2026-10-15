@@ -163,19 +163,6 @@ export function patchNodeDataRecord(
   });
 }
 
-export function patchNodeStyleRecord(
-  catalog: ProjectCatalog,
-  definitionUuid: string,
-  nodeUuid: string,
-  record: Readonly<Record<string, string>>,
-): ProjectCatalog {
-  return mutateNode(catalog, definitionUuid, nodeUuid, (node) => {
-    const next = { ...record };
-    if (Object.keys(next).length) (node as { style?: Record<string, string> }).style = next;
-    else delete (node as { style?: Record<string, string> }).style;
-  });
-}
-
 export function patchNodeDomAttributes(
   catalog: ProjectCatalog,
   definitionUuid: string,

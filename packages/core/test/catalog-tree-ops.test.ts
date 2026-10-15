@@ -46,6 +46,56 @@ describe('catalog tree ops', () => {
     expect(findParentOfNode(removed.components[defUuid]!.root, childUuid)).toBeNull();
   });
 
+  it('prunes bound styles for a removed subtree while preserving unrelated styles', () => {
+    const rootUuid = createCatalogUuid();
+    const removedUuid = createCatalogUuid();
+    const descendantUuid = createCatalogUuid();
+    const keptUuid = createCatalogUuid();
+    const catalog = componentCatalog({
+      uuid: rootUuid,
+      dom: {
+        tagName: 'div',
+        children: [
+          {
+            uuid: removedUuid,
+            dom: {
+              tagName: 'section',
+              children: [{ uuid: descendantUuid, dom: { tagName: 'span' } }],
+            },
+          },
+          { uuid: keptUuid, dom: { tagName: 'span' } },
+        ],
+      },
+    });
+    const defUuid = Object.keys(catalog.components)[0]!;
+    const withStyles: ProjectCatalog = {
+      ...catalog,
+      globalStyles: {
+        block: {
+          rules: [
+            {
+              id: `layer-${removedUuid}`,
+              selector: '.removed',
+              bindings: { removed: removedUuid },
+              declarations: { display: 'none' },
+            },
+            {
+              id: `layer-${keptUuid}`,
+              selector: '.kept',
+              bindings: { kept: keptUuid },
+              declarations: { display: 'block' },
+            },
+          ],
+        },
+      },
+    };
+
+    const removed = removeCatalogNode(withStyles, defUuid, removedUuid);
+    const block = removed.globalStyles?.block;
+
+    expect(block?.rules?.map(({ id }) => id)).toEqual([`layer-${keptUuid}`]);
+  });
+
   it('moves a node between siblings', () => {
     const rootUuid = createCatalogUuid();
     const firstUuid = createCatalogUuid();

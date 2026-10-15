@@ -8,7 +8,6 @@ export {
   patchNodeName,
   patchNodeDomAttributes,
   patchNodeDomText,
-  patchNodeStyleRecord,
   patchNodeTagName,
   resolveJsonSchemaForDefinition,
 } from './ops';

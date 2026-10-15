@@ -15,3 +15,10 @@ export type LayerStyleCommand = {
   value: string | null;
   breakpointUuid: string | null;
 };
+
+export type LayerStyleDeclarationsCommand = {
+  type: 'setLayerStyleDeclarations';
+  nodeUuid: string;
+  declarations: Readonly<Record<string, string | null>>;
+  breakpointUuid: string | null;
+};

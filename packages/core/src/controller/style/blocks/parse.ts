@@ -3,7 +3,6 @@ import { UUID_PATTERN } from '../../../document/ids';
 import { isPlainObject as isRecord } from '../../../utils';
 import type {
   StyleBlock,
-  StyleChild,
   StyleDeclarations,
   StyleLayer,
   StyleRule,
@@ -28,7 +27,7 @@ export function canonicalizeTokenInterface(value: TokenInterface | undefined) {
 
 /**
  * Gap, padding, and margin accept only a token reference. Longhands included.
- * Checked on the style block and on `node.style`, whatever letter case the key uses.
+ * Checked on canonical style blocks, whatever letter case the key uses.
  */
 const SPACING_PROPERTY =
   /^(gap|row-gap|column-gap|padding|margin|padding-(top|right|bottom|left|inline|block)|margin-(top|right|bottom|left|inline|block))$/;
@@ -58,29 +57,9 @@ export function parseStyleBlock(value: unknown): StyleBlock {
       ids.add(rule.id);
     }
   }
-  if (record.children !== undefined) {
-    if (!isRecord(record.children)) {
-      throw new DocumentError('schema', 'Style block children must be an object');
-    }
-    const children: Record<string, StyleChild> = {};
-    for (const id of Object.keys(record.children).sort()) {
-      if (!/^[A-Za-z][A-Za-z0-9_-]*(?:\/[A-Za-z][A-Za-z0-9_-]*)*$/.test(id)) {
-        throw new DocumentError('schema', `Invalid style child path "${id}"`);
-      }
-      const child = record.children[id];
-      if (!isRecord(child)) {
-        throw new DocumentError('schema', `Style child "${id}" must be an object`);
-      }
-      if ('children' in child) {
-        throw new DocumentError('schema', `Style child "${id}" cannot contain children`);
-      }
-      children[id] = parseChild(child, `Style child "${id}"`);
-    }
-    if (Object.keys(children).length) block.children = children;
-  }
   assertKnown(
     record,
-    ['declarations', 'states', 'variants', 'breakpoints', 'children', 'rules'],
+    ['declarations', 'states', 'variants', 'breakpoints', 'rules'],
     'Style block',
   );
   return block;
@@ -186,7 +165,7 @@ export function parseTokenInterface(value: unknown): TokenInterface {
 }
 
 function parseChild(record: Record<string, unknown>, label: string) {
-  const child: StyleChild = {};
+  const child: StyleBlock = {};
   if (record.declarations !== undefined)
     child.declarations = parseDeclarations(record.declarations, label);
   if (record.states !== undefined) child.states = parseStates(record.states, label);
@@ -233,7 +212,7 @@ function parseStates(value: unknown, label: string) {
 
 function parseVariants(value: unknown, label: string) {
   if (!isRecord(value)) throw new DocumentError('schema', `${label} variants must be an object`);
-  const variants: NonNullable<StyleChild['variants']> = {};
+  const variants: NonNullable<StyleBlock['variants']> = {};
   for (const axis of Object.keys(value).sort()) {
     if (!/^[A-Za-z][A-Za-z0-9_-]*$/.test(axis)) {
       throw new DocumentError('schema', `${label} has invalid variant axis "${axis}"`);
@@ -249,7 +228,7 @@ function parseVariants(value: unknown, label: string) {
       if (!isRecord(layer)) {
         throw new DocumentError('schema', `${label} variant ${axis}=${name} must be an object`);
       }
-      if ('variants' in layer || 'breakpoints' in layer || 'children' in layer) {
+      if ('variants' in layer || 'breakpoints' in layer) {
         throw new DocumentError(
           'schema',
           `${label} variant ${axis}=${name} only supports declarations and states`,
@@ -271,7 +250,7 @@ function parseVariants(value: unknown, label: string) {
 
 function parseBreakpointLayers(value: unknown, label: string) {
   if (!isRecord(value)) throw new DocumentError('schema', `${label} breakpoints must be an object`);
-  const breakpoints: NonNullable<StyleChild['breakpoints']> = {};
+  const breakpoints: NonNullable<StyleBlock['breakpoints']> = {};
   for (const id of Object.keys(value).sort()) {
     if (!BREAKPOINT_ID.test(id)) {
       throw new DocumentError('schema', `${label} has invalid breakpoint "${id}"`);
@@ -280,7 +259,7 @@ function parseBreakpointLayers(value: unknown, label: string) {
     if (!isRecord(layer)) {
       throw new DocumentError('schema', `${label} breakpoint "${id}" must be an object`);
     }
-    if ('variants' in layer || 'breakpoints' in layer || 'children' in layer) {
+    if ('variants' in layer || 'breakpoints' in layer) {
       throw new DocumentError(
         'schema',
         `${label} breakpoint "${id}" only supports declarations and states`,

@@ -1,4 +1,4 @@
-import type { Node } from '@facadeur/domain';
+import type { ExampleStyleMap } from '../register-example-styles';
 import { ids as exampleMediaIds } from './idList';
 
 export const styles = {
@@ -8,4 +8,4 @@ export const styles = {
   [exampleMediaIds.nodes.video1]: {
     aspectRatio: '16 / 9',
   },
-} satisfies Readonly<Record<string, NonNullable<Node['style']>>>;
+} satisfies ExampleStyleMap;

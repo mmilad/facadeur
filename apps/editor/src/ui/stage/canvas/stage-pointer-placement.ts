@@ -82,9 +82,16 @@ export function createStagePlacement({
     });
     const parentBox =
       nodesByUuid.get(parent.uuid)?.rect ?? boxOf(frame.host.contentDocument().body);
+    const parentStyle = app
+      .getCoreSnapshot()
+      .catalog.globalStyles?.block?.rules?.find(
+        (rule) =>
+          rule.id === `layer-${parent.uuid}` &&
+          Object.values(rule.bindings ?? {}).includes(parent.uuid),
+      )?.declarations;
     const placed = placeInParent({
       direction:
-        parent.style?.display === 'flex' && parent.style?.['flex-direction'] === 'row'
+        parentStyle?.display === 'flex' && parentStyle?.['flex-direction'] === 'row'
           ? 'row'
           : 'column',
       pointer: local,
@@ -123,6 +130,7 @@ export function createStagePlacement({
       return;
     }
     const uuid = createCatalogUuid();
+    const isImage = toolName === 'image';
     const node =
       toolName === 'frame'
         ? { uuid, name: 'layer', dom: { tagName: 'div', children: [] } }
@@ -132,7 +140,6 @@ export function createStagePlacement({
               uuid,
               name: 'Image',
               dom: { tagName: 'img', attributes: { alt: '', src: '' } },
-              style: { width: '120px', height: '80px' },
             };
     onEvent({
       type: EditorEventType.NodeInsert,
@@ -142,6 +149,19 @@ export function createStagePlacement({
         node,
       },
     });
+    if (isImage) {
+      onEvent({
+        type: EditorEventType.DesignCommandExecute,
+        data: {
+          command: {
+            type: 'setLayerStyleDeclarations',
+            nodeUuid: uuid,
+            breakpointUuid: null,
+            declarations: { width: '120px', height: '80px' },
+          },
+        },
+      });
+    }
     onEvent({ type: EditorEventType.NodeSelect, data: { nodeId: node.uuid } });
     onEvent({ type: EditorEventType.CatalogPersist, data: {} });
   }

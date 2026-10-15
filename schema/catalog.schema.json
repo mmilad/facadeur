@@ -3,11 +3,7 @@
   "$id": "https://github.com/mmilad/facadeur/schema/project-catalog",
   "additionalProperties": false,
   "type": "object",
-  "required": [
-    "atoms",
-    "components",
-    "pages"
-  ],
+  "required": ["atoms", "components", "pages"],
   "properties": {
     "atoms": {
       "type": "object",
@@ -15,13 +11,7 @@
         "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
           "additionalProperties": false,
           "type": "object",
-          "required": [
-            "uuid",
-            "name",
-            "kind",
-            "schema",
-            "root"
-          ],
+          "required": ["uuid", "name", "kind", "schema", "root"],
           "properties": {
             "uuid": {
               "format": "uuid",
@@ -59,10 +49,7 @@
                 {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": [
-                    "kind",
-                    "uuid"
-                  ],
+                  "required": ["kind", "uuid"],
                   "properties": {
                     "kind": {
                       "const": "ref",
@@ -79,10 +66,7 @@
                 {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": [
-                    "kind",
-                    "schema"
-                  ],
+                  "required": ["kind", "schema"],
                   "properties": {
                     "kind": {
                       "const": "inline",
@@ -102,10 +86,7 @@
               "$id": "T1",
               "additionalProperties": false,
               "type": "object",
-              "required": [
-                "uuid",
-                "dom"
-              ],
+              "required": ["uuid", "dom"],
               "properties": {
                 "uuid": {
                   "format": "uuid",
@@ -120,9 +101,7 @@
                 "dom": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": [
-                    "tagName"
-                  ],
+                  "required": ["tagName"],
                   "properties": {
                     "tagName": {
                       "minLength": 1,
@@ -187,23 +166,12 @@
                     }
                   }
                 },
-                "style": {
-                  "type": "object",
-                  "patternProperties": {
-                    "^(.*)$": {
-                      "type": "string"
-                    }
-                  }
-                },
                 "schema": {
                   "anyOf": [
                     {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": [
-                        "kind",
-                        "uuid"
-                      ],
+                      "required": ["kind", "uuid"],
                       "properties": {
                         "kind": {
                           "const": "ref",
@@ -220,10 +188,7 @@
                     {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": [
-                        "kind",
-                        "schema"
-                      ],
+                      "required": ["kind", "schema"],
                       "properties": {
                         "kind": {
                           "const": "inline",
@@ -293,10 +258,7 @@
             "style": {
               "additionalProperties": false,
               "type": "object",
-              "required": [
-                "kind",
-                "uuid"
-              ],
+              "required": ["kind", "uuid"],
               "properties": {
                 "kind": {
                   "const": "ref",
@@ -334,9 +296,7 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": [
-                            "mode"
-                          ],
+                          "required": ["mode"],
                           "properties": {
                             "mode": {
                               "const": "flat",
@@ -347,9 +307,7 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": [
-                            "mode"
-                          ],
+                          "required": ["mode"],
                           "properties": {
                             "mode": {
                               "const": "grouped",
@@ -364,10 +322,7 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": [
-                            "mode",
-                            "fields"
-                          ],
+                          "required": ["mode", "fields"],
                           "properties": {
                             "mode": {
                               "const": "manual",
@@ -394,9 +349,7 @@
                     "^(.*)$": {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": [
-                        "isStatic"
-                      ],
+                      "required": ["isStatic"],
                       "properties": {
                         "isStatic": {
                           "const": true,
@@ -438,9 +391,7 @@
                         "^(.*)$": {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": [
-                            "isStatic"
-                          ],
+                          "required": ["isStatic"],
                           "properties": {
                             "isStatic": {
                               "const": true,
@@ -487,13 +438,7 @@
         "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
           "additionalProperties": false,
           "type": "object",
-          "required": [
-            "uuid",
-            "name",
-            "kind",
-            "schema",
-            "root"
-          ],
+          "required": ["uuid", "name", "kind", "schema", "root"],
           "properties": {
             "uuid": {
               "format": "uuid",
@@ -531,10 +476,7 @@
                 {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": [
-                    "kind",
-                    "uuid"
-                  ],
+                  "required": ["kind", "uuid"],
                   "properties": {
                     "kind": {
                       "const": "ref",
@@ -551,10 +493,7 @@
                 {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": [
-                    "kind",
-                    "schema"
-                  ],
+                  "required": ["kind", "schema"],
                   "properties": {
                     "kind": {
                       "const": "inline",
@@ -574,10 +513,7 @@
               "$id": "T1",
               "additionalProperties": false,
               "type": "object",
-              "required": [
-                "uuid",
-                "dom"
-              ],
+              "required": ["uuid", "dom"],
               "properties": {
                 "uuid": {
                   "format": "uuid",
@@ -592,9 +528,7 @@
                 "dom": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": [
-                    "tagName"
-                  ],
+                  "required": ["tagName"],
                   "properties": {
                     "tagName": {
                       "minLength": 1,
@@ -659,23 +593,12 @@
                     }
                   }
                 },
-                "style": {
-                  "type": "object",
-                  "patternProperties": {
-                    "^(.*)$": {
-                      "type": "string"
-                    }
-                  }
-                },
                 "schema": {
                   "anyOf": [
                     {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": [
-                        "kind",
-                        "uuid"
-                      ],
+                      "required": ["kind", "uuid"],
                       "properties": {
                         "kind": {
                           "const": "ref",
@@ -692,10 +615,7 @@
                     {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": [
-                        "kind",
-                        "schema"
-                      ],
+                      "required": ["kind", "schema"],
                       "properties": {
                         "kind": {
                           "const": "inline",
@@ -765,10 +685,7 @@
             "style": {
               "additionalProperties": false,
               "type": "object",
-              "required": [
-                "kind",
-                "uuid"
-              ],
+              "required": ["kind", "uuid"],
               "properties": {
                 "kind": {
                   "const": "ref",
@@ -806,9 +723,7 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": [
-                            "mode"
-                          ],
+                          "required": ["mode"],
                           "properties": {
                             "mode": {
                               "const": "flat",
@@ -819,9 +734,7 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": [
-                            "mode"
-                          ],
+                          "required": ["mode"],
                           "properties": {
                             "mode": {
                               "const": "grouped",
@@ -836,10 +749,7 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": [
-                            "mode",
-                            "fields"
-                          ],
+                          "required": ["mode", "fields"],
                           "properties": {
                             "mode": {
                               "const": "manual",
@@ -866,9 +776,7 @@
                     "^(.*)$": {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": [
-                        "isStatic"
-                      ],
+                      "required": ["isStatic"],
                       "properties": {
                         "isStatic": {
                           "const": true,
@@ -910,9 +818,7 @@
                         "^(.*)$": {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": [
-                            "isStatic"
-                          ],
+                          "required": ["isStatic"],
                           "properties": {
                             "isStatic": {
                               "const": true,
@@ -959,13 +865,7 @@
         "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
           "additionalProperties": false,
           "type": "object",
-          "required": [
-            "uuid",
-            "name",
-            "kind",
-            "schema",
-            "root"
-          ],
+          "required": ["uuid", "name", "kind", "schema", "root"],
           "properties": {
             "uuid": {
               "format": "uuid",
@@ -1003,10 +903,7 @@
                 {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": [
-                    "kind",
-                    "uuid"
-                  ],
+                  "required": ["kind", "uuid"],
                   "properties": {
                     "kind": {
                       "const": "ref",
@@ -1023,10 +920,7 @@
                 {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": [
-                    "kind",
-                    "schema"
-                  ],
+                  "required": ["kind", "schema"],
                   "properties": {
                     "kind": {
                       "const": "inline",
@@ -1046,10 +940,7 @@
               "$id": "T1",
               "additionalProperties": false,
               "type": "object",
-              "required": [
-                "uuid",
-                "dom"
-              ],
+              "required": ["uuid", "dom"],
               "properties": {
                 "uuid": {
                   "format": "uuid",
@@ -1064,9 +955,7 @@
                 "dom": {
                   "additionalProperties": false,
                   "type": "object",
-                  "required": [
-                    "tagName"
-                  ],
+                  "required": ["tagName"],
                   "properties": {
                     "tagName": {
                       "minLength": 1,
@@ -1131,23 +1020,12 @@
                     }
                   }
                 },
-                "style": {
-                  "type": "object",
-                  "patternProperties": {
-                    "^(.*)$": {
-                      "type": "string"
-                    }
-                  }
-                },
                 "schema": {
                   "anyOf": [
                     {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": [
-                        "kind",
-                        "uuid"
-                      ],
+                      "required": ["kind", "uuid"],
                       "properties": {
                         "kind": {
                           "const": "ref",
@@ -1164,10 +1042,7 @@
                     {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": [
-                        "kind",
-                        "schema"
-                      ],
+                      "required": ["kind", "schema"],
                       "properties": {
                         "kind": {
                           "const": "inline",
@@ -1237,10 +1112,7 @@
             "style": {
               "additionalProperties": false,
               "type": "object",
-              "required": [
-                "kind",
-                "uuid"
-              ],
+              "required": ["kind", "uuid"],
               "properties": {
                 "kind": {
                   "const": "ref",
@@ -1278,9 +1150,7 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": [
-                            "mode"
-                          ],
+                          "required": ["mode"],
                           "properties": {
                             "mode": {
                               "const": "flat",
@@ -1291,9 +1161,7 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": [
-                            "mode"
-                          ],
+                          "required": ["mode"],
                           "properties": {
                             "mode": {
                               "const": "grouped",
@@ -1308,10 +1176,7 @@
                         {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": [
-                            "mode",
-                            "fields"
-                          ],
+                          "required": ["mode", "fields"],
                           "properties": {
                             "mode": {
                               "const": "manual",
@@ -1338,9 +1203,7 @@
                     "^(.*)$": {
                       "additionalProperties": false,
                       "type": "object",
-                      "required": [
-                        "isStatic"
-                      ],
+                      "required": ["isStatic"],
                       "properties": {
                         "isStatic": {
                           "const": true,
@@ -1382,9 +1245,7 @@
                         "^(.*)$": {
                           "additionalProperties": false,
                           "type": "object",
-                          "required": [
-                            "isStatic"
-                          ],
+                          "required": ["isStatic"],
                           "properties": {
                             "isStatic": {
                               "const": true,
@@ -1439,14 +1300,7 @@
     "tokens": {
       "additionalProperties": false,
       "type": "object",
-      "required": [
-        "color",
-        "space",
-        "radius",
-        "shadow",
-        "type",
-        "font"
-      ],
+      "required": ["color", "space", "radius", "shadow", "type", "font"],
       "properties": {
         "color": {
           "type": "object",
@@ -1454,13 +1308,7 @@
             "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
               "additionalProperties": false,
               "type": "object",
-              "required": [
-                "uuid",
-                "label",
-                "group",
-                "valueType",
-                "value"
-              ],
+              "required": ["uuid", "label", "group", "valueType", "value"],
               "properties": {
                 "uuid": {
                   "format": "uuid",
@@ -1602,13 +1450,7 @@
             "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
               "additionalProperties": false,
               "type": "object",
-              "required": [
-                "uuid",
-                "label",
-                "group",
-                "valueType",
-                "value"
-              ],
+              "required": ["uuid", "label", "group", "valueType", "value"],
               "properties": {
                 "uuid": {
                   "format": "uuid",
@@ -1750,13 +1592,7 @@
             "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
               "additionalProperties": false,
               "type": "object",
-              "required": [
-                "uuid",
-                "label",
-                "group",
-                "valueType",
-                "value"
-              ],
+              "required": ["uuid", "label", "group", "valueType", "value"],
               "properties": {
                 "uuid": {
                   "format": "uuid",
@@ -1898,13 +1734,7 @@
             "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
               "additionalProperties": false,
               "type": "object",
-              "required": [
-                "uuid",
-                "label",
-                "group",
-                "valueType",
-                "value"
-              ],
+              "required": ["uuid", "label", "group", "valueType", "value"],
               "properties": {
                 "uuid": {
                   "format": "uuid",
@@ -2046,13 +1876,7 @@
             "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
               "additionalProperties": false,
               "type": "object",
-              "required": [
-                "uuid",
-                "label",
-                "group",
-                "valueType",
-                "value"
-              ],
+              "required": ["uuid", "label", "group", "valueType", "value"],
               "properties": {
                 "uuid": {
                   "format": "uuid",
@@ -2194,13 +2018,7 @@
             "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
               "additionalProperties": false,
               "type": "object",
-              "required": [
-                "uuid",
-                "label",
-                "group",
-                "valueType",
-                "value"
-              ],
+              "required": ["uuid", "label", "group", "valueType", "value"],
               "properties": {
                 "uuid": {
                   "format": "uuid",
@@ -2344,11 +2162,7 @@
       "items": {
         "additionalProperties": false,
         "type": "object",
-        "required": [
-          "id",
-          "name",
-          "data"
-        ],
+        "required": ["id", "name", "data"],
         "properties": {
           "id": {
             "minLength": 1,
@@ -2362,10 +2176,7 @@
           "data": {
             "additionalProperties": false,
             "type": "object",
-            "required": [
-              "viewBox",
-              "paths"
-            ],
+            "required": ["viewBox", "paths"],
             "properties": {
               "viewBox": {
                 "minLength": 1,
@@ -2395,11 +2206,7 @@
         "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
           "additionalProperties": false,
           "type": "object",
-          "required": [
-            "uuid",
-            "name",
-            "value"
-          ],
+          "required": ["uuid", "name", "value"],
           "properties": {
             "uuid": {
               "format": "uuid",
@@ -2567,168 +2374,12 @@
                 }
               }
             },
-            "children": {
-              "type": "object",
-              "patternProperties": {
-                "^(?:[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}|[A-Za-z][A-Za-z0-9_-]*)(?:/(?:[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}|[A-Za-z][A-Za-z0-9_-]*))*$": {
-                  "additionalProperties": false,
-                  "type": "object",
-                  "properties": {
-                    "declarations": {
-                      "type": "object",
-                      "patternProperties": {
-                        "^(--)?[A-Za-z_][\\w-]*$": {
-                          "type": "string"
-                        }
-                      }
-                    },
-                    "states": {
-                      "additionalProperties": false,
-                      "type": "object",
-                      "properties": {
-                        "hover": {
-                          "type": "object",
-                          "patternProperties": {
-                            "^(--)?[A-Za-z_][\\w-]*$": {
-                              "type": "string"
-                            }
-                          }
-                        },
-                        "focus-visible": {
-                          "type": "object",
-                          "patternProperties": {
-                            "^(--)?[A-Za-z_][\\w-]*$": {
-                              "type": "string"
-                            }
-                          }
-                        },
-                        "disabled": {
-                          "type": "object",
-                          "patternProperties": {
-                            "^(--)?[A-Za-z_][\\w-]*$": {
-                              "type": "string"
-                            }
-                          }
-                        }
-                      }
-                    },
-                    "variants": {
-                      "type": "object",
-                      "patternProperties": {
-                        "^[A-Za-z][A-Za-z0-9_-]*$": {
-                          "type": "object",
-                          "patternProperties": {
-                            "^(.*)$": {
-                              "additionalProperties": false,
-                              "type": "object",
-                              "properties": {
-                                "declarations": {
-                                  "type": "object",
-                                  "patternProperties": {
-                                    "^(--)?[A-Za-z_][\\w-]*$": {
-                                      "type": "string"
-                                    }
-                                  }
-                                },
-                                "states": {
-                                  "additionalProperties": false,
-                                  "type": "object",
-                                  "properties": {
-                                    "hover": {
-                                      "type": "object",
-                                      "patternProperties": {
-                                        "^(--)?[A-Za-z_][\\w-]*$": {
-                                          "type": "string"
-                                        }
-                                      }
-                                    },
-                                    "focus-visible": {
-                                      "type": "object",
-                                      "patternProperties": {
-                                        "^(--)?[A-Za-z_][\\w-]*$": {
-                                          "type": "string"
-                                        }
-                                      }
-                                    },
-                                    "disabled": {
-                                      "type": "object",
-                                      "patternProperties": {
-                                        "^(--)?[A-Za-z_][\\w-]*$": {
-                                          "type": "string"
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    },
-                    "breakpoints": {
-                      "type": "object",
-                      "patternProperties": {
-                        "^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$": {
-                          "additionalProperties": false,
-                          "type": "object",
-                          "properties": {
-                            "declarations": {
-                              "type": "object",
-                              "patternProperties": {
-                                "^(--)?[A-Za-z_][\\w-]*$": {
-                                  "type": "string"
-                                }
-                              }
-                            },
-                            "states": {
-                              "additionalProperties": false,
-                              "type": "object",
-                              "properties": {
-                                "hover": {
-                                  "type": "object",
-                                  "patternProperties": {
-                                    "^(--)?[A-Za-z_][\\w-]*$": {
-                                      "type": "string"
-                                    }
-                                  }
-                                },
-                                "focus-visible": {
-                                  "type": "object",
-                                  "patternProperties": {
-                                    "^(--)?[A-Za-z_][\\w-]*$": {
-                                      "type": "string"
-                                    }
-                                  }
-                                },
-                                "disabled": {
-                                  "type": "object",
-                                  "patternProperties": {
-                                    "^(--)?[A-Za-z_][\\w-]*$": {
-                                      "type": "string"
-                                    }
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            },
             "rules": {
               "type": "array",
               "items": {
                 "additionalProperties": false,
                 "type": "object",
-                "required": [
-                  "id",
-                  "selector",
-                  "bindings"
-                ],
+                "required": ["id", "selector", "bindings"],
                 "properties": {
                   "id": {
                     "minLength": 1,
@@ -2936,11 +2587,7 @@
           "items": {
             "additionalProperties": false,
             "type": "object",
-            "required": [
-              "uuid",
-              "label",
-              "minWidth"
-            ],
+            "required": ["uuid", "label", "minWidth"],
             "properties": {
               "uuid": {
                 "format": "uuid",

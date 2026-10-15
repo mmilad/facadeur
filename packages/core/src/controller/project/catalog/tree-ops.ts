@@ -223,24 +223,14 @@ function pruneRemovedNodeStyles(catalog: ProjectCatalog, removedUuids: ReadonlyS
   const currentBlock = catalog.globalStyles?.block;
   if (!currentBlock) return catalog;
 
-  const children = Object.fromEntries(
-    Object.entries(currentBlock.children ?? {}).filter(
-      ([path]) => !path.split('/').some((uuid) => removedUuids.has(uuid)),
-    ),
-  );
   const rules = (currentBlock.rules ?? []).filter(
     (rule) => !Object.values(rule.bindings ?? {}).some((uuid) => removedUuids.has(uuid)),
   );
-  if (
-    Object.keys(children).length === Object.keys(currentBlock.children ?? {}).length &&
-    rules.length === (currentBlock.rules ?? []).length
-  ) {
+  if (rules.length === (currentBlock.rules ?? []).length) {
     return catalog;
   }
 
   const block = { ...currentBlock };
-  if (Object.keys(children).length) block.children = children;
-  else delete block.children;
   if (rules.length) block.rules = rules;
   else delete block.rules;
 

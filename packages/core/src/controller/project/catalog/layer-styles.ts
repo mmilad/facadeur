@@ -1,4 +1,5 @@
 import type { Node, ProjectCatalog } from '@facadeur/domain';
+import { replaceSelectorClasses } from '../../style/selectors';
 
 /** Stable CSS class derived from the user-facing layer name. */
 export function layerSelectorForName(name: string) {
@@ -21,35 +22,49 @@ export function setLayerStyleDeclaration(
     breakpointUuid: string | null;
   },
 ): ProjectCatalog {
+  return setLayerStyleDeclarations(catalog, {
+    nodeUuid: input.nodeUuid,
+    declarations: { [input.property]: input.value },
+    breakpointUuid: input.breakpointUuid,
+  });
+}
+
+export function setLayerStyleDeclarations(
+  catalog: ProjectCatalog,
+  input: {
+    nodeUuid: string;
+    declarations: Readonly<Record<string, string | null>>;
+    breakpointUuid: string | null;
+  },
+): ProjectCatalog {
   const sourceNode = findCatalogNode(catalog, input.nodeUuid);
   if (!sourceNode) return catalog;
   const nextCatalog = structuredClone(catalog) as ProjectCatalog;
   const node = findCatalogNode(nextCatalog, input.nodeUuid);
   if (!node) return catalog;
-  const legacyDeclarations = { ...(node.style ?? {}) };
-  delete (node as { style?: Record<string, string> }).style;
   const selector = layerSelectorForName(node.name ?? 'Layer');
   const className = selector.slice(1);
   const ruleId = `layer-${input.nodeUuid}`;
   const currentBlock = nextCatalog.globalStyles?.block;
   const rules = [...(currentBlock?.rules ?? [])];
-  let index = rules.findIndex((rule) => rule.id === ruleId);
-  if (index < 0 && input.value === null && !Object.keys(legacyDeclarations).length) return catalog;
+  let index = rules.findIndex(
+    (rule) => rule.id === ruleId && Object.values(rule.bindings ?? {}).includes(input.nodeUuid),
+  );
+  if (index < 0 && Object.values(input.declarations).every((value) => value === null)) return catalog;
   if (index < 0) {
     rules.push({ id: ruleId, selector, bindings: { [className]: input.nodeUuid } });
     index = rules.length - 1;
   }
 
-  const rule = { ...rules[index]!, selector, bindings: { [className]: input.nodeUuid } };
-  if (Object.keys(legacyDeclarations).length) {
-    rule.declarations = { ...legacyDeclarations, ...(rule.declarations ?? {}) };
-  }
+  const rule = { ...rules[index]! };
   if (input.breakpointUuid) {
     const breakpoints = { ...(rule.breakpoints ?? {}) };
     const layer = { ...(breakpoints[input.breakpointUuid] ?? {}) };
     const declarations = { ...(layer.declarations ?? {}) };
-    if (input.value === null) delete declarations[input.property];
-    else declarations[input.property] = input.value;
+    for (const [property, value] of Object.entries(input.declarations)) {
+      if (value === null) delete declarations[property];
+      else declarations[property] = value;
+    }
     if (Object.keys(declarations).length) layer.declarations = declarations;
     else delete layer.declarations;
     if (Object.keys(layer).length) breakpoints[input.breakpointUuid] = layer;
@@ -58,8 +73,10 @@ export function setLayerStyleDeclaration(
     else delete rule.breakpoints;
   } else {
     const declarations = { ...(rule.declarations ?? {}) };
-    if (input.value === null) delete declarations[input.property];
-    else declarations[input.property] = input.value;
+    for (const [property, value] of Object.entries(input.declarations)) {
+      if (value === null) delete declarations[property];
+      else declarations[property] = value;
+    }
     if (Object.keys(declarations).length) rule.declarations = declarations;
     else delete rule.declarations;
   }
@@ -83,15 +100,22 @@ export function syncLayerStyleSelector(
 ): ProjectCatalog {
   const rules = catalog.globalStyles?.block?.rules;
   if (!rules?.some((rule) => rule.id === `layer-${nodeUuid}`)) return catalog;
-  const selector = layerSelectorForName(name);
-  const className = selector.slice(1);
+  const nextClassName = layerSelectorForName(name).slice(1);
   const block = {
     ...catalog.globalStyles?.block,
-    rules: rules.map((rule) =>
-      rule.id === `layer-${nodeUuid}`
-        ? { ...rule, selector, bindings: { [className]: nodeUuid } }
-        : rule,
-    ),
+    rules: rules.map((rule) => {
+      if (rule.id !== `layer-${nodeUuid}`) return rule;
+      const currentClassName = Object.entries(rule.bindings ?? {}).find(
+        ([, uuid]) => uuid === nodeUuid,
+      )?.[0];
+      if (!currentClassName) return rule;
+      const selector = replaceSelectorClasses(rule.selector, (className) =>
+        className === currentClassName ? nextClassName : className,
+      );
+      const bindings = { ...rule.bindings, [nextClassName]: nodeUuid };
+      if (currentClassName !== nextClassName) delete bindings[currentClassName];
+      return { ...rule, selector, bindings };
+    }),
   };
   return { ...catalog, globalStyles: { ...catalog.globalStyles, block } };
 }

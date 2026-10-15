@@ -8,7 +8,7 @@ if (!FormatRegistry.Has('uuid')) {
 export { uuidSchema } from './uuid';
 export { schemaSourceSchema } from './schema-source';
 export { domSpecSchema, domEventSchema } from './dom';
-export { styleSpecSchema, styleRulesRefSchema } from './style';
+export { styleRulesRefSchema } from './style';
 export {
   previewDataSchema,
   nodeConfigSchema,

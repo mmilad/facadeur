@@ -1,4 +1,4 @@
-import type { Node } from '@facadeur/domain';
+import type { ExampleStyleMap } from '../register-example-styles';
 import { tokenIds as exampleTokenIds } from '../catalog/tokens/idList';
 import { ids as exampleFormRadioOptionIds } from './idList';
 import { tokenRef } from '../references';
@@ -9,4 +9,4 @@ export const styles = {
     alignItems: 'center',
     gap: tokenRef(exampleTokenIds.space.scale.step2),
   },
-} satisfies Readonly<Record<string, NonNullable<Node['style']>>>;
+} satisfies ExampleStyleMap;

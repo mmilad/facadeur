@@ -35,6 +35,9 @@ describe('examples', () => {
 
   it('includes the design-only Facadeur workspace and settings concepts without variants', () => {
     const catalog = validateProjectCatalog(createExampleCatalog());
+    const styleDeclarations = (nodeUuid: string) =>
+      catalog.globalStyles?.block?.rules?.find((rule) => rule.id === `layer-${nodeUuid}`)
+        ?.declarations;
     const collectText = (node: ReturnType<typeof resolveDefinitionToElementBuildConfig>): string =>
       [node.text ?? '', ...(node.children ?? []).map(collectText)].join(' ');
     const workspaceText = collectText(
@@ -80,12 +83,12 @@ describe('examples', () => {
     expect(JSON.stringify(facadeurComponents.sidebarRight)).toContain('GLOBAL  ·  SETTINGS');
     expect(JSON.stringify(facadeurComponents.globalStylesTable)).toContain('Global styles');
     expect(facadeurWorkspace.root.config?.definitionRef).toBe(facadeurComponents.shell.uuid);
-    expect(facadeurComponents.shell.root.style?.width).toBe('100%');
-    expect(facadeurComponents.shell.root.style?.height).toBeUndefined();
-    expect(facadeurWorkspace.root.style?.height).toBeUndefined();
-    expect(facadeurSettings.root.style?.height).toBeUndefined();
-    expect(facadeurWorkspaceMobile.root.style?.width).toBe('100%');
-    expect(facadeurWorkspaceMobile.root.style?.height).toBeUndefined();
+    expect(styleDeclarations(facadeurComponents.shell.root.uuid)?.width).toBe('100%');
+    expect(styleDeclarations(facadeurComponents.shell.root.uuid)?.height).toBeUndefined();
+    expect(styleDeclarations(facadeurWorkspace.root.uuid)?.height).toBeUndefined();
+    expect(styleDeclarations(facadeurSettings.root.uuid)?.height).toBeUndefined();
+    expect(styleDeclarations(facadeurWorkspaceMobile.root.uuid)?.width).toBe('100%');
+    expect(styleDeclarations(facadeurWorkspaceMobile.root.uuid)?.height).toBeUndefined();
     expect(JSON.stringify(facadeurWorkspaceMobile)).toContain('Layers drawer control');
     expect(JSON.stringify(facadeurWorkspaceMobile)).toContain('Inspector drawer control');
     expect(facadeurWorkspaceMobile.root.dom.children?.[0]?.config?.definitionRef).toBe(
@@ -116,10 +119,10 @@ describe('examples', () => {
     expect(facadeurComponents.settingsCategory.config?.previewData?.fields?.label).toBe(
       'Viewports',
     );
-    expect(facadeurComponents.settingsCategory.root.style?.color).toBe(
+    expect(styleDeclarations(facadeurComponents.settingsCategory.root.uuid)?.color).toBe(
       '{props:660e8400-e29b-41d4-a716-000000001a2f}',
     );
-    expect(facadeurComponents.settingsCategory.root.style?.backgroundColor).toBe(
+    expect(styleDeclarations(facadeurComponents.settingsCategory.root.uuid)?.backgroundColor).toBe(
       '{props:660e8400-e29b-41d4-a716-000000001a30}',
     );
     expect(JSON.stringify(facadeurSettings)).toContain('"foreground":"#6754d9"');

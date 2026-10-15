@@ -1,5 +1,4 @@
 import { defaultBreakpointIds } from '@facadeur/core/default-breakpoint-ids';
-import type { StyleChildLayer } from '@facadeur/domain';
 import {
   componentDefinition,
   colors,
@@ -7,54 +6,59 @@ import {
   iconSource,
   image,
   leaf,
+  registerExampleStyle,
   row,
   smallText,
+  styledNode,
   uuid,
 } from './shared';
 
-const iconButton = (id: number, imageId: number, icon: string, label: string) => ({
-  uuid: uuid(id),
-  name: label,
-  dom: {
-    tagName: 'button',
-    attributes: { type: 'button', 'aria-label': label },
-    children: [
-      image(imageId, `${label} icon`, iconSource(icon), { width: '18px', height: '18px' }),
-    ],
-  },
-  style: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '36px',
-    height: '36px',
-    padding: '0',
-    backgroundColor: colors.paper,
-    border: `1px solid ${colors.line}`,
-    borderRadius: '8px',
+const iconButton = (id: number, imageId: number, icon: string, label: string) =>
+  styledNode(
+    {
+      uuid: uuid(id),
+      name: label,
+      dom: {
+        tagName: 'button',
+        attributes: { type: 'button', 'aria-label': label },
+        children: [
+          image(imageId, `${label} icon`, iconSource(icon), { width: '18px', height: '18px' }),
+        ],
+      },
+    },
+    {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '36px',
+      height: '36px',
+      padding: '0',
+      backgroundColor: colors.paper,
+      border: `1px solid ${colors.line}`,
+      borderRadius: '8px',
+    },
+  );
+
+const headerVisibility = (shownAtLaptop: boolean) => ({
+  declarations: { display: shownAtLaptop ? 'none' : 'flex' },
+  breakpoints: {
+    [defaultBreakpointIds.laptop]: { declarations: { display: shownAtLaptop ? 'flex' : 'none' } },
   },
 });
 
-export const facadeurHeaderStyleChildren = {
-  [`${uuid(3102)}/${uuid(3104)}`]: {
-    declarations: { display: 'none' },
-    breakpoints: {
-      [defaultBreakpointIds.laptop]: { declarations: { display: 'flex' } },
-    },
+const headerActionsVisibility = {
+  declarations: { display: 'none' },
+  breakpoints: {
+    [defaultBreakpointIds.laptop]: { declarations: { display: 'flex' } },
   },
-  [`${uuid(3108)}/${uuid(3109)}`]: {
-    declarations: { display: 'none' },
-    breakpoints: {
-      [defaultBreakpointIds.laptop]: { declarations: { display: 'flex' } },
-    },
+};
+
+const mobileActionsVisibility = {
+  declarations: { display: 'flex' },
+  breakpoints: {
+    [defaultBreakpointIds.laptop]: { declarations: { display: 'none' } },
   },
-  [`${uuid(3108)}/${uuid(3112)}`]: {
-    declarations: { display: 'flex' },
-    breakpoints: {
-      [defaultBreakpointIds.laptop]: { declarations: { display: 'none' } },
-    },
-  },
-} satisfies Record<string, StyleChildLayer>;
+};
 
 export const facadeurHeader = componentDefinition(
   310,
@@ -140,3 +144,7 @@ export const facadeurHeader = componentDefinition(
     },
   ),
 );
+
+registerExampleStyle(uuid(3104), 'Desktop project context', headerVisibility(true));
+registerExampleStyle(uuid(3109), 'Desktop header actions', headerActionsVisibility);
+registerExampleStyle(uuid(3112), 'Mobile header actions', mobileActionsVisibility);

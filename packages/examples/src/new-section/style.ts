@@ -1,3 +1,3 @@
-import type { Node } from '@facadeur/domain';
+import type { ExampleStyleMap } from '../register-example-styles';
 
-export const styles = {} satisfies Readonly<Record<string, NonNullable<Node['style']>>>;
+export const styles = {} satisfies ExampleStyleMap;

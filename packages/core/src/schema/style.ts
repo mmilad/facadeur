@@ -33,22 +33,6 @@ const UUID_SOURCE = UUID_PATTERN.source.slice(1, -1);
 const tokenInterfaceSetKeySchema = Type.String({
   pattern: `^(?:${UUID_SOURCE}|[a-z][a-z0-9]*(?:\\.[a-z0-9]+)+)$`,
 });
-const styleTargetSegment = `(?:${UUID_SOURCE}|[A-Za-z][A-Za-z0-9_-]*)`;
-const styleTargetSchema = Type.String({
-  pattern: `^${styleTargetSegment}(?:/${styleTargetSegment})*$`,
-});
-
-/** Sparse appearance for one local node or a rendered path to a nested instance root. */
-export const styleChildSchema = Type.Object(
-  {
-    declarations: Type.Optional(styleDeclarationsSchema),
-    states: Type.Optional(styleStatesSchema),
-    variants: Type.Optional(variantStyleSchema),
-    breakpoints: Type.Optional(breakpointStyleSchema),
-  },
-  { additionalProperties: false },
-);
-
 /** Ordered local CSS rule authored in the Styles panel. Bindings keep class names attached to nodes. */
 export const styleRuleSchema = Type.Object(
   {
@@ -72,7 +56,6 @@ export const styleBlockSchema = Type.Object(
     states: Type.Optional(styleStatesSchema),
     variants: Type.Optional(variantStyleSchema),
     breakpoints: Type.Optional(breakpointStyleSchema),
-    children: Type.Optional(Type.Record(styleTargetSchema, styleChildSchema)),
     /** Ordered base rules; named preset rule arrays sparsely merge by id and append new rules. */
     rules: Type.Optional(Type.Array(styleRuleSchema)),
   },

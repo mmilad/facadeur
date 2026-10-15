@@ -26,7 +26,6 @@ export type InspectorFormValue = {
     tagName: string;
     text: string;
     classList: string[];
-    style: Record<string, string>;
     data: Record<string, string>;
   };
   previewData: Record<string, FieldValue>;
@@ -156,7 +155,6 @@ export function buildInspectorFormModel(
       tagName: node.dom.tagName,
       text: node.dom.text ?? '',
       classList: classListFromNode(node),
-      style: { ...(node.style ?? {}) },
       data: recordFromFieldValues(node.data ?? {}),
     },
     previewData: { ...previewFields },
@@ -224,14 +222,6 @@ export function buildInspectorFormModel(
         path: 'node.classList',
         label: 'Classes',
         suggestions: classSuggestions,
-      },
-      {
-        type: 'record',
-        path: 'node.style',
-        label: 'CSS',
-        keyLabel: 'Property',
-        valueLabel: 'Value',
-        propBindValues: true,
       },
     ],
   });
@@ -343,13 +333,6 @@ export function inspectorChangeTarget(
       kind: 'nodeClassList',
       nodeUuid,
       value: Array.isArray(value) ? value.map(String) : [],
-    };
-  }
-  if (path === 'node.style') {
-    return {
-      kind: 'nodeStyle',
-      nodeUuid,
-      value: (value ?? {}) as Record<string, string>,
     };
   }
   if (path === 'node.data') {

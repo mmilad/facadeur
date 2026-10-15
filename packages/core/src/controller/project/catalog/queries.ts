@@ -1,4 +1,10 @@
-import type { Node, NodeDefinition, ProjectCatalog } from '@facadeur/domain';
+import type {
+  GlobalStyleBlock,
+  Node,
+  NodeDefinition,
+  ProjectCatalog,
+  StyleLayer,
+} from '@facadeur/domain';
 import { tokenCustomProperty } from '../../../tokens/names';
 import { listCatalogDefinitions, findDefinition } from './ops';
 import { readTokenTree } from '../../style/tokens/global/tree';
@@ -51,16 +57,27 @@ export function projectStyleSuggestions(catalog: ProjectCatalog) {
     description: token.path,
     group: 'Design tokens',
   }));
-  const visit = (node: Node) => {
-    for (const [key, value] of Object.entries(node.style ?? {})) {
+  const addDeclarations = (record: Readonly<Record<string, string>> | undefined) => {
+    for (const [key, value] of Object.entries(record ?? {})) {
       if (!value.trim()) continue;
       const values = valuesByKey.get(key) ?? new Set<string>();
       values.add(value);
       valuesByKey.set(key, values);
     }
-    for (const child of node.dom.children ?? []) visit(child);
   };
-  for (const { definition } of listCatalogDefinitions(catalog)) visit(definition.root);
+  const addLayer = (layer: Pick<StyleLayer, 'declarations' | 'states'>) => {
+    addDeclarations(layer.declarations);
+    for (const declarations of Object.values(layer.states ?? {})) addDeclarations(declarations);
+  };
+  const block = catalog.globalStyles?.block;
+  if (block) {
+    addLayer(block);
+    addResponsiveLayers(block);
+    for (const rule of block.rules ?? []) {
+      addLayer(rule);
+      addResponsiveLayers(rule);
+    }
+  }
 
   return {
     keys: [...valuesByKey.keys()].sort((left, right) => left.localeCompare(right)),
@@ -72,6 +89,15 @@ export function projectStyleSuggestions(catalog: ProjectCatalog) {
     ),
     options: tokenOptions,
   };
+
+  function addResponsiveLayers(
+    layer: Pick<GlobalStyleBlock, 'variants' | 'breakpoints'>,
+  ) {
+    for (const values of Object.values(layer.variants ?? {})) {
+      for (const variant of Object.values(values)) addLayer(variant);
+    }
+    for (const breakpoint of Object.values(layer.breakpoints ?? {})) addLayer(breakpoint);
+  }
 }
 
 export function tokenByUuid(catalog: ProjectCatalog, uuid: string) {

@@ -1,4 +1,4 @@
-import type { Node } from '@facadeur/domain';
+import type { ExampleStyleMap } from '../register-example-styles';
 import { tokenIds as exampleTokenIds } from '../catalog/tokens/idList';
 import { ids as exampleProductCardIds } from './idList';
 import { tokenRef } from '../references';
@@ -47,4 +47,4 @@ export const styles = {
     overflow: 'hidden',
     boxSizing: 'border-box',
   },
-} satisfies Readonly<Record<string, NonNullable<Node['style']>>>;
+} satisfies ExampleStyleMap;

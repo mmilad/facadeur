@@ -197,7 +197,7 @@ function renderNode(
   cssRules: string[],
 ): string {
   const source = node.nodeUuid ? sourceNodes.get(node.nodeUuid) : undefined;
-  const declarations = Object.entries(node.style ?? {}).map(
+  const declarations = Object.entries(node.dynamicStyle ?? {}).map(
     ([property, value]) => `  ${kebab(property)}: ${cssValue(value, tokenProperties)};`,
   );
   if (declarations.length) {

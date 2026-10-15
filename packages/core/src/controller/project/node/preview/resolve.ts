@@ -17,6 +17,7 @@ export type PreviewResolveContext = {
 
 const PROP_REF = /^\{prop:([^}]+)\}$/;
 const COMPONENT_PROP_REF = /^\{props:([^}]+)\}$/;
+const STYLE_REFERENCE = /^\{props:[^}]+\}$/;
 
 /** Replace `{prop:uuid}` and similar templates with literal strings for renderers. */
 export function resolveTemplateString(template: string, ctx: PreviewResolveContext): string {
@@ -267,7 +268,11 @@ function resolveNodeToElementBuildConfig(
     delete attributes['data-icon'];
     attributes.viewBox = icon.data.viewBox;
   }
-  const style = resolveStringRecord(node.style, ctx);
+  const rule = catalog.globalStyles?.block?.rules?.find((entry) => entry.id === `layer-${node.uuid}`);
+  const referencedStyles = Object.fromEntries(
+    Object.entries(rule?.declarations ?? {}).filter(([, value]) => STYLE_REFERENCE.test(value)),
+  );
+  const dynamicStyle = resolveStringRecord(referencedStyles, ctx);
   const properties = node.dom.properties;
 
   return {
@@ -275,7 +280,7 @@ function resolveNodeToElementBuildConfig(
     ...(text !== undefined ? { text } : {}),
     attributes,
     ...(node.dom.data ? { dataset: { ...node.dom.data } } : {}),
-    ...(style && Object.keys(style).length ? { style } : {}),
+    ...(dynamicStyle && Object.keys(dynamicStyle).length ? { dynamicStyle } : {}),
     ...(properties && Object.keys(properties).length ? { properties } : {}),
     ...(resolvedChildren.length ? { children: resolvedChildren } : {}),
     nodeUuid: node.uuid,

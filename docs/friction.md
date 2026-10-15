@@ -20,6 +20,17 @@
 
 ## Test runner blocked by filesystem sandbox
 
+- **Update (2026-10-15, Catalog style migration):** Restricted
+  `pnpm --filter @facadeur/core typecheck` again failed before starting pnpm because Corepack attempted to fetch the pinned
+  pnpm 10.33.3 and received `ENOTFOUND registry.npmjs.org`. The same package typechecks ran in
+  the approved host context; Core, Style Engine, Examples, Codegen, and Editor all passed.
+  Continue using the approved host context for workspace pnpm commands; no pin or install change
+  is needed.
+- **Update (2026-10-15, style legacy removal):** A restricted Prettier invocation reproduced the
+  Corepack `ENOTFOUND registry.npmjs.org` failure before formatting. The approved host-context
+  Prettier command completed successfully. Continue using the approved host context for pnpm-based
+  formatting and checks.
+
 - **Reproduction:** Run `pnpm exec vitest run apps/editor/test/schema-library.test.ts apps/editor/test/schema-composition-ui.test.tsx` in the restricted workspace process.
 - **Evidence:** pnpm 10.33.3 is available locally. Inside the filesystem sandbox, pnpm/Vitest fail with `EPERM` when `fs.promises.realpath` resolves `D:\newProjects\facadeur\apps\editor`. The same focused command succeeds outside the sandbox (13 tests passed).
 - **Impact:** Focused tests require running outside the sandbox; normal in-sandbox verification is blocked.

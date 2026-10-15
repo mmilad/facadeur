@@ -26,7 +26,7 @@ export function buildInspectorSidebarViewModel(
       icons: path === 'node.attributes' ? iconOptions : [],
       color,
     });
-  const styleValueOptions = fieldOptions('node.style', 'CSS value', true);
+  const styleValueOptions = fieldOptions('layerStyle', 'CSS value', true);
   const isRoot = model.selectionKind === 'root';
   const headerFields =
     sectionFields(model, isRoot ? 'Asset' : 'Element', undefined, propOptions, fieldOptions)
@@ -39,9 +39,7 @@ export function buildInspectorSidebarViewModel(
     propOptions,
     fieldOptions,
   );
-  const styleSection = rawStyleSection
-    ? { ...rawStyleSection, fields: filterNodeStyle(rawStyleSection.fields) }
-    : null;
+  const styleSection = rawStyleSection;
   const nodeDataSection = sectionFields(
     model,
     'Properties',
@@ -143,19 +141,6 @@ export function buildInspectorSidebarViewModel(
   };
 }
 
-function filterNodeStyle(fields: readonly FormFieldConfig[]): FormFieldConfig[] {
-  const result: FormFieldConfig[] = [];
-  for (const field of fields) {
-    if (field.type !== 'layout') {
-      if (field.name !== 'node.style') result.push(field);
-      continue;
-    }
-    const children = filterNodeStyle(field.fields);
-    if (children.length) result.push({ ...field, fields: children });
-  }
-  return result;
-}
-
 function previewDefaultForProp(model: InspectorViewModel, name: string) {
   if (!name.startsWith('props.')) return undefined;
   const value = getPath(model.formValue.previewData, name.slice('props.'.length));
@@ -197,7 +182,6 @@ function sectionFields(
         label,
         fields: mapInspectorFormFields(
           section.fields,
-          model.styleSuggestions,
           componentOptions,
           fieldOptions,
         ),

@@ -22,6 +22,7 @@ const TYPOGRAPHY_FIELDS = [
   'letterSpacing',
 ] as const;
 const SINGLE_TOKEN = /^\{token:([^}]+)\}$/;
+const COMPONENT_PROP_REFERENCE = /^\{props:[^}]+\}$/;
 
 /** Compile project-level Catalog styles into CSS for generated components. */
 export function renderGlobalStyleCss(catalog: ProjectCatalog): string {
@@ -32,19 +33,9 @@ export function renderGlobalStyleCss(catalog: ProjectCatalog): string {
   const tokens = new Map(
     [...readTokenTree(catalog.tokens ?? {}).tokens].map(([uuid, token]) => [uuid, token]),
   );
-  const { selectorsByNode, nodeUuids, rootUuidByNode } = indexCatalogNodes(catalog);
+  const { nodeUuids, rootUuidByNode } = indexCatalogNodes(catalog);
   const rules: string[] = [];
   if (block) emitLayer(rules, ':root', block, block.breakpoints, catalog, tokens);
-
-  for (const [path, layer] of Object.entries(block?.children ?? {})) {
-    const selectors = selectorsByNode.get(path);
-    if (!selectors?.length) {
-      throw new Error(`Global style child path "${path}" does not resolve to Catalog nodes`);
-    }
-    for (const selector of selectors) {
-      emitLayer(rules, selector, layer, layer.breakpoints, catalog, tokens);
-    }
-  }
 
   for (const authored of block?.rules ?? []) {
     const rootUuids = new Set<string>();
@@ -73,14 +64,14 @@ export function renderGlobalStyleCss(catalog: ProjectCatalog): string {
   for (const [uuid, value] of Object.entries(tokenSets)) {
     const token = tokens.get(uuid);
     const property = tokenCustomProperty(token?.path ?? uuid);
-    rules.push(cssRule(':root', [[property, substitute(value, tokens)]]));
+    rules.push(cssRule(':root', [[property, substitute(value, tokens, catalog)]]));
   }
 
   return rules.join('\n\n');
 }
 
-/** Render resolved node styles as CSS so nested instance rules can participate in the cascade. */
-export function renderElementBuildStyleCss(
+/** Render resolved per-instance property bindings used by Catalog style rules. */
+export function renderDynamicStyleCss(
   root: ElementBuildConfig,
   catalog: ProjectCatalog,
 ): string {
@@ -97,14 +88,14 @@ export function renderElementBuildStyleCss(
     const instanceRoot =
       node.nodeUuid && styleUuids.length > 1 ? node.nodeUuid : undefined;
     const selectorUuids = [...new Set([...scopes, ...(instanceRoot ? [instanceRoot] : [])])];
-    if (node.nodeUuid && node.style && Object.keys(node.style).length) {
+    if (node.nodeUuid && node.dynamicStyle && Object.keys(node.dynamicStyle).length) {
       const selector = [
         ...selectorUuids.map((uuid) => `.${codegenNodeClass(uuid)}`),
         ...(selectorUuids.includes(node.nodeUuid)
           ? []
           : [`.${codegenNodeClass(node.nodeUuid)}`]),
       ].join(' ');
-      rules.push(cssRule(selector, declarations(node.style, tokens)));
+      rules.push(cssRule(selector, declarations(node.dynamicStyle, tokens, catalog)));
     }
     const childScopes = instanceRoot ? [...scopes, instanceRoot] : scopes;
     for (const child of node.children ?? []) visit(child, childScopes);
@@ -121,20 +112,27 @@ function emitLayer(
   catalog: ProjectCatalog,
   tokens: ReadonlyMap<string, IndexedToken>,
 ) {
-  if (layer.declarations) output.push(cssRule(selector, declarations(layer.declarations, tokens)));
+  if (layer.declarations)
+    output.push(cssRule(selector, declarations(layer.declarations, tokens, catalog)));
   for (const [state, values] of Object.entries(layer.states ?? {})) {
     output.push(
-      cssRule(appendStyleSelectorSuffix(selector, `:${state}`), declarations(values, tokens)),
+      cssRule(
+        appendStyleSelectorSuffix(selector, `:${state}`),
+        declarations(values, tokens, catalog),
+      ),
     );
   }
   for (const [axis, variants] of Object.entries(layer.variants ?? {})) {
     for (const [value, variant] of Object.entries(variants)) {
       const selected = withVariant(selector, axis, value);
       if (variant.declarations)
-        output.push(cssRule(selected, declarations(variant.declarations, tokens)));
+        output.push(cssRule(selected, declarations(variant.declarations, tokens, catalog)));
       for (const [state, values] of Object.entries(variant.states ?? {})) {
         output.push(
-          cssRule(appendStyleSelectorSuffix(selected, `:${state}`), declarations(values, tokens)),
+          cssRule(
+            appendStyleSelectorSuffix(selected, `:${state}`),
+            declarations(values, tokens, catalog),
+          ),
         );
       }
     }
@@ -147,13 +145,15 @@ function emitLayer(
     const media = (content: string) =>
       `@media (min-width: ${breakpoint.minWidth}px) {\n${indent(content)}\n}`;
     if (override.declarations)
-      output.push(media(cssRule(selector, declarations(override.declarations, tokens), 1)));
+      output.push(
+        media(cssRule(selector, declarations(override.declarations, tokens, catalog), 1)),
+      );
     for (const [state, values] of Object.entries(override.states ?? {})) {
       output.push(
         media(
           cssRule(
             appendStyleSelectorSuffix(selector, `:${state}`),
-            declarations(values, tokens),
+            declarations(values, tokens, catalog),
             1,
           ),
         ),
@@ -162,29 +162,20 @@ function emitLayer(
   }
 }
 
-/** One Catalog walk supplies child-path selectors and authored-rule binding validation. */
+/** One Catalog walk supplies authored-rule binding validation and component scope roots. */
 function indexCatalogNodes(catalog: ProjectCatalog) {
-  const selectorsByNode = new Map<string, string[]>();
   const nodeUuids = new Set<string>();
   const rootUuidByNode = new Map<string, string>();
-  const visit = (node: Node, rootUuid: string, path: readonly string[]) => {
+  const visit = (node: Node, rootUuid: string) => {
     nodeUuids.add(node.uuid);
     rootUuidByNode.set(node.uuid, rootUuid);
-    if (path.length) {
-      const key = path.join('/');
-      selectorsByNode.set(key, [...(selectorsByNode.get(key) ?? []), pathSelector(rootUuid, path)]);
-    }
-    for (const child of node.dom.children ?? []) visit(child, rootUuid, [...path, child.uuid]);
+    for (const child of node.dom.children ?? []) visit(child, rootUuid);
   };
   for (const definitions of [catalog.atoms, catalog.components, catalog.pages]) {
     for (const definition of Object.values(definitions))
-      visit(definition.root, definition.root.uuid, []);
+      visit(definition.root, definition.root.uuid);
   }
-  return { selectorsByNode, nodeUuids, rootUuidByNode };
-}
-
-function pathSelector(rootUuid: string, path: readonly string[]) {
-  return [rootUuid, ...path].map((uuid) => `.${codegenNodeClass(uuid)}`).join(' > ');
+  return { nodeUuids, rootUuidByNode };
 }
 
 function codegenNodeClass(uuid: string) {
@@ -194,9 +185,11 @@ function codegenNodeClass(uuid: string) {
 function declarations(
   values: Readonly<Record<string, string>>,
   tokens: ReadonlyMap<string, IndexedToken>,
+  catalog: ProjectCatalog,
 ): [string, string][] {
   const output: [string, string][] = [];
   for (const [property, value] of Object.entries(values)) {
+    if (COMPONENT_PROP_REFERENCE.test(value)) continue;
     const uuid = value.match(SINGLE_TOKEN)?.[1];
     const token = uuid ? tokens.get(uuid) : undefined;
     if (
@@ -207,14 +200,15 @@ function declarations(
         output.push([kebab(field), `var(${typographyCustomProperty(token.path, field)})`]);
       }
     } else {
-      output.push([kebab(property), substitute(value, tokens)]);
+      output.push([kebab(property), substitute(value, tokens, catalog)]);
     }
   }
   return output;
 }
 
-function substitute(value: string, tokens: ReadonlyMap<string, IndexedToken>) {
-  return value.replace(/\{token:([^}]+)\}/g, (_match, uuid: string) => {
+function substitute(value: string, tokens: ReadonlyMap<string, IndexedToken>, catalog: ProjectCatalog) {
+  const withProps = value.replace(/\{prop:([^}]+)\}/g, (_match, uuid: string) => catalog.props?.[uuid]?.value ?? '');
+  return withProps.replace(/\{token:([^}]+)\}/g, (_match, uuid: string) => {
     const token = tokens.get(uuid);
     return `var(${token ? tokenCustomProperty(token.path) : `--token-${uuid}`})`;
   });

@@ -18,7 +18,6 @@ export type InspectorFormChangeTarget =
   | { kind: 'nodeTagName'; nodeUuid: string; value: string }
   | { kind: 'nodeText'; nodeUuid: string; value: string }
   | { kind: 'nodeClassList'; nodeUuid: string; value: readonly string[] }
-  | { kind: 'nodeStyle'; nodeUuid: string; value: Readonly<Record<string, string>> }
   | { kind: 'nodeDataRecord'; nodeUuid: string; value: Readonly<Record<string, string>> }
   | { kind: 'nodeFieldExposureMode'; nodeUuid: string; mode: 'flat' | 'grouped' | 'manual' }
   | { kind: 'nodeFieldExposureGroupName'; nodeUuid: string; value: string }

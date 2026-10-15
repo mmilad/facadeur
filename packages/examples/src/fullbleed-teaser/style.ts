@@ -1,4 +1,4 @@
-import type { Node } from '@facadeur/domain';
+import type { ExampleStyleMap } from '../register-example-styles';
 import { tokenIds as exampleTokenIds } from '../catalog/tokens/idList';
 import { ids as exampleFullbleedTeaserIds } from './idList';
 import { tokenRef } from '../references';
@@ -42,4 +42,4 @@ export const styles = {
     minHeight: '1px',
     position: 'relative',
   },
-} satisfies Readonly<Record<string, NonNullable<Node['style']>>>;
+} satisfies ExampleStyleMap;

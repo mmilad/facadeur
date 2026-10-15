@@ -10,7 +10,7 @@ import type { ViewportBoard } from '../../domain/viewport/board';
 import { useStagePointer } from './canvas/useStagePointer';
 import { useStageViewportBoard } from './canvas/useStageViewportBoard';
 import { DynamicElement } from '../../domain/viewport/dynamic-element';
-import { renderElementBuildStyleCss, renderGlobalStyleCss } from '@facadeur/style-engine';
+import { renderDynamicStyleCss, renderGlobalStyleCss } from '@facadeur/style-engine';
 
 export function StageCanvas({
   app,
@@ -76,7 +76,7 @@ export function StageCanvas({
   const globalStyleCss = useMemo(() => {
     const catalog = app.getCatalog();
     return [
-      buildConfig ? renderElementBuildStyleCss(buildConfig, catalog) : '',
+      buildConfig ? renderDynamicStyleCss(buildConfig, catalog) : '',
       renderGlobalStyleCss(catalog),
     ]
       .filter(Boolean)

@@ -28,7 +28,6 @@ import {
   patchNodeName,
   patchNodeDomAttributes,
   patchNodeDomText,
-  patchNodeStyleRecord,
   patchNodeTagName,
 } from './catalog/ops';
 import {
@@ -274,11 +273,6 @@ export class CoreController implements CoreControllerHost {
     );
   }
 
-  patchNodeStyleRecord(nodeUuid: string, record: Readonly<Record<string, string>>) {
-    if (!this.openDefinitionId) return;
-    this.commitCatalog(patchNodeStyleRecord(this.catalog, this.openDefinitionId, nodeUuid, record));
-  }
-
   patchNodeDomAttributeRecord(nodeUuid: string, record: Readonly<Record<string, string>>) {
     if (!this.openDefinitionId) return;
     const definition = findDefinition(this.catalog, this.openDefinitionId)?.definition;
@@ -403,10 +397,6 @@ export class CoreController implements CoreControllerHost {
       }
       case 'nodeClassList': {
         this.patchNodeClassList(target.nodeUuid, target.value);
-        return;
-      }
-      case 'nodeStyle': {
-        this.patchNodeStyleRecord(target.nodeUuid, target.value);
         return;
       }
       case 'nodeDataRecord': {

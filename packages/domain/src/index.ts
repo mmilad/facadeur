@@ -42,7 +42,6 @@ export type {
   GlobalStyles,
   IconDefinition,
   LayerMap,
-  StyleChildLayer,
   StyleDeclarations,
   StyleLayer,
   StyleStates,

@@ -221,10 +221,14 @@ export function useStagePointer({
       )
         return;
       const definition = app.getCoreSnapshot().openDefinition;
+      const catalog = app.getCoreSnapshot().catalog;
       const nodeUuid = app.getCoreSnapshot().selectedNodeUuid;
       if (!definition || !nodeUuid) return;
       const node = findNodeByUuid(definition.root, nodeUuid);
-      if (!node || node.style?.position !== 'absolute') return;
+      const declarations = catalog.globalStyles?.block?.rules?.find(
+        (rule) => rule.id === `layer-${nodeUuid}`,
+      )?.declarations;
+      if (!node || declarations?.position !== 'absolute') return;
       event.preventDefault();
       const frame = boardRef.current?.frames()[0];
       const rendered =
@@ -235,22 +239,25 @@ export function useStagePointer({
         frame &&
         boardRef.current?.renderedNodes(frame).find((item) => item.uuid === parentUuid);
       const left =
-        numericCssValue(node.style.left) ??
+        numericCssValue(declarations.left) ??
         (rendered && parent ? rendered.rect.left - parent.rect.left : 0);
       const top =
-        numericCssValue(node.style.top) ??
+        numericCssValue(declarations.top) ??
         (rendered && parent ? rendered.rect.top - parent.rect.top : 0);
       const step = event.shiftKey ? 10 : 1;
       const dx = event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0;
       const dy = event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0;
       onEventRef.current({
-        type: EditorEventType.NodeStyleRecordSet,
+        type: EditorEventType.DesignCommandExecute,
         data: {
-          nodeId: nodeUuid,
-          style: {
-            ...node.style,
-            left: `${left + dx}px`,
-            top: `${top + dy}px`,
+          command: {
+            type: 'setLayerStyleDeclarations',
+            nodeUuid,
+            breakpointUuid: null,
+            declarations: {
+              left: `${left + dx}px`,
+              top: `${top + dy}px`,
+            },
           },
         },
       });

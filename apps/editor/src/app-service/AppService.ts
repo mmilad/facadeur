@@ -121,10 +121,6 @@ export class AppService {
     return this.core.node.config.inspectorInputs();
   }
 
-  patchNodeStyleRecord(nodeUuid: string, record: Readonly<Record<string, string>>) {
-    this.core.patchNodeStyleRecord(nodeUuid, record);
-  }
-
   insertCatalogNode(parentUuid: string, index: number, node: Node) {
     this.core.insertCatalogNode(parentUuid, index, node);
   }
@@ -147,15 +143,12 @@ export class AppService {
     const formKey = `${this.session.getSnapshot().openId}:${nodeUuid}`;
     const snapshot = this.core.getSnapshot();
     const catalog = snapshot.catalog;
-    const node = snapshot.openDefinition
-      ? findNodeByUuid(snapshot.openDefinition.root, nodeUuid)
-      : null;
     const rule = catalog.globalStyles?.block?.rules?.find(
       (item) => item.id === `layer-${nodeUuid}`,
     );
     const layerStyle = {
       selector: layerSelectorForName(String(model.formValue.node.name ?? 'Layer')),
-      declarations: { ...(node?.style ?? {}), ...(rule?.declarations ?? {}) },
+      declarations: { ...(rule?.declarations ?? {}) },
       breakpoints: catalog.globalStyles?.breakpoints ?? [],
       overrides: Object.fromEntries(
         Object.entries(rule?.breakpoints ?? {}).map(([id, layer]) => [
@@ -359,9 +352,6 @@ export class AppService {
           return;
         case EditorEventType.NodeMove:
           this.moveCatalogNode(event.data.nodeId, event.data.parentId, event.data.index);
-          return;
-        case EditorEventType.NodeStyleRecordSet:
-          this.patchNodeStyleRecord(event.data.nodeId, event.data.style);
           return;
       }
     } catch (failure) {

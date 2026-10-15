@@ -117,18 +117,12 @@ export type LayerMap = Readonly<Record<string, StyleLayer>>;
 
 export type VariantStyleMap = Readonly<Record<string, LayerMap>>;
 
-export interface StyleChildLayer extends StyleLayer {
-  readonly variants?: VariantStyleMap;
-  readonly breakpoints?: LayerMap;
-}
-
 /** Project-wide CSS authored like a design document `styles` block (not per-node `style`). */
 export interface GlobalStyleBlock {
   readonly declarations?: StyleDeclarations;
   readonly states?: StyleStates;
   readonly variants?: VariantStyleMap;
   readonly breakpoints?: LayerMap;
-  readonly children?: Readonly<Record<string, StyleChildLayer>>;
   readonly rules?: readonly GlobalStyleRule[];
 }
 

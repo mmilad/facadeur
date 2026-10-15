@@ -41,7 +41,6 @@ export interface Node {
   /** Editor-facing label for this authored element, independent of its HTML tag. */
   readonly name?: string;
   readonly dom: DomSpec & { readonly children?: readonly Node[] };
-  readonly style?: Readonly<Record<string, string>>;
   readonly schema?: SchemaSource;
   readonly data?: Readonly<Record<string, FieldValue>>;
   readonly config?: NodeConfig;

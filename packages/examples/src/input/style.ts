@@ -1,4 +1,4 @@
-import type { Node } from '@facadeur/domain';
+import type { ExampleStyleMap } from '../register-example-styles';
 import { tokenIds as exampleTokenIds } from '../catalog/tokens/idList';
 import { ids as exampleInputIds } from './idList';
 import { tokenRef } from '../references';
@@ -17,4 +17,4 @@ export const styles = {
     color: tokenRef(exampleTokenIds.color.text.secondary),
     font: tokenRef(exampleTokenIds.type.label),
   },
-} satisfies Readonly<Record<string, NonNullable<Node['style']>>>;
+} satisfies ExampleStyleMap;

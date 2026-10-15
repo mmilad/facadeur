@@ -40,7 +40,6 @@ import {
 } from './layout';
 import {
   styleBlockSchema,
-  styleChildSchema,
   styleLayerSchema,
   styleRuleSchema,
   styleStatesSchema,
@@ -78,7 +77,6 @@ export {
   styleStatesSchema,
   styleLayerSchema,
   styleRuleSchema,
-  styleChildSchema,
   styleBlockSchema,
   tokenInterfaceSchema,
   previewDataSchema,
@@ -100,7 +98,6 @@ export type StyleDeclarations = Record<string, string>;
 export type StyleStates = Static<typeof styleStatesSchema>;
 export type StyleLayer = Static<typeof styleLayerSchema>;
 export type StyleRule = Static<typeof styleRuleSchema>;
-export type StyleChild = Static<typeof styleChildSchema>;
 export type StyleBlock = Static<typeof styleBlockSchema>;
 export type TokenInterface = Static<typeof tokenInterfaceSchema>;
 export type { JsonSchema };

@@ -1,4 +1,5 @@
-import type { FieldValue, Node, NodeDefinition } from '@facadeur/domain';
+import { layerSelectorForName } from '@facadeur/core';
+import type { FieldValue, GlobalStyleRule, Node, NodeDefinition } from '@facadeur/domain';
 import type { JsonSchemaObject } from '@facadeur/domain';
 import { defaultIcons } from '../catalog/icons';
 
@@ -19,6 +20,8 @@ export const uuid = (value: number) =>
   `660e8400-e29b-41d4-a716-${value.toString(16).padStart(12, '0')}`;
 export const prop = (value: number) => uuid(3000 + value);
 const iconsById = new Map(defaultIcons.map((icon) => [icon.id, icon]));
+const styleRulesByNode = new Map<string, GlobalStyleRule>();
+type ExampleStyle = Readonly<Record<string, string>>;
 
 export function iconSource(id: string) {
   const data = iconsById.get(id)?.data;
@@ -28,22 +31,22 @@ export function iconSource(id: string) {
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
-export const labelStyle: Node['style'] = {
+export const labelStyle: ExampleStyle = {
   color: colors.muted,
   fontSize: '10px',
   fontWeight: '650',
   letterSpacing: '0.08em',
   textTransform: 'uppercase',
 };
-export const smallText: Node['style'] = { color: colors.muted, fontSize: '12px' };
-export const row: Node['style'] = {
+export const smallText: ExampleStyle = { color: colors.muted, fontSize: '12px' };
+export const row: ExampleStyle = {
   display: 'flex',
   flexDirection: 'row',
   alignItems: 'center',
   gap: '10px',
   width: '100%',
 };
-export const panel: Node['style'] = {
+export const panel: ExampleStyle = {
   display: 'flex',
   flexDirection: 'column',
   gap: '16px',
@@ -51,25 +54,71 @@ export const panel: Node['style'] = {
   backgroundColor: colors.paper,
 };
 
-export function leaf(id: number, name: string, text: string, style: Node['style'] = {}): Node {
-  return { uuid: uuid(id), name, dom: { tagName: 'div', text }, style };
+export function leaf(id: number, name: string, text: string, style: ExampleStyle = {}): Node {
+  return styledNode({ uuid: uuid(id), name, dom: { tagName: 'div', text } }, style);
 }
 
-export function image(id: number, name: string, source: string, style: Node['style'] = {}): Node {
-  return {
-    uuid: uuid(id),
-    name,
-    dom: { tagName: 'img', attributes: { src: source, alt: '' } },
-    style: { width: '16px', height: '16px', objectFit: 'contain', flexShrink: '0', ...style },
+export function image(id: number, name: string, source: string, style: ExampleStyle = {}): Node {
+  return styledNode(
+    { uuid: uuid(id), name, dom: { tagName: 'img', attributes: { src: source, alt: '' } } },
+    { width: '16px', height: '16px', objectFit: 'contain', flexShrink: '0', ...style },
+  );
+}
+
+export function group(id: number, name: string, children: Node[], style: ExampleStyle = {}): Node {
+  return styledNode({ uuid: uuid(id), name, dom: { tagName: 'div', children } }, style);
+}
+
+export function styledNode(node: Node, declarations: ExampleStyle): Node {
+  if (Object.keys(declarations).length) {
+    registerExampleStyle(node.uuid, node.name ?? 'Layer', { declarations });
+  }
+  return node;
+}
+
+export function registerExampleStyle(
+  nodeUuid: string,
+  name: string,
+  layer: Pick<GlobalStyleRule, 'declarations' | 'states' | 'variants' | 'breakpoints'>,
+) {
+  const previous = styleRulesByNode.get(nodeUuid);
+  const className = layerSelectorForName(name).slice(1);
+  const rule: GlobalStyleRule = {
+    id: `layer-${nodeUuid}`,
+    selector: `.${className}`,
+    bindings: { [className]: nodeUuid },
+    ...(previous ? mergeRuleLayer(previous, layer) : layer),
   };
+  styleRulesByNode.set(nodeUuid, rule);
 }
 
-export function group(id: number, name: string, children: Node[], style: Node['style'] = {}): Node {
-  return { uuid: uuid(id), name, dom: { tagName: 'div', children }, style };
+export function facadeurEditorStyleRules() {
+  return [...styleRulesByNode.values()];
 }
 
 export function textProp(id: number): string {
   return `{props:${prop(id)}}`;
+}
+
+function mergeRuleLayer(
+  lower: Pick<GlobalStyleRule, 'declarations' | 'states' | 'variants' | 'breakpoints'>,
+  upper: Pick<GlobalStyleRule, 'declarations' | 'states' | 'variants' | 'breakpoints'>,
+) {
+  return mergeSparse(lower, upper);
+}
+
+function mergeSparse<T>(lower: T, upper: unknown): T {
+  if (!isRecord(lower) || !isRecord(upper)) return upper as T;
+  const result: Record<string, unknown> = { ...lower };
+  for (const [key, value] of Object.entries(upper)) {
+    result[key] =
+      isRecord(result[key]) && isRecord(value) ? mergeSparse(result[key], value) : value;
+  }
+  return result as T;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 export function componentDefinition(

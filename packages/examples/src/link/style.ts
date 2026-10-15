@@ -1,4 +1,4 @@
-import type { Node } from '@facadeur/domain';
+import type { ExampleStyleMap } from '../register-example-styles';
 import { tokenIds as exampleTokenIds } from '../catalog/tokens/idList';
 import { ids as exampleLinkIds } from './idList';
 import { tokenRef } from '../references';
@@ -15,4 +15,4 @@ export const styles = {
     textDecoration: 'underline',
     textUnderlineOffset: '0.15em',
   },
-} satisfies Readonly<Record<string, NonNullable<Node['style']>>>;
+} satisfies ExampleStyleMap;

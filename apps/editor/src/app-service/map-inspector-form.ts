@@ -6,13 +6,11 @@ import {
 import type {
   AutocompleteOption,
   FormFieldConfig,
-  RecordFieldSuggestions,
   TransformableFieldOption,
 } from '@facadeur/form';
 
 export function mapInspectorFormFields(
   fields: InspectorFormField[],
-  styleSuggestions: RecordFieldSuggestions,
   componentDataOptions: readonly AutocompleteOption[] = [],
   fieldOptions: (
     path: string,
@@ -21,13 +19,12 @@ export function mapInspectorFormFields(
   ) => readonly TransformableFieldOption[],
 ): FormFieldConfig[] {
   return fields.flatMap((field) =>
-    mapInspectorField(field, styleSuggestions, componentDataOptions, fieldOptions),
+    mapInspectorField(field, componentDataOptions, fieldOptions),
   );
 }
 
 function mapInspectorField(
   field: InspectorFormField,
-  styleSuggestions: RecordFieldSuggestions,
   componentDataOptions: readonly AutocompleteOption[],
   fieldOptions: (
     path: string,
@@ -39,12 +36,7 @@ function mapInspectorField(
     return [
       {
         type: 'layout',
-        fields: mapInspectorFormFields(
-          field.fields,
-          styleSuggestions,
-          componentDataOptions,
-          fieldOptions,
-        ),
+        fields: mapInspectorFormFields(field.fields, componentDataOptions, fieldOptions),
       },
     ];
   }
@@ -91,18 +83,11 @@ function mapInspectorField(
           ? {
               valueField: {
                 type: 'transformable' as const,
-                fieldOptions: fieldOptions(field.path, field.label, field.path === 'node.style'),
+                fieldOptions: fieldOptions(field.path, field.label),
               },
             }
           : {}),
-        ...(field.path === 'node.style'
-          ? {
-              suggestions: {
-                ...styleSuggestions,
-                options: [...(styleSuggestions.options ?? []), ...componentDataOptions],
-              },
-            }
-          : field.path === 'node.attributes' && componentDataOptions.length
+        ...(field.path === 'node.attributes' && componentDataOptions.length
             ? { suggestions: { options: componentDataOptions } }
             : {}),
       },

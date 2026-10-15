@@ -1,4 +1,4 @@
-import type { Node } from '@facadeur/domain';
+import type { ExampleStyleMap } from '../register-example-styles';
 import { ids as exampleImageIds } from './idList';
 
 export const styles = {
@@ -10,4 +10,4 @@ export const styles = {
     maxWidth: '100%',
     aspectRatio: '16 / 9',
   },
-} satisfies Readonly<Record<string, NonNullable<Node['style']>>>;
+} satisfies ExampleStyleMap;
