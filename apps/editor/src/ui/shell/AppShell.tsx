@@ -1,5 +1,7 @@
 'use client';
 
+import { useMemo } from 'react';
+import { renderDesignCss } from '@facadeur/style-engine';
 import type { EditorSnapshot } from '../../domain/session';
 import type { EditorEvent } from '../../domain/sidebar/events';
 import { EditorEventType } from '../../domain/sidebar/events';
@@ -36,20 +38,24 @@ export function AppShell({
   const designSurface = isDesignDomain(surface);
   const editorCanvas = surface === 'editor';
   const activeKind = snap.openDefinition?.kind ?? snap.workspace;
+  const designStyles = useMemo(
+    () =>
+      renderDesignCss(
+        { tokens: snap.design.tokens, breakpoints: snap.design.breakpoints },
+        { selector: '.design-domain-stage' },
+      ),
+    [snap.design.tokens, snap.design.breakpoints],
+  );
 
   return (
     <div className="app">
+      <style>{designStyles}</style>
       <header className="topbar">
         <div className="brand">facadeur</div>
         <DocumentTitle title={documentTitle} />
         <KindBadge kind={activeKind} />
         {editorCanvas ? (
-          <ToolBar
-            onEvent={onEvent}
-            tool={snap.tool}
-            kind={activeKind}
-            icons={snap.design.icons}
-          />
+          <ToolBar onEvent={onEvent} tool={snap.tool} kind={activeKind} icons={snap.design.icons} />
         ) : null}
         <div className="topbar-spacer" />
         {connectionStatus ? (
@@ -97,20 +103,12 @@ export function AppShell({
         <aside className="side side-left">
           {designSurface || surface === 'schemas' ? (
             <div className="design-project-navigation">
-              <ProjectTree
-                model={snap.sidebar.project}
-                surface={surface}
-                onEvent={onEvent}
-              />
+              <ProjectTree model={snap.sidebar.project} surface={surface} onEvent={onEvent} />
             </div>
           ) : (
             <ResizableLeftRail
               project={
-                <ProjectTree
-                  model={snap.sidebar.project}
-                  surface={surface}
-                  onEvent={onEvent}
-                />
+                <ProjectTree model={snap.sidebar.project} surface={surface} onEvent={onEvent} />
               }
               layers={
                 editorCanvas ? (
@@ -130,4 +128,3 @@ export function AppShell({
     </div>
   );
 }
-

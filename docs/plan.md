@@ -463,9 +463,16 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
   - Contracts: preserve schema CRUD/save behavior, current surface navigation, UUID identity, display titles, inline vs shared definition schema selection, schema references, and preview defaults; keep existing Storybook manager/form stories working.
   - Validation: Editor/Form typechecks, Schema Editor Playground interactions, App/Editor Catalog Storybook interactions, Storybook production build, Prettier, candidate detector, and `git diff --check` passed. The Editor app build compiled but its lint phase is blocked by the pre-existing unused `EditorSurface` import in `DesignDomainStage.tsx`.
 
-- [ ] Editor: restore full-height layout and scrolling for the catalog schema view.
-  - Evidence: unlike the neighboring settings views, `SchemaCatalogEditor` renders directly as workspace content and its `.catalog` styles only add padding; it lacks the stage's flex sizing, `min-height: 0`, and a bounded scroll region, so the view does not inherit the app's layout defaults.
+- [x] Editor: restore full-height layout and scrolling for the catalog schema view.
+  - Evidence: unlike neighboring settings views, `SchemaCatalogEditor` renders directly as workspace content and was missing the stage's flex sizing and bounded scroll region.
   - Action: make the catalog editor a full-height flex column with a fixed header and an independently scrollable content area; stack the schema list and editor at narrow widths and compact property-card headers based on their available width.
   - Scope: layout only for the new catalog schema view, shared by the app and Storybook stories.
   - Contracts: preserve schema editing, list selection, CRUD/save events, current header content, and small-screen layout.
-  - Validation: inspect the app Storybook view at desktop and narrow widths; Editor typecheck, Storybook build, Prettier, candidate detector, and `git diff --check`.
+  - Validation: inspected the app Storybook view at narrow width and confirmed list/editor stack, field controls remain within the panel, and the schema area scrolls. Editor typecheck, Storybook production build, Prettier, candidate detector, and `git diff --check` passed; the build retains existing Vite sourcemap/client-directive/chunk-size warnings.
+
+- [x] Editor: keep project font resources loaded across editor surfaces.
+  - Evidence: `DesignDomainStage` injects `renderDesignCss` locally, so file-backed `@font-face` rules and Google font imports are removed when navigating to the schema surface; shell chrome such as the topbar and project sidebar can then fall back to another font.
+  - Action: mount the design stylesheet once in `AppShell` and keep its token declarations scoped to `.design-domain-stage`; remove the per-stage style injection.
+  - Scope: preserve project fonts while switching surfaces without applying project token values to the editor shell.
+  - Contracts: retain current token values, breakpoint overrides, font sources, and existing design-stage CSS selector semantics.
+  - Validation: switched Fonts → Schemas in the App Storybook view; added and passed a regression test verifying the font imports persist while token rules remain scoped. Editor typecheck, the focused design-domain test suite (5 tests), Prettier, candidate detector, and `git diff --check` passed.

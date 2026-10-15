@@ -58,6 +58,26 @@ describe('design domain stage', () => {
     ).toBe('true');
   });
 
+  it('keeps project font resources loaded when navigating from fonts to schemas', async () => {
+    const session: EditorSession = createEditorSession({ projectCatalog: createExampleCatalog() });
+    host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(async () => {
+      root?.render(<EditorHost session={session} navigation={testNavigation} />);
+    });
+
+    await openSettingsDomain(host!, 'fonts');
+    const designStyles = host!.querySelector('.app > style');
+    expect(designStyles?.textContent).toContain('@import url(');
+    expect(designStyles?.textContent).toContain('.design-domain-stage {');
+
+    await act(async () => clickSettingsTab(host!, 'schemas'));
+    expect(host!.querySelector('.design-domain-stage')).toBeNull();
+    expect(host!.querySelector('.app > style')?.textContent).toContain('@import url(');
+    expect(host!.querySelector('.app > style')?.textContent).toContain('.design-domain-stage {');
+  });
+
   it('returns to the asset preview when opening an asset from the tree', async () => {
     const session: EditorSession = createEditorSession({ projectCatalog: createExampleCatalog() });
     host = document.createElement('div');

@@ -155,8 +155,7 @@
 
 @container (max-width: 560px) {
   .header {
-    grid-template-columns:
-      20px minmax(60px, 0.8fr) minmax(80px, 1fr) minmax(90px, 0.9fr) auto 24px;
+    grid-template-columns: 20px minmax(60px, 0.8fr) minmax(80px, 1fr) minmax(90px, 0.9fr) auto 24px;
     gap: 4px;
     padding: 6px;
   }

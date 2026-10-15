@@ -1,8 +1,6 @@
 import type { EditorSnapshot } from '../../domain/session';
 import type { EditorEvent } from '../../domain/sidebar/events';
-import { useMemo } from 'react';
 import { activeBreakpoints } from '@facadeur/core';
-import { renderDesignCss } from '@facadeur/style-engine';
 import { FontsDomainPanel } from '../design/FontsDomainPanel';
 import { IconsDomainPanel } from '../design/IconsDomainPanel';
 import { TokensDomainPanel } from '../design/tokens/TokensDomainPanel';
@@ -32,17 +30,6 @@ export function DesignDomainStage({
   const designTitle = 'project design';
   const sharedResources = domain === 'fonts' || domain === 'icons';
   const tokenDomain = !sharedResources && domain !== 'viewports';
-  const fontStyles = useMemo(
-    () =>
-      renderDesignCss(
-        {
-          tokens: snap.design.tokens,
-          breakpoints: snap.design.breakpoints,
-        },
-        { selector: '.design-domain-stage' },
-      ),
-    [snap.design.tokens, snap.design.breakpoints],
-  );
   const ctx = viewportEditContext({
     breakpoints: activeBreakpoints(snap.design.breakpoints),
     focusId: snap.focusViewportId,
@@ -51,7 +38,6 @@ export function DesignDomainStage({
 
   return (
     <section className="design-domain-stage eu-form" aria-label={title} data-design-domain={domain}>
-      <style>{fontStyles}</style>
       <header className="design-domain-head">
         <div className="design-domain-head-main">
           <h1 className="design-domain-breadcrumb">
