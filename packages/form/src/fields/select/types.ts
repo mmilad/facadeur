@@ -11,6 +11,7 @@ export type SelectFieldConfig = {
   label: string;
   type: 'select';
   options?: readonly SelectOption[];
+  placeholder?: string;
   optionsFrom?: {
     arg: string;
     values: Readonly<Record<string, readonly SelectOption[]>>;

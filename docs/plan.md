@@ -413,3 +413,45 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
   - Scope: make grouped parent preview fields editable and independently bindable; retain existing field names, grouped defaults, flat/manual exposure, and prop-reference format.
   - Contracts: nested preview data remains an object in Catalog; inherited prop refs remain UUID-backed and resolve to the correct instance field; direct child prop IDs remain unchanged.
   - Validation: Core and Editor typechecks, Prettier, candidate detector review, and `git diff --check` passed. Tests were not run.
+
+- [x] Editor: prototype the schema form and catalog manager separately in Storybook.
+  - Evidence: the current `SchemaEditor` only edits one schema; the existing catalog screen also manages selection, search, creation, deletion, and saving, which the prototype does not yet demonstrate.
+  - Action: keep `SchemaEditor` as a controlled single-schema form and add a separate controlled catalog manager that receives schema entries and emits selection, create, change, delete, and save events. Keep catalog state and fixture data in the Storybook host.
+  - Scope: Storybook prototype only; no application wiring, jsonjoy changes, dependency changes, or Core resolution work.
+  - Contracts: serialize standard JSON Schema; preserve supplied schema keywords when editing supported fields; `$ref` choices are opaque strings supplied by the host so future resource kinds can be added by the host; all management state changes are emitted to the host.
+  - Validation: Storybook build and Editor typecheck passed; Storybook play interaction passed while selecting existing schemas, creating/editing/deleting a schema, and saving; Prettier, candidate detector, and `git diff --check` passed.
+
+- [x] Storybook: make the preview root scrollable.
+  - Evidence: the shared app stylesheet sets the preview document's `html` and `body` to `overflow: hidden`, while Storybook's `#storybook-root` has no scrolling container; long stories cannot scroll.
+  - Action: add Storybook preview-only CSS setting `#storybook-root` to `height: 100%` and `overflow-y: auto`.
+  - Scope: apply to every Storybook story without changing the running app's layout.
+  - Contracts: preserve story canvas sizing and allow vertical scrolling when story content exceeds the viewport.
+  - Validation: the local Storybook browser reports `overflow-y: auto` on `#storybook-root`, with content height (1721px) greater than viewport height (642px); candidate detector and `git diff --check` passed.
+
+- [x] Storybook: separate schema field presets and make catalog references selectable.
+  - Evidence: `SchemaEditor.tsx` built repeated form controls inline and encoded reference groups as disabled pseudo-options. Empty reference values fell back to the first option, and switching to a reference kind briefly emitted `{}` because no `$ref` existed yet.
+  - Action: extract parameterized, data-only schema form presets with shared field metadata (`title`, `description`, `required`) and explicit Select `options`, `placeholder`, and optional `preselected` data. Keep schema state and catalog CRUD in the Storybook host. Replace pseudo-options with real labeled catalog choices and ensure the controlled Select displays its placeholder while its value is empty. Default a newly selected reference kind to a valid host-supplied ref; preserve root, property, and array-item refs as `$ref`.
+  - Scope: continue the Storybook schema-editor prototype; extend `packages/form` only for the controlled Select placeholder behavior required by these presets.
+  - Contracts: preserve standard JSON Schema serialization, opaque host-supplied ref strings, controlled change emission, existing enum/object/array behavior, and public form control behavior when no placeholder is provided.
+  - Validation: Storybook play interaction passed for creating/selecting catalog refs at root/property/array-item levels and verifying `$ref` serialization. Form and Editor typechecks, Storybook build, Prettier, candidate detector rerun, and `git diff --check` passed.
+
+- [x] Storybook: improve schema field cards with a compact accordion header.
+  - Evidence: `PropertiesEditor` renders every control expanded in a `fieldset`, repeats the type selector in the body, and uses a wide text button for removal; the schema shape is difficult to scan.
+  - Action: use the existing `packages/form` controls individually, keep parameterized `getField` as their shared config source, and put the chevron, editable name and description, type selector, required toggle, and accessible remove control in the header. Only the chevron toggles the body, which holds the title/display name and field-specific configuration such as enum values, references, and nested object/array settings.
+  - Scope: Storybook schema editor presentation; use local layout styles and public controls from `packages/form`.
+  - Contracts: preserve controlled schema updates, field order (Type, Title, Name, Description), required membership, enum/ref/array behavior, nested editors, and accessible labels. Name, description, and required remain editable while collapsed, and their controls do not toggle the card.
+  - Validation: Storybook play interaction passed for editing collapsed header metadata and required status, expanding/collapsing cards, changing field type, removing a field, and preserving root/property/array `$ref` selection; Form and Editor typechecks, Storybook build, Prettier, candidate detector rerun, and `git diff --check` passed.
+
+- [x] Storybook: provide browsing stories separately from the interaction playground.
+  - Evidence: `SchemaEditor.stories.tsx` currently exports only `Playground`, whose play function runs the integration interaction sequence whenever it is opened.
+  - Action: add a normal interactive catalog manager story and a focused single-schema form story; keep the automated interaction sequence only on `Playground`.
+  - Scope: Storybook examples only; do not change editor behavior or application wiring.
+  - Contracts: examples remain controlled by Storybook-local state and use catalog fixtures/references; opening browsing stories does not launch a play sequence.
+  - Validation: Storybook production build passed and generated `Catalog Manager`, `Single Schema`, and `Playground` entries; Editor typecheck, Prettier, candidate detector, and `git diff --check` passed. The already-running dev server kept its old story index and needs a restart before the two new entries appear there; its Playground play interaction remains separate and unchanged.
+
+- [x] Storybook: preserve property fields when adding after deletions and edit string constraints.
+  - Evidence: `SchemaPropertiesEditor` derives the new key from property count, so sparse names can collide and overwrite an existing schema. The property body currently omits string `minLength`, `maxLength`, `pattern`, and `format` controls requested for field configuration.
+  - Action: generate the next unused `fieldN` key; add controlled configuration inputs for the four standard JSON Schema string keywords, preserving unknown schema keywords and removing a constraint when its input is cleared. Reuse `packages/form` NumberField and TextField.
+  - Scope: Storybook schema editor prototype; no application wiring or schema contract changes.
+  - Contracts: avoid replacing existing properties after deletion gaps; serialize constraints with JSON Schema's numeric/string types; preserve schema property ordering, required membership, references, and same-kind annotations.
+  - Validation: Playground interaction passed with a deleted-key gap and verified constraints serialize with the expected types and disappear when cleared; Editor/Form typechecks, Storybook production build, Prettier, candidate detector, and `git diff --check` passed. The Storybook build still reports the existing Vite client-directive, sourcemap, and large-chunk warnings.

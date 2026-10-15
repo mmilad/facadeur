@@ -190,7 +190,9 @@ export function FormField({
       const options = getSelectOptions(field, values);
       const current = typeof value === 'string' ? value : '';
       const selected =
-        field.type === 'combobox' || options.some((option) => option.value === current)
+        field.type === 'combobox' ||
+        options.some((option) => option.value === current) ||
+        (field.type === 'select' && Boolean(field.placeholder) && current === '')
           ? current
           : (options[0]?.value ?? '');
       const Control = field.type === 'select' ? SelectField : ComboboxField;
@@ -205,6 +207,7 @@ export function FormField({
             label={field.label}
             value={selected}
             options={options}
+            placeholder={field.type === 'select' ? field.placeholder : undefined}
             disabled={field.disabled}
             onChange={(next) => onChange(next)}
           />

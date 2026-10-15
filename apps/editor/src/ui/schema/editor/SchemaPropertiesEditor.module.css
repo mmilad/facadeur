@@ -1,0 +1,175 @@
+.properties {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.card {
+  overflow: hidden;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line, #e3d9cc);
+  border-radius: 8px;
+  background: var(--surface, #fffdfa);
+}
+
+.visuallyHidden {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.header {
+  display: grid;
+  grid-template-columns:
+    24px minmax(100px, 0.8fr) minmax(140px, 1.2fr) minmax(130px, 190px)
+    auto 32px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: color-mix(in srgb, var(--ink, #1c1915) 3%, transparent);
+}
+
+.disclosure {
+  display: grid;
+  width: 24px;
+  height: 30px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.chevron,
+.chevronOpen {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+}
+
+.chevronOpen {
+  transform: rotate(45deg) translateY(-2px);
+}
+
+.headerType {
+  min-width: 0;
+}
+
+.header > :global(input) {
+  min-width: 0;
+}
+
+.headerType :global(.eu-field) {
+  margin: 0;
+}
+
+.headerType :global(.eu-field__label) {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.headerRequired {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted, #6f675e);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.headerRequired :global(.eu-field) {
+  margin: 0;
+}
+
+.headerRequired :global(.eu-field__label) {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.remove {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted, #6f675e);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.remove:hover {
+  border-color: color-mix(in srgb, currentColor 18%, transparent);
+  background: color-mix(in srgb, currentColor 6%, transparent);
+  color: var(--ink, #1c1915);
+}
+
+.body {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+}
+
+.metadata {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.stringConstraints {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.arraySettings {
+  display: grid;
+  gap: 12px;
+}
+
+.add {
+  justify-self: start;
+}
+
+@media (max-width: 600px) {
+  .header {
+    grid-template-columns:
+      22px minmax(90px, 0.8fr) minmax(120px, 1.2fr) minmax(115px, 35%)
+      auto 32px;
+    gap: 5px;
+    padding: 6px;
+  }
+
+  .body {
+    padding: 10px;
+  }
+
+  .metadata {
+    grid-template-columns: 1fr;
+  }
+
+  .stringConstraints {
+    grid-template-columns: 1fr;
+  }
+}

@@ -189,6 +189,10 @@ docs/plan.md` attempted to fetch pinned pnpm 10.33.3 and failed with `ENOTFOUND`
   (`ENOTFOUND registry.npmjs.org`). The approved host-context editor typecheck and scoped ESLint
   passed. Continue using the approved host context for pnpm checks; no install or pin change is
   needed.
+- **Update (2026-10-15, Storybook schema editor):** Restricted pnpm again attempted to fetch the
+  pinned pnpm 10.33.3 and failed with `ENOTFOUND registry.npmjs.org`. The Form and Editor typechecks,
+  Prettier, and Storybook build passed through the approved host context. Continue using that
+  context for repository checks; no install or pin change is needed.
 
 ## Cloud verification process limits (2026-10-11)
 
