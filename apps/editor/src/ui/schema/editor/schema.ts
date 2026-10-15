@@ -14,12 +14,18 @@ export type SchemaReferenceChoice = {
   group: string;
 };
 
+export type SchemaReferenceTargetChoice = {
+  target: string;
+  label: string;
+};
+
 export type PropertyDraft = {
   name: string;
   metadata: SchemaFieldMetadata;
   kind: string;
   enumValues: string[];
   reference: string;
+  referenceTarget: string;
 };
 
 export const scalarKinds: SelectOption[] = [
@@ -35,6 +41,11 @@ export const scalarKinds: SelectOption[] = [
 ];
 
 export const rootKinds: SelectOption[] = [...scalarKinds];
+
+export const iconReferenceTarget: SchemaReferenceTargetChoice = {
+  target: 'icon',
+  label: 'Icon',
+};
 
 export const arrayItemKinds: SelectOption[] = scalarKinds.filter((kind) => kind.value !== 'array');
 
@@ -63,6 +74,7 @@ export function draftFromSchema(
     kind: kindOf(schema),
     enumValues: Array.isArray(schema.enum) ? schema.enum.map(String) : [],
     reference: typeof schema.$ref === 'string' ? schema.$ref : '',
+    referenceTarget: referenceTargetOf(schema),
   };
 }
 
@@ -72,7 +84,14 @@ export function schemaFromDraft(draft: PropertyDraft, previous: JsonSchema): Jso
   let shape: JsonSchema;
   if (draft.kind === 'reference') shape = draft.reference ? { $ref: draft.reference } : {};
   else if (draft.kind === 'enum') shape = { type: 'string', enum: draft.enumValues };
-  else if (draft.kind === 'object') {
+  else if (draft.kind === 'string') {
+    shape = {
+      type: 'string',
+      ...(draft.referenceTarget
+        ? { 'x-facadeur-reference': { target: draft.referenceTarget } }
+        : {}),
+    };
+  } else if (draft.kind === 'object') {
     shape = {
       type: 'object',
       properties: sameKind ? (previous.properties ?? {}) : {},
@@ -86,10 +105,21 @@ export function schemaFromDraft(draft: PropertyDraft, previous: JsonSchema): Jso
     };
   } else shape = { type: draft.kind };
 
-  return {
+  const result: JsonSchema = {
     ...kept,
     ...shape,
     title: draft.metadata.title?.trim() || undefined,
     description: draft.metadata.description?.trim() || undefined,
   };
+  if (draft.kind === 'string' && !draft.referenceTarget) {
+    delete result['x-facadeur-reference'];
+  }
+  return result;
+}
+
+function referenceTargetOf(schema: JsonSchema) {
+  const reference = schema['x-facadeur-reference'];
+  return reference && typeof reference === 'object' && 'target' in reference
+    ? String(reference.target ?? '')
+    : '';
 }

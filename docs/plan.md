@@ -476,3 +476,17 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
   - Scope: preserve project fonts while switching surfaces without applying project token values to the editor shell.
   - Contracts: retain current token values, breakpoint overrides, font sources, and existing design-stage CSS selector semantics.
   - Validation: switched Fonts → Schemas in the App Storybook view; added and passed a regression test verifying the font imports persist while token rules remain scoped. Editor typecheck, the focused design-domain test suite (5 tests), Prettier, candidate detector, and `git diff --check` passed.
+
+- [ ] Core/Editor: replace icon options-source metadata with typed catalog references.
+  - Evidence: the Icon Button schema uses the one-off `x-facadeur-options-source: "icons"` keyword, and Core converts that one marker into enum fields inside `inspector-view.ts`; schema editing has no UI for choosing a reusable reference target.
+  - Action: represent resource references as string schemas with `x-facadeur-reference: { target }`; make the controlled SchemaEditor accept host-supplied target choices and edit this annotation on string properties. Pass the Icon target from the app schema surfaces, resolve Icon IDs to inspector choices centrally, and validate referenced defaults/field values against the catalog icon IDs. Update the seed Icon Button schema and remove the options-source path.
+  - Scope: make icon references authorable and usable through the existing schema and inspector surfaces; keep `$ref` for schema-to-schema references and leave future target kinds additive.
+  - Contracts: preserve the string value and stable icon ID (`save`), JSON Schema validity, controlled editor updates, preview rendering, and strict catalog validation; unknown reference targets/IDs must be rejected rather than silently accepted.
+  - Validation: focused Core validation and Editor schema UI checks, relevant Core/Editor typechecks, candidate detector rerun, and `git diff --check`.
+
+- [x] Editor: edit static catalog-reference values with their schema control.
+  - Evidence: `DefinitionFieldSettings` routes text-like static values through `TransformableField`, even when the field schema declares `x-facadeur-reference`; the ordinary inspector projection already resolves registered reference values to an enum/select.
+  - Action: share the reference-options schema projection with root and child config-field models, then route referenced static fields through `SchemaValueForm` so their available catalog values render as a select.
+  - Scope: correct static config editing for typed catalog references, starting with icons; no changes to token transforms or serialized static config.
+  - Contracts: keep icon IDs as strings, preserve reference metadata and static config paths, and keep unknown literal IDs subject to existing strict validation.
+  - Validation: regression tests verify projected config-field options and render the static reference as a select with the selected catalog ID; focused Core/Editor tests (11), Core/Editor typechecks, candidate detector, and `git diff --check` passed.

@@ -8,8 +8,10 @@ import {
 } from '../../../src/ui/schema/editor/SchemaCatalogEditor';
 import {
   SchemaEditor,
+  type SchemaReferenceTargetChoice,
   type SchemaReferenceChoice,
 } from '../../../src/ui/schema/editor/SchemaEditor';
+import { iconReferenceTarget } from '../../../src/ui/schema/editor/schema';
 import { catalogSchemaTitle } from '../../../src/domain/catalog/schema-display';
 import type { JsonSchema } from '@facadeur/core';
 import { exampleCatalog } from '@facadeur/examples';
@@ -22,6 +24,7 @@ const imageSchemaId = Object.entries(fixtureSchemas).find(
   ([, schema]) => schema.title === 'Image',
 )?.[0];
 const imageReference = `urn:facadeur:schema:${imageSchemaId}`;
+const referenceTargets: readonly SchemaReferenceTargetChoice[] = [iconReferenceTarget];
 
 const meta = {
   title: 'Schema/Schema editor',
@@ -65,6 +68,7 @@ function CatalogEditorExample() {
       selectedId={selectedId}
       query={query}
       references={references}
+      referenceTargets={referenceTargets}
       isSaved={isSaved}
       onQueryChange={setQuery}
       onSelect={setSelectedId}
@@ -131,7 +135,14 @@ function SingleSchemaExample() {
     [],
   );
 
-  return <SchemaEditor schema={schema} references={references} onChange={setSchema} />;
+  return (
+    <SchemaEditor
+      schema={schema}
+      references={references}
+      referenceTargets={referenceTargets}
+      onChange={setSchema}
+    />
+  );
 }
 
 export const CatalogManager: Story = {
@@ -152,6 +163,11 @@ export const Playground: Story = {
     await expect(canvas.getByLabelText('Display name')).toHaveValue('Image');
     await userEvent.click(canvas.getByRole('button', { name: 'Icon button', exact: true }));
     await expect(canvas.getByLabelText('Display name')).toHaveValue('Icon button');
+    await userEvent.click(canvas.getByRole('button', { name: 'Expand field icon' }));
+    const iconReferenceTarget = canvas.getByLabelText('Reference target');
+    await expect(iconReferenceTarget).toHaveValue('icon');
+    await userEvent.selectOptions(iconReferenceTarget, '');
+    await userEvent.selectOptions(iconReferenceTarget, 'icon');
 
     await userEvent.click(canvas.getByRole('button', { name: 'New schema', exact: true }));
     const displayName = canvas.getByLabelText('Display name');

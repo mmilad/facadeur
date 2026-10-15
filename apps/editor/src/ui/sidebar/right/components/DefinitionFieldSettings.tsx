@@ -33,7 +33,14 @@ export function DefinitionFieldSettings({
         }}
       />
       {isStatic ? (
-        isTransformable(field.type) ? (
+        isCatalogReference(field.schema) ? (
+          <SchemaValueForm
+            schema={field.schema}
+            value={value}
+            label="Static value"
+            onChange={(next) => onChange('value', next)}
+          />
+        ) : isTransformable(field.type) ? (
           <TransformableField
             id={`static-field-${configField.instanceUuid ?? 'root'}-${field.name}`}
             name={
@@ -56,6 +63,16 @@ export function DefinitionFieldSettings({
         )
       ) : null}
     </section>
+  );
+}
+
+function isCatalogReference(schema: ConfigField['field']['schema']) {
+  const reference = schema['x-facadeur-reference'];
+  return (
+    typeof reference === 'object' &&
+    reference !== null &&
+    'target' in reference &&
+    typeof reference.target === 'string'
   );
 }
 

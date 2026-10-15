@@ -10,6 +10,7 @@ import { Stack } from '../components/layout';
 import { Field } from '../components/feedback';
 import { Select } from '../controls/form-binding/index';
 import { SchemaEditor, type SchemaReferenceChoice } from '../schema/editor/SchemaEditor';
+import { iconReferenceTarget } from '../schema/editor/schema';
 import { CatalogPreviewFields, staticFieldConfigsForDefinition } from './CatalogPreviewFields';
 
 const INLINE_SCHEMA_VALUE = '__inline__';
@@ -229,6 +230,7 @@ export function CatalogSchemaStage({
                       heading="Inline contract"
                       schema={definition.schema.schema}
                       references={schemaReferences}
+                      referenceTargets={[iconReferenceTarget]}
                       onChange={(next) => void saveInlineSchema(next as JsonSchemaObject)}
                     />
                     {propertyRows.some((row) => row.source !== 'Local') ? (

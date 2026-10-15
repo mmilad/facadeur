@@ -3,7 +3,7 @@ import type { JsonSchema } from '@facadeur/core';
 import { useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { catalogSchemaTitle } from '../../../domain/catalog/schema-display';
-import type { SchemaReferenceChoice } from './SchemaEditor';
+import type { SchemaReferenceChoice, SchemaReferenceTargetChoice } from './SchemaEditor';
 import { SchemaEditor } from './SchemaEditor';
 import { fieldConfig } from './presets';
 import styles from './SchemaCatalogEditor.module.css';
@@ -19,6 +19,7 @@ export type SchemaCatalogEditorProps = {
   selectedId: string;
   query: string;
   references: readonly SchemaReferenceChoice[];
+  referenceTargets?: readonly SchemaReferenceTargetChoice[];
   isSaved?: boolean;
   onQueryChange: (query: string) => void;
   onSelect: (uuid: string) => void;
@@ -40,6 +41,7 @@ export function SchemaCatalogEditor({
   selectedId,
   query,
   references,
+  referenceTargets = [],
   isSaved = false,
   onQueryChange,
   onSelect,
@@ -114,6 +116,7 @@ export function SchemaCatalogEditor({
             <SchemaEditor
               schema={selected.schema}
               references={references}
+              referenceTargets={referenceTargets}
               onChange={(schema) => onSchemaChange(selected.uuid, schema)}
             />
             <div className={styles.footer}>

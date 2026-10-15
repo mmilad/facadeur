@@ -6,6 +6,7 @@ import {
   validateProjectCatalog,
 } from '../src/index';
 import { createExampleCatalog } from '@facadeur/examples';
+import { buildInspectorFormModel } from '../src/controller/project/node/preview/inspector-view';
 const testUuid25 = globalThis.crypto.randomUUID();
 const testUuid26 = globalThis.crypto.randomUUID();
 const testUuid27 = globalThis.crypto.randomUUID();
@@ -136,6 +137,91 @@ describe('validateProjectCatalog', () => {
     expect(() =>
       validateProjectCatalog({ ...createExampleCatalog(), icons: [{ id: 'bad' }] }),
     ).toThrow(DocumentError);
+  });
+
+  it('validates catalog icon references in schemas and field values', () => {
+    const base = createExampleCatalog();
+    const schemaUuid = globalThis.crypto.randomUUID();
+    const componentUuid = globalThis.crypto.randomUUID();
+    const rootUuid = globalThis.crypto.randomUUID();
+    const icon = {
+      id: 'save',
+      name: 'Save',
+      data: { viewBox: '0 0 24 24', paths: ['M2 2h20v20H2z'] },
+    };
+    const catalog = {
+      ...base,
+      schemas: {
+        ...base.schemas,
+        [schemaUuid]: {
+          type: 'object',
+          properties: {
+            icon: {
+              type: 'string',
+              default: 'save',
+              'x-facadeur-reference': { target: 'icon' },
+            },
+          },
+        },
+      },
+      components: {
+        ...base.components,
+        [componentUuid]: {
+          uuid: componentUuid,
+          name: 'Icon button',
+          kind: 'component' as const,
+          schema: { kind: 'ref' as const, uuid: schemaUuid },
+          root: { uuid: rootUuid, dom: { tagName: 'button' } },
+          config: {
+            previewData: { fields: { icon: 'save' } },
+            staticFields: { icon: { isStatic: true, value: 'save' } },
+          },
+        },
+      },
+      icons: [...(base.icons ?? []).filter(({ id }) => id !== icon.id), icon],
+    };
+
+    const normalized = validateProjectCatalog(catalog);
+    const definition = normalized.components[componentUuid]!;
+    const inspector = buildInspectorFormModel(normalized, definition, rootUuid)!;
+    const previewSection = inspector.fields.find(
+      (field) => field.type === 'section' && field.title === 'Preview defaults',
+    );
+    const iconField =
+      previewSection?.type === 'section'
+        ? previewSection.fields.find(
+            (field) => field.type === 'schemaField' && field.field.name === 'icon',
+          )
+        : undefined;
+    expect(iconField?.type === 'schemaField' ? iconField.field.options : undefined).toContain(
+      'save',
+    );
+    const configIconField = inspector.configFields.find((field) => field.field.name === 'icon');
+    expect(configIconField?.field.schema.enum).toContain('save');
+    expect(() =>
+      validateProjectCatalog({
+        ...catalog,
+        components: {
+          ...catalog.components,
+          [componentUuid]: {
+            ...catalog.components[componentUuid]!,
+            config: { previewData: { fields: { icon: 'missing' } } },
+          },
+        },
+      }),
+    ).toThrow(/Unknown icon reference/);
+    expect(() =>
+      validateProjectCatalog({
+        ...catalog,
+        schemas: {
+          ...catalog.schemas,
+          [schemaUuid]: {
+            type: 'object',
+            properties: { icon: { type: 'string', 'x-facadeur-reference': { target: 'future' } } },
+          },
+        },
+      }),
+    ).toThrow(/Unknown catalog reference target/);
   });
 
   it('rejects missing schema ref', () => {

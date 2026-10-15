@@ -12,7 +12,7 @@ import type { JsonSchemaField } from '../../../../schema/json-schema-fields';
 import { classListFromNode, findDefinition, findNodeByUuid } from '../../catalog/ops';
 import { effectiveSchemaForDefinition } from '../../catalog/field-contract';
 import { staticFieldValues } from './merge';
-import { configFieldsForDefinition } from './inspector-config-fields';
+import { configFieldsForDefinition, schemaWithReferenceOptions } from './inspector-config-fields';
 import { inspectorInputsForNode } from '../config/inspector';
 import { designPropOptions, type DesignPropOption } from './prop-ref';
 import type { InspectorFormChangeTarget } from '../../inspector-form-change';
@@ -132,15 +132,7 @@ export function buildInspectorFormModel(
   const configFields =
     nodeUuid === definition.root.uuid ? configFieldsForDefinition(catalog, definition) : [];
   const schemaFields = effective.schema
-    ? fieldsFromJsonSchema(effective.schema).map((field) =>
-        field.schema['x-facadeur-options-source'] === 'icons'
-          ? {
-              ...field,
-              type: 'enum' as const,
-              options: (catalog.icons ?? []).map((icon) => icon.id),
-            }
-          : field,
-      )
+    ? fieldsFromJsonSchema(schemaWithReferenceOptions(effective.schema, catalog))
     : [];
   const classSuggestions = collectClassSuggestions(definition.root);
   const tagOptions = htmlTagOptions(node.dom.tagName);

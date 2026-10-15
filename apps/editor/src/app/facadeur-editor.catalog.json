@@ -2656,7 +2656,9 @@
           "type": "string",
           "title": "Icon preset ID",
           "default": "save",
-          "x-facadeur-options-source": "icons",
+          "x-facadeur-reference": {
+            "target": "icon"
+          },
           "x-facadeur-prop-id": "247d9011-871d-4f73-9967-8efb592a89f4"
         }
       },

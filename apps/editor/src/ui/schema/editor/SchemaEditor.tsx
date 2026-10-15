@@ -8,14 +8,16 @@ import {
   referencesAsOptions,
   rootKinds,
   type SchemaReferenceChoice,
+  type SchemaReferenceTargetChoice,
 } from './schema';
 
-export type { SchemaReferenceChoice } from './schema';
+export type { SchemaReferenceChoice, SchemaReferenceTargetChoice } from './schema';
 
 export type SchemaEditorProps = {
   heading?: string;
   schema: JsonSchema;
   references: readonly SchemaReferenceChoice[];
+  referenceTargets?: readonly SchemaReferenceTargetChoice[];
   onChange: (schema: JsonSchema) => void;
 };
 
@@ -23,6 +25,7 @@ export function SchemaEditor({
   heading = 'Schema editor',
   schema,
   references,
+  referenceTargets = [],
   onChange,
 }: SchemaEditorProps) {
   const kind = kindOf(schema);
@@ -120,6 +123,7 @@ export function SchemaEditor({
           properties={schema.properties ?? {}}
           required={schema.required ?? []}
           references={referenceOptions}
+          referenceTargets={referenceTargets}
           onChange={(properties, required) =>
             onChange({
               ...schema,
@@ -136,6 +140,7 @@ export function SchemaEditor({
           properties={schema.items?.properties ?? {}}
           required={schema.items?.required ?? []}
           references={referenceOptions}
+          referenceTargets={referenceTargets}
           onChange={(properties, required) =>
             onChange({
               ...schema,

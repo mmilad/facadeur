@@ -17,6 +17,7 @@ import {
   scalarKinds,
   schemaFromDraft,
   type PropertyDraft,
+  type SchemaReferenceTargetChoice,
 } from './schema';
 import styles from './SchemaPropertiesEditor.module.css';
 
@@ -24,6 +25,7 @@ type SchemaPropertiesEditorProps = {
   properties: Record<string, JsonSchema>;
   required: readonly string[];
   references: readonly SelectOption[];
+  referenceTargets: readonly SchemaReferenceTargetChoice[];
   onChange: (properties: Record<string, JsonSchema>, required: string[]) => void;
 };
 
@@ -32,6 +34,7 @@ type SchemaPropertyCardProps = {
   schema: JsonSchema;
   required: boolean;
   references: readonly SelectOption[];
+  referenceTargets: readonly SchemaReferenceTargetChoice[];
   onChange: (nextName: string, nextSchema: JsonSchema, required: boolean) => void;
   onRemove: () => void;
 };
@@ -50,6 +53,7 @@ function SchemaPropertyCard({
   schema,
   required,
   references,
+  referenceTargets,
   onChange,
   onRemove,
 }: SchemaPropertyCardProps) {
@@ -70,6 +74,10 @@ function SchemaPropertyCard({
   const referenceConfig = fieldConfig('reference', {
     options: references,
     placeholder: 'Choose a catalog schema…',
+  });
+  const referenceTargetConfig = fieldConfig('referenceTarget', {
+    options: referenceTargets.map(({ target, label }) => ({ value: target, label })),
+    placeholder: 'No reference',
   });
   const itemKindConfig = fieldConfig('itemKind', {
     options: optionsWithAvailability(arrayItemKinds, references.length > 0),
@@ -260,6 +268,18 @@ function SchemaPropertyCard({
               />
             </Field>
           ) : null}
+          {draft.kind === 'string' && referenceTargets.length ? (
+            <Field label="Reference target" htmlFor={`${bodyId}-reference-target`}>
+              <SelectField
+                id={`${bodyId}-reference-target`}
+                name={referenceTargetConfig.name}
+                value={draft.referenceTarget}
+                options={referenceTargetConfig.options ?? []}
+                placeholder={referenceTargetConfig.placeholder}
+                onChange={(referenceTarget) => commit({ referenceTarget })}
+              />
+            </Field>
+          ) : null}
           {draft.kind === 'reference' ? (
             <Field label={referenceConfig.label} htmlFor={`${bodyId}-reference`}>
               <SelectField
@@ -302,6 +322,7 @@ function SchemaPropertyCard({
                   properties={schema.items?.properties ?? {}}
                   required={schema.items?.required ?? []}
                   references={references}
+                  referenceTargets={referenceTargets}
                   onChange={(properties, itemRequired) =>
                     onChange(
                       name,
@@ -327,6 +348,7 @@ function SchemaPropertyCard({
               properties={schema.properties ?? {}}
               required={schema.required ?? []}
               references={references}
+              referenceTargets={referenceTargets}
               onChange={(properties, nestedRequired) =>
                 onChange(
                   name,
@@ -352,6 +374,7 @@ export function SchemaPropertiesEditor({
   properties,
   required,
   references,
+  referenceTargets,
   onChange,
 }: SchemaPropertiesEditorProps) {
   const entries = Object.entries(properties);
@@ -391,6 +414,7 @@ export function SchemaPropertiesEditor({
           schema={schema}
           required={required.includes(name)}
           references={references}
+          referenceTargets={referenceTargets}
           onChange={(nextName, nextSchema, isRequired) =>
             updateProperty(name, nextName, nextSchema, isRequired)
           }

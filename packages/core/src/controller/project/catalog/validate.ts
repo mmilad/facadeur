@@ -66,6 +66,7 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
       ) {
         throw new DocumentError('schema', `Invalid value for field "${field}" in ${context}`);
       }
+      assertCatalogReferenceValue(value, fieldSchema, catalog, `${context}.${field}`);
     }
   };
 
@@ -212,6 +213,14 @@ export function assertCatalogRefIntegrity(catalog: ProjectCatalog): void {
     ...Object.keys(catalog.components),
     ...Object.keys(catalog.pages),
   ]);
+  const definitions = listCatalogDefinitions(catalog).map(({ definition }) => definition);
+  for (const [id, schema] of Object.entries(catalog.schemas ?? {})) {
+    assertReferenceSchema(schema, catalog, `schema ${id}`);
+  }
+  for (const definition of definitions) {
+    const schema = resolveJsonSchemaForDefinition(catalog, definition);
+    if (schema) assertReferenceSchema(schema, catalog, `definition ${definition.name}`);
+  }
 
   const visitNode = (node: {
     config?: { definitionRef?: string };
@@ -248,6 +257,88 @@ export function assertCatalogRefIntegrity(catalog: ProjectCatalog): void {
     visitNode(def.root);
   }
   assertDefinitionRefsAcyclic(catalog);
+}
+
+function assertReferenceSchema(schema: unknown, catalog: ProjectCatalog, context: string): void {
+  if (Array.isArray(schema)) {
+    schema.forEach((entry) => assertReferenceSchema(entry, catalog, context));
+    return;
+  }
+  if (!schema || typeof schema !== 'object') return;
+  const record = schema as Record<string, unknown>;
+  if (
+    Object.hasOwn(record, 'x-facadeur-reference') &&
+    (!record['x-facadeur-reference'] ||
+      typeof record['x-facadeur-reference'] !== 'object' ||
+      !('target' in record['x-facadeur-reference']) ||
+      typeof (record['x-facadeur-reference'] as Record<string, unknown>).target !== 'string' ||
+      !(record['x-facadeur-reference'] as Record<string, unknown>).target)
+  ) {
+    throw new DocumentError('schema', `Invalid catalog reference annotation (${context})`);
+  }
+  const reference = record['x-facadeur-reference'];
+  if (reference && typeof reference === 'object' && 'target' in reference) {
+    const target = String((reference as Record<string, unknown>).target);
+    if (target !== 'icon') {
+      throw new DocumentError(
+        'schema',
+        `Unknown catalog reference target "${target}" (${context})`,
+      );
+    }
+    const defaultValue = record.default;
+    if (
+      defaultValue !== undefined &&
+      (typeof defaultValue !== 'string' || !catalog.icons?.some((icon) => icon.id === defaultValue))
+    ) {
+      throw new DocumentError(
+        'schema',
+        `Unknown icon reference default "${defaultValue}" (${context})`,
+      );
+    }
+  }
+  for (const value of Object.values(record)) assertReferenceSchema(value, catalog, context);
+}
+
+function assertCatalogReferenceValue(
+  value: unknown,
+  schema: unknown,
+  catalog: ProjectCatalog,
+  context: string,
+): void {
+  if (!schema || typeof schema !== 'object' || Array.isArray(schema)) return;
+  const record = schema as Record<string, unknown>;
+  const reference = record['x-facadeur-reference'];
+  if (reference && typeof reference === 'object' && 'target' in reference) {
+    const target = String((reference as Record<string, unknown>).target);
+    if (target === 'icon' && value !== undefined) {
+      if (typeof value === 'string' && /^\{(?:prop|props):[^}]+\}$/.test(value)) return;
+      if (typeof value !== 'string' || !catalog.icons?.some((icon) => icon.id === value)) {
+        throw new DocumentError('schema', `Unknown icon reference "${String(value)}" (${context})`);
+      }
+    }
+  }
+  const properties = record.properties;
+  if (
+    value &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    properties &&
+    typeof properties === 'object'
+  ) {
+    for (const [name, childSchema] of Object.entries(properties)) {
+      assertCatalogReferenceValue(
+        (value as Record<string, unknown>)[name],
+        childSchema,
+        catalog,
+        `${context}.${name}`,
+      );
+    }
+  }
+  if (Array.isArray(value) && record.items) {
+    value.forEach((entry, index) =>
+      assertCatalogReferenceValue(entry, record.items, catalog, `${context}[${index}]`),
+    );
+  }
 }
 
 function assertDefinitionRefsAcyclic(catalog: ProjectCatalog) {

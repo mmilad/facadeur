@@ -12,6 +12,7 @@ export type SchemaFieldKey =
   | 'required'
   | 'enumValues'
   | 'reference'
+  | 'referenceTarget'
   | 'itemKind'
   | 'itemReference'
   | 'query'
@@ -44,6 +45,7 @@ const defaultPresets: Record<SchemaFieldKey, Omit<FieldPreset, 'options' | 'plac
   required: { name: 'required', title: 'Required' },
   enumValues: { name: 'enumValues', title: 'Allowed values' },
   reference: { name: 'reference', title: 'Reference' },
+  referenceTarget: { name: 'referenceTarget', title: 'Reference target' },
   itemKind: { name: 'itemKind', title: 'Item type', preselected: 'string' },
   itemReference: { name: 'itemReference', title: 'Item reference' },
   query: { name: 'query', title: 'Search schemas' },
@@ -57,6 +59,7 @@ export function getField(key: SchemaFieldKey, options: FieldPresetOptions = {}) 
     case 'kind':
     case 'itemKind':
     case 'reference':
+    case 'referenceTarget':
     case 'itemReference':
       return {
         field: {

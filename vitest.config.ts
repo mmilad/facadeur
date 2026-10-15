@@ -88,6 +88,8 @@ export default defineConfig({
       'apps/editor/test/stage.test.ts',
       'apps/editor/test/style-property-controls.test.tsx',
       'apps/editor/test/schema-value-form.test.tsx',
+      'apps/editor/test/schema-editor-reference.test.ts',
+      'apps/editor/test/definition-field-settings.test.tsx',
       'apps/editor/test/schema-form-config.test.ts',
       'apps/editor/test/editor-navigation.test.ts',
       'apps/editor/test/design-domain.test.tsx',

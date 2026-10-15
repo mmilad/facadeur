@@ -3,6 +3,7 @@ import type {
   Node,
   NodeDefinition,
   ProjectCatalog,
+  JsonSchemaObject,
   StaticFieldConfig,
 } from '@facadeur/domain';
 import { fieldsFromJsonSchema, type JsonSchemaField } from '../../../../schema/json-schema-fields';
@@ -12,7 +13,7 @@ import { inheritableSchemaForDefinition } from '../../catalog/field-contract';
 /** Config-tab fields owned by the root, followed by fields from each child instance. */
 export function configFieldsForDefinition(catalog: ProjectCatalog, definition: NodeDefinition) {
   const ownFields = fieldsFromJsonSchema(
-    resolveJsonSchemaForDefinition(catalog, definition) ?? {},
+    schemaWithReferenceOptions(resolveJsonSchemaForDefinition(catalog, definition) ?? {}, catalog),
   ).map((field) => ({
     field,
     config: definition.config?.staticFields?.[field.name],
@@ -31,7 +32,7 @@ export function configFieldsForDefinition(catalog: ProjectCatalog, definition: N
     if (target) {
       const targetSchema = inheritableSchemaForDefinition(catalog, target);
       for (const field of fieldsFromJsonSchema(
-        (targetSchema ?? {}) as Parameters<typeof fieldsFromJsonSchema>[0],
+        schemaWithReferenceOptions((targetSchema ?? {}) as JsonSchemaObject, catalog),
       )) {
         instanceFields.push({
           field,
@@ -47,4 +48,33 @@ export function configFieldsForDefinition(catalog: ProjectCatalog, definition: N
   };
   visit(definition.root);
   return [...ownFields, ...instanceFields];
+}
+
+/** Add registered catalog choices as enum values for schema-backed inspector controls. */
+export function schemaWithReferenceOptions(schema: JsonSchemaObject, catalog: ProjectCatalog) {
+  return mapSchemaReferences(schema, (target) => {
+    if (target === 'icon') return (catalog.icons ?? []).map((icon) => icon.id);
+    return [];
+  }) as JsonSchemaObject;
+}
+
+function mapSchemaReferences(
+  value: unknown,
+  optionsForTarget: (target: string) => string[],
+): unknown {
+  if (Array.isArray(value)) {
+    return value.map((entry) => mapSchemaReferences(entry, optionsForTarget));
+  }
+  if (!value || typeof value !== 'object') return value;
+  const result = Object.fromEntries(
+    Object.entries(value).map(([key, entry]) => [
+      key,
+      mapSchemaReferences(entry, optionsForTarget),
+    ]),
+  );
+  const reference = result['x-facadeur-reference'];
+  if (reference && typeof reference === 'object' && 'target' in reference) {
+    result.enum = optionsForTarget(String(reference.target));
+  }
+  return result;
 }

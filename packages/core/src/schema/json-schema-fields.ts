@@ -32,18 +32,19 @@ function fieldFromJsonSchemaProperty(
   const enumValues = branches.flatMap(
     (branch) => branch.enum ?? ('const' in branch ? [branch.const] : []),
   );
-  const type: FieldDefinition['type'] = enumValues.length
-    ? 'enum'
-    : types.every((entry) => entry === 'number' || entry === 'integer')
-      ? 'number'
-      : types.every((entry) => entry === 'boolean')
-        ? 'boolean'
-        : types.every((entry) => entry === 'array')
-          ? 'array'
-          : types.every((entry) => entry === 'object' || entry === undefined) ||
-              branches.every((branch) => Boolean(branch.properties))
-            ? 'object'
-            : 'text';
+  const type: FieldDefinition['type'] =
+    enumValues.length || branches.some((branch) => Array.isArray(branch.enum))
+      ? 'enum'
+      : types.every((entry) => entry === 'number' || entry === 'integer')
+        ? 'number'
+        : types.every((entry) => entry === 'boolean')
+          ? 'boolean'
+          : types.every((entry) => entry === 'array')
+            ? 'array'
+            : types.every((entry) => entry === 'object' || entry === undefined) ||
+                branches.every((branch) => Boolean(branch.properties))
+              ? 'object'
+              : 'text';
   const options = [
     ...new Set(enumValues.filter((entry): entry is string => typeof entry === 'string')),
   ];
