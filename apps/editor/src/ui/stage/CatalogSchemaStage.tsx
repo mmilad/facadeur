@@ -9,7 +9,7 @@ import { EditorEventType } from '../../domain/sidebar/events';
 import { Stack } from '../components/layout';
 import { Field } from '../components/feedback';
 import { Select } from '../controls/form-binding/index';
-import { JsonSchemaTypeEditor } from '../schema/JsonSchemaTypeEditor';
+import { SchemaEditor, type SchemaReferenceChoice } from '../schema/editor/SchemaEditor';
 import { CatalogPreviewFields, staticFieldConfigsForDefinition } from './CatalogPreviewFields';
 
 const INLINE_SCHEMA_VALUE = '__inline__';
@@ -83,6 +83,11 @@ export function CatalogSchemaStage({
     .sort(([idA, a], [idB, b]) =>
       catalogSchemaTitle(a, idA).localeCompare(catalogSchemaTitle(b, idB)),
     );
+  const schemaReferences: SchemaReferenceChoice[] = schemaEntries.map(([uuid, schema]) => ({
+    ref: `urn:facadeur:schema:${uuid}`,
+    label: catalogSchemaTitle(schema, uuid),
+    group: 'Catalog schemas',
+  }));
 
   const schemaRef = definition?.schema.kind === 'ref' ? definition.schema.uuid : null;
   const selectValue = schemaRef ?? INLINE_SCHEMA_VALUE;
@@ -220,9 +225,10 @@ export function CatalogSchemaStage({
                   </Stack>
                 ) : definition.schema.kind === 'inline' ? (
                   <Stack gap={10}>
-                    <h3>Inline contract</h3>
-                    <JsonSchemaTypeEditor
+                    <SchemaEditor
+                      heading="Inline contract"
                       schema={definition.schema.schema}
+                      references={schemaReferences}
                       onChange={(next) => void saveInlineSchema(next as JsonSchemaObject)}
                     />
                     {propertyRows.some((row) => row.source !== 'Local') ? (

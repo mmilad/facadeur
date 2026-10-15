@@ -13,12 +13,18 @@ import {
 export type { SchemaReferenceChoice } from './schema';
 
 export type SchemaEditorProps = {
+  heading?: string;
   schema: JsonSchema;
   references: readonly SchemaReferenceChoice[];
   onChange: (schema: JsonSchema) => void;
 };
 
-export function SchemaEditor({ schema, references, onChange }: SchemaEditorProps) {
+export function SchemaEditor({
+  heading = 'Schema editor',
+  schema,
+  references,
+  onChange,
+}: SchemaEditorProps) {
   const kind = kindOf(schema);
   const referenceOptions = referencesAsOptions(references);
   const rootValue = {
@@ -107,7 +113,7 @@ export function SchemaEditor({ schema, references, onChange }: SchemaEditorProps
 
   return (
     <section>
-      <h2>Schema editor</h2>
+      {heading ? <h2>{heading}</h2> : null}
       <Form value={rootValue} fields={rootFields} onChange={(next) => updateRoot(next)} />
       {kind === 'object' ? (
         <SchemaPropertiesEditor

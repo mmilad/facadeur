@@ -1,6 +1,7 @@
 import { Form, type FormFieldConfig } from '@facadeur/form';
 import type { JsonSchema } from '@facadeur/core';
 import { useMemo } from 'react';
+import type { ReactNode } from 'react';
 import { catalogSchemaTitle } from '../../../domain/catalog/schema-display';
 import type { SchemaReferenceChoice } from './SchemaEditor';
 import { SchemaEditor } from './SchemaEditor';
@@ -13,6 +14,7 @@ export type CatalogSchemaEntry = {
 };
 
 export type SchemaCatalogEditorProps = {
+  headerContent?: ReactNode;
   schemas: readonly CatalogSchemaEntry[];
   selectedId: string;
   query: string;
@@ -33,6 +35,7 @@ const searchFields: readonly FormFieldConfig[] = [
 const displayNameFields: readonly FormFieldConfig[] = [fieldConfig('displayName')];
 
 export function SchemaCatalogEditor({
+  headerContent,
   schemas,
   selectedId,
   query,
@@ -63,9 +66,7 @@ export function SchemaCatalogEditor({
 
   return (
     <section className={styles.catalog} aria-label="Catalog schemas">
-      <header className={styles.header}>
-        <h1>Settings · Schemas</h1>
-      </header>
+      <header className={styles.header}>{headerContent ?? <h1>Settings · Schemas</h1>}</header>
       <div className={styles.layout}>
         <aside className={styles.sidebar} aria-label="Schema list">
           <Form

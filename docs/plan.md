@@ -455,3 +455,17 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
   - Scope: Storybook schema editor prototype; no application wiring or schema contract changes.
   - Contracts: avoid replacing existing properties after deletion gaps; serialize constraints with JSON Schema's numeric/string types; preserve schema property ordering, required membership, references, and same-kind annotations.
   - Validation: Playground interaction passed with a deleted-key gap and verified constraints serialize with the expected types and disappear when cleared; Editor/Form typechecks, Storybook production build, Prettier, candidate detector, and `git diff --check` passed. The Storybook build still reports the existing Vite client-directive, sourcemap, and large-chunk warnings.
+
+- [x] Editor: replace legacy JSON Schema authoring controls with the Storybook editor.
+  - Evidence: CatalogSchemasPanel and inline-schema editing in CatalogSchemaStage still render JsonSchemaTypeEditor from jsonjoy-builder, while the controlled SchemaCatalogEditor/SchemaEditor prototype already covers catalog management and JSON Schema editing in Storybook.
+  - Action: adapt the new controlled editors to existing AppService schema events and navigation; use SchemaEditor for inline definition schemas; remove the superseded visual JSONJoy type editor, its deep import declaration, and its CSS. Keep JsonSchemaContractEditor and its JSONJoy provider because it edits schema-backed values, not schemas.
+  - Scope: replace schema authoring UI in the app with the Storybook-proven editor; no change to serialized JSON Schema or event/data contracts.
+  - Contracts: preserve schema CRUD/save behavior, current surface navigation, UUID identity, display titles, inline vs shared definition schema selection, schema references, and preview defaults; keep existing Storybook manager/form stories working.
+  - Validation: Editor/Form typechecks, Schema Editor Playground interactions, App/Editor Catalog Storybook interactions, Storybook production build, Prettier, candidate detector, and `git diff --check` passed. The Editor app build compiled but its lint phase is blocked by the pre-existing unused `EditorSurface` import in `DesignDomainStage.tsx`.
+
+- [ ] Editor: restore full-height layout and scrolling for the catalog schema view.
+  - Evidence: unlike the neighboring settings views, `SchemaCatalogEditor` renders directly as workspace content and its `.catalog` styles only add padding; it lacks the stage's flex sizing, `min-height: 0`, and a bounded scroll region, so the view does not inherit the app's layout defaults.
+  - Action: make the catalog editor a full-height flex column with a fixed header and an independently scrollable content area; stack the schema list and editor at narrow widths and compact property-card headers based on their available width.
+  - Scope: layout only for the new catalog schema view, shared by the app and Storybook stories.
+  - Contracts: preserve schema editing, list selection, CRUD/save events, current header content, and small-screen layout.
+  - Validation: inspect the app Storybook view at desktop and narrow widths; Editor typecheck, Storybook build, Prettier, candidate detector, and `git diff --check`.

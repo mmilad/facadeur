@@ -1,11 +1,23 @@
 .catalog {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
   color: var(--ink, #1c1915);
-  padding: 20px;
+  background: var(--white, #fff);
+  border-right: 1px solid var(--line, #e3d9cc);
 }
 
 .header {
+  display: flex;
+  flex: none;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
   border-bottom: 1px solid var(--line, #e3d9cc);
-  margin-bottom: 16px;
+  padding: 14px 20px 10px;
+  background: var(--sidebar, #faf7f2);
 }
 
 .header h1 {
@@ -15,9 +27,14 @@
 
 .layout {
   display: grid;
+  flex: 1;
   grid-template-columns: minmax(200px, 240px) minmax(0, 1fr);
   gap: 20px;
   align-items: start;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px 20px 24px;
 }
 
 .sidebar {
@@ -72,9 +89,15 @@
   color: var(--muted, #6f675e);
 }
 
-@media (max-width: 720px) {
+@media (max-width: 900px) {
+  .header {
+    flex-wrap: wrap;
+    padding: 12px;
+  }
+
   .layout {
     grid-template-columns: 1fr;
+    padding: 12px;
   }
 
   .sidebar {
