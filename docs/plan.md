@@ -1,5 +1,22 @@
 # Facadeur cleanup plan
 
+- [x] Editor: include CSS shorthand properties in the layer declaration picker.
+  - Evidence: `LayerStylesEditor` derives available names only from `getComputedStyle`, which
+    enumerates resolved longhands and omits unset shorthands such as `padding`, `margin`, and
+    `border-radius`; declarations already present on the selected layer are appended separately.
+  - Action: expose a static list of standard and vendor CSS properties, including shorthand names;
+    retain existing declarations that are absent from that list so custom or legacy properties
+    remain editable. Remove the browser CSSOM discovery and runtime support filter.
+  - Scope: property choices for adding layer declarations; keep the existing per-breakpoint
+    declaration and override behavior unchanged.
+  - Contracts: preserve existing declaration names, custom-property choices, and breakpoint
+    behavior; avoid duplicate options. Property availability is based on the checked-in list,
+    independent of the browser running the editor.
+  - Validation: Editor typecheck, Storybook production build, Prettier, candidate detector, and
+    `git diff --check` passed. The property list stays in a dedicated data module because it is
+    generated static vocabulary, separate from the cohesive editor behavior. Automated tests were
+    not run.
+
 - [x] Core/Editor: support one default child slot for component instances.
   - Evidence: Repeater and Switch already expand their own authored `dom.children` as templates,
     but a fixed or dynamic `definitionRef` expands the referenced definition and currently ignores

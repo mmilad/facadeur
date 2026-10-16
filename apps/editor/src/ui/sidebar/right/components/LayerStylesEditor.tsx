@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { AutocompleteSelectField, TransformableField } from '@facadeur/form';
-import type { AutocompleteOption, TransformableFieldOption } from '@facadeur/form';
+import type { TransformableFieldOption } from '@facadeur/form';
 import type { EditorEvent } from '../../../../domain/sidebar/events';
 import { EditorEventType } from '../../../../domain/sidebar/events';
 import type { InspectorSidebarModel } from '../../../../domain/sidebar/types';
 import { Section, Stack } from '../../../components/layout';
 import { TextInput } from '../../../controls/form-binding';
+import { CSS_PROPERTY_OPTIONS } from './css-property-options';
 import './layer-styles-editor.css';
 
 export function LayerStylesEditor({
@@ -25,7 +26,6 @@ export function LayerStylesEditor({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [property, setProperty] = useState('');
   const [value, setValue] = useState('');
-  const [supportedProperties, setSupportedProperties] = useState<AutocompleteOption[]>([]);
   const selectedViewport = layerStyle.breakpoints.find((item) => item.uuid === selectedId);
   const hasSelectedViewport = Boolean(selectedViewport);
   const writingBreakpointId =
@@ -33,24 +33,15 @@ export function LayerStylesEditor({
   useEffect(() => {
     if (selectedId && !hasSelectedViewport) setSelectedId(null);
   }, [selectedId, hasSelectedViewport]);
-  useEffect(() => {
-    const computed = window.getComputedStyle(document.documentElement);
-    const names = Array.from({ length: computed.length }, (_, index) => computed.item(index));
-    setSupportedProperties(
-      [...new Set(names.filter(Boolean))]
-        .sort((left, right) => left.localeCompare(right))
-        .map((name) => ({ value: name, label: name, group: 'CSS properties' })),
-    );
-  }, []);
   const declarations = {
     ...(writingBreakpointId
       ? (layerStyle.overrides[writingBreakpointId] ?? {})
       : layerStyle.declarations),
   };
   const propertyOptions = [
-    ...supportedProperties,
+    ...CSS_PROPERTY_OPTIONS,
     ...Object.keys(declarations)
-      .filter((name) => !supportedProperties.some((option) => option.value === name))
+      .filter((name) => !CSS_PROPERTY_OPTIONS.some((option) => option.value === name))
       .map((name) => ({ value: name, label: name, group: 'Used in this style' })),
   ];
 

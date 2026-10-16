@@ -1104,35 +1104,56 @@
           "tagName": "div",
           "children": [
             {
-              "uuid": "660e8400-e29b-41d4-a716-000000000dae",
-              "name": "CSS selector",
+              "uuid": "ba23004b-ed5b-4ea8-9343-e2580da44895",
+              "name": "style-group",
               "dom": {
                 "tagName": "div",
-                "text": "{props:660e8400-e29b-41d4-a716-000000001965}"
-              }
-            },
-            {
-              "uuid": "660e8400-e29b-41d4-a716-000000000daf",
-              "name": "CSS property",
-              "dom": {
-                "tagName": "div",
-                "text": "{props:660e8400-e29b-41d4-a716-000000001966}"
-              }
-            },
-            {
-              "uuid": "660e8400-e29b-41d4-a716-000000000db0",
-              "name": "CSS value",
-              "dom": {
-                "tagName": "div",
-                "text": "{props:660e8400-e29b-41d4-a716-000000001967}"
-              }
-            },
-            {
-              "uuid": "660e8400-e29b-41d4-a716-000000000db1",
-              "name": "CSS source",
-              "dom": {
-                "tagName": "div",
-                "text": "{props:660e8400-e29b-41d4-a716-000000001968}"
+                "children": [
+                  {
+                    "uuid": "00920dce-3865-4454-ba12-34dfa2b1c2cb",
+                    "name": "Style Selector LAbel",
+                    "dom": {
+                      "tagName": "div",
+                      "text": ".my-selector",
+                      "children": []
+                    }
+                  },
+                  {
+                    "uuid": "c21f21df-debb-4c3d-b624-8488b2b67164",
+                    "name": "Property List",
+                    "dom": {
+                      "tagName": "div",
+                      "children": [
+                        {
+                          "uuid": "d8f24635-2124-475c-ab0c-05ba19b5b85e",
+                          "name": "Property Item",
+                          "dom": {
+                            "tagName": "div",
+                            "children": [
+                              {
+                                "uuid": "660e8400-e29b-41d4-a716-000000000daf",
+                                "name": "property-name",
+                                "dom": {
+                                  "tagName": "div",
+                                  "text": "{props:660e8400-e29b-41d4-a716-000000001966}"
+                                }
+                              },
+                              {
+                                "uuid": "660e8400-e29b-41d4-a716-000000000db0",
+                                "name": "property-value",
+                                "dom": {
+                                  "tagName": "div",
+                                  "text": "{props:660e8400-e29b-41d4-a716-000000001967}",
+                                  "children": []
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
               }
             }
           ]
@@ -1372,6 +1393,254 @@
         }
       },
       "category": "ui"
+    },
+    "660e8400-e29b-41d4-a716-000000001388": {
+      "uuid": "660e8400-e29b-41d4-a716-000000001388",
+      "name": "Tree node",
+      "kind": "component",
+      "schema": {
+        "kind": "inline",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "title": "Title",
+              "default": "Component catalog",
+              "x-facadeur-prop-id": "660e8400-e29b-41d4-a716-000000001f41"
+            },
+            "items": {
+              "type": "array",
+              "title": "Items",
+              "default": [],
+              "x-facadeur-prop-id": "660e8400-e29b-41d4-a716-000000001f42",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "title": "Kind",
+                    "enum": ["component", "group"],
+                    "x-facadeur-prop-id": "ec2d9c30-97d5-4b50-b339-58a6be97f684"
+                  },
+                  "componentId": {
+                    "type": "string",
+                    "title": "Component",
+                    "x-facadeur-reference": {
+                      "target": "component"
+                    },
+                    "x-facadeur-prop-id": "005b1a21-f0fb-4861-ad27-2d5406bec107"
+                  },
+                  "label": {
+                    "type": "string",
+                    "title": "Label",
+                    "x-facadeur-prop-id": "168d8f0a-8ea6-4bc4-b022-14cb6c56e82d"
+                  },
+                  "children": {
+                    "type": "array",
+                    "title": "Components",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "componentId": {
+                          "type": "string",
+                          "title": "Component",
+                          "x-facadeur-reference": {
+                            "target": "component"
+                          },
+                          "x-facadeur-prop-id": "7f563a1c-5397-4edc-b458-df36f4d50232"
+                        },
+                        "label": {
+                          "type": "string",
+                          "title": "Label",
+                          "x-facadeur-prop-id": "00098d8a-2197-4cd6-8bc7-989e14364c64"
+                        }
+                      },
+                      "required": ["componentId", "label"],
+                      "additionalProperties": false
+                    },
+                    "x-facadeur-prop-id": "290ad6e1-8832-48b6-b5df-fb9601ef7f7a"
+                  }
+                },
+                "required": ["kind", "label"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": ["title", "items"],
+          "additionalProperties": false
+        }
+      },
+      "config": {
+        "previewData": {
+          "fields": {
+            "title": "Component catalog",
+            "items": [
+              {
+                "kind": "component",
+                "componentId": "660e8400-e29b-41d4-a716-000000000136",
+                "label": "Header component"
+              },
+              {
+                "kind": "group",
+                "label": "Navigation components",
+                "children": [
+                  {
+                    "componentId": "660e8400-e29b-41d4-a716-000000000136",
+                    "label": "Header variant"
+                  },
+                  {
+                    "componentId": "660e8400-e29b-41d4-a716-000000000140",
+                    "label": "Left sidebar"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "root": {
+        "uuid": "660e8400-e29b-41d4-a716-00000000138f",
+        "name": "Tree node root",
+        "dom": {
+          "tagName": "div",
+          "children": [
+            {
+              "uuid": "660e8400-e29b-41d4-a716-000000001391",
+              "name": "Title",
+              "dom": {
+                "tagName": "h3",
+                "text": "{props:660e8400-e29b-41d4-a716-000000001f41}"
+              }
+            },
+            {
+              "uuid": "660e8400-e29b-41d4-a716-00000000138b",
+              "name": "Items",
+              "dom": {
+                "tagName": "ul",
+                "children": [
+                  {
+                    "uuid": "660e8400-e29b-41d4-a716-000000001395",
+                    "name": "Tree item",
+                    "dom": {
+                      "tagName": "li",
+                      "children": [
+                        {
+                          "uuid": "660e8400-e29b-41d4-a716-00000000138c",
+                          "name": "Item kind",
+                          "dom": {
+                            "tagName": "div",
+                            "children": [
+                              {
+                                "uuid": "660e8400-e29b-41d4-a716-00000000138d",
+                                "name": "Component item",
+                                "dom": {
+                                  "tagName": "div"
+                                },
+                                "config": {
+                                  "definitionRefBinding": {
+                                    "kind": "item",
+                                    "path": "componentId"
+                                  },
+                                  "compositionCase": "component"
+                                },
+                                "data": {
+                                  "title": "{item:label}"
+                                }
+                              },
+                              {
+                                "uuid": "660e8400-e29b-41d4-a716-00000000138e",
+                                "name": "Component group",
+                                "dom": {
+                                  "tagName": "section",
+                                  "children": [
+                                    {
+                                      "uuid": "660e8400-e29b-41d4-a716-000000001390",
+                                      "name": "Group label",
+                                      "dom": {
+                                        "tagName": "h4",
+                                        "text": "{item:label}"
+                                      }
+                                    },
+                                    {
+                                      "uuid": "660e8400-e29b-41d4-a716-000000001392",
+                                      "name": "Group items",
+                                      "dom": {
+                                        "tagName": "ul",
+                                        "children": [
+                                          {
+                                            "uuid": "660e8400-e29b-41d4-a716-000000001394",
+                                            "name": "Group item",
+                                            "dom": {
+                                              "tagName": "li",
+                                              "children": [
+                                                {
+                                                  "uuid": "660e8400-e29b-41d4-a716-000000001393",
+                                                  "name": "Component",
+                                                  "dom": {
+                                                    "tagName": "div"
+                                                  },
+                                                  "config": {
+                                                    "definitionRefBinding": {
+                                                      "kind": "item",
+                                                      "path": "componentId"
+                                                    }
+                                                  },
+                                                  "data": {
+                                                    "title": "{item:label}"
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      },
+                                      "config": {
+                                        "composition": {
+                                          "kind": "repeater",
+                                          "source": {
+                                            "kind": "item",
+                                            "path": "children"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  ]
+                                },
+                                "config": {
+                                  "compositionCase": "group"
+                                }
+                              }
+                            ]
+                          },
+                          "config": {
+                            "composition": {
+                              "kind": "switch",
+                              "source": {
+                                "kind": "item",
+                                "path": "kind"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              "config": {
+                "composition": {
+                  "kind": "repeater",
+                  "source": {
+                    "kind": "prop",
+                    "uuid": "660e8400-e29b-41d4-a716-000000001f42"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
     }
   },
   "pages": {
@@ -3575,34 +3844,18 @@
             "css-rule-row": "660e8400-e29b-41d4-a716-000000000dad"
           },
           "declarations": {
-            "display": "flex",
-            "flexDirection": "row",
             "alignItems": "center",
             "gap": "10px",
             "width": "100%",
-            "minHeight": "48px",
             "padding": "10px 0",
             "borderBottom": "1px solid #e8e6e2"
           }
         },
         {
-          "id": "layer-660e8400-e29b-41d4-a716-000000000dae",
-          "selector": ".css-selector",
-          "bindings": {
-            "css-selector": "660e8400-e29b-41d4-a716-000000000dae"
-          },
-          "declarations": {
-            "fontFamily": "monospace",
-            "color": "#6754d9",
-            "fontSize": "11px",
-            "width": "28%"
-          }
-        },
-        {
           "id": "layer-660e8400-e29b-41d4-a716-000000000daf",
-          "selector": ".css-property",
+          "selector": ".property-name",
           "bindings": {
-            "css-property": "660e8400-e29b-41d4-a716-000000000daf"
+            "property-name": "660e8400-e29b-41d4-a716-000000000daf"
           },
           "declarations": {
             "fontFamily": "monospace",
@@ -3613,27 +3866,15 @@
         },
         {
           "id": "layer-660e8400-e29b-41d4-a716-000000000db0",
-          "selector": ".css-value",
+          "selector": ".property-value",
           "bindings": {
-            "css-value": "660e8400-e29b-41d4-a716-000000000db0"
+            "property-value": "660e8400-e29b-41d4-a716-000000000db0"
           },
           "declarations": {
             "fontFamily": "monospace",
             "fontSize": "11px",
             "flex": "1",
             "minWidth": "0"
-          }
-        },
-        {
-          "id": "layer-660e8400-e29b-41d4-a716-000000000db1",
-          "selector": ".css-source",
-          "bindings": {
-            "css-source": "660e8400-e29b-41d4-a716-000000000db1"
-          },
-          "declarations": {
-            "color": "#817f88",
-            "fontSize": "10px",
-            "textAlign": "right"
           }
         },
         {
@@ -4168,6 +4409,31 @@
                 "display": "block"
               }
             }
+          }
+        },
+        {
+          "id": "layer-d8f24635-2124-475c-ab0c-05ba19b5b85e",
+          "selector": ".property-item",
+          "bindings": {
+            "property-item": "d8f24635-2124-475c-ab0c-05ba19b5b85e"
+          },
+          "declarations": {
+            "display": "flex",
+            "flex-direction": "row",
+            "width": "100%",
+            "align-items": "center"
+          }
+        },
+        {
+          "id": "layer-00920dce-3865-4454-ba12-34dfa2b1c2cb",
+          "selector": ".style-selector-label",
+          "bindings": {
+            "style-selector-label": "00920dce-3865-4454-ba12-34dfa2b1c2cb"
+          },
+          "declarations": {
+            "min-height": "48px",
+            "display": "flex",
+            "align-items": "center"
           }
         }
       ]
