@@ -13,4 +13,6 @@ export interface ElementBuildConfig {
   /** Catalog nodes whose styles apply to this rendered root, including referenced definition roots. */
   readonly styleNodeUuids?: readonly Uuid[];
   readonly nodeUuid?: Uuid;
+  /** Stable key for repeated instances of one authored node. */
+  readonly renderKey?: string;
 }

@@ -10,7 +10,14 @@ export function catalogNodeFromInsertEntry(entry: LayerInsertEntry): NodeModel |
     }
     return null;
   }
-  if (entry.kind === 'structural') return null;
+  if (entry.kind === 'structural') {
+    return {
+      uuid,
+      name: entry.label,
+      dom: { tagName: 'div', children: [] },
+      config: { composition: { kind: entry.tool } },
+    };
+  }
   return {
     uuid,
     name: entry.label,

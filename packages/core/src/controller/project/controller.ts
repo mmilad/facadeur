@@ -24,6 +24,7 @@ import {
   patchNodeData,
   patchCatalogDefinitionPreviewField,
   patchNodeDataRecord,
+  patchNodeComposition,
   patchDefinitionFieldExposure,
   patchNodeName,
   patchNodeDomAttributes,
@@ -236,6 +237,11 @@ export class CoreController implements CoreControllerHost {
     this.commitCatalog(patchNodeDataRecord(this.catalog, this.openDefinitionId, nodeUuid, record));
   }
 
+  patchNodeComposition(nodeUuid: string, patch: Parameters<typeof patchNodeComposition>[3]) {
+    if (!this.openDefinitionId) return;
+    this.commitCatalog(patchNodeComposition(this.catalog, this.openDefinitionId, nodeUuid, patch));
+  }
+
   private patchNodeExposure(nodeUuid: string, exposure: FieldExposure) {
     if (!this.openDefinitionId) return;
     this.commitCatalog(
@@ -405,6 +411,10 @@ export class CoreController implements CoreControllerHost {
           if (key.trim()) record[key.trim()] = value;
         }
         this.patchNodeDataRecord(target.nodeUuid, record);
+        return;
+      }
+      case 'nodeComposition': {
+        this.patchNodeComposition(target.nodeUuid, target.patch);
         return;
       }
       case 'nodeFieldExposureMode': {

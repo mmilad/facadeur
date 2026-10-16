@@ -17,6 +17,8 @@ export interface LayerItem {
 }
 
 function layerTypeForNode(node: NodeModel) {
+  if (node.config?.composition) return node.config.composition.kind;
+  if (node.config?.definitionRefBinding) return 'instance';
   if (node.config?.definitionRef) return 'instance';
   return 'layer';
 }

@@ -10,7 +10,7 @@ import { SettingsSections } from '../SettingsSections';
 import type { CatalogSchemaEntry } from '../../schema/editor/SchemaCatalogEditor';
 import { SchemaCatalogEditor } from '../../schema/editor/SchemaCatalogEditor';
 import type { SchemaReferenceChoice } from '../../schema/editor/SchemaEditor';
-import { iconReferenceTarget } from '../../schema/editor/schema';
+import { componentReferenceTarget, iconReferenceTarget } from '../../schema/editor/schema';
 
 export function CatalogSchemasPanel({
   schemas,
@@ -51,7 +51,7 @@ export function CatalogSchemasPanel({
       selectedId={selectedId}
       query={query}
       references={references}
-      referenceTargets={[iconReferenceTarget]}
+      referenceTargets={[iconReferenceTarget, componentReferenceTarget]}
       isSaved={isSaved}
       onQueryChange={setQuery}
       onSelect={setSelectedId}

@@ -6,7 +6,7 @@ import { sanitizeProjectCatalog } from './sanitize-field-values';
 import { findDefinition, listCatalogDefinitions, resolveJsonSchemaForDefinition } from './ops';
 import { effectiveSchemaForDefinition, inheritableSchemaForDefinition } from './field-contract';
 import { matchesSchemaValue } from '../../validation/json-schema-value';
-import { ensureCatalogFieldIds } from './field-ids';
+import { componentPropsForSchema, ensureCatalogFieldIds } from './field-ids';
 
 function catalogSchemaErrorMessage(data: unknown): string {
   try {
@@ -64,7 +64,10 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
         ) &&
         !isFieldBindingValue(value, fieldSchema)
       ) {
-        throw new DocumentError('schema', `Invalid value for field "${field}" in ${context}`);
+        throw new DocumentError(
+          'schema',
+          `Invalid value for field "${field}" in ${context}; it does not match the current schema.`,
+        );
       }
       assertCatalogReferenceValue(value, fieldSchema, catalog, `${context}.${field}`);
     }
@@ -73,15 +76,118 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
   for (const definition of definitions) {
     const effective = effectiveSchemaForDefinition(catalog, definition);
     const ownSchema = resolveJsonSchemaForDefinition(catalog, definition);
-    for (const [field, config] of Object.entries(definition.config?.staticFields ?? {})) {
-      if (!config.isStatic || !schemaPathExists(ownSchema, field)) {
+    const visitComposition = (
+      node: Node,
+      parent: Node | undefined,
+      itemSchema: Record<string, unknown> | null,
+    ) => {
+      const composition = node.config?.composition;
+      const source = composition?.source;
+      let sourceSchema: Record<string, unknown> | null = null;
+      if (composition && source?.kind === 'prop') {
+        const prop = componentPropsForSchema(effective.schema).find(
+          (entry) => entry.uuid === source.uuid,
+        );
+        sourceSchema = prop
+          ? schemaAtPath(effective.schema, prop.name.slice('props.'.length))
+          : null;
+      } else if (composition && source?.kind === 'item') {
+        sourceSchema = itemSchema ? schemaAtPath(itemSchema, source.path) : null;
+      }
+      if (composition && source) {
+        const validSource =
+          composition.kind === 'repeater'
+            ? sourceSchema?.type === 'array'
+            : isEnumSchema(sourceSchema);
+        if (!validSource) {
+          throw new DocumentError(
+            'schema',
+            `Invalid ${composition.kind} source on node "${node.name ?? node.uuid}"`,
+          );
+        }
+      }
+      if (source?.kind === 'item' && !itemSchema) {
         throw new DocumentError(
           'schema',
-          `Static field config requires a field in the definition schema ("${field}")`,
+          `Item binding requires a repeater context (${node.uuid})`,
+        );
+      }
+      if (node.config?.definitionRefBinding && node.config.definitionRef) {
+        throw new DocumentError(
+          'schema',
+          `A node cannot have both a fixed and dynamic component reference (${node.uuid})`,
+        );
+      }
+      if (node.config?.definitionRefBinding) {
+        const referenceSchema = itemSchema
+          ? schemaAtPath(itemSchema, node.config.definitionRefBinding.path)
+          : null;
+        const reference = referenceSchema?.['x-facadeur-reference'];
+        if (
+          !reference ||
+          typeof reference !== 'object' ||
+          !('target' in reference) ||
+          reference.target !== 'component'
+        ) {
+          throw new DocumentError(
+            'schema',
+            `Dynamic component reference requires a component reference field (${node.uuid})`,
+          );
+        }
+      }
+      if (node.config?.compositionCase && parent?.config?.composition?.kind !== 'switch') {
+        throw new DocumentError('schema', `Switch case requires a switch parent (${node.uuid})`);
+      }
+      if (node.config?.compositionCase && parent?.config?.composition?.source) {
+        const parentSource = parent.config.composition.source;
+        const parentSourceSchema =
+          parentSource.kind === 'item'
+            ? itemSchema
+              ? schemaAtPath(itemSchema, parentSource.path)
+              : null
+            : (() => {
+                const parentProp = componentPropsForSchema(effective.schema).find(
+                  (entry) => entry.uuid === parentSource.uuid,
+                );
+                return parentProp
+                  ? schemaAtPath(effective.schema, parentProp.name.slice('props.'.length))
+                  : null;
+              })();
+        if (!enumValues(parentSourceSchema).includes(node.config.compositionCase)) {
+          throw new DocumentError(
+            'schema',
+            `Unknown switch case "${node.config.compositionCase}" (${node.uuid})`,
+          );
+        }
+      }
+      const childItemSchema =
+        composition?.kind === 'repeater' && sourceSchema
+          ? asSchemaRecord(sourceSchema.items)
+          : itemSchema;
+      for (const child of node.dom.children ?? []) {
+        visitComposition(child, node, childItemSchema);
+      }
+    };
+    visitComposition(definition.root, undefined, null);
+    for (const [field, config] of Object.entries(definition.config?.staticFields ?? {})) {
+      if (!config.isStatic) {
+        throw new DocumentError(
+          'schema',
+          `Static config for field "${field}" on definition "${definition.name}" is not marked static.`,
+        );
+      }
+      if (!schemaPathExists(ownSchema, field)) {
+        throw new DocumentError(
+          'schema',
+          `Static config for field "${field}" on definition "${definition.name}" refers to a field that no longer exists. Update or remove this config.`,
         );
       }
       if (config.value !== undefined) {
-        validateRecord({ [field]: config.value }, ownSchema, `static value for "${field}"`);
+        validateRecord(
+          { [field]: config.value },
+          ownSchema,
+          `static config on definition "${definition.name}"`,
+        );
       }
     }
     for (const [instanceUuid, fieldConfigs] of Object.entries(
@@ -98,15 +204,26 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
           `Static field config requires a definition instance (${instanceUuid})`,
         );
       }
+      const instanceName = node?.name ?? instanceUuid;
       for (const [field, config] of Object.entries(fieldConfigs)) {
-        if (!config.isStatic || !schemaPathExists(targetSchema, field)) {
+        if (!config.isStatic) {
           throw new DocumentError(
             'schema',
-            `Static field config requires a field in the instance schema ("${field}")`,
+            `Static config for field "${field}" on instance "${instanceName}" is not marked static.`,
+          );
+        }
+        if (!schemaPathExists(targetSchema, field)) {
+          throw new DocumentError(
+            'schema',
+            `Static config for field "${field}" on instance "${instanceName}" of "${target.name}" in "${definition.name}" refers to a field that no longer exists. Update or remove this config.`,
           );
         }
         if (config.value !== undefined) {
-          validateRecord({ [field]: config.value }, targetSchema, `static value for "${field}"`);
+          validateRecord(
+            { [field]: config.value },
+            targetSchema,
+            `static config on instance "${instanceName}" of "${target.name}" in "${definition.name}"`,
+          );
         }
       }
     }
@@ -155,6 +272,63 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
     };
     visit(definition.root);
   }
+}
+
+function schemaAtPath(schema: Record<string, unknown> | null, path: string) {
+  let current: unknown = schema;
+  for (const segment of path.split('.')) {
+    if (!current || typeof current !== 'object' || Array.isArray(current)) return null;
+    const properties = (current as Record<string, unknown>).properties;
+    if (!properties || typeof properties !== 'object' || Array.isArray(properties)) return null;
+    current = (properties as Record<string, unknown>)[segment];
+  }
+  return current && typeof current === 'object' && !Array.isArray(current)
+    ? (current as Record<string, unknown>)
+    : null;
+}
+
+function asSchemaRecord(value: unknown) {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function isEnumSchema(schema: Record<string, unknown> | null) {
+  if (!schema) return false;
+  if (Array.isArray(schema.enum) && schema.enum.length > 0) return true;
+  if (!Array.isArray(schema.oneOf) || schema.oneOf.length === 0) return false;
+  return schema.oneOf.every((branch) => {
+    if (!branch || typeof branch !== 'object' || Array.isArray(branch)) return false;
+    const discriminator = (branch as Record<string, unknown>).properties;
+    if (!discriminator || typeof discriminator !== 'object' || Array.isArray(discriminator)) {
+      return false;
+    }
+    const valueSchema = (discriminator as Record<string, unknown>).type;
+    if (!valueSchema || typeof valueSchema !== 'object' || Array.isArray(valueSchema)) return false;
+    const values = valueSchema as Record<string, unknown>;
+    return Object.hasOwn(values, 'const') || (Array.isArray(values.enum) && values.enum.length > 0);
+  });
+}
+
+function enumValues(schema: Record<string, unknown> | null): string[] {
+  if (!schema) return [];
+  if (Array.isArray(schema.enum)) {
+    return schema.enum.filter((value): value is string => typeof value === 'string');
+  }
+  if (!Array.isArray(schema.oneOf)) return [];
+  return schema.oneOf.flatMap((branch) => {
+    if (!branch || typeof branch !== 'object' || Array.isArray(branch)) return [];
+    const properties = (branch as Record<string, unknown>).properties;
+    if (!properties || typeof properties !== 'object' || Array.isArray(properties)) return [];
+    const type = (properties as Record<string, unknown>).type;
+    if (!type || typeof type !== 'object' || Array.isArray(type)) return [];
+    const valueSchema = type as Record<string, unknown>;
+    const constant = valueSchema.const;
+    if (typeof constant === 'string') return [constant];
+    return Array.isArray(valueSchema.enum)
+      ? valueSchema.enum.filter((value): value is string => typeof value === 'string')
+      : [];
+  });
 }
 
 function findDefinitionInstance(root: Node, uuid: string): Node | null {
@@ -279,21 +453,25 @@ function assertReferenceSchema(schema: unknown, catalog: ProjectCatalog, context
   const reference = record['x-facadeur-reference'];
   if (reference && typeof reference === 'object' && 'target' in reference) {
     const target = String((reference as Record<string, unknown>).target);
-    if (target !== 'icon') {
+    if (target !== 'icon' && target !== 'component') {
       throw new DocumentError(
         'schema',
         `Unknown catalog reference target "${target}" (${context})`,
       );
     }
     const defaultValue = record.default;
-    if (
-      defaultValue !== undefined &&
-      (typeof defaultValue !== 'string' || !catalog.icons?.some((icon) => icon.id === defaultValue))
-    ) {
-      throw new DocumentError(
-        'schema',
-        `Unknown icon reference default "${defaultValue}" (${context})`,
-      );
+    if (defaultValue !== undefined) {
+      const valid =
+        typeof defaultValue === 'string' &&
+        (target === 'icon'
+          ? catalog.icons?.some((icon) => icon.id === defaultValue)
+          : Object.hasOwn(catalog.components, defaultValue));
+      if (!valid) {
+        throw new DocumentError(
+          'schema',
+          `Unknown ${target} reference default "${defaultValue}" (${context})`,
+        );
+      }
     }
   }
   for (const value of Object.values(record)) assertReferenceSchema(value, catalog, context);
@@ -314,6 +492,15 @@ function assertCatalogReferenceValue(
       if (typeof value === 'string' && /^\{(?:prop|props):[^}]+\}$/.test(value)) return;
       if (typeof value !== 'string' || !catalog.icons?.some((icon) => icon.id === value)) {
         throw new DocumentError('schema', `Unknown icon reference "${String(value)}" (${context})`);
+      }
+    }
+    if (target === 'component' && value !== undefined) {
+      if (typeof value === 'string' && /^\{(?:prop|props|item):[^}]+\}$/.test(value)) return;
+      if (typeof value !== 'string' || !Object.hasOwn(catalog.components, value)) {
+        throw new DocumentError(
+          'schema',
+          `Unknown component reference "${String(value)}" (${context})`,
+        );
       }
     }
   }

@@ -3,11 +3,7 @@ import {
   type FieldDefinition,
   type InspectorFormField,
 } from '@facadeur/core';
-import type {
-  AutocompleteOption,
-  FormFieldConfig,
-  TransformableFieldOption,
-} from '@facadeur/form';
+import type { AutocompleteOption, FormFieldConfig, TransformableFieldOption } from '@facadeur/form';
 
 export function mapInspectorFormFields(
   fields: InspectorFormField[],
@@ -18,9 +14,7 @@ export function mapInspectorFormFields(
     color?: boolean,
   ) => readonly TransformableFieldOption[],
 ): FormFieldConfig[] {
-  return fields.flatMap((field) =>
-    mapInspectorField(field, componentDataOptions, fieldOptions),
-  );
+  return fields.flatMap((field) => mapInspectorField(field, componentDataOptions, fieldOptions));
 }
 
 function mapInspectorField(
@@ -62,7 +56,7 @@ function mapInspectorField(
         type: 'select',
         name: field.path,
         label: field.label,
-        options: field.options.map((value) => ({ value, label: value })),
+        options: field.options.map(({ value, label }) => ({ value, label })),
       },
     ];
   }
@@ -88,8 +82,8 @@ function mapInspectorField(
             }
           : {}),
         ...(field.path === 'node.attributes' && componentDataOptions.length
-            ? { suggestions: { options: componentDataOptions } }
-            : {}),
+          ? { suggestions: { options: componentDataOptions } }
+          : {}),
       },
     ];
   }

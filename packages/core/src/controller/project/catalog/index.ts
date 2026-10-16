@@ -5,6 +5,7 @@ export {
   findNodeByUuid,
   patchNodeData,
   patchNodeDataRecord,
+  patchNodeComposition,
   patchNodeName,
   patchNodeDomAttributes,
   patchNodeDomText,

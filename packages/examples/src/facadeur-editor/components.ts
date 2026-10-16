@@ -15,6 +15,7 @@ import {
   textProp,
 } from './shared';
 import { facadeurHeader } from './header';
+import { facadeurTreeNode } from './tree-node';
 
 const sidebarLeft = componentDefinition(
   320,
@@ -653,6 +654,7 @@ const globalStylesTable = componentDefinition(
 
 export const facadeurComponents = {
   header: facadeurHeader,
+  treeNode: facadeurTreeNode,
   sidebarLeft,
   sidebarRight,
   canvas,
@@ -668,6 +670,7 @@ export const facadeurComponentCatalog = Object.fromEntries(
 
 export const facadeurComponentIds = {
   header: facadeurHeader.uuid,
+  treeNode: facadeurTreeNode.uuid,
   sidebarLeft: sidebarLeft.uuid,
   sidebarRight: sidebarRight.uuid,
   canvas: canvas.uuid,

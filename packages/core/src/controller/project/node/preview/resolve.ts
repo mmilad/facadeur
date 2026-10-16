@@ -13,11 +13,14 @@ export type PreviewResolveContext = {
   readonly fields: Record<string, FieldValue>;
   readonly overrides?: Record<string, FieldValue>;
   readonly componentProps?: Readonly<Record<string, FieldValue>>;
+  readonly item?: FieldValue;
 };
 
 const PROP_REF = /^\{prop:([^}]+)\}$/;
 const COMPONENT_PROP_REF = /^\{props:([^}]+)\}$/;
+const ITEM_FIELD_REF = /^\{item:([^}]+)\}$/;
 const STYLE_REFERENCE = /^\{props:[^}]+\}$/;
+const MAX_DYNAMIC_DEFINITION_DEPTH = 32;
 
 /** Replace `{prop:uuid}` and similar templates with literal strings for renderers. */
 export function resolveTemplateString(template: string, ctx: PreviewResolveContext): string {
@@ -34,6 +37,13 @@ export function resolveTemplateString(template: string, ctx: PreviewResolveConte
     if (typeof value === 'string') return value;
     if (typeof value === 'number' || typeof value === 'boolean') return String(value);
     return template;
+  }
+  const itemMatch = template.match(ITEM_FIELD_REF);
+  if (itemMatch) {
+    const value = itemMatch[1] ? fieldAtPath(ctx.item, itemMatch[1]) : undefined;
+    if (value === undefined || value === null) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
   }
   return template;
 }
@@ -109,8 +119,8 @@ function createTokenTextResolver(tokenTree: unknown) {
 }
 
 /**
- * Walk a definition tree: merge field layers, resolve bindings, emit renderer-ready configs.
- * Repeaters / definitionRef expansion belong here later — not in the rendering component.
+ * Walk a definition tree: merge field layers, resolve bindings, and expand Catalog composition.
+ * Keep this independent of the renderer so preview and code generation share the resolved tree.
  */
 export function resolveDefinitionToElementBuildConfig(
   definition: NodeDefinition,
@@ -125,6 +135,8 @@ export function resolveDefinitionToElementBuildConfig(
     new Set([definition.uuid]),
     {},
     createTokenTextResolver(catalog.tokens ?? {}),
+    undefined,
+    0,
   );
 }
 
@@ -136,13 +148,26 @@ function resolveNodeToElementBuildConfig(
   activeDefinitions: ReadonlySet<string>,
   inheritedOverrides: Record<string, FieldValue>,
   resolveTokenText: (value: string) => string,
+  itemContext: FieldValue | undefined,
+  dynamicDefinitionDepth: number,
 ): ElementBuildConfig {
-  const definitionRef = node.config?.definitionRef;
+  const boundDefinitionRef = node.config?.definitionRefBinding
+    ? fieldAtPath(itemContext, node.config.definitionRefBinding.path)
+    : undefined;
+  const definitionRef =
+    node.config?.definitionRef ??
+    (typeof boundDefinitionRef === 'string' ? boundDefinitionRef : undefined);
   if (definitionRef) {
     const located = findDefinition(catalog, definitionRef);
     if (located) {
       const refDefinition = located.definition;
-      if (activeDefinitions.has(refDefinition.uuid)) {
+      const dynamicReference = Boolean(node.config?.definitionRefBinding);
+      if (dynamicReference && dynamicDefinitionDepth >= MAX_DYNAMIC_DEFINITION_DEPTH) {
+        throw new Error(
+          `Dynamic component reference exceeded the ${MAX_DYNAMIC_DEFINITION_DEPTH}-level preview limit at "${node.name ?? node.uuid}"`,
+        );
+      }
+      if (activeDefinitions.has(refDefinition.uuid) && !dynamicReference) {
         throw new Error(`Cyclic catalog definition reference at "${refDefinition.uuid}"`);
       }
       const exposure = definition.config?.fieldExposure?.[node.uuid] ?? { mode: 'flat' as const };
@@ -154,10 +179,12 @@ function resolveNodeToElementBuildConfig(
       const instancePreviewData = resolveParentPropBindings(
         node.config?.previewData?.fields as Record<string, FieldValue> | undefined,
         parentComponentProps,
+        itemContext,
       );
       const instanceData = resolveParentPropBindings(
         node.data as Record<string, FieldValue> | undefined,
         parentComponentProps,
+        itemContext,
       );
       const hiddenStaticFields = new Set([
         ...staticFieldsNotExposed(refDefinition),
@@ -207,9 +234,11 @@ function resolveNodeToElementBuildConfig(
         refDefinition,
         catalog,
         instanceFields,
-        new Set(activeDefinitions).add(refDefinition.uuid),
+        dynamicReference ? activeDefinitions : new Set(activeDefinitions).add(refDefinition.uuid),
         instanceOverrides,
         resolveTokenText,
+        itemContext,
+        dynamicDefinitionDepth + (dynamicReference ? 1 : 0),
       );
       const styleNodeUuids = new Set(built.styleNodeUuids ?? []);
       if (built.nodeUuid) styleNodeUuids.add(built.nodeUuid);
@@ -238,23 +267,76 @@ function resolveNodeToElementBuildConfig(
       fields,
     ),
     overrides: nodeOverrides,
+    item: itemContext,
   };
 
   const text = textFromNode(node, fields, ctx, resolveTokenText);
   const attributes = resolveStringRecord(node.dom.attributes, ctx) ?? {};
   const iconId = node.dom.tagName.toLowerCase() === 'svg' ? attributes['data-icon'] : undefined;
   const icon = iconId ? catalog.icons?.find((entry) => entry.id === iconId) : undefined;
-  const children = (node.dom.children ?? []).map((child) =>
-    resolveNodeToElementBuildConfig(
-      child,
-      definition,
-      catalog,
-      fields,
-      activeDefinitions,
-      fields,
-      resolveTokenText,
-    ),
-  );
+  const composition = node.config?.composition;
+  const childNodes = node.dom.children ?? [];
+  const children =
+    composition?.kind === 'repeater'
+      ? (() => {
+          const value = composition.source
+            ? resolveCompositionSource(composition.source, ctx)
+            : undefined;
+          if (!Array.isArray(value)) return [];
+          return value.flatMap((item, itemIndex) =>
+            childNodes.map((child, templateIndex) => {
+              const resolved = resolveNodeToElementBuildConfig(
+                child,
+                definition,
+                catalog,
+                fields,
+                activeDefinitions,
+                fields,
+                resolveTokenText,
+                item,
+                dynamicDefinitionDepth,
+              );
+              return {
+                ...resolved,
+                renderKey: `${child.uuid}:${itemIndex}:${templateIndex}`,
+              };
+            }),
+          );
+        })()
+      : composition?.kind === 'switch'
+        ? (() => {
+            const value = composition.source
+              ? resolveCompositionSource(composition.source, ctx)
+              : undefined;
+            return childNodes
+              .filter((child) => child.config?.compositionCase === String(value ?? ''))
+              .map((child) =>
+                resolveNodeToElementBuildConfig(
+                  child,
+                  definition,
+                  catalog,
+                  fields,
+                  activeDefinitions,
+                  fields,
+                  resolveTokenText,
+                  itemContext,
+                  dynamicDefinitionDepth,
+                ),
+              );
+          })()
+        : childNodes.map((child) =>
+            resolveNodeToElementBuildConfig(
+              child,
+              definition,
+              catalog,
+              fields,
+              activeDefinitions,
+              fields,
+              resolveTokenText,
+              itemContext,
+              dynamicDefinitionDepth,
+            ),
+          );
   const resolvedChildren =
     node.dom.tagName.toLowerCase() === 'svg' && icon
       ? icon.data.paths.map((path, index) => ({
@@ -268,7 +350,9 @@ function resolveNodeToElementBuildConfig(
     delete attributes['data-icon'];
     attributes.viewBox = icon.data.viewBox;
   }
-  const rule = catalog.globalStyles?.block?.rules?.find((entry) => entry.id === `layer-${node.uuid}`);
+  const rule = catalog.globalStyles?.block?.rules?.find(
+    (entry) => entry.id === `layer-${node.uuid}`,
+  );
   const referencedStyles = Object.fromEntries(
     Object.entries(rule?.declarations ?? {}).filter(([, value]) => STYLE_REFERENCE.test(value)),
   );
@@ -349,15 +433,36 @@ function componentPropValues(
   return values;
 }
 
+function fieldAtPath(value: FieldValue | undefined, path: string): FieldValue | undefined {
+  let current = value;
+  for (const segment of path.split('.')) {
+    current =
+      current && typeof current === 'object' && !Array.isArray(current)
+        ? current[segment]
+        : undefined;
+  }
+  return current;
+}
+
+function resolveCompositionSource(
+  source: NonNullable<NonNullable<Node['config']>['composition']>['source'],
+  ctx: PreviewResolveContext,
+) {
+  if (!source) return undefined;
+  if (source.kind === 'item') return fieldAtPath(ctx.item, source.path);
+  return ctx.componentProps?.[source.uuid];
+}
+
 function resolveParentPropBindings(
   fields: Readonly<Record<string, FieldValue>> | undefined,
   parentProps: Readonly<Record<string, FieldValue>>,
+  itemContext: FieldValue | undefined,
 ) {
   if (!fields) return undefined;
   return Object.fromEntries(
     Object.entries(fields).map(([name, value]) => [
       name,
-      resolveParentPropBinding(value, parentProps),
+      resolveParentPropBinding(value, parentProps, itemContext),
     ]),
   );
 }
@@ -365,25 +470,30 @@ function resolveParentPropBindings(
 function resolveParentPropBinding(
   value: FieldValue,
   parentProps: Readonly<Record<string, FieldValue>>,
+  itemContext: FieldValue | undefined,
   activeProps = new Set<string>(),
 ): FieldValue {
   if (typeof value === 'string') {
+    const itemMatch = value.match(ITEM_FIELD_REF);
+    if (itemMatch?.[1]) return fieldAtPath(itemContext, itemMatch[1]) ?? value;
     const match = value.match(COMPONENT_PROP_REF);
     const uuid = match?.[1];
     if (!uuid || activeProps.has(uuid)) return value;
     const parentValue = parentProps[uuid];
     if (parentValue === undefined) return value;
     const nextActive = new Set(activeProps).add(uuid);
-    return resolveParentPropBinding(parentValue, parentProps, nextActive);
+    return resolveParentPropBinding(parentValue, parentProps, itemContext, nextActive);
   }
   if (Array.isArray(value)) {
-    return value.map((entry) => resolveParentPropBinding(entry, parentProps, activeProps));
+    return value.map((entry) =>
+      resolveParentPropBinding(entry, parentProps, itemContext, activeProps),
+    );
   }
   if (value && typeof value === 'object') {
     return Object.fromEntries(
       Object.entries(value).map(([name, entry]) => [
         name,
-        resolveParentPropBinding(entry, parentProps, activeProps),
+        resolveParentPropBinding(entry, parentProps, itemContext, activeProps),
       ]),
     );
   }

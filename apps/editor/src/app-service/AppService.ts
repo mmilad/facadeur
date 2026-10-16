@@ -370,20 +370,26 @@ export class AppService {
     const spot = catalogLayerInsertTarget(definition, item, intent.placement);
     const parent = spot ? findNodeByUuid(definition.root, spot.parentUuid) : null;
     if (!spot || !parent) return;
-    const entry: Extract<LayerInsertEntry, { kind: 'instance' | 'primitive' }> | null =
+    const entry: LayerInsertEntry | null =
       intent.kind === 'instance'
         ? {
             kind: 'instance',
             assetId: intent.value,
             label: snapshot.catalog.find((asset) => asset.id === intent.value)?.name ?? '',
           }
-        : ['frame', 'text', 'image'].includes(intent.value)
+        : intent.kind === 'structural' && ['repeater', 'switch'].includes(intent.value)
           ? {
-              kind: 'primitive',
-              tool: intent.value as 'frame' | 'text' | 'image',
-              label: intent.value[0]!.toUpperCase() + intent.value.slice(1),
+              kind: 'structural',
+              tool: intent.value as 'repeater' | 'switch',
+              label: intent.value === 'repeater' ? 'Repeater' : 'Switch',
             }
-          : null;
+          : ['frame', 'text', 'image'].includes(intent.value)
+            ? {
+                kind: 'primitive',
+                tool: intent.value as 'frame' | 'text' | 'image',
+                label: intent.value[0]!.toUpperCase() + intent.value.slice(1),
+              }
+            : null;
     if (!entry) return;
     if (!catalogPlacementAllowed(definition.kind, parent, entry, snapshot.catalog)) {
       const assetKind =

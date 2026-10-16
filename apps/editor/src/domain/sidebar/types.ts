@@ -25,7 +25,7 @@ export interface SidebarLayer {
 }
 
 export interface SidebarInsertOption {
-  readonly kind: 'instance' | 'primitive';
+  readonly kind: 'instance' | 'primitive' | 'structural';
   readonly value: string;
   readonly label: string;
 }

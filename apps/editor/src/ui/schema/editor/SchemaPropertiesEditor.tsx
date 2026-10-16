@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import type { JsonSchema } from '@facadeur/core';
 import {
   BooleanField,
@@ -10,8 +10,10 @@ import {
 } from '@facadeur/form';
 import { Field } from '../../components/feedback/Field';
 import { fieldConfig } from './presets';
+import { SchemaCompositionEditor } from './SchemaCompositionEditor';
 import {
   arrayItemKinds,
+  compositionBranches,
   draftFromSchema,
   kindOf,
   scalarKinds,
@@ -26,6 +28,7 @@ type SchemaPropertiesEditorProps = {
   required: readonly string[];
   references: readonly SelectOption[];
   referenceTargets: readonly SchemaReferenceTargetChoice[];
+  renderSchema: (schema: JsonSchema, onChange: (schema: JsonSchema) => void) => ReactNode;
   onChange: (properties: Record<string, JsonSchema>, required: string[]) => void;
 };
 
@@ -35,6 +38,7 @@ type SchemaPropertyCardProps = {
   required: boolean;
   references: readonly SelectOption[];
   referenceTargets: readonly SchemaReferenceTargetChoice[];
+  renderSchema: SchemaPropertiesEditorProps['renderSchema'];
   onChange: (nextName: string, nextSchema: JsonSchema, required: boolean) => void;
   onRemove: () => void;
 };
@@ -54,6 +58,7 @@ function SchemaPropertyCard({
   required,
   references,
   referenceTargets,
+  renderSchema,
   onChange,
   onRemove,
 }: SchemaPropertyCardProps) {
@@ -102,7 +107,9 @@ function SchemaPropertyCard({
           : {}
         : nextKind === 'enum'
           ? { type: 'string', enum: [] }
-          : { type: nextKind };
+          : nextKind === 'oneOf' || nextKind === 'anyOf'
+            ? { [nextKind]: compositionBranches(schema.items ?? {}, nextKind) }
+            : { type: nextKind };
     onChange(name, { ...schema, type: 'array', items }, required);
   };
 
@@ -268,6 +275,18 @@ function SchemaPropertyCard({
               />
             </Field>
           ) : null}
+          {draft.kind === 'oneOf' || draft.kind === 'anyOf' ? (
+            <SchemaCompositionEditor
+              kind={draft.kind}
+              branches={compositionBranches(schema, draft.kind)}
+              onChange={(branches) =>
+                onChange(name, { ...schema, [draft.kind]: branches }, required)
+              }
+              renderBranch={(branch, _index, onBranchChange) =>
+                renderSchema(branch, onBranchChange)
+              }
+            />
+          ) : null}
           {draft.kind === 'string' && referenceTargets.length ? (
             <Field label="Reference target" htmlFor={`${bodyId}-reference-target`}>
               <SelectField
@@ -323,6 +342,7 @@ function SchemaPropertyCard({
                   required={schema.items?.required ?? []}
                   references={references}
                   referenceTargets={referenceTargets}
+                  renderSchema={renderSchema}
                   onChange={(properties, itemRequired) =>
                     onChange(
                       name,
@@ -341,6 +361,26 @@ function SchemaPropertyCard({
                   }
                 />
               ) : null}
+              {itemKind === 'oneOf' || itemKind === 'anyOf' ? (
+                <SchemaCompositionEditor
+                  kind={itemKind}
+                  branches={compositionBranches(schema.items ?? {}, itemKind)}
+                  onChange={(branches) =>
+                    onChange(
+                      name,
+                      {
+                        ...schema,
+                        type: 'array',
+                        items: { ...schema.items, [itemKind]: branches },
+                      },
+                      required,
+                    )
+                  }
+                  renderBranch={(_branch, _index, onBranchChange) =>
+                    renderSchema(_branch, onBranchChange)
+                  }
+                />
+              ) : null}
             </div>
           ) : null}
           {draft.kind === 'object' ? (
@@ -349,6 +389,7 @@ function SchemaPropertyCard({
               required={schema.required ?? []}
               references={references}
               referenceTargets={referenceTargets}
+              renderSchema={renderSchema}
               onChange={(properties, nestedRequired) =>
                 onChange(
                   name,
@@ -375,6 +416,7 @@ export function SchemaPropertiesEditor({
   required,
   references,
   referenceTargets,
+  renderSchema,
   onChange,
 }: SchemaPropertiesEditorProps) {
   const entries = Object.entries(properties);
@@ -415,6 +457,7 @@ export function SchemaPropertiesEditor({
           required={required.includes(name)}
           references={references}
           referenceTargets={referenceTargets}
+          renderSchema={renderSchema}
           onChange={(nextName, nextSchema, isRequired) =>
             updateProperty(name, nextName, nextSchema, isRequired)
           }

@@ -1,0 +1,57 @@
+.composition {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.composition h3,
+.composition p {
+  margin: 0;
+}
+
+.composition h3 {
+  font-size: 14px;
+}
+
+.composition p {
+  color: var(--muted, #6f675e);
+  font-size: 12px;
+}
+
+.branches {
+  display: grid;
+  gap: 8px;
+}
+
+.branch {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 8px;
+  border: 1px solid var(--line, #e3d9cc);
+  border-radius: 6px;
+}
+
+.branch legend {
+  padding: 0 4px;
+  color: var(--muted, #6f675e);
+  font-size: 12px;
+}
+
+.remove {
+  justify-self: end;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line, #e3d9cc);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted, #6f675e);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.add {
+  justify-self: start;
+}

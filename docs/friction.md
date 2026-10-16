@@ -204,6 +204,15 @@ docs/plan.md` attempted to fetch pinned pnpm 10.33.3 and failed with `ENOTFOUND`
   pinned pnpm 10.33.3 and failed with `ENOTFOUND registry.npmjs.org`. The Form and Editor typechecks,
   Prettier, and Storybook build passed through the approved host context. Continue using that
   context for repository checks; no install or pin change is needed.
+- **Update (2026-10-15, Catalog composition):** The restricted process again failed before project
+  code while Corepack tried to fetch pinned pnpm 10.33.3 (`ENOTFOUND registry.npmjs.org`). Use the
+  same pnpm command through the approved host context for authoritative typecheck results; no
+  repository workaround is needed.
+- **Update (2026-10-16, schema recursion diagnostics):** Restricted Prettier and Core/Editor
+  typechecks again failed before project code while Corepack tried to fetch pinned pnpm 10.33.3
+  (`ENOTFOUND registry.npmjs.org`). Approved host-context Prettier, both typechecks, and the
+  Storybook build succeeded. Continue using the approved host context; no repository workaround is
+  needed.
 
 ## Cloud verification process limits (2026-10-11)
 

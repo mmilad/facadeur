@@ -30,6 +30,53 @@ export const fieldExposureSchema = Type.Union([
 export const nodeConfigSchema = Type.Object(
   {
     definitionRef: Type.Optional(uuidSchema),
+    definitionRefBinding: Type.Optional(
+      Type.Object(
+        { kind: Type.Literal('item'), path: Type.String({ minLength: 1 }) },
+        { additionalProperties: false },
+      ),
+    ),
+    composition: Type.Optional(
+      Type.Union([
+        Type.Object(
+          {
+            kind: Type.Literal('repeater'),
+            source: Type.Optional(
+              Type.Union([
+                Type.Object(
+                  { kind: Type.Literal('prop'), uuid: uuidSchema },
+                  { additionalProperties: false },
+                ),
+                Type.Object(
+                  { kind: Type.Literal('item'), path: Type.String({ minLength: 1 }) },
+                  { additionalProperties: false },
+                ),
+              ]),
+            ),
+          },
+          { additionalProperties: false },
+        ),
+        Type.Object(
+          {
+            kind: Type.Literal('switch'),
+            source: Type.Optional(
+              Type.Union([
+                Type.Object(
+                  { kind: Type.Literal('prop'), uuid: uuidSchema },
+                  { additionalProperties: false },
+                ),
+                Type.Object(
+                  { kind: Type.Literal('item'), path: Type.String({ minLength: 1 }) },
+                  { additionalProperties: false },
+                ),
+              ]),
+            ),
+          },
+          { additionalProperties: false },
+        ),
+      ]),
+    ),
+    compositionCase: Type.Optional(Type.String({ minLength: 1 })),
     previewData: Type.Optional(previewDataSchema),
   },
   { additionalProperties: false },

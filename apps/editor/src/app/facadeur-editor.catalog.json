@@ -3,7 +3,7 @@
   "components": {
     "660e8400-e29b-41d4-a716-000000000136": {
       "uuid": "660e8400-e29b-41d4-a716-000000000136",
-      "name": "Facadeur header",
+      "name": "header",
       "kind": "component",
       "schema": {
         "kind": "inline",
@@ -136,11 +136,12 @@
             }
           ]
         }
-      }
+      },
+      "category": "base"
     },
     "660e8400-e29b-41d4-a716-000000000140": {
       "uuid": "660e8400-e29b-41d4-a716-000000000140",
-      "name": "Facadeur left sidebar",
+      "name": "sidebar left ",
       "kind": "component",
       "schema": {
         "kind": "inline",
@@ -292,11 +293,12 @@
             }
           ]
         }
-      }
+      },
+      "category": "base/sidebar"
     },
     "660e8400-e29b-41d4-a716-00000000014a": {
       "uuid": "660e8400-e29b-41d4-a716-00000000014a",
-      "name": "Facadeur right sidebar",
+      "name": "sidebar right",
       "kind": "component",
       "schema": {
         "kind": "inline",
@@ -633,7 +635,8 @@
             }
           ]
         }
-      }
+      },
+      "category": "base/sidebar"
     },
     "660e8400-e29b-41d4-a716-000000000154": {
       "uuid": "660e8400-e29b-41d4-a716-000000000154",
@@ -811,7 +814,7 @@
     },
     "660e8400-e29b-41d4-a716-000000000168": {
       "uuid": "660e8400-e29b-41d4-a716-000000000168",
-      "name": "Facadeur workspace shell",
+      "name": "shell",
       "kind": "component",
       "schema": {
         "kind": "inline",
@@ -970,7 +973,8 @@
             }
           ]
         }
-      }
+      },
+      "category": "base"
     },
     "660e8400-e29b-41d4-a716-000000000172": {
       "uuid": "660e8400-e29b-41d4-a716-000000000172",
@@ -1782,10 +1786,7 @@
     "1a60f254-fd8a-4e98-ac6c-22376fb19ba1": {
       "type": "object",
       "title": "Icon button",
-      "required": [
-        "label",
-        "icon"
-      ],
+      "required": ["label", "icon"],
       "properties": {
         "label": {
           "type": "string",
@@ -2354,21 +2355,13 @@
         "group": "",
         "valueType": "fontFamily",
         "value": {
-          "fallbacks": [
-            "system-ui",
-            "sans-serif"
-          ],
+          "fallbacks": ["system-ui", "sans-serif"],
           "family": "Inter",
           "source": {
             "family": "Inter",
             "type": "google"
           },
-          "weights": [
-            400,
-            500,
-            600,
-            700
-          ]
+          "weights": [400, 500, 600, 700]
         }
       }
     }
@@ -2641,13 +2634,6 @@
             "alignItems": "center",
             "gap": "8px",
             "width": "auto"
-          },
-          "breakpoints": {
-            "650e8400-e29b-41d4-a716-000000000003": {
-              "declarations": {
-                "display": "none"
-              }
-            }
           }
         },
         {

@@ -72,7 +72,7 @@ export interface EditorEventDataMap {
   [EditorEventType.LayerInsert]: {
     readonly targetId: string;
     readonly placement: 'inside' | 'below';
-    readonly kind: 'instance' | 'primitive';
+    readonly kind: 'instance' | 'primitive' | 'structural';
     readonly value: string;
   };
   [EditorEventType.LayerCopy]: {

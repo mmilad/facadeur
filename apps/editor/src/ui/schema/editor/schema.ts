@@ -37,6 +37,8 @@ export const scalarKinds: SelectOption[] = [
   { value: 'enum', label: 'String enum' },
   { value: 'object', label: 'Object' },
   { value: 'array', label: 'Array' },
+  { value: 'oneOf', label: 'One of' },
+  { value: 'anyOf', label: 'Any of' },
   { value: 'reference', label: 'Catalog reference' },
 ];
 
@@ -47,12 +49,28 @@ export const iconReferenceTarget: SchemaReferenceTargetChoice = {
   label: 'Icon',
 };
 
+export const componentReferenceTarget: SchemaReferenceTargetChoice = {
+  target: 'component',
+  label: 'Component',
+};
+
 export const arrayItemKinds: SelectOption[] = scalarKinds.filter((kind) => kind.value !== 'array');
 
 export function kindOf(schema: JsonSchema): string {
   if (schema.$ref) return 'reference';
   if (Array.isArray(schema.enum)) return 'enum';
+  if (Array.isArray(schema.oneOf)) return 'oneOf';
+  if (Array.isArray(schema.anyOf)) return 'anyOf';
   return typeof schema.type === 'string' ? schema.type : 'object';
+}
+
+export function initialCompositionBranch(): JsonSchema {
+  return { type: 'string' };
+}
+
+export function compositionBranches(schema: JsonSchema, kind: 'oneOf' | 'anyOf'): JsonSchema[] {
+  const branches = schema[kind] ?? schema[kind === 'oneOf' ? 'anyOf' : 'oneOf'];
+  return branches?.length ? branches : [initialCompositionBranch()];
 }
 
 export function referencesAsOptions(references: readonly SchemaReferenceChoice[]): SelectOption[] {
@@ -103,6 +121,8 @@ export function schemaFromDraft(draft: PropertyDraft, previous: JsonSchema): Jso
       type: 'array',
       items: sameKind ? (previous.items ?? { type: 'string' }) : { type: 'string' },
     };
+  } else if (draft.kind === 'oneOf' || draft.kind === 'anyOf') {
+    shape = { [draft.kind]: compositionBranches(previous, draft.kind) };
   } else shape = { type: draft.kind };
 
   const result: JsonSchema = {

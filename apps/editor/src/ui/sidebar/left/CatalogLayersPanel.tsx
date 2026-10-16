@@ -289,7 +289,9 @@ function CatalogLayerRows({
 }
 
 function layerTypeLabel(item: SidebarLayer) {
-  if (item.type === 'repeater' || item.type === 'switch') return 'Fragment';
+  if (item.type === 'repeater' || item.type === 'switch') {
+    return item.type === 'repeater' ? 'Repeater' : 'Switch';
+  }
   return item.tagName ?? '';
 }
 

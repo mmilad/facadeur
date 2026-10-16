@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { catalogSchemaTitle } from '../../../domain/catalog/schema-display';
 import type { SchemaReferenceChoice, SchemaReferenceTargetChoice } from './SchemaEditor';
 import { SchemaEditor } from './SchemaEditor';
+import { SchemaRecursionWarnings } from './SchemaRecursionWarnings';
 import { fieldConfig } from './presets';
 import styles from './SchemaCatalogEditor.module.css';
 
@@ -113,6 +114,7 @@ export function SchemaCatalogEditor({
               }
             />
             <p className={styles.id}>Id: {selected.uuid}</p>
+            <SchemaRecursionWarnings schemas={schemas} selectedId={selected.uuid} />
             <SchemaEditor
               schema={selected.schema}
               references={references}

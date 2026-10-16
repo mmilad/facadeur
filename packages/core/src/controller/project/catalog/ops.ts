@@ -4,6 +4,7 @@ import type {
   FieldExposure,
   JsonSchemaObject,
   Node,
+  NodeConfig,
   NodeDefinition,
   ProjectCatalog,
   StaticFieldConfig,
@@ -160,6 +161,38 @@ export function patchNodeDataRecord(
 ): ProjectCatalog {
   return mutateNode(catalog, definitionUuid, nodeUuid, (node) => {
     (node as { data?: Record<string, unknown> }).data = { ...record };
+  });
+}
+
+export function patchNodeComposition(
+  catalog: ProjectCatalog,
+  definitionUuid: string,
+  nodeUuid: string,
+  patch: {
+    readonly source?: NonNullable<NodeConfig['composition']>['source'] | null;
+    readonly compositionCase?: string | null;
+    readonly definitionRefBinding?: NodeConfig['definitionRefBinding'] | null;
+  },
+): ProjectCatalog {
+  return mutateNode(catalog, definitionUuid, nodeUuid, (node) => {
+    const config = { ...(node.config ?? {}) };
+    if (config.composition && Object.hasOwn(patch, 'source')) {
+      const composition = { ...config.composition };
+      if (patch.source) composition.source = patch.source;
+      else delete composition.source;
+      config.composition = composition;
+    }
+    if (Object.hasOwn(patch, 'compositionCase')) {
+      if (patch.compositionCase) config.compositionCase = patch.compositionCase;
+      else delete config.compositionCase;
+    }
+    if (Object.hasOwn(patch, 'definitionRefBinding')) {
+      if (patch.definitionRefBinding) {
+        config.definitionRefBinding = patch.definitionRefBinding;
+        delete config.definitionRef;
+      } else delete config.definitionRefBinding;
+    }
+    (node as { config?: NodeConfig }).config = Object.keys(config).length > 0 ? config : undefined;
   });
 }
 

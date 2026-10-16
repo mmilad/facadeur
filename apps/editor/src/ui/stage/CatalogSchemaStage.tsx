@@ -10,7 +10,8 @@ import { Stack } from '../components/layout';
 import { Field } from '../components/feedback';
 import { Select } from '../controls/form-binding/index';
 import { SchemaEditor, type SchemaReferenceChoice } from '../schema/editor/SchemaEditor';
-import { iconReferenceTarget } from '../schema/editor/schema';
+import { SchemaRecursionWarnings } from '../schema/editor/SchemaRecursionWarnings';
+import { componentReferenceTarget, iconReferenceTarget } from '../schema/editor/schema';
 import { CatalogPreviewFields, staticFieldConfigsForDefinition } from './CatalogPreviewFields';
 
 const INLINE_SCHEMA_VALUE = '__inline__';
@@ -226,11 +227,21 @@ export function CatalogSchemaStage({
                   </Stack>
                 ) : definition.schema.kind === 'inline' ? (
                   <Stack gap={10}>
+                    <SchemaRecursionWarnings
+                      schemas={[
+                        ...schemaEntries.map(([uuid, schema]) => ({ uuid, schema })),
+                        {
+                          uuid: `inline:${definition.uuid}`,
+                          schema: definition.schema.schema,
+                        },
+                      ]}
+                      selectedId={`inline:${definition.uuid}`}
+                    />
                     <SchemaEditor
                       heading="Inline contract"
                       schema={definition.schema.schema}
                       references={schemaReferences}
-                      referenceTargets={[iconReferenceTarget]}
+                      referenceTargets={[iconReferenceTarget, componentReferenceTarget]}
                       onChange={(next) => void saveInlineSchema(next as JsonSchemaObject)}
                     />
                     {propertyRows.some((row) => row.source !== 'Local') ? (

@@ -27,6 +27,10 @@ export type InspectorFormValue = {
     text: string;
     classList: string[];
     data: Record<string, string>;
+    compositionSourceProp: string;
+    compositionSourceItemPath: string;
+    compositionCase: string;
+    definitionRefBindingPath: string;
   };
   previewData: Record<string, FieldValue>;
   nodeData: Record<string, FieldValue>;
@@ -35,7 +39,12 @@ export type InspectorFormValue = {
 export type InspectorFormField =
   | { type: 'section'; title: string; fields: InspectorFormField[] }
   | { type: 'text'; path: string; label: string; hint?: string; bindable?: boolean }
-  | { type: 'select'; path: string; label: string; options: readonly string[] }
+  | {
+      type: 'select';
+      path: string;
+      label: string;
+      options: readonly { value: string; label: string }[];
+    }
   | { type: 'classList'; path: string; label: string; suggestions: readonly string[] }
   | {
       type: 'record';
@@ -156,12 +165,23 @@ export function buildInspectorFormModel(
       text: node.dom.text ?? '',
       classList: classListFromNode(node),
       data: recordFromFieldValues(node.data ?? {}),
+      compositionSourceProp:
+        node.config?.composition?.source?.kind === 'prop'
+          ? node.config.composition.source.uuid
+          : '',
+      compositionSourceItemPath:
+        node.config?.composition?.source?.kind === 'item'
+          ? node.config.composition.source.path
+          : '',
+      compositionCase: node.config?.compositionCase ?? '',
+      definitionRefBindingPath: node.config?.definitionRefBinding?.path ?? '',
     },
     previewData: { ...previewFields },
     nodeData: { ...nodeInputs.values },
   };
 
   const sections: InspectorFormField[] = [];
+  const parentNode = findParentNode(definition.root, nodeUuid);
   if (nodeUuid === definition.root.uuid)
     sections.push({
       type: 'section',
@@ -177,7 +197,7 @@ export function buildInspectorFormModel(
           type: 'select',
           path: 'node.tagName',
           label: 'Tag',
-          options: tagOptions,
+          options: tagOptions.map((value) => ({ value, label: value })),
         },
       ],
     });
@@ -194,7 +214,46 @@ export function buildInspectorFormModel(
                 type: 'select' as const,
                 path: 'node.tagName',
                 label: 'Tag',
-                options: tagOptions,
+                options: tagOptions.map((value) => ({ value, label: value })),
+              },
+            ]
+          : []),
+        ...(node.config?.composition
+          ? [
+              {
+                type: 'select' as const,
+                path: 'node.compositionSourceProp',
+                label: 'Source prop',
+                options: [
+                  { value: '', label: 'Choose an array or enum prop…' },
+                  ...compositionSourceOptions(
+                    effectiveSchemaForDefinition(catalog, definition).schema,
+                    node.config.composition.kind,
+                  ),
+                ],
+              },
+              {
+                type: 'text' as const,
+                path: 'node.compositionSourceItemPath',
+                label: 'Item field path',
+              },
+            ]
+          : []),
+        ...(parentNode?.config?.composition?.kind === 'switch'
+          ? [
+              {
+                type: 'text' as const,
+                path: 'node.compositionCase',
+                label: 'Switch case value',
+              },
+            ]
+          : []),
+        ...(node.config?.definitionRef || node.config?.definitionRefBinding
+          ? [
+              {
+                type: 'text' as const,
+                path: 'node.definitionRefBindingPath',
+                label: 'Dynamic component item path',
               },
             ]
           : []),
@@ -322,6 +381,40 @@ export function inspectorChangeTarget(
         setting === 'isStatic' || setting === 'expose' ? value === true : (value as FieldValue),
     };
   }
+  if (path === 'node.compositionSourceProp') {
+    const uuid = String(value ?? '').trim();
+    return {
+      kind: 'nodeComposition',
+      nodeUuid,
+      patch: { source: uuid ? { kind: 'prop', uuid } : null },
+    };
+  }
+  if (path === 'node.compositionSourceItemPath') {
+    const itemPath = String(value ?? '').trim();
+    return {
+      kind: 'nodeComposition',
+      nodeUuid,
+      patch: { source: itemPath ? { kind: 'item', path: itemPath } : null },
+    };
+  }
+  if (path === 'node.compositionCase') {
+    const caseValue = String(value ?? '').trim();
+    return {
+      kind: 'nodeComposition',
+      nodeUuid,
+      patch: { compositionCase: caseValue || null },
+    };
+  }
+  if (path === 'node.definitionRefBindingPath') {
+    const itemPath = String(value ?? '').trim();
+    return {
+      kind: 'nodeComposition',
+      nodeUuid,
+      patch: {
+        definitionRefBinding: itemPath ? { kind: 'item', path: itemPath } : null,
+      },
+    };
+  }
   if (path === 'node.tagName') {
     return { kind: 'nodeTagName', nodeUuid, value: String(value ?? '').trim() };
   }
@@ -361,6 +454,41 @@ export function inspectorChangeTarget(
       field,
       value: value as FieldValue | undefined,
     };
+  }
+  return null;
+}
+
+function compositionSourceOptions(
+  schema: Record<string, unknown> | null,
+  kind: 'repeater' | 'switch',
+) {
+  const properties = schema?.properties;
+  if (!properties || typeof properties !== 'object' || Array.isArray(properties)) return [];
+  return Object.entries(properties as Record<string, unknown>).flatMap(([name, value]) => {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return [];
+    const field = value as Record<string, unknown>;
+    const uuid = field['x-facadeur-prop-id'];
+    const enumValues = Array.isArray(field.enum)
+      ? true
+      : Array.isArray(field.oneOf) &&
+        field.oneOf.every(
+          (branch) =>
+            !!branch &&
+            typeof branch === 'object' &&
+            !Array.isArray(branch) &&
+            typeof (branch as Record<string, unknown>).const === 'string',
+        );
+    const valid = kind === 'repeater' ? field.type === 'array' : enumValues;
+    if (typeof uuid !== 'string' || !valid) return [];
+    return [{ value: uuid, label: `${String(field.title ?? name)} (${name})` }];
+  });
+}
+
+function findParentNode(root: Node, targetUuid: string): Node | null {
+  for (const child of root.dom.children ?? []) {
+    if (child.uuid === targetUuid) return root;
+    const nested = findParentNode(child, targetUuid);
+    if (nested) return nested;
   }
   return null;
 }

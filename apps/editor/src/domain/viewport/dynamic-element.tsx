@@ -29,6 +29,7 @@ export function DynamicElement({ config }: { config: ElementBuildConfig }) {
     dataset,
     nodeUuid,
     properties,
+    renderKey,
     styleNodeUuids,
     tagName,
     text,
@@ -63,15 +64,11 @@ export function DynamicElement({ config }: { config: ElementBuildConfig }) {
   if (nodeUuid || styleNodeUuids?.length) {
     const currentClass = typeof props.className === 'string' ? props.className : '';
     const styleClasses = new Set([...(styleNodeUuids ?? []), ...(nodeUuid ? [nodeUuid] : [])]);
-    props.className = [
-      currentClass,
-      ...[...styleClasses].map((uuid) => `facadeur-node-${uuid}`),
-    ]
+    props.className = [currentClass, ...[...styleClasses].map((uuid) => `facadeur-node-${uuid}`)]
       .filter(Boolean)
       .join(' ');
   }
-  if (attributeStyle)
-    props.style = parseInlineStyle(attributeStyle);
+  if (attributeStyle) props.style = parseInlineStyle(attributeStyle);
 
   useLayoutEffect(() => {
     const element = elementRef.current;
@@ -86,7 +83,10 @@ export function DynamicElement({ config }: { config: ElementBuildConfig }) {
   const renderedChildren = [
     ...(content !== undefined && content !== '' ? [content] : []),
     ...children.map((child, index) => (
-      <DynamicElement key={child.nodeUuid ?? `${child.tagName}-${index}`} config={child} />
+      <DynamicElement
+        key={child.renderKey ?? child.nodeUuid ?? `${child.tagName}-${index}`}
+        config={child}
+      />
     )),
   ];
 

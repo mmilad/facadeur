@@ -9,6 +9,23 @@ export interface PreviewData {
 
 export interface NodeConfig {
   readonly definitionRef?: Uuid;
+  /** Resolve a component definition UUID from the active repeater item. */
+  readonly definitionRefBinding?: { readonly kind: 'item'; readonly path: string };
+  /** Data-driven composition for this node, or a case value when nested in a switch. */
+  readonly composition?:
+    | {
+        readonly kind: 'repeater';
+        readonly source?:
+          | { readonly kind: 'prop'; readonly uuid: Uuid }
+          | { readonly kind: 'item'; readonly path: string };
+      }
+    | {
+        readonly kind: 'switch';
+        readonly source?:
+          | { readonly kind: 'prop'; readonly uuid: Uuid }
+          | { readonly kind: 'item'; readonly path: string };
+      };
+  readonly compositionCase?: string;
   readonly previewData?: PreviewData;
 }
 

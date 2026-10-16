@@ -145,12 +145,113 @@ function SingleSchemaExample() {
   );
 }
 
+function CompositionExamples() {
+  const [oneOf, setOneOf] = useState<JsonSchema>({
+    oneOf: [
+      {
+        title: 'Text content',
+        type: 'object',
+        properties: { text: { type: 'string' } },
+        required: ['text'],
+        additionalProperties: false,
+      },
+      {
+        title: 'Image content',
+        type: 'object',
+        properties: { src: { type: 'string' }, alt: { type: 'string' } },
+        required: ['src'],
+        additionalProperties: false,
+      },
+    ],
+  });
+  const [anyOf, setAnyOf] = useState<JsonSchema>({
+    anyOf: [
+      { title: 'Email', type: 'string', format: 'email' },
+      { title: 'Phone', type: 'string', pattern: '^\\+?[0-9]+$' },
+    ],
+  });
+
+  return (
+    <div style={{ display: 'grid', gap: 24, gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+      <SchemaEditor
+        heading="One of · exactly one branch matches"
+        schema={oneOf}
+        references={[]}
+        onChange={setOneOf}
+      />
+      <SchemaEditor
+        heading="Any of · one or more branches match"
+        schema={anyOf}
+        references={[]}
+        onChange={setAnyOf}
+      />
+    </div>
+  );
+}
+
+function RecursiveReferencesExample() {
+  const firstId = 'storybook-recursive-node';
+  const secondId = 'storybook-recursive-parent';
+  const [schemas, setSchemas] = useState<CatalogSchemaEntry[]>([
+    {
+      uuid: firstId,
+      schema: {
+        title: 'Tree node',
+        type: 'object',
+        properties: { parent: { $ref: `urn:facadeur:schema:${secondId}` } },
+        required: ['parent'],
+      },
+    },
+    {
+      uuid: secondId,
+      schema: {
+        title: 'Tree parent',
+        type: 'object',
+        properties: { node: { $ref: `urn:facadeur:schema:${firstId}` } },
+        required: ['node'],
+      },
+    },
+  ]);
+  const references = schemas.map(({ uuid, schema }) => ({
+    ref: `urn:facadeur:schema:${uuid}`,
+    label: String(schema.title ?? uuid),
+    group: 'Catalog schemas',
+  }));
+
+  return (
+    <SchemaCatalogEditor
+      schemas={schemas}
+      selectedId={firstId}
+      query=""
+      references={references}
+      onQueryChange={() => undefined}
+      onSelect={() => undefined}
+      onCreate={() => undefined}
+      onSchemaChange={(uuid, schema) =>
+        setSchemas((current) =>
+          current.map((entry) => (entry.uuid === uuid ? { ...entry, schema } : entry)),
+        )
+      }
+      onDelete={() => undefined}
+      onSave={() => undefined}
+    />
+  );
+}
+
 export const CatalogManager: Story = {
   render: () => <CatalogEditorExample />,
 };
 
 export const SingleSchema: Story = {
   render: () => <SingleSchemaExample />,
+};
+
+export const Compositions: Story = {
+  render: () => <CompositionExamples />,
+};
+
+export const RecursiveReferences: Story = {
+  render: () => <RecursiveReferencesExample />,
 };
 
 export const Playground: Story = {

@@ -67,7 +67,6 @@ export function buildCatalogEditorSnapshot(input: {
     const parent = target ? findNodeByUuid(openDefinition.root, target.parentUuid) : null;
     if (!parent) return [];
     return catalogLayerInsertEntries(openDefinition.kind, catalogAssets, input.openId)
-      .filter((entry) => entry.kind !== 'structural')
       .filter((entry) => catalogPlacementAllowed(openDefinition.kind, parent, entry, catalogAssets))
       .map((entry) => ({
         kind: entry.kind,

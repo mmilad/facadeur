@@ -54,6 +54,7 @@ export function configFieldsForDefinition(catalog: ProjectCatalog, definition: N
 export function schemaWithReferenceOptions(schema: JsonSchemaObject, catalog: ProjectCatalog) {
   return mapSchemaReferences(schema, (target) => {
     if (target === 'icon') return (catalog.icons ?? []).map((icon) => icon.id);
+    if (target === 'component') return Object.keys(catalog.components);
     return [];
   }) as JsonSchemaObject;
 }

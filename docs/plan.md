@@ -1,5 +1,27 @@
 # Facadeur cleanup plan
 
+- [x] Schema editor: warn about forced recursive catalog schema references.
+  - Evidence: schema `$ref` values can connect catalog schemas in direct and indirect cycles; the editor currently exposes no diagnostic when a cycle has no optional-field or array exit.
+  - Action: derive a reference graph from catalog schema entries, detect cycles that remain after optional-property and array-item edges are treated as termination points, and show a non-blocking warning for the selected schema. Bound dynamic component expansion in the shared preview/codegen resolver so recursive data cannot overflow the call stack.
+  - Scope: catalog and inline schema editing surfaces; no new reference format or strict recursion prohibition.
+  - Contracts: preserve `$ref` values and allow saving recursive schemas; describe the detected path and note that union analysis is heuristic. Dynamic component recursion remains allowed up to a 32-level expansion limit.
+  - Validation: Core and Editor typechecks, Prettier, Storybook production build, candidate detector, and `git diff --check` passed. Added a Storybook example for an indirect required cycle. Tests were not run.
+
+- [x] Catalog: support data-driven repeater and switch nodes for recursive components.
+  - Evidence: Catalog node contracts, placement, inspector controls, validation, and Core preview/codegen resolution now cover repeater templates and switch cases; dynamic component references are supported in repeater items.
+  - Action: add a Tree Node example with grouped component references and load it alongside the app's JSON seed catalog.
+  - Scope: recursive composition of Catalog definitions using schema data. Ordinary DOM nodes and existing fixed `definitionRef` instances remain supported.
+  - Contracts: Repeater reads an array prop and renders its child template with each item as
+    binding context. Switch reads an enum value and renders the child matching that value. Catalog
+    component references remain UUID-based and are validated against allowed catalog targets.
+  - Validation: Core and Editor typechecks, inspect Catalog validation and preview/codegen
+    behavior, candidate detector and diff check. Do not alter the user's staged seed-catalog JSON.
+  - Refactoring review: keep the Catalog composition walk in `resolve.ts` with field binding and
+    definition expansion, and keep its new invariants in Catalog validation. The large
+    `components.ts` remains the example catalog registry; the new TreeNode itself lives in
+    `tree-node.ts`. Existing AppService and Catalog directory boundaries stay intact because
+    insertion routing and catalog mutations remain within their current owners.
+
 - [x] Catalog: bind SVG icons by catalog key and expose dynamic choices.
   - Evidence: Icon Btn still stores a data URI, while icon geometry already lives in
     `ProjectCatalog.icons`; the current transform menu only offers text, props, and tokens.
@@ -371,10 +393,10 @@ signal. The review decisions are:
   adjacent `catalog/queries.ts` module; nested preview updates delegate to a Catalog operation.
 - `packages/examples/src/form-controls-section/dom.ts` (526 lines): one canonical reusable
   Catalog fixture tree.
-- `apps/editor/src/app-service/AppService.ts` (565 lines): one event-to-operation coordinator;
+- `apps/editor/src/app-service/AppService.ts` (614 lines): one event-to-operation coordinator;
   its switch is the single dispatch boundary and its private helpers own related Catalog actions.
   Splitting cases into per-event services would scatter the operation contract again.
-- `packages/core/src/controller/project/catalog` (12 direct source files): keep the files together
+- `packages/core/src/controller/project/catalog` (13 direct source files): keep the files together
   because they all implement Catalog-owned queries, validation, tree, definition, and style
   operations. The new layer-style behavior belongs in this domain and the existing `index.ts`
   remains its public boundary; a finer split would add indirection without separating ownership.
@@ -382,6 +404,12 @@ signal. The review decisions are:
   definitions, schemas, preview defaults, and registry together as one cohesive Catalog component
   set for the Facadeur design concepts. The responsive header lives in `header.ts` because its
   breakpoint-based layout changes independently from the other design components.
+- `packages/core/src/controller/project/node/preview/resolve.ts` (528 lines), `inspector-view.ts`
+  (494 lines), and Catalog `validate.ts` (538 lines): keep the preview walker, declarative
+  Inspector model, and Catalog invariants in their current owners. This change adds composition
+  branches and a bounded dynamic-reference depth to the existing recursive resolver and validation
+  walk without introducing a separate lifecycle or shared behavior that would justify another
+  module. The schema editor's independent graph diagnostic remains in its feature directory.
 
 ## Latest verification
 
@@ -507,3 +535,15 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
   - Scope: correct static config editing for typed catalog references, starting with icons; no changes to token transforms or serialized static config.
   - Contracts: keep icon IDs as strings, preserve reference metadata and static config paths, and keep unknown literal IDs subject to existing strict validation.
   - Validation: regression tests verify projected config-field options and render the static reference as a select with the selected catalog ID; focused Core/Editor tests (11), Core/Editor typechecks, candidate detector, and `git diff --check` passed.
+- [x] Storybook: author `oneOf` and `anyOf` compositions in the schema form.
+  - Evidence: the JSON Schema contract accepts both keywords, but `kindOf` and the schema type selectors expose only primitive, object, array, enum, and reference forms. Editing a composition currently treats it as an object and cannot edit its branches.
+  - Action: expose `oneOf` and `anyOf` as schema kinds; add a controlled branch editor that recursively reuses `SchemaEditor` and existing `packages/form` fields. Keep at least one branch and preserve branch schemas and metadata during edits. Keep `SchemaPropertiesEditor` cohesive because its field-card controls share one controlled update path; branch list presentation lives in `SchemaCompositionEditor`.
+  - Scope: continue the Storybook schema editor and catalog manager; no new schema keywords, application workflow, or data migration.
+  - Contracts: emit standard JSON Schema `oneOf`/`anyOf`; preserve existing branches and surrounding schema metadata; distinguish exact-one from at-least-one semantics in labels; keep object/array/ref/enum editing unchanged.
+  - Validation: Editor typecheck, Storybook production build, Prettier, candidate detector, and `git diff --check` passed. The running dev server has a stale story index and could not open the new `Compositions` story for visual inspection; restart it to browse the built story. Tests were not run.
+- [x] Core: make stale static-field validation errors actionable.
+  - Evidence: schema fields can be renamed or have their types changed while catalog instances still store static values under the old field name or with the old value shape.
+  - Action: include the owning definition and, for instance settings, the instance and referenced definition in validation errors; distinguish removed fields from values that no longer match the schema.
+  - Scope: improve diagnostics only; no migration or silent config removal.
+  - Contracts: preserve catalog data and validation rules; continue rejecting stale configs until the user updates them.
+  - Validation: Core and Editor typechecks, candidate detector, and `git diff --check` passed; tests were not run.

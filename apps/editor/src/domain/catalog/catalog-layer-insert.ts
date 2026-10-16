@@ -32,10 +32,8 @@ export function catalogLayerInsertEntries(
 ): LayerInsertEntry[] {
   if (kind === 'atom') return [];
   if (kind === 'page') {
-    return catalogInstances(
-      catalog,
-      openId,
-      (asset) => defaultNestingRules.page.instanceKinds.includes(asset.kind),
+    return catalogInstances(catalog, openId, (asset) =>
+      defaultNestingRules.page.instanceKinds.includes(asset.kind),
     );
   }
   return [
@@ -89,7 +87,7 @@ export function catalogPlacementAllowed(
   if (!canAcceptCatalogChildren(parent)) return false;
   const rule = defaultNestingRules[docKind];
   if (!rule) return false;
-  if (entry.kind === 'structural') return false;
+  if (entry.kind === 'structural') return rule.nodeTypes.includes(entry.tool);
   if (entry.kind === 'primitive') {
     return rule.nodeTypes.includes(entry.tool);
   }
@@ -109,9 +107,7 @@ export function catalogLayerInsertEntriesForLayer(
   if (!target) return [];
   const parent = findNodeByUuid(definition.root, target.parentUuid);
   if (!parent) return [];
-  const entries = catalogLayerInsertEntries(definition.kind, snap.catalog, snap.openId).filter(
-    (entry) => entry.kind !== 'structural',
-  );
+  const entries = catalogLayerInsertEntries(definition.kind, snap.catalog, snap.openId);
   return entries.filter((entry) =>
     catalogPlacementAllowed(definition.kind, parent, entry, snap.catalog),
   );
