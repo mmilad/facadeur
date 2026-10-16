@@ -19,3 +19,10 @@ export {
   resolveTemplateString,
   type PreviewResolveContext,
 } from './resolve';
+export {
+  computedIndexName,
+  resolveReferenceText,
+  resolveReferenceValue,
+  type ReferenceResolutionContext,
+  type RepeaterReferenceScope,
+} from './reference-resolver';

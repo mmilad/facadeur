@@ -41,6 +41,7 @@ export const nodeConfigSchema = Type.Object(
         Type.Object(
           {
             kind: Type.Literal('repeater'),
+            indexName: Type.Optional(Type.String({ minLength: 1 })),
             source: Type.Optional(
               Type.Union([
                 Type.Object(

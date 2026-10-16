@@ -9,11 +9,18 @@ import type { ElementBuildConfig } from '@facadeur/domain';
 import { findDefinition } from '../../catalog/ops';
 import { lockedStaticFieldValues, mergePreviewFields, staticFieldValues } from './merge';
 import { effectiveSchemaForDefinition } from '../../catalog/field-contract';
-import { componentPropsForSchema } from '../../catalog/field-ids';
-import { readTokenTree } from '../../../style/tokens/global/tree';
-import { tokenReference } from '../../../style/tokens/syntax';
 import { canAcceptCatalogChildren } from '../../catalog/tree-ops';
 import { effectiveClassList } from '../../catalog/node-classes';
+import {
+  componentPropValues,
+  computedIndexName,
+  fieldAtPath,
+  isSupportedReference,
+  repeaterItemSchema,
+  resolveReferenceValue,
+  resolveReferenceText,
+  type RepeaterReferenceScope,
+} from './reference-resolver';
 
 /** Merged field layers + catalog context for binding resolution. */
 export type PreviewResolveContext = {
@@ -21,12 +28,11 @@ export type PreviewResolveContext = {
   readonly fields: Record<string, FieldValue>;
   readonly overrides?: Record<string, FieldValue>;
   readonly componentProps?: Readonly<Record<string, FieldValue>>;
+  readonly componentSchema?: Record<string, unknown> | null;
   readonly item?: FieldValue;
+  readonly repeaterScopes?: readonly RepeaterReferenceScope[];
 };
 
-const PROP_REF = /^\{prop:([^}]+)\}$/;
-const COMPONENT_PROP_REF = /^\{props:([^}]+)\}$/;
-const ITEM_FIELD_REF = /^\{item:([^}]+)\}$/;
 const STYLE_REFERENCE = /^\{props:[^}]+\}$/;
 const MAX_DYNAMIC_DEFINITION_DEPTH = 32;
 
@@ -37,34 +43,14 @@ type ChildrenSlotContent = {
   activeDefinitions: ReadonlySet<string>;
   inheritedOverrides: Record<string, FieldValue>;
   itemContext: FieldValue | undefined;
+  repeaterScopes: readonly RepeaterReferenceScope[];
   dynamicDefinitionDepth: number;
   parentSlotContent?: ChildrenSlotContent;
 };
 
 /** Replace `{prop:uuid}` and similar templates with literal strings for renderers. */
 export function resolveTemplateString(template: string, ctx: PreviewResolveContext): string {
-  const match = template.match(PROP_REF);
-  if (match) {
-    const uuid = match[1];
-    const prop = uuid ? ctx.catalog.props?.[uuid] : undefined;
-    if (prop?.value) return prop.value;
-  }
-  const componentMatch = template.match(COMPONENT_PROP_REF);
-  if (componentMatch) {
-    const value = componentMatch[1] ? ctx.componentProps?.[componentMatch[1]] : undefined;
-    if (value === undefined || value === null) return '';
-    if (typeof value === 'string') return value;
-    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
-    return template;
-  }
-  const itemMatch = template.match(ITEM_FIELD_REF);
-  if (itemMatch) {
-    const value = itemMatch[1] ? fieldAtPath(ctx.item, itemMatch[1]) : undefined;
-    if (value === undefined || value === null) return '';
-    if (typeof value === 'string') return value;
-    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
-  }
-  return template;
+  return isSupportedReference(template) ? resolveReferenceText(template, ctx) : template;
 }
 
 function resolveStringRecord(
@@ -105,36 +91,10 @@ function textFromNode(
   node: Node,
   fields: Record<string, FieldValue>,
   ctx: PreviewResolveContext,
-  resolveTokenText: (value: string) => string,
 ): string | undefined {
   const fieldText = stringField(fields.text);
   const source = fieldText ?? node.dom.text;
-  return source === undefined ? undefined : resolveTokenText(resolveTemplateString(source, ctx));
-}
-
-function createTokenTextResolver(tokenTree: unknown) {
-  const tokensByUuid = readTokenTree(tokenTree).tokens;
-
-  function resolveUuid(uuid: string, activeUuids: ReadonlySet<string>): string | undefined {
-    const token = tokensByUuid.get(uuid);
-    if (!token || activeUuids.has(uuid)) return undefined;
-    const nextActiveUuids = new Set(activeUuids).add(uuid);
-    if (typeof token.value === 'string') {
-      const alias = tokenReference(token.value);
-      if (alias) return resolveUuid(alias, nextActiveUuids);
-      return token.value;
-    }
-    if (typeof token.value === 'number' || typeof token.value === 'boolean') {
-      return String(token.value);
-    }
-    return JSON.stringify(token.value) ?? '';
-  }
-
-  return (value: string) => {
-    const uuid = tokenReference(value);
-    if (!uuid) return value;
-    return resolveUuid(uuid, new Set()) ?? '';
-  };
+  return source === undefined ? undefined : resolveTemplateString(source, ctx);
 }
 
 /**
@@ -153,8 +113,8 @@ export function resolveDefinitionToElementBuildConfig(
     parentFields,
     new Set([definition.uuid]),
     {},
-    createTokenTextResolver(catalog.tokens ?? {}),
     undefined,
+    [],
     0,
     undefined,
   );
@@ -167,8 +127,8 @@ function resolveNodeToElementBuildConfig(
   parentFields: Record<string, FieldValue>,
   activeDefinitions: ReadonlySet<string>,
   inheritedOverrides: Record<string, FieldValue>,
-  resolveTokenText: (value: string) => string,
   itemContext: FieldValue | undefined,
+  repeaterScopes: readonly RepeaterReferenceScope[],
   dynamicDefinitionDepth: number,
   slotContent: ChildrenSlotContent | undefined,
 ): ElementBuildConfig {
@@ -204,13 +164,11 @@ function resolveNodeToElementBuildConfig(
       );
       const instancePreviewData = resolveParentPropBindings(
         node.config?.previewData?.fields as Record<string, FieldValue> | undefined,
-        parentComponentProps,
-        itemContext,
+        { catalog, componentProps: parentComponentProps, repeaterScopes },
       );
       const instanceData = resolveParentPropBindings(
         node.data as Record<string, FieldValue> | undefined,
-        parentComponentProps,
-        itemContext,
+        { catalog, componentProps: parentComponentProps, repeaterScopes },
       );
       const hiddenStaticFields = new Set([
         ...staticFieldsNotExposed(refDefinition),
@@ -262,8 +220,8 @@ function resolveNodeToElementBuildConfig(
         instanceFields,
         dynamicReference ? activeDefinitions : new Set(activeDefinitions).add(refDefinition.uuid),
         instanceOverrides,
-        resolveTokenText,
         itemContext,
+        repeaterScopes,
         dynamicDefinitionDepth + (dynamicReference ? 1 : 0),
         node.dom.children?.length
           ? {
@@ -273,6 +231,7 @@ function resolveNodeToElementBuildConfig(
               activeDefinitions,
               inheritedOverrides,
               itemContext,
+              repeaterScopes,
               dynamicDefinitionDepth,
               ...(slotContent ? { parentSlotContent: slotContent } : {}),
             }
@@ -304,11 +263,13 @@ function resolveNodeToElementBuildConfig(
       effectiveSchemaForDefinition(catalog, definition).schema,
       fields,
     ),
+    componentSchema: effectiveSchemaForDefinition(catalog, definition).schema,
     overrides: nodeOverrides,
     item: itemContext,
+    repeaterScopes,
   };
 
-  const text = textFromNode(node, fields, ctx, resolveTokenText);
+  const text = textFromNode(node, fields, ctx);
   const attributes = resolveStringRecord(node.dom.attributes, ctx) ?? {};
   const classList = effectiveClassList(node, ctx.componentProps);
   if (classList.length) attributes.class = classList.join(' ');
@@ -326,6 +287,18 @@ function resolveNodeToElementBuildConfig(
           if (!Array.isArray(value)) return [];
           return value.flatMap((item, itemIndex) =>
             childNodes.map((child, templateIndex) => {
+              const scope: RepeaterReferenceScope = {
+                nodeUuid: node.uuid,
+                indexName:
+                  composition.indexName?.trim() || computedIndexName(repeaterScopes.length),
+                index: itemIndex,
+                item,
+                itemSchema: repeaterItemSchema(
+                  composition.source,
+                  ctx.componentSchema,
+                  repeaterScopes,
+                ),
+              };
               const resolved = resolveNodeToElementBuildConfig(
                 child,
                 definition,
@@ -333,8 +306,8 @@ function resolveNodeToElementBuildConfig(
                 fields,
                 activeDefinitions,
                 fields,
-                resolveTokenText,
                 item,
+                [...repeaterScopes, scope],
                 dynamicDefinitionDepth,
                 slotContent,
               );
@@ -360,8 +333,8 @@ function resolveNodeToElementBuildConfig(
                   fields,
                   activeDefinitions,
                   fields,
-                  resolveTokenText,
                   itemContext,
+                  repeaterScopes,
                   dynamicDefinitionDepth,
                   slotContent,
                 ),
@@ -377,8 +350,8 @@ function resolveNodeToElementBuildConfig(
                   slotContent.fields,
                   slotContent.activeDefinitions,
                   slotContent.inheritedOverrides,
-                  resolveTokenText,
                   slotContent.itemContext,
+                  slotContent.repeaterScopes,
                   slotContent.dynamicDefinitionDepth,
                   slotContent.parentSlotContent,
                 ),
@@ -392,8 +365,8 @@ function resolveNodeToElementBuildConfig(
                 fields,
                 activeDefinitions,
                 fields,
-                resolveTokenText,
                 itemContext,
+                repeaterScopes,
                 dynamicDefinitionDepth,
                 slotContent,
               ),
@@ -486,33 +459,6 @@ function hasFieldPath(values: Readonly<Record<string, FieldValue>>, path: string
   return current !== undefined;
 }
 
-function componentPropValues(
-  schema: Record<string, unknown> | null,
-  fields: Readonly<Record<string, FieldValue>>,
-) {
-  const values: Record<string, FieldValue> = {};
-  for (const prop of componentPropsForSchema(schema)) {
-    let value: FieldValue | undefined = fields;
-    for (const segment of prop.path.split('.')) {
-      value =
-        value && typeof value === 'object' && !Array.isArray(value) ? value[segment] : undefined;
-    }
-    if (value !== undefined) values[prop.uuid] = value;
-  }
-  return values;
-}
-
-function fieldAtPath(value: FieldValue | undefined, path: string): FieldValue | undefined {
-  let current = value;
-  for (const segment of path.split('.')) {
-    current =
-      current && typeof current === 'object' && !Array.isArray(current)
-        ? current[segment]
-        : undefined;
-  }
-  return current;
-}
-
 function resolveCompositionSource(
   source: CompositionSource | undefined,
   ctx: PreviewResolveContext,
@@ -524,45 +470,39 @@ function resolveCompositionSource(
 
 function resolveParentPropBindings(
   fields: Readonly<Record<string, FieldValue>> | undefined,
-  parentProps: Readonly<Record<string, FieldValue>>,
-  itemContext: FieldValue | undefined,
+  context: {
+    catalog: ProjectCatalog;
+    componentProps: Readonly<Record<string, FieldValue>>;
+    repeaterScopes: readonly RepeaterReferenceScope[];
+  },
 ) {
   if (!fields) return undefined;
   return Object.fromEntries(
-    Object.entries(fields).map(([name, value]) => [
-      name,
-      resolveParentPropBinding(value, parentProps, itemContext),
-    ]),
+    Object.entries(fields).map(([name, value]) => [name, resolveParentPropBinding(value, context)]),
   );
 }
 
 function resolveParentPropBinding(
   value: FieldValue,
-  parentProps: Readonly<Record<string, FieldValue>>,
-  itemContext: FieldValue | undefined,
-  activeProps = new Set<string>(),
+  context: {
+    catalog: ProjectCatalog;
+    componentProps: Readonly<Record<string, FieldValue>>;
+    repeaterScopes: readonly RepeaterReferenceScope[];
+  },
 ): FieldValue {
   if (typeof value === 'string') {
-    const itemMatch = value.match(ITEM_FIELD_REF);
-    if (itemMatch?.[1]) return fieldAtPath(itemContext, itemMatch[1]) ?? value;
-    const match = value.match(COMPONENT_PROP_REF);
-    const uuid = match?.[1];
-    if (!uuid || activeProps.has(uuid)) return value;
-    const parentValue = parentProps[uuid];
-    if (parentValue === undefined) return value;
-    const nextActive = new Set(activeProps).add(uuid);
-    return resolveParentPropBinding(parentValue, parentProps, itemContext, nextActive);
+    if (!isSupportedReference(value)) return value;
+    const resolved = resolveReferenceValue(value, context);
+    return resolved === undefined ? value : (resolved as FieldValue);
   }
   if (Array.isArray(value)) {
-    return value.map((entry) =>
-      resolveParentPropBinding(entry, parentProps, itemContext, activeProps),
-    );
+    return value.map((entry) => resolveParentPropBinding(entry, context));
   }
   if (value && typeof value === 'object') {
     return Object.fromEntries(
       Object.entries(value).map(([name, entry]) => [
         name,
-        resolveParentPropBinding(entry, parentProps, itemContext, activeProps),
+        resolveParentPropBinding(entry, context),
       ]),
     );
   }

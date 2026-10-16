@@ -155,7 +155,14 @@ function propBindingOptions(model: InspectorViewModel): AutocompleteOption[] {
     value: option.ref,
     label: option.name,
     description: previewDefaultForProp(model, option.name),
-    group: option.kind === 'component' ? 'Component props' : 'Design props',
+    group:
+      option.kind === 'component'
+        ? 'Component props'
+        : option.kind === 'item'
+          ? 'Repeater item props'
+          : option.kind === 'index'
+            ? 'Repeater indices'
+            : 'Design props',
   }));
 }
 

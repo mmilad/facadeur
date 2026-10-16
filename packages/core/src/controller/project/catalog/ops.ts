@@ -173,6 +173,7 @@ export function patchNodeComposition(
   nodeUuid: string,
   patch: {
     readonly source?: CompositionSource | null;
+    readonly indexName?: string | null;
     readonly compositionCase?: string | null;
     readonly definitionRefBinding?: NodeConfig['definitionRefBinding'] | null;
   },
@@ -182,11 +183,17 @@ export function patchNodeComposition(
     if (
       config.composition &&
       config.composition.kind !== 'slot' &&
-      Object.hasOwn(patch, 'source')
+      (Object.hasOwn(patch, 'source') || Object.hasOwn(patch, 'indexName'))
     ) {
       const composition = { ...config.composition };
-      if (patch.source) composition.source = patch.source;
-      else delete composition.source;
+      if (Object.hasOwn(patch, 'source')) {
+        if (patch.source) composition.source = patch.source;
+        else delete composition.source;
+      }
+      if (composition.kind === 'repeater' && Object.hasOwn(patch, 'indexName')) {
+        if (patch.indexName?.trim()) composition.indexName = patch.indexName.trim();
+        else delete composition.indexName;
+      }
       config.composition = composition;
     }
     if (Object.hasOwn(patch, 'compositionCase')) {

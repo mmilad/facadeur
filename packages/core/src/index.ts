@@ -19,6 +19,11 @@ export {
   mergePreviewFields,
   previewFieldsForNode,
   resolveDefinitionToElementBuildConfig,
+  computedIndexName,
+  resolveReferenceText,
+  resolveReferenceValue,
+  type ReferenceResolutionContext,
+  type RepeaterReferenceScope,
 } from './controller/project/node/preview/index';
 export {
   fieldsFromJsonSchema,

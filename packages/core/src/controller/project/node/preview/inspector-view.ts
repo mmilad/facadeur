@@ -15,6 +15,11 @@ import { staticFieldValues } from './merge';
 import { configFieldsForDefinition, schemaWithReferenceOptions } from './inspector-config-fields';
 import { inspectorInputsForNode } from '../config/inspector';
 import { designPropOptions, type DesignPropOption } from './prop-ref';
+import {
+  computedIndexName,
+  repeaterItemSchema,
+  type RepeaterReferenceScope,
+} from './reference-resolver';
 import type { InspectorFormChangeTarget } from '../../inspector-form-change';
 
 export type InspectorFormValue = {
@@ -29,6 +34,7 @@ export type InspectorFormValue = {
     data: Record<string, string>;
     compositionSourceProp: string;
     compositionSourceItemPath: string;
+    compositionIndexName: string;
     compositionCase: string;
     definitionRefBindingPath: string;
   };
@@ -137,6 +143,8 @@ export function buildInspectorFormModel(
   const effective = effectiveSchemaForDefinition(catalog, scopedDefinition);
   const componentEffective =
     scopedDefinition === definition ? effective : effectiveSchemaForDefinition(catalog, definition);
+  const ancestorNodes = findNodePath(definition.root, nodeUuid).slice(0, -1);
+  const repeaterScopes = buildInspectorRepeaterScopes(ancestorNodes, componentEffective.schema);
   const configFields =
     nodeUuid === definition.root.uuid ? configFieldsForDefinition(catalog, definition) : [];
   const schemaFields = effective.schema
@@ -170,6 +178,10 @@ export function buildInspectorFormModel(
       data: recordFromFieldValues(node.data ?? {}),
       compositionSourceProp: compositionSource?.kind === 'prop' ? compositionSource.uuid : '',
       compositionSourceItemPath: compositionSource?.kind === 'item' ? compositionSource.path : '',
+      compositionIndexName:
+        composition?.kind === 'repeater'
+          ? (composition.indexName ?? computedIndexName(repeaterScopes.length))
+          : '',
       compositionCase: node.config?.compositionCase ?? '',
       definitionRefBindingPath: node.config?.definitionRefBinding?.path ?? '',
     },
@@ -178,7 +190,7 @@ export function buildInspectorFormModel(
   };
 
   const sections: InspectorFormField[] = [];
-  const parentNode = findParentNode(definition.root, nodeUuid);
+  const parentNode = ancestorNodes.at(-1) ?? null;
   if (nodeUuid === definition.root.uuid)
     sections.push({
       type: 'section',
@@ -234,6 +246,16 @@ export function buildInspectorFormModel(
                 path: 'node.compositionSourceItemPath',
                 label: 'Item field path',
               },
+              ...(composition.kind === 'repeater'
+                ? [
+                    {
+                      type: 'text' as const,
+                      path: 'node.compositionIndexName',
+                      label: 'Index name',
+                      hint: 'Leave blank for the generated name.',
+                    },
+                  ]
+                : []),
             ]
           : []),
         ...(parentNode?.config?.composition?.kind === 'switch'
@@ -307,7 +329,7 @@ export function buildInspectorFormModel(
     formValue,
     fields: sections,
     configFields,
-    propOptions: designPropOptions(catalog, componentEffective.schema),
+    propOptions: designPropOptions(catalog, componentEffective.schema, repeaterScopes),
   };
 }
 
@@ -392,6 +414,14 @@ export function inspectorChangeTarget(
       kind: 'nodeComposition',
       nodeUuid,
       patch: { source: itemPath ? { kind: 'item', path: itemPath } : null },
+    };
+  }
+  if (path === 'node.compositionIndexName') {
+    const indexName = String(value ?? '').trim();
+    return {
+      kind: 'nodeComposition',
+      nodeUuid,
+      patch: { indexName: indexName || null },
     };
   }
   if (path === 'node.compositionCase') {
@@ -481,11 +511,35 @@ function compositionSourceOptions(
   });
 }
 
-function findParentNode(root: Node, targetUuid: string): Node | null {
-  for (const child of root.dom.children ?? []) {
-    if (child.uuid === targetUuid) return root;
-    const nested = findParentNode(child, targetUuid);
-    if (nested) return nested;
+function findNodePath(root: Node, targetUuid: string): Node[] {
+  const visit = (current: Node, path: Node[]): Node[] | null => {
+    const nextPath = [...path, current];
+    if (current.uuid === targetUuid) return nextPath;
+    for (const child of current.dom.children ?? []) {
+      const found = visit(child, nextPath);
+      if (found) return found;
+    }
+    return null;
+  };
+  return visit(root, []) ?? [];
+}
+
+function buildInspectorRepeaterScopes(
+  ancestors: readonly Node[],
+  componentSchema: Record<string, unknown> | null,
+): RepeaterReferenceScope[] {
+  const scopes: RepeaterReferenceScope[] = [];
+  for (const node of ancestors) {
+    const composition = node.config?.composition;
+    if (composition?.kind !== 'repeater') continue;
+    const depth = scopes.length;
+    scopes.push({
+      nodeUuid: node.uuid,
+      indexName: composition.indexName?.trim() || computedIndexName(depth),
+      index: 0,
+      item: {},
+      itemSchema: repeaterItemSchema(composition.source, componentSchema, scopes),
+    });
   }
-  return null;
+  return scopes;
 }

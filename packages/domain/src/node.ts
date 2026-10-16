@@ -17,6 +17,8 @@ export interface NodeConfig {
     | {
         readonly kind: 'repeater';
         readonly source?: CompositionSource;
+        /** Optional display name for this repeater's current item index. */
+        readonly indexName?: string;
       }
     | {
         readonly kind: 'switch';

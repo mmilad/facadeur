@@ -1,5 +1,6 @@
 import type { FieldValue, JsonSchemaObject, ProjectCatalog } from '@facadeur/domain';
 import { componentPropsForSchema } from '../../catalog/field-ids';
+import { referenceOptionsForScopes, type RepeaterReferenceScope } from './reference-resolver';
 
 const PROP_REF = /^\{prop:([^}]+)\}$/;
 const COMPONENT_PROP_REF = /^\{props:([^}]+)\}$/;
@@ -9,7 +10,7 @@ export type DesignPropOption = {
   name: string;
   /** Stored field value: `{prop:uuid}`. */
   ref: string;
-  kind: 'design' | 'component';
+  kind: 'design' | 'component' | 'item' | 'index';
 };
 
 export function encodePropRef(uuid: string): string {
@@ -23,7 +24,11 @@ export function encodeComponentPropRef(uuid: string): string {
 export function parsePropRef(value: FieldValue | undefined): string | null {
   if (typeof value !== 'string') return null;
   const match = value.match(PROP_REF) ?? value.match(COMPONENT_PROP_REF);
-  return match?.[1] ?? null;
+  if (match?.[1]) return match[1];
+  const item = /^\{item-prop:([^:}]+):([^}]+)\}$/.exec(value);
+  if (item?.[1] && item[2]) return `item:${item[1]}:${item[2]}`;
+  const index = /^\{index:([^}]+)\}$/.exec(value);
+  return index?.[1] ? `index:${index[1]}` : null;
 }
 
 export function isPropRef(value: FieldValue | undefined): boolean {
@@ -33,6 +38,7 @@ export function isPropRef(value: FieldValue | undefined): boolean {
 export function designPropOptions(
   catalog: ProjectCatalog,
   componentSchema?: JsonSchemaObject | null,
+  repeaterScopes: readonly RepeaterReferenceScope[] = [],
 ): DesignPropOption[] {
   const props = catalog.props ?? {};
   const designOptions = Object.values(props)
@@ -50,5 +56,5 @@ export function designPropOptions(
         kind: 'component' as const,
       }))
     : [];
-  return [...designOptions, ...componentOptions];
+  return [...designOptions, ...componentOptions, ...referenceOptionsForScopes(repeaterScopes)];
 }
