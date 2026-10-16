@@ -231,7 +231,7 @@ const sidebarRight = componentDefinition(
           componentInstance(3326, 'Inherited font declaration', 350, {
             selector: '.form-control',
             property: 'font-family',
-            value: 'Inter, sans-serif',
+            value: 'system-ui, sans-serif',
             source: 'Inherited',
           }),
         ],
@@ -498,7 +498,7 @@ const shell = componentDefinition(
       minWidth: '0',
       color: colors.ink,
       backgroundColor: colors.paper,
-      fontFamily: 'Inter, ui-sans-serif, sans-serif',
+      fontFamily: 'system-ui, ui-sans-serif, sans-serif',
       fontSize: '12px',
       overflow: 'hidden',
     },
@@ -611,7 +611,7 @@ const globalStylesTable = componentDefinition(
       componentInstance(3810, 'Form-control font rule', 350, {
         selector: '.form-control',
         property: 'font-family',
-        value: 'Inter, sans-serif',
+        value: 'system-ui, sans-serif',
         source: 'Global',
       }),
       componentInstance(3811, 'Form-control border rule', 350, {

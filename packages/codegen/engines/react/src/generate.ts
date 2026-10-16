@@ -43,12 +43,18 @@ export function generateReact(options: GenerateOptions): GenerateOutput {
     const propPaths = new Map(
       componentPropsForSchema(schema).map((prop) => [prop.uuid, prop.path]),
     );
+    const booleanPropUuids = new Set(
+      componentPropsForSchema(schema)
+        .filter((prop) => prop.valueType === 'boolean')
+        .map((prop) => prop.uuid),
+    );
     const component = renderComponent(
       entry.exportName,
       entry.definition.uuid,
       tree,
       tokensByUuid,
       propPaths,
+      booleanPropUuids,
       entry.definition.root,
       schema,
     );
@@ -97,6 +103,7 @@ function renderComponent(
   tree: RenderBuildConfig,
   tokenProperties: ReadonlyMap<string, string>,
   propPaths: ReadonlyMap<string, string>,
+  booleanPropUuids: ReadonlySet<string>,
   sourceRoot: Node,
   schema: unknown,
 ) {
@@ -107,7 +114,15 @@ function renderComponent(
     for (const child of node.dom.children ?? []) collect(child);
   };
   collect(sourceRoot);
-  const jsx = renderNode(tree, tokenProperties, propPaths, sourceNodes, cssRules, new Map());
+  const jsx = renderNode(
+    tree,
+    tokenProperties,
+    propPaths,
+    booleanPropUuids,
+    sourceNodes,
+    cssRules,
+    new Map(),
+  );
   const propsType = schemaType(schema);
   const propsAreOptional = !schemaHasRequiredProperties(schema);
   const source = [
@@ -203,6 +218,7 @@ function renderNode(
   node: RenderBuildConfig,
   tokenProperties: ReadonlyMap<string, string>,
   propPaths: ReadonlyMap<string, string>,
+  booleanPropUuids: ReadonlySet<string>,
   sourceNodes: ReadonlyMap<string, Node>,
   cssRules: string[],
   repeaterScopes: ReadonlyMap<string, CodegenRepeaterScope>,
@@ -215,6 +231,7 @@ function renderNode(
           child,
           tokenProperties,
           propPaths,
+          booleanPropUuids,
           sourceNodes,
           cssRules,
           childRepeaterScopes(source, child, propPaths, repeaterScopes),
@@ -271,7 +288,13 @@ function renderNode(
   }
   const classKey = Object.hasOwn(attributes, 'className') ? 'className' : 'class';
   const derivedClassExpression = source?.classes
-    ? classExpression(source.classes, propPaths, [...styleNodeUuids], repeaterScopes)
+    ? classExpression(
+        source.classes,
+        propPaths,
+        booleanPropUuids,
+        [...styleNodeUuids],
+        repeaterScopes,
+      )
     : undefined;
   const props = Object.entries(attributes)
     .map(([key, value]) => {
@@ -290,6 +313,7 @@ function renderNode(
         child,
         tokenProperties,
         propPaths,
+        booleanPropUuids,
         sourceNodes,
         cssRules,
         childRepeaterScopes(source, child, propPaths, repeaterScopes),

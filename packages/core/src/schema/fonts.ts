@@ -16,17 +16,11 @@ export const fontFaceFileSchema = Type.Object(
 );
 
 export const fontSourceSchema = Type.Union([
+  Type.Object({ type: Type.Literal('system') }, { additionalProperties: false }),
   Type.Object(
     {
       type: Type.Literal('file'),
       files: Type.Array(fontFaceFileSchema, { minItems: 1 }),
-    },
-    { additionalProperties: false },
-  ),
-  Type.Object(
-    {
-      type: Type.Literal('google'),
-      family: Type.String({ minLength: 1 }),
     },
     { additionalProperties: false },
   ),

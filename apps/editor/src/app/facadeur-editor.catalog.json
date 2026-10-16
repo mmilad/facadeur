@@ -1217,7 +1217,7 @@
                         "fields": {
                           "selector": ".form-control",
                           "property": "font-family",
-                          "value": "Inter, sans-serif",
+                          "value": "system-ui, sans-serif",
                           "source": "Inherited"
                         }
                       }
@@ -2103,7 +2103,7 @@
                 "minWidth": "0",
                 "color": "#25242a",
                 "backgroundColor": "#ffffff",
-                "fontFamily": "Inter, ui-sans-serif, sans-serif",
+                "fontFamily": "system-ui, ui-sans-serif, sans-serif",
                 "fontSize": "12px",
                 "overflow": "hidden"
               }
@@ -2338,7 +2338,7 @@
                           "name": "Style Selector LAbel",
                           "dom": {
                             "tagName": "div",
-                            "text": ".my-selectorsdfsdfdd",
+                            "text": "{props:271b07c4-96e4-45a6-9831-d74460adb637}",
                             "children": []
                           },
                           "classes": [
@@ -2386,8 +2386,6 @@
                                                 "generated": true,
                                                 "style": {
                                                   "declarations": {
-                                                    "fontFamily": "monospace",
-                                                    "fontSize": "11px",
                                                     "flex": "1",
                                                     "minWidth": "0"
                                                   }
@@ -2429,7 +2427,8 @@
                                               "display": "flex",
                                               "flex-direction": "row",
                                               "width": "100%",
-                                              "align-items": "center"
+                                              "align-items": "center",
+                                              "font-family": "{token:0498c315-10df-54a4-8213-f36bad42e52a}"
                                             }
                                           }
                                         }
@@ -2537,7 +2536,8 @@
             "0": {
               "selector": "."
             }
-          }
+          },
+          "isOpen": true
         }
       },
       "category": "sidebar"
@@ -2778,7 +2778,7 @@
                   "fields": {
                     "selector": ".form-control",
                     "property": "font-family",
-                    "value": "Inter, sans-serif",
+                    "value": "system-ui, sans-serif",
                     "source": "Global"
                   }
                 }
@@ -3004,7 +3004,7 @@
                     "type": "string",
                     "title": "Kind",
                     "enum": ["component", "group"],
-                    "x-facadeur-prop-id": "7daa4adb-634f-4a21-a7db-e45e73a7672c"
+                    "x-facadeur-prop-id": "160a7bac-5ada-4efb-bf0a-3b0149315c7c"
                   },
                   "componentId": {
                     "type": "string",
@@ -3012,12 +3012,12 @@
                     "x-facadeur-reference": {
                       "target": "component"
                     },
-                    "x-facadeur-prop-id": "2de7b858-5497-4d71-9d3c-8151fd05072b"
+                    "x-facadeur-prop-id": "cbba58f5-4b87-4b4a-8988-a01db9890fb9"
                   },
                   "label": {
                     "type": "string",
                     "title": "Label",
-                    "x-facadeur-prop-id": "ac329639-b948-4b22-9773-869acdaed21a"
+                    "x-facadeur-prop-id": "427e466e-0296-468b-b5ea-baf0d1d208e2"
                   },
                   "children": {
                     "type": "array",
@@ -3031,18 +3031,18 @@
                           "x-facadeur-reference": {
                             "target": "component"
                           },
-                          "x-facadeur-prop-id": "4d867f60-66c1-4530-8226-a6bce602bf2e"
+                          "x-facadeur-prop-id": "8ca70d06-4e67-42df-8b2f-3c9cd11bd4e7"
                         },
                         "label": {
                           "type": "string",
                           "title": "Label",
-                          "x-facadeur-prop-id": "1b844165-851c-49e1-a996-e433bbf760b8"
+                          "x-facadeur-prop-id": "ab8bb905-2d44-4f15-aa0b-9616847dd460"
                         }
                       },
                       "required": ["componentId", "label"],
                       "additionalProperties": false
                     },
-                    "x-facadeur-prop-id": "303ecb16-7ccd-47e4-96ac-2e02c8f9129c"
+                    "x-facadeur-prop-id": "7b2d0aec-da6f-4b1e-b5ea-05c20d2ae1c5"
                   }
                 },
                 "required": ["kind", "label"],
@@ -3726,7 +3726,7 @@
                 "minWidth": "0",
                 "color": "#25242a",
                 "backgroundColor": "#ffffff",
-                "fontFamily": "Inter, ui-sans-serif, sans-serif",
+                "fontFamily": "system-ui, ui-sans-serif, sans-serif",
                 "fontSize": "12px",
                 "overflow": "hidden"
               }
@@ -4120,7 +4120,7 @@
                 "padding": "14px",
                 "color": "#25242a",
                 "backgroundColor": "#ffffff",
-                "fontFamily": "Inter, ui-sans-serif, sans-serif",
+                "fontFamily": "system-ui, ui-sans-serif, sans-serif",
                 "fontSize": "12px",
                 "overflow": "hidden"
               }
@@ -4620,7 +4620,7 @@
         "group": "",
         "valueType": "typography",
         "value": {
-          "fontFamily": "{token:0498c315-10df-54a4-8213-f36bad42e52a}",
+          "fontFamily": "{token:0498c315-10df-54a4-8213-f36bad42e52b}",
           "fontSize": "40px",
           "fontWeight": 600,
           "letterSpacing": "0",
@@ -4641,7 +4641,7 @@
         "group": "",
         "valueType": "typography",
         "value": {
-          "fontFamily": "{token:0498c315-10df-54a4-8213-f36bad42e52a}",
+          "fontFamily": "{token:0498c315-10df-54a4-8213-f36bad42e52b}",
           "fontSize": "32px",
           "fontWeight": 600,
           "letterSpacing": "0",
@@ -4680,7 +4680,7 @@
         "group": "",
         "valueType": "typography",
         "value": {
-          "fontFamily": "{token:0498c315-10df-54a4-8213-f36bad42e52a}",
+          "fontFamily": "{token:0498c315-10df-54a4-8213-f36bad42e52b}",
           "fontSize": "24px",
           "fontWeight": 600,
           "letterSpacing": "0",
@@ -4699,17 +4699,26 @@
     "font": {
       "0498c315-10df-54a4-8213-f36bad42e52a": {
         "uuid": "0498c315-10df-54a4-8213-f36bad42e52a",
-        "label": "Inter",
+        "label": "System UI",
         "group": "",
         "valueType": "fontFamily",
         "value": {
-          "fallbacks": ["system-ui", "sans-serif"],
-          "family": "Inter",
-          "source": {
-            "family": "Inter",
-            "type": "google"
-          },
+          "fallbacks": ["sans-serif"],
+          "family": "system-ui",
+          "source": { "type": "system" },
           "weights": [400, 500, 600, 700]
+        }
+      },
+      "0498c315-10df-54a4-8213-f36bad42e52b": {
+        "uuid": "0498c315-10df-54a4-8213-f36bad42e52b",
+        "label": "Georgia",
+        "group": "",
+        "valueType": "fontFamily",
+        "value": {
+          "fallbacks": ["serif"],
+          "family": "Georgia",
+          "source": { "type": "system" },
+          "weights": [400, 700]
         }
       }
     }

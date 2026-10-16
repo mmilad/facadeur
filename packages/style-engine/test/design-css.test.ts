@@ -208,9 +208,7 @@ describe('project template', () => {
     expect(css).toContain('--type-body--font-size: 17px;');
     expect(css).toContain('--type-body--font-size: 18px;');
     expect(css).not.toContain('min-width: 375px');
-    expect(css.startsWith('@import url("https://fonts.googleapis.com/css2?family=Inter:')).toBe(
-      true,
-    );
+    expect(css).not.toContain('fonts.googleapis.com');
   });
 
   it('keeps component token groups out and preserves shared token values', () => {

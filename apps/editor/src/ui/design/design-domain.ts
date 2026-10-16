@@ -29,7 +29,7 @@ export const DESIGN_DOMAIN_ITEMS: {
 
 /** Token domains available in Settings, in the order shown in its navigation. */
 export const SETTINGS_TOKEN_DOMAIN_ITEMS = (
-  ['viewports', 'fonts', 'colors', 'spacing', 'shadow', 'radius'] as const
+  ['viewports', 'fonts', 'colors', 'spacing', 'shadow', 'radius', 'typography'] as const
 ).flatMap((id) => DESIGN_DOMAIN_ITEMS.filter((item) => item.id === id));
 
 export type SettingsTokenDomain = (typeof SETTINGS_TOKEN_DOMAIN_ITEMS)[number]['id'];

@@ -13,7 +13,7 @@ import type { TypographyCatalogs } from '../src/ui/controls/typography/index';
 import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
 const catalogs: TypographyCatalogs = {
-  fontRefs: [fixtureTokenRef(fixtureIds.tokens.font.inter)],
+  fontRefs: [fixtureTokenRef(fixtureIds.tokens.font.systemUi)],
   fontFamilyTokens: [],
   fontWeightTokens: [],
   dimensionTokens: [],
@@ -51,7 +51,7 @@ describe('complex design token editor UI', () => {
   it('commits only the changed typography field when an override is absent', () => {
     const commits: (DesignTypographyValue | null)[] = [];
     const base = {
-      fontFamily: fixtureTokenRef(fixtureIds.tokens.font.inter),
+      fontFamily: fixtureTokenRef(fixtureIds.tokens.font.systemUi),
       fontSize: '16px',
       fontWeight: fixtureTokenRef(fixtureIds.tokens.type.body),
       lineHeight: 1.5,
@@ -75,7 +75,7 @@ describe('complex design token editor UI', () => {
   it('keeps partial overrides while editing inherited fields and resets one field', () => {
     const commits: (DesignTypographyValue | null)[] = [];
     const base = {
-      fontFamily: fixtureTokenRef(fixtureIds.tokens.font.inter),
+      fontFamily: fixtureTokenRef(fixtureIds.tokens.font.systemUi),
       fontSize: '16px',
       fontWeight: fixtureTokenRef(fixtureIds.tokens.type.body),
       lineHeight: 1.5,
@@ -111,7 +111,7 @@ describe('complex design token editor UI', () => {
       <DesignTypographyEditor
         namePrefix="editor"
         value={{
-          fontFamily: fixtureTokenRef(fixtureIds.tokens.font.inter),
+          fontFamily: fixtureTokenRef(fixtureIds.tokens.font.systemUi),
           fontSize: '16px',
           fontWeight: fixtureTokenRef(fixtureIds.tokens.type.body),
           lineHeight: 1.5,
@@ -132,7 +132,7 @@ describe('complex design token editor UI', () => {
       <DesignTypographyEditor
         namePrefix="editor"
         value={{
-          fontFamily: fixtureTokenRef(fixtureIds.tokens.font.inter),
+          fontFamily: fixtureTokenRef(fixtureIds.tokens.font.systemUi),
           fontSize: '.5rem',
           fontWeight: fixtureTokenRef(fixtureIds.tokens.type.body),
           lineHeight: 'normal',
@@ -147,7 +147,7 @@ describe('complex design token editor UI', () => {
       setInput(host!.querySelector('input[name="editor-fontSize"]')!, 'clamp(1rem, 2vw, 2rem)'),
     );
     expect(commits.at(-1)).toEqual({
-      fontFamily: fixtureTokenRef(fixtureIds.tokens.font.inter),
+      fontFamily: fixtureTokenRef(fixtureIds.tokens.font.systemUi),
       fontSize: 'clamp(1rem, 2vw, 2rem)',
       fontWeight: fixtureTokenRef(fixtureIds.tokens.type.body),
       lineHeight: 'normal',

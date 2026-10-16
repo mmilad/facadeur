@@ -10,6 +10,7 @@ import { isFieldBindingValue, matchesPartialSchemaValue } from '../../validation
 import { componentPropsForSchema, ensureCatalogFieldIds } from './field-ids';
 import { canAcceptCatalogChildren, defaultChildrenSlotCount } from './tree-ops';
 import { isVoidHtmlTag } from '../../../document/html-tags';
+import { migrateFontSources } from './migrate-font-sources';
 
 function catalogSchemaErrorMessage(data: unknown): string {
   try {
@@ -24,8 +25,11 @@ function catalogSchemaErrorMessage(data: unknown): string {
 }
 
 export function validateProjectCatalog(data: unknown): ProjectCatalog {
+  const migrated = migrateFontSources(data);
   const normalized =
-    data && typeof data === 'object' ? ensureGeneratedNodeClasses(data as ProjectCatalog) : data;
+    migrated && typeof migrated === 'object'
+      ? ensureGeneratedNodeClasses(migrated as ProjectCatalog)
+      : migrated;
   const sanitized =
     normalized && typeof normalized === 'object'
       ? sanitizeProjectCatalog(normalized as ProjectCatalog)

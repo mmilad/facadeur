@@ -263,7 +263,7 @@ describe('design token tables', () => {
     expect(view.getByTestId('token-label').textContent).toContain('Comfortable');
 
     const typographySummary = view.container.querySelector(
-      'tr[data-token-path="type.Body"] .design-typography-editor summary .meta',
+      'tr[data-token-path="type.Body"] .token-table-typography-summary',
     );
     expect(typographySummary?.textContent).toContain('Comfortable');
     expect(typographySummary?.textContent).not.toContain(
@@ -405,7 +405,7 @@ describe('design token tables', () => {
       uuid: exampleIds.tokens.type.title,
       path: 'type.title',
       override: {
-        fontFamily: tokenRef(exampleIds.tokens.font.inter),
+        fontFamily: tokenRef(exampleIds.tokens.font.systemUi),
         fontSize: '20px',
         fontWeight: 500,
         lineHeight: 1.4,
@@ -470,6 +470,9 @@ describe('design token tables', () => {
       view.container.querySelector(
         `[data-viewport-tab="${exampleIds.catalog.breakpoints.tablet}"]`,
       )!,
+    );
+    fireEvent.click(
+      view.container.querySelector(`button[name="token-details-${exampleIds.tokens.type.body}"]`)!,
     );
     const size = view.container.querySelector<HTMLInputElement>(
       `input[name="token-${exampleIds.tokens.type.body}-fontSize"]`,

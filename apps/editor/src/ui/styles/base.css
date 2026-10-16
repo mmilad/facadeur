@@ -8,7 +8,7 @@
   --accent: #9c4221;
   --selection-secondary: #5b3cc4;
   --sidebar: #fbf7f1;
-  --sans: Inter, 'Source Sans 3', 'Segoe UI', sans-serif;
+  --sans: system-ui, 'Segoe UI', sans-serif;
   --serif: 'Noto Serif Display', 'Liberation Serif', Georgia, serif;
   --mono: 'JetBrains Mono', 'Cascadia Mono', ui-monospace, monospace;
   color: var(--ink);

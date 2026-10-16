@@ -36,7 +36,7 @@ export function FontsDomainPanel({
   const visibleFonts = useMemo(() => {
     if (!needle) return fonts;
     return fonts.filter((font) => {
-      const source = font.value.source.type === 'google' ? font.value.source.family : 'file';
+      const source = font.value.source.type;
       return [font.label, font.value.family, source, font.value.source.type].some((value) =>
         value.toLowerCase().includes(needle),
       );
@@ -151,8 +151,7 @@ export function FontsDomainPanel({
         tableClassName="font-table"
         rows={visibleFonts.map((font): TableRowData => {
           const expanded = expandedUuid === font.uuid;
-          const source =
-            font.value.source.type === 'google' ? `Google · ${font.value.source.family}` : 'File';
+          const source = font.value.source.type === 'system' ? 'System' : 'File';
           return renderFontTableRow({
             font,
             expanded,
@@ -194,7 +193,6 @@ function renderFontTableRow({
   onCommit: (patch: FontPatch) => void;
   onError: (error: unknown) => void;
 }): TableRowData {
-  const googleFamily = font.value.source.type === 'google' ? font.value.source.family : null;
   return {
     id: font.uuid,
     className: expanded ? 'font-row is-expanded' : 'font-row',
@@ -231,20 +229,13 @@ function renderFontTableRow({
               onCommit({ family: trimmed });
             }}
           />
-          {googleFamily ? (
-            <TextControl
-              label="Google family"
-              name={`font-${font.uuid}-google-family`}
-              value={googleFamily}
-              onCommit={(family) => {
-                const trimmed = family.trim();
-                if (!trimmed || trimmed === googleFamily) return;
-                onCommit({ googleFamily: trimmed });
-              }}
-            />
-          ) : (
+          {font.value.source.type === 'file' ? (
             <p className="meta resource-detail-note">
               File source · file list editing is not supported in the UI yet.
+            </p>
+          ) : (
+            <p className="meta resource-detail-note">
+              System font · family availability depends on the user&apos;s device.
             </p>
           )}
         </section>

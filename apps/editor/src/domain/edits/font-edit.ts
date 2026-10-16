@@ -26,23 +26,22 @@ function splitList(text: string): string[] {
 export type FontPatch = {
   label?: string;
   family?: string;
-  googleFamily?: string;
   fallbacks?: string[];
   weights?: number[];
 };
 
 export function createDefaultFont(label: string): FontFamily {
-  const family = label.trim();
-  if (!family) throw new Error('Font label is required');
+  const trimmedLabel = label.trim();
+  if (!trimmedLabel) throw new Error('Font label is required');
   const font: FontFamily = {
     uuid: createCatalogUuid(),
-    label: family,
+    label: trimmedLabel,
     group: '',
     valueType: 'fontFamily',
     value: {
-      family,
+      family: 'system-ui',
       weights: [400, 600],
-      source: { type: 'google', family },
+      source: { type: 'system' },
       fallbacks: ['sans-serif'],
     },
   };
@@ -88,12 +87,9 @@ export function editedFont(font: FontFamily, patch: FontPatch): FontFamily {
       weights,
       fallbacks,
       source:
-        font.value.source.type === 'google'
-          ? {
-              type: 'google',
-              family: patch.googleFamily ?? patch.family ?? font.value.source.family,
-            }
-          : { type: 'file', files: font.value.source.files.map((file) => ({ ...file })) },
+        font.value.source.type === 'file'
+          ? { type: 'file', files: font.value.source.files.map((file) => ({ ...file })) }
+          : { type: 'system' },
     },
   };
   assertFont(next);

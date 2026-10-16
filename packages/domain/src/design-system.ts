@@ -45,12 +45,11 @@ export type FontFaceFile = Readonly<Record<string, DesignTokenValue>> & {
 
 export type FontSource =
   | (Readonly<Record<string, DesignTokenValue>> & {
-      readonly type: 'file';
-      readonly files: readonly FontFaceFile[];
+      readonly type: 'system';
     })
   | (Readonly<Record<string, DesignTokenValue>> & {
-      readonly type: 'google';
-      readonly family: string;
+      readonly type: 'file';
+      readonly files: readonly FontFaceFile[];
     });
 
 /** Font-specific payload carried by a token in the `font` family. */

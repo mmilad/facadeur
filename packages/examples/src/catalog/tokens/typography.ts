@@ -10,7 +10,7 @@ export const typography = {
     group: '',
     valueType: 'typography',
     value: {
-      fontFamily: tokenRef(exampleTokenIds.font.inter),
+      fontFamily: tokenRef(exampleTokenIds.font.systemUi),
       fontSize: '16px',
       fontWeight: 400,
       letterSpacing: '0',
@@ -31,7 +31,7 @@ export const typography = {
     group: '',
     valueType: 'typography',
     value: {
-      fontFamily: tokenRef(exampleTokenIds.font.inter),
+      fontFamily: tokenRef(exampleTokenIds.font.systemUi),
       fontSize: '12px',
       fontWeight: 400,
       letterSpacing: '0',
@@ -49,7 +49,7 @@ export const typography = {
     group: '',
     valueType: 'typography',
     value: {
-      fontFamily: tokenRef(exampleTokenIds.font.inter),
+      fontFamily: tokenRef(exampleTokenIds.font.georgia),
       fontSize: '40px',
       fontWeight: 600,
       letterSpacing: '0',
@@ -70,7 +70,7 @@ export const typography = {
     group: '',
     valueType: 'typography',
     value: {
-      fontFamily: tokenRef(exampleTokenIds.font.inter),
+      fontFamily: tokenRef(exampleTokenIds.font.georgia),
       fontSize: '32px',
       fontWeight: 600,
       letterSpacing: '0',
@@ -91,7 +91,7 @@ export const typography = {
     group: '',
     valueType: 'typography',
     value: {
-      fontFamily: tokenRef(exampleTokenIds.font.inter),
+      fontFamily: tokenRef(exampleTokenIds.font.systemUi),
       fontSize: '14px',
       fontWeight: 500,
       letterSpacing: '0',
@@ -109,7 +109,7 @@ export const typography = {
     group: '',
     valueType: 'typography',
     value: {
-      fontFamily: tokenRef(exampleTokenIds.font.inter),
+      fontFamily: tokenRef(exampleTokenIds.font.georgia),
       fontSize: '24px',
       fontWeight: 600,
       letterSpacing: '0',

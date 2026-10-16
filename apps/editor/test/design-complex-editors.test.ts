@@ -6,7 +6,7 @@ import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur
 describe('complex design token editor adapters', () => {
   it('keeps typography breakpoint edits sparse and preserves other overrides', () => {
     const base = {
-      fontFamily: fixtureTokenRef(fixtureIds.tokens.font.inter),
+      fontFamily: fixtureTokenRef(fixtureIds.tokens.font.systemUi),
       fontSize: '16px',
       fontWeight: fixtureTokenRef(fixtureIds.tokens.type.body),
       lineHeight: 1.5,

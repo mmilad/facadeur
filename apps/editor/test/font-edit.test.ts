@@ -9,14 +9,14 @@ import {
 } from '../src/domain/edits/font-edit';
 
 describe('font-edit', () => {
-  it('creates a google font with a generic fallback', () => {
+  it('creates a system font with a generic fallback', () => {
     const font = createDefaultFont('display');
     expect(font).toMatchObject({
       label: 'display',
       value: {
-        family: 'display',
+        family: 'system-ui',
         weights: [400, 600],
-        source: { type: 'google', family: 'display' },
+        source: { type: 'system' },
         fallbacks: ['sans-serif'],
       },
     });
@@ -33,14 +33,13 @@ describe('font-edit', () => {
   });
 
   it('updates the Example Catalog font family and weights through editedFont', () => {
-    const font = createExampleCatalog().tokens.font[exampleIds.tokens.font.inter];
+    const font = createExampleCatalog().tokens.font[exampleIds.tokens.font.systemUi];
     const next = editedFont(font, {
-      family: 'Source Sans 3',
-      googleFamily: 'Source Sans 3',
+      family: 'Georgia',
       weights: [400, 700],
     });
-    expect(next.value.family).toBe('Source Sans 3');
-    expect(next.value.source).toEqual({ type: 'google', family: 'Source Sans 3' });
+    expect(next.value.family).toBe('Georgia');
+    expect(next.value.source).toEqual({ type: 'system' });
     expect(next.value.weights).toEqual([400, 700]);
   });
 });

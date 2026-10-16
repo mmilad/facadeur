@@ -56,6 +56,7 @@ export function TokensDomainPanel({
   const labelFor = useTokenLabel();
   const searchValue = useTokenSearchValue();
   const [query, setQuery] = useState('');
+  const [expandedTypographyUuid, setExpandedTypographyUuid] = useState<string | null>(null);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => new Set());
   const [transformDrafts, setTransformDrafts] = useState<
     Record<string, { base: string; value: string }>
@@ -210,6 +211,14 @@ export function TokensDomainPanel({
                 onEvent,
                 snap,
                 token,
+                expanded: token.type === 'typography' && expandedTypographyUuid === token.uuid,
+                onToggle:
+                  token.type === 'typography'
+                    ? () =>
+                        setExpandedTypographyUuid((current) =>
+                          current === token.uuid ? null : token.uuid,
+                        )
+                    : undefined,
                 writingId,
                 ctx,
                 colorTokens,

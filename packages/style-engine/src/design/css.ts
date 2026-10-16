@@ -1,10 +1,8 @@
 import {
-  fontStyles,
   loadTokens,
   quoteFamily,
   type DesignInput,
   type FontFamily,
-  type FontStyle,
   type ResolvedDesign,
 } from '@facadeur/core';
 
@@ -26,9 +24,6 @@ export function renderResolvedCss(design: ResolvedDesign, selector = ':root'): s
 export function compileDesignRules(design: ResolvedDesign, selector = ':root'): string[] {
   const chunks: string[] = [];
   for (const font of design.fonts) {
-    if (font.value.source.type === 'google') chunks.push(`@import url("${googleFontUrl(font)}");`);
-  }
-  for (const font of design.fonts) {
     if (font.value.source.type === 'file') chunks.push(...fontFaceRules(font));
   }
   const base = design.properties
@@ -49,29 +44,6 @@ export function compileDesignRules(design: ResolvedDesign, selector = ':root'): 
     );
   }
   return chunks;
-}
-
-export function googleFontUrl(font: FontFamily): string {
-  if (font.value.source.type !== 'google') {
-    throw new Error(`Font "${font.uuid}" is not a Google font`);
-  }
-  const family = encodeURIComponent(font.value.source.family).replace(/%20/g, '+');
-  const weights = [...font.value.weights].sort((left, right) => left - right);
-  const styles = fontStyles(font);
-  const axis = styles.includes('italic')
-    ? `ital,wght@${italicPairs(styles, weights).join(';')}`
-    : `wght@${weights.join(';')}`;
-  return `https://fonts.googleapis.com/css2?family=${family}:${axis}&display=swap`;
-}
-
-function italicPairs(styles: readonly FontStyle[], weights: readonly number[]): string[] {
-  const pairs: string[] = [];
-  for (const style of ['normal', 'italic'] as const) {
-    if (!styles.includes(style)) continue;
-    const italic = style === 'italic' ? 1 : 0;
-    for (const weight of weights) pairs.push(`${italic},${weight}`);
-  }
-  return pairs;
 }
 
 function fontFaceRules(font: FontFamily): string[] {

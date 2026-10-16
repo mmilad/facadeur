@@ -18,7 +18,7 @@ const TOKEN_COPY: Record<DesignTokenFamily, { label: string; placeholder: string
   radius: { label: 'radius', placeholder: 'Corner lg' },
   shadow: { label: 'shadow', placeholder: 'Elevated md' },
   type: { label: 'typography', placeholder: 'Body' },
-  font: { label: 'font', placeholder: 'Inter' },
+  font: { label: 'font', placeholder: 'system-ui' },
 };
 
 export function TokenAddRow({

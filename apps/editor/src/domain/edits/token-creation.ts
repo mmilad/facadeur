@@ -70,9 +70,9 @@ export function defaultTokenValue(family: DesignTokenFamily): {
       return {
         valueType: 'fontFamily',
         value: {
-          family: 'Inter',
+          family: 'system-ui',
           weights: [400, 600],
-          source: { type: 'google', family: 'Inter' },
+          source: { type: 'system' },
           fallbacks: ['sans-serif'],
         },
       };

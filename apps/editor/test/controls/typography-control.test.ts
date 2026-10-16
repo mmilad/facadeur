@@ -19,25 +19,25 @@ const secondFontUuid = '0498c315-10df-54a4-8213-f36bad42e52b';
 
 describe('typography control value', () => {
   it('detects token references', () => {
-    expect(isTokenRef(fixtureTokenRef(fixtureIds.tokens.font.inter))).toBe(true);
+    expect(isTokenRef(fixtureTokenRef(fixtureIds.tokens.font.systemUi))).toBe(true);
     expect(isTokenRef('16px')).toBe(false);
   });
 
   it('builds project font refs', () => {
     expect(
-      projectFontRefs([{ uuid: fixtureIds.tokens.font.inter }, { uuid: secondFontUuid }]),
-    ).toEqual([fixtureTokenRef(fixtureIds.tokens.font.inter), fixtureTokenRef(secondFontUuid)]);
+      projectFontRefs([{ uuid: fixtureIds.tokens.font.systemUi }, { uuid: secondFontUuid }]),
+    ).toEqual([fixtureTokenRef(fixtureIds.tokens.font.systemUi), fixtureTokenRef(secondFontUuid)]);
   });
 
   it('infers field mode', () => {
     expect(
-      inferTypographyFieldMode(fixtureTokenRef(fixtureIds.tokens.font.inter), [
-        fixtureTokenRef(fixtureIds.tokens.font.inter),
+      inferTypographyFieldMode(fixtureTokenRef(fixtureIds.tokens.font.systemUi), [
+        fixtureTokenRef(fixtureIds.tokens.font.systemUi),
       ]),
     ).toBe('token');
-    expect(inferTypographyFieldMode('Inter', [fixtureTokenRef(fixtureIds.tokens.font.inter)])).toBe(
-      'custom',
-    );
+    expect(
+      inferTypographyFieldMode('system-ui', [fixtureTokenRef(fixtureIds.tokens.font.systemUi)]),
+    ).toBe('custom');
   });
 
   it('maps typography style properties', () => {
@@ -60,8 +60,8 @@ describe('typography control value', () => {
     expect(formatTypographyFieldValue(1.5)).toBe('1.5');
     expect(parseTypographyFieldValue('lineHeight', '1.5')).toBe(1.5);
     expect(parseTypographyFieldValue('fontWeight', '600')).toBe(600);
-    expect(parseTypographyFieldValue('fontFamily', 'Inter, sans-serif')).toEqual([
-      'Inter',
+    expect(parseTypographyFieldValue('fontFamily', 'system-ui, sans-serif')).toEqual([
+      'system-ui',
       'sans-serif',
     ]);
   });

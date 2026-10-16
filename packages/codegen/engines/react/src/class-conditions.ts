@@ -16,13 +16,19 @@ export type CodegenRepeaterScope = {
 export function classExpression(
   classes: NonNullable<Node['classes']>,
   propPaths: ReadonlyMap<string, string>,
+  booleanPropUuids: ReadonlySet<string>,
   styleNodeUuids: readonly string[],
   repeaterScopes: ReadonlyMap<string, CodegenRepeaterScope>,
 ) {
   const values = classes.map((item) => {
     const condition = item.condition;
     if (!condition) return JSON.stringify(item.name);
-    const expression = classConditionExpression(condition, propPaths, repeaterScopes);
+    const expression = classConditionExpression(
+      condition,
+      propPaths,
+      booleanPropUuids,
+      repeaterScopes,
+    );
     return `${expression} ? ${JSON.stringify(item.name)} : ""`;
   });
   values.push(...styleNodeUuids.map((uuid) => JSON.stringify(`facadeur-node-${uuid}`)));
@@ -68,24 +74,36 @@ export function childRepeaterScopes(
 function classConditionExpression(
   condition: ClassCondition | LegacyClassCondition,
   propPaths: ReadonlyMap<string, string>,
+  booleanPropUuids: ReadonlySet<string>,
   repeaterScopes: ReadonlyMap<string, CodegenRepeaterScope>,
 ): string {
   if (condition.kind === 'prop-equals') {
     const path = propPaths.get(condition.propUuid);
-    return path
-      ? `Object.is(getProp(props, ${JSON.stringify(path)}), ${JSON.stringify(condition.value)})`
-      : 'false';
+    if (!path) return 'false';
+    const value = `getProp(props, ${JSON.stringify(path)})`;
+    const resolvedValue = booleanPropUuids.has(condition.propUuid) ? `(${value} ?? false)` : value;
+    return `Object.is(${resolvedValue}, ${JSON.stringify(condition.value)})`;
   }
   if (condition.kind === 'rule') {
     if (!condition.conditions.length) return 'false';
     const operator = condition.operator === 'and' ? '&&' : '||';
-    return `(${condition.conditions.map((child) => classConditionExpression(child, propPaths, repeaterScopes)).join(` ${operator} `)})`;
+    return `(${condition.conditions.map((child) => classConditionExpression(child, propPaths, booleanPropUuids, repeaterScopes)).join(` ${operator} `)})`;
   }
-  const left = conditionOperandExpression(condition.left, propPaths, repeaterScopes);
+  const left = conditionOperandExpression(
+    condition.left,
+    propPaths,
+    booleanPropUuids,
+    repeaterScopes,
+  );
   if (condition.operator === 'is-set') return `(${left} !== undefined && ${left} !== null)`;
   if (condition.operator === 'is-not-set') return `(${left} === undefined || ${left} === null)`;
   if (!condition.right) return 'false';
-  const right = conditionOperandExpression(condition.right, propPaths, repeaterScopes);
+  const right = conditionOperandExpression(
+    condition.right,
+    propPaths,
+    booleanPropUuids,
+    repeaterScopes,
+  );
   const operators: Partial<Record<ClassConditionLeaf['operator'], string>> = {
     equals: 'Object.is(LEFT, RIGHT)',
     'not-equals': '!Object.is(LEFT, RIGHT)',
@@ -113,6 +131,7 @@ function classConditionExpression(
 function conditionOperandExpression(
   operand: ClassConditionOperand,
   propPaths: ReadonlyMap<string, string>,
+  booleanPropUuids: ReadonlySet<string>,
   repeaterScopes: ReadonlyMap<string, CodegenRepeaterScope>,
 ) {
   if (operand.kind === 'literal') return JSON.stringify(operand.value);
@@ -128,7 +147,8 @@ function conditionOperandExpression(
     const itemPath = path.startsWith(`${scope.arrayPath}.`)
       ? path.slice(scope.arrayPath.length + 1)
       : path;
-    return `getProp(${scope.itemExpression}, ${JSON.stringify(itemPath)})`;
+    const expression = `getProp(${scope.itemExpression}, ${JSON.stringify(itemPath)})`;
+    return booleanPropUuids.has(itemMatch[2]) ? `(${expression} ?? false)` : expression;
   }
   if (legacyItemMatch?.[1]) {
     const scope = [...repeaterScopes.values()].at(-1);
@@ -136,6 +156,9 @@ function conditionOperandExpression(
       ? `getProp(${scope.itemExpression}, ${JSON.stringify(legacyItemMatch[1])})`
       : 'undefined';
   }
-  const path = match?.[1] ? propPaths.get(match[1]) : undefined;
-  return path ? `getProp(props, ${JSON.stringify(path)})` : 'undefined';
+  const propUuid = match?.[1];
+  const path = propUuid ? propPaths.get(propUuid) : undefined;
+  if (!path || !propUuid) return 'undefined';
+  const expression = `getProp(props, ${JSON.stringify(path)})`;
+  return booleanPropUuids.has(propUuid) ? `(${expression} ?? false)` : expression;
 }

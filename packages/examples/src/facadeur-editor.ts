@@ -133,7 +133,7 @@ function settingsRoot(): Node {
     minWidth: '0',
     color: colors.ink,
     backgroundColor: colors.paper,
-    fontFamily: 'Inter, ui-sans-serif, sans-serif',
+    fontFamily: 'system-ui, ui-sans-serif, sans-serif',
     fontSize: '12px',
     overflow: 'hidden',
   });
@@ -261,7 +261,7 @@ function mobileWorkspaceRoot(): Node {
       padding: '14px',
       color: colors.ink,
       backgroundColor: colors.paper,
-      fontFamily: 'Inter, ui-sans-serif, sans-serif',
+      fontFamily: 'system-ui, ui-sans-serif, sans-serif',
       fontSize: '12px',
       overflow: 'hidden',
     },

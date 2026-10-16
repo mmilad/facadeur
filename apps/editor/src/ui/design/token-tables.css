@@ -194,6 +194,59 @@
   margin: 0;
 }
 
+.token-table-typography-summary {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.token-typography-detail-row > .settings-table-cell {
+  padding-top: 0;
+}
+
+.token-typography-details .design-typography-editor {
+  display: grid;
+  gap: 10px;
+}
+
+.token-table-typography-name {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  min-height: 28px;
+}
+
+.token-typography-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.token-typography-detail-section {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.token-typography-detail-section h3 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 720px) {
+  .token-typography-details {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+}
+
 .token-table-value > .eu-field > .eu-field__label {
   position: absolute;
   width: 1px;

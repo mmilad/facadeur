@@ -18,7 +18,7 @@ describe('token value control', () => {
       <TokenValueControl
         label="Color"
         value={fixtureTokenRef(fixtureIds.tokens.color.blue._500)}
-        tokens={[fixtureTokenRef(fixtureIds.tokens.font.inter)]}
+        tokens={[fixtureTokenRef(fixtureIds.tokens.font.systemUi)]}
         onCommit={onCommit}
       />,
     );
@@ -31,7 +31,7 @@ describe('token value control', () => {
 
   it('resets the token search when reopening from the reference button', async () => {
     const user = userEvent.setup();
-    const font = fixtureTokenRef(fixtureIds.tokens.font.inter);
+    const font = fixtureTokenRef(fixtureIds.tokens.font.systemUi);
     render(
       <TokenValueControl
         label="Color"
@@ -54,7 +54,7 @@ describe('token value control', () => {
   it('commits a selected token', async () => {
     const user = userEvent.setup();
     const onCommit = vi.fn();
-    const font = fixtureTokenRef(fixtureIds.tokens.font.inter);
+    const font = fixtureTokenRef(fixtureIds.tokens.font.systemUi);
     render(
       <TokenValueControl
         label="Size"

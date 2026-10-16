@@ -135,7 +135,7 @@ export function TypographyControl({
             label={fieldLabel(key)}
             value={shown}
             tokenOptions={tokens}
-            customPlaceholder={key === 'fontFamily' ? 'Inter, sans-serif' : undefined}
+            customPlaceholder={key === 'fontFamily' ? 'system-ui, sans-serif' : undefined}
             onCommit={(next) => commitKey(key, next)}
           />
         );
@@ -171,7 +171,7 @@ export function TypographyStyleControl({
         label={fieldLabel}
         value={value}
         tokenOptions={tokens}
-        customPlaceholder="Inter, sans-serif"
+        customPlaceholder="system-ui, sans-serif"
         onCommit={onCommit}
       />
     );

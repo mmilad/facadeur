@@ -83,12 +83,7 @@ export function fontStyles(font: FontFamily): FontStyle[] {
 function assertSource(font: FontFamily, styles: readonly FontStyle[]) {
   const { source, weights } = font.value;
   const fontLabel = `Font "${font.uuid}"`;
-  if (source.type === 'google') {
-    assertCssString(source.family, `${fontLabel} Google family`);
-    return;
-  }
-  if (source.type !== 'file')
-    throw new DocumentError('schema', `${fontLabel} has an unknown source`);
+  if (source.type === 'system') return;
   if (!source.files.length)
     throw new DocumentError('schema', `${fontLabel} needs at least one file`);
   for (const file of source.files) assertFaceFile(font.uuid, file);

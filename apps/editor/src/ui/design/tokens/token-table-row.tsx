@@ -40,6 +40,8 @@ export function createTokenTableRow({
   shadowTokens,
   typographyCatalogs,
   showType,
+  expanded = false,
+  onToggle,
   resolvePreview,
   labelFor,
   searchValue,
@@ -56,6 +58,8 @@ export function createTokenTableRow({
   shadowTokens: readonly string[];
   typographyCatalogs: TypographyCatalogs;
   showType: boolean;
+  expanded?: boolean;
+  onToggle?: () => void;
   resolvePreview: (reference: string) => string | undefined;
   labelFor: (reference: string) => string;
   searchValue: (reference: string) => string | undefined;
@@ -168,18 +172,42 @@ export function createTokenTableRow({
       });
     }
   };
-  return {
-    id: token.uuid,
-    className: 'token-table-row',
-    dataAttributes: { 'data-token-path': token.path },
-    cells: [
-      <div className="token-table-name">
+  const typographyEditor =
+    token.type === 'typography' ? (
+      <DesignTypographyEditor
+        namePrefix={`token-${token.uuid}`}
+        label={displayLabel}
+        value={shownValue as DesignTypographyValue}
+        storedValue={
+          (writingId ? token.override : token.value) as DesignTypographyValue | undefined
+        }
+        baseValue={token.baseValue as DesignTypographyValue}
+        breakpointId={writingId}
+        isOverride={Boolean(writingId)}
+        catalogs={typographyCatalogs}
+        typographyTokens={tokenReferencesByType(snap.design.tokens, 'typography').filter(
+          (candidate) => candidate !== ref,
+        )}
+        showDisclosure={false}
+        onCommit={(next) =>
+          commitRawToken(onEvent, snap, token.family, token.uuid, next, writingId)
+        }
+        onReset={
+          writingId && token.override !== undefined
+            ? () => resetTokenBreakpoint(onEvent, snap, token.family, token.uuid, writingId)
+            : undefined
+        }
+      />
+    ) : null;
+  const details = typographyEditor ? (
+    <div className="token-typography-details">
+      <section className="token-typography-detail-section">
+        <h3>Token metadata</h3>
         <TextField
           id={`token-label-${token.uuid}`}
           name={`token-label-${token.uuid}`}
-          label={`Label for ${cssVar}`}
+          label="Label"
           key={token.label ?? ''}
-          className="token-table-label-input"
           value={displayLabel}
           onChange={() => undefined}
           onCommit={commitLabel}
@@ -191,15 +219,64 @@ export function createTokenTableRow({
           <TextField
             id={`token-path-${token.uuid}`}
             name={`token-path-${token.uuid}`}
-            label={`CSS variable name for ${cssVar}`}
+            label="CSS variable name"
             className="token-path-input"
             value={tokenPathSuffix}
             onChange={() => undefined}
             onCommit={commitPath}
           />
         </div>
-        {showType ? <span>{token.type}</span> : null}
-      </div>,
+      </section>
+      <section className="token-typography-detail-section">
+        <h3>Typography style</h3>
+        {typographyEditor}
+      </section>
+    </div>
+  ) : undefined;
+  const nameCell = typographyEditor ? (
+    <div className="token-table-name token-table-typography-name">
+      <strong>{displayLabel}</strong>
+    </div>
+  ) : (
+    <div className="token-table-name">
+      <TextField
+        id={`token-label-${token.uuid}`}
+        name={`token-label-${token.uuid}`}
+        label={`Label for ${cssVar}`}
+        key={token.label ?? ''}
+        className="token-table-label-input"
+        value={displayLabel}
+        onChange={() => undefined}
+        onCommit={commitLabel}
+      />
+      <div className="token-path-editor">
+        <span aria-hidden="true">
+          --{DESIGN_TOKEN_CSS_PREFIX}-{pathParts[0]}-
+        </span>
+        <TextField
+          id={`token-path-${token.uuid}`}
+          name={`token-path-${token.uuid}`}
+          label={`CSS variable name for ${cssVar}`}
+          className="token-path-input"
+          value={tokenPathSuffix}
+          onChange={() => undefined}
+          onCommit={commitPath}
+        />
+      </div>
+      {showType ? <span>{token.type}</span> : null}
+    </div>
+  );
+  return {
+    id: token.uuid,
+    className: 'token-table-row',
+    dataAttributes: { 'data-token-path': token.path },
+    details,
+    detailsClassName: details ? 'token-typography-detail-row' : undefined,
+    expanded: details ? expanded : undefined,
+    toggleName: details ? `token-details-${token.uuid}` : undefined,
+    onToggle: details ? onToggle : undefined,
+    cells: [
+      nameCell,
       <TokenPreview
         value={shownValue}
         type={token.type}
@@ -247,29 +324,9 @@ export function createTokenTableRow({
             }
           />
         ) : token.type === 'typography' ? (
-          <DesignTypographyEditor
-            namePrefix={`token-${token.uuid}`}
-            label={displayLabel}
-            value={shownValue as DesignTypographyValue}
-            storedValue={
-              (writingId ? token.override : token.value) as DesignTypographyValue | undefined
-            }
-            baseValue={token.baseValue as DesignTypographyValue}
-            breakpointId={writingId}
-            isOverride={Boolean(writingId)}
-            catalogs={typographyCatalogs}
-            typographyTokens={tokenReferencesByType(snap.design.tokens, 'typography').filter(
-              (candidate) => candidate !== ref,
-            )}
-            onCommit={(next) =>
-              commitRawToken(onEvent, snap, token.family, token.uuid, next, writingId)
-            }
-            onReset={
-              writingId && token.override !== undefined
-                ? () => resetTokenBreakpoint(onEvent, snap, token.family, token.uuid, writingId)
-                : undefined
-            }
-          />
+          <span className="token-table-typography-summary">
+            {typographySummary(shownValue, labelFor)}
+          </span>
         ) : token.type === 'dimension' ? (
           <ComboField
             className="design-spacing-field"
@@ -359,6 +416,22 @@ export function createTokenTableRow({
       </div>,
     ],
   };
+}
+
+function typographySummary(value: unknown, labelFor: (reference: string) => string): string {
+  if (typeof value === 'string') return labelFor(value) || value;
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return JSON.stringify(value) ?? '';
+  }
+  const record = value as Record<string, unknown>;
+  const display = (item: unknown) => {
+    if (typeof item === 'string' && /^\{[^{}]+\}$/.test(item)) return labelFor(item);
+    return Array.isArray(item) ? item.join(', ') : String(item ?? '');
+  };
+  return [record.fontSize, record.fontWeight, record.fontFamily]
+    .filter((item) => item !== undefined)
+    .map(display)
+    .join(' · ');
 }
 
 function ResetOverrideIcon() {

@@ -64,6 +64,13 @@ function resolveReference(
       );
       if (scopedProp) {
         value = fieldAtPath(scope.item, scopedProp.path);
+        if (
+          value === undefined &&
+          scopedProp.valueType === 'boolean' &&
+          hasParentObject(scope.item, scopedProp.path)
+        ) {
+          value = false;
+        }
         foundInScope = true;
         break;
       }
@@ -134,9 +141,20 @@ export function componentPropValues(
   const values: Record<string, FieldValue> = {};
   for (const prop of componentPropsForSchema(schema)) {
     const value = fieldAtPath(fields, prop.path);
-    if (value !== undefined) values[prop.uuid] = value;
+    if (value !== undefined) {
+      values[prop.uuid] = value;
+    } else if (prop.valueType === 'boolean' && hasParentObject(fields, prop.path)) {
+      values[prop.uuid] = false;
+    }
   }
   return values;
+}
+
+function hasParentObject(value: FieldValue | undefined, path: string) {
+  const segments = path.split('.');
+  if (segments.length === 1) return true;
+  const parent = fieldAtPath(value, segments.slice(0, -1).join('.'));
+  return parent !== null && typeof parent === 'object' && !Array.isArray(parent);
 }
 
 export function isSupportedReference(reference: string) {

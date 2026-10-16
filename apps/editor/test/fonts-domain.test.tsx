@@ -55,9 +55,9 @@ describe('fonts domain panel', () => {
       (font) => font.label === 'Display',
     );
     expect(display?.value).toMatchObject({
-      family: 'Display',
+      family: 'system-ui',
       fallbacks: ['sans-serif'],
-      source: { type: 'google', family: 'Display' },
+      source: { type: 'system' },
     });
     expect(view.container.querySelector('input[name^="font-"][name$="-family"]')).toBeInstanceOf(
       HTMLInputElement,
@@ -66,7 +66,7 @@ describe('fonts domain panel', () => {
 
   it('blocks removing a font that typography tokens still reference', () => {
     const view = openFonts();
-    const uuid = exampleIds.tokens.font.inter;
+    const uuid = exampleIds.tokens.font.systemUi;
     fireEvent.click(view.container.querySelector(`button[name="remove-font-${uuid}"]`)!);
 
     expect(
@@ -78,7 +78,7 @@ describe('fonts domain panel', () => {
 
   it('rejects fallbacks that do not end on a generic family', () => {
     const view = openFonts();
-    const uuid = exampleIds.tokens.font.inter;
+    const uuid = exampleIds.tokens.font.systemUi;
     fireEvent.click(view.container.querySelector(`button[name="font-details-${uuid}"]`)!);
     const fallbacks = view.container.querySelector<HTMLInputElement>(
       `input[name="font-${uuid}-fallbacks"]`,
@@ -89,25 +89,25 @@ describe('fonts domain panel', () => {
     expect(
       fontFamilyTokens(session!.getSnapshot().design.tokens).find((font) => font.uuid === uuid)
         ?.value.fallbacks,
-    ).toEqual(['system-ui', 'sans-serif']);
+    ).toEqual(['sans-serif']);
     expect(session!.getSnapshot().notice?.tone).toBe('error');
     expect(session!.getSnapshot().notice?.text).toMatch(/generic family/i);
   });
 
-  it('searches resource metadata and expands the compact detail row', () => {
+  it('searches system source metadata and expands the compact detail row', () => {
     const view = openFonts();
-    const uuid = exampleIds.tokens.font.inter;
+    const uuid = exampleIds.tokens.font.systemUi;
     fireEvent.click(view.container.querySelector(`button[name="font-details-${uuid}"]`)!);
     fireEvent.change(view.container.querySelector('input[name="font-search"]')!, {
-      target: { value: 'google' },
+      target: { value: 'system' },
     });
     expect(view.container.querySelectorAll('.font-row')).toHaveLength(1);
-    expect(view.container.textContent).toContain('Google · Inter');
+    expect(view.container.textContent).toContain('System');
 
     fireEvent.click(view.container.querySelector(`button[name="font-details-${uuid}"]`)!);
     expect(view.container.querySelector(`input[name="font-${uuid}-fallbacks"]`)).toBeNull();
     expect(view.container.querySelector(`button[name="remove-font-${uuid}"]`)?.title).toBe(
-      'Remove font Inter',
+      'Remove font System UI',
     );
   });
 });

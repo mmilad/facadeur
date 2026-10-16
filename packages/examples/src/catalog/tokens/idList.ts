@@ -1,6 +1,7 @@
 export const tokenIds = {
   font: {
-    inter: '0498c315-10df-54a4-8213-f36bad42e52a',
+    systemUi: '0498c315-10df-54a4-8213-f36bad42e52a',
+    georgia: '0498c315-10df-54a4-8213-f36bad42e52b',
   },
   color: {
     accent: {
