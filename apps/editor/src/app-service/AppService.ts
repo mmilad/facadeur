@@ -367,7 +367,8 @@ export class AppService {
     const definition = snapshot.openDefinition;
     const item = findLayer(snapshot.layers, intent.targetId);
     if (!definition || !item) return;
-    const spot = catalogLayerInsertTarget(definition, item, intent.placement);
+    const projectCatalog = this.core.getSnapshot().catalog;
+    const spot = catalogLayerInsertTarget(definition, projectCatalog, item, intent.placement);
     const parent = spot ? findNodeByUuid(definition.root, spot.parentUuid) : null;
     if (!spot || !parent) return;
     const entry: LayerInsertEntry | null =
@@ -377,11 +378,16 @@ export class AppService {
             assetId: intent.value,
             label: snapshot.catalog.find((asset) => asset.id === intent.value)?.name ?? '',
           }
-        : intent.kind === 'structural' && ['repeater', 'switch'].includes(intent.value)
+        : intent.kind === 'structural' && ['repeater', 'switch', 'slot'].includes(intent.value)
           ? {
               kind: 'structural',
-              tool: intent.value as 'repeater' | 'switch',
-              label: intent.value === 'repeater' ? 'Repeater' : 'Switch',
+              tool: intent.value as 'repeater' | 'switch' | 'slot',
+              label:
+                intent.value === 'repeater'
+                  ? 'Repeater'
+                  : intent.value === 'switch'
+                    ? 'Switch'
+                    : 'Children',
             }
           : ['frame', 'text', 'image'].includes(intent.value)
             ? {
@@ -391,7 +397,16 @@ export class AppService {
               }
             : null;
     if (!entry) return;
-    if (!catalogPlacementAllowed(definition.kind, parent, entry, snapshot.catalog)) {
+    if (
+      !catalogPlacementAllowed(
+        definition.kind,
+        definition,
+        parent,
+        entry,
+        projectCatalog,
+        snapshot.catalog,
+      )
+    ) {
       const assetKind =
         entry.kind === 'instance'
           ? snapshot.catalog.find((asset) => asset.id === entry.assetId)?.kind
@@ -418,7 +433,8 @@ export class AppService {
     const definition = snapshot.openDefinition;
     const item = findLayer(snapshot.layers, intent.targetId);
     if (!definition || !item) return;
-    const spot = catalogLayerInsertTarget(definition, item, intent.placement);
+    const projectCatalog = this.core.getSnapshot().catalog;
+    const spot = catalogLayerInsertTarget(definition, projectCatalog, item, intent.placement);
     if (!spot) return;
     const clipboard = this.layerClipboard;
     if (!clipboard) return;
@@ -507,7 +523,11 @@ export class AppService {
     if (!definition || nodeId === definition.root.uuid) return;
     const parentInfo = findParentOfNode(definition.root, nodeId);
     const acceptsFrame = defaultNestingRules[definition.kind].nodeTypes.includes('frame');
-    if (!parentInfo || !acceptsFrame || !canAcceptCatalogChildren(parentInfo.parent)) {
+    if (
+      !parentInfo ||
+      !acceptsFrame ||
+      !canAcceptCatalogChildren(parentInfo.parent, this.core.getSnapshot().catalog)
+    ) {
       this.session.setNotice(refusalMessage(definition.kind, 'frame'), 'error');
       return;
     }
@@ -526,7 +546,13 @@ export class AppService {
   ) {
     const definition = this.session.getSnapshot().openDefinition;
     if (!definition) return;
-    const target = catalogLayerDropTarget(definition, sourceId, targetId, zone);
+    const target = catalogLayerDropTarget(
+      definition,
+      this.core.getSnapshot().catalog,
+      sourceId,
+      targetId,
+      zone,
+    );
     if (!target) return;
     this.moveCatalogNode(sourceId, target.parentUuid, target.index);
     await this.persistCatalog();

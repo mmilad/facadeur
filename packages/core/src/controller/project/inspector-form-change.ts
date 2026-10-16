@@ -1,4 +1,4 @@
-import type { FieldValue } from '@facadeur/domain';
+import type { CompositionSource, FieldValue } from '@facadeur/domain';
 
 export type InspectorFormChangeTarget =
   | { kind: 'definitionName'; value: string }
@@ -23,8 +23,7 @@ export type InspectorFormChangeTarget =
       kind: 'nodeComposition';
       nodeUuid: string;
       patch: {
-        readonly source?:
-          NonNullable<import('@facadeur/domain').NodeConfig['composition']>['source'] | null;
+        readonly source?: CompositionSource | null;
         readonly compositionCase?: string | null;
         readonly definitionRefBinding?:
           import('@facadeur/domain').NodeConfig['definitionRefBinding'] | null;

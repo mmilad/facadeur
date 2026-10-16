@@ -1,5 +1,6 @@
 import {
   canAcceptCatalogChildren,
+  defaultChildrenSlotCount,
   defaultNestingRules,
   findNodeByUuid,
   findParentOfNode,
@@ -7,13 +8,14 @@ import {
   type NodeModel,
 } from '@facadeur/core';
 import type { DefaultKind } from '@facadeur/core';
+import type { ProjectCatalog } from '@facadeur/domain';
 import type { LayerItem } from './layer-tree';
 import type { AssetSummary, EditorSnapshot } from '../session/types';
 
 /** Available catalog layer insertions for a definition kind. */
 export type LayerInsertEntry =
   | { kind: 'primitive'; tool: 'frame' | 'text' | 'image'; label: string }
-  | { kind: 'structural'; tool: 'repeater' | 'switch'; label: string }
+  | { kind: 'structural'; tool: 'repeater' | 'switch' | 'slot'; label: string }
   | { kind: 'instance'; assetId: string; label: string };
 
 const STANDARD_ATOM_IDS = [
@@ -40,6 +42,9 @@ export function catalogLayerInsertEntries(
     { kind: 'primitive', tool: 'frame', label: 'Frame' },
     { kind: 'structural', tool: 'repeater', label: 'Repeater' },
     { kind: 'structural', tool: 'switch', label: 'Switch' },
+    ...(kind === 'component'
+      ? [{ kind: 'structural' as const, tool: 'slot' as const, label: 'Children' }]
+      : []),
     ...catalogInstances(catalog, openId, (asset) =>
       defaultNestingRules[kind].instanceKinds.includes(asset.kind),
     ),
@@ -64,30 +69,37 @@ function catalogInstances(
 
 export function catalogLayerInsertTarget(
   definition: NodeDefinitionModel,
+  catalog: ProjectCatalog,
   item: LayerItem,
   placement: 'inside' | 'below',
 ): { parentUuid: string; index: number } | null {
   const node = findNodeByUuid(definition.root, item.id);
   if (!node) return null;
   if (placement === 'inside') {
-    if (!canAcceptCatalogChildren(node)) return null;
+    if (!canAcceptCatalogChildren(node, catalog)) return null;
     return { parentUuid: item.id, index: (node.dom.children ?? []).length };
   }
   const parentInfo = findParentOfNode(definition.root, item.id);
   if (!parentInfo) return null;
+  if (!canAcceptCatalogChildren(parentInfo.parent, catalog)) return null;
   return { parentUuid: parentInfo.parent.uuid, index: parentInfo.index + 1 };
 }
 
 export function catalogPlacementAllowed(
   docKind: NodeDefinitionModel['kind'],
+  definition: NodeDefinitionModel,
   parent: NodeModel,
   entry: LayerInsertEntry,
+  projectCatalog: ProjectCatalog,
   catalog: readonly AssetSummary[],
 ): boolean {
-  if (!canAcceptCatalogChildren(parent)) return false;
+  if (!canAcceptCatalogChildren(parent, projectCatalog)) return false;
   const rule = defaultNestingRules[docKind];
   if (!rule) return false;
-  if (entry.kind === 'structural') return rule.nodeTypes.includes(entry.tool);
+  if (entry.kind === 'structural') {
+    if (entry.tool === 'slot' && defaultChildrenSlotCount(definition) > 0) return false;
+    return rule.nodeTypes.includes(entry.tool);
+  }
   if (entry.kind === 'primitive') {
     return rule.nodeTypes.includes(entry.tool);
   }
@@ -98,17 +110,25 @@ export function catalogPlacementAllowed(
 
 export function catalogLayerInsertEntriesForLayer(
   snap: EditorSnapshot,
+  projectCatalog: ProjectCatalog,
   item: LayerItem,
   placement: 'inside' | 'below',
 ): LayerInsertEntry[] {
   const definition = snap.openDefinition;
   if (!definition) return [];
-  const target = catalogLayerInsertTarget(definition, item, placement);
+  const target = catalogLayerInsertTarget(definition, projectCatalog, item, placement);
   if (!target) return [];
   const parent = findNodeByUuid(definition.root, target.parentUuid);
   if (!parent) return [];
   const entries = catalogLayerInsertEntries(definition.kind, snap.catalog, snap.openId);
   return entries.filter((entry) =>
-    catalogPlacementAllowed(definition.kind, parent, entry, snap.catalog),
+    catalogPlacementAllowed(
+      definition.kind,
+      definition,
+      parent,
+      entry,
+      projectCatalog,
+      snap.catalog,
+    ),
   );
 }

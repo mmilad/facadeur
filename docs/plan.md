@@ -1,5 +1,39 @@
 # Facadeur cleanup plan
 
+- [x] Core/Editor: support one default child slot for component instances.
+  - Evidence: Repeater and Switch already expand their own authored `dom.children` as templates,
+    but a fixed or dynamic `definitionRef` expands the referenced definition and currently ignores
+    the referencing node's `dom.children`. Sidebar drag targeting only recognizes `frame` and
+    `instance`, while Core's current child check only excludes a partial list of void HTML tags.
+    Neither rule models whether a component actually accepts children.
+  - Action: add one explicit, render-positioned default Children/Slot outlet to component
+    definitions. This is structural template content, not a persisted `canHaveChildren` flag.
+    Derive a catalog-aware child capability for each authored node and expose it as a computed
+    sidebar DTO field. Ordinary non-void DOM nodes and Repeater/Switch template nodes can accept
+    children; component instances can accept them only when their referenced definition declares
+    exactly one default outlet. Components without an outlet and void HTML nodes cannot accept
+    children. Use the same Core-owned capability for sidebar drop zones, canvas placement,
+    insertion/move/paste operations, and Catalog validation. Resolve instance-authored children at
+    the outlet in the shared Core preview/codegen resolver, in the embedding definition's data
+    context, so preview and generated examples agree. Prevent authoring more than one default
+    outlet; leave named slots for a later extension.
+  - Scope: first default slot only; no named/multiple slots, new per-node capability flag, or
+    changes to current Repeater/Switch template semantics.
+  - Contracts: preserve existing `definitionRef`/`definitionRefBinding` identities, child order,
+    style UUID bindings, preview data and item context, and common preview/codegen resolution.
+    Reject or diagnose instance children when the target has no default slot, and reject a second
+    default slot in one component definition. For dynamic references, permit authored children
+    only when every schema-allowed target definition has the default slot.
+  - Validation: Core and Editor typechecks, Prettier, Storybook production build, candidate
+    detector, and `git diff --check` passed. Focused automated tests were not run.
+  - Refactoring review: keep child capability and slot count in Core's Catalog tree operations,
+    with its shared preview expansion in `resolve.ts` and catalog invariants in `validate.ts`;
+    these are the existing owners for the corresponding semantics. The detector flags
+    `validate.ts`, `resolve.ts`, `inspector-view.ts`, and `AppService.ts` by size. The inspector
+    change only excludes slot outlets from source controls. `AppService.ts` remains the existing
+    command router; this change only threads catalog context to existing placement paths. No new
+    responsibility or duplicated resolver/validator was introduced.
+
 - [x] Schema editor: warn about forced recursive catalog schema references.
   - Evidence: schema `$ref` values can connect catalog schemas in direct and indirect cycles; the editor currently exposes no diagnostic when a cycle has no optional-field or array exit.
   - Action: derive a reference graph from catalog schema entries, detect cycles that remain after optional-property and array-item edges are treated as termination points, and show a non-blocking warning for the selected schema. Bound dynamic component expansion in the shared preview/codegen resolver so recursive data cannot overflow the call stack.

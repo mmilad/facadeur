@@ -6,6 +6,7 @@ import {
   type NodeDefinitionModel,
   type NodeModel,
 } from '@facadeur/core';
+import type { ProjectCatalog } from '@facadeur/domain';
 
 export type DropZone = 'before' | 'inside' | 'after';
 
@@ -32,16 +33,17 @@ function indexAfterRemoval(
 
 export function catalogLayerInsertAt(
   root: NodeModel,
+  catalog: ProjectCatalog,
   targetUuid: string,
   zone: DropZone,
 ): { parentUuid: string; index: number } | null {
   if (zone === 'inside') {
     const target = findNodeByUuid(root, targetUuid);
-    if (!target || !canAcceptCatalogChildren(target)) return null;
+    if (!target || !canAcceptCatalogChildren(target, catalog)) return null;
     return { parentUuid: targetUuid, index: (target.dom.children ?? []).length };
   }
   const parentInfo = findParentOfNode(root, targetUuid);
-  if (!parentInfo) return null;
+  if (!parentInfo || !canAcceptCatalogChildren(parentInfo.parent, catalog)) return null;
   const index = parentInfo.index;
   return {
     parentUuid: parentInfo.parent.uuid,
@@ -51,13 +53,14 @@ export function catalogLayerInsertAt(
 
 export function catalogLayerDropTarget(
   definition: NodeDefinitionModel,
+  catalog: ProjectCatalog,
   draggedUuid: string,
   targetUuid: string,
   zone: DropZone,
 ): { parentUuid: string; index: number } | null {
   if (draggedUuid === targetUuid) return null;
   if (isInsideCatalogSubtree(definition.root, draggedUuid, targetUuid)) return null;
-  const spot = catalogLayerInsertAt(definition.root, targetUuid, zone);
+  const spot = catalogLayerInsertAt(definition.root, catalog, targetUuid, zone);
   if (!spot) return null;
   const parent = findNodeByUuid(definition.root, spot.parentUuid);
   if (!parent) return null;
@@ -70,10 +73,11 @@ export function catalogLayerDropTarget(
 
 export function catalogLayerDropLegal(
   definition: NodeDefinitionModel,
+  catalog: ProjectCatalog,
   draggedUuid: string,
   targetUuid: string,
   zone: DropZone,
 ): boolean {
   if (definition.root.uuid === draggedUuid) return false;
-  return catalogLayerDropTarget(definition, draggedUuid, targetUuid, zone) !== null;
+  return catalogLayerDropTarget(definition, catalog, draggedUuid, targetUuid, zone) !== null;
 }

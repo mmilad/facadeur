@@ -53,6 +53,7 @@ export {
   findNodeByUuid,
   findParentOfNode,
   canAcceptCatalogChildren,
+  defaultChildrenSlotCount,
   insertCatalogNode,
   isInsideCatalogSubtree,
   moveCatalogNode,

@@ -155,6 +155,9 @@ export function buildInspectorFormModel(
     Object.assign(previewFields, staticFieldValues(definition));
   }
 
+  const composition = node.config?.composition;
+  const compositionSource =
+    composition && composition.kind !== 'slot' ? composition.source : undefined;
   const formValue: InspectorFormValue = {
     definition: {
       name: definition.name,
@@ -165,14 +168,8 @@ export function buildInspectorFormModel(
       text: node.dom.text ?? '',
       classList: classListFromNode(node),
       data: recordFromFieldValues(node.data ?? {}),
-      compositionSourceProp:
-        node.config?.composition?.source?.kind === 'prop'
-          ? node.config.composition.source.uuid
-          : '',
-      compositionSourceItemPath:
-        node.config?.composition?.source?.kind === 'item'
-          ? node.config.composition.source.path
-          : '',
+      compositionSourceProp: compositionSource?.kind === 'prop' ? compositionSource.uuid : '',
+      compositionSourceItemPath: compositionSource?.kind === 'item' ? compositionSource.path : '',
       compositionCase: node.config?.compositionCase ?? '',
       definitionRefBindingPath: node.config?.definitionRefBinding?.path ?? '',
     },
@@ -218,7 +215,7 @@ export function buildInspectorFormModel(
               },
             ]
           : []),
-        ...(node.config?.composition
+        ...(composition && composition.kind !== 'slot'
           ? [
               {
                 type: 'select' as const,
@@ -228,7 +225,7 @@ export function buildInspectorFormModel(
                   { value: '', label: 'Choose an array or enum prop…' },
                   ...compositionSourceOptions(
                     effectiveSchemaForDefinition(catalog, definition).schema,
-                    node.config.composition.kind,
+                    composition.kind,
                   ),
                 ],
               },

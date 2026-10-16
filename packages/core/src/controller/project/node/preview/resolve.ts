@@ -1,4 +1,10 @@
-import type { FieldValue, Node, NodeDefinition, ProjectCatalog } from '@facadeur/domain';
+import type {
+  CompositionSource,
+  FieldValue,
+  Node,
+  NodeDefinition,
+  ProjectCatalog,
+} from '@facadeur/domain';
 import type { ElementBuildConfig } from '@facadeur/domain';
 import { findDefinition } from '../../catalog/ops';
 import { lockedStaticFieldValues, mergePreviewFields, staticFieldValues } from './merge';
@@ -6,6 +12,7 @@ import { effectiveSchemaForDefinition } from '../../catalog/field-contract';
 import { componentPropsForSchema } from '../../catalog/field-ids';
 import { readTokenTree } from '../../../style/tokens/global/tree';
 import { tokenReference } from '../../../style/tokens/syntax';
+import { canAcceptCatalogChildren } from '../../catalog/tree-ops';
 
 /** Merged field layers + catalog context for binding resolution. */
 export type PreviewResolveContext = {
@@ -21,6 +28,17 @@ const COMPONENT_PROP_REF = /^\{props:([^}]+)\}$/;
 const ITEM_FIELD_REF = /^\{item:([^}]+)\}$/;
 const STYLE_REFERENCE = /^\{props:[^}]+\}$/;
 const MAX_DYNAMIC_DEFINITION_DEPTH = 32;
+
+type ChildrenSlotContent = {
+  nodes: readonly Node[];
+  definition: NodeDefinition;
+  fields: Record<string, FieldValue>;
+  activeDefinitions: ReadonlySet<string>;
+  inheritedOverrides: Record<string, FieldValue>;
+  itemContext: FieldValue | undefined;
+  dynamicDefinitionDepth: number;
+  parentSlotContent?: ChildrenSlotContent;
+};
 
 /** Replace `{prop:uuid}` and similar templates with literal strings for renderers. */
 export function resolveTemplateString(template: string, ctx: PreviewResolveContext): string {
@@ -137,6 +155,7 @@ export function resolveDefinitionToElementBuildConfig(
     createTokenTextResolver(catalog.tokens ?? {}),
     undefined,
     0,
+    undefined,
   );
 }
 
@@ -150,6 +169,7 @@ function resolveNodeToElementBuildConfig(
   resolveTokenText: (value: string) => string,
   itemContext: FieldValue | undefined,
   dynamicDefinitionDepth: number,
+  slotContent: ChildrenSlotContent | undefined,
 ): ElementBuildConfig {
   const boundDefinitionRef = node.config?.definitionRefBinding
     ? fieldAtPath(itemContext, node.config.definitionRefBinding.path)
@@ -161,6 +181,11 @@ function resolveNodeToElementBuildConfig(
     const located = findDefinition(catalog, definitionRef);
     if (located) {
       const refDefinition = located.definition;
+      if (node.dom.children?.length && !canAcceptCatalogChildren(node, catalog)) {
+        throw new Error(
+          `Component instance "${node.name ?? node.uuid}" has child layers, but its target does not provide a Children slot`,
+        );
+      }
       const dynamicReference = Boolean(node.config?.definitionRefBinding);
       if (dynamicReference && dynamicDefinitionDepth >= MAX_DYNAMIC_DEFINITION_DEPTH) {
         throw new Error(
@@ -239,6 +264,18 @@ function resolveNodeToElementBuildConfig(
         resolveTokenText,
         itemContext,
         dynamicDefinitionDepth + (dynamicReference ? 1 : 0),
+        node.dom.children?.length
+          ? {
+              nodes: node.dom.children,
+              definition,
+              fields: parentFields,
+              activeDefinitions,
+              inheritedOverrides,
+              itemContext,
+              dynamicDefinitionDepth,
+              ...(slotContent ? { parentSlotContent: slotContent } : {}),
+            }
+          : undefined,
       );
       const styleNodeUuids = new Set(built.styleNodeUuids ?? []);
       if (built.nodeUuid) styleNodeUuids.add(built.nodeUuid);
@@ -295,6 +332,7 @@ function resolveNodeToElementBuildConfig(
                 resolveTokenText,
                 item,
                 dynamicDefinitionDepth,
+                slotContent,
               );
               return {
                 ...resolved,
@@ -321,22 +359,41 @@ function resolveNodeToElementBuildConfig(
                   resolveTokenText,
                   itemContext,
                   dynamicDefinitionDepth,
+                  slotContent,
                 ),
               );
           })()
-        : childNodes.map((child) =>
-            resolveNodeToElementBuildConfig(
-              child,
-              definition,
-              catalog,
-              fields,
-              activeDefinitions,
-              fields,
-              resolveTokenText,
-              itemContext,
-              dynamicDefinitionDepth,
-            ),
-          );
+        : composition?.kind === 'slot'
+          ? slotContent
+            ? slotContent.nodes.map((child) =>
+                resolveNodeToElementBuildConfig(
+                  child,
+                  slotContent.definition,
+                  catalog,
+                  slotContent.fields,
+                  slotContent.activeDefinitions,
+                  slotContent.inheritedOverrides,
+                  resolveTokenText,
+                  slotContent.itemContext,
+                  slotContent.dynamicDefinitionDepth,
+                  slotContent.parentSlotContent,
+                ),
+              )
+            : []
+          : childNodes.map((child) =>
+              resolveNodeToElementBuildConfig(
+                child,
+                definition,
+                catalog,
+                fields,
+                activeDefinitions,
+                fields,
+                resolveTokenText,
+                itemContext,
+                dynamicDefinitionDepth,
+                slotContent,
+              ),
+            );
   const resolvedChildren =
     node.dom.tagName.toLowerCase() === 'svg' && icon
       ? icon.data.paths.map((path, index) => ({
@@ -445,7 +502,7 @@ function fieldAtPath(value: FieldValue | undefined, path: string): FieldValue | 
 }
 
 function resolveCompositionSource(
-  source: NonNullable<NonNullable<Node['config']>['composition']>['source'],
+  source: CompositionSource | undefined,
   ctx: PreviewResolveContext,
 ) {
   if (!source) return undefined;

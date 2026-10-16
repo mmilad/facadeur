@@ -74,6 +74,7 @@ export const nodeConfigSchema = Type.Object(
           },
           { additionalProperties: false },
         ),
+        Type.Object({ kind: Type.Literal('slot') }, { additionalProperties: false }),
       ]),
     ),
     compositionCase: Type.Optional(Type.String({ minLength: 1 })),

@@ -7,6 +7,8 @@ import { findDefinition, listCatalogDefinitions, resolveJsonSchemaForDefinition 
 import { effectiveSchemaForDefinition, inheritableSchemaForDefinition } from './field-contract';
 import { matchesSchemaValue } from '../../validation/json-schema-value';
 import { componentPropsForSchema, ensureCatalogFieldIds } from './field-ids';
+import { canAcceptCatalogChildren, defaultChildrenSlotCount } from './tree-ops';
+import { isVoidHtmlTag } from '../../../document/html-tags';
 
 function catalogSchemaErrorMessage(data: unknown): string {
   try {
@@ -38,8 +40,57 @@ export function validateProjectCatalog(data: unknown): ProjectCatalog {
   }
 
   assertCatalogRefIntegrity(catalog as ProjectCatalog);
+  assertChildrenSlotIntegrity(catalog as ProjectCatalog);
   assertEffectiveCatalogFields(catalog as ProjectCatalog);
   return catalog as ProjectCatalog;
+}
+
+function assertChildrenSlotIntegrity(catalog: ProjectCatalog) {
+  const definitions = listCatalogDefinitions(catalog).map(({ definition }) => definition);
+  for (const definition of definitions) {
+    const slotCount = defaultChildrenSlotCount(definition);
+    if (slotCount && definition.kind !== 'component') {
+      throw new DocumentError(
+        'schema',
+        `Children slot is only supported in component definitions ("${definition.name}").`,
+      );
+    }
+    if (slotCount > 1) {
+      throw new DocumentError(
+        'schema',
+        `Component "${definition.name}" has ${slotCount} Children slots; only one default slot is supported.`,
+      );
+    }
+    const visit = (node: Node) => {
+      const children = node.dom.children ?? [];
+      if (node.config?.composition?.kind === 'slot') {
+        if (isVoidHtmlTag(node.dom.tagName)) {
+          throw new DocumentError(
+            'schema',
+            `Children slot "${node.name ?? node.uuid}" cannot use void HTML tag "${node.dom.tagName}".`,
+          );
+        }
+        if (children.length) {
+          throw new DocumentError(
+            'schema',
+            `Children slot "${node.name ?? node.uuid}" cannot contain authored child layers.`,
+          );
+        }
+      }
+      if (
+        children.length &&
+        (node.config?.definitionRef || node.config?.definitionRefBinding) &&
+        !canAcceptCatalogChildren(node, catalog)
+      ) {
+        throw new DocumentError(
+          'schema',
+          `Component instance "${node.name ?? node.uuid}" has child layers, but its target does not provide a Children slot.`,
+        );
+      }
+      for (const child of children) visit(child);
+    };
+    visit(definition.root);
+  }
 }
 
 function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
@@ -82,7 +133,7 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
       itemSchema: Record<string, unknown> | null,
     ) => {
       const composition = node.config?.composition;
-      const source = composition?.source;
+      const source = composition && composition.kind !== 'slot' ? composition.source : undefined;
       let sourceSchema: Record<string, unknown> | null = null;
       if (composition && source?.kind === 'prop') {
         const prop = componentPropsForSchema(effective.schema).find(
@@ -138,8 +189,13 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
       if (node.config?.compositionCase && parent?.config?.composition?.kind !== 'switch') {
         throw new DocumentError('schema', `Switch case requires a switch parent (${node.uuid})`);
       }
-      if (node.config?.compositionCase && parent?.config?.composition?.source) {
-        const parentSource = parent.config.composition.source;
+      const parentComposition = parent?.config?.composition;
+      if (
+        node.config?.compositionCase &&
+        parentComposition?.kind === 'switch' &&
+        parentComposition.source
+      ) {
+        const parentSource = parentComposition.source;
         const parentSourceSchema =
           parentSource.kind === 'item'
             ? itemSchema

@@ -1,11 +1,33 @@
 import type { GlobalStyleRule, Node, NodeDefinition, ProjectCatalog } from '@facadeur/domain';
+import { isVoidHtmlTag } from '../../../document/html-tags';
 import { createCatalogUuid } from '../../../document/ids';
 import { findDefinition, findNodeByUuid } from './ops';
 
-const LEAF_TAGS = new Set(['img', 'input', 'br', 'hr', 'meta', 'link']);
+export function defaultChildrenSlotCount(definition: NodeDefinition) {
+  let count = 0;
+  const visit = (node: Node) => {
+    if (node.config?.composition?.kind === 'slot') count += 1;
+    for (const child of node.dom.children ?? []) visit(child);
+  };
+  visit(definition.root);
+  return count;
+}
 
-export function canAcceptCatalogChildren(node: Node): boolean {
-  return !LEAF_TAGS.has(node.dom.tagName.toLowerCase());
+export function canAcceptCatalogChildren(node: Node, catalog?: ProjectCatalog): boolean {
+  const composition = node.config?.composition?.kind;
+  if (composition === 'slot') return false;
+  if (node.config?.definitionRef) {
+    const target = catalog && findDefinition(catalog, node.config.definitionRef)?.definition;
+    return Boolean(target && target.kind === 'component' && defaultChildrenSlotCount(target) === 1);
+  }
+  if (node.config?.definitionRefBinding) {
+    const targets = Object.values(catalog?.components ?? {});
+    return targets.length > 0 && targets.every((target) => defaultChildrenSlotCount(target) === 1);
+  }
+  if (composition === 'repeater' || composition === 'switch') {
+    return !isVoidHtmlTag(node.dom.tagName);
+  }
+  return !isVoidHtmlTag(node.dom.tagName);
 }
 
 export function findParentOfNode(root: Node, uuid: string): { parent: Node; index: number } | null {
@@ -28,7 +50,7 @@ export function insertCatalogNode(
   const located = findDefinition(catalog, definitionUuid);
   if (!located) return catalog;
   const parent = findNodeByUuid(located.definition.root, parentUuid);
-  if (!parent || !canAcceptCatalogChildren(parent)) return catalog;
+  if (!parent || !canAcceptCatalogChildren(parent, catalog)) return catalog;
 
   const next = structuredClone(catalog) as ProjectCatalog;
   const definition = next[located.kind][definitionUuid]! as NodeDefinition;
@@ -55,7 +77,8 @@ export function duplicateCatalogNode(
   if (!target) return null;
   const cloneResult = cloneCatalogSubtree(catalog, sourceDefinitionUuid, sourceNodeUuid);
   const targetParent = findNodeByUuid(target.definition.root, parentUuid);
-  if (!cloneResult || !targetParent || !canAcceptCatalogChildren(targetParent)) return null;
+  if (!cloneResult || !targetParent || !canAcceptCatalogChildren(targetParent, catalog))
+    return null;
 
   const next = structuredClone(catalog) as ProjectCatalog;
   const nextTarget = findDefinition(next, targetDefinitionUuid);
@@ -175,7 +198,7 @@ export function moveCatalogNode(
   if (!node) return catalog;
 
   const newParent = findNodeByUuid(definition.root, newParentUuid);
-  if (!newParent || !canAcceptCatalogChildren(newParent)) return catalog;
+  if (!newParent || !canAcceptCatalogChildren(newParent, catalog)) return catalog;
 
   const children = [...(newParent.dom.children ?? [])];
   const clamped = Math.max(0, Math.min(index, children.length));

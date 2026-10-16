@@ -37,7 +37,7 @@ export function buildCatalogEditorSnapshot(input: {
   const catalogAssets = catalogAssetSummaries(input.core);
   const assets = catalogAssets.filter((asset) => asset.kind === input.workspace);
   const layers = openDefinition
-    ? catalogLayerTree(openDefinition.uuid, openDefinition.root, input.core)
+    ? catalogLayerTree(openDefinition, coreSnap.catalog, input.core)
     : null;
   const openKind = openDefinition?.kind ?? input.workspace;
   const sidebarLayers = (item: typeof layers): SidebarLayer | null =>
@@ -47,6 +47,7 @@ export function buildCatalogEditorSnapshot(input: {
           address: item.address,
           label: item.name,
           type: item.type,
+          canAcceptChildren: item.canAcceptChildren,
           tagName: item.tagName,
           virtual: item.virtual,
           documentId: item.documentId,
@@ -63,11 +64,20 @@ export function buildCatalogEditorSnapshot(input: {
       : null;
   function sidebarInsertOptions(item: NonNullable<typeof layers>, placement: 'inside' | 'below') {
     if (!openDefinition) return [];
-    const target = catalogLayerInsertTarget(openDefinition, item, placement);
+    const target = catalogLayerInsertTarget(openDefinition, coreSnap.catalog, item, placement);
     const parent = target ? findNodeByUuid(openDefinition.root, target.parentUuid) : null;
     if (!parent) return [];
     return catalogLayerInsertEntries(openDefinition.kind, catalogAssets, input.openId)
-      .filter((entry) => catalogPlacementAllowed(openDefinition.kind, parent, entry, catalogAssets))
+      .filter((entry) =>
+        catalogPlacementAllowed(
+          openDefinition.kind,
+          openDefinition,
+          parent,
+          entry,
+          coreSnap.catalog,
+          catalogAssets,
+        ),
+      )
       .map((entry) => ({
         kind: entry.kind,
         value: entry.kind === 'instance' ? entry.assetId : entry.tool,

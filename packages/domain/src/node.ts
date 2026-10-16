@@ -15,19 +15,19 @@ export interface NodeConfig {
   readonly composition?:
     | {
         readonly kind: 'repeater';
-        readonly source?:
-          | { readonly kind: 'prop'; readonly uuid: Uuid }
-          | { readonly kind: 'item'; readonly path: string };
+        readonly source?: CompositionSource;
       }
     | {
         readonly kind: 'switch';
-        readonly source?:
-          | { readonly kind: 'prop'; readonly uuid: Uuid }
-          | { readonly kind: 'item'; readonly path: string };
-      };
+        readonly source?: CompositionSource;
+      }
+    | { readonly kind: 'slot' };
   readonly compositionCase?: string;
   readonly previewData?: PreviewData;
 }
+
+export type CompositionSource =
+  { readonly kind: 'prop'; readonly uuid: Uuid } | { readonly kind: 'item'; readonly path: string };
 
 export type FieldExposure =
   | { readonly mode: 'flat' }

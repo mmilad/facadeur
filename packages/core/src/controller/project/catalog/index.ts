@@ -14,6 +14,7 @@ export {
 } from './ops';
 export {
   canAcceptCatalogChildren,
+  defaultChildrenSlotCount,
   findParentOfNode,
   insertCatalogNode,
   isInsideCatalogSubtree,

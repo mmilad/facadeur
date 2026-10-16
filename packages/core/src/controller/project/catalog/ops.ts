@@ -1,5 +1,6 @@
 import type {
   CatalogMapKey,
+  CompositionSource,
   FieldValue,
   FieldExposure,
   JsonSchemaObject,
@@ -169,14 +170,18 @@ export function patchNodeComposition(
   definitionUuid: string,
   nodeUuid: string,
   patch: {
-    readonly source?: NonNullable<NodeConfig['composition']>['source'] | null;
+    readonly source?: CompositionSource | null;
     readonly compositionCase?: string | null;
     readonly definitionRefBinding?: NodeConfig['definitionRefBinding'] | null;
   },
 ): ProjectCatalog {
   return mutateNode(catalog, definitionUuid, nodeUuid, (node) => {
     const config = { ...(node.config ?? {}) };
-    if (config.composition && Object.hasOwn(patch, 'source')) {
+    if (
+      config.composition &&
+      config.composition.kind !== 'slot' &&
+      Object.hasOwn(patch, 'source')
+    ) {
       const composition = { ...config.composition };
       if (patch.source) composition.source = patch.source;
       else delete composition.source;

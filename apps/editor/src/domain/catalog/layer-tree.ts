@@ -1,4 +1,10 @@
-import type { CoreController, NodeModel } from '@facadeur/core';
+import {
+  canAcceptCatalogChildren,
+  type CoreController,
+  type NodeDefinitionModel,
+  type NodeModel,
+} from '@facadeur/core';
+import type { ProjectCatalog } from '@facadeur/domain';
 
 export interface LayerItem {
   id: string;
@@ -9,6 +15,7 @@ export interface LayerItem {
   name: string;
   tagName?: string;
   type: string;
+  canAcceptChildren: boolean;
   children: LayerItem[];
   virtual: boolean;
   ownerNodeId?: string;
@@ -31,20 +38,21 @@ function layerNameForNode(node: NodeModel, root: boolean): string {
 
 /** Layer tree for the open catalog definition (node UUID render addresses). */
 export function catalogLayerTree(
-  definitionUuid: string,
-  root: NodeModel,
+  definition: NodeDefinitionModel,
+  catalog: ProjectCatalog,
   core: CoreController,
 ): LayerItem {
   const visit = (node: NodeModel, isRoot = false): LayerItem => ({
     id: node.uuid,
     address: `node:${node.uuid}`,
-    documentId: definitionUuid,
+    documentId: definition.uuid,
     name: layerNameForNode(node, isRoot),
     tagName: core.getEffectiveNodeTagName(node.uuid) ?? node.dom.tagName,
     type: layerTypeForNode(node),
+    canAcceptChildren: canAcceptCatalogChildren(node, catalog),
     children: (node.dom.children ?? []).map((child) => visit(child)),
     virtual: false,
     fieldEditable: false,
   });
-  return visit(root, true);
+  return visit(definition.root, true);
 }

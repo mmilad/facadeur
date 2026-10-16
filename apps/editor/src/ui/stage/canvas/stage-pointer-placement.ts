@@ -50,7 +50,8 @@ export function createStagePlacement({
 }) {
   function measure(clientX: number, clientY: number, draggedUuid: string | null): StageDrop | null {
     const board = getBoard();
-    const definition = app.getCoreSnapshot().openDefinition;
+    const coreSnapshot = app.getCoreSnapshot();
+    const definition = coreSnapshot.openDefinition;
     if (!board || !definition) return null;
     const frame = selection.frameAt(clientX, clientY);
     if (!frame) return null;
@@ -66,9 +67,13 @@ export function createStagePlacement({
     );
     const target = targetUuid ? findNodeByUuid(definition.root, targetUuid) : definition.root;
     const parentInfo = targetUuid ? findParentOfNode(definition.root, targetUuid) : null;
-    const parent = target && canAcceptCatalogChildren(target) ? target : parentInfo?.parent;
+    const parent =
+      target && canAcceptCatalogChildren(target, coreSnapshot.catalog)
+        ? target
+        : parentInfo?.parent;
     if (
       !parent ||
+      !canAcceptCatalogChildren(parent, coreSnapshot.catalog) ||
       (draggedUuid && isInsideCatalogSubtree(definition.root, draggedUuid, parent.uuid))
     )
       return null;
@@ -167,7 +172,8 @@ export function createStagePlacement({
   }
 
   function applyDrop(drag: EditorDrag, drop: StageDrop | null): boolean {
-    const definition = app.getCoreSnapshot().openDefinition;
+    const coreSnapshot = app.getCoreSnapshot();
+    const definition = coreSnapshot.openDefinition;
     if (!definition) return false;
     if (drag.kind === 'node') {
       if (!drop || definition.root.uuid === drag.nodeId) return false;
@@ -183,7 +189,14 @@ export function createStagePlacement({
       const parent = findNodeByUuid(definition.root, drop.parentUuid);
       if (
         !parent ||
-        !catalogPlacementAllowed(definition.kind, parent, entry, session.getSnapshot().catalog)
+        !catalogPlacementAllowed(
+          definition.kind,
+          definition,
+          parent,
+          entry,
+          coreSnapshot.catalog,
+          session.getSnapshot().catalog,
+        )
       )
         return false;
       const node = catalogNodeFromInsertEntry(entry);

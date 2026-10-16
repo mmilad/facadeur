@@ -15,6 +15,7 @@ export interface SidebarLayer {
   readonly address: string;
   readonly label: string;
   readonly type: string;
+  readonly canAcceptChildren: boolean;
   readonly tagName?: string;
   readonly children: readonly SidebarLayer[];
   readonly virtual: boolean;

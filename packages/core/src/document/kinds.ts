@@ -1,4 +1,12 @@
-export const nodeTypes = ['frame', 'text', 'image', 'instance', 'repeater', 'switch'] as const;
+export const nodeTypes = [
+  'frame',
+  'text',
+  'image',
+  'instance',
+  'repeater',
+  'switch',
+  'slot',
+] as const;
 export type NodeType = (typeof nodeTypes)[number];
 
 /** Default document kinds. The list is data: pass a different rule map to replace it. */
@@ -29,7 +37,7 @@ export const defaultNestingRules: Record<DefaultKind, NestingRule> = {
   },
   component: {
     rootNodeTypes: ['frame', 'text', 'image', 'repeater', 'switch'],
-    nodeTypes: ['frame', 'text', 'image', 'instance', 'repeater', 'switch'],
+    nodeTypes: ['frame', 'text', 'image', 'instance', 'repeater', 'switch', 'slot'],
     instanceKinds: ['atom', 'component'],
   },
   section: {

@@ -289,6 +289,7 @@ function CatalogLayerRows({
 }
 
 function layerTypeLabel(item: SidebarLayer) {
+  if (item.type === 'slot') return 'Children';
   if (item.type === 'repeater' || item.type === 'switch') {
     return item.type === 'repeater' ? 'Repeater' : 'Switch';
   }
