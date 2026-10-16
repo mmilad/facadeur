@@ -185,6 +185,7 @@ export function createTokenTableRow({
         breakpointId={writingId}
         isOverride={Boolean(writingId)}
         catalogs={typographyCatalogs}
+        styleName={{ value: displayLabel, onCommit: commitLabel }}
         typographyTokens={tokenReferencesByType(snap.design.tokens, 'typography').filter(
           (candidate) => candidate !== ref,
         )}
@@ -200,42 +201,12 @@ export function createTokenTableRow({
       />
     ) : null;
   const details = typographyEditor ? (
-    <div className="token-typography-details">
-      <section className="token-typography-detail-section">
-        <h3>Token metadata</h3>
-        <TextField
-          id={`token-label-${token.uuid}`}
-          name={`token-label-${token.uuid}`}
-          label="Label"
-          key={token.label ?? ''}
-          value={displayLabel}
-          onChange={() => undefined}
-          onCommit={commitLabel}
-        />
-        <div className="token-path-editor">
-          <span aria-hidden="true">
-            --{DESIGN_TOKEN_CSS_PREFIX}-{pathParts[0]}-
-          </span>
-          <TextField
-            id={`token-path-${token.uuid}`}
-            name={`token-path-${token.uuid}`}
-            label="CSS variable name"
-            className="token-path-input"
-            value={tokenPathSuffix}
-            onChange={() => undefined}
-            onCommit={commitPath}
-          />
-        </div>
-      </section>
-      <section className="token-typography-detail-section">
-        <h3>Typography style</h3>
-        {typographyEditor}
-      </section>
-    </div>
+    <div className="token-typography-details">{typographyEditor}</div>
   ) : undefined;
   const nameCell = typographyEditor ? (
     <div className="token-table-name token-table-typography-name">
       <strong>{displayLabel}</strong>
+      <code>{cssVar}</code>
     </div>
   ) : (
     <div className="token-table-name">

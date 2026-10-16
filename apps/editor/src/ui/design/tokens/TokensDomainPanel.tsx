@@ -158,6 +158,49 @@ export function TokensDomainPanel({
     );
   });
   const groups = groupTokens(visible);
+  const defaultTypographyGroup = DOMAIN_FAMILY.typography;
+  const standaloneTokens =
+    domain === 'typography'
+      ? (groups.find((group) => group.path === defaultTypographyGroup)?.tokens ?? [])
+      : [];
+  const visibleGroups = groups.filter(
+    (group) => !(domain === 'typography' && group.path === defaultTypographyGroup),
+  );
+  const createRow = (token: TableToken) =>
+    createTokenTableRow({
+      onEvent,
+      snap,
+      token,
+      expanded: token.type === 'typography' && expandedTypographyUuid === token.uuid,
+      onToggle:
+        token.type === 'typography'
+          ? () =>
+              setExpandedTypographyUuid((current) => (current === token.uuid ? null : token.uuid))
+          : undefined,
+      writingId,
+      ctx,
+      colorTokens,
+      shadowTokens,
+      typographyCatalogs,
+      showType: domain === 'typography',
+      resolvePreview: resolve,
+      labelFor,
+      searchValue,
+      transformDraft: transformDrafts[token.uuid],
+      onTransform: () =>
+        setTransformDrafts((current) => ({
+          ...current,
+          [token.uuid]: { base: formatTokenValue(token.effectiveValue), value: '' },
+        })),
+      onTransformValue: (next) =>
+        setTransformDrafts((current) => ({
+          ...current,
+          [token.uuid]: {
+            base: current[token.uuid]?.base ?? formatTokenValue(token.effectiveValue),
+            value: next,
+          },
+        })),
+    });
   const domainTitle = designDomainLabel(domain);
   const writing = ctx.breakpoints.find((item) => item.uuid === writingId);
   return (
@@ -193,7 +236,8 @@ export function TokensDomainPanel({
           ) : undefined
         }
         tableClassName="token-table"
-        groups={groups.map((group) => {
+        rows={standaloneTokens.map(createRow)}
+        groups={visibleGroups.map((group) => {
           const open = !collapsedGroups.has(group.path);
           return {
             id: group.path,
@@ -206,44 +250,7 @@ export function TokensDomainPanel({
                 else next.add(group.path);
                 return next;
               }),
-            rows: group.tokens.map((token) =>
-              createTokenTableRow({
-                onEvent,
-                snap,
-                token,
-                expanded: token.type === 'typography' && expandedTypographyUuid === token.uuid,
-                onToggle:
-                  token.type === 'typography'
-                    ? () =>
-                        setExpandedTypographyUuid((current) =>
-                          current === token.uuid ? null : token.uuid,
-                        )
-                    : undefined,
-                writingId,
-                ctx,
-                colorTokens,
-                shadowTokens,
-                typographyCatalogs,
-                showType: domain === 'typography',
-                resolvePreview: resolve,
-                labelFor,
-                searchValue,
-                transformDraft: transformDrafts[token.uuid],
-                onTransform: () =>
-                  setTransformDrafts((current) => ({
-                    ...current,
-                    [token.uuid]: { base: formatTokenValue(token.effectiveValue), value: '' },
-                  })),
-                onTransformValue: (next) =>
-                  setTransformDrafts((current) => ({
-                    ...current,
-                    [token.uuid]: {
-                      base: current[token.uuid]?.base ?? formatTokenValue(token.effectiveValue),
-                      value: next,
-                    },
-                  })),
-              }),
-            ),
+            rows: group.tokens.map(createRow),
           };
         })}
       />

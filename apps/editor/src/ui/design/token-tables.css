@@ -205,9 +205,17 @@
   padding-top: 0;
 }
 
-.token-typography-details .design-typography-editor {
-  display: grid;
-  gap: 10px;
+.token-typography-details {
+  min-width: 0;
+}
+
+.token-table-typography-name code {
+  overflow: hidden;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .token-table-typography-name {
@@ -216,34 +224,58 @@
   min-height: 28px;
 }
 
-.token-typography-details {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-  border-top: 1px solid var(--line);
-  padding-top: 12px;
+.token-table-typography-name strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.token-typography-detail-section {
+.token-typography-details .design-typography-editor {
   display: grid;
-  align-content: start;
+  gap: 10px;
+}
+
+.token-typography-details .design-typography-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
+}
+
+.token-typography-details .design-typography-sample-field,
+.token-typography-details .design-typography-fields > .eu-field__error,
+.token-typography-details .design-typography-fields > .text-button {
+  grid-column: 1 / -1;
+}
+
+.token-typography-details .design-typography-field > .eu-field {
+  margin: 0;
+}
+
+.token-typography-details .design-typography-field-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.token-typography-details .design-typography-field-control > .eu-field {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
+.token-typography-details .design-typography-field-control > div:first-child {
+  flex: 1;
+  width: 100%;
   min-width: 0;
 }
 
-.token-typography-detail-section h3 {
-  margin: 0;
-  color: var(--muted);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+.token-typography-details .design-typography-field-control > .eu-field > .eu-inline {
+  display: none;
 }
 
 @media (max-width: 720px) {
-  .token-typography-details {
+  .token-typography-details .design-typography-fields {
     grid-template-columns: minmax(0, 1fr);
-    gap: 8px;
   }
 }
 

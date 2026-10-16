@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { TransformableField, type TransformableFieldOption } from '@facadeur/form';
+import { TextField, TransformableField, type TransformableFieldOption } from '@facadeur/form';
 import {
   useTokenResolver,
   useTokenSearchValue,
@@ -36,6 +36,8 @@ export interface DesignTypographyEditorProps {
   catalogs: TypographyCatalogs;
   /** Typography references used when the whole token is an alias. */
   typographyTokens?: readonly string[];
+  /** Optional editable token label rendered beside the font family in the details grid. */
+  styleName?: { value: string; onCommit: (value: string) => void };
   /** Render fields directly when the host provides the disclosure. */
   showDisclosure?: boolean;
   onCommit: (next: DesignTypographyValue | null) => void;
@@ -259,6 +261,36 @@ export function DesignTypographyEditor(props: DesignTypographyEditorProps) {
       REFERENCE.test(props.value.trim()) && !tokens.includes(props.value.trim())
         ? [props.value.trim(), ...tokens]
         : tokens;
+    const control = (
+      <TransformableField
+        id={props.namePrefix}
+        name={props.namePrefix}
+        label={props.label ?? 'Typography'}
+        value={aliasDraft}
+        fieldOptions={[
+          { type: 'text', label: 'Text' },
+          ...tokenTransformOptions(
+            aliasTokens,
+            labelFor,
+            searchValue,
+            resolvePreview,
+            'Typography',
+          ),
+        ]}
+        onChange={setAliasDraft}
+        onTransform={() => setAliasDraft('')}
+        onCommit={(next) => props.onCommit(next.trim() || null)}
+      />
+    );
+    if (props.showDisclosure === false) {
+      return (
+        <div className="design-token-editor design-typography-editor">
+          <Field label={props.label ?? 'Typography'} htmlFor={props.namePrefix}>
+            {control}
+          </Field>
+        </div>
+      );
+    }
     return (
       <ComboField
         fields={[
@@ -266,27 +298,7 @@ export function DesignTypographyEditor(props: DesignTypographyEditorProps) {
             key: 'typography-alias',
             label: props.label ?? 'Typography',
             htmlFor: props.namePrefix,
-            control: (
-              <TransformableField
-                id={props.namePrefix}
-                name={props.namePrefix}
-                label={props.label ?? 'Typography'}
-                value={aliasDraft}
-                fieldOptions={[
-                  { type: 'text', label: 'Text' },
-                  ...tokenTransformOptions(
-                    aliasTokens,
-                    labelFor,
-                    searchValue,
-                    resolvePreview,
-                    'Typography',
-                  ),
-                ]}
-                onChange={setAliasDraft}
-                onTransform={() => setAliasDraft('')}
-                onCommit={(next) => props.onCommit(next.trim() || null)}
-              />
-            ),
+            control,
           },
         ]}
       />
@@ -309,119 +321,166 @@ export function DesignTypographyEditor(props: DesignTypographyEditorProps) {
     }
   };
 
-  const editorContent = (
-    <ComboField
-      fields={
-        [
-          ...(error
-            ? [
-                {
-                  key: 'error',
-                  content: (
-                    <p className="eu-field__error" role="alert">
-                      {error}
-                    </p>
-                  ),
-                },
-              ]
-            : []),
-          ...(props.onReset && breakpoint
-            ? [
-                {
-                  key: 'reset-all',
-                  content: (
-                    <button type="button" className="text-button" onClick={props.onReset}>
-                      Reset all fields
-                    </button>
-                  ),
-                },
-              ]
-            : []),
-          ...DESIGN_TYPOGRAPHY_FIELDS.map((key) => {
-            const shown = effective[key];
-            const local = stored[key];
-            const inherited = breakpoint && local === undefined;
-            const name = `${props.namePrefix}-${key}`;
-            const value = fieldDrafts[key] ?? formatTypographyFieldValue(shown);
-            return {
-              key,
-              label: fieldLabel(key),
-              htmlFor: name,
-              control: (
-                <TransformableField
-                  id={name}
-                  name={name}
-                  label={fieldLabel(key)}
-                  value={value}
-                  fieldOptions={fieldOptionsForKey(
-                    key,
-                    catalogs,
-                    value,
-                    labelFor,
-                    searchValue,
-                    resolvePreview,
-                  )}
-                  placeholder={key === 'fontWeight' ? '400' : 'Inherited'}
-                  onTransform={() => {
-                    setError(null);
-                    setFieldDrafts((drafts) => ({ ...drafts, [key]: '' }));
-                  }}
-                  onChange={(next) => setFieldDrafts((drafts) => ({ ...drafts, [key]: next }))}
-                  onCommit={(next) => {
-                    if (commitField(key, next)) {
-                      setFieldDrafts((drafts) => {
-                        const updated = { ...drafts };
-                        delete updated[key];
-                        return updated;
-                      });
-                    }
-                  }}
-                />
-              ),
-              hint: inherited ? <span className="meta">Inherited</span> : undefined,
-              action:
-                breakpoint && local !== undefined ? (
-                  <button
-                    type="button"
-                    className="text-button"
-                    name={`${props.namePrefix}-${key}-reset`}
-                    onClick={() => {
-                      if (commitField(key, null)) {
-                        setFieldDrafts((drafts) => {
-                          const updated = { ...drafts };
-                          delete updated[key];
-                          return updated;
-                        });
-                      }
-                    }}
-                  >
-                    Reset field
-                  </button>
-                ) : undefined,
-            };
-          }),
-        ] satisfies readonly ComboFieldItem[]
-      }
-    >
-      <Field label="Sample">
-        <div
-          className="design-typography-sample"
-          style={{
-            fontFamily: previewValue(effective.fontFamily) || undefined,
-            fontSize: previewValue(effective.fontSize) || undefined,
-            fontWeight:
-              typeof effective.fontWeight === 'number'
-                ? effective.fontWeight
-                : previewValue(effective.fontWeight) || undefined,
-            lineHeight: previewValue(effective.lineHeight) || undefined,
-            letterSpacing: previewValue(effective.letterSpacing) || undefined,
+  const typographyFields = DESIGN_TYPOGRAPHY_FIELDS.map((key) => {
+    const shown = effective[key];
+    const local = stored[key];
+    const inherited = breakpoint && local === undefined;
+    const name = `${props.namePrefix}-${key}`;
+    const value = fieldDrafts[key] ?? formatTypographyFieldValue(shown);
+    return {
+      key,
+      label: fieldLabel(key),
+      htmlFor: name,
+      control: (
+        <TransformableField
+          id={name}
+          name={name}
+          label={fieldLabel(key)}
+          value={value}
+          fieldOptions={fieldOptionsForKey(
+            key,
+            catalogs,
+            value,
+            labelFor,
+            searchValue,
+            resolvePreview,
+          )}
+          placeholder={key === 'fontWeight' ? '400' : 'Inherited'}
+          onTransform={() => {
+            setError(null);
+            setFieldDrafts((drafts) => ({ ...drafts, [key]: '' }));
           }}
-        >
-          Aa — The quick brown fox
-        </div>
-      </Field>
-    </ComboField>
+          onChange={(next) => setFieldDrafts((drafts) => ({ ...drafts, [key]: next }))}
+          onCommit={(next) => {
+            if (commitField(key, next)) {
+              setFieldDrafts((drafts) => {
+                const updated = { ...drafts };
+                delete updated[key];
+                return updated;
+              });
+            }
+          }}
+        />
+      ),
+      hint: inherited ? <span className="meta">Inherited</span> : undefined,
+      action:
+        breakpoint && local !== undefined ? (
+          <button
+            type="button"
+            className="text-button"
+            name={`${props.namePrefix}-${key}-reset`}
+            onClick={() => {
+              if (commitField(key, null)) {
+                setFieldDrafts((drafts) => {
+                  const updated = { ...drafts };
+                  delete updated[key];
+                  return updated;
+                });
+              }
+            }}
+          >
+            Reset field
+          </button>
+        ) : undefined,
+    };
+  });
+  const sample = (
+    <Field label="Sample">
+      <div
+        className="design-typography-sample"
+        style={{
+          fontFamily: previewValue(effective.fontFamily) || undefined,
+          fontSize: previewValue(effective.fontSize) || undefined,
+          fontWeight:
+            typeof effective.fontWeight === 'number'
+              ? effective.fontWeight
+              : previewValue(effective.fontWeight) || undefined,
+          lineHeight: previewValue(effective.lineHeight) || undefined,
+          letterSpacing: previewValue(effective.letterSpacing) || undefined,
+        }}
+      >
+        Aa — The quick brown fox
+      </div>
+    </Field>
   );
+  const editorContent =
+    props.showDisclosure === false ? (
+      <div className="design-typography-fields">
+        {props.styleName ? (
+          <div className="design-typography-field design-typography-field--styleName">
+            <Field label="Style name" htmlFor={`${props.namePrefix}-style-name`}>
+              <TextField
+                id={`${props.namePrefix}-style-name`}
+                name={`${props.namePrefix}-style-name`}
+                label="Style name"
+                value={props.styleName.value}
+                onChange={() => undefined}
+                onCommit={props.styleName.onCommit}
+              />
+            </Field>
+          </div>
+        ) : null}
+        {error ? (
+          <p className="eu-field__error" role="alert">
+            {error}
+          </p>
+        ) : null}
+        {props.onReset && breakpoint ? (
+          <button type="button" className="text-button" onClick={props.onReset}>
+            Reset all fields
+          </button>
+        ) : null}
+        {typographyFields.map((field) => (
+          <div
+            className={`design-typography-field design-typography-field--${field.key}`}
+            key={field.key}
+          >
+            <Field label={field.label} htmlFor={field.htmlFor}>
+              <div className="design-typography-field-control">
+                {field.control}
+                {field.action}
+              </div>
+              {field.hint}
+            </Field>
+          </div>
+        ))}
+        <div className="design-typography-sample-field">{sample}</div>
+      </div>
+    ) : (
+      <ComboField
+        fields={
+          [
+            ...(error
+              ? [
+                  {
+                    key: 'error',
+                    content: (
+                      <p className="eu-field__error" role="alert">
+                        {error}
+                      </p>
+                    ),
+                  },
+                ]
+              : []),
+            ...(props.onReset && breakpoint
+              ? [
+                  {
+                    key: 'reset-all',
+                    content: (
+                      <button type="button" className="text-button" onClick={props.onReset}>
+                        Reset all fields
+                      </button>
+                    ),
+                  },
+                ]
+              : []),
+            ...typographyFields,
+          ] satisfies readonly ComboFieldItem[]
+        }
+      >
+        {sample}
+      </ComboField>
+    );
   if (props.showDisclosure === false) {
     return <div className="design-token-editor design-typography-editor">{editorContent}</div>;
   }

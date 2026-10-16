@@ -683,8 +683,28 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
 
 - [x] Editor: align typography token rows with the Fonts accordion.
   - Evidence: Fonts uses the shared Table row-details disclosure, while each typography token embeds a separate disclosure inside its value cell, leaving the editor controls visually detached from the token row.
-    - Action: use the token label as the shared table disclosure header, move label and CSS variable editing into the expanded details, and arrange metadata beside the existing typography editor with the same two-section layout used by Fonts. Keep the compact style summary in the collapsed row.
+  - Action: use the token label as the shared table disclosure header, move label and CSS variable editing into the expanded details, and arrange metadata beside the existing typography editor with the same two-section layout used by Fonts. Keep the compact style summary in the collapsed row.
   - Scope: typography token presentation in the design settings; preserve typography editing, token references, breakpoint overrides/resets, and other token-domain rows.
-    - Contracts: keep the existing token data and command paths unchanged; use the shared row disclosure and avoid interactive controls in its header.
-    - Structure: retain `token-table-row.tsx` as the cohesive token-row builder; it keeps token display, edits, and actions together, and splitting the current flow would add pass-through plumbing without a separate owner.
+  - Contracts: keep the existing token data and command paths unchanged; use the shared row disclosure and avoid interactive controls in its header.
+  - Structure: retain `token-table-row.tsx` as the cohesive token-row builder; it keeps token display, edits, and actions together, and splitting the current flow would add pass-through plumbing without a separate owner.
   - Validation: Workspace typechecks, Prettier, candidate detector rerun, and `git diff --check` passed; tests were not run.
+- [x] Editor: remove the redundant default Type group from typography tokens.
+  - Evidence: default typography tokens have an empty subgroup, so `groupTokens` places all of them beneath a table accordion named after their `type` family, adding a redundant level above the token rows.
+  - Action: render the default typography-family group as ordinary rows and retain accordion grouping for explicitly named subgroups.
+  - Scope: typography token presentation only; preserve token paths, labels, and custom groups.
+  - Contracts: do not change token persistence or token group metadata.
+  - Validation: Workspace typecheck, Prettier, candidate detector rerun, and `git diff --check`; tests not run.
+- [x] Editor: render token typography fields with the Fonts detail layout.
+  - Evidence: the typography token detail reused `ComboField`, which adds an inner bordered fieldset and horizontal label column unlike the stacked fields in the Fonts detail view.
+  - Action: keep `ComboField` for the existing compact typography editor, but render a dedicated details grid when the host owns the disclosure: Style name beside Family, Size beside Weight, Line height beside Letter spacing, and Sample across the grid.
+  - Scope: typography editing presentation in token detail rows; retain shared value parsing, validation, references, breakpoint handling, and other typography editor consumers.
+  - Contracts: preserve field names, commit/reset behavior, and the existing default editor layout.
+  - Structure: keep `DesignTypographyEditor` cohesive because it owns field parsing, validation, commits, and both presentation modes; extracting the details-only grid would split one editing contract across components.
+  - Validation: Workspace typecheck, Prettier, candidate detector rerun, and `git diff --check` passed; tests not run.
+- [x] Editor: make the style label the only typography-token name editor.
+  - Evidence: the expanded typography row showed the editable label and an editable CSS variable suffix derived from that same label, while the separate metadata column reserved half the detail width.
+  - Action: remove the typography CSS-path editor and metadata column; show the derived CSS variable beside the style label in the accordion header, with one visibly labeled style-name field in the full-width details grid.
+  - Scope: typography token settings presentation and label editing; keep non-typography token path editing unchanged.
+  - Contracts: changing the label continues to derive the token path; token references still resolve by UUID and export still emits the resolved value.
+  - Structure: keep token-row table behavior shared while letting the existing typography editor own its full-width details layout.
+  - Validation: Workspace typecheck, Prettier, candidate detector rerun, and `git diff --check`; tests not run.
