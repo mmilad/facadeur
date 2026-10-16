@@ -1,9 +1,9 @@
-import type { GlobalStyleRule, Node } from '@facadeur/domain';
+import type { Node } from '@facadeur/domain';
 
-const styleRules = new Map<string, GlobalStyleRule>();
+const nodeStyles = new Map<string, Readonly<Record<string, string>>>();
 export type ExampleStyleMap = Readonly<Record<string, Readonly<Record<string, string>>>>;
 
-/** Register fixture appearance as UUID-bound catalog rules while keeping nodes data-only. */
+/** Collect style declarations during fixture construction for attachment to their owning Nodes. */
 export function registerExampleStyles(root: Node, styles: ExampleStyleMap) {
   const nodesByUuid = new Map<string, Node>();
   const visit = (node: Node) => {
@@ -16,16 +16,13 @@ export function registerExampleStyles(root: Node, styles: ExampleStyleMap) {
     if (!Object.keys(declarations).length) continue;
     const node = nodesByUuid.get(nodeUuid);
     if (!node) throw new Error(`Example style target "${nodeUuid}" does not exist`);
-    const className = `layer-${nodeUuid}`;
-    styleRules.set(nodeUuid, {
-      id: `layer-${nodeUuid}`,
-      selector: `.${className}`,
-      bindings: { [className]: nodeUuid },
-      declarations,
-    });
+    nodeStyles.set(nodeUuid, declarations);
   }
 }
 
-export function registeredExampleStyleRules() {
-  return [...styleRules.values()];
+export function registeredExampleNodeStyles() {
+  return [...nodeStyles.entries()].map(([nodeUuid, declarations]) => ({
+    nodeUuid,
+    declarations,
+  }));
 }

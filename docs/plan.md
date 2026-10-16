@@ -461,6 +461,9 @@ signal. The review decisions are:
   branches and a bounded dynamic-reference depth to the existing recursive resolver and validation
   walk without introducing a separate lifecycle or shared behavior that would justify another
   module. The schema editor's independent graph diagnostic remains in its feature directory.
+- `apps/editor/src/ui/sidebar/right/components/css-property-options.ts` (508 lines): retain the
+  curated CSS property option list as one data-only catalog; splitting its constant entries would
+  add navigation without separating behavior or ownership.
 
 ## Latest verification
 
@@ -598,3 +601,9 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
   - Scope: improve diagnostics only; no migration or silent config removal.
   - Contracts: preserve catalog data and validation rules; continue rejecting stale configs until the user updates them.
   - Validation: Core and Editor typechecks, candidate detector, and `git diff --check` passed; tests were not run.
+- [x] Core/Editor: move element classes and their styles onto Nodes.
+  - Evidence: `Node.dom.attributes.class` is copied directly to rendered elements, while layer-specific styles are stored in `catalog.globalStyles.block.rules` under UUID-bound `layer-*` rules. The class list and its styles are therefore split across DOM attributes and a misleading global-style location, and only the generated layer selector is editable.
+  - Action: add Node-owned class definitions with a literal class name, optional prop condition, and sparse responsive styles; derive the rendered `class` attribute from active definitions. Migrate existing DOM class strings and each node-bound `layer-*` rule into the matching Node definition, then remove those legacy rules and the class-string mutation path. Update Inspector class/style editing to target every class definition, including the generated class.
+  - Scope: establish local class ownership as the prerequisite for conditional classes; support a prop equality condition, while global reusable class definitions remain a separate future feature.
+  - Contracts: keep non-class DOM attributes intact; preserve class order, style declarations, breakpoints, token and prop references, component preview behavior, generated React output, Undo/Redo through existing catalog commits, and prevent a local style from leaking to another node with the same class name.
+  - Validation: workspace typecheck passed; static catalog check found 153/153 Nodes with generated classes, no class DOM attributes, and no `layer-*` rules; Prettier, candidate detector, and `git diff --check` passed. Updated existing contract tests but did not run tests.

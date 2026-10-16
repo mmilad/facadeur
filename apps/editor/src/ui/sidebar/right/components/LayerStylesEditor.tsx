@@ -13,19 +13,50 @@ import './layer-styles-editor.css';
 
 export function LayerStylesEditor({
   nodeId,
+  definitionId,
+  layerStyles,
+  valueFieldOptions,
+  onEvent,
+}: {
+  nodeId: string;
+  definitionId: string;
+  layerStyles: InspectorSidebarModel['layerStyles'];
+  valueFieldOptions: readonly TransformableFieldOption[];
+  onEvent: (event: EditorEvent) => void;
+}) {
+  return (
+    <Stack gap={10}>
+      {layerStyles.map((layerStyle) => (
+        <LayerClassStyleEditor
+          key={layerStyle.className}
+          nodeId={nodeId}
+          definitionId={definitionId}
+          layerStyle={layerStyle}
+          valueFieldOptions={valueFieldOptions}
+          onEvent={onEvent}
+        />
+      ))}
+    </Stack>
+  );
+}
+
+function LayerClassStyleEditor({
+  nodeId,
+  definitionId,
   layerStyle,
   valueFieldOptions,
   onEvent,
 }: {
   nodeId: string;
-  layerStyle: InspectorSidebarModel['layerStyle'];
+  definitionId: string;
+  layerStyle: InspectorSidebarModel['layerStyles'][number];
   valueFieldOptions: readonly TransformableFieldOption[];
   onEvent: (event: EditorEvent) => void;
 }) {
-  const baseId = layerStyle.breakpoints[0]?.uuid ?? null;
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [property, setProperty] = useState('');
   const [value, setValue] = useState('');
+  const baseId = layerStyle.breakpoints[0]?.uuid;
   const selectedViewport = layerStyle.breakpoints.find((item) => item.uuid === selectedId);
   const hasSelectedViewport = Boolean(selectedViewport);
   const writingBreakpointId =
@@ -50,8 +81,10 @@ export function LayerStylesEditor({
       type: EditorEventType.DesignCommandExecute,
       data: {
         command: {
-          type: 'setLayerStyleDeclaration',
+          type: 'setNodeClassStyleDeclaration',
+          definitionUuid: definitionId,
           nodeUuid: nodeId,
+          className: layerStyle.className,
           property: name,
           value: next,
           breakpointUuid: writingBreakpointId,

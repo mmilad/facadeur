@@ -1,6 +1,7 @@
 import type { DomSpec } from './dom';
 import type { FieldValue } from './field-value';
 import type { SchemaSource } from './schema-source';
+import type { LayerMap, StyleLayer, VariantStyleMap } from './design-system';
 import type { Uuid } from './uuid';
 
 export interface PreviewData {
@@ -58,9 +59,26 @@ export interface Node {
   /** Editor-facing label for this authored element, independent of its HTML tag. */
   readonly name?: string;
   readonly dom: DomSpec & { readonly children?: readonly Node[] };
+  /** Literal CSS classes owned by this element; the `class` DOM attribute is derived. */
+  readonly classes?: readonly NodeClassDefinition[];
   readonly schema?: SchemaSource;
   readonly data?: Readonly<Record<string, FieldValue>>;
   readonly config?: NodeConfig;
+}
+
+export interface NodeClassDefinition {
+  readonly name: string;
+  /** Present only for the class derived from this layer's editor-facing name. */
+  readonly generated?: true;
+  readonly condition?: {
+    readonly kind: 'prop-equals';
+    readonly propUuid: Uuid;
+    readonly value: string | number | boolean | null;
+  };
+  readonly style?: StyleLayer & {
+    readonly variants?: VariantStyleMap;
+    readonly breakpoints?: LayerMap;
+  };
 }
 
 export type NodeDefinitionKind = 'atom' | 'component' | 'page';
@@ -72,7 +90,6 @@ export interface NodeDefinition {
   readonly category?: string;
   readonly schema: SchemaSource;
   readonly root: Node;
-  readonly style?: { readonly kind: 'ref'; readonly uuid: Uuid };
   readonly config?: DefinitionConfig;
 }
 

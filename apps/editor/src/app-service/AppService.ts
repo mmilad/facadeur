@@ -4,6 +4,7 @@ import {
   canAcceptCatalogChildren,
   createCatalogUuid,
   defaultNestingRules,
+  findDefinition,
   findNodeByUuid,
   findParentOfNode,
 } from '@facadeur/core';
@@ -25,7 +26,6 @@ import { catalogNodeFromInsertEntry } from '../domain/catalog/layer-node-draft';
 import { isInsertTool, refusalMessage, toolAllowed } from '../domain/editing';
 import type { LayerItem } from '../domain/catalog/layer-tree';
 import { buildInspectorSidebarViewModel } from './sidebar-view-model';
-import { layerSelectorForName } from '@facadeur/core';
 
 /** Editor entry: catalog editing via {@link CoreController}, chrome via {@link EditorSession}. */
 export class AppService {
@@ -143,24 +143,28 @@ export class AppService {
     const formKey = `${this.session.getSnapshot().openId}:${nodeUuid}`;
     const snapshot = this.core.getSnapshot();
     const catalog = snapshot.catalog;
-    const rule = catalog.globalStyles?.block?.rules?.find(
-      (item) => item.id === `layer-${nodeUuid}`,
-    );
-    const layerStyle = {
-      selector: layerSelectorForName(String(model.formValue.node.name ?? 'Layer')),
-      declarations: { ...(rule?.declarations ?? {}) },
+    const definitionId = this.session.getSnapshot().openId;
+    const definition = definitionId ? findDefinition(catalog, definitionId)?.definition : undefined;
+    const node = definition ? findNodeByUuid(definition.root, nodeUuid) : undefined;
+    if (!definition || !node || !definitionId) return null;
+    const layerStyles = (node.classes ?? []).map((item) => ({
+      className: item.name,
+      generated: item.generated === true,
+      selector: `.${item.name}`,
+      declarations: { ...(item.style?.declarations ?? {}) },
       breakpoints: catalog.globalStyles?.breakpoints ?? [],
       overrides: Object.fromEntries(
-        Object.entries(rule?.breakpoints ?? {}).map(([id, layer]) => [
+        Object.entries(item.style?.breakpoints ?? {}).map(([id, layer]) => [
           id,
           layer.declarations ?? {},
         ]),
       ),
-    };
+    }));
     return buildInspectorSidebarViewModel(
       model,
       formKey,
-      layerStyle,
+      definitionId,
+      layerStyles,
       (catalog.icons ?? []).map((icon) => ({ value: icon.id, label: icon.name })),
     );
   }

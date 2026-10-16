@@ -46,7 +46,7 @@ describe('catalog tree ops', () => {
     expect(findParentOfNode(removed.components[defUuid]!.root, childUuid)).toBeNull();
   });
 
-  it('prunes bound styles for a removed subtree while preserving unrelated styles', () => {
+  it('removes node-owned styles with a subtree while preserving unrelated node styles', () => {
     const rootUuid = createCatalogUuid();
     const removedUuid = createCatalogUuid();
     const descendantUuid = createCatalogUuid();
@@ -58,42 +58,26 @@ describe('catalog tree ops', () => {
         children: [
           {
             uuid: removedUuid,
+            classes: [{ name: 'removed', style: { declarations: { display: 'none' } } }],
             dom: {
               tagName: 'section',
               children: [{ uuid: descendantUuid, dom: { tagName: 'span' } }],
             },
           },
-          { uuid: keptUuid, dom: { tagName: 'span' } },
+          {
+            uuid: keptUuid,
+            classes: [{ name: 'kept', style: { declarations: { display: 'block' } } }],
+            dom: { tagName: 'span' },
+          },
         ],
       },
     });
     const defUuid = Object.keys(catalog.components)[0]!;
-    const withStyles: ProjectCatalog = {
-      ...catalog,
-      globalStyles: {
-        block: {
-          rules: [
-            {
-              id: `layer-${removedUuid}`,
-              selector: '.removed',
-              bindings: { removed: removedUuid },
-              declarations: { display: 'none' },
-            },
-            {
-              id: `layer-${keptUuid}`,
-              selector: '.kept',
-              bindings: { kept: keptUuid },
-              declarations: { display: 'block' },
-            },
-          ],
-        },
-      },
-    };
+    const removed = removeCatalogNode(catalog, defUuid, removedUuid);
+    const children = removed.components[defUuid]!.root.dom.children ?? [];
 
-    const removed = removeCatalogNode(withStyles, defUuid, removedUuid);
-    const block = removed.globalStyles?.block;
-
-    expect(block?.rules?.map(({ id }) => id)).toEqual([`layer-${keptUuid}`]);
+    expect(children.map(({ uuid }) => uuid)).toEqual([keptUuid]);
+    expect(children[0]?.classes?.[0]?.style?.declarations).toEqual({ display: 'block' });
   });
 
   it('moves a node between siblings', () => {

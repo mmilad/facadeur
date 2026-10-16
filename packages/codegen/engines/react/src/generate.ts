@@ -6,7 +6,11 @@ import {
   tokenCustomProperty,
 } from '@facadeur/core';
 import type { ElementBuildConfig, Node, ProjectCatalog } from '@facadeur/domain';
-import { renderBoxSizingReset, renderDesignCss, renderGlobalStyleCss } from '@facadeur/style-engine';
+import {
+  renderBoxSizingReset,
+  renderDesignCss,
+  renderGlobalStyleCss,
+} from '@facadeur/style-engine';
 import { catalogEntries } from '../../../src/catalog';
 import { CodegenError } from '../../../src/error';
 import type {
@@ -204,6 +208,18 @@ function renderNode(
     const selector = node.nodeUuid ? `[data-facadeur-codegen-node="${node.nodeUuid}"]` : '.node';
     cssRules.push(`${selector} {\n${declarations.join('\n')}\n}`);
   }
+  if (node.nodeUuid) {
+    for (const [className, values] of Object.entries(node.dynamicClassStyles ?? {})) {
+      const entries = Object.entries(values).map(
+        ([property, value]) => `  ${kebab(property)}: ${cssValue(value, tokenProperties)};`,
+      );
+      if (entries.length) {
+        cssRules.push(
+          `.facadeur-node-${node.nodeUuid}${classSelector(className)} {\n${entries.join('\n')}\n}`,
+        );
+      }
+    }
+  }
   const attributes: Record<string, unknown> = {
     ...node.attributes,
     ...Object.fromEntries(
@@ -230,11 +246,17 @@ function renderNode(
   if (declarations.length) {
     if (!node.nodeUuid) attributes.className = 'node';
   }
+  const classKey = Object.hasOwn(attributes, 'className') ? 'className' : 'class';
+  const derivedClassExpression = source?.classes
+    ? classExpression(source.classes, propPaths, [...styleNodeUuids])
+    : undefined;
   const props = Object.entries(attributes)
-    .map(
-      ([key, value]) =>
-        ` ${reactAttribute(key)}=${jsxValue(reactValue(reactAttribute(key), value), source?.dom.attributes?.[key], propPaths)}`,
-    )
+    .map(([key, value]) => {
+      if (key === classKey && derivedClassExpression) {
+        return ` className={${derivedClassExpression}}`;
+      }
+      return ` ${reactAttribute(key)}=${jsxValue(reactValue(reactAttribute(key), value), source?.dom.attributes?.[key], propPaths)}`;
+    })
     .join('');
   const tag = safeTag(node.tagName);
   if (isVoidTag(tag)) return `<${tag}${props} />`;
@@ -243,6 +265,26 @@ function renderNode(
     .map((child) => renderNode(child, tokenProperties, propPaths, sourceNodes, cssRules))
     .join('');
   return `<${tag}${props}>${content}${children}</${tag}>`;
+}
+
+function classExpression(
+  classes: NonNullable<Node['classes']>,
+  propPaths: ReadonlyMap<string, string>,
+  styleNodeUuids: readonly string[],
+) {
+  const values = classes.map((item) => {
+    const condition = item.condition;
+    if (!condition) return JSON.stringify(item.name);
+    const path = propPaths.get(condition.propUuid);
+    if (!path) return '""';
+    return `getProp(props, ${JSON.stringify(path)}) === ${JSON.stringify(condition.value)} ? ${JSON.stringify(item.name)} : ""`;
+  });
+  values.push(...styleNodeUuids.map((uuid) => JSON.stringify(`facadeur-node-${uuid}`)));
+  return `[${values.join(', ')}].filter(Boolean).join(" ")`;
+}
+
+function classSelector(name: string) {
+  return `.${name.replace(/[^A-Za-z0-9_-]/g, (character) => `\\${character.codePointAt(0)!.toString(16)} `)}`;
 }
 
 function jsxValue(value: unknown, source: unknown, propPaths: ReadonlyMap<string, string>) {

@@ -3,6 +3,7 @@ import { DocumentError } from '../../../document/errors';
 import { projectCatalogSchema } from '../../../schema/node-model/index';
 import type { Node, ProjectCatalog } from '@facadeur/domain';
 import { sanitizeProjectCatalog } from './sanitize-field-values';
+import { ensureGeneratedNodeClasses } from './node-classes';
 import { findDefinition, listCatalogDefinitions, resolveJsonSchemaForDefinition } from './ops';
 import { effectiveSchemaForDefinition, inheritableSchemaForDefinition } from './field-contract';
 import { matchesSchemaValue } from '../../validation/json-schema-value';
@@ -23,8 +24,12 @@ function catalogSchemaErrorMessage(data: unknown): string {
 }
 
 export function validateProjectCatalog(data: unknown): ProjectCatalog {
+  const normalized =
+    data && typeof data === 'object' ? ensureGeneratedNodeClasses(data as ProjectCatalog) : data;
   const sanitized =
-    data && typeof data === 'object' ? sanitizeProjectCatalog(data as ProjectCatalog) : data;
+    normalized && typeof normalized === 'object'
+      ? sanitizeProjectCatalog(normalized as ProjectCatalog)
+      : normalized;
   const catalog =
     sanitized && typeof sanitized === 'object'
       ? ensureCatalogFieldIds(sanitized as ProjectCatalog).catalog

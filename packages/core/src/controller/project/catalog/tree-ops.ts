@@ -1,4 +1,4 @@
-import type { GlobalStyleRule, Node, NodeDefinition, ProjectCatalog } from '@facadeur/domain';
+import type { Node, NodeDefinition, ProjectCatalog } from '@facadeur/domain';
 import { isVoidHtmlTag } from '../../../document/html-tags';
 import { createCatalogUuid } from '../../../document/ids';
 import { findDefinition, findNodeByUuid } from './ops';
@@ -75,25 +75,21 @@ export function duplicateCatalogNode(
 ): { catalog: ProjectCatalog; nodeUuid: string } | null {
   const target = findDefinition(catalog, targetDefinitionUuid);
   if (!target) return null;
-  const cloneResult = cloneCatalogSubtree(catalog, sourceDefinitionUuid, sourceNodeUuid);
+  const clonedNode = cloneCatalogSubtree(catalog, sourceDefinitionUuid, sourceNodeUuid);
   const targetParent = findNodeByUuid(target.definition.root, parentUuid);
-  if (!cloneResult || !targetParent || !canAcceptCatalogChildren(targetParent, catalog))
-    return null;
+  if (!clonedNode || !targetParent || !canAcceptCatalogChildren(targetParent, catalog)) return null;
 
   const next = structuredClone(catalog) as ProjectCatalog;
   const nextTarget = findDefinition(next, targetDefinitionUuid);
   const nextParent = nextTarget && findNodeByUuid(nextTarget.definition.root, parentUuid);
   if (!nextTarget || !nextParent) return null;
   const children = [...(nextParent.dom.children ?? [])];
-  children.splice(Math.max(0, Math.min(index, children.length)), 0, cloneResult.node);
+  children.splice(Math.max(0, Math.min(index, children.length)), 0, clonedNode);
   (nextParent.dom as { children?: Node[] }).children = children;
   (next[nextTarget.kind] as Record<string, NodeDefinition>)[targetDefinitionUuid] =
     nextTarget.definition;
 
-  return {
-    catalog: appendCatalogStyleRules(next, cloneResult.styleRules),
-    nodeUuid: cloneResult.node.uuid,
-  };
+  return { catalog: next, nodeUuid: clonedNode.uuid };
 }
 
 /** Clone a node subtree with fresh IDs and remap styles bound entirely within the subtree. */
@@ -106,46 +102,18 @@ function cloneCatalogSubtree(
   const sourceNode = source && findNodeByUuid(source.definition.root, sourceNodeUuid);
   if (!sourceNode) return null;
 
-  const idMap = new Map<string, string>();
-  const node = cloneCatalogNodeTree(sourceNode, idMap);
-  const styleRules = (catalog.globalStyles?.block?.rules ?? []).flatMap((rule, index) => {
-    const bindings = Object.entries(rule.bindings ?? {});
-    if (!bindings.length || !bindings.every(([, uuid]) => idMap.has(uuid))) return [];
-    const originalNodeUuid = bindings[0]![1];
-    const clonedNodeUuid = idMap.get(originalNodeUuid)!;
-    return [
-      {
-        ...structuredClone(rule),
-        id:
-          rule.id === `layer-${originalNodeUuid}`
-            ? `layer-${clonedNodeUuid}`
-            : `layer-${clonedNodeUuid}-${index}`,
-        bindings: Object.fromEntries(
-          bindings.map(([className, uuid]) => [className, idMap.get(uuid)!]),
-        ),
-      },
-    ];
-  });
-  return { node, styleRules };
+  return cloneCatalogNodeTree(sourceNode);
 }
 
-function appendCatalogStyleRules(catalog: ProjectCatalog, styleRules: readonly GlobalStyleRule[]) {
-  if (!styleRules.length) return catalog;
-  const rules = catalog.globalStyles?.block?.rules ?? [];
-  const block = { ...(catalog.globalStyles?.block ?? {}), rules: [...rules, ...styleRules] };
-  return { ...catalog, globalStyles: { ...(catalog.globalStyles ?? {}), block } };
-}
-
-function cloneCatalogNodeTree(node: Node, idMap: Map<string, string>): Node {
+function cloneCatalogNodeTree(node: Node): Node {
   const uuid = createCatalogUuid();
-  idMap.set(node.uuid, uuid);
   return {
     ...node,
     uuid,
     dom: {
       ...node.dom,
       ...(node.dom.children
-        ? { children: node.dom.children.map((child) => cloneCatalogNodeTree(child, idMap)) }
+        ? { children: node.dom.children.map((child) => cloneCatalogNodeTree(child)) }
         : {}),
     },
   };
@@ -216,9 +184,7 @@ export function removeCatalogNode(
   const located = findDefinition(catalog, definitionUuid);
   if (!located) return catalog;
   if (located.definition.root.uuid === nodeUuid) return catalog;
-  const removedNode = findNodeByUuid(located.definition.root, nodeUuid);
-  if (!removedNode) return catalog;
-  const removedUuids = collectSubtreeUuids(removedNode);
+  if (!findNodeByUuid(located.definition.root, nodeUuid)) return catalog;
 
   const next = structuredClone(catalog) as ProjectCatalog;
   const definition = next[located.kind][definitionUuid]! as NodeDefinition;
@@ -229,36 +195,5 @@ export function removeCatalogNode(
   siblings.splice(parentInfo.index, 1);
   (parentInfo.parent.dom as { children?: Node[] }).children = siblings;
   (next[located.kind] as Record<string, NodeDefinition>)[definitionUuid] = definition;
-  return pruneRemovedNodeStyles(next, removedUuids);
-}
-
-function collectSubtreeUuids(root: Node) {
-  const uuids = new Set<string>();
-  const visit = (node: Node) => {
-    uuids.add(node.uuid);
-    for (const child of node.dom.children ?? []) visit(child);
-  };
-  visit(root);
-  return uuids;
-}
-
-function pruneRemovedNodeStyles(catalog: ProjectCatalog, removedUuids: ReadonlySet<string>) {
-  const currentBlock = catalog.globalStyles?.block;
-  if (!currentBlock) return catalog;
-
-  const rules = (currentBlock.rules ?? []).filter(
-    (rule) => !Object.values(rule.bindings ?? {}).some((uuid) => removedUuids.has(uuid)),
-  );
-  if (rules.length === (currentBlock.rules ?? []).length) {
-    return catalog;
-  }
-
-  const block = { ...currentBlock };
-  if (rules.length) block.rules = rules;
-  else delete block.rules;
-
-  const globalStyles = { ...catalog.globalStyles };
-  if (Object.keys(block).length) globalStyles.block = block;
-  else delete globalStyles.block;
-  return { ...catalog, globalStyles };
+  return next;
 }

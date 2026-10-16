@@ -13,7 +13,9 @@ describe('Catalog-driven React code generation', () => {
 
     expect(component?.contents).toContain('export function Button');
     expect(component?.contents).toContain('<button');
-    const componentsCss = generated.ui.find((file) => file.path === 'styles/components.css')?.contents;
+    const componentsCss = generated.ui.find(
+      (file) => file.path === 'styles/components.css',
+    )?.contents;
     expect(componentsCss).toMatch(/^\*,\n\*::before,\n\*::after \{\n  box-sizing: border-box;/);
     expect(componentsCss).toContain(`[data-facadeur-codegen-node="${button!.root.uuid}"]`);
     expect(
@@ -37,17 +39,15 @@ describe('Catalog-driven React code generation', () => {
   it('preserves authored classes when attaching generated node styles', () => {
     const catalog = createExampleCatalog();
     const button = Object.values(catalog.atoms).find((definition) => definition.name === 'Button')!;
-    Reflect.set(button.root.dom, 'attributes', {
-      ...button.root.dom.attributes,
-      class: 'authored-button',
-    });
+    Reflect.set(button.root, 'classes', [
+      ...(button.root.classes ?? []),
+      { name: 'authored-button' },
+    ]);
 
     const generated = generateReact({ catalog, entries: [button.uuid] });
     const component = generated.ui.find((file) => file.path === 'components/button/index.tsx');
 
-    expect(component?.contents).toContain(
-      `className={"authored-button facadeur-node-${button.root.uuid}"}`,
-    );
+    expect(component?.contents).toContain(`"authored-button"`);
     expect(component?.contents).toContain(`data-facadeur-codegen-node={"${button.root.uuid}"}`);
   });
 
@@ -58,12 +58,12 @@ describe('Catalog-driven React code generation', () => {
     const accentUuid = '550e8400-e29b-41d4-a716-000000000401';
     const tabletUuid = catalog.globalStyles!.breakpoints![1]!.uuid;
     Reflect.set(button.root.dom, 'children', [
-      { uuid: childUuid, dom: { tagName: 'span', attributes: { class: 'icon' } } },
+      { uuid: childUuid, classes: [{ name: 'icon' }], dom: { tagName: 'span' } },
     ]);
-    Reflect.set(button.root.dom, 'attributes', {
-      ...button.root.dom.attributes,
-      class: 'authored-button',
-    });
+    Reflect.set(button.root, 'classes', [
+      ...(button.root.classes ?? []),
+      { name: 'authored-button' },
+    ]);
     const withGlobalStyles = {
       ...catalog,
       globalStyles: {

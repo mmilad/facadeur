@@ -12,6 +12,7 @@ export type {
   FieldExposure,
   StaticFieldConfig,
   Node,
+  NodeClassDefinition,
   NodeConfig,
   NodeDefinition,
   NodeDefinitionModel,

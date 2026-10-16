@@ -35,9 +35,22 @@ describe('examples', () => {
 
   it('includes the design-only Facadeur workspace and settings concepts without variants', () => {
     const catalog = validateProjectCatalog(createExampleCatalog());
-    const styleDeclarations = (nodeUuid: string) =>
-      catalog.globalStyles?.block?.rules?.find((rule) => rule.id === `layer-${nodeUuid}`)
-        ?.declarations;
+    const findNode = (
+      node: import('@facadeur/domain').Node,
+      nodeUuid: string,
+    ): import('@facadeur/domain').Node | undefined => {
+      if (node.uuid === nodeUuid) return node;
+      for (const child of node.dom.children ?? []) {
+        const match = findNode(child, nodeUuid);
+        if (match) return match;
+      }
+      return undefined;
+    };
+    const styleDeclarations = (nodeUuid: string) => {
+      const definition = exampleCatalogDefinitions().find((item) => findNode(item.root, nodeUuid));
+      const node = definition && findNode(definition.root, nodeUuid);
+      return node?.classes?.find((item) => item.generated)?.style?.declarations;
+    };
     const collectText = (node: ReturnType<typeof resolveDefinitionToElementBuildConfig>): string =>
       [node.text ?? '', ...(node.children ?? []).map(collectText)].join(' ');
     const workspaceText = collectText(

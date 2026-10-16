@@ -9,12 +9,13 @@ import { mapInspectorFormFields } from './map-inspector-form';
 import { transformableFieldOptions } from './transformable-field-options';
 import type { InspectorSidebarModel } from '../domain/sidebar/types';
 
-export type InspectorLayerStyle = InspectorSidebarModel['layerStyle'];
+export type InspectorLayerStyles = InspectorSidebarModel['layerStyles'];
 
 export function buildInspectorSidebarViewModel(
   model: InspectorViewModel,
   formKey: string,
-  layerStyle: InspectorLayerStyle,
+  definitionId: string,
+  layerStyles: InspectorLayerStyles,
   icons: readonly AutocompleteOption[] = [],
 ): InspectorSidebarModel {
   const propOptions = propBindingOptions(model);
@@ -130,9 +131,10 @@ export function buildInspectorSidebarViewModel(
   const names = flattenFields(allFields).map((field) => field.name);
   return {
     nodeId: model.nodeUuid,
+    definitionId,
     formKey,
     selectionKind: model.selectionKind,
-    layerStyle,
+    layerStyles,
     headerFields,
     tabs,
     values: Object.fromEntries(names.map((name) => [name, getPath(model.formValue, name)])),
@@ -180,11 +182,7 @@ function sectionFields(
   return section?.type === 'section'
     ? {
         label,
-        fields: mapInspectorFormFields(
-          section.fields,
-          componentOptions,
-          fieldOptions,
-        ),
+        fields: mapInspectorFormFields(section.fields, componentOptions, fieldOptions),
       }
     : null;
 }

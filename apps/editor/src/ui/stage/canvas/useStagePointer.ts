@@ -225,10 +225,9 @@ export function useStagePointer({
       const nodeUuid = app.getCoreSnapshot().selectedNodeUuid;
       if (!definition || !nodeUuid) return;
       const node = findNodeByUuid(definition.root, nodeUuid);
-      const declarations = catalog.globalStyles?.block?.rules?.find(
-        (rule) => rule.id === `layer-${nodeUuid}`,
-      )?.declarations;
-      if (!node || declarations?.position !== 'absolute') return;
+      const generatedClass = node?.classes?.find((item) => item.generated);
+      const declarations = generatedClass?.style?.declarations;
+      if (!node || !generatedClass || declarations?.position !== 'absolute') return;
       event.preventDefault();
       const frame = boardRef.current?.frames()[0];
       const rendered =
@@ -251,13 +250,15 @@ export function useStagePointer({
         type: EditorEventType.DesignCommandExecute,
         data: {
           command: {
-            type: 'setLayerStyleDeclarations',
+            type: 'setNodeClassStyleDeclarations',
+            definitionUuid: definition.uuid,
             nodeUuid,
-            breakpointUuid: null,
+            className: generatedClass.name,
             declarations: {
               left: `${left + dx}px`,
               top: `${top + dy}px`,
             },
+            breakpointUuid: null,
           },
         },
       });

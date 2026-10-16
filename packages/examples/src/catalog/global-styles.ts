@@ -1,10 +1,6 @@
 import type { ProjectCatalog } from '@facadeur/domain';
 import { globalIds as exampleGlobalIds } from './idList';
-import { facadeurEditorStyleRules } from '../facadeur-editor/shared';
-import { registeredExampleStyleRules } from '../register-example-styles';
-
 export const globalStyles = {
-  block: { rules: [...registeredExampleStyleRules(), ...facadeurEditorStyleRules()] },
   breakpoints: [
     {
       uuid: exampleGlobalIds.breakpoints.phone,

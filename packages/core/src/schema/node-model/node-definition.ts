@@ -2,7 +2,6 @@ import { Type } from '@sinclair/typebox';
 import { definitionConfigSchema } from './config';
 import { nodeSchema } from './node';
 import { schemaSourceSchema } from './schema-source';
-import { styleRulesRefSchema } from './style';
 import { uuidSchema } from './uuid';
 
 export const nodeDefinitionKindSchema = Type.Union([
@@ -21,7 +20,6 @@ export const nodeDefinitionSchema = Type.Object(
     ),
     schema: schemaSourceSchema,
     root: nodeSchema,
-    style: Type.Optional(styleRulesRefSchema),
     config: Type.Optional(definitionConfigSchema),
   },
   { additionalProperties: false },

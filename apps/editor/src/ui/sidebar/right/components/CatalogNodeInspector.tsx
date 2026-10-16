@@ -157,7 +157,8 @@ export function CatalogNodeInspector({
               <LayerStylesEditor
                 key={model.formKey}
                 nodeId={model.nodeId}
-                layerStyle={model.layerStyle}
+                definitionId={model.definitionId}
+                layerStyles={model.layerStyles}
                 valueFieldOptions={model.styleValueOptions}
                 onEvent={onEvent}
               />

@@ -1,16 +1,19 @@
-import type { Node, NodeDefinition, ProjectCatalog } from '@facadeur/domain';
+import type { Node, NodeClassDefinition, NodeDefinition, ProjectCatalog } from '@facadeur/domain';
+import { layerSelectorForName } from '@facadeur/core';
 import { definitions as atoms } from './catalog/atoms';
 import { definitions as components } from './catalog/components';
 import { definitions as pages } from './catalog/pages';
 import { globalStyles } from './catalog/global-styles';
+import { facadeurEditorNodeClasses } from './facadeur-editor/shared';
+import { registeredExampleNodeStyles } from './register-example-styles';
 import { schemas } from './catalog/schemas';
 import { tokens } from './catalog/tokens';
 import { defaultIcons } from './catalog/icons';
 
 export const exampleCatalog = {
-  atoms: nameDefinitions(atoms),
-  components: nameDefinitions(components),
-  pages: nameDefinitions(pages),
+  atoms: definitionsWithNodeClasses(nameDefinitions(atoms)),
+  components: definitionsWithNodeClasses(nameDefinitions(components)),
+  pages: definitionsWithNodeClasses(nameDefinitions(pages)),
   schemas,
   tokens,
   icons: defaultIcons,
@@ -46,6 +49,74 @@ function nameDefinitions(definitions: Record<string, NodeDefinition>) {
   return Object.fromEntries(
     Object.entries(definitions).map(([uuid, definition]) => [uuid, nameDefinition(definition)]),
   );
+}
+
+function definitionsWithNodeClasses(definitions: Record<string, NodeDefinition>) {
+  const deferredClasses = new Map<string, NodeClassDefinition>(
+    facadeurEditorNodeClasses().map(({ nodeUuid, nodeClass }) => [nodeUuid, nodeClass]),
+  );
+  for (const { nodeUuid, declarations } of registeredExampleNodeStyles()) {
+    const previous = deferredClasses.get(nodeUuid);
+    deferredClasses.set(nodeUuid, {
+      name: previous?.name ?? 'layer',
+      generated: true,
+      style: {
+        ...(previous?.style ?? {}),
+        declarations: { ...(previous?.style?.declarations ?? {}), ...declarations },
+      },
+    });
+  }
+  return Object.fromEntries(
+    Object.entries(definitions).map(([uuid, definition]) => [
+      uuid,
+      { ...definition, root: nodeClasses(definition.root, deferredClasses) },
+    ]),
+  );
+}
+
+function nodeClasses(node: Node, deferred: ReadonlyMap<string, NodeClassDefinition>): Node {
+  const uuid = node.uuid;
+  const classes: NodeClassDefinition[] = [
+    ...(node.classes ?? []),
+    ...(node.dom.attributes?.class ?? '')
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((name) => ({ name })),
+  ];
+  const generatedName = layerSelectorForName(node.name ?? 'Layer').slice(1);
+  const generatedIndex = classes.findIndex((item) => item.generated);
+  if (generatedIndex >= 0)
+    classes[generatedIndex] = { ...classes[generatedIndex]!, name: generatedName, generated: true };
+  else {
+    const matchingIndex = classes.findIndex((item) => item.name === generatedName);
+    if (matchingIndex < 0) classes.push({ name: generatedName, generated: true });
+    else classes[matchingIndex] = { ...classes[matchingIndex]!, generated: true };
+  }
+  const extra = deferred.get(uuid);
+  if (extra) {
+    const resolvedExtra = { ...extra, name: extra.name === 'layer' ? generatedName : extra.name };
+    const index = classes.findIndex((item) => item.name === resolvedExtra.name);
+    if (index < 0) classes.push(resolvedExtra);
+    else
+      classes[index] = {
+        ...classes[index]!,
+        ...resolvedExtra,
+        style: { ...(classes[index]!.style ?? {}), ...(resolvedExtra.style ?? {}) },
+      };
+  }
+  const { attributes: oldAttributes, ...domBase } = node.dom;
+  const attributes = { ...(oldAttributes ?? {}) };
+  delete attributes.class;
+  const children = node.dom.children?.map((child) => nodeClasses(child, deferred));
+  return {
+    ...node,
+    classes,
+    dom: {
+      ...domBase,
+      ...(Object.keys(attributes).length ? { attributes } : {}),
+      ...(children ? { children } : {}),
+    },
+  };
 }
 
 function nameDefinition(definition: NodeDefinition): NodeDefinition {

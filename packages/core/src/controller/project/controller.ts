@@ -18,6 +18,7 @@ import {
   upsertCatalogSchema,
 } from './catalog/definition-ops';
 import { removeCatalogDesignProp, upsertCatalogDesignProp } from './catalog/props-ops';
+import { patchNodeClasses } from './catalog/node-classes';
 import {
   findDefinition,
   findNodeByUuid,
@@ -310,9 +311,8 @@ export class CoreController implements CoreControllerHost {
 
   patchNodeClassList(nodeUuid: string, classes: readonly string[]) {
     if (!this.openDefinitionId) return;
-    const value = classes.join(' ').trim();
     this.commitCatalog(
-      patchNodeDomAttributes(this.catalog, this.openDefinitionId, nodeUuid, { class: value }),
+      patchNodeClasses(this.catalog, this.openDefinitionId, nodeUuid, classes),
     );
   }
 

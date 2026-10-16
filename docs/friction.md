@@ -213,6 +213,10 @@ docs/plan.md` attempted to fetch pinned pnpm 10.33.3 and failed with `ENOTFOUND`
   (`ENOTFOUND registry.npmjs.org`). Approved host-context Prettier, both typechecks, and the
   Storybook build succeeded. Continue using the approved host context; no repository workaround is
   needed.
+- **Update (2026-10-16, Node-owned class styles):** Restricted pnpm again failed in Corepack before
+  project code (`ENOTFOUND registry.npmjs.org`). Prettier and the workspace typecheck succeeded in
+  approved host execution. Continue using that context for pinned pnpm commands; no repository
+  workaround is needed.
 
 ## Cloud verification process limits (2026-10-11)
 

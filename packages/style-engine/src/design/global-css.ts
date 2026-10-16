@@ -28,12 +28,17 @@ const COMPONENT_PROP_REFERENCE = /^\{props:[^}]+\}$/;
 export function renderGlobalStyleCss(catalog: ProjectCatalog): string {
   const block = catalog.globalStyles?.block;
   const tokenSets = catalog.globalStyles?.tokenInterface?.sets ?? {};
-  if (!block && !Object.keys(tokenSets).length) return '';
-
   const tokens = new Map(
     [...readTokenTree(catalog.tokens ?? {}).tokens].map(([uuid, token]) => [uuid, token]),
   );
-  const { nodeUuids, rootUuidByNode } = indexCatalogNodes(catalog);
+  const { nodeUuids, rootUuidByNode, nodes } = indexCatalogNodes(catalog);
+  if (
+    !block &&
+    !Object.keys(tokenSets).length &&
+    ![...nodes.values()].some((node) => node.classes?.some((item) => item.style))
+  ) {
+    return '';
+  }
   const rules: string[] = [];
   if (block) emitLayer(rules, ':root', block, block.breakpoints, catalog, tokens);
 
@@ -61,6 +66,19 @@ export function renderGlobalStyleCss(catalog: ProjectCatalog): string {
     emitLayer(rules, scopedSelector, authored, authored.breakpoints, catalog, tokens);
   }
 
+  for (const node of nodes.values()) {
+    const rootUuid = rootUuidByNode.get(node.uuid);
+    for (const item of node.classes ?? []) {
+      if (!item.style) continue;
+      const nodeSelector = `.${codegenNodeClass(node.uuid)}${classSelector(item.name)}`;
+      const selector =
+        rootUuid && rootUuid !== node.uuid
+          ? `.${codegenNodeClass(rootUuid)} ${nodeSelector}`
+          : nodeSelector;
+      emitLayer(rules, selector, item.style, item.style.breakpoints, catalog, tokens);
+    }
+  }
+
   for (const [uuid, value] of Object.entries(tokenSets)) {
     const token = tokens.get(uuid);
     const property = tokenCustomProperty(token?.path ?? uuid);
@@ -71,10 +89,7 @@ export function renderGlobalStyleCss(catalog: ProjectCatalog): string {
 }
 
 /** Render resolved per-instance property bindings used by Catalog style rules. */
-export function renderDynamicStyleCss(
-  root: ElementBuildConfig,
-  catalog: ProjectCatalog,
-): string {
+export function renderDynamicStyleCss(root: ElementBuildConfig, catalog: ProjectCatalog): string {
   const tokens = new Map(
     [...readTokenTree(catalog.tokens ?? {}).tokens].map(([uuid, token]) => [uuid, token]),
   );
@@ -85,17 +100,25 @@ export function renderDynamicStyleCss(
       : node.nodeUuid
         ? [node.nodeUuid]
         : [];
-    const instanceRoot =
-      node.nodeUuid && styleUuids.length > 1 ? node.nodeUuid : undefined;
+    const instanceRoot = node.nodeUuid && styleUuids.length > 1 ? node.nodeUuid : undefined;
     const selectorUuids = [...new Set([...scopes, ...(instanceRoot ? [instanceRoot] : [])])];
     if (node.nodeUuid && node.dynamicStyle && Object.keys(node.dynamicStyle).length) {
       const selector = [
         ...selectorUuids.map((uuid) => `.${codegenNodeClass(uuid)}`),
-        ...(selectorUuids.includes(node.nodeUuid)
-          ? []
-          : [`.${codegenNodeClass(node.nodeUuid)}`]),
+        ...(selectorUuids.includes(node.nodeUuid) ? [] : [`.${codegenNodeClass(node.nodeUuid)}`]),
       ].join(' ');
       rules.push(cssRule(selector, declarations(node.dynamicStyle, tokens, catalog)));
+    }
+    if (node.nodeUuid) {
+      for (const [className, values] of Object.entries(node.dynamicClassStyles ?? {})) {
+        const selector = [
+          ...selectorUuids
+            .filter((uuid) => uuid !== node.nodeUuid)
+            .map((uuid) => `.${codegenNodeClass(uuid)}`),
+          `.${codegenNodeClass(node.nodeUuid)}${classSelector(className)}`,
+        ].join(' ');
+        rules.push(cssRule(selector, declarations(values, tokens, catalog)));
+      }
     }
     const childScopes = instanceRoot ? [...scopes, instanceRoot] : scopes;
     for (const child of node.children ?? []) visit(child, childScopes);
@@ -166,8 +189,10 @@ function emitLayer(
 function indexCatalogNodes(catalog: ProjectCatalog) {
   const nodeUuids = new Set<string>();
   const rootUuidByNode = new Map<string, string>();
+  const nodes = new Map<string, Node>();
   const visit = (node: Node, rootUuid: string) => {
     nodeUuids.add(node.uuid);
+    nodes.set(node.uuid, node);
     rootUuidByNode.set(node.uuid, rootUuid);
     for (const child of node.dom.children ?? []) visit(child, rootUuid);
   };
@@ -175,7 +200,11 @@ function indexCatalogNodes(catalog: ProjectCatalog) {
     for (const definition of Object.values(definitions))
       visit(definition.root, definition.root.uuid);
   }
-  return { nodeUuids, rootUuidByNode };
+  return { nodeUuids, rootUuidByNode, nodes };
+}
+
+function classSelector(name: string) {
+  return `.${name.replace(/[^A-Za-z0-9_-]/g, (character) => `\\${character.codePointAt(0)!.toString(16)} `)}`;
 }
 
 function codegenNodeClass(uuid: string) {
@@ -206,8 +235,15 @@ function declarations(
   return output;
 }
 
-function substitute(value: string, tokens: ReadonlyMap<string, IndexedToken>, catalog: ProjectCatalog) {
-  const withProps = value.replace(/\{prop:([^}]+)\}/g, (_match, uuid: string) => catalog.props?.[uuid]?.value ?? '');
+function substitute(
+  value: string,
+  tokens: ReadonlyMap<string, IndexedToken>,
+  catalog: ProjectCatalog,
+) {
+  const withProps = value.replace(
+    /\{prop:([^}]+)\}/g,
+    (_match, uuid: string) => catalog.props?.[uuid]?.value ?? '',
+  );
   return withProps.replace(/\{token:([^}]+)\}/g, (_match, uuid: string) => {
     const token = tokens.get(uuid);
     return `var(${token ? tokenCustomProperty(token.path) : `--token-${uuid}`})`;

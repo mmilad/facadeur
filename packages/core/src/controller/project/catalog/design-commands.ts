@@ -2,8 +2,8 @@ import type { ProjectCatalog } from '@facadeur/domain';
 import type {
   DesignLibraryCommand,
   GlobalTokenCommand,
-  LayerStyleCommand,
-  LayerStyleDeclarationsCommand,
+  NodeClassStyleCommand,
+  NodeClassStyleDeclarationsCommand,
 } from '../../style/types';
 import { assertBreakpoints, cloneBreakpoints } from '../../style/breakpoints';
 import {
@@ -12,23 +12,25 @@ import {
   setTokenInTree,
 } from '../../style/tokens/global/tree';
 import { validateProjectCatalog } from './validate';
-import { setLayerStyleDeclaration, setLayerStyleDeclarations } from './layer-styles';
+import { setNodeClassStyleDeclaration, setNodeClassStyleDeclarations } from './node-classes';
 
 export type CatalogDesignCommand =
   | GlobalTokenCommand
   | DesignLibraryCommand
-  | LayerStyleCommand
-  | LayerStyleDeclarationsCommand;
+  | NodeClassStyleCommand
+  | NodeClassStyleDeclarationsCommand;
 
 export function applyCatalogDesignCommand(
   catalog: ProjectCatalog,
   command: CatalogDesignCommand,
 ): ProjectCatalog {
-  if (command.type === 'setLayerStyleDeclaration') {
-    return validateProjectCatalog(setLayerStyleDeclaration(catalog, command)) as ProjectCatalog;
+  if (command.type === 'setNodeClassStyleDeclaration') {
+    return validateProjectCatalog(setNodeClassStyleDeclaration(catalog, command)) as ProjectCatalog;
   }
-  if (command.type === 'setLayerStyleDeclarations') {
-    return validateProjectCatalog(setLayerStyleDeclarations(catalog, command)) as ProjectCatalog;
+  if (command.type === 'setNodeClassStyleDeclarations') {
+    return validateProjectCatalog(
+      setNodeClassStyleDeclarations(catalog, command),
+    ) as ProjectCatalog;
   }
   if (command.type === 'setToken') {
     const tokens = setTokenInTree(

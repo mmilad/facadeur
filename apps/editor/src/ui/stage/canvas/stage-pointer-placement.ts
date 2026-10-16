@@ -5,6 +5,7 @@ import {
   findNodeByUuid,
   findParentOfNode,
   isInsideCatalogSubtree,
+  layerSelectorForName,
 } from '@facadeur/core';
 import type { AppService } from '../../../app-service/AppService';
 import type { EditorEvent } from '../../../domain/sidebar/events';
@@ -87,13 +88,7 @@ export function createStagePlacement({
     });
     const parentBox =
       nodesByUuid.get(parent.uuid)?.rect ?? boxOf(frame.host.contentDocument().body);
-    const parentStyle = app
-      .getCoreSnapshot()
-      .catalog.globalStyles?.block?.rules?.find(
-        (rule) =>
-          rule.id === `layer-${parent.uuid}` &&
-          Object.values(rule.bindings ?? {}).includes(parent.uuid),
-      )?.declarations;
+    const parentStyle = parent.classes?.find((item) => item.generated)?.style?.declarations;
     const placed = placeInParent({
       direction:
         parentStyle?.display === 'flex' && parentStyle?.['flex-direction'] === 'row'
@@ -159,8 +154,10 @@ export function createStagePlacement({
         type: EditorEventType.DesignCommandExecute,
         data: {
           command: {
-            type: 'setLayerStyleDeclarations',
+            type: 'setNodeClassStyleDeclarations',
             nodeUuid: uuid,
+            definitionUuid: definition.uuid,
+            className: layerSelectorForName('Image').slice(1),
             breakpointUuid: null,
             declarations: { width: '120px', height: '80px' },
           },

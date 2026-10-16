@@ -13,6 +13,7 @@ import { componentPropsForSchema } from '../../catalog/field-ids';
 import { readTokenTree } from '../../../style/tokens/global/tree';
 import { tokenReference } from '../../../style/tokens/syntax';
 import { canAcceptCatalogChildren } from '../../catalog/tree-ops';
+import { effectiveClassList } from '../../catalog/node-classes';
 
 /** Merged field layers + catalog context for binding resolution. */
 export type PreviewResolveContext = {
@@ -309,6 +310,9 @@ function resolveNodeToElementBuildConfig(
 
   const text = textFromNode(node, fields, ctx, resolveTokenText);
   const attributes = resolveStringRecord(node.dom.attributes, ctx) ?? {};
+  const classList = effectiveClassList(node, ctx.componentProps);
+  if (classList.length) attributes.class = classList.join(' ');
+  else delete attributes.class;
   const iconId = node.dom.tagName.toLowerCase() === 'svg' ? attributes['data-icon'] : undefined;
   const icon = iconId ? catalog.icons?.find((entry) => entry.id === iconId) : undefined;
   const composition = node.config?.composition;
@@ -407,13 +411,22 @@ function resolveNodeToElementBuildConfig(
     delete attributes['data-icon'];
     attributes.viewBox = icon.data.viewBox;
   }
-  const rule = catalog.globalStyles?.block?.rules?.find(
-    (entry) => entry.id === `layer-${node.uuid}`,
+  const dynamicClassStyles = Object.fromEntries(
+    (node.classes ?? [])
+      .filter(
+        ({ condition }) =>
+          !condition || Object.is(ctx.componentProps?.[condition.propUuid], condition.value),
+      )
+      .flatMap((item) => {
+        const referenced = Object.fromEntries(
+          Object.entries(item.style?.declarations ?? {}).filter(([, value]) =>
+            STYLE_REFERENCE.test(value),
+          ),
+        );
+        const resolved = resolveStringRecord(referenced, ctx);
+        return resolved && Object.keys(resolved).length ? [[item.name, resolved]] : [];
+      }),
   );
-  const referencedStyles = Object.fromEntries(
-    Object.entries(rule?.declarations ?? {}).filter(([, value]) => STYLE_REFERENCE.test(value)),
-  );
-  const dynamicStyle = resolveStringRecord(referencedStyles, ctx);
   const properties = node.dom.properties;
 
   return {
@@ -421,7 +434,7 @@ function resolveNodeToElementBuildConfig(
     ...(text !== undefined ? { text } : {}),
     attributes,
     ...(node.dom.data ? { dataset: { ...node.dom.data } } : {}),
-    ...(dynamicStyle && Object.keys(dynamicStyle).length ? { dynamicStyle } : {}),
+    ...(Object.keys(dynamicClassStyles).length ? { dynamicClassStyles } : {}),
     ...(properties && Object.keys(properties).length ? { properties } : {}),
     ...(resolvedChildren.length ? { children: resolvedChildren } : {}),
     nodeUuid: node.uuid,

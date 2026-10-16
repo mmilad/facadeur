@@ -11,7 +11,9 @@ import type {
   StaticFieldConfig,
 } from '@facadeur/domain';
 import { isVoidHtmlTag } from '../../../document/html-tags';
-import { syncLayerStyleSelector } from './layer-styles';
+import { classListFromNode, layerSelectorForName } from './node-classes';
+
+export { classListFromNode } from './node-classes';
 
 function nodeAcceptsChildren(tagName: string): boolean {
   return !isVoidHtmlTag(tagName);
@@ -208,8 +210,11 @@ export function patchNodeDomAttributes(
   attributes: Readonly<Record<string, string>>,
 ): ProjectCatalog {
   return mutateNode(catalog, definitionUuid, nodeUuid, (node) => {
-    const merged = { ...(node.dom.attributes ?? {}), ...attributes };
-    for (const [key, value] of Object.entries(attributes)) {
+    const sanitizedAttributes = Object.fromEntries(
+      Object.entries(attributes).filter(([key]) => key !== 'class'),
+    );
+    const merged = { ...(node.dom.attributes ?? {}), ...sanitizedAttributes };
+    for (const [key, value] of Object.entries(sanitizedAttributes)) {
       if (!value) delete merged[key];
     }
     (node.dom as { attributes?: Record<string, string> }).attributes =
@@ -227,11 +232,6 @@ export function patchNodeDomText(
     if (text) (node.dom as { text?: string }).text = text;
     else delete (node.dom as { text?: string }).text;
   });
-}
-
-export function classListFromNode(node: Node): string[] {
-  const raw = node.dom.attributes?.class ?? '';
-  return raw.split(/\s+/).filter(Boolean);
 }
 
 export function patchNodeTagName(
@@ -260,10 +260,18 @@ export function patchNodeName(
 ): ProjectCatalog {
   const trimmed = name.trim();
   if (!trimmed) return catalog;
-  const renamed = mutateNode(catalog, definitionUuid, nodeUuid, (node) => {
+  return mutateNode(catalog, definitionUuid, nodeUuid, (node) => {
     (node as { name?: string }).name = trimmed;
+    const classes = [...(node.classes ?? [])];
+    const generatedIndex = classes.findIndex((item) => item.generated);
+    if (generatedIndex >= 0) {
+      classes[generatedIndex] = {
+        ...classes[generatedIndex]!,
+        name: layerSelectorForName(trimmed).slice(1),
+      };
+      (node as { classes?: typeof classes }).classes = classes;
+    }
   });
-  return syncLayerStyleSelector(renamed, nodeUuid, trimmed);
 }
 
 export function patchDefinitionFieldExposure(

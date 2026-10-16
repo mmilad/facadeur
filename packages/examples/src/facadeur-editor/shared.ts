@@ -1,5 +1,5 @@
 import { layerSelectorForName } from '@facadeur/core';
-import type { FieldValue, GlobalStyleRule, Node, NodeDefinition } from '@facadeur/domain';
+import type { FieldValue, Node, NodeClassDefinition, NodeDefinition } from '@facadeur/domain';
 import type { JsonSchemaObject } from '@facadeur/domain';
 import { defaultIcons } from '../catalog/icons';
 
@@ -20,7 +20,7 @@ export const uuid = (value: number) =>
   `660e8400-e29b-41d4-a716-${value.toString(16).padStart(12, '0')}`;
 export const prop = (value: number) => uuid(3000 + value);
 const iconsById = new Map(defaultIcons.map((icon) => [icon.id, icon]));
-const styleRulesByNode = new Map<string, GlobalStyleRule>();
+const classesByNode = new Map<string, NodeClassDefinition>();
 type ExampleStyle = Readonly<Record<string, string>>;
 
 export function iconSource(id: string) {
@@ -70,41 +70,40 @@ export function group(id: number, name: string, children: Node[], style: Example
 }
 
 export function styledNode(node: Node, declarations: ExampleStyle): Node {
-  if (Object.keys(declarations).length) {
-    registerExampleStyle(node.uuid, node.name ?? 'Layer', { declarations });
-  }
-  return node;
+  const className = layerSelectorForName(node.name ?? 'Layer').slice(1);
+  return {
+    ...node,
+    classes: [
+      ...(node.classes ?? []).filter((item) => item.name !== className),
+      {
+        name: className,
+        generated: true,
+        ...(Object.keys(declarations).length ? { style: { declarations } } : {}),
+      },
+    ],
+  };
 }
 
 export function registerExampleStyle(
   nodeUuid: string,
   name: string,
-  layer: Pick<GlobalStyleRule, 'declarations' | 'states' | 'variants' | 'breakpoints'>,
+  style: NonNullable<NodeClassDefinition['style']>,
 ) {
-  const previous = styleRulesByNode.get(nodeUuid);
   const className = layerSelectorForName(name).slice(1);
-  const rule: GlobalStyleRule = {
-    id: `layer-${nodeUuid}`,
-    selector: `.${className}`,
-    bindings: { [className]: nodeUuid },
-    ...(previous ? mergeRuleLayer(previous, layer) : layer),
-  };
-  styleRulesByNode.set(nodeUuid, rule);
+  const previous = classesByNode.get(nodeUuid);
+  classesByNode.set(nodeUuid, {
+    name: className,
+    generated: true,
+    style: previous ? mergeSparse(previous.style, style) : style,
+  });
 }
 
-export function facadeurEditorStyleRules() {
-  return [...styleRulesByNode.values()];
+export function facadeurEditorNodeClasses() {
+  return [...classesByNode.entries()].map(([nodeUuid, nodeClass]) => ({ nodeUuid, nodeClass }));
 }
 
 export function textProp(id: number): string {
   return `{props:${prop(id)}}`;
-}
-
-function mergeRuleLayer(
-  lower: Pick<GlobalStyleRule, 'declarations' | 'states' | 'variants' | 'breakpoints'>,
-  upper: Pick<GlobalStyleRule, 'declarations' | 'states' | 'variants' | 'breakpoints'>,
-) {
-  return mergeSparse(lower, upper);
 }
 
 function mergeSparse<T>(lower: T, upper: unknown): T {

@@ -1,5 +1,4 @@
 export {
-  classListFromNode,
   findDefinition,
   listCatalogDefinitions,
   findNodeByUuid,
@@ -30,6 +29,13 @@ export {
   upsertCatalogSchema,
 } from './definition-ops';
 export { removeCatalogDesignProp, upsertCatalogDesignProp } from './props-ops';
-export { layerSelectorForName } from './layer-styles';
+export {
+  classListFromNode,
+  effectiveClassList,
+  layerSelectorForName,
+  patchNodeClasses,
+  setNodeClassStyleDeclaration,
+  setNodeClassStyleDeclarations,
+} from './node-classes';
 export { assertCatalogRefIntegrity, emptyProjectCatalog, validateProjectCatalog } from './validate';
 export { applyCatalogDesignCommand, type CatalogDesignCommand } from './design-commands';

@@ -8,6 +8,7 @@ export interface ElementBuildConfig {
   readonly dataset?: Readonly<Record<string, string>>;
   /** Resolved component prop bindings used by runtime style rules. */
   readonly dynamicStyle?: Readonly<Record<string, string>>;
+  readonly dynamicClassStyles?: Readonly<Record<string, Readonly<Record<string, string>>>>;
   readonly properties?: Readonly<Record<string, unknown>>;
   readonly children?: readonly ElementBuildConfig[];
   /** Catalog nodes whose styles apply to this rendered root, including referenced definition roots. */
