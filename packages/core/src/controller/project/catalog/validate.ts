@@ -144,9 +144,7 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
         const prop = componentPropsForSchema(effective.schema).find(
           (entry) => entry.uuid === source.uuid,
         );
-        sourceSchema = prop
-          ? schemaAtPath(effective.schema, prop.name.slice('props.'.length))
-          : null;
+        sourceSchema = prop ? schemaAtPath(effective.schema, prop.path) : null;
       } else if (composition && source?.kind === 'item') {
         sourceSchema = itemSchema ? schemaAtPath(itemSchema, source.path) : null;
       }
@@ -210,9 +208,7 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
                 const parentProp = componentPropsForSchema(effective.schema).find(
                   (entry) => entry.uuid === parentSource.uuid,
                 );
-                return parentProp
-                  ? schemaAtPath(effective.schema, parentProp.name.slice('props.'.length))
-                  : null;
+                return parentProp ? schemaAtPath(effective.schema, parentProp.path) : null;
               })();
         if (!enumValues(parentSourceSchema).includes(node.config.compositionCase)) {
           throw new DocumentError(

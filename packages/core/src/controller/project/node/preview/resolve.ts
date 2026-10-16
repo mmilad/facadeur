@@ -492,9 +492,8 @@ function componentPropValues(
 ) {
   const values: Record<string, FieldValue> = {};
   for (const prop of componentPropsForSchema(schema)) {
-    const path = prop.name.slice('props.'.length);
     let value: FieldValue | undefined = fields;
-    for (const segment of path.split('.')) {
+    for (const segment of prop.path.split('.')) {
       value =
         value && typeof value === 'object' && !Array.isArray(value) ? value[segment] : undefined;
     }

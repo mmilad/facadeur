@@ -589,6 +589,13 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
   - Scope: correct static config editing for typed catalog references, starting with icons; no changes to token transforms or serialized static config.
   - Contracts: keep icon IDs as strings, preserve reference metadata and static config paths, and keep unknown literal IDs subject to existing strict validation.
   - Validation: regression tests verify projected config-field options and render the static reference as a select with the selected catalog ID; focused Core/Editor tests (11), Core/Editor typechecks, candidate detector, and `git diff --check` passed.
+
+- [x] Core/Editor: mark array item paths in component prop choices.
+  - Evidence: `componentPropsForSchema` traverses `items` using the same display prefix as the array property, so the prop selector shows `props.rules.selector` without indicating that `selector` belongs to an array item.
+  - Action: keep stable prop UUIDs and canonical data paths intact while adding `[]` to displayed array-item paths (for example `props.rules[].selector`); update consumers that need canonical paths to use the explicit path field.
+  - Scope: make array structure visible in prop selectors only; do not add index addressing or change repeater evaluation.
+  - Contracts: preserve persisted `{props:uuid}` references, UUID identity, canonical resolver/codegen paths, and existing non-array labels.
+  - Validation: Core and Codegen typechecks, Prettier, candidate detector rerun, and `git diff --check` passed; tests were not run. The detector also reports existing size-review signals in `validate.ts` and `resolve.ts`; this task only updated their use of the canonical path field.
 - [x] Storybook: author `oneOf` and `anyOf` compositions in the schema form.
   - Evidence: the JSON Schema contract accepts both keywords, but `kindOf` and the schema type selectors expose only primitive, object, array, enum, and reference forms. Editing a composition currently treats it as an object and cannot edit its branches.
   - Action: expose `oneOf` and `anyOf` as schema kinds; add a controlled branch editor that recursively reuses `SchemaEditor` and existing `packages/form` fields. Keep at least one branch and preserve branch schemas and metadata during edits. Keep `SchemaPropertiesEditor` cohesive because its field-card controls share one controlled update path; branch list presentation lives in `SchemaCompositionEditor`.

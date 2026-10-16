@@ -35,7 +35,7 @@ export function generateReact(options: GenerateOptions): GenerateOutput {
     const tree = resolveDefinitionToElementBuildConfig(entry.definition, options.catalog);
     const schema = resolveJsonSchemaForDefinition(options.catalog, entry.definition);
     const propPaths = new Map(
-      componentPropsForSchema(schema).map((prop) => [prop.uuid, prop.name.slice('props.'.length)]),
+      componentPropsForSchema(schema).map((prop) => [prop.uuid, prop.path]),
     );
     const component = renderComponent(
       entry.exportName,

@@ -216,27 +216,36 @@ function schemaFieldSignature(value: unknown): string {
   return JSON.stringify(normalize(value));
 }
 
-export function componentPropsForSchema(schema: unknown): { uuid: string; name: string }[] {
-  const output: { uuid: string; name: string }[] = [];
+export function componentPropsForSchema(
+  schema: unknown,
+): { uuid: string; name: string; path: string }[] {
+  const output: { uuid: string; name: string; path: string }[] = [];
   const seenIds = new Set<string>();
   const seenPaths = new Set<string>();
-  const visit = (value: unknown, prefix = '') => {
+  const visit = (value: unknown, pathPrefix = '', displayPrefix = '') => {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return;
     const record = value as Record<string, unknown>;
     if (record.properties && typeof record.properties === 'object') {
       for (const [name, property] of Object.entries(record.properties as Record<string, unknown>)) {
-        const path = prefix ? `${prefix}.${name}` : name;
+        const path = pathPrefix ? `${pathPrefix}.${name}` : name;
+        const displayPath = displayPrefix ? `${displayPrefix}.${name}` : name;
+        const propertyRecord =
+          property && typeof property === 'object' && !Array.isArray(property)
+            ? (property as Record<string, unknown>)
+            : {};
+        const isArray = propertyRecord.type === 'array' || 'items' in propertyRecord;
         const uuid = componentPropIdFromSchemaProperty(property);
         if (uuid && !seenIds.has(uuid) && !seenPaths.has(path)) {
           seenIds.add(uuid);
           seenPaths.add(path);
-          output.push({ uuid, name: `props.${path}` });
+          output.push({ uuid, name: `props.${displayPath}${isArray ? '[]' : ''}`, path });
         }
-        visit(property, path);
+        visit(property, path, displayPath);
       }
     }
     for (const key of ['items', 'anyOf', 'oneOf', 'allOf']) {
-      if (key in record) visit(record[key], prefix);
+      if (key in record)
+        visit(record[key], pathPrefix, key === 'items' ? `${displayPrefix}[]` : displayPrefix);
     }
   };
   visit(schema);

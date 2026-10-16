@@ -2245,25 +2245,39 @@
         "schema": {
           "type": "object",
           "properties": {
-            "selector": {
-              "type": "string",
-              "default": ".form-control",
-              "x-facadeur-prop-id": "660e8400-e29b-41d4-a716-000000001965"
-            },
-            "property": {
-              "type": "string",
-              "default": "color",
-              "x-facadeur-prop-id": "660e8400-e29b-41d4-a716-000000001966"
-            },
-            "value": {
-              "type": "string",
-              "default": "#25242a",
-              "x-facadeur-prop-id": "660e8400-e29b-41d4-a716-000000001967"
-            },
-            "source": {
-              "type": "string",
-              "default": "Global",
-              "x-facadeur-prop-id": "660e8400-e29b-41d4-a716-000000001968"
+            "rules": {
+              "title": "Rule",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "x-facadeur-prop-id": "271b07c4-96e4-45a6-9831-d74460adb637",
+                    "description": "name of property"
+                  },
+                  "declarations": {
+                    "type": "object",
+                    "properties": {
+                      "propName": {
+                        "type": "string",
+                        "x-facadeur-prop-id": "509cf3ee-0176-4b85-abd0-64636a76f5a7",
+                        "description": "name of property"
+                      },
+                      "propValue": {
+                        "type": "string",
+                        "x-facadeur-prop-id": "c6551a6c-35a8-4edd-88cd-de9f5d7d01e8",
+                        "description": "value of property"
+                      }
+                    },
+                    "additionalProperties": false,
+                    "description": "style values",
+                    "x-facadeur-prop-id": "08f1ba25-16d7-4122-94ea-24993fd892f9"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "x-facadeur-prop-id": "a69b26d6-87b8-487e-b775-c0325f38c05d"
             }
           },
           "additionalProperties": false
@@ -2320,51 +2334,74 @@
                       "tagName": "div",
                       "children": [
                         {
-                          "uuid": "d8f24635-2124-475c-ab0c-05ba19b5b85e",
-                          "name": "Property Item",
+                          "uuid": "2cf7504b-21b9-4e24-bbb1-e4f4e6100202",
+                          "name": "Repeater",
                           "dom": {
                             "tagName": "div",
                             "children": [
                               {
-                                "uuid": "660e8400-e29b-41d4-a716-000000000daf",
-                                "name": "property-name",
+                                "uuid": "d8f24635-2124-475c-ab0c-05ba19b5b85e",
+                                "name": "Property Item",
                                 "dom": {
                                   "tagName": "div",
-                                  "text": "{props:660e8400-e29b-41d4-a716-000000001966}"
-                                },
-                                "classes": [
-                                  {
-                                    "name": "property-name",
-                                    "generated": true,
-                                    "style": {
-                                      "declarations": {
-                                        "fontFamily": "monospace",
-                                        "fontSize": "11px",
-                                        "flex": "1",
-                                        "minWidth": "0"
-                                      }
+                                  "children": [
+                                    {
+                                      "uuid": "660e8400-e29b-41d4-a716-000000000daf",
+                                      "name": "property-name",
+                                      "dom": {
+                                        "tagName": "div",
+                                        "text": "{props:660e8400-e29b-41d4-a716-000000001966}"
+                                      },
+                                      "classes": [
+                                        {
+                                          "name": "property-name",
+                                          "generated": true,
+                                          "style": {
+                                            "declarations": {
+                                              "fontFamily": "monospace",
+                                              "fontSize": "11px",
+                                              "flex": "1",
+                                              "minWidth": "0"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "uuid": "660e8400-e29b-41d4-a716-000000000db0",
+                                      "name": "property-value",
+                                      "dom": {
+                                        "tagName": "div",
+                                        "text": "{props:660e8400-e29b-41d4-a716-000000001967}",
+                                        "children": []
+                                      },
+                                      "classes": [
+                                        {
+                                          "name": "property-value",
+                                          "generated": true,
+                                          "style": {
+                                            "declarations": {
+                                              "fontFamily": "monospace",
+                                              "fontSize": "11px",
+                                              "flex": "1",
+                                              "minWidth": "0"
+                                            }
+                                          }
+                                        }
+                                      ]
                                     }
-                                  }
-                                ]
-                              },
-                              {
-                                "uuid": "660e8400-e29b-41d4-a716-000000000db0",
-                                "name": "property-value",
-                                "dom": {
-                                  "tagName": "div",
-                                  "text": "{props:660e8400-e29b-41d4-a716-000000001967}",
-                                  "children": []
+                                  ]
                                 },
                                 "classes": [
                                   {
-                                    "name": "property-value",
+                                    "name": "property-item",
                                     "generated": true,
                                     "style": {
                                       "declarations": {
-                                        "fontFamily": "monospace",
-                                        "fontSize": "11px",
-                                        "flex": "1",
-                                        "minWidth": "0"
+                                        "display": "flex",
+                                        "flex-direction": "row",
+                                        "width": "100%",
+                                        "align-items": "center"
                                       }
                                     }
                                   }
@@ -2374,18 +2411,15 @@
                           },
                           "classes": [
                             {
-                              "name": "property-item",
-                              "generated": true,
-                              "style": {
-                                "declarations": {
-                                  "display": "flex",
-                                  "flex-direction": "row",
-                                  "width": "100%",
-                                  "align-items": "center"
-                                }
-                              }
+                              "name": "repeater",
+                              "generated": true
                             }
-                          ]
+                          ],
+                          "config": {
+                            "composition": {
+                              "kind": "repeater"
+                            }
+                          }
                         }
                       ]
                     },
@@ -2421,7 +2455,15 @@
               }
             }
           }
-        ]
+        ],
+        "data": {
+          "rules": [
+            {
+              "selector": "",
+              "declarations": {}
+            }
+          ]
+        }
       },
       "category": "sidebar"
     },
@@ -2887,7 +2929,7 @@
                     "type": "string",
                     "title": "Kind",
                     "enum": ["component", "group"],
-                    "x-facadeur-prop-id": "54d4f935-cdf6-4654-8364-1c4a0e920eb1"
+                    "x-facadeur-prop-id": "6c462698-bd61-4d0c-b4ad-0e253fd17d54"
                   },
                   "componentId": {
                     "type": "string",
@@ -2895,12 +2937,12 @@
                     "x-facadeur-reference": {
                       "target": "component"
                     },
-                    "x-facadeur-prop-id": "88541e13-cc00-424e-b7ee-e5a6c86e0655"
+                    "x-facadeur-prop-id": "e586826e-ad99-4b72-96a7-3169066c5857"
                   },
                   "label": {
                     "type": "string",
                     "title": "Label",
-                    "x-facadeur-prop-id": "854a8a75-b2fa-47e0-b3e5-b5d93932a524"
+                    "x-facadeur-prop-id": "3c1e01eb-11c2-4eae-944b-ee5e18d3b9b8"
                   },
                   "children": {
                     "type": "array",
@@ -2914,18 +2956,18 @@
                           "x-facadeur-reference": {
                             "target": "component"
                           },
-                          "x-facadeur-prop-id": "21ed9dff-352f-4b04-a5df-06941554c576"
+                          "x-facadeur-prop-id": "f7581f89-0742-4128-b587-c0aeceaa2bc2"
                         },
                         "label": {
                           "type": "string",
                           "title": "Label",
-                          "x-facadeur-prop-id": "975477fc-5534-47f4-a404-e40b30f7dc22"
+                          "x-facadeur-prop-id": "69d9276e-c9c3-4c5a-87b2-6d8ededa988a"
                         }
                       },
                       "required": ["componentId", "label"],
                       "additionalProperties": false
                     },
-                    "x-facadeur-prop-id": "c7a2cc6d-3435-4389-ba45-511b98b09aad"
+                    "x-facadeur-prop-id": "255f9e5f-25f4-41b7-b9f8-8b671d604aa0"
                   }
                 },
                 "required": ["kind", "label"],
