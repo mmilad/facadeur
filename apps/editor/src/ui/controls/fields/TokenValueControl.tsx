@@ -48,7 +48,11 @@ export function TokenValueControl({
       value: token,
       label: labelFor(token),
       description: searchValue(token) ?? resolve(token) ?? path,
-      group: category ? `${tokenTitle(category)} tokens` : undefined,
+      group: category
+        ? category === 'font'
+          ? 'Font assets'
+          : `${tokenTitle(category)} tokens`
+        : undefined,
       keywords: `${path} ${tokenTitle(path)}`,
     };
   });

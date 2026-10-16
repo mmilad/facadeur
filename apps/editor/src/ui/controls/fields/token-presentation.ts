@@ -27,6 +27,7 @@ export function tokenLeafLabel(path: string): string {
 
 export function tokenTitle(path: string): string {
   const parts = tokenPath(path).split('.').filter(Boolean);
+  if (parts.length === 1 && parts[0] === 'type') return 'Typography';
   if (parts.length > 1 && namespaces.has(parts[0]!)) parts.shift();
   return parts.map(tokenSegmentLabel).join(' ');
 }

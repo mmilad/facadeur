@@ -12,11 +12,7 @@ import type { EditorSnapshot } from '../../../domain/session';
 import type { EditorEvent } from '../../../domain/sidebar/events';
 import { formatTokenValue } from '../../../domain/edits/token-edit';
 import { viewportEditContext } from '../../../domain/viewport/viewport-edit';
-import {
-  projectFontRefs,
-  projectFontWeightOptions,
-  type TypographyCatalogs,
-} from '../../controls/typography/index';
+import { projectFontWeightOptions, type TypographyCatalogs } from '../../controls/typography/index';
 import type { DesignDomain } from '../design-domain';
 import { designDomainLabel } from '../design-domain';
 import { Table } from '../../settings/Table';
@@ -84,7 +80,6 @@ export function TokensDomainPanel({
   const typographyCatalogs = useMemo<TypographyCatalogs>(() => {
     const fonts = fontFamilyTokens(snap.design.tokens);
     return {
-      fontRefs: projectFontRefs(fonts),
       fontFamilyTokens: tokenReferencesByType(snap.design.tokens, 'fontFamily'),
       fontWeights: projectFontWeightOptions(fonts),
       fontWeightTokens: tokenReferencesByType(snap.design.tokens, 'fontWeight'),

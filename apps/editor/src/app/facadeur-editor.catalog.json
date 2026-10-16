@@ -2387,7 +2387,8 @@
                                                 "style": {
                                                   "declarations": {
                                                     "flex": "1",
-                                                    "minWidth": "0"
+                                                    "minWidth": "0",
+                                                    "font": "{token:550e8400-e29b-41d4-a716-00000000043a}"
                                                   }
                                                 }
                                               }
@@ -2510,6 +2511,20 @@
               "classes": [
                 {
                   "name": "style-group",
+                  "generated": true
+                }
+              ]
+            },
+            {
+              "uuid": "6ee6d530-0bf3-4c47-ba9b-719eee78da4a",
+              "name": "layer",
+              "dom": {
+                "tagName": "div",
+                "children": []
+              },
+              "classes": [
+                {
+                  "name": "layer",
                   "generated": true
                 }
               ]
@@ -3004,7 +3019,7 @@
                     "type": "string",
                     "title": "Kind",
                     "enum": ["component", "group"],
-                    "x-facadeur-prop-id": "160a7bac-5ada-4efb-bf0a-3b0149315c7c"
+                    "x-facadeur-prop-id": "c26a01a6-a970-41a3-97fe-6588d0136f91"
                   },
                   "componentId": {
                     "type": "string",
@@ -3012,12 +3027,12 @@
                     "x-facadeur-reference": {
                       "target": "component"
                     },
-                    "x-facadeur-prop-id": "cbba58f5-4b87-4b4a-8988-a01db9890fb9"
+                    "x-facadeur-prop-id": "ac1045ea-896f-496e-966e-7636c87e30b9"
                   },
                   "label": {
                     "type": "string",
                     "title": "Label",
-                    "x-facadeur-prop-id": "427e466e-0296-468b-b5ea-baf0d1d208e2"
+                    "x-facadeur-prop-id": "c3c80192-64f8-4758-9511-1b59bdb79da0"
                   },
                   "children": {
                     "type": "array",
@@ -3031,18 +3046,18 @@
                           "x-facadeur-reference": {
                             "target": "component"
                           },
-                          "x-facadeur-prop-id": "8ca70d06-4e67-42df-8b2f-3c9cd11bd4e7"
+                          "x-facadeur-prop-id": "cc53f5e8-22fe-4c74-824d-f47d617fd681"
                         },
                         "label": {
                           "type": "string",
                           "title": "Label",
-                          "x-facadeur-prop-id": "ab8bb905-2d44-4f15-aa0b-9616847dd460"
+                          "x-facadeur-prop-id": "f96106a2-37e8-42d7-8c55-ef2834b04200"
                         }
                       },
                       "required": ["componentId", "label"],
                       "additionalProperties": false
                     },
-                    "x-facadeur-prop-id": "7b2d0aec-da6f-4b1e-b5ea-05c20d2ae1c5"
+                    "x-facadeur-prop-id": "dc4dda55-20c3-49e6-8384-0acfd7a90774"
                   }
                 },
                 "required": ["kind", "label"],
@@ -4705,7 +4720,9 @@
         "value": {
           "fallbacks": ["sans-serif"],
           "family": "system-ui",
-          "source": { "type": "system" },
+          "source": {
+            "type": "system"
+          },
           "weights": [400, 500, 600, 700]
         }
       },
@@ -4717,7 +4734,9 @@
         "value": {
           "fallbacks": ["serif"],
           "family": "Georgia",
-          "source": { "type": "system" },
+          "source": {
+            "type": "system"
+          },
           "weights": [400, 700]
         }
       }

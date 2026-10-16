@@ -32,6 +32,7 @@ export function tokenTransformOptions(
   searchValue: (reference: string) => string | undefined,
   resolve: (reference: string) => string | undefined,
   fallbackGroup: string,
+  fallbackOptionLabel = `${fallbackGroup} tokens`,
 ) {
   const groups = new Map<string, AutocompleteOption[]>();
   for (const reference of tokens) {
@@ -50,7 +51,7 @@ export function tokenTransformOptions(
   }
   return [...groups].map(([label, items]) => ({
     type: 'token' as const,
-    label: `${label} tokens`,
+    label: label === fallbackGroup ? fallbackOptionLabel : `${label} tokens`,
     items,
   }));
 }

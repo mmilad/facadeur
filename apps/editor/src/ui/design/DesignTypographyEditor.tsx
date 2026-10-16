@@ -108,7 +108,7 @@ function fieldOptionsForKey(
 ): readonly TransformableFieldOption[] {
   const references =
     key === 'fontFamily'
-      ? [...catalogs.fontRefs, ...catalogs.fontFamilyTokens]
+      ? catalogs.fontFamilyTokens
       : key === 'fontWeight'
         ? catalogs.fontWeightTokens
         : key === 'lineHeight'
@@ -133,10 +133,20 @@ function fieldOptionsForKey(
         ]
       : [];
 
+  const descriptionFor = key === 'fontFamily' ? () => undefined : searchValue;
+  const tokenOptions = tokenTransformOptions(
+    tokens,
+    labelFor,
+    descriptionFor,
+    resolve,
+    key === 'fontFamily' ? 'Font assets' : 'Typography',
+    key === 'fontFamily' ? 'Font assets' : undefined,
+  );
+
   return [
     { type: 'text', label: key === 'fontWeight' ? 'Weight' : 'Dimension' },
     ...weightOptions,
-    ...tokenTransformOptions(tokens, labelFor, searchValue, resolve, 'Typography'),
+    ...tokenOptions,
   ];
 }
 

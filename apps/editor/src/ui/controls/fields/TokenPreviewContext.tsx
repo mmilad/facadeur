@@ -37,10 +37,9 @@ export function TokenPreviewProvider({
   const { searchValue, labelFor } = useMemo(() => {
     const values = new Map<string, string>();
     for (const token of readTokenTree(design.tokens).tokens.values()) {
-      values.set(
-        tokenReferenceValue(token.uuid),
-        formatTokenValue(token.breakpoints[breakpointId ?? ''] ?? token.value),
-      );
+      const value = token.breakpoints[breakpointId ?? ''] ?? token.value;
+      const searchValue = fontSearchValue(token.family, token.valueType, value);
+      values.set(tokenReferenceValue(token.uuid), searchValue ?? formatTokenValue(value));
     }
     return {
       searchValue: (reference: string) => values.get(normalizeReference(reference)),
@@ -86,16 +85,39 @@ export function useTokenLabel() {
 
 /** Current value labels may follow the document that owns an inherited value. */
 function createTokenLabeler(design: EditorDesignSnapshot): (reference: string) => string {
-  const designLabels = new Map<string, { path: string; label: string }>();
+  const designLabels = new Map<string, { family: string; path: string; label: string }>();
   for (const token of readTokenTree(design.tokens).tokens.values()) {
-    designLabels.set(tokenReferenceValue(token.uuid), { path: token.path, label: token.label });
+    designLabels.set(tokenReferenceValue(token.uuid), {
+      family: token.family,
+      path: token.path,
+      label: token.label,
+    });
   }
   return (reference: string) => {
     const key = normalizeReference(reference);
     const token = designLabels.get(key);
+    if (token?.family === 'font') return token.label;
     if (token) return tokenDisplayLabel(token.path, token.label);
     return tokenDisplayLabel(key);
   };
+}
+
+function fontSearchValue(family: string, valueType: string, value: unknown) {
+  if (
+    family !== 'font' ||
+    valueType !== 'fontFamily' ||
+    !value ||
+    typeof value !== 'object' ||
+    Array.isArray(value)
+  ) {
+    return undefined;
+  }
+  const font = value as Record<string, unknown>;
+  if (typeof font.family !== 'string' || !Array.isArray(font.fallbacks)) return undefined;
+  const fallbacks = font.fallbacks.filter(
+    (fallback): fallback is string => typeof fallback === 'string',
+  );
+  return [font.family, ...fallbacks].join(', ');
 }
 
 function normalizeReference(reference: string) {

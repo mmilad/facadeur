@@ -79,8 +79,10 @@ export function editedFont(font: FontFamily, patch: FontPatch): FontFamily {
   const fallbacks = patch.fallbacks ? [...patch.fallbacks] : [...font.value.fallbacks];
   const weights = patch.weights ? [...patch.weights] : [...font.value.weights];
   const next: FontFamily = {
-    ...font,
+    uuid: font.uuid,
     label: patch.label ?? font.label,
+    group: font.group,
+    valueType: 'fontFamily',
     value: {
       ...font.value,
       family,
@@ -91,6 +93,7 @@ export function editedFont(font: FontFamily, patch: FontPatch): FontFamily {
           ? { type: 'file', files: font.value.source.files.map((file) => ({ ...file })) }
           : { type: 'system' },
     },
+    ...(font.extensions ? { extensions: font.extensions } : {}),
   };
   assertFont(next);
   return next;

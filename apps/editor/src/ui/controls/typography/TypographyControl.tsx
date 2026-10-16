@@ -38,7 +38,6 @@ function assignTypographyField(
 }
 
 export interface TypographyCatalogs {
-  fontRefs: readonly string[];
   fontFamilyTokens: readonly string[];
   /** Numeric weights from the project fonts, such as "400". */
   fontWeights?: readonly string[];
@@ -85,7 +84,7 @@ function tokenOptionsForKey(
   key: (typeof TYPOGRAPHY_VALUE_KEYS)[number],
   catalogs: TypographyCatalogs,
 ): readonly string[] {
-  if (key === 'fontFamily') return [...catalogs.fontRefs, ...catalogs.fontFamilyTokens];
+  if (key === 'fontFamily') return catalogs.fontFamilyTokens;
   if (key === 'fontWeight') return [...(catalogs.fontWeights ?? []), ...catalogs.fontWeightTokens];
   if (key === 'lineHeight') return [...catalogs.dimensionTokens, ...catalogs.numberTokens];
   return catalogs.dimensionTokens;
@@ -164,7 +163,7 @@ export function TypographyStyleControl({
   const fieldName = name ?? `style-${key}`;
 
   if (key === 'font-family') {
-    const tokens = [...catalogs.fontRefs, ...catalogs.fontFamilyTokens];
+    const tokens = catalogs.fontFamilyTokens;
     return (
       <TokenOrCustomField
         name={fieldName}

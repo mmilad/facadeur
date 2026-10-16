@@ -708,3 +708,22 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
   - Contracts: changing the label continues to derive the token path; token references still resolve by UUID and export still emits the resolved value.
   - Structure: keep token-row table behavior shared while letting the existing typography editor own its full-width details layout.
   - Validation: Workspace typecheck, Prettier, candidate detector rerun, and `git diff --check`; tests not run.
+- [x] Editor: keep derived font-index data out of persisted font edits.
+  - Evidence: `fontFamilyTokens` returns indexed tokens with derived fields, including an always-present empty `breakpoints` map. `editedFont` spread that runtime object into the `setToken` command, and Core rejects any `breakpoints` property on font tokens.
+  - Action: construct edited font records from persisted fields only, while preserving font value metadata and extensions. No catalog migration is needed because the invalid field came from the in-memory index projection and failed validation before it could be persisted.
+  - Scope: font edits in Settings; no responsive font support or index-model changes.
+  - Contracts: preserve UUID, label, group, font family data, weights, fallbacks, source, value metadata, and extensions; omit derived path/type/family/breakpoint index fields from the command payload. Leave existing persisted font migration behavior unchanged.
+  - Validation: Core and Editor typechecks, source inspection, Prettier, candidate detector rerun, and `git diff --check`; tests not run.
+- [x] Editor/Style Engine: include design token CSS in stage frames.
+  - Evidence: `StageCanvas` injects only dynamic node styles and authored global styles into each iframe. Typography declarations reference custom properties such as `--type-caption--font-family`, but unlike the Design settings surface, the stage frame receives no compiled token declarations, so computed typography properties are undefined.
+  - Action: compile the current catalog's design tokens and breakpoints with `renderDesignCss` and include that stylesheet in each stage frame's existing global style injection.
+  - Scope: stage preview styling only; preserve authored/dynamic style output and generated project CSS.
+  - Contracts: token variables use the existing Core CSS names and viewport overrides; styles remain scoped to the frame document and update with the design revision.
+  - Validation: Editor and Style Engine typechecks, source inspection, Prettier, candidate detector rerun, and `git diff --check` passed; tests were not run.
+- [x] Editor: present typography tokens and font assets distinctly in pickers.
+  - Evidence: the Typography picker combines `fontRefs` with `fontFamilyTokens`, which are the same UUID references, so each Font asset appears twice. Font option descriptions fall back to serialized object JSON, and standalone `type` paths are titled “Type” although the domain is Typography.
+  - Action: use one source for font-family references, label those choices as Font assets, suppress raw JSON fallback descriptions, and title standalone `type` token groups “Typography”. Show Font asset labels without the redundant “Fonts /” prefix in picker contexts.
+  - Scope: design token picker labels and the typography `font-family` picker; keep persisted token families and font asset records unchanged.
+  - Contracts: retain UUID references, permit Font assets in font-family fields and Typography references in whole-style fields, preserve other token picker labels and descriptions.
+  - Structure: `DesignTypographyEditor.tsx` remains a cohesive control that owns field presentation and token options; the detector's 506-line review signal does not identify a separate responsibility touched by this change.
+  - Validation: Editor typecheck, source inspection, Prettier, candidate detector rerun, and `git diff --check` passed; tests were not run.
