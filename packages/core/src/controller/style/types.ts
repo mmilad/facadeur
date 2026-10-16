@@ -1,6 +1,7 @@
 import type { DesignTokenFamily } from '@facadeur/domain';
 import type { Breakpoint } from '../../schema/document';
 import type { TokenDefinition } from './tokens/types';
+import type { ClassCondition } from '@facadeur/domain';
 
 export type GlobalTokenCommand =
   | { type: 'setToken'; family: DesignTokenFamily; token: TokenDefinition }
@@ -25,4 +26,12 @@ export type NodeClassStyleDeclarationsCommand = {
   className: string;
   declarations: Readonly<Record<string, string | null>>;
   breakpointUuid: string | null;
+};
+
+export type NodeClassConditionCommand = {
+  type: 'setNodeClassCondition';
+  nodeUuid: string;
+  definitionUuid: string;
+  className: string;
+  condition: ClassCondition | null;
 };

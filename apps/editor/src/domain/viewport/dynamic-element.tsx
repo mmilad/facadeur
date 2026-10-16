@@ -1,6 +1,6 @@
 import { isVoidHtmlTag } from '@facadeur/core';
-import type { ElementBuildConfig } from '@facadeur/core';
-import { createElement, useLayoutEffect, useRef } from 'react';
+import type { RenderBuildConfig } from '@facadeur/core';
+import { Fragment, createElement, useLayoutEffect, useRef } from 'react';
 import type { CSSProperties, HTMLAttributes, RefAttributes } from 'react';
 
 const REACT_ATTRIBUTE_NAMES: Readonly<Record<string, string>> = {
@@ -21,20 +21,38 @@ const REACT_ATTRIBUTE_NAMES: Readonly<Record<string, string>> = {
 
 const ignorePreviewChange = () => {};
 
-export function DynamicElement({ config }: { config: ElementBuildConfig }) {
+export function DynamicElement({ config }: { config: RenderBuildConfig }) {
   const elementRef = useRef<HTMLElement | null>(null);
-  const {
-    attributes = {},
-    children = [],
-    dataset,
-    nodeUuid,
-    properties,
-    renderKey,
-    styleNodeUuids,
-    tagName,
-    text,
-  } = config;
-  const domProperties = properties ?? {};
+  const children = config.children ?? [];
+  const domProperties = config.kind === 'fragment' ? {} : (config.properties ?? {});
+  useLayoutEffect(() => {
+    const element = elementRef.current;
+    if (!element || !Object.keys(domProperties).length) return;
+    for (const [name, value] of Object.entries(domProperties)) {
+      if (value !== undefined && value !== null) {
+        (element as unknown as Record<string, unknown>)[name] = value;
+      }
+    }
+  }, [domProperties]);
+
+  if (config.kind === 'fragment') {
+    return createElement(
+      Fragment,
+      null,
+      ...children.map((child, index) => (
+        <DynamicElement
+          key={
+            child.renderKey ??
+            child.nodeUuid ??
+            `${child.kind === 'fragment' ? 'fragment' : child.tagName}-${index}`
+          }
+          config={child}
+        />
+      )),
+    );
+  }
+
+  const { attributes = {}, dataset, nodeUuid, renderKey, styleNodeUuids, tagName, text } = config;
   const content = text;
   const attributeStyle = attributes.style;
   const props: Record<string, unknown> = {};
@@ -70,21 +88,15 @@ export function DynamicElement({ config }: { config: ElementBuildConfig }) {
   }
   if (attributeStyle) props.style = parseInlineStyle(attributeStyle);
 
-  useLayoutEffect(() => {
-    const element = elementRef.current;
-    if (!element || !Object.keys(domProperties).length) return;
-    for (const [name, value] of Object.entries(domProperties)) {
-      if (value !== undefined && value !== null) {
-        (element as unknown as Record<string, unknown>)[name] = value;
-      }
-    }
-  }, [domProperties]);
-
   const renderedChildren = [
     ...(content !== undefined && content !== '' ? [content] : []),
     ...children.map((child, index) => (
       <DynamicElement
-        key={child.renderKey ?? child.nodeUuid ?? `${child.tagName}-${index}`}
+        key={
+          child.renderKey ??
+          child.nodeUuid ??
+          `${child.kind === 'fragment' ? 'fragment' : child.tagName}-${index}`
+        }
         config={child}
       />
     )),

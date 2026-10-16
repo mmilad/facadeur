@@ -33,7 +33,7 @@ function layerTypeForNode(node: NodeModel) {
 function layerNameForNode(node: NodeModel, root: boolean): string {
   if (root) return 'root';
   if (node.name?.trim()) return node.name.trim();
-  return node.dom.tagName;
+  return node.dom.tagName ?? 'layer';
 }
 
 /** Layer tree for the open catalog definition (node UUID render addresses). */
@@ -47,7 +47,9 @@ export function catalogLayerTree(
     address: `node:${node.uuid}`,
     documentId: definition.uuid,
     name: layerNameForNode(node, isRoot),
-    tagName: core.getEffectiveNodeTagName(node.uuid) ?? node.dom.tagName,
+    ...(node.config?.composition?.kind === 'repeater'
+      ? {}
+      : { tagName: core.getEffectiveNodeTagName(node.uuid) ?? node.dom.tagName }),
     type: layerTypeForNode(node),
     canAcceptChildren: canAcceptCatalogChildren(node, catalog),
     children: (node.dom.children ?? []).map((child) => visit(child)),

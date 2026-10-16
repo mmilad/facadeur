@@ -50,6 +50,13 @@ export function fieldConfigForSchema(
     };
   }
   if (type === 'boolean') return { ...base, type: 'toggle' };
+  if (type === 'object' || schema.properties) {
+    return {
+      ...base,
+      type: 'schemaField',
+      field: { name, type: 'object', schema },
+    };
+  }
   if (type === 'integer' || type === 'number') {
     return {
       ...base,

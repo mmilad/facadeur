@@ -19,7 +19,7 @@ export function buildInspectorSidebarViewModel(
   icons: readonly AutocompleteOption[] = [],
 ): InspectorSidebarModel {
   const propOptions = propBindingOptions(model);
-  const iconOptions = model.formValue.node.tagName.toLowerCase() === 'svg' ? icons : [];
+  const iconOptions = model.formValue.node.tagName?.toLowerCase() === 'svg' ? icons : [];
   const fieldOptions = (path: string, _label: string, color = false) =>
     transformableFieldOptions({
       props: propOptions,
@@ -33,6 +33,7 @@ export function buildInspectorSidebarViewModel(
     sectionFields(model, isRoot ? 'Asset' : 'Element', undefined, propOptions, fieldOptions)
       ?.fields ?? [];
   const contentSection = sectionFields(model, 'Content', undefined, propOptions, fieldOptions);
+  const hasDomTag = model.formValue.node.tagName !== undefined;
   const rawStyleSection = sectionFields(
     model,
     'Layout & style',
@@ -50,22 +51,26 @@ export function buildInspectorSidebarViewModel(
   );
   const propertySections = [
     ...(contentSection ? [contentSection] : []),
-    {
-      label: 'HTML attributes',
-      fields: [
-        {
-          type: 'record' as const,
-          name: 'node.attributes',
-          label: 'Attributes',
-          keyLabel: 'Attribute',
-          valueLabel: 'Value',
-          valueField: {
-            type: 'transformable' as const,
-            fieldOptions: fieldOptions('node.attributes', 'Value'),
+    ...(hasDomTag
+      ? [
+          {
+            label: 'HTML attributes',
+            fields: [
+              {
+                type: 'record' as const,
+                name: 'node.attributes',
+                label: 'Attributes',
+                keyLabel: 'Attribute',
+                valueLabel: 'Value',
+                valueField: {
+                  type: 'transformable' as const,
+                  fieldOptions: fieldOptions('node.attributes', 'Value'),
+                },
+              },
+            ],
           },
-        },
-      ],
-    },
+        ]
+      : []),
     ...(model.selectionKind === 'element' && nodeDataSection ? [nodeDataSection] : []),
   ];
   const componentDefaults = nodeDataSection

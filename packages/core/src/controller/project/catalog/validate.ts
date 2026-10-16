@@ -6,7 +6,7 @@ import { sanitizeProjectCatalog } from './sanitize-field-values';
 import { ensureGeneratedNodeClasses } from './node-classes';
 import { findDefinition, listCatalogDefinitions, resolveJsonSchemaForDefinition } from './ops';
 import { effectiveSchemaForDefinition, inheritableSchemaForDefinition } from './field-contract';
-import { matchesSchemaValue } from '../../validation/json-schema-value';
+import { isFieldBindingValue, matchesPartialSchemaValue } from '../../validation/json-schema-value';
 import { componentPropsForSchema, ensureCatalogFieldIds } from './field-ids';
 import { canAcceptCatalogChildren, defaultChildrenSlotCount } from './tree-ops';
 import { isVoidHtmlTag } from '../../../document/html-tags';
@@ -45,9 +45,25 @@ export function validateProjectCatalog(data: unknown): ProjectCatalog {
   }
 
   assertCatalogRefIntegrity(catalog as ProjectCatalog);
+  assertNodeTagIntegrity(catalog as ProjectCatalog);
   assertChildrenSlotIntegrity(catalog as ProjectCatalog);
   assertEffectiveCatalogFields(catalog as ProjectCatalog);
   return catalog as ProjectCatalog;
+}
+
+function assertNodeTagIntegrity(catalog: ProjectCatalog) {
+  for (const { definition } of listCatalogDefinitions(catalog)) {
+    const visit = (node: Node) => {
+      if (node.config?.composition?.kind !== 'repeater' && !node.dom.tagName) {
+        throw new DocumentError(
+          'schema',
+          `DOM node "${node.name ?? node.uuid}" must define a tag name.`,
+        );
+      }
+      for (const child of node.dom.children ?? []) visit(child);
+    };
+    visit(definition.root);
+  }
 }
 
 function assertChildrenSlotIntegrity(catalog: ProjectCatalog) {
@@ -69,7 +85,7 @@ function assertChildrenSlotIntegrity(catalog: ProjectCatalog) {
     const visit = (node: Node) => {
       const children = node.dom.children ?? [];
       if (node.config?.composition?.kind === 'slot') {
-        if (isVoidHtmlTag(node.dom.tagName)) {
+        if (node.dom.tagName && isVoidHtmlTag(node.dom.tagName)) {
           throw new DocumentError(
             'schema',
             `Children slot "${node.name ?? node.uuid}" cannot use void HTML tag "${node.dom.tagName}".`,
@@ -114,9 +130,9 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
       const fieldSchema = properties[field];
       if (!fieldSchema) continue;
       if (
-        !matchesSchemaValue(
+        !matchesPartialSchemaValue(
           value,
-          optionalizeRequired(fieldSchema) as Parameters<typeof matchesSchemaValue>[1],
+          fieldSchema as Parameters<typeof matchesPartialSchemaValue>[1],
         ) &&
         !isFieldBindingValue(value, fieldSchema)
       ) {
@@ -396,33 +412,6 @@ function findDefinitionInstance(root: Node, uuid: string): Node | null {
     if (found) return found;
   }
   return null;
-}
-
-function isFieldBindingValue(value: unknown, schema: unknown) {
-  if (typeof value !== 'string') return false;
-  const fieldSchema =
-    schema && typeof schema === 'object' ? (schema as Record<string, unknown>) : {};
-  if (
-    fieldSchema.type === 'string' ||
-    (Array.isArray(fieldSchema.type) && fieldSchema.type.includes('string'))
-  ) {
-    return false;
-  }
-  return (
-    /^\{prop:[^}]+\}$/.test(value) ||
-    /^[A-Za-z][A-Za-z0-9_-]*(?:\.[A-Za-z][A-Za-z0-9_-]*)+$/.test(value)
-  );
-}
-
-function optionalizeRequired(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(optionalizeRequired);
-  if (!value || typeof value !== 'object') return value;
-  const result: Record<string, unknown> = {};
-  for (const [key, entry] of Object.entries(value)) {
-    if (key === 'required') continue;
-    result[key] = optionalizeRequired(entry);
-  }
-  return result;
 }
 
 function schemaPathExists(schema: Record<string, unknown> | null, path: string) {

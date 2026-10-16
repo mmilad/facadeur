@@ -19,7 +19,7 @@ export function inspectorInputsForNode(
   const schema = effective.schema;
   if (!schema) return { fields: [], values: {} };
   const fields = fieldsFromJsonSchema(schema);
-  const merged = instanceData ?? previewFieldsForNode(definition, nodeUuid);
+  const merged = instanceData ?? previewFieldsForNode(definition, nodeUuid, {}, effective.schema);
   const values: Record<string, FieldValue> = {};
   for (const field of fields) {
     if (Object.prototype.hasOwnProperty.call(effective.previewDefaults, field.name)) {

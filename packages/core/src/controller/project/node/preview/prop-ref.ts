@@ -11,6 +11,7 @@ export type DesignPropOption = {
   /** Stored field value: `{prop:uuid}`. */
   ref: string;
   kind: 'design' | 'component' | 'item' | 'index';
+  valueType?: string;
 };
 
 export function encodePropRef(uuid: string): string {
@@ -47,6 +48,7 @@ export function designPropOptions(
       name: prop.name,
       ref: encodePropRef(prop.uuid),
       kind: 'design' as const,
+      valueType: 'string',
     }))
     .sort((left, right) => left.name.localeCompare(right.name));
   const componentOptions = componentSchema

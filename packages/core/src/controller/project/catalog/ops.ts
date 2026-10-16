@@ -195,6 +195,7 @@ export function patchNodeComposition(
         else delete composition.indexName;
       }
       config.composition = composition;
+      if (composition.kind === 'repeater') delete (node.dom as { tagName?: string }).tagName;
     }
     if (Object.hasOwn(patch, 'compositionCase')) {
       if (patch.compositionCase) config.compositionCase = patch.compositionCase;
@@ -250,6 +251,7 @@ export function patchNodeTagName(
   const trimmed = tagName.trim();
   if (!trimmed) return catalog;
   return mutateNode(catalog, definitionUuid, nodeUuid, (node) => {
+    if (node.config?.composition?.kind === 'repeater') return;
     (node.dom as { tagName: string }).tagName = trimmed;
     if (!nodeAcceptsChildren(trimmed)) {
       delete (node.dom as { children?: Node[] }).children;

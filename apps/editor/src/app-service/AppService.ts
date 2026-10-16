@@ -151,6 +151,14 @@ export class AppService {
       className: item.name,
       generated: item.generated === true,
       selector: `.${item.name}`,
+      condition: item.condition,
+      conditionOptions: model.propOptions
+        .filter((option) => option.kind !== 'design')
+        .map((option) => ({
+          value: option.ref,
+          label: option.name,
+          ...(option.valueType ? { valueType: option.valueType } : {}),
+        })),
       declarations: { ...(item.style?.declarations ?? {}) },
       breakpoints: catalog.globalStyles?.breakpoints ?? [],
       overrides: Object.fromEntries(

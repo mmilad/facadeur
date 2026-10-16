@@ -110,7 +110,7 @@ export class CoreController implements CoreControllerHost {
       ? findDefinition(this.catalog, this.openDefinitionId)?.definition
       : undefined;
     const node = definition ? findNodeByUuid(definition.root, nodeUuid) : undefined;
-    return node ? effectiveNodeTagName(this.catalog, node) : null;
+    return node ? (effectiveNodeTagName(this.catalog, node) ?? null) : null;
   }
 
   getActiveBreakpoints() {
@@ -311,9 +311,7 @@ export class CoreController implements CoreControllerHost {
 
   patchNodeClassList(nodeUuid: string, classes: readonly string[]) {
     if (!this.openDefinitionId) return;
-    this.commitCatalog(
-      patchNodeClasses(this.catalog, this.openDefinitionId, nodeUuid, classes),
-    );
+    this.commitCatalog(patchNodeClasses(this.catalog, this.openDefinitionId, nodeUuid, classes));
   }
 
   patchNodeTagName(nodeUuid: string, tagName: string) {

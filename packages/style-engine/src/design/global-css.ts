@@ -6,7 +6,7 @@ import {
   typographyCustomProperty,
 } from '@facadeur/core';
 import type {
-  ElementBuildConfig,
+  RenderBuildConfig,
   LayerMap,
   Node,
   ProjectCatalog,
@@ -89,12 +89,16 @@ export function renderGlobalStyleCss(catalog: ProjectCatalog): string {
 }
 
 /** Render resolved per-instance property bindings used by Catalog style rules. */
-export function renderDynamicStyleCss(root: ElementBuildConfig, catalog: ProjectCatalog): string {
+export function renderDynamicStyleCss(root: RenderBuildConfig, catalog: ProjectCatalog): string {
   const tokens = new Map(
     [...readTokenTree(catalog.tokens ?? {}).tokens].map(([uuid, token]) => [uuid, token]),
   );
   const rules: string[] = [];
-  const visit = (node: ElementBuildConfig, scopes: readonly string[]) => {
+  const visit = (node: RenderBuildConfig, scopes: readonly string[]) => {
+    if (node.kind === 'fragment') {
+      for (const child of node.children ?? []) visit(child, scopes);
+      return;
+    }
     const styleUuids = node.styleNodeUuids?.length
       ? [...new Set(node.styleNodeUuids)]
       : node.nodeUuid

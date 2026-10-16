@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Form } from '@facadeur/form';
+import type { FormChangeMeta } from '@facadeur/form';
 import type { FieldValue } from '@facadeur/domain';
 import type { InspectorSidebarModel } from '../../../../domain/sidebar/types';
 import type { EditorEvent } from '../../../../domain/sidebar/events';
@@ -26,6 +27,18 @@ export function CatalogNodeInspector({
       data: { nodeId: model.nodeId, path, value },
     });
   };
+  const emitFormChange = (next: Record<string, unknown>, meta: FormChangeMeta) => {
+    const segments = meta.path.split('.');
+    const arrayIndex = segments.findIndex((segment) => /^\d+$/.test(segment));
+    if (arrayIndex < 0) {
+      emitFieldChange(meta.path, meta.next);
+      return;
+    }
+
+    // Repeater metadata carries a deep path, but Core patches schema fields as a whole.
+    const fieldPath = segments.slice(0, arrayIndex).join('.');
+    emitFieldChange(fieldPath, next[fieldPath]);
+  };
   return (
     <div className="inspector-form-stack" data-testid="catalog-node-inspector">
       <section className="inspector-element" aria-labelledby="inspector-element-title">
@@ -37,7 +50,7 @@ export function CatalogNodeInspector({
           value={model.values}
           fields={[...model.headerFields]}
           bindOptions={model.bindOptions}
-          onChange={(_, meta) => emitFieldChange(meta.path, meta.next)}
+          onChange={emitFormChange}
         />
       </section>
       <div className="inspector-tabs" role="tablist" aria-label="Element settings">
@@ -74,7 +87,7 @@ export function CatalogNodeInspector({
                   value={model.values}
                   fields={[...section.fields]}
                   bindOptions={model.bindOptions}
-                  onChange={(_, meta) => emitFieldChange(meta.path, meta.next)}
+                  onChange={emitFormChange}
                 />
               </section>
             ))}

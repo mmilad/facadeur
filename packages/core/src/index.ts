@@ -11,6 +11,8 @@ export type {
   DesignTokenValue,
   DesignTokenValueType,
   ElementBuildConfig,
+  FragmentBuildConfig,
+  RenderBuildConfig,
   FontFamilyDefinition,
 } from '@facadeur/domain';
 export { NodeController } from './controller/project/node/index';
@@ -22,6 +24,9 @@ export {
   computedIndexName,
   resolveReferenceText,
   resolveReferenceValue,
+  classConditionOperatorsForType,
+  effectiveClassList,
+  evaluateClassCondition,
   type ReferenceResolutionContext,
   type RepeaterReferenceScope,
 } from './controller/project/node/preview/index';
@@ -64,7 +69,6 @@ export {
   moveCatalogNode,
   removeCatalogNode,
   classListFromNode,
-  effectiveClassList,
   patchNodeClasses,
   setNodeClassStyleDeclaration,
   setNodeClassStyleDeclarations,

@@ -24,10 +24,11 @@ export function canAcceptCatalogChildren(node: Node, catalog?: ProjectCatalog): 
     const targets = Object.values(catalog?.components ?? {});
     return targets.length > 0 && targets.every((target) => defaultChildrenSlotCount(target) === 1);
   }
-  if (composition === 'repeater' || composition === 'switch') {
-    return !isVoidHtmlTag(node.dom.tagName);
+  if (composition === 'repeater') return true;
+  if (composition === 'switch') {
+    return node.dom.tagName ? !isVoidHtmlTag(node.dom.tagName) : false;
   }
-  return !isVoidHtmlTag(node.dom.tagName);
+  return node.dom.tagName ? !isVoidHtmlTag(node.dom.tagName) : false;
 }
 
 export function findParentOfNode(root: Node, uuid: string): { parent: Node; index: number } | null {

@@ -218,7 +218,7 @@ function schemaFieldSignature(value: unknown): string {
 
 export function componentPropsForSchema(
   schema: unknown,
-): { uuid: string; name: string; path: string }[] {
+): { uuid: string; name: string; path: string; valueType?: string }[] {
   const output: { uuid: string; name: string; path: string }[] = [];
   const seenIds = new Set<string>();
   const seenPaths = new Set<string>();
@@ -238,7 +238,14 @@ export function componentPropsForSchema(
         if (uuid && !seenIds.has(uuid) && !seenPaths.has(path)) {
           seenIds.add(uuid);
           seenPaths.add(path);
-          output.push({ uuid, name: `props.${displayPath}${isArray ? '[]' : ''}`, path });
+          const valueType =
+            typeof propertyRecord.type === 'string' ? propertyRecord.type : undefined;
+          output.push({
+            uuid,
+            name: `props.${displayPath}${isArray ? '[]' : ''}`,
+            path,
+            ...(valueType ? { valueType } : {}),
+          });
         }
         visit(property, path, displayPath);
       }

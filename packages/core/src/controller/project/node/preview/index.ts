@@ -20,6 +20,11 @@ export {
   type PreviewResolveContext,
 } from './resolve';
 export {
+  classConditionOperatorsForType,
+  effectiveClassList,
+  evaluateClassCondition,
+} from './class-conditions';
+export {
   computedIndexName,
   resolveReferenceText,
   resolveReferenceValue,

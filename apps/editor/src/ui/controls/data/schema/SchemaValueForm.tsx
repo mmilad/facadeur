@@ -13,20 +13,23 @@ function hasStructuralCases(schema: JsonSchema): boolean {
 
 function usesStructuralEditor(schema: JsonSchema): boolean {
   if (hasStructuralCases(schema)) return true;
-  if (schema.properties) {
-    return Object.values(schema.properties).some(
-      (property) => hasStructuralCases(property) || hasStructuralArrayItems(property),
-    );
-  }
-  return hasStructuralArrayItems(schema);
+  const type = primaryJsonSchemaType(schema);
+  if (type === 'object' || schema.properties) return true;
+  return type === 'array' && hasNestedObject(schema.items, true);
 }
 
-function hasStructuralArrayItems(schema: JsonSchema): boolean {
+function hasNestedObject(schema: JsonSchema | JsonSchema[] | undefined, nested = false): boolean {
+  if (!schema || Array.isArray(schema)) return false;
+  if (hasStructuralCases(schema)) return true;
   const type = primaryJsonSchemaType(schema);
-  if (type !== 'array' && !schema.items) return false;
-  const items = schema.items;
-  if (!items || Array.isArray(items)) return false;
-  return hasStructuralCases(items);
+  if (nested && (type === 'object' || schema.properties)) return true;
+  if (
+    schema.properties &&
+    Object.values(schema.properties).some((property) => hasNestedObject(property, true))
+  ) {
+    return true;
+  }
+  return type === 'array' && hasNestedObject(schema.items, true);
 }
 
 /** Route simple contract samples through the shared JSON Schema form and structural unions to their dedicated editor. */

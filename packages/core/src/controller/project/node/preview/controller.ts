@@ -1,5 +1,5 @@
 import type { CoreControllerHost } from '../../../../types/host';
-import type { ElementBuildConfig } from '@facadeur/domain';
+import type { RenderBuildConfig } from '@facadeur/domain';
 import {
   buildInspectorFormModel,
   inspectorChangeTarget,
@@ -8,23 +8,30 @@ import {
 import { resolveDefinitionToElementBuildConfig } from './resolve';
 import { previewFieldsForNode } from './merge';
 import { findDefinition, findNodeByUuid } from '../../catalog/ops';
+import { effectiveSchemaForDefinition } from '../../catalog/field-contract';
 
 /**
  * Preview pipeline for canvas/DOM:
  * 1. Merge field layers (ancestor → definition preview → instance data).
  * 2. Resolve bindings (`{prop:uuid}`, field-driven attributes/styles/text) to literals.
- * Output is {@link ElementBuildConfig} for the Editor's React canvas.
+ * Output is a render tree for the Editor's React canvas.
  */
 export class PreviewController {
   constructor(private readonly core: CoreControllerHost) {}
 
   fieldsForNode(nodeUuid: string) {
-    const definition = this.core.getSnapshot().openDefinition;
+    const snap = this.core.getSnapshot();
+    const definition = snap.openDefinition;
     if (!definition) return {};
-    return previewFieldsForNode(definition, nodeUuid);
+    return previewFieldsForNode(
+      definition,
+      nodeUuid,
+      {},
+      effectiveSchemaForDefinition(snap.catalog, definition).schema,
+    );
   }
 
-  buildOpenDefinition(): ElementBuildConfig | null {
+  buildOpenDefinition(): RenderBuildConfig | null {
     const snap = this.core.getSnapshot();
     const definition = snap.openDefinition;
     if (!definition) return null;

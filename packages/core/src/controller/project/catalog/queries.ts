@@ -27,7 +27,8 @@ export function definitionDisplayName(catalog: ProjectCatalog, definition: NodeD
 }
 
 export function effectiveNodeTagName(catalog: ProjectCatalog, node: Node) {
-  const visit = (current: Node, seen: Set<string>): string => {
+  const visit = (current: Node, seen: Set<string>): string | undefined => {
+    if (current.config?.composition?.kind === 'repeater') return undefined;
     const definitionRef = current.config?.definitionRef;
     if (!definitionRef || seen.has(definitionRef)) return current.dom.tagName;
     const target = findDefinition(catalog, definitionRef)?.definition;
@@ -90,9 +91,7 @@ export function projectStyleSuggestions(catalog: ProjectCatalog) {
     options: tokenOptions,
   };
 
-  function addResponsiveLayers(
-    layer: Pick<GlobalStyleBlock, 'variants' | 'breakpoints'>,
-  ) {
+  function addResponsiveLayers(layer: Pick<GlobalStyleBlock, 'variants' | 'breakpoints'>) {
     for (const values of Object.values(layer.variants ?? {})) {
       for (const variant of Object.values(values)) addLayer(variant);
     }

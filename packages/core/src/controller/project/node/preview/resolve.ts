@@ -5,12 +5,17 @@ import type {
   NodeDefinition,
   ProjectCatalog,
 } from '@facadeur/domain';
-import type { ElementBuildConfig } from '@facadeur/domain';
+import type { RenderBuildConfig } from '@facadeur/domain';
 import { findDefinition } from '../../catalog/ops';
-import { lockedStaticFieldValues, mergePreviewFields, staticFieldValues } from './merge';
+import {
+  compatibleNodeFieldValues,
+  lockedStaticFieldValues,
+  mergePreviewFields,
+  staticFieldValues,
+} from './merge';
 import { effectiveSchemaForDefinition } from '../../catalog/field-contract';
 import { canAcceptCatalogChildren } from '../../catalog/tree-ops';
-import { effectiveClassList } from '../../catalog/node-classes';
+import { effectiveClassList, evaluateClassCondition } from './class-conditions';
 import {
   componentPropValues,
   computedIndexName,
@@ -105,7 +110,7 @@ export function resolveDefinitionToElementBuildConfig(
   definition: NodeDefinition,
   catalog: ProjectCatalog,
   parentFields: Record<string, FieldValue> = {},
-): ElementBuildConfig {
+): RenderBuildConfig {
   return resolveNodeToElementBuildConfig(
     definition.root,
     definition,
@@ -131,7 +136,7 @@ function resolveNodeToElementBuildConfig(
   repeaterScopes: readonly RepeaterReferenceScope[],
   dynamicDefinitionDepth: number,
   slotContent: ChildrenSlotContent | undefined,
-): ElementBuildConfig {
+): RenderBuildConfig {
   const boundDefinitionRef = node.config?.definitionRefBinding
     ? fieldAtPath(itemContext, node.config.definitionRefBinding.path)
     : undefined;
@@ -237,6 +242,7 @@ function resolveNodeToElementBuildConfig(
             }
           : undefined,
       );
+      if (built.kind === 'fragment') return { ...built, nodeUuid: node.uuid };
       const styleNodeUuids = new Set(built.styleNodeUuids ?? []);
       if (built.nodeUuid) styleNodeUuids.add(built.nodeUuid);
       styleNodeUuids.add(node.uuid);
@@ -245,25 +251,27 @@ function resolveNodeToElementBuildConfig(
   }
 
   const definitionPreview = definition.config?.previewData?.fields ?? {};
+  const effective = effectiveSchemaForDefinition(catalog, definition);
+  const nodeData = compatibleNodeFieldValues(
+    node.data as Record<string, FieldValue> | undefined,
+    effective.schema,
+  );
   const fields = mergePreviewFields(
     { ...(definitionPreview as Record<string, FieldValue>), ...staticFieldValues(definition) },
-    node.data as Record<string, FieldValue> | undefined,
+    nodeData,
     parentFields,
   );
   Object.assign(fields, lockedStaticFieldValues(definition));
   const nodeOverrides = {
     ...inheritedOverrides,
-    ...(node.data as Record<string, FieldValue> | undefined),
+    ...nodeData,
   };
   for (const field of staticFieldsNotExposed(definition)) delete nodeOverrides[field];
   const ctx: PreviewResolveContext = {
     catalog,
     fields,
-    componentProps: componentPropValues(
-      effectiveSchemaForDefinition(catalog, definition).schema,
-      fields,
-    ),
-    componentSchema: effectiveSchemaForDefinition(catalog, definition).schema,
+    componentProps: componentPropValues(effective.schema, fields),
+    componentSchema: effective.schema,
     overrides: nodeOverrides,
     item: itemContext,
     repeaterScopes,
@@ -271,10 +279,10 @@ function resolveNodeToElementBuildConfig(
 
   const text = textFromNode(node, fields, ctx);
   const attributes = resolveStringRecord(node.dom.attributes, ctx) ?? {};
-  const classList = effectiveClassList(node, ctx.componentProps);
+  const classList = effectiveClassList(node, ctx);
   if (classList.length) attributes.class = classList.join(' ');
   else delete attributes.class;
-  const iconId = node.dom.tagName.toLowerCase() === 'svg' ? attributes['data-icon'] : undefined;
+  const iconId = node.dom.tagName?.toLowerCase() === 'svg' ? attributes['data-icon'] : undefined;
   const icon = iconId ? catalog.icons?.find((entry) => entry.id === iconId) : undefined;
   const composition = node.config?.composition;
   const childNodes = node.dom.children ?? [];
@@ -372,7 +380,7 @@ function resolveNodeToElementBuildConfig(
               ),
             );
   const resolvedChildren =
-    node.dom.tagName.toLowerCase() === 'svg' && icon
+    node.dom.tagName?.toLowerCase() === 'svg' && icon
       ? icon.data.paths.map((path, index) => ({
           tagName: 'path',
           attributes: { d: path },
@@ -384,12 +392,16 @@ function resolveNodeToElementBuildConfig(
     delete attributes['data-icon'];
     attributes.viewBox = icon.data.viewBox;
   }
+  if (composition?.kind === 'repeater') {
+    return {
+      kind: 'fragment',
+      ...(resolvedChildren.length ? { children: resolvedChildren } : {}),
+      nodeUuid: node.uuid,
+    };
+  }
   const dynamicClassStyles = Object.fromEntries(
     (node.classes ?? [])
-      .filter(
-        ({ condition }) =>
-          !condition || Object.is(ctx.componentProps?.[condition.propUuid], condition.value),
-      )
+      .filter(({ condition }) => !condition || evaluateClassCondition(condition, ctx))
       .flatMap((item) => {
         const referenced = Object.fromEntries(
           Object.entries(item.style?.declarations ?? {}).filter(([, value]) =>
@@ -403,7 +415,7 @@ function resolveNodeToElementBuildConfig(
   const properties = node.dom.properties;
 
   return {
-    tagName: node.dom.tagName,
+    tagName: node.dom.tagName ?? 'div',
     ...(text !== undefined ? { text } : {}),
     attributes,
     ...(node.dom.data ? { dataset: { ...node.dom.data } } : {}),

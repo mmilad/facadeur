@@ -28,12 +28,13 @@ export function StructuralSchemaValueForm({
   label: string;
   onChange: (value: FieldValue) => void;
 }) {
+  const rootValue = value ?? (primaryJsonSchemaType(schema) === 'array' ? [] : {});
   return renderSchemaValue(
     schema,
-    value,
+    rootValue,
     [],
     (path, next) => {
-      const updated = path.length ? setAtPath(value ?? {}, path, next) : (next ?? value ?? {});
+      const updated = path.length ? setAtPath(rootValue, path, next) : (next ?? rootValue);
       onChange(updated);
     },
     label,

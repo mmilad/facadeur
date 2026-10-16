@@ -58,6 +58,13 @@ export interface InspectorSidebarModel {
     readonly declarations: Readonly<Record<string, string>>;
     readonly breakpoints: readonly import('@facadeur/core').Breakpoint[];
     readonly overrides: Readonly<Record<string, Readonly<Record<string, string>>>>;
+    readonly condition?:
+      import('@facadeur/domain').ClassCondition | import('@facadeur/domain').LegacyClassCondition;
+    readonly conditionOptions: readonly {
+      readonly value: string;
+      readonly label: string;
+      readonly valueType?: string;
+    }[];
   }[];
   readonly headerFields: readonly FormFieldConfig[];
   readonly tabs: readonly {

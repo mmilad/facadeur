@@ -1,4 +1,4 @@
-import type { Node, NodeClassDefinition, ProjectCatalog } from '@facadeur/domain';
+import type { ClassCondition, Node, NodeClassDefinition, ProjectCatalog } from '@facadeur/domain';
 
 export function layerSelectorForName(name: string) {
   return `.${classNameForNode(name)}`;
@@ -17,18 +17,6 @@ export function classNameForNode(name: string) {
 
 export function classListFromNode(node: Node): string[] {
   return (node.classes ?? []).filter((item) => !item.generated).map((item) => item.name);
-}
-
-export function effectiveClassList(
-  node: Node,
-  componentProps: Readonly<Record<string, unknown>> = {},
-): string[] {
-  return (node.classes ?? [])
-    .filter(
-      ({ condition }) =>
-        !condition || Object.is(componentProps[condition.propUuid], condition.value),
-    )
-    .map(({ name }) => name);
 }
 
 export function ensureGeneratedNodeClasses(catalog: ProjectCatalog): ProjectCatalog {
@@ -117,6 +105,25 @@ export function setNodeClassStyleDeclaration(
       else delete style.declarations;
     }
     classes[index] = { ...current, style: hasStyle(style) ? style : undefined };
+    (node as { classes?: NodeClassDefinition[] }).classes = classes;
+  });
+}
+
+export function setNodeClassCondition(
+  catalog: ProjectCatalog,
+  input: {
+    definitionUuid: string;
+    nodeUuid: string;
+    className: string;
+    condition: ClassCondition | null;
+  },
+) {
+  return mutateNode(catalog, input.definitionUuid, input.nodeUuid, (node) => {
+    const classes = [...(node.classes ?? [])];
+    const index = classes.findIndex(({ name }) => name === input.className);
+    if (index < 0) return;
+    const current = classes[index]!;
+    classes[index] = { ...current, condition: input.condition ?? undefined };
     (node as { classes?: NodeClassDefinition[] }).classes = classes;
   });
 }

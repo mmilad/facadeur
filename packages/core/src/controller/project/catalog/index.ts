@@ -31,7 +31,6 @@ export {
 export { removeCatalogDesignProp, upsertCatalogDesignProp } from './props-ops';
 export {
   classListFromNode,
-  effectiveClassList,
   layerSelectorForName,
   patchNodeClasses,
   setNodeClassStyleDeclaration,

@@ -5,7 +5,7 @@ import {
   resolveJsonSchemaForDefinition,
   tokenCustomProperty,
 } from '@facadeur/core';
-import type { ElementBuildConfig, Node, ProjectCatalog } from '@facadeur/domain';
+import type { Node, ProjectCatalog, RenderBuildConfig } from '@facadeur/domain';
 import {
   renderBoxSizingReset,
   renderDesignCss,
@@ -19,6 +19,12 @@ import type {
   GeneratedComponent,
   GeneratedFile,
 } from '../../../src/types';
+import {
+  childRepeaterScopes,
+  classExpression,
+  classSelector,
+  type CodegenRepeaterScope,
+} from './class-conditions';
 
 export function generateReact(options: GenerateOptions): GenerateOutput {
   const entries = catalogEntries(options.catalog, options.entries);
@@ -88,7 +94,7 @@ export function generateReact(options: GenerateOptions): GenerateOutput {
 function renderComponent(
   exportName: string,
   uuid: string,
-  tree: ElementBuildConfig,
+  tree: RenderBuildConfig,
   tokenProperties: ReadonlyMap<string, string>,
   propPaths: ReadonlyMap<string, string>,
   sourceRoot: Node,
@@ -101,7 +107,7 @@ function renderComponent(
     for (const child of node.dom.children ?? []) collect(child);
   };
   collect(sourceRoot);
-  const jsx = renderNode(tree, tokenProperties, propPaths, sourceNodes, cssRules);
+  const jsx = renderNode(tree, tokenProperties, propPaths, sourceNodes, cssRules, new Map());
   const propsType = schemaType(schema);
   const propsAreOptional = !schemaHasRequiredProperties(schema);
   const source = [
@@ -194,13 +200,28 @@ function schemaType(schema: unknown): string {
 }
 
 function renderNode(
-  node: ElementBuildConfig,
+  node: RenderBuildConfig,
   tokenProperties: ReadonlyMap<string, string>,
   propPaths: ReadonlyMap<string, string>,
   sourceNodes: ReadonlyMap<string, Node>,
   cssRules: string[],
+  repeaterScopes: ReadonlyMap<string, CodegenRepeaterScope>,
 ): string {
   const source = node.nodeUuid ? sourceNodes.get(node.nodeUuid) : undefined;
+  if (node.kind === 'fragment') {
+    return (node.children ?? [])
+      .map((child) =>
+        renderNode(
+          child,
+          tokenProperties,
+          propPaths,
+          sourceNodes,
+          cssRules,
+          childRepeaterScopes(source, child, propPaths, repeaterScopes),
+        ),
+      )
+      .join('');
+  }
   const declarations = Object.entries(node.dynamicStyle ?? {}).map(
     ([property, value]) => `  ${kebab(property)}: ${cssValue(value, tokenProperties)};`,
   );
@@ -209,13 +230,15 @@ function renderNode(
     cssRules.push(`${selector} {\n${declarations.join('\n')}\n}`);
   }
   if (node.nodeUuid) {
-    for (const [className, values] of Object.entries(node.dynamicClassStyles ?? {})) {
+    const resolvedClassStyles = new Map(Object.entries(node.dynamicClassStyles ?? {}));
+    for (const item of source?.classes ?? []) {
+      const values = resolvedClassStyles.get(item.name) ?? item.style?.declarations ?? {};
       const entries = Object.entries(values).map(
         ([property, value]) => `  ${kebab(property)}: ${cssValue(value, tokenProperties)};`,
       );
       if (entries.length) {
         cssRules.push(
-          `.facadeur-node-${node.nodeUuid}${classSelector(className)} {\n${entries.join('\n')}\n}`,
+          `.facadeur-node-${node.nodeUuid}${classSelector(item.name)} {\n${entries.join('\n')}\n}`,
         );
       }
     }
@@ -248,7 +271,7 @@ function renderNode(
   }
   const classKey = Object.hasOwn(attributes, 'className') ? 'className' : 'class';
   const derivedClassExpression = source?.classes
-    ? classExpression(source.classes, propPaths, [...styleNodeUuids])
+    ? classExpression(source.classes, propPaths, [...styleNodeUuids], repeaterScopes)
     : undefined;
   const props = Object.entries(attributes)
     .map(([key, value]) => {
@@ -262,29 +285,18 @@ function renderNode(
   if (isVoidTag(tag)) return `<${tag}${props} />`;
   const content = node.text === undefined ? '' : jsxValue(node.text, source?.dom.text, propPaths);
   const children = (node.children ?? [])
-    .map((child) => renderNode(child, tokenProperties, propPaths, sourceNodes, cssRules))
+    .map((child) =>
+      renderNode(
+        child,
+        tokenProperties,
+        propPaths,
+        sourceNodes,
+        cssRules,
+        childRepeaterScopes(source, child, propPaths, repeaterScopes),
+      ),
+    )
     .join('');
   return `<${tag}${props}>${content}${children}</${tag}>`;
-}
-
-function classExpression(
-  classes: NonNullable<Node['classes']>,
-  propPaths: ReadonlyMap<string, string>,
-  styleNodeUuids: readonly string[],
-) {
-  const values = classes.map((item) => {
-    const condition = item.condition;
-    if (!condition) return JSON.stringify(item.name);
-    const path = propPaths.get(condition.propUuid);
-    if (!path) return '""';
-    return `getProp(props, ${JSON.stringify(path)}) === ${JSON.stringify(condition.value)} ? ${JSON.stringify(item.name)} : ""`;
-  });
-  values.push(...styleNodeUuids.map((uuid) => JSON.stringify(`facadeur-node-${uuid}`)));
-  return `[${values.join(', ')}].filter(Boolean).join(" ")`;
-}
-
-function classSelector(name: string) {
-  return `.${name.replace(/[^A-Za-z0-9_-]/g, (character) => `\\${character.codePointAt(0)!.toString(16)} `)}`;
 }
 
 function jsxValue(value: unknown, source: unknown, propPaths: ReadonlyMap<string, string>) {

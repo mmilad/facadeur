@@ -35,19 +35,72 @@ const nodeClassStyleSchema = Type.Object(
   },
   { additionalProperties: false },
 );
+const classConditionOperandSchema = Type.Union([
+  Type.Object(
+    {
+      kind: Type.Literal('literal'),
+      value: Type.Union([Type.String(), Type.Number(), Type.Boolean(), Type.Null()]),
+    },
+    { additionalProperties: false },
+  ),
+  Type.Object(
+    { kind: Type.Literal('reference'), reference: Type.String({ minLength: 1 }) },
+    { additionalProperties: false },
+  ),
+]);
+const classConditionLeafSchema = Type.Object(
+  {
+    kind: Type.Literal('condition'),
+    left: classConditionOperandSchema,
+    operator: Type.Union([
+      Type.Literal('is-set'),
+      Type.Literal('is-not-set'),
+      Type.Literal('equals'),
+      Type.Literal('not-equals'),
+      Type.Literal('greater-than'),
+      Type.Literal('greater-or-equal'),
+      Type.Literal('less-than'),
+      Type.Literal('less-or-equal'),
+      Type.Literal('length-equals'),
+      Type.Literal('length-not-equals'),
+      Type.Literal('length-greater-than'),
+      Type.Literal('length-greater-or-equal'),
+      Type.Literal('length-less-than'),
+      Type.Literal('length-less-or-equal'),
+    ]),
+    right: Type.Optional(classConditionOperandSchema),
+  },
+  { additionalProperties: false },
+);
+const classConditionSchema = Type.Recursive((Self) =>
+  Type.Union([
+    classConditionLeafSchema,
+    Type.Object(
+      {
+        kind: Type.Literal('rule'),
+        operator: Type.Union([Type.Literal('and'), Type.Literal('or')]),
+        conditions: Type.Array(Self, { minItems: 1 }),
+      },
+      { additionalProperties: false },
+    ),
+  ]),
+);
 const nodeClassSchema = Type.Object(
   {
     name: Type.String({ minLength: 1 }),
     generated: Type.Optional(Type.Literal(true)),
     condition: Type.Optional(
-      Type.Object(
-        {
-          kind: Type.Literal('prop-equals'),
-          propUuid: uuidSchema,
-          value: Type.Union([Type.String(), Type.Number(), Type.Boolean(), Type.Null()]),
-        },
-        { additionalProperties: false },
-      ),
+      Type.Union([
+        classConditionSchema,
+        Type.Object(
+          {
+            kind: Type.Literal('prop-equals'),
+            propUuid: uuidSchema,
+            value: Type.Union([Type.String(), Type.Number(), Type.Boolean(), Type.Null()]),
+          },
+          { additionalProperties: false },
+        ),
+      ]),
     ),
     style: Type.Optional(nodeClassStyleSchema),
   },

@@ -4,6 +4,7 @@ import type {
   GlobalTokenCommand,
   NodeClassStyleCommand,
   NodeClassStyleDeclarationsCommand,
+  NodeClassConditionCommand,
 } from '../../style/types';
 import { assertBreakpoints, cloneBreakpoints } from '../../style/breakpoints';
 import {
@@ -12,13 +13,18 @@ import {
   setTokenInTree,
 } from '../../style/tokens/global/tree';
 import { validateProjectCatalog } from './validate';
-import { setNodeClassStyleDeclaration, setNodeClassStyleDeclarations } from './node-classes';
+import {
+  setNodeClassCondition,
+  setNodeClassStyleDeclaration,
+  setNodeClassStyleDeclarations,
+} from './node-classes';
 
 export type CatalogDesignCommand =
   | GlobalTokenCommand
   | DesignLibraryCommand
   | NodeClassStyleCommand
-  | NodeClassStyleDeclarationsCommand;
+  | NodeClassStyleDeclarationsCommand
+  | NodeClassConditionCommand;
 
 export function applyCatalogDesignCommand(
   catalog: ProjectCatalog,
@@ -31,6 +37,9 @@ export function applyCatalogDesignCommand(
     return validateProjectCatalog(
       setNodeClassStyleDeclarations(catalog, command),
     ) as ProjectCatalog;
+  }
+  if (command.type === 'setNodeClassCondition') {
+    return validateProjectCatalog(setNodeClassCondition(catalog, command)) as ProjectCatalog;
   }
   if (command.type === 'setToken') {
     const tokens = setTokenInTree(

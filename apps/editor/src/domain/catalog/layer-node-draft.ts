@@ -14,7 +14,7 @@ export function catalogNodeFromInsertEntry(entry: LayerInsertEntry): NodeModel |
     return {
       uuid,
       name: entry.label,
-      dom: { tagName: 'div', children: [] },
+      dom: entry.tool === 'repeater' ? { children: [] } : { tagName: 'div', children: [] },
       config: { composition: { kind: entry.tool } },
     };
   }

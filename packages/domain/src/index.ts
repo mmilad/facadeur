@@ -13,6 +13,12 @@ export type {
   StaticFieldConfig,
   Node,
   NodeClassDefinition,
+  ClassCondition,
+  ClassConditionLeaf,
+  ClassConditionOperand,
+  ClassConditionOperator,
+  ClassConditionValue,
+  LegacyClassCondition,
   NodeConfig,
   NodeDefinition,
   NodeDefinitionModel,
@@ -50,4 +56,4 @@ export type {
   TokenInterface,
   VariantStyleMap,
 } from './design-system';
-export type { ElementBuildConfig } from './element-build';
+export type { ElementBuildConfig, FragmentBuildConfig, RenderBuildConfig } from './element-build';

@@ -4,7 +4,7 @@ import { fieldValueSchema } from '../fields';
 export const domEventSchema = Type.Record(Type.String({ minLength: 1 }), Type.Unknown());
 
 const domSpecFields = {
-  tagName: Type.String({ minLength: 1, pattern: '^[A-Za-z][A-Za-z0-9-]*$' }),
+  tagName: Type.Optional(Type.String({ minLength: 1, pattern: '^[A-Za-z][A-Za-z0-9-]*$' })),
   text: Type.Optional(Type.String()),
   attributes: Type.Optional(
     Type.Record(Type.String({ minLength: 1, pattern: '^(?!class$).+' }), Type.String()),

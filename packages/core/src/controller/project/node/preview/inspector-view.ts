@@ -11,6 +11,7 @@ import { fieldsFromJsonSchema } from '../../../../schema/json-schema-fields';
 import type { JsonSchemaField } from '../../../../schema/json-schema-fields';
 import { classListFromNode, findDefinition, findNodeByUuid } from '../../catalog/ops';
 import { effectiveSchemaForDefinition } from '../../catalog/field-contract';
+import { componentPropsForSchema } from '../../catalog/field-ids';
 import { staticFieldValues } from './merge';
 import { configFieldsForDefinition, schemaWithReferenceOptions } from './inspector-config-fields';
 import { inspectorInputsForNode } from '../config/inspector';
@@ -28,12 +29,11 @@ export type InspectorFormValue = {
   };
   node: {
     name: string;
-    tagName: string;
+    tagName?: string;
     text: string;
     classList: string[];
     data: Record<string, string>;
-    compositionSourceProp: string;
-    compositionSourceItemPath: string;
+    compositionSource: string;
     compositionIndexName: string;
     compositionCase: string;
     definitionRefBindingPath: string;
@@ -151,7 +151,7 @@ export function buildInspectorFormModel(
     ? fieldsFromJsonSchema(schemaWithReferenceOptions(effective.schema, catalog))
     : [];
   const classSuggestions = collectClassSuggestions(definition.root);
-  const tagOptions = htmlTagOptions(node.dom.tagName);
+  const tagOptions = htmlTagOptions(node.dom.tagName ?? 'div');
   const nodeInputs = inspectorInputsForNode(
     catalog,
     scopedDefinition,
@@ -172,12 +172,13 @@ export function buildInspectorFormModel(
     },
     node: {
       name: node.name ?? '',
-      tagName: node.dom.tagName,
+      ...(composition?.kind !== 'repeater' && node.dom.tagName
+        ? { tagName: node.dom.tagName }
+        : {}),
       text: node.dom.text ?? '',
       classList: classListFromNode(node),
       data: recordFromFieldValues(node.data ?? {}),
-      compositionSourceProp: compositionSource?.kind === 'prop' ? compositionSource.uuid : '',
-      compositionSourceItemPath: compositionSource?.kind === 'item' ? compositionSource.path : '',
+      compositionSource: compositionSourceSelection(compositionSource),
       compositionIndexName:
         composition?.kind === 'repeater'
           ? (composition.indexName ?? computedIndexName(repeaterScopes.length))
@@ -191,7 +192,8 @@ export function buildInspectorFormModel(
 
   const sections: InspectorFormField[] = [];
   const parentNode = ancestorNodes.at(-1) ?? null;
-  if (nodeUuid === definition.root.uuid)
+  const isRepeater = composition?.kind === 'repeater';
+  if (nodeUuid === definition.root.uuid && !isRepeater)
     sections.push({
       type: 'section',
       title: 'Asset',
@@ -217,7 +219,7 @@ export function buildInspectorFormModel(
       title: 'Element',
       fields: [
         { type: 'text', path: 'node.name', label: 'Name', hint: 'Layer label' },
-        ...(!node.config?.definitionRef
+        ...(!node.config?.definitionRef && !isRepeater
           ? [
               {
                 type: 'select' as const,
@@ -231,20 +233,16 @@ export function buildInspectorFormModel(
           ? [
               {
                 type: 'select' as const,
-                path: 'node.compositionSourceProp',
-                label: 'Source prop',
+                path: 'node.compositionSource',
+                label: 'Source',
                 options: [
-                  { value: '', label: 'Choose an array or enum prop…' },
+                  { value: '', label: 'Choose an array or enum source…' },
                   ...compositionSourceOptions(
                     effectiveSchemaForDefinition(catalog, definition).schema,
                     composition.kind,
+                    repeaterScopes,
                   ),
                 ],
-              },
-              {
-                type: 'text' as const,
-                path: 'node.compositionSourceItemPath',
-                label: 'Item field path',
               },
               ...(composition.kind === 'repeater'
                 ? [
@@ -280,7 +278,7 @@ export function buildInspectorFormModel(
     });
   }
 
-  if (!isVoidHtmlTag(node.dom.tagName)) {
+  if (node.dom.tagName && !isVoidHtmlTag(node.dom.tagName)) {
     sections.push({
       type: 'section',
       title: 'Content',
@@ -288,24 +286,30 @@ export function buildInspectorFormModel(
     });
   }
 
-  const previewSection = schemaFieldSections('previewData', 'Preview defaults', schemaFields);
+  const previewSection = isRepeater
+    ? null
+    : schemaFieldSections('previewData', 'Preview defaults', schemaFields);
   if (previewSection) sections.push(previewSection);
 
-  sections.push({
-    type: 'section',
-    title: 'Layout & style',
-    fields: [
-      {
-        type: 'classList',
-        path: 'node.classList',
-        label: 'Classes',
-        suggestions: classSuggestions,
-      },
-    ],
-  });
+  if (!isRepeater) {
+    sections.push({
+      type: 'section',
+      title: 'Layout & style',
+      fields: [
+        {
+          type: 'classList',
+          path: 'node.classList',
+          label: 'Classes',
+          suggestions: classSuggestions,
+        },
+      ],
+    });
+  }
 
   const propsSection = schemaFieldSections('nodeData', 'Properties', schemaFields);
-  if (propsSection) {
+  if (isRepeater) {
+    // Repeater nodes define item scopes; data belongs to the parent component or item.
+  } else if (propsSection) {
     sections.push(propsSection);
   } else {
     sections.push({
@@ -400,20 +404,20 @@ export function inspectorChangeTarget(
         setting === 'isStatic' || setting === 'expose' ? value === true : (value as FieldValue),
     };
   }
-  if (path === 'node.compositionSourceProp') {
-    const uuid = String(value ?? '').trim();
+  if (path === 'node.compositionSource') {
+    const selection = String(value ?? '').trim();
+    const source = selection.startsWith('item:')
+      ? { kind: 'item' as const, path: selection.slice('item:'.length) }
+      : selection
+        ? {
+            kind: 'prop' as const,
+            uuid: selection.startsWith('prop:') ? selection.slice('prop:'.length) : selection,
+          }
+        : null;
     return {
       kind: 'nodeComposition',
       nodeUuid,
-      patch: { source: uuid ? { kind: 'prop', uuid } : null },
-    };
-  }
-  if (path === 'node.compositionSourceItemPath') {
-    const itemPath = String(value ?? '').trim();
-    return {
-      kind: 'nodeComposition',
-      nodeUuid,
-      patch: { source: itemPath ? { kind: 'item', path: itemPath } : null },
+      patch: { source },
     };
   }
   if (path === 'node.compositionIndexName') {
@@ -488,27 +492,83 @@ export function inspectorChangeTarget(
 function compositionSourceOptions(
   schema: Record<string, unknown> | null,
   kind: 'repeater' | 'switch',
+  repeaterScopes: readonly RepeaterReferenceScope[],
 ) {
   const properties = schema?.properties;
-  if (!properties || typeof properties !== 'object' || Array.isArray(properties)) return [];
-  return Object.entries(properties as Record<string, unknown>).flatMap(([name, value]) => {
-    if (!value || typeof value !== 'object' || Array.isArray(value)) return [];
-    const field = value as Record<string, unknown>;
-    const uuid = field['x-facadeur-prop-id'];
-    const enumValues = Array.isArray(field.enum)
-      ? true
-      : Array.isArray(field.oneOf) &&
-        field.oneOf.every(
-          (branch) =>
-            !!branch &&
-            typeof branch === 'object' &&
-            !Array.isArray(branch) &&
-            typeof (branch as Record<string, unknown>).const === 'string',
-        );
-    const valid = kind === 'repeater' ? field.type === 'array' : enumValues;
-    if (typeof uuid !== 'string' || !valid) return [];
-    return [{ value: uuid, label: `${String(field.title ?? name)} (${name})` }];
-  });
+  const componentOptions =
+    properties && typeof properties === 'object' && !Array.isArray(properties)
+      ? Object.entries(properties as Record<string, unknown>).flatMap(([name, value]) => {
+          if (!value || typeof value !== 'object' || Array.isArray(value)) return [];
+          const field = value as Record<string, unknown>;
+          const uuid = field['x-facadeur-prop-id'];
+          if (typeof uuid !== 'string' || !isCompositionSource(field, kind)) return [];
+          return [
+            {
+              value: `prop:${uuid}`,
+              label: `${String(field.title ?? name)} (${name})`,
+            },
+          ];
+        })
+      : [];
+  const activeScope = repeaterScopes.at(-1);
+  const itemOptions = activeScope
+    ? componentPropsForSchema(activeScope.itemSchema).flatMap((prop) => {
+        if (prop.name.includes('[].')) return [];
+        const field = schemaAtPath(activeScope.itemSchema, prop.path);
+        if (!field || !isCompositionSource(field, kind)) return [];
+        const itemName = prop.name.replace(/^props\./, '');
+        return [
+          {
+            value: `item:${prop.path}`,
+            label: `${activeScope.indexName}.${itemName} (${prop.path})`,
+          },
+        ];
+      })
+    : [];
+  return [...componentOptions, ...itemOptions];
+}
+
+function compositionSourceSelection(
+  source: { kind: 'prop'; uuid: string } | { kind: 'item'; path: string } | undefined,
+) {
+  if (!source) return '';
+  return source.kind === 'prop' ? `prop:${source.uuid}` : `item:${source.path}`;
+}
+
+function isCompositionSource(field: Record<string, unknown>, kind: 'repeater' | 'switch') {
+  if (kind === 'repeater') return field.type === 'array';
+  const enumValues = Array.isArray(field.enum)
+    ? true
+    : Array.isArray(field.oneOf) &&
+      field.oneOf.every(
+        (branch) =>
+          !!branch &&
+          typeof branch === 'object' &&
+          !Array.isArray(branch) &&
+          typeof (branch as Record<string, unknown>).const === 'string',
+      );
+  return enumValues;
+}
+
+function schemaAtPath(schema: unknown, path: string): Record<string, unknown> | null {
+  let current = schema;
+  for (const segment of path.split('.').filter(Boolean)) {
+    while (
+      current &&
+      typeof current === 'object' &&
+      !Array.isArray(current) &&
+      (current as Record<string, unknown>).type === 'array'
+    ) {
+      current = (current as Record<string, unknown>).items;
+    }
+    if (!current || typeof current !== 'object' || Array.isArray(current)) return null;
+    const properties = (current as Record<string, unknown>).properties;
+    if (!properties || typeof properties !== 'object' || Array.isArray(properties)) return null;
+    current = (properties as Record<string, unknown>)[segment];
+  }
+  return current && typeof current === 'object' && !Array.isArray(current)
+    ? (current as Record<string, unknown>)
+    : null;
 }
 
 function findNodePath(root: Node, targetUuid: string): Node[] {

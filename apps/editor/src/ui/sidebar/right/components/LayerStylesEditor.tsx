@@ -9,6 +9,7 @@ import type { InspectorSidebarModel } from '../../../../domain/sidebar/types';
 import { Section, Stack } from '../../../components/layout';
 import { TextInput } from '../../../controls/form-binding';
 import { CSS_PROPERTY_OPTIONS } from './css-property-options';
+import { ClassConditionEditor } from './ClassConditionEditor';
 import './layer-styles-editor.css';
 
 export function LayerStylesEditor({
@@ -95,6 +96,24 @@ function LayerClassStyleEditor({
   return (
     <Section title={layerStyle.selector} collapsible defaultOpen appearance="accordion" keepMounted>
       <Stack gap={10}>
+        <ClassConditionEditor
+          condition={layerStyle.condition}
+          options={layerStyle.conditionOptions}
+          onChange={(condition) =>
+            onEvent({
+              type: EditorEventType.DesignCommandExecute,
+              data: {
+                command: {
+                  type: 'setNodeClassCondition',
+                  definitionUuid: definitionId,
+                  nodeUuid: nodeId,
+                  className: layerStyle.className,
+                  condition,
+                },
+              },
+            })
+          }
+        />
         <div
           className="layer-style-tabs"
           role="tablist"

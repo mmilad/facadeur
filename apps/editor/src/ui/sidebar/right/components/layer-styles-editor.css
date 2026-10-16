@@ -63,3 +63,44 @@
   color: var(--muted);
   opacity: 1;
 }
+.class-condition-editor {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 6px;
+}
+
+.class-condition-toggle,
+.class-condition-row,
+.class-condition-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.class-condition-row > select,
+.class-condition-row > input {
+  min-width: 0;
+  flex: 1;
+}
+
+.class-condition-rule,
+.class-condition-leaf {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 8px;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 5px;
+}
+
+.class-condition-rule .class-condition-rule,
+.class-condition-rule .class-condition-leaf {
+  margin-left: 10px;
+}
+
+.class-condition-actions button,
+.class-condition-row button {
+  flex: 0 0 auto;
+}

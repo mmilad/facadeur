@@ -56,7 +56,19 @@ function resolveReference(
   if (componentProp?.[1]) {
     const activeKey = `component:${componentProp[1]}`;
     if (activeReferences.has(activeKey)) return undefined;
-    const value = context.componentProps?.[componentProp[1]];
+    let value: unknown;
+    let foundInScope = false;
+    for (const scope of [...(context.repeaterScopes ?? [])].reverse()) {
+      const scopedProp = componentPropsForSchema(scope.itemSchema).find(
+        (candidate) => candidate.uuid === componentProp[1] && !candidate.name.includes('[].'),
+      );
+      if (scopedProp) {
+        value = fieldAtPath(scope.item, scopedProp.path);
+        foundInScope = true;
+        break;
+      }
+    }
+    if (!foundInScope) value = context.componentProps?.[componentProp[1]];
     if (typeof value !== 'string' || !isSupportedReference(value)) return value;
     return resolveReference(value, context, new Set(activeReferences).add(activeKey));
   }
@@ -145,12 +157,14 @@ export function referenceOptionsForScopes(scopes: readonly RepeaterReferenceScop
       name: scope.indexName,
       ref: `{index:${scope.nodeUuid}}`,
       kind: 'index' as const,
+      valueType: 'integer',
     },
     ...componentPropsForSchema(scope.itemSchema).map((prop) => ({
       uuid: `item:${scope.nodeUuid}:${prop.uuid}`,
       name: `${scope.indexName}.${prop.name.replace(/^props\./, '').replace(/\[\]$/, '')}`,
       ref: `{item-prop:${scope.nodeUuid}:${prop.uuid}}`,
       kind: 'item' as const,
+      ...(prop.valueType ? { valueType: prop.valueType } : {}),
     })),
   ]);
 }

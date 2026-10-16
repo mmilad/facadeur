@@ -72,15 +72,50 @@ export interface NodeClassDefinition {
   readonly name: string;
   /** Present only for the class derived from this layer's editor-facing name. */
   readonly generated?: true;
-  readonly condition?: {
-    readonly kind: 'prop-equals';
-    readonly propUuid: Uuid;
-    readonly value: string | number | boolean | null;
-  };
+  readonly condition?: ClassCondition | LegacyClassCondition;
   readonly style?: StyleLayer & {
     readonly variants?: VariantStyleMap;
     readonly breakpoints?: LayerMap;
   };
+}
+
+export type ClassConditionValue = string | number | boolean | null;
+export type ClassConditionOperand =
+  | { readonly kind: 'literal'; readonly value: ClassConditionValue }
+  | { readonly kind: 'reference'; readonly reference: string };
+export type ClassConditionOperator =
+  | 'is-set'
+  | 'is-not-set'
+  | 'equals'
+  | 'not-equals'
+  | 'greater-than'
+  | 'greater-or-equal'
+  | 'less-than'
+  | 'less-or-equal'
+  | 'length-equals'
+  | 'length-not-equals'
+  | 'length-greater-than'
+  | 'length-greater-or-equal'
+  | 'length-less-than'
+  | 'length-less-or-equal';
+export type ClassCondition =
+  | {
+      readonly kind: 'rule';
+      readonly operator: 'and' | 'or';
+      readonly conditions: readonly (ClassCondition | ClassConditionLeaf)[];
+    }
+  | ClassConditionLeaf;
+export interface ClassConditionLeaf {
+  readonly kind: 'condition';
+  readonly left: ClassConditionOperand;
+  readonly operator: ClassConditionOperator;
+  readonly right?: ClassConditionOperand;
+}
+/** Read compatibility for catalogs saved before condition groups were introduced. */
+export interface LegacyClassCondition {
+  readonly kind: 'prop-equals';
+  readonly propUuid: Uuid;
+  readonly value: ClassConditionValue;
 }
 
 export type NodeDefinitionKind = 'atom' | 'component' | 'page';

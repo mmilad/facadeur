@@ -217,6 +217,11 @@ docs/plan.md` attempted to fetch pinned pnpm 10.33.3 and failed with `ENOTFOUND`
   project code (`ENOTFOUND registry.npmjs.org`). Prettier and the workspace typecheck succeeded in
   approved host execution. Continue using that context for pinned pnpm commands; no repository
   workaround is needed.
+- **Update (2026-10-16, conditional classes):** Three restricted `pnpm --filter ... typecheck`
+  invocations again failed while Corepack tried to fetch pinned pnpm 10.33.3 (`ENOTFOUND
+registry.npmjs.org`). The same Core, Editor, and Codegen commands passed in the approved host
+  context. Continue using that context for package-manager verification; no repository workaround
+  is needed.
 
 ## Cloud verification process limits (2026-10-11)
 

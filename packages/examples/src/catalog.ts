@@ -36,7 +36,8 @@ export function exampleCatalogLayers(definition: NodeDefinition) {
   const layers: { uuid: string; label: string }[] = [];
   const visit = (current: Node, parent = '') => {
     const rawName = current.name ?? current.data?.name ?? current.dom.data?.name;
-    const name = typeof rawName === 'string' && rawName.trim() ? rawName : current.dom.tagName;
+    const name =
+      typeof rawName === 'string' && rawName.trim() ? rawName : (current.dom.tagName ?? 'layer');
     const label = parent ? `${parent} / ${name}` : name;
     layers.push({ uuid: current.uuid, label });
     for (const child of current.dom.children ?? []) visit(child, label);
@@ -136,7 +137,7 @@ function nameNode(node: Node, isRoot: boolean): Node {
 }
 
 function nameForNode(node: Node): string {
-  const tag = node.dom.tagName.toLowerCase();
+  const tag = node.dom.tagName?.toLowerCase() ?? 'div';
   const attrs = node.dom.attributes ?? {};
   const classes = attrs.class?.split(/\s+/).filter(Boolean) ?? [];
   const content = node.dom.text;

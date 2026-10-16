@@ -3,7 +3,7 @@ import { ChipsField, RecordField as FormRecordField } from '@facadeur/form';
 import type { TransformableFieldOption } from '@facadeur/form';
 import type { FieldValue } from '@facadeur/core';
 import { SchemaValueForm } from '../SchemaValueForm';
-import { getPath } from '@facadeur/form';
+import { getPath, resolvePath } from '@facadeur/form';
 import { primaryJsonSchemaType, type JsonSchemaField } from '@facadeur/core';
 import { PropBindableInput } from '../../../form-binding/components/input/PropBindableInput';
 import {
@@ -220,8 +220,9 @@ function BoundClassList({ config }: { config: import('./field-config').ClassList
 
 function BoundSchemaField({ config }: { config: import('./field-config').SchemaFieldConfig }) {
   const form = useFormContext();
+  const path = resolvePath(usePathPrefix(), config.name);
   const designPropOptions = useDesignPropOptions();
-  const raw = getPath(form.value, config.name);
+  const raw = getPath(form.value, path);
   const schema = config.field.schema;
   const propBindable = config.propBindable === true && fieldSupportsPropBind(config.field);
 
@@ -243,7 +244,7 @@ function BoundSchemaField({ config }: { config: import('./field-config').SchemaF
           propOptions={designPropOptions}
           kind={config.field.type === 'number' ? 'number' : 'text'}
           showBindToggle={config.propBindable === true}
-          onCommit={(next) => form.emitChange(config.name, next, { commit: true })}
+          onCommit={(next) => form.emitChange(path, next, { commit: true })}
         />
       </Field>
     );
@@ -254,7 +255,7 @@ function BoundSchemaField({ config }: { config: import('./field-config').SchemaF
       schema={schema}
       value={raw as FieldValue | undefined}
       label={config.label}
-      onChange={(next) => form.emitChange(config.name, next, { commit: true })}
+      onChange={(next) => form.emitChange(path, next, { commit: true })}
     />
   );
 }
