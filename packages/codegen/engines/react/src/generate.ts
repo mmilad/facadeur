@@ -378,7 +378,7 @@ function renderNode(
       if (key === classKey && derivedClassExpression) {
         return ` className={${derivedClassExpression}}`;
       }
-      return ` ${reactAttribute(key)}=${jsxValue(reactValue(reactAttribute(key), value), source?.dom.attributes?.[key], propPaths, repeaterScopes)}`;
+      return ` ${reactAttribute(key)}=${jsxValue(reactValue(reactAttribute(key), value), source?.dom.attributes?.[key], propPaths, repeaterScopes, stateIdentifiers)}`;
     })
     .join('');
   const behaviorEvents = nodeTransitions.map((transition) => transition.event);
@@ -432,7 +432,9 @@ function renderNode(
   const tag = safeTag(node.tagName);
   if (isVoidTag(tag)) return `<${tag}${props}${dragOverProp}${eventProps} />`;
   const content =
-    node.text === undefined ? '' : jsxValue(node.text, source?.dom.text, propPaths, repeaterScopes);
+    node.text === undefined
+      ? ''
+      : jsxValue(node.text, source?.dom.text, propPaths, repeaterScopes, stateIdentifiers);
   const children = (node.children ?? [])
     .map((child) =>
       renderNode(
@@ -456,6 +458,7 @@ function jsxValue(
   source: unknown,
   propPaths: ReadonlyMap<string, string>,
   repeaterScopes: ReadonlyMap<string, CodegenRepeaterScope>,
+  stateIdentifiers: ReadonlyMap<string, string>,
 ) {
   if (typeof source === 'string') {
     const itemScope = [...repeaterScopes.values()].at(-1);
@@ -463,6 +466,11 @@ function jsxValue(
     const itemFieldMatch = source.match(/^\{item:([^}]+)\}$/);
     if (itemFieldMatch?.[1] && itemScope) {
       return `{getProp(${itemScope.itemExpression}, ${JSON.stringify(itemFieldMatch[1])})}`;
+    }
+    const stateMatch = source.match(/^\{state:([^}]+)\}$/);
+    if (stateMatch?.[1]) {
+      const state = stateIdentifiers.get(stateMatch[1]);
+      if (state) return `{${state}}`;
     }
     const match = source.match(/^\{props:([^}]+)\}$/);
     const scopedPath = match?.[1] ? itemScope?.itemPropPaths?.get(match[1]) : undefined;

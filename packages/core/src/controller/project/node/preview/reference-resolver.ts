@@ -175,6 +175,7 @@ export function isSupportedReference(reference: string) {
   return (
     DESIGN_PROP_REF.test(reference) ||
     COMPONENT_PROP_REF.test(reference) ||
+    COMPONENT_STATE_REF.test(reference) ||
     ITEM_FIELD_REF.test(reference) ||
     ITEM_VALUE_REF.test(reference) ||
     ITEM_PROP_REF.test(reference) ||

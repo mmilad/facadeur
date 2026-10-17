@@ -243,18 +243,32 @@ describe('Catalog-driven React code generation', () => {
     const rowUuid = globalThis.crypto.randomUUID();
     const row = {
       uuid: rowUuid,
-      dom: { tagName: 'span', text: '{item}' },
+      dom: {
+        tagName: 'span',
+        text: '{item}',
+        children: [
+          {
+            uuid: globalThis.crypto.randomUUID(),
+            dom: { tagName: 'small', text: '{state:selected}' },
+          },
+        ],
+      },
     };
     const button = {
       uuid: buttonUuid,
-      dom: { tagName: 'button', text: 'Move', children: [row] },
+      dom: {
+        tagName: 'button',
+        attributes: { value: '{state:selected}' },
+        text: 'Move',
+        children: [row],
+      },
     };
     Reflect.set(component.root, 'config', {
       composition: { kind: 'repeater', source: { kind: 'state', name: 'items' } },
     });
     Reflect.set(component.root.dom, 'children', [button]);
     Reflect.set(component, 'behavior', {
-      state: { items: [] },
+      state: { items: [], selected: 'Alpha' },
       stateSchema: { items: { type: 'array', items: { type: 'string' } } },
       transitions: [
         {
@@ -289,7 +303,9 @@ describe('Catalog-driven React code generation', () => {
     const output = generated.ui.find((file) => file.path.startsWith('components/'))?.contents ?? '';
     expect(output).toContain('useState<string[]>([])');
     expect(output).toContain('(behaviorState0 ?? []).map((item, index) => <Fragment key={index}>');
-    expect(output).toContain('{item}</span>');
+    expect(output).toContain('>{item}<small data-facadeur-codegen-node=');
+    expect(output).toMatch(/<small[^>]*>\{behaviorState1\}<\/small>/);
+    expect(output).toContain('value={behaviorState1}');
     expect(output).toContain('handleBehaviorAt');
     expect(output).toContain(`${JSON.stringify(repeaterUuid)}: index`);
     expect(output).toContain(`repeaterIndices[${JSON.stringify(repeaterUuid)}]`);

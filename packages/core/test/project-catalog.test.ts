@@ -3,6 +3,7 @@ import {
   DocumentError,
   executeComponentBehavior,
   emptyProjectCatalog,
+  resolveDefinitionToElementBuildConfig,
   tokenReferenceValue,
   validateProjectCatalog,
 } from '../src/index';
@@ -457,6 +458,58 @@ describe('validateProjectCatalog', () => {
 });
 
 describe('executeComponentBehavior', () => {
+  it('resolves component state references in preview text and attributes', () => {
+    const catalog = createExampleCatalog();
+    const definition = Object.values(catalog.components)[0]!;
+    Reflect.set(definition, 'behavior', {
+      state: { selected: 'Green' },
+      transitions: [],
+    });
+    Reflect.set(definition.root.dom, 'text', '{state:selected}');
+    Reflect.set(definition.root.dom, 'attributes', { 'aria-label': '{state:selected}' });
+    Reflect.set(definition.root, 'classes', [
+      {
+        name: 'is-open',
+        condition: {
+          kind: 'condition',
+          left: { kind: 'reference', reference: '{state:open}' },
+          operator: 'equals',
+          right: { kind: 'literal', value: true },
+        },
+        style: { declarations: { display: 'block' } },
+      },
+      {
+        name: 'is-closed',
+        condition: {
+          kind: 'condition',
+          left: { kind: 'reference', reference: '{state:open}' },
+          operator: 'equals',
+          right: { kind: 'literal', value: false },
+        },
+        style: { declarations: { display: 'none' } },
+      },
+    ]);
+    Reflect.set(definition, 'behavior', {
+      state: { selected: 'Green', open: false },
+      transitions: [],
+    });
+
+    const preview = resolveDefinitionToElementBuildConfig(definition, catalog);
+    const openPreview = resolveDefinitionToElementBuildConfig(
+      definition,
+      catalog,
+      {},
+      {
+        behaviorStateByInstance: { [definition.uuid]: { selected: 'Green', open: true } },
+      },
+    );
+
+    expect(preview.text).toBe('Green');
+    expect(preview.attributes?.['aria-label']).toBe('Green');
+    expect(preview.attributes?.class).toBe('is-closed');
+    expect(openPreview.attributes?.class).toBe('is-open');
+  });
+
   it('moves an array item using the active repeater index without mutating input state', () => {
     const repeaterUuid = globalThis.crypto.randomUUID();
     const behavior = {

@@ -204,6 +204,115 @@ const sortableListDemo: NodeDefinition = {
   },
 };
 
+const customSelectDemo: NodeDefinition = {
+  uuid: '860e8400-e29b-41d4-a716-446655440020',
+  name: 'Custom Select Demo',
+  kind: 'component',
+  schema: {
+    kind: 'inline',
+    schema: { type: 'object', properties: {}, additionalProperties: false },
+  },
+  root: {
+    uuid: '860e8400-e29b-41d4-a716-446655440021',
+    name: 'Custom select',
+    dom: {
+      tagName: 'div',
+      children: [
+        {
+          uuid: '860e8400-e29b-41d4-a716-446655440022',
+          name: 'Selected value',
+          dom: {
+            tagName: 'button',
+            attributes: { type: 'button', 'aria-expanded': '{state:open}' },
+            text: '{state:selected}',
+          },
+        },
+        {
+          uuid: '860e8400-e29b-41d4-a716-446655440023',
+          name: 'Options',
+          config: {
+            composition: { kind: 'repeater', source: { kind: 'state', name: 'options' } },
+          },
+          classes: [
+            {
+              name: 'is-open',
+              condition: {
+                kind: 'condition',
+                left: { kind: 'reference', reference: '{state:open}' },
+                operator: 'equals',
+                right: { kind: 'literal', value: true },
+              },
+              style: { declarations: { display: 'block' } },
+            },
+            {
+              name: 'is-closed',
+              condition: {
+                kind: 'condition',
+                left: { kind: 'reference', reference: '{state:open}' },
+                operator: 'equals',
+                right: { kind: 'literal', value: false },
+              },
+              style: { declarations: { display: 'none' } },
+            },
+          ],
+          dom: {
+            tagName: 'ul',
+            children: [
+              {
+                uuid: '860e8400-e29b-41d4-a716-446655440024',
+                name: 'Option',
+                dom: {
+                  tagName: 'li',
+                  children: [
+                    {
+                      uuid: '860e8400-e29b-41d4-a716-446655440025',
+                      name: 'Choose option',
+                      dom: {
+                        tagName: 'button',
+                        attributes: { type: 'button', value: '{item}' },
+                        text: '{item}',
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      ],
+    },
+  },
+  behavior: {
+    state: { open: false, selected: 'Choose a color', options: ['Red', 'Green', 'Blue'] },
+    stateSchema: { options: { type: 'array', items: { type: 'string' } } },
+    transitions: [
+      {
+        nodeUuid: '860e8400-e29b-41d4-a716-446655440022',
+        event: 'click',
+        actions: [
+          {
+            kind: 'set-state',
+            name: 'open',
+            value: {
+              kind: 'operation',
+              operator: 'toggle',
+              values: [{ kind: 'state', name: 'open' }],
+            },
+          },
+        ],
+      },
+      {
+        nodeUuid: '860e8400-e29b-41d4-a716-446655440025',
+        event: 'click',
+        actions: [
+          { kind: 'set-state', name: 'selected', value: { kind: 'event', path: 'target.value' } },
+          { kind: 'set-state', name: 'open', value: { kind: 'literal', value: false } },
+        ],
+      },
+    ],
+  },
+};
+
 function BehaviorPreview({ definition }: { definition: NodeDefinition }) {
   const editor = useMemo(() => {
     const catalog = createExampleCatalog();
@@ -239,3 +348,4 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 export const ToggleState: Story = { args: { definition: toggleDemo } };
 export const SortableList: Story = { args: { definition: sortableListDemo } };
+export const CustomSelect: Story = { args: { definition: customSelectDemo } };

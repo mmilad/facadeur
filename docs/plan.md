@@ -876,3 +876,10 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
   - Scope: private module boundary required by the state-array drag feature; no public API or output changes outside the newly added action behavior.
   - Contracts: preserve generated handler names, imports, setup order, state expressions, callback order, JSX, and React output structure.
   - Validation: codegen tests including TypeScript transpilation, package typechecks, candidate detector, and `git diff --check`.
+
+- [x] Core/Codegen React: render component-state references in authored text and attributes.
+  - Evidence: `resolveReferenceText` handles `{state:name}`, but Core's `isSupportedReference` excludes it, so the preview leaves state references literal. React JSX emission also handles prop and Repeater item references only. These gaps prevent a custom Select from showing its selected state or placing each Repeater item in an option's `value`.
+  - Action: include state references in Core's template recognition; pass the component's behavior-state identifier map through JSX rendering and emit state-bound text and attributes as live expressions.
+  - Scope: existing scalar state values in DOM text/attributes; preserve existing literal, component-prop, and Repeater item bindings.
+  - Contracts: state remains local React state initialized from `behavior.state`; authored reference strings stay unchanged in Catalog data; generated output updates when transitions change the referenced state.
+  - Validation: Core preview-resolution tests cover state-backed text, attributes, and conditional classes; React codegen asserts state-bound text/attributes and transpiles generated TSX; 27 focused tests passed, four package typechecks passed, candidate detector and `git diff --check` passed. Storybook on port 6006 confirmed selecting Green updates the trigger and closes the option list in all six viewport previews.
