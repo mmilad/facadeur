@@ -75,6 +75,37 @@ function catalogWith(
 }
 
 describe('catalog field exposure', () => {
+  it('resolves state-backed repeater rows and keeps an empty-state template for codegen', () => {
+    const catalog = createExampleCatalog();
+    const component = Object.values(catalog.components)[0]!;
+    const rowUuid = globalThis.crypto.randomUUID();
+    const row: Node = { uuid: rowUuid, dom: { tagName: 'span', text: '{item}' } };
+    Reflect.set(component.root, 'config', {
+      composition: { kind: 'repeater', source: { kind: 'state', name: 'items' } },
+    });
+    Reflect.set(component.root.dom, 'children', [row]);
+    Reflect.set(component, 'behavior', {
+      state: { items: [] },
+      stateSchema: { items: { type: 'array', items: { type: 'string' } } },
+      transitions: [],
+    });
+
+    expect(() => validateProjectCatalog(catalog)).not.toThrow();
+    const empty = resolveDefinitionToElementBuildConfig(component, catalog);
+    expect(empty.kind).toBe('fragment');
+    expect(empty.kind === 'fragment' ? empty.children : undefined).toBeUndefined();
+    expect(empty.kind === 'fragment' ? empty.repeater?.templates : undefined).toHaveLength(1);
+
+    Reflect.set(component, 'behavior', {
+      state: { items: ['One', 'Two'] },
+      stateSchema: { items: { type: 'array', items: { type: 'string' } } },
+      transitions: [],
+    });
+    const populated = resolveDefinitionToElementBuildConfig(component, catalog);
+    expect(
+      populated.kind === 'fragment' ? populated.children?.map((child) => child.text) : [],
+    ).toEqual(['One', 'Two']);
+  });
   it('evaluates class conditions against private component state defaults', () => {
     const original = exampleImage;
     const catalog = {

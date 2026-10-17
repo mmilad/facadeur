@@ -1,14 +1,10 @@
 import { Value } from '@sinclair/typebox/value';
 import { DocumentError } from '../../../document/errors';
 import { projectCatalogSchema } from '../../../schema/node-model/index';
-import type {
-  BehaviorValue,
-  ClassCondition,
-  LegacyClassCondition,
-  Node,
-  ProjectCatalog,
-} from '@facadeur/domain';
+import type { Node, ProjectCatalog } from '@facadeur/domain';
 import { sanitizeProjectCatalog } from './sanitize-field-values';
+import { assertComponentBehaviorIntegrity } from './validate-behavior';
+import { schemaPathExists } from './schema-path';
 import { ensureGeneratedNodeClasses } from './node-classes';
 import { findDefinition, listCatalogDefinitions, resolveJsonSchemaForDefinition } from './ops';
 import { effectiveSchemaForDefinition, inheritableSchemaForDefinition } from './field-contract';
@@ -60,124 +56,6 @@ export function validateProjectCatalog(data: unknown): ProjectCatalog {
   assertChildrenSlotIntegrity(catalog as ProjectCatalog);
   assertEffectiveCatalogFields(catalog as ProjectCatalog);
   return catalog as ProjectCatalog;
-}
-
-function assertComponentBehaviorIntegrity(catalog: ProjectCatalog) {
-  for (const { definition } of listCatalogDefinitions(catalog)) {
-    const behavior = definition.behavior;
-    if (behavior && definition.kind !== 'component') {
-      throw new DocumentError(
-        'schema',
-        `Behavior is only supported on component definitions ("${definition.name}").`,
-      );
-    }
-    const stateNames = new Set(Object.keys(behavior?.state ?? {}));
-    const nodes = new Set<string>();
-    const visit = (node: Node) => {
-      nodes.add(node.uuid);
-      for (const classDefinition of node.classes ?? []) {
-        if (classDefinition.condition) {
-          visitCondition(classDefinition.condition, stateNames, definition.name);
-        }
-      }
-      for (const child of node.dom.children ?? []) visit(child);
-    };
-    visit(definition.root);
-    if (!behavior) continue;
-    const schema = resolveJsonSchemaForDefinition(catalog, definition) as Record<string, unknown>;
-    const props =
-      schema.properties && typeof schema.properties === 'object'
-        ? (schema.properties as Record<string, unknown>)
-        : {};
-    const checkValue = (value: BehaviorValue) => {
-      if (
-        (value.kind === 'state' || value.kind === 'state-after-transition') &&
-        !stateNames.has(value.name)
-      ) {
-        throw new DocumentError(
-          'schema',
-          `Unknown behavior state "${value.name}" (${definition.name}).`,
-        );
-      }
-      if (value.kind === 'prop' && !schemaPathExists(schema, value.path)) {
-        throw new DocumentError(
-          'schema',
-          `Unknown behavior prop "${value.path}" (${definition.name}).`,
-        );
-      }
-      if (value.kind === 'operation') {
-        const expected = value.operator === 'not' || value.operator === 'toggle' ? 1 : 2;
-        if (value.values.length !== expected) {
-          throw new DocumentError(
-            'schema',
-            `Behavior operation "${value.operator}" expects ${expected} value(s) (${definition.name}).`,
-          );
-        }
-        value.values.forEach(checkValue);
-      }
-    };
-    for (const transition of behavior.transitions) {
-      if (!nodes.has(transition.nodeUuid)) {
-        throw new DocumentError(
-          'schema',
-          `Behavior event references unknown node "${transition.nodeUuid}" (${definition.name}).`,
-        );
-      }
-      for (const action of transition.actions) {
-        if (action.kind === 'set-state' && !stateNames.has(action.name)) {
-          throw new DocumentError(
-            'schema',
-            `Behavior transition sets unknown state "${action.name}" (${definition.name}).`,
-          );
-        }
-        if (action.kind === 'increment' && !stateNames.has(action.name)) {
-          throw new DocumentError(
-            'schema',
-            `Behavior transition increments unknown state "${action.name}" (${definition.name}).`,
-          );
-        }
-        if (action.kind === 'increment' && typeof behavior.state?.[action.name] !== 'number') {
-          throw new DocumentError(
-            'schema',
-            `Behavior transition increments non-numeric state "${action.name}" (${definition.name}).`,
-          );
-        }
-        if (
-          action.kind === 'emit' &&
-          !Object.hasOwn(props, `on${action.name[0]?.toUpperCase() ?? ''}${action.name.slice(1)}`)
-        ) {
-          throw new DocumentError(
-            'schema',
-            `Behavior emit "${action.name}" has no matching callback prop (${definition.name}).`,
-          );
-        }
-        if (action.kind === 'set-state') checkValue(action.value);
-        if (action.kind === 'emit') action.args.forEach(checkValue);
-      }
-    }
-  }
-}
-
-function visitCondition(
-  condition: ClassCondition | LegacyClassCondition,
-  stateNames: ReadonlySet<string>,
-  definitionName: string,
-) {
-  if (condition.kind === 'rule') {
-    condition.conditions.forEach((child) => visitCondition(child, stateNames, definitionName));
-    return;
-  }
-  if (condition.kind !== 'condition') return;
-  for (const operand of [condition.left, condition.right]) {
-    if (operand?.kind !== 'reference') continue;
-    const match = operand.reference.match(/^\{state:([^}]+)\}$/);
-    if (match?.[1] && !stateNames.has(match[1])) {
-      throw new DocumentError(
-        'schema',
-        `Class condition references unknown behavior state "${match[1]}" (${definitionName}).`,
-      );
-    }
-  }
 }
 
 function assertNodeTagIntegrity(catalog: ProjectCatalog) {
@@ -294,6 +172,10 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
         sourceSchema = prop ? schemaAtPath(effective.schema, prop.path) : null;
       } else if (composition && source?.kind === 'item') {
         sourceSchema = itemSchema ? schemaAtPath(itemSchema, source.path) : null;
+      } else if (composition && source?.kind === 'state') {
+        sourceSchema =
+          (definition.behavior?.stateSchema?.[source.name] as
+            Record<string, unknown> | undefined) ?? null;
       }
       if (composition && source) {
         const validSource =
@@ -351,12 +233,14 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
             ? itemSchema
               ? schemaAtPath(itemSchema, parentSource.path)
               : null
-            : (() => {
-                const parentProp = componentPropsForSchema(effective.schema).find(
-                  (entry) => entry.uuid === parentSource.uuid,
-                );
-                return parentProp ? schemaAtPath(effective.schema, parentProp.path) : null;
-              })();
+            : parentSource.kind === 'state'
+              ? null
+              : (() => {
+                  const parentProp = componentPropsForSchema(effective.schema).find(
+                    (entry) => entry.uuid === parentSource.uuid,
+                  );
+                  return parentProp ? schemaAtPath(effective.schema, parentProp.path) : null;
+                })();
         if (!enumValues(parentSourceSchema).includes(node.config.compositionCase)) {
           throw new DocumentError(
             'schema',
@@ -543,17 +427,6 @@ function findDefinitionInstance(root: Node, uuid: string): Node | null {
     if (found) return found;
   }
   return null;
-}
-
-function schemaPathExists(schema: Record<string, unknown> | null, path: string) {
-  let current: unknown = schema;
-  for (const segment of path.split('.')) {
-    if (!current || typeof current !== 'object') return false;
-    const properties = (current as Record<string, unknown>).properties;
-    if (!properties || typeof properties !== 'object' || !(segment in properties)) return false;
-    current = (properties as Record<string, unknown>)[segment];
-  }
-  return true;
 }
 
 /** Ensure schema refs and definitionRef targets exist in the catalog. */

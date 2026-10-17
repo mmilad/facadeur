@@ -11,6 +11,8 @@ export type CodegenRepeaterScope = {
   arrayPath: string;
   itemExpression: string;
   index: number;
+  indexExpression?: string;
+  itemPropPaths?: ReadonlyMap<string, string>;
 };
 
 export function classExpression(
@@ -56,7 +58,7 @@ export function childRepeaterScopes(
   const arrayPath =
     composition.source.kind === 'prop'
       ? propPaths.get(composition.source.uuid)
-      : parent
+      : composition.source.kind === 'item' && parent
         ? `${parent.arrayPath}.${composition.source.path}`
         : undefined;
   const arrayExpression =
@@ -70,6 +72,7 @@ export function childRepeaterScopes(
     arrayPath,
     itemExpression: `(${arrayExpression})?.[${index}]`,
     index,
+    indexExpression: String(index),
   });
 }
 
@@ -147,7 +150,10 @@ function conditionOperandExpression(
   const indexMatch = operand.reference.match(/^\{index:([^}]+)\}$/);
   const legacyItemMatch = operand.reference.match(/^\{item:([^}]+)\}$/);
   if (stateMatch?.[1]) return stateNames.get(stateMatch[1]) ?? 'undefined';
-  if (indexMatch) return String(repeaterScopes.get(indexMatch[1]!)?.index ?? 'undefined');
+  if (indexMatch) {
+    const scope = repeaterScopes.get(indexMatch[1]!);
+    return scope?.indexExpression ?? String(scope?.index ?? 'undefined');
+  }
   if (itemMatch?.[1] && itemMatch[2]) {
     const scope = repeaterScopes.get(itemMatch[1]);
     const path = propPaths.get(itemMatch[2]);

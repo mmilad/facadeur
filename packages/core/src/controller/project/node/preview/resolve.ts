@@ -295,7 +295,8 @@ function resolveNodeToElementBuildConfig(
       styleNodeUuids.add(node.uuid);
       const behaviorTargets = [
         ...(built.behaviorTargets ?? []),
-        ...(behaviorTargetFor(context, definition, node, parentComponentProps) ?? []),
+        ...(behaviorTargetFor(context, definition, node, parentComponentProps, repeaterScopes) ??
+          []),
       ];
       return {
         ...built,
@@ -370,6 +371,7 @@ function resolveNodeToElementBuildConfig(
                   ctx.componentSchema,
                   repeaterScopes,
                   catalog,
+                  definition.behavior?.stateSchema,
                 ),
                 itemPath: repeaterItemPath(composition.source, ctx.componentSchema, repeaterScopes),
               };
@@ -436,10 +438,57 @@ function resolveNodeToElementBuildConfig(
     attributes.viewBox = icon.data.viewBox;
   }
   if (composition?.kind === 'repeater') {
+    const stateSource = composition.source?.kind === 'state' ? composition.source : undefined;
+    const stateSchema = stateSource
+      ? definition.behavior?.stateSchema?.[stateSource.name]
+      : undefined;
+    const itemSchema = stateSchema
+      ? repeaterItemSchema(
+          stateSource,
+          ctx.componentSchema,
+          repeaterScopes,
+          catalog,
+          definition.behavior?.stateSchema,
+        )
+      : null;
+    const currentItems = stateSource ? ctx.componentState?.[stateSource.name] : undefined;
+    const sampleItem = Array.isArray(currentItems)
+      ? (currentItems[0] ?? sampleForSchema(itemSchema?.items))
+      : undefined;
+    const templates = stateSource
+      ? childNodes.map((child, templateIndex) => {
+          const scope: RepeaterReferenceScope = {
+            nodeUuid: node.uuid,
+            indexName: composition.indexName?.trim() || computedIndexName(repeaterScopes.length),
+            index: 0,
+            item: sampleItem ?? {},
+            itemSchema,
+            itemPath: `state.${stateSource.name}`,
+          };
+          return resolveNodeToElementBuildConfig(child, {
+            ...context,
+            parentFields: fields,
+            inheritedOverrides: fields,
+            itemContext: sampleItem,
+            repeaterScopes: [...repeaterScopes, scope],
+            elementInstancePath: `${instancePath}/repeat-template:${templateIndex}`,
+          });
+        })
+      : undefined;
     return {
       kind: 'fragment',
       ...(resolvedChildren.length ? { children: resolvedChildren } : {}),
       nodeUuid: node.uuid,
+      ...(stateSource && itemSchema
+        ? {
+            repeater: {
+              stateName: stateSource.name,
+              itemSchema,
+              templates: templates ?? [],
+              indexName: composition.indexName?.trim() || computedIndexName(repeaterScopes.length),
+            },
+          }
+        : {}),
     };
   }
   const classes = node.classes ?? [];
@@ -455,7 +504,13 @@ function resolveNodeToElementBuildConfig(
     }),
   );
   const properties = node.dom.properties;
-  const behaviorTargets = behaviorTargetFor(context, definition, node, ctx.componentProps);
+  const behaviorTargets = behaviorTargetFor(
+    context,
+    definition,
+    node,
+    ctx.componentProps,
+    repeaterScopes,
+  );
 
   return {
     tagName: node.dom.tagName ?? 'div',
@@ -480,6 +535,7 @@ function behaviorTargetFor(
   definition: NodeDefinition,
   node: Node,
   props: Readonly<Record<string, FieldValue>> | undefined,
+  repeaterScopes: readonly RepeaterReferenceScope[],
 ) {
   if (!context.includeBehaviorTargets) return undefined;
   const events = [
@@ -496,8 +552,35 @@ function behaviorTargetFor(
     nodeUuid: node.uuid,
     events,
     ...(props ? { props } : {}),
+    ...(repeaterScopes.length
+      ? {
+          repeaterIndices: Object.fromEntries(
+            repeaterScopes.map((scope) => [scope.nodeUuid, scope.index]),
+          ),
+        }
+      : {}),
   };
   return [target];
+}
+
+function sampleForSchema(schema: unknown): FieldValue | undefined {
+  if (!schema || typeof schema !== 'object' || Array.isArray(schema)) return undefined;
+  const record = schema as Record<string, unknown>;
+  if (record.default !== undefined) return record.default as FieldValue;
+  if (record.type === 'object') {
+    const properties = record.properties;
+    if (!properties || typeof properties !== 'object' || Array.isArray(properties)) return {};
+    return Object.fromEntries(
+      Object.entries(properties as Record<string, unknown>).map(([name, property]) => [
+        name,
+        sampleForSchema(property) ?? '',
+      ]),
+    );
+  }
+  if (record.type === 'array') return [];
+  if (record.type === 'boolean') return false;
+  if (record.type === 'number' || record.type === 'integer') return 0;
+  return '';
 }
 
 function staticFieldNames(definition: NodeDefinition) {
@@ -551,6 +634,7 @@ function resolveCompositionSource(
 ) {
   if (!source) return undefined;
   if (source.kind === 'item') return fieldAtPath(ctx.item, source.path);
+  if (source.kind === 'state') return ctx.componentState?.[source.name];
   return ctx.componentProps?.[source.uuid];
 }
 

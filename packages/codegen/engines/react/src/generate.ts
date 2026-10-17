@@ -131,7 +131,11 @@ function renderComponent(
     cssRules,
     new Map(),
     behavior,
+    new Map(
+      Object.keys(behavior?.state ?? {}).map((name, index) => [name, `behaviorState${index}`]),
+    ),
   );
+  const returnedJsx = tree.kind === 'fragment' ? `<>${jsx}</>` : jsx;
   const callbackProps = new Set(
     (behavior?.transitions ?? []).flatMap((transition) =>
       transition.actions
@@ -153,11 +157,11 @@ function renderComponent(
     `/** Generated from Catalog definition ${uuid}. */`,
     `export function ${exportName}(props: ${exportName}Props${propsAreOptional ? ' = {}' : ''}) {`,
     ...behaviorSource.setup.map((line) => `  ${line}`),
-    `  return ${jsx};`,
+    `  return ${returnedJsx};`,
     '}',
     ...behaviorSource.helpers,
     '',
-    'function getProp(props: object, path: string) {',
+    'function getProp(props: unknown, path: string) {',
     '  let value: unknown = props;',
     '  for (const segment of path.split(".")) {',
     '    if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;',
@@ -187,11 +191,13 @@ function renderBehavior(behavior: ComponentBehavior | undefined) {
   for (const [name, initial] of Object.entries(behavior.state ?? {})) {
     const state = stateIdentifiers.get(name)!;
     const setter = `setBehaviorState${state.slice('behaviorState'.length)}`;
-    const stateType = Array.isArray(initial)
-      ? 'unknown[]'
-      : initial === null
-        ? 'unknown'
-        : typeof initial;
+    const stateType = behavior.stateSchema?.[name]
+      ? schemaType(behavior.stateSchema[name])
+      : Array.isArray(initial)
+        ? 'unknown[]'
+        : initial === null
+          ? 'unknown'
+          : typeof initial;
     setup.push(`const [${state}, ${setter}] = useState<${stateType}>(${JSON.stringify(initial)});`);
   }
   for (const transition of behavior.transitions) {
@@ -226,7 +232,17 @@ function renderBehavior(behavior: ComponentBehavior | undefined) {
             `const ${temporary} = ${expression};`,
             `${setterName(action.name, stateIdentifiers)}(${temporary});`,
           );
-        } else {
+        } else if (action.kind === 'move-array-item') {
+          const array = nextState.get(action.name) ?? stateIdentifiers.get(action.name) ?? '[]';
+          const currentIndex = `repeaterIndices[${JSON.stringify(action.repeaterUuid)}]`;
+          const targetIndex = `(${currentIndex} ${action.direction === 'up' ? '-' : '+'} 1)`;
+          const temporary = `nextBehaviorState${temporaryIndex++}`;
+          actions.push(
+            `const ${temporary} = (() => { const current = ${array}; const from = ${currentIndex}; const to = ${targetIndex}; if (!Array.isArray(current) || from === undefined || to < 0 || to >= current.length) return current; const next = [...current]; const [item] = next.splice(from, 1); next.splice(to, 0, item); return next; })();`,
+            `${setterName(action.name, stateIdentifiers)}(${temporary});`,
+          );
+          nextState.set(action.name, temporary);
+        } else if (action.kind === 'emit') {
           actions.push(
             `props[${JSON.stringify(`on${action.name[0]?.toUpperCase() ?? ''}${action.name.slice(1)}`)}]?.(${action.args.map((arg) => behaviorExpression(arg, stateIdentifiers, nextState)).join(', ')});`,
           );
@@ -234,13 +250,13 @@ function renderBehavior(behavior: ComponentBehavior | undefined) {
       }
     }
     const handlerName = behaviorHandlerName(nodeUuid, event);
-    return `function ${handlerName}(event: SyntheticEvent) {\n${actions.map((line) => `  ${line}`).join('\n')}\n}`;
+    return `function ${handlerName}(event: SyntheticEvent, repeaterIndices: Readonly<Record<string, number>> = {}) {\n${actions.map((line) => `  ${line}`).join('\n')}\n}`;
   });
   return {
     imports:
       setup.length || helpers.length
         ? [
-            `import { ${[...(setup.length ? ['useState'] : []), ...(helpers.length ? ['type SyntheticEvent'] : [])].join(', ')} } from 'react';`,
+            `import { ${[...(setup.length ? ['useState'] : []), ...(helpers.length ? ['type SyntheticEvent'] : []), ...(Object.keys(behavior.stateSchema ?? {}).length ? ['Fragment'] : [])].join(', ')} } from 'react';`,
           ]
         : [],
     setup,
@@ -366,9 +382,39 @@ function renderNode(
   cssRules: string[],
   repeaterScopes: ReadonlyMap<string, CodegenRepeaterScope>,
   behavior?: ComponentBehavior,
+  stateIdentifiers: ReadonlyMap<string, string> = new Map(),
 ): string {
   const source = node.nodeUuid ? sourceNodes.get(node.nodeUuid) : undefined;
   if (node.kind === 'fragment') {
+    if (node.repeater) {
+      const state = stateIdentifiers.get(node.repeater.stateName) ?? '[]';
+      const dynamicScope: CodegenRepeaterScope = {
+        arrayPath: `state.${node.repeater.stateName}`,
+        itemExpression: 'item',
+        index: 0,
+        indexExpression: 'index',
+        itemPropPaths: new Map(
+          componentPropsForSchema(node.repeater.itemSchema).map((prop) => [prop.uuid, prop.path]),
+        ),
+      };
+      const scopes = new Map(repeaterScopes).set(node.nodeUuid ?? '', dynamicScope);
+      const templates = node.repeater.templates
+        .map((template) =>
+          renderNode(
+            template,
+            tokenProperties,
+            propPaths,
+            booleanPropUuids,
+            sourceNodes,
+            cssRules,
+            scopes,
+            behavior,
+            stateIdentifiers,
+          ),
+        )
+        .join('');
+      return `{(${state} ?? []).map((item, index) => <Fragment key={index}>${templates}</Fragment>)}`;
+    }
     return (node.children ?? [])
       .map((child) =>
         renderNode(
@@ -380,6 +426,7 @@ function renderNode(
           cssRules,
           childRepeaterScopes(source, child, propPaths, repeaterScopes),
           behavior,
+          stateIdentifiers,
         ),
       )
       .join('');
@@ -454,7 +501,7 @@ function renderNode(
       if (key === classKey && derivedClassExpression) {
         return ` className={${derivedClassExpression}}`;
       }
-      return ` ${reactAttribute(key)}=${jsxValue(reactValue(reactAttribute(key), value), source?.dom.attributes?.[key], propPaths)}`;
+      return ` ${reactAttribute(key)}=${jsxValue(reactValue(reactAttribute(key), value), source?.dom.attributes?.[key], propPaths, repeaterScopes)}`;
     })
     .join('');
   const behaviorEvents =
@@ -465,12 +512,35 @@ function renderNode(
     .map((event) => {
       const name = `on${event[0]?.toUpperCase() ?? ''}${event.slice(1)}`;
       const handler = behaviorHandlerName(node.nodeUuid ?? '', event);
-      return ` ${name}={${handler}}`;
+      const repeaterUuids = [
+        ...new Set(
+          (behavior?.transitions ?? [])
+            .filter(
+              (transition) => transition.nodeUuid === node.nodeUuid && transition.event === event,
+            )
+            .flatMap((transition) =>
+              transition.actions.flatMap((action) =>
+                action.kind === 'move-array-item' ? [action.repeaterUuid] : [],
+              ),
+            ),
+        ),
+      ];
+      const indices = repeaterUuids
+        .map((uuid) => {
+          const scope = repeaterScopes.get(uuid);
+          const index = scope?.indexExpression ?? (scope ? String(scope.index) : undefined);
+          return index ? `${JSON.stringify(uuid)}: ${index}` : undefined;
+        })
+        .filter((entry): entry is string => Boolean(entry));
+      return indices.length
+        ? ` ${name}={(event) => ${handler}(event, { ${indices.join(', ')} })}`
+        : ` ${name}={${handler}}`;
     })
     .join('');
   const tag = safeTag(node.tagName);
   if (isVoidTag(tag)) return `<${tag}${props}${eventProps} />`;
-  const content = node.text === undefined ? '' : jsxValue(node.text, source?.dom.text, propPaths);
+  const content =
+    node.text === undefined ? '' : jsxValue(node.text, source?.dom.text, propPaths, repeaterScopes);
   const children = (node.children ?? [])
     .map((child) =>
       renderNode(
@@ -482,6 +552,7 @@ function renderNode(
         cssRules,
         childRepeaterScopes(source, child, propPaths, repeaterScopes),
         behavior,
+        stateIdentifiers,
       ),
     )
     .join('');
@@ -493,9 +564,25 @@ function behaviorHandlerName(nodeUuid: string, event: string) {
   return `handleBehaviorAt${nodeUuid.replaceAll('-', '')}Event${eventCodePoints.join('_')}`;
 }
 
-function jsxValue(value: unknown, source: unknown, propPaths: ReadonlyMap<string, string>) {
+function jsxValue(
+  value: unknown,
+  source: unknown,
+  propPaths: ReadonlyMap<string, string>,
+  repeaterScopes: ReadonlyMap<string, CodegenRepeaterScope>,
+) {
   if (typeof source === 'string') {
+    const itemScope = [...repeaterScopes.values()].at(-1);
+    if (source === '{item}' && itemScope) return `{${itemScope.itemExpression}}`;
+    const itemFieldMatch = source.match(/^\{item:([^}]+)\}$/);
+    if (itemFieldMatch?.[1] && itemScope) {
+      return `{getProp(${itemScope.itemExpression}, ${JSON.stringify(itemFieldMatch[1])})}`;
+    }
     const match = source.match(/^\{props:([^}]+)\}$/);
+    const scopedPath = match?.[1] ? itemScope?.itemPropPaths?.get(match[1]) : undefined;
+    if (scopedPath && itemScope && match?.[1]) {
+      const expression = `getProp(${itemScope.itemExpression}, ${JSON.stringify(scopedPath)})`;
+      return `{${expression} ?? ${JSON.stringify(value)}}`;
+    }
     const path = match?.[1] ? propPaths.get(match[1]) : undefined;
     if (path && match) {
       const fallback = value === match[0] ? undefined : value;

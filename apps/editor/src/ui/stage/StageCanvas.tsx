@@ -140,6 +140,7 @@ export function StageCanvas({
         definitionUuid: string;
         nodeUuid: string;
         props?: Readonly<Record<string, FieldValue>>;
+        repeaterIndices?: Readonly<Record<string, number>>;
       },
       eventName: string,
       event: unknown,
@@ -152,6 +153,7 @@ export function StageCanvas({
         state: runtimeStatesRef.current[target.scopeKey] ?? behavior.state ?? {},
         props: target.props ?? owner?.config?.previewData?.fields,
         event: behaviorEventSnapshot(event),
+        repeaterIndices: target.repeaterIndices,
       });
       if (!result.matched) return;
       const nextStates = { ...runtimeStatesRef.current, [target.scopeKey]: { ...result.state } };

@@ -1,6 +1,7 @@
 import type { DomSpec } from './dom';
 import type { FieldValue } from './field-value';
 import type { SchemaSource } from './schema-source';
+import type { JsonSchemaObject } from './schema-source';
 import type { LayerMap, StyleLayer, VariantStyleMap } from './design-system';
 import type { Uuid } from './uuid';
 
@@ -30,7 +31,9 @@ export interface NodeConfig {
 }
 
 export type CompositionSource =
-  { readonly kind: 'prop'; readonly uuid: Uuid } | { readonly kind: 'item'; readonly path: string };
+  | { readonly kind: 'prop'; readonly uuid: Uuid }
+  | { readonly kind: 'item'; readonly path: string }
+  | { readonly kind: 'state'; readonly name: string };
 
 export type FieldExposure =
   | { readonly mode: 'flat' }
@@ -71,11 +74,19 @@ export type BehaviorValue =
 export type BehaviorAction =
   | { readonly kind: 'set-state'; readonly name: string; readonly value: BehaviorValue }
   | { readonly kind: 'increment'; readonly name: string; readonly amount?: number }
+  | {
+      readonly kind: 'move-array-item';
+      readonly name: string;
+      readonly repeaterUuid: Uuid;
+      readonly direction: 'up' | 'down';
+    }
   | { readonly kind: 'emit'; readonly name: string; readonly args: readonly BehaviorValue[] };
 
 /** Portable, data-only UI behavior. A renderer compiles this contract to its target runtime. */
 export interface ComponentBehavior {
   readonly state?: Readonly<Record<string, FieldValue | null>>;
+  /** Declares item types independently of preview values, including empty arrays. */
+  readonly stateSchema?: Readonly<Record<string, JsonSchemaObject>>;
   readonly transitions: readonly {
     readonly nodeUuid: Uuid;
     readonly event: string;

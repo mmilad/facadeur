@@ -410,9 +410,81 @@ describe('validateProjectCatalog', () => {
       ),
     ).toThrow(/expects 1 value/i);
   });
+
+  it('validates state-backed reorder actions against their repeater rows', () => {
+    const catalog = createExampleCatalog();
+    const component = Object.values(catalog.components)[0]!;
+    const buttonUuid = globalThis.crypto.randomUUID();
+    Reflect.set(component.root, 'config', {
+      composition: { kind: 'repeater', source: { kind: 'state', name: 'items' } },
+    });
+    Reflect.set(component.root.dom, 'children', [
+      { uuid: buttonUuid, dom: { tagName: 'button', text: 'Move' } },
+    ]);
+    Reflect.set(component, 'behavior', {
+      state: { items: ['Alpha', 'Bravo'] },
+      stateSchema: { items: { type: 'array', items: { type: 'string' } } },
+      transitions: [
+        {
+          nodeUuid: buttonUuid,
+          event: 'click',
+          actions: [
+            {
+              kind: 'move-array-item',
+              name: 'items',
+              repeaterUuid: component.root.uuid,
+              direction: 'up',
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(() => validateProjectCatalog(catalog)).not.toThrow();
+
+    const behavior = component.behavior!;
+    Reflect.set(component, 'behavior', {
+      ...behavior,
+      transitions: [{ ...behavior.transitions[0]!, nodeUuid: component.root.uuid }],
+    });
+    expect(() => validateProjectCatalog(catalog)).toThrow(/inside its Repeater/i);
+
+    const withoutSchema = { ...behavior };
+    Reflect.deleteProperty(withoutSchema, 'stateSchema');
+    Reflect.set(component, 'behavior', withoutSchema);
+    expect(() => validateProjectCatalog(catalog)).toThrow(/requires an explicit state schema/i);
+  });
 });
 
 describe('executeComponentBehavior', () => {
+  it('moves an array item using the active repeater index without mutating input state', () => {
+    const repeaterUuid = globalThis.crypto.randomUUID();
+    const behavior = {
+      state: { items: ['first', 'second', 'third'] },
+      transitions: [
+        {
+          nodeUuid: rootNodeUuid,
+          event: 'click',
+          actions: [
+            {
+              kind: 'move-array-item' as const,
+              name: 'items',
+              repeaterUuid,
+              direction: 'down' as const,
+            },
+          ],
+        },
+      ],
+    };
+    const result = executeComponentBehavior(behavior, rootNodeUuid, 'click', {
+      state: behavior.state,
+      repeaterIndices: { [repeaterUuid]: 1 },
+    });
+
+    expect(result.state.items).toEqual(['first', 'third', 'second']);
+    expect(behavior.state.items).toEqual(['first', 'second', 'third']);
+  });
+
   it('executes ordered transition actions against an isolated state snapshot', () => {
     const behavior = {
       state: { open: false, count: 0 },

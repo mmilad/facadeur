@@ -4,6 +4,7 @@ export interface BehaviorRuntimeContext {
   readonly state: Readonly<Record<string, FieldValue | null>>;
   readonly props?: Readonly<Record<string, unknown>>;
   readonly event?: unknown;
+  readonly repeaterIndices?: Readonly<Record<string, number>>;
 }
 
 export interface BehaviorRuntimeResult {
@@ -45,6 +46,22 @@ export function executeComponentBehavior(
       } else if (action.kind === 'increment') {
         const current = state[action.name];
         state[action.name] = (typeof current === 'number' ? current : 0) + (action.amount ?? 1);
+      } else if (action.kind === 'move-array-item') {
+        const current = state[action.name];
+        const from = context.repeaterIndices?.[action.repeaterUuid];
+        const to = from === undefined ? undefined : from + (action.direction === 'up' ? -1 : 1);
+        if (
+          Array.isArray(current) &&
+          from !== undefined &&
+          to !== undefined &&
+          to >= 0 &&
+          to < current.length
+        ) {
+          const next = [...current];
+          const [item] = next.splice(from, 1);
+          next.splice(to, 0, item!);
+          state[action.name] = next;
+        }
       } else {
         emitted.push({
           name: action.name,

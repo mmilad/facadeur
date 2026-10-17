@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createExampleCatalog } from '@facadeur/examples';
 import { generateReact } from '../src';
+import ts from 'typescript';
 
 describe('Catalog-driven React code generation', () => {
   it('emits generated root class styles before authored class styles', () => {
@@ -232,6 +233,64 @@ describe('Catalog-driven React code generation', () => {
     const generated = generateReact({ catalog, entries: [component.uuid] });
     const output = generated.ui.find((file) => file.path.startsWith('components/'))?.contents ?? '';
     expect(output).toContain('Object.is((behaviorState0), (true)) ? "is-open" : ""');
+  });
+
+  it('generates dynamic maps and row-index move actions for internal state repeaters', () => {
+    const catalog = createExampleCatalog();
+    const component = Object.values(catalog.components)[0]!;
+    const repeaterUuid = component.root.uuid;
+    const buttonUuid = globalThis.crypto.randomUUID();
+    const rowUuid = globalThis.crypto.randomUUID();
+    const row = {
+      uuid: rowUuid,
+      dom: { tagName: 'span', text: '{item}' },
+    };
+    const button = {
+      uuid: buttonUuid,
+      dom: { tagName: 'button', text: 'Move', children: [row] },
+    };
+    Reflect.set(component.root, 'config', {
+      composition: { kind: 'repeater', source: { kind: 'state', name: 'items' } },
+    });
+    Reflect.set(component.root.dom, 'children', [button]);
+    Reflect.set(component, 'behavior', {
+      state: { items: [] },
+      stateSchema: { items: { type: 'array', items: { type: 'string' } } },
+      transitions: [
+        {
+          nodeUuid: buttonUuid,
+          event: 'click',
+          actions: [
+            {
+              kind: 'move-array-item',
+              name: 'items',
+              repeaterUuid,
+              direction: 'up',
+            },
+          ],
+        },
+      ],
+    });
+
+    const generated = generateReact({ catalog, entries: [component.uuid] });
+    const output = generated.ui.find((file) => file.path.startsWith('components/'))?.contents ?? '';
+    expect(output).toContain('useState<string[]>([])');
+    expect(output).toContain('(behaviorState0 ?? []).map((item, index) => <Fragment key={index}>');
+    expect(output).toContain('{item}</span>');
+    expect(output).toContain('handleBehaviorAt');
+    expect(output).toContain(`${JSON.stringify(repeaterUuid)}: index`);
+    expect(output).toContain(`repeaterIndices[${JSON.stringify(repeaterUuid)}]`);
+    const diagnostics = ts.transpileModule(output, {
+      reportDiagnostics: true,
+      compilerOptions: {
+        jsx: ts.JsxEmit.ReactJSX,
+        target: ts.ScriptTarget.ES2022,
+        module: ts.ModuleKind.ESNext,
+      },
+    }).diagnostics;
+    expect(diagnostics?.filter((item) => item.category === ts.DiagnosticCategory.Error)).toEqual(
+      [],
+    );
   });
 
   it('keeps repeated state actions and same-event transitions sequential', () => {

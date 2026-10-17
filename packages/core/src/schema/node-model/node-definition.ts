@@ -62,6 +62,15 @@ const behaviorActionSchema = Type.Union([
   ),
   Type.Object(
     {
+      kind: Type.Literal('move-array-item'),
+      name: Type.String({ minLength: 1 }),
+      repeaterUuid: uuidSchema,
+      direction: Type.Union([Type.Literal('up'), Type.Literal('down')]),
+    },
+    { additionalProperties: false },
+  ),
+  Type.Object(
+    {
       kind: Type.Literal('emit'),
       name: Type.String({ minLength: 1 }),
       args: Type.Array(behaviorValueSchema),
@@ -73,6 +82,9 @@ const behaviorActionSchema = Type.Union([
 const componentBehaviorSchema = Type.Object(
   {
     state: Type.Optional(Type.Record(Type.String({ minLength: 1 }), Type.Unknown())),
+    stateSchema: Type.Optional(
+      Type.Record(Type.String({ minLength: 1 }), Type.Record(Type.String(), Type.Unknown())),
+    ),
     transitions: Type.Array(
       Type.Object(
         {

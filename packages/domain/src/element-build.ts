@@ -31,6 +31,7 @@ export interface ElementBehaviorTarget {
   readonly nodeUuid: Uuid;
   readonly events: readonly string[];
   readonly props?: Readonly<Record<string, FieldValue>>;
+  readonly repeaterIndices?: Readonly<Record<string, number>>;
 }
 
 /** A structural Catalog node that contributes its children without a DOM element. */
@@ -43,6 +44,13 @@ export interface FragmentBuildConfig {
   readonly nodeUuid?: Uuid;
   /** Stable key for repeated instances of one authored node. */
   readonly renderKey?: string;
+  /** Runtime array mapping for a state-backed repeater, including empty-list templates. */
+  readonly repeater?: {
+    readonly stateName: string;
+    readonly itemSchema: Readonly<Record<string, unknown>>;
+    readonly templates: readonly RenderBuildConfig[];
+    readonly indexName: string;
+  };
 }
 
 export type RenderBuildConfig = ElementBuildConfig | FragmentBuildConfig;

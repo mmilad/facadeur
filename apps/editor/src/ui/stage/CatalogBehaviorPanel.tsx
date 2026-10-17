@@ -15,16 +15,17 @@ import { EditorEventType } from '../../domain/sidebar/events';
 import { previewDomEventOptions } from '../../domain/viewport/dom-events';
 import { Field } from '../components/feedback';
 import { Inline, Stack } from '../components/layout';
-import { NumberInput, Select, TextInput, Toggle } from '../controls/form-binding';
+import { ArrayField, NumberInput, Select, TextInput, Toggle } from '../controls/form-binding';
 import './catalog-behavior-panel.css';
 
-type StateType = 'boolean' | 'string' | 'number';
+type StateType = 'boolean' | 'string' | 'number' | 'string-list';
 type StateEntry = [string, FieldValue | null];
 type Transition = ComponentBehavior['transitions'][number];
 const typeOptions = [
   { value: 'boolean', label: 'Boolean' },
   { value: 'string', label: 'Text' },
   { value: 'number', label: 'Number' },
+  { value: 'string-list', label: 'List of text items' },
 ];
 const valueKindOptions = [
   { value: 'literal', label: 'Literal' },
@@ -44,6 +45,7 @@ const operationOptions = [
 const actionKindOptions = [
   { value: 'set-state', label: 'Set state' },
   { value: 'increment', label: 'Increment state' },
+  { value: 'move-array-item', label: 'Move list item' },
   { value: 'emit', label: 'Emit callback' },
 ];
 const eventOptions = previewDomEventOptions.map(([value, label]) => ({ value, label }));
@@ -66,6 +68,7 @@ export function CatalogBehaviorPanel({
   const behavior = definition.behavior ?? { state: {}, transitions: [] };
   const states = Object.entries(behavior.state ?? {});
   const nodes = listNodes(definition.root);
+  const repeaters = listRepeaters(definition.root);
   const nodeOptions = nodes.map((node) => ({
     value: node.uuid,
     label: `${node.label} (${node.tagName})`,
@@ -82,8 +85,25 @@ export function CatalogBehaviorPanel({
     const name = stateName.trim();
     if (!isStateName(name) || Object.hasOwn(behavior.state ?? {}, name)) return;
     const initial: FieldValue =
-      stateType === 'boolean' ? false : stateType === 'number' ? initialNumber : initialString;
-    setState({ ...(behavior.state ?? {}), [name]: initial });
+      stateType === 'boolean'
+        ? false
+        : stateType === 'number'
+          ? initialNumber
+          : stateType === 'string-list'
+            ? []
+            : initialString;
+    dispatch({
+      ...behavior,
+      state: { ...(behavior.state ?? {}), [name]: initial },
+      ...(stateType === 'string-list'
+        ? {
+            stateSchema: {
+              ...(behavior.stateSchema ?? {}),
+              [name]: { type: 'array', items: { type: 'string' } },
+            },
+          }
+        : {}),
+    });
     setStateName('');
   };
   const updateState = (name: string, value: FieldValue | null) =>
@@ -100,6 +120,12 @@ export function CatalogBehaviorPanel({
       ...behavior,
       state: Object.fromEntries(
         states.map(([key, value]) => [key === name ? normalized : key, value]),
+      ),
+      stateSchema: Object.fromEntries(
+        Object.entries(behavior.stateSchema ?? {}).map(([key, value]) => [
+          key === name ? normalized : key,
+          value,
+        ]),
       ),
       transitions: behavior.transitions.map((transition) => ({
         ...transition,
@@ -122,6 +148,9 @@ export function CatalogBehaviorPanel({
     dispatch({
       ...behavior,
       state: Object.fromEntries(states.filter(([key]) => key !== name)),
+      stateSchema: Object.fromEntries(
+        Object.entries(behavior.stateSchema ?? {}).filter(([key]) => key !== name),
+      ),
     });
   };
   const addTransition = () => {
@@ -194,6 +223,11 @@ export function CatalogBehaviorPanel({
               />
             </Field>
           ) : null}
+          {stateType === 'string-list' ? (
+            <p className="catalog-behavior-initial">
+              Starts empty. Add example items below; the Repeater can use this state as its source.
+            </p>
+          ) : null}
           <Inline gap="sm" align="center">
             <button type="button" onClick={addState} disabled={addDisabled}>
               Add state
@@ -242,6 +276,31 @@ export function CatalogBehaviorPanel({
                     />
                   </Field>
                 ) : null}
+                {Array.isArray(value) && value.every((item) => typeof item === 'string') ? (
+                  <Field label="Initial list items">
+                    <ArrayField<string>
+                      value={value}
+                      defaultItem=""
+                      rowLabel="Text"
+                      onChange={(next) => updateState(name, next)}
+                    >
+                      {(item, index) => (
+                        <TextInput
+                          aria-label={`Initial item ${index + 1} for ${name}`}
+                          value={item}
+                          onChange={(next) =>
+                            updateState(
+                              name,
+                              (value as string[]).map((current, itemIndex) =>
+                                itemIndex === index ? next : current,
+                              ),
+                            )
+                          }
+                        />
+                      )}
+                    </ArrayField>
+                  </Field>
+                ) : null}
                 <div>
                   <span className="catalog-behavior-subtitle">Class condition reference</span>
                   <code>{`{state:${name}}`}</code>
@@ -255,7 +314,8 @@ export function CatalogBehaviorPanel({
                 </button>
                 {stateIsReferenced(definition.root, behavior.transitions, name) ? (
                   <small className="catalog-behavior-error">
-                    Remove this state’s class condition or transition references before deleting it.
+                    Remove this state’s Repeater, class condition, or transition references before
+                    deleting it.
                   </small>
                 ) : null}
               </li>
@@ -330,6 +390,8 @@ export function CatalogBehaviorPanel({
                     key={actionIndex}
                     action={action}
                     states={states}
+                    repeaters={repeaters}
+                    transitionNodeUuid={transition.nodeUuid}
                     onChange={(next) =>
                       updateTransition(index, {
                         ...transition,
@@ -390,6 +452,40 @@ export function CatalogBehaviorPanel({
                   </button>
                   <button
                     type="button"
+                    onClick={() => {
+                      const list = states.find(([, value]) => Array.isArray(value))?.[0] ?? '';
+                      const repeater = repeaters.find(
+                        (item) =>
+                          item.stateName === list && item.nodeUuids.includes(transition.nodeUuid),
+                      );
+                      if (!repeater) return;
+                      updateTransition(index, {
+                        ...transition,
+                        actions: [
+                          ...transition.actions,
+                          {
+                            kind: 'move-array-item',
+                            name: list,
+                            repeaterUuid: repeater.uuid,
+                            direction: 'up',
+                          },
+                        ],
+                      });
+                    }}
+                    disabled={
+                      !repeaters.some(
+                        (item) =>
+                          item.nodeUuids.includes(transition.nodeUuid) &&
+                          states.some(
+                            ([name, value]) => Array.isArray(value) && item.stateName === name,
+                          ),
+                      )
+                    }
+                  >
+                    Add move item
+                  </button>
+                  <button
+                    type="button"
                     onClick={() =>
                       updateTransition(index, {
                         ...transition,
@@ -419,15 +515,22 @@ export function CatalogBehaviorPanel({
 function ActionEditor({
   action,
   states,
+  repeaters,
+  transitionNodeUuid,
   onChange,
   onRemove,
 }: {
   action: BehaviorAction;
   states: StateEntry[];
+  repeaters: { uuid: string; label: string; stateName?: string; nodeUuids: string[] }[];
+  transitionNodeUuid: string;
   onChange: (action: BehaviorAction) => void;
   onRemove: () => void;
 }) {
   const stateOptions = states.map(([name]) => ({ value: name, label: name }));
+  const arrayStateOptions = states
+    .filter(([, value]) => Array.isArray(value))
+    .map(([name]) => ({ value: name, label: name }));
   const changeKind = (kind: string) => {
     if (kind === 'set-state')
       onChange({ kind, name: states[0]?.[0] ?? '', value: { kind: 'literal', value: null } });
@@ -437,7 +540,18 @@ function ActionEditor({
         name: states.find(([, value]) => typeof value === 'number')?.[0] ?? states[0]?.[0] ?? '',
         amount: 1,
       });
-    else onChange({ kind: 'emit', name: '', args: [] });
+    else if (kind === 'move-array-item') {
+      const list = arrayStateOptions[0]?.value ?? '';
+      const repeater = repeaters.find(
+        (item) => item.stateName === list && item.nodeUuids.includes(transitionNodeUuid),
+      );
+      onChange({
+        kind,
+        name: list,
+        repeaterUuid: repeater?.uuid ?? '',
+        direction: 'up',
+      });
+    } else onChange({ kind: 'emit', name: '', args: [] });
   };
   return (
     <section className="catalog-behavior-action" aria-label="Transition action">
@@ -528,6 +642,48 @@ function ActionEditor({
           >
             Add callback argument
           </button>
+        </>
+      ) : null}
+      {action.kind === 'move-array-item' ? (
+        <>
+          <Field label="Array state">
+            <Select
+              aria-label="Array state to reorder"
+              value={action.name}
+              options={arrayStateOptions}
+              onChange={(name) => {
+                const repeater = repeaters.find((item) => item.stateName === name);
+                onChange({ ...action, name, repeaterUuid: repeater?.uuid ?? '' });
+              }}
+            />
+          </Field>
+          <Field label="Repeater">
+            <Select
+              aria-label="Repeater row index source"
+              value={action.repeaterUuid}
+              options={repeaters
+                .filter(
+                  (repeater) =>
+                    repeater.stateName === action.name &&
+                    repeater.nodeUuids.includes(transitionNodeUuid),
+                )
+                .map(({ uuid, label }) => ({ value: uuid, label }))}
+              onChange={(repeaterUuid) => onChange({ ...action, repeaterUuid })}
+            />
+          </Field>
+          <Field label="Direction">
+            <Select
+              aria-label="List move direction"
+              value={action.direction}
+              options={[
+                { value: 'up', label: 'Up' },
+                { value: 'down', label: 'Down' },
+              ]}
+              onChange={(direction) =>
+                onChange({ ...action, direction: direction as 'up' | 'down' })
+              }
+            />
+          </Field>
         </>
       ) : null}
       <button type="button" onClick={onRemove}>
@@ -705,6 +861,33 @@ function listNodes(root: Node) {
   return nodes;
 }
 
+function listRepeaters(root: Node) {
+  const repeaters: {
+    uuid: string;
+    label: string;
+    stateName?: string;
+    nodeUuids: string[];
+  }[] = [];
+  const visit = (node: Node, path: string[]) => {
+    const label = node.name?.trim() || node.dom.tagName || 'element';
+    const nextPath = [...path, label];
+    const composition = node.config?.composition;
+    if (composition?.kind === 'repeater') {
+      repeaters.push({
+        uuid: node.uuid,
+        label: nextPath.join(' / '),
+        nodeUuids: listNodes(node)
+          .map((entry) => entry.uuid)
+          .filter((uuid) => uuid !== node.uuid),
+        ...(composition.source?.kind === 'state' ? { stateName: composition.source.name } : {}),
+      });
+    }
+    for (const child of node.dom.children ?? []) visit(child, nextPath);
+  };
+  visit(root, []);
+  return repeaters;
+}
+
 function nodeLabel(nodes: ReturnType<typeof listNodes>, uuid: string) {
   return nodes.find((node) => node.uuid === uuid)?.label ?? uuid;
 }
@@ -720,6 +903,8 @@ function renameActionState(
       args: action.args.map((value) => renameBehaviorValue(value, oldName, newName)),
     };
   if (action.kind === 'increment')
+    return action.name === oldName ? { ...action, name: newName } : action;
+  if (action.kind === 'move-array-item')
     return action.name === oldName ? { ...action, name: newName } : action;
   return {
     ...action,
@@ -744,18 +929,23 @@ function renameBehaviorValue(
 }
 
 function actionUsesState(action: BehaviorAction, name: string) {
+  if (action.kind === 'move-array-item') return action.name === name;
   if (action.kind === 'increment' || action.kind === 'set-state')
     return (
       action.name === name || (action.kind === 'set-state' && valueUsesState(action.value, name))
     );
-  return action.args.some((value) => valueUsesState(value, name));
+  if (action.kind === 'emit') return action.args.some((value) => valueUsesState(value, name));
+  return false;
 }
 
 function stateIsReferenced(root: Node, transitions: readonly Transition[], name: string): boolean {
   const visit = (node: Node): boolean => {
     const classReference =
       node.classes?.some((item) => conditionUsesState(item.condition, name)) ?? false;
-    return classReference || (node.dom.children ?? []).some(visit);
+    const source =
+      node.config?.composition?.kind === 'repeater' ? node.config.composition.source : undefined;
+    const repeaterReference = source?.kind === 'state' && source.name === name;
+    return classReference || repeaterReference || (node.dom.children ?? []).some(visit);
   };
   return (
     visit(root) ||

@@ -25,6 +25,7 @@ const DESIGN_PROP_REF = /^\{prop:([^}]+)\}$/;
 const COMPONENT_PROP_REF = /^\{props:([^}]+)\}$/;
 const COMPONENT_STATE_REF = /^\{state:([^}]+)\}$/;
 const ITEM_FIELD_REF = /^\{item:([^}]+)\}$/;
+const ITEM_VALUE_REF = /^\{item\}$/;
 const ITEM_PROP_REF = /^\{item-prop:([^:}]+):([^}]+)\}$/;
 const INDEX_REF = /^\{index:([^}]+)\}$/;
 const TOKEN_REF = /^\{token:([^}]+)\}$/;
@@ -92,6 +93,7 @@ function resolveReference(
 
   const itemField = reference.match(ITEM_FIELD_REF);
   if (itemField?.[1]) return fieldAtPath(lastScope(context)?.item ?? context.item, itemField[1]);
+  if (ITEM_VALUE_REF.test(reference)) return lastScope(context)?.item ?? context.item;
 
   const itemProp = reference.match(ITEM_PROP_REF);
   if (itemProp?.[1] && itemProp[2]) {
@@ -129,6 +131,7 @@ export function resolveReferenceText(reference: string, context: ReferenceResolu
     COMPONENT_PROP_REF.test(reference) ||
     COMPONENT_STATE_REF.test(reference) ||
     ITEM_FIELD_REF.test(reference) ||
+    ITEM_VALUE_REF.test(reference) ||
     ITEM_PROP_REF.test(reference) ||
     INDEX_REF.test(reference) ||
     TOKEN_REF.test(reference);
@@ -173,6 +176,7 @@ export function isSupportedReference(reference: string) {
     DESIGN_PROP_REF.test(reference) ||
     COMPONENT_PROP_REF.test(reference) ||
     ITEM_FIELD_REF.test(reference) ||
+    ITEM_VALUE_REF.test(reference) ||
     ITEM_PROP_REF.test(reference) ||
     INDEX_REF.test(reference) ||
     TOKEN_REF.test(reference)
@@ -201,17 +205,24 @@ export function referenceOptionsForScopes(scopes: readonly RepeaterReferenceScop
 }
 
 export function repeaterItemSchema(
-  source: { kind: 'prop'; uuid: string } | { kind: 'item'; path: string } | undefined,
+  source:
+    | { kind: 'prop'; uuid: string }
+    | { kind: 'item'; path: string }
+    | { kind: 'state'; name: string }
+    | undefined,
   componentSchema: unknown,
   repeaterScopes: readonly RepeaterReferenceScope[],
   catalog: ProjectCatalog,
+  stateSchema?: Readonly<Record<string, Record<string, unknown>>>,
 ) {
   const sourceSchema =
     source?.kind === 'prop'
       ? schemaPropertyById(componentSchema, source.uuid)
       : source?.kind === 'item'
         ? schemaAtPath(repeaterScopes.at(-1)?.itemSchema, source.path)
-        : undefined;
+        : source?.kind === 'state'
+          ? stateSchema?.[source.name]
+          : undefined;
   const items = sourceSchema?.items;
   const resolvedItems = resolveCatalogSchemaReferences(items, catalog);
   return resolvedItems && typeof resolvedItems === 'object' && !Array.isArray(resolvedItems)
@@ -220,7 +231,11 @@ export function repeaterItemSchema(
 }
 
 export function repeaterItemPath(
-  source: { kind: 'prop'; uuid: string } | { kind: 'item'; path: string } | undefined,
+  source:
+    | { kind: 'prop'; uuid: string }
+    | { kind: 'item'; path: string }
+    | { kind: 'state'; name: string }
+    | undefined,
   componentSchema: unknown,
   repeaterScopes: readonly RepeaterReferenceScope[],
 ) {
@@ -243,6 +258,7 @@ export function repeaterItemPath(
       ? `${parentScope.itemPath ?? parentScope.indexName}.${itemName}`
       : `props.${itemName}`;
   }
+  if (source?.kind === 'state') return `state.${source.name}`;
   return 'item[]';
 }
 

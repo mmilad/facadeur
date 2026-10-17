@@ -52,6 +52,10 @@ export const nodeConfigSchema = Type.Object(
                   { kind: Type.Literal('item'), path: Type.String({ minLength: 1 }) },
                   { additionalProperties: false },
                 ),
+                Type.Object(
+                  { kind: Type.Literal('state'), name: Type.String({ minLength: 1 }) },
+                  { additionalProperties: false },
+                ),
               ]),
             ),
           },

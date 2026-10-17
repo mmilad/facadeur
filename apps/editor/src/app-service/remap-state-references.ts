@@ -30,10 +30,23 @@ export function remapBehaviorStateReferences(
     if (action.kind === 'increment') {
       return { ...action, name: renamed.get(action.name) ?? action.name };
     }
+    if (action.kind === 'move-array-item') {
+      return { ...action, name: renamed.get(action.name) ?? action.name };
+    }
     return { ...action, args: action.args.map(mapValue) };
   };
   return {
     ...behavior,
+    ...(behavior.stateSchema
+      ? {
+          stateSchema: Object.fromEntries(
+            Object.entries(behavior.stateSchema).map(([name, schema]) => [
+              renamed.get(name) ?? name,
+              schema,
+            ]),
+          ),
+        }
+      : {}),
     transitions: behavior.transitions.map((transition) => ({
       ...transition,
       actions: transition.actions.map(mapAction),
@@ -58,10 +71,19 @@ export function remapStateReferences(node: Node, renamed: ReadonlyMap<string, st
     return { ...item, condition: mapCondition(condition) };
   });
   const children = node.dom.children?.map((child) => remapStateReferences(child, renamed));
+  const composition = node.config?.composition;
+  const source = composition && composition.kind !== 'slot' ? composition.source : undefined;
+  const nextSource =
+    source?.kind === 'state'
+      ? { ...source, name: renamed.get(source.name) ?? source.name }
+      : source;
   return {
     ...node,
     ...(classes ? { classes } : {}),
     dom: { ...node.dom, ...(children ? { children } : {}) },
+    ...(composition && composition.kind !== 'slot' && source?.kind === 'state'
+      ? { config: { ...node.config, composition: { ...composition, source: nextSource } } }
+      : {}),
   };
 }
 

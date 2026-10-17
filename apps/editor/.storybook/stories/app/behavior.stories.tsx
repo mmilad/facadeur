@@ -99,23 +99,111 @@ const toggleDemo: NodeDefinition = {
   },
 };
 
-function BehaviorPreview() {
+const sortableListDemo: NodeDefinition = {
+  uuid: '860e8400-e29b-41d4-a716-446655440010',
+  name: 'Sortable List Demo',
+  kind: 'component',
+  schema: {
+    kind: 'inline',
+    schema: { type: 'object', properties: {}, additionalProperties: false },
+  },
+  root: {
+    uuid: '860e8400-e29b-41d4-a716-446655440011',
+    name: 'Items',
+    config: {
+      composition: {
+        kind: 'repeater',
+        source: { kind: 'state', name: 'items' },
+        indexName: 'rowIndex',
+      },
+    },
+    dom: {
+      tagName: 'ul',
+      children: [
+        {
+          uuid: '860e8400-e29b-41d4-a716-446655440012',
+          name: 'List item',
+          dom: {
+            tagName: 'li',
+            children: [
+              {
+                uuid: '860e8400-e29b-41d4-a716-446655440013',
+                name: 'Item label',
+                dom: { tagName: 'span', text: '{item}' },
+              },
+              {
+                uuid: '860e8400-e29b-41d4-a716-446655440014',
+                name: 'Move up',
+                dom: {
+                  tagName: 'button',
+                  attributes: { type: 'button', 'aria-label': 'Move item up' },
+                  text: '↑',
+                },
+              },
+              {
+                uuid: '860e8400-e29b-41d4-a716-446655440015',
+                name: 'Move down',
+                dom: {
+                  tagName: 'button',
+                  attributes: { type: 'button', 'aria-label': 'Move item down' },
+                  text: '↓',
+                },
+              },
+            ],
+          },
+        },
+      ],
+    },
+  },
+  behavior: {
+    state: { items: ['Alpha', 'Bravo', 'Charlie'] },
+    stateSchema: { items: { type: 'array', items: { type: 'string' } } },
+    transitions: [
+      {
+        nodeUuid: '860e8400-e29b-41d4-a716-446655440014',
+        event: 'click',
+        actions: [
+          {
+            kind: 'move-array-item',
+            name: 'items',
+            repeaterUuid: '860e8400-e29b-41d4-a716-446655440011',
+            direction: 'up',
+          },
+        ],
+      },
+      {
+        nodeUuid: '860e8400-e29b-41d4-a716-446655440015',
+        event: 'click',
+        actions: [
+          {
+            kind: 'move-array-item',
+            name: 'items',
+            repeaterUuid: '860e8400-e29b-41d4-a716-446655440011',
+            direction: 'down',
+          },
+        ],
+      },
+    ],
+  },
+};
+
+function BehaviorPreview({ definition }: { definition: NodeDefinition }) {
   const editor = useMemo(() => {
     const catalog = createExampleCatalog();
     const projectCatalog = {
       ...catalog,
-      components: { ...catalog.components, [toggleDemo.uuid]: toggleDemo },
+      components: { ...catalog.components, [definition.uuid]: definition },
     };
     const session = createEditorSession({ projectCatalog });
-    session.openAsset(toggleDemo.uuid, 'root');
-    session.selectNode(toggleDemo.root.uuid);
+    session.openAsset(definition.uuid, 'root');
+    session.selectNode(definition.root.uuid);
     const app = createAppService({
       core: session.core,
       session,
       catalogPort: createInMemoryCatalogPort(() => session.core.getSnapshot().catalog),
     });
     return { app, session };
-  }, []);
+  }, [definition]);
   const navigation = useStorybookNavigation(fn());
   useEffect(() => () => editor.session.destroy(), [editor.session]);
   return (
@@ -132,4 +220,5 @@ const meta = {
 } satisfies Meta<typeof BehaviorPreview>;
 export default meta;
 type Story = StoryObj<typeof meta>;
-export const ToggleState: Story = {};
+export const ToggleState: Story = { args: { definition: toggleDemo } };
+export const SortableList: Story = { args: { definition: sortableListDemo } };
