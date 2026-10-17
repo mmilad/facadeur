@@ -8,7 +8,7 @@ import type {
 } from '@facadeur/domain';
 import { fieldsFromJsonSchema, type JsonSchemaField } from '../../../../schema/json-schema-fields';
 import { findDefinition, resolveJsonSchemaForDefinition } from '../../catalog/ops';
-import { inheritableSchemaForDefinition } from '../../catalog/field-contract';
+import { defaultFieldExposure, inheritableSchemaForDefinition } from '../../catalog/field-contract';
 
 /** Config-tab fields owned by the root, followed by fields from each child instance. */
 export function configFieldsForDefinition(catalog: ProjectCatalog, definition: NodeDefinition) {
@@ -25,12 +25,19 @@ export function configFieldsForDefinition(catalog: ProjectCatalog, definition: N
     instanceLabel: string;
     exposure: FieldExposure;
   }[] = [];
+  const ownSchema = resolveJsonSchemaForDefinition(catalog, definition);
+  const occupiedNames = new Set(Object.keys(ownSchema?.properties ?? {}));
   const visit = (node: Node) => {
     const target = node.config?.definitionRef
       ? findDefinition(catalog, node.config.definitionRef)?.definition
       : undefined;
     if (target) {
       const targetSchema = inheritableSchemaForDefinition(catalog, target);
+      const childProperties = targetSchema?.properties ?? {};
+      const instanceLabel = node.name?.trim() || target.name;
+      const exposure =
+        definition.config?.fieldExposure?.[node.uuid] ??
+        defaultFieldExposure(occupiedNames, childProperties, instanceLabel);
       for (const field of fieldsFromJsonSchema(
         schemaWithReferenceOptions((targetSchema ?? {}) as JsonSchemaObject, catalog),
       )) {
@@ -38,9 +45,16 @@ export function configFieldsForDefinition(catalog: ProjectCatalog, definition: N
           field,
           config: definition.config?.instanceFieldConfigs?.[node.uuid]?.[field.name],
           instanceUuid: node.uuid,
-          instanceLabel: node.name?.trim() || target.name,
-          exposure: definition.config?.fieldExposure?.[node.uuid] ?? { mode: 'flat' },
+          instanceLabel,
+          exposure,
         });
+      }
+      if (exposure.mode === 'flat') {
+        Object.keys(childProperties).forEach((name) => occupiedNames.add(name));
+      } else if (exposure.mode === 'grouped') {
+        occupiedNames.add(exposure.groupName || instanceLabel);
+      } else {
+        Object.values(exposure.fields).forEach((name) => occupiedNames.add(name));
       }
       return;
     }

@@ -1,5 +1,21 @@
 # Facadeur cleanup plan
 
+- [x] Examples/Editor: add a reusable Icon atom backed by project icon references.
+  - Evidence: Core already resolves an SVG node's `data-icon` key against `ProjectCatalog.icons`, but the reusable example atoms do not expose an SVG Icon atom; the app seed only has an Icon button component.
+  - Action: add an `Icon` atom with an Icon-target schema reference, a `data-icon` prop binding, and a preview default; merge that atom into the Editor seed catalog alongside its existing Tree Node example.
+  - Scope: reusable project icon rendering only; keep SVG geometry resolution in Core and leave icon upload and SVG editing out of scope.
+  - Contracts: use stable prop IDs and catalog icon IDs, render the selected icon's existing path geometry directly in the SVG root, and add no wrapper element.
+  - Validation: Examples and Editor typechecks, Prettier, targeted UUID search, candidate detector rerun, and `git diff --check` passed; tests were not run. The repository UUID-check script could not run because it imports a non-exported `console` from `node:console`.
+  - Structure: keep the definition under Examples, which owns reusable catalog fixtures; keep seed composition in `EditorBootstrap`, where the app already adds the Tree Node fixture.
+
+- [x] Core: keep default flat field exposure from shadowing local fields.
+  - Evidence: inserting `Css Rule Set` into `CSS rule row` reproduces `Invalid repeater source on node "Repeater"`: both definitions expose a `rules` field, and the child’s default flat exposure replaces the parent’s schema property ID, invalidating the parent Repeater source.
+  - Action: when an unconfigured child instance has any field-name collision with the owning definition’s effective fields, default that instance to grouped exposure under a unique instance label. Use the same inferred exposure in the Inspector config UI; preserve explicitly configured flat, grouped, and manual exposure.
+  - Scope: default field exposure for nested component instances; do not rename user schema fields or alter persisted node data.
+  - Contracts: keep local schema properties and their UUIDs stable, preserve existing explicit exposure choices and non-colliding flat exposure, and keep the derived group name deterministic.
+  - Validation: Core and Editor typechecks, in-memory catalog insertion and preview-resolution reproduction, Prettier, candidate detector rerun, and `git diff --check` passed; tests were not run.
+  - Structure: keep collision detection with effective schema composition in `field-contract.ts`; have preview resolution and Inspector config consume that same helper rather than duplicating the rule. `resolve.ts` remains the cohesive recursive preview-tree walker.
+
 - [x] Editor: include CSS shorthand properties in the layer declaration picker.
   - Evidence: `LayerStylesEditor` derives available names only from `getComputedStyle`, which
     enumerates resolved longhands and omits unset shorthands such as `padding`, `margin`, and
@@ -727,3 +743,16 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
   - Contracts: retain UUID references, permit Font assets in font-family fields and Typography references in whole-style fields, preserve other token picker labels and descriptions.
   - Structure: `DesignTypographyEditor.tsx` remains a cohesive control that owns field presentation and token options; the detector's 506-line review signal does not identify a separate responsibility touched by this change.
   - Validation: Editor typecheck, source inspection, Prettier, candidate detector rerun, and `git diff --check` passed; tests were not run.
+- [ ] Core: keep schema edits and preview defaults in sync.
+  - Evidence: `CatalogSchemaStage` allows removing fields from an inline schema while `definition.config.previewData.fields` keeps values for those fields; `validateProjectCatalog` then rejects the next catalog commit, including inserting a component, with an invalid preview-default error.
+  - Action: when an inline schema is replaced, remove definition preview defaults for fields no longer in the contract; make catalog validation tolerate stale or mistyped preview examples, and filter them from rendering. Keep strict validation for component instance data and type validation for active preview fields.
+  - Scope: schema replacement and preview-default validation; do not change persisted schema or renderer contracts.
+  - Contracts: preserve preview values for retained fields, preserve valid partial values and bindings, and keep invalid values for known fields rejected.
+  - Validation: Core and Editor typechecks, focused in-memory reproduction for stale CSS rule preview values, candidate detector rerun, and `git diff --check`; no tests run.
+
+- [x] Core: preserve Repeater layers when their schema changes.
+  - Evidence: switching a definition from its inline schema to a shared schema can leave Repeater and child text/style bindings pointing at property IDs from the old schema; validation rejects an invalid Repeater source, and deleting children destroys authored layers.
+  - Action: reconcile `{props:uuid}` bindings by schema path when a definition schema changes. Clear only bindings with no corresponding property in the new schema, remove only an invalid Repeater source, and retain its child layers. Preserve repeaters whose source remains valid.
+  - Scope: schema-change commits only; do not alter manual Repeater editing or Switch behavior.
+  - Contracts: keep node and Repeater identities, child order, and composition kind; remap matching paths to new stable field IDs and blank only removed property bindings.
+  - Validation: Core and Editor typechecks, in-memory switch to the existing global CSS Rule Set schema confirming Repeater and child identities are retained and bindings remapped, candidate detector, and `git diff --check`; tests not run.

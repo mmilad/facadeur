@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useMemo } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { validateProjectCatalog } from '@facadeur/core';
-import { facadeurTreeNode, facadeurWorkspace } from '@facadeur/examples';
+import { facadeurTreeNode, facadeurWorkspace, icon } from '@facadeur/examples';
 import { createEditorSession } from '../domain/session/create-editor-session';
 import type { EditorSession } from '../domain/session';
 import { EditorHost } from './EditorHost';
@@ -52,6 +52,7 @@ function createInitialSession() {
   const seedCatalog = structuredClone(facadeurEditorCatalog);
   const catalog = {
     ...seedCatalog,
+    atoms: { ...seedCatalog.atoms, [icon.uuid]: icon },
     components: { ...seedCatalog.components, [facadeurTreeNode.uuid]: facadeurTreeNode },
   };
   const projectCatalog = validateProjectCatalog(catalog);

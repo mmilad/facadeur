@@ -13,10 +13,29 @@ export function mergePreviewFields(
   schema?: JsonSchemaObject | null,
 ) {
   return {
-    ...definitionPreview,
+    ...compatiblePreviewFieldValues(definitionPreview, schema),
     ...parentFields,
     ...compatibleNodeFieldValues(nodeData, schema),
   };
+}
+
+function compatiblePreviewFieldValues(
+  values: Record<string, FieldValue> | undefined,
+  schema: JsonSchemaObject | null | undefined,
+) {
+  if (!values || !schema?.properties) return values ?? {};
+  return Object.fromEntries(
+    Object.entries(values).filter(([name, value]) => {
+      const fieldSchema = (schema.properties as Record<string, unknown>)[name];
+      if (!fieldSchema || typeof fieldSchema !== 'object') return false;
+      return (
+        matchesPartialSchemaValue(
+          value,
+          fieldSchema as Parameters<typeof matchesPartialSchemaValue>[1],
+        ) || isFieldBindingValue(value, fieldSchema)
+      );
+    }),
+  );
 }
 
 export function previewFieldsForNode(

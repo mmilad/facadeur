@@ -1,5 +1,56 @@
 {
-  "atoms": {},
+  "atoms": {
+    "550e8400-e29b-41d4-a716-000000000501": {
+      "uuid": "550e8400-e29b-41d4-a716-000000000501",
+      "name": "Icon",
+      "kind": "atom",
+      "schema": {
+        "kind": "inline",
+        "schema": {
+          "type": "object",
+          "title": "Icon",
+          "required": ["icon"],
+          "properties": {
+            "icon": {
+              "type": "string",
+              "title": "Icon",
+              "default": "save",
+              "x-facadeur-reference": {
+                "target": "icon"
+              },
+              "x-facadeur-prop-id": "550e8400-e29b-41d4-a716-000000000503"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "root": {
+        "uuid": "550e8400-e29b-41d4-a716-000000000502",
+        "name": "Icon",
+        "dom": {
+          "tagName": "svg",
+          "attributes": {
+            "data-icon": "{props:550e8400-e29b-41d4-a716-000000000503}",
+            "aria-hidden": "true",
+            "focusable": "false"
+          }
+        },
+        "classes": [
+          {
+            "name": "icon",
+            "generated": true
+          }
+        ]
+      },
+      "config": {
+        "previewData": {
+          "fields": {
+            "icon": "save"
+          }
+        }
+      }
+    }
+  },
   "components": {
     "660e8400-e29b-41d4-a716-000000000136": {
       "uuid": "660e8400-e29b-41d4-a716-000000000136",
@@ -440,8 +491,9 @@
                     "uuid": "660e8400-e29b-41d4-a716-000000000c89",
                     "name": "Form layer",
                     "dom": {
-                      "tagName": "div",
-                      "text": "　⌄  form-control"
+                      "tagName": "h1",
+                      "text": "　⌄  form-control",
+                      "children": []
                     },
                     "classes": [
                       {
@@ -2943,30 +2995,21 @@
           },
           "children": [
             {
-              "uuid": "c4b6af9a-ad54-46e6-b209-09f70826b200",
+              "uuid": "4056b344-57e5-48fd-abaf-3b138dc81dce",
               "name": "Icon",
               "dom": {
-                "tagName": "svg",
-                "attributes": {
-                  "data-icon": "{props:247d9011-871d-4f73-9967-8efb592a89f4}",
-                  "viewBox": "0 0 24 24",
-                  "aria-hidden": "true"
-                }
+                "tagName": "div",
+                "children": []
               },
               "classes": [
                 {
                   "name": "icon",
-                  "generated": true,
-                  "style": {
-                    "declarations": {
-                      "width": "18px",
-                      "height": "18px",
-                      "objectFit": "contain",
-                      "flexShrink": "0"
-                    }
-                  }
+                  "generated": true
                 }
-              ]
+              ],
+              "config": {
+                "definitionRef": "550e8400-e29b-41d4-a716-000000000501"
+              }
             }
           ]
         },
@@ -3019,7 +3062,7 @@
                     "type": "string",
                     "title": "Kind",
                     "enum": ["component", "group"],
-                    "x-facadeur-prop-id": "c26a01a6-a970-41a3-97fe-6588d0136f91"
+                    "x-facadeur-prop-id": "81c319b2-2746-41b9-8f1c-aa42333263a8"
                   },
                   "componentId": {
                     "type": "string",
@@ -3027,12 +3070,12 @@
                     "x-facadeur-reference": {
                       "target": "component"
                     },
-                    "x-facadeur-prop-id": "ac1045ea-896f-496e-966e-7636c87e30b9"
+                    "x-facadeur-prop-id": "752070a9-e3bb-48c5-9ab4-c92c04f5e56c"
                   },
                   "label": {
                     "type": "string",
                     "title": "Label",
-                    "x-facadeur-prop-id": "c3c80192-64f8-4758-9511-1b59bdb79da0"
+                    "x-facadeur-prop-id": "eeb8c845-9aba-4b46-8710-53a5ae7b6c40"
                   },
                   "children": {
                     "type": "array",
@@ -3046,18 +3089,18 @@
                           "x-facadeur-reference": {
                             "target": "component"
                           },
-                          "x-facadeur-prop-id": "cc53f5e8-22fe-4c74-824d-f47d617fd681"
+                          "x-facadeur-prop-id": "05332226-82d5-4122-bbb2-72e63ec1de89"
                         },
                         "label": {
                           "type": "string",
                           "title": "Label",
-                          "x-facadeur-prop-id": "f96106a2-37e8-42d7-8c55-ef2834b04200"
+                          "x-facadeur-prop-id": "3d9dce46-31ab-49cc-8f04-478d26578367"
                         }
                       },
                       "required": ["componentId", "label"],
                       "additionalProperties": false
                     },
-                    "x-facadeur-prop-id": "dc4dda55-20c3-49e6-8384-0acfd7a90774"
+                    "x-facadeur-prop-id": "330178d6-64eb-41f9-b11a-c156d9e69a34"
                   }
                 },
                 "required": ["kind", "label"],
@@ -3304,6 +3347,164 @@
             "generated": true
           }
         ]
+      }
+    },
+    "631ca8f3-acb7-42aa-bc96-3062ef6dda9c": {
+      "uuid": "631ca8f3-acb7-42aa-bc96-3062ef6dda9c",
+      "name": "Css Rule Set",
+      "kind": "component",
+      "schema": {
+        "kind": "ref",
+        "uuid": "6faf561c-fad5-48ae-8bb5-d7ddb4237c34"
+      },
+      "root": {
+        "uuid": "8a0e1db6-abd4-4202-a9e5-7193ffcc53bf",
+        "dom": {
+          "tagName": "div",
+          "children": [
+            {
+              "uuid": "149dbfaa-6b29-4083-a497-772f60df1f68",
+              "name": "Style Selector LAbel",
+              "dom": {
+                "tagName": "div",
+                "text": "{props:9c7df0e9-6a58-4876-94ca-e15654103d22}",
+                "children": []
+              },
+              "classes": [
+                {
+                  "name": "style-selector-label",
+                  "generated": true,
+                  "style": {
+                    "declarations": {
+                      "min-height": "48px",
+                      "display": "flex",
+                      "align-items": "center"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "uuid": "3957dc87-9283-4b0a-abda-d2f02434c354",
+              "name": "Repeater",
+              "dom": {
+                "children": [
+                  {
+                    "uuid": "940b6c04-49a7-478b-ba01-b7c776d3c562",
+                    "name": "Property Item",
+                    "dom": {
+                      "tagName": "div",
+                      "children": [
+                        {
+                          "uuid": "f3468848-4ec3-4d79-be0d-241db46a2e85",
+                          "name": "property-name",
+                          "dom": {
+                            "tagName": "div",
+                            "text": "{props:449fb6d4-7937-4f8c-a303-11a04e011ec4}"
+                          },
+                          "classes": [
+                            {
+                              "name": "property-name",
+                              "generated": true,
+                              "style": {
+                                "declarations": {
+                                  "flex": "1",
+                                  "minWidth": "0",
+                                  "font": "{token:550e8400-e29b-41d4-a716-00000000043a}"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "uuid": "0d13da20-9a70-4565-8806-6ae4160d717f",
+                          "name": "property-value",
+                          "dom": {
+                            "tagName": "div",
+                            "text": "{props:36ab4f66-00d7-42f9-8472-14534e502c84}",
+                            "children": []
+                          },
+                          "classes": [
+                            {
+                              "name": "property-value",
+                              "generated": true,
+                              "style": {
+                                "declarations": {
+                                  "fontFamily": "monospace",
+                                  "fontSize": "11px",
+                                  "flex": "1",
+                                  "minWidth": "0"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    "classes": [
+                      {
+                        "name": "property-item",
+                        "generated": true,
+                        "style": {
+                          "declarations": {
+                            "display": "flex",
+                            "flex-direction": "row",
+                            "width": "100%",
+                            "align-items": "center",
+                            "font-family": "{token:0498c315-10df-54a4-8213-f36bad42e52a}"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "classes": [
+                {
+                  "name": "repeater",
+                  "generated": true
+                }
+              ],
+              "config": {
+                "composition": {
+                  "kind": "repeater",
+                  "source": {
+                    "kind": "prop",
+                    "uuid": "bb7bf186-f4ed-4c9d-a354-00b0cfffcbcd"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "classes": [
+          {
+            "name": "layer",
+            "generated": true
+          }
+        ]
+      },
+      "category": "sidebar",
+      "config": {
+        "previewData": {
+          "fields": {
+            "rules": [
+              {
+                "propName": "color",
+                "propValue": "red"
+              },
+              {
+                "propName": "border",
+                "propValue": "1px solid blue"
+              },
+              {
+                "propName": "padding",
+                "propValue": "10px"
+              }
+            ],
+            "selector": ".default-class"
+          }
+        }
       }
     }
   },
@@ -4165,6 +4366,35 @@
             "target": "icon"
           },
           "x-facadeur-prop-id": "247d9011-871d-4f73-9967-8efb592a89f4"
+        }
+      },
+      "additionalProperties": false
+    },
+    "6faf561c-fad5-48ae-8bb5-d7ddb4237c34": {
+      "type": "object",
+      "title": "Css Rule Set",
+      "properties": {
+        "selector": {
+          "type": "string",
+          "x-facadeur-prop-id": "9c7df0e9-6a58-4876-94ca-e15654103d22"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "propName": {
+                "type": "string",
+                "x-facadeur-prop-id": "449fb6d4-7937-4f8c-a303-11a04e011ec4"
+              },
+              "propValue": {
+                "type": "string",
+                "x-facadeur-prop-id": "36ab4f66-00d7-42f9-8472-14534e502c84"
+              }
+            },
+            "additionalProperties": false
+          },
+          "x-facadeur-prop-id": "bb7bf186-f4ed-4c9d-a354-00b0cfffcbcd"
         }
       },
       "additionalProperties": false

@@ -25,6 +25,23 @@ export type EffectiveDefinitionSchema = {
   readonly previewDefaults: Readonly<Record<string, FieldValue>>;
 };
 
+/** Keep inherited fields under a stable group when flattening would shadow an existing field. */
+export function defaultFieldExposure(
+  existingNames: ReadonlySet<string>,
+  childProperties: Readonly<Record<string, unknown>>,
+  groupBaseName: string,
+): FieldExposure {
+  if (!Object.keys(childProperties).some((name) => existingNames.has(name))) {
+    return { mode: 'flat' };
+  }
+
+  const baseName = groupBaseName.trim() || 'group';
+  let groupName = baseName;
+  let suffix = 2;
+  while (existingNames.has(groupName)) groupName = `${baseName} ${suffix++}`;
+  return { mode: 'grouped', groupName };
+}
+
 type ObjectSchema = JsonSchemaObject & {
   type?: string;
   properties?: Record<string, unknown>;
@@ -116,9 +133,13 @@ function resolveEffectiveSchema(
               .map(([name, config]) => [name, config.value!]),
           ),
         };
-        const exposure: FieldExposure = definition.config?.fieldExposure?.[node.uuid] ?? {
-          mode: 'flat',
-        };
+        const exposure: FieldExposure =
+          definition.config?.fieldExposure?.[node.uuid] ??
+          defaultFieldExposure(
+            new Set(Object.keys(properties)),
+            childProperties,
+            node.name || target.name,
+          );
         if (exposure.mode === 'flat') {
           for (const name of Object.keys(childProperties)) {
             properties[name] = childProperties[name];

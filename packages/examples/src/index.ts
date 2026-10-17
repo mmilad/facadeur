@@ -11,6 +11,7 @@ export { facadeurSettings, facadeurWorkspace, facadeurWorkspaceMobile } from './
 export { facadeurComponents, facadeurComponentIds } from './facadeur-editor/components';
 export { facadeurTreeNode } from './facadeur-editor/tree-node';
 export { definition as image } from './image';
+export { definition as icon } from './icon';
 export { schemaUuid as imageSchemaUuid } from './image/schema';
 export { exampleIds } from './idList';
 export { tokenRef } from './references';

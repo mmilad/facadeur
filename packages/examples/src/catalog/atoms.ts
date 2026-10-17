@@ -9,6 +9,7 @@ import { definition as video } from '../video';
 import { definition as button } from '../button';
 import { definition as form_input } from '../form-input';
 import { definition as link } from '../link';
+import { definition as icon } from '../icon';
 import type { ProjectCatalog } from '@facadeur/domain';
 
 export const definitions = {
@@ -23,4 +24,5 @@ export const definitions = {
   [button.uuid]: button,
   [form_input.uuid]: form_input,
   [link.uuid]: link,
+  [icon.uuid]: icon,
 } satisfies ProjectCatalog['atoms'];

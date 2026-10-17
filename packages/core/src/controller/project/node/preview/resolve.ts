@@ -13,7 +13,11 @@ import {
   mergePreviewFields,
   staticFieldValues,
 } from './merge';
-import { effectiveSchemaForDefinition } from '../../catalog/field-contract';
+import {
+  defaultFieldExposure,
+  effectiveSchemaForDefinition,
+  inheritableSchemaForDefinition,
+} from '../../catalog/field-contract';
 import { canAcceptCatalogChildren } from '../../catalog/tree-ops';
 import { effectiveClassList, evaluateClassCondition } from './class-conditions';
 import {
@@ -161,12 +165,16 @@ function resolveNodeToElementBuildConfig(
       if (activeDefinitions.has(refDefinition.uuid) && !dynamicReference) {
         throw new Error(`Cyclic catalog definition reference at "${refDefinition.uuid}"`);
       }
-      const exposure = definition.config?.fieldExposure?.[node.uuid] ?? { mode: 'flat' as const };
+      const parentSchema = effectiveSchemaForDefinition(catalog, definition).schema;
+      const exposure =
+        definition.config?.fieldExposure?.[node.uuid] ??
+        defaultFieldExposure(
+          new Set(Object.keys(parentSchema?.properties ?? {})),
+          inheritableSchemaForDefinition(catalog, refDefinition)?.properties ?? {},
+          node.name || refDefinition.name,
+        );
       const instanceFieldConfigs = definition.config?.instanceFieldConfigs?.[node.uuid] ?? {};
-      const parentComponentProps = componentPropValues(
-        effectiveSchemaForDefinition(catalog, definition).schema,
-        parentFields,
-      );
+      const parentComponentProps = componentPropValues(parentSchema, parentFields);
       const instancePreviewData = resolveParentPropBindings(
         node.config?.previewData?.fields as Record<string, FieldValue> | undefined,
         { catalog, componentProps: parentComponentProps, repeaterScopes },
@@ -260,6 +268,7 @@ function resolveNodeToElementBuildConfig(
     { ...(definitionPreview as Record<string, FieldValue>), ...staticFieldValues(definition) },
     nodeData,
     parentFields,
+    effective.schema,
   );
   Object.assign(fields, lockedStaticFieldValues(definition));
   const nodeOverrides = {

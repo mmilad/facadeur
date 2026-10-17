@@ -23,6 +23,7 @@ import {
   findDefinition,
   findNodeByUuid,
   patchNodeData,
+  pruneDefinitionValuesForSchema,
   patchCatalogDefinitionPreviewField,
   patchNodeDataRecord,
   patchNodeComposition,
@@ -32,6 +33,7 @@ import {
   patchNodeDomText,
   patchNodeTagName,
 } from './catalog/ops';
+import { reconcileDefinitionBindingsForSchemaChange } from './catalog/schema-repeater';
 import {
   updateDefinitionInstanceField,
   updateDefinitionStaticField,
@@ -193,7 +195,15 @@ export class CoreController implements CoreControllerHost {
   }
 
   patchDefinition(kind: CatalogMapKey, uuid: string, patch: Partial<NodeDefinition>) {
-    this.commitCatalog(patchCatalogDefinitionRecord(this.catalog, kind, uuid, patch), () => {
+    const withPrunedValues =
+      patch.schema?.kind === 'inline'
+        ? pruneDefinitionValuesForSchema(this.catalog, uuid, patch.schema.schema)
+        : this.catalog;
+    const patched = patchCatalogDefinitionRecord(withPrunedValues, kind, uuid, patch);
+    const nextCatalog = patch.schema
+      ? reconcileDefinitionBindingsForSchemaChange(this.catalog, patched, uuid)
+      : patched;
+    this.commitCatalog(nextCatalog, () => {
       if (this.openDefinitionId === uuid) {
         const located = findDefinition(this.catalog, uuid);
         if (located) this.selectedNodeUuid = located.definition.root.uuid;

@@ -133,19 +133,21 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
     for (const [field, value] of Object.entries(values)) {
       const fieldSchema = properties[field];
       if (!fieldSchema) continue;
-      if (
-        !matchesPartialSchemaValue(
-          value,
-          fieldSchema as Parameters<typeof matchesPartialSchemaValue>[1],
-        ) &&
-        !isFieldBindingValue(value, fieldSchema)
-      ) {
+      const matchesSchema = matchesPartialSchemaValue(
+        value,
+        fieldSchema as Parameters<typeof matchesPartialSchemaValue>[1],
+      );
+      const isBinding = isFieldBindingValue(value, fieldSchema);
+      if (!matchesSchema && !isBinding) {
+        if (context.startsWith('preview defaults') || context.startsWith('instance preview values'))
+          continue;
         throw new DocumentError(
           'schema',
           `Invalid value for field "${field}" in ${context}; it does not match the current schema.`,
         );
       }
-      assertCatalogReferenceValue(value, fieldSchema, catalog, `${context}.${field}`);
+      if (matchesSchema || isBinding)
+        assertCatalogReferenceValue(value, fieldSchema, catalog, `${context}.${field}`);
     }
   };
 

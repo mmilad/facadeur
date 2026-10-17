@@ -99,6 +99,51 @@ export function patchNodeData(
   });
 }
 
+/** Keep field-backed values in sync when an inline schema removes properties. */
+export function pruneDefinitionValuesForSchema(
+  catalog: ProjectCatalog,
+  definitionUuid: string,
+  schema: JsonSchemaObject,
+): ProjectCatalog {
+  const located = findDefinition(catalog, definitionUuid);
+  if (!located) return catalog;
+  const definition = located.definition;
+  if (definition.schema.kind !== 'inline') return catalog;
+  const nextProperties = schema.properties ?? {};
+  const removedNames = new Set(
+    Object.keys(definition.schema.schema.properties ?? {}).filter(
+      (name) => !Object.prototype.hasOwnProperty.call(nextProperties, name),
+    ),
+  );
+  if (!removedNames.size) return catalog;
+  const next = structuredClone(catalog) as ProjectCatalog;
+  const nextDefinition = next[located.kind][definitionUuid]!;
+  const pruneRecord = (record: Record<string, unknown> | undefined) => {
+    if (!record) return undefined;
+    const pruned = { ...record };
+    for (const name of removedNames) delete pruned[name];
+    return Object.keys(pruned).length ? pruned : undefined;
+  };
+  const config = { ...nextDefinition.config };
+  const previewData = config.previewData;
+  if (previewData) {
+    const fields = pruneRecord(previewData.fields);
+    const { fields: _fields, ...extras } = previewData;
+    const nextPreviewData =
+      fields || Object.keys(extras).length
+        ? { ...extras, ...(fields ? { fields: fields as Record<string, FieldValue> } : {}) }
+        : undefined;
+    if (nextPreviewData) config.previewData = nextPreviewData;
+    else delete config.previewData;
+  }
+  const { config: _oldConfig, ...definitionBase } = nextDefinition;
+  (next[located.kind] as Record<string, NodeDefinition>)[definitionUuid] = {
+    ...definitionBase,
+    ...(Object.keys(config).length ? { config } : {}),
+  };
+  return next;
+}
+
 export function patchCatalogDefinitionPreviewField(
   catalog: ProjectCatalog,
   definitionUuid: string,
