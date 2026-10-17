@@ -9,7 +9,7 @@ import type { StageController } from '../../domain/viewport/stage';
 import type { ViewportBoard } from '../../domain/viewport/board';
 import { useStagePointer } from './canvas/useStagePointer';
 import { useStageViewportBoard } from './canvas/useStageViewportBoard';
-import { DynamicElement } from '../../domain/viewport/dynamic-element';
+import { DynamicElement, type PreviewControlValue } from '../../domain/viewport/dynamic-element';
 import { executeComponentBehavior, resolveDefinitionToElementBuildConfig } from '@facadeur/core';
 import {
   renderDesignCss,
@@ -50,6 +50,7 @@ export function StageCanvas({
   const [interacting, setInteracting] = useState(false);
   const [runtimeState, setRuntimeState] = useState<Record<string, FieldValue | null>>({});
   const runtimeStateRef = useRef(runtimeState);
+  const [controlValues, setControlValues] = useState<Record<string, PreviewControlValue>>({});
 
   useStagePointer({
     app,
@@ -81,12 +82,30 @@ export function StageCanvas({
   const coreSnapshot = app.getCoreSnapshot();
   const definition = coreSnapshot.openDefinition;
   const behavior = definition?.behavior as ComponentBehavior | undefined;
-  const hasTransitions = (behavior?.transitions.length ?? 0) > 0;
   const behaviorStateSignature = JSON.stringify(behavior?.state ?? {});
+  const behaviorEvents = useMemo(() => {
+    const events: Record<string, string[]> = {};
+    for (const transition of behavior?.transitions ?? []) {
+      const nodeEvents = (events[transition.nodeUuid] ??= []);
+      if (!nodeEvents.includes(transition.event)) nodeEvents.push(transition.event);
+    }
+    return events;
+  }, [behavior]);
+  const handleControlChange = useCallback((key: string, value: PreviewControlValue) => {
+    setControlValues((current) => ({ ...current, [key]: value }));
+  }, []);
+  const toggleInteraction = useCallback(() => {
+    const initialState = JSON.parse(behaviorStateSignature) as Record<string, FieldValue | null>;
+    runtimeStateRef.current = initialState;
+    setRuntimeState(initialState);
+    setControlValues({});
+    setInteracting((current) => !current);
+  }, [behaviorStateSignature]);
   useEffect(() => {
     const initialState = JSON.parse(behaviorStateSignature) as Record<string, FieldValue | null>;
     runtimeStateRef.current = initialState;
     setRuntimeState(initialState);
+    setControlValues({});
     setInteracting(false);
   }, [openId, behaviorStateSignature]);
   useEffect(() => {
@@ -167,6 +186,10 @@ export function StageCanvas({
             <DynamicElement
               config={buildConfig}
               behaviorHandler={interacting ? behaviorHandler : undefined}
+              interactive={interacting}
+              behaviorEvents={behaviorEvents}
+              controlValues={controlValues}
+              onControlChange={handleControlChange}
             />,
             frame.host.contentDocument().body,
             frame.breakpoint.uuid,
@@ -192,18 +215,18 @@ export function StageCanvas({
           ? insertModeCue(tool)
           : readOnly
             ? 'Scroll to zoom · drag the canvas to pan'
-            : 'Scroll to zoom · drag the canvas to pan · Click to select a layer · F T I insert'}
+            : interacting
+              ? 'Test mode · use the component controls and events · click the button to return to layer editing'
+              : 'Scroll to zoom · drag the canvas to pan · Click to select a layer · F T I insert'}
       </p>
-      {hasTransitions && !isInsertTool(tool) && !readOnly && (
+      {definition && !isInsertTool(tool) && !readOnly && (
         <button
           className="stage-interaction-toggle"
           type="button"
           aria-pressed={interacting}
-          onClick={() => setInteracting((value) => !value)}
+          onClick={toggleInteraction}
         >
-          {interacting
-            ? 'Preview interaction on · click to edit layers'
-            : 'Try component interactions'}
+          {interacting ? 'Preview interaction on · click to edit layers' : 'Try this component'}
         </button>
       )}
     </div>

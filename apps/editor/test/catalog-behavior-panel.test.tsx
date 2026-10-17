@@ -41,6 +41,25 @@ function renderControlledPanel(initial: NodeDefinition = definition) {
 }
 
 describe('CatalogBehaviorPanel transitions', () => {
+  it('only offers preview events and keeps the next transition ready after adding one', () => {
+    const { onEvent } = renderControlledPanel();
+    const eventInput = screen.getByRole('combobox', { name: 'Transition event name' });
+    const eventNames = Array.from((eventInput as HTMLSelectElement).options).map(
+      (option) => option.value,
+    );
+
+    expect(eventNames).toContain('dragover');
+    expect(eventNames).toContain('pointerenter');
+    expect(eventNames).not.toContain('made-up-event');
+    fireEvent.change(eventInput, { target: { value: 'dragover' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add transition' }));
+    expect(screen.getByRole('heading', { name: /emits dragover/i })).toBeTruthy();
+    expect(
+      (screen.getByRole('combobox', { name: 'Transition event name' }) as HTMLSelectElement).value,
+    ).toBe('click');
+    expect(onEvent).toHaveBeenCalled();
+  });
+
   it('authors an element event with a data-only state action and operation value', () => {
     const { onEvent } = renderControlledPanel();
 

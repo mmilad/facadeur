@@ -2,6 +2,7 @@ import { isVoidHtmlTag } from '@facadeur/core';
 import type { RenderBuildConfig } from '@facadeur/core';
 import { Fragment, createElement, useLayoutEffect, useRef } from 'react';
 import type { CSSProperties, HTMLAttributes, RefAttributes } from 'react';
+import { reactEventPropFor } from './dom-events';
 
 const REACT_ATTRIBUTE_NAMES: Readonly<Record<string, string>> = {
   class: 'className',
@@ -22,22 +23,40 @@ const REACT_ATTRIBUTE_NAMES: Readonly<Record<string, string>> = {
 const ignorePreviewChange = () => {};
 
 export type PreviewBehaviorHandler = (nodeUuid: string, eventName: string, event: unknown) => void;
+export interface PreviewControlValue {
+  readonly value?: string;
+  readonly checked?: boolean;
+}
 
 export function DynamicElement({
   config,
   behaviorHandler,
+  interactive = false,
+  behaviorEvents,
+  controlValues,
+  onControlChange,
 }: {
   config: RenderBuildConfig;
   behaviorHandler?: PreviewBehaviorHandler;
+  interactive?: boolean;
+  behaviorEvents?: Readonly<Record<string, readonly string[]>>;
+  controlValues?: Readonly<Record<string, PreviewControlValue>>;
+  onControlChange?: (key: string, value: PreviewControlValue) => void;
 }) {
   const elementRef = useRef<HTMLElement | null>(null);
   const previousDomProperties = useRef<Readonly<Record<string, unknown>>>({});
   const children = config.children ?? [];
-  const domProperties = domPropertiesFor(config);
+  const renderNodeUuid = config.kind === 'fragment' ? undefined : config.nodeUuid;
+  const controlKey = config.kind === 'fragment' ? undefined : (config.renderKey ?? renderNodeUuid);
+  const domProperties: Record<string, unknown> = {
+    ...domPropertiesFor(config),
+    ...(controlKey ? controlValues?.[controlKey] : undefined),
+  };
   useLayoutEffect(() => {
     const element = elementRef.current;
     if (!element) return;
     for (const [name, value] of Object.entries(domProperties)) {
+      if (interactive && (name === 'value' || name === 'checked')) continue;
       if (value !== undefined && value !== null) {
         (element as unknown as Record<string, unknown>)[name] = value;
       }
@@ -48,7 +67,7 @@ export function DynamicElement({
       }
     }
     previousDomProperties.current = domProperties;
-  }, [domProperties]);
+  }, [domProperties, interactive]);
 
   if (config.kind === 'fragment') {
     return createElement(
@@ -63,13 +82,17 @@ export function DynamicElement({
           }
           config={child}
           behaviorHandler={behaviorHandler}
+          interactive={interactive}
+          behaviorEvents={behaviorEvents}
+          controlValues={controlValues}
+          onControlChange={onControlChange}
         />
       )),
     );
   }
 
   const { attributes = {}, dataset, nodeUuid, renderKey, styleNodeUuids, tagName, text } = config;
-  const content = text;
+  const content = interactive && tagName.toLowerCase() === 'textarea' ? undefined : text;
   const attributeStyle = attributes.style;
   const props: Record<string, unknown> = {};
 
@@ -89,26 +112,42 @@ export function DynamicElement({
   if (isCheckableInput) {
     props.checked = Boolean(domProperties.checked ?? props.checked ?? false);
     delete domProperties.checked;
-    props.onChange ??= ignorePreviewChange;
-  } else if (isFormControl) {
-    // Keep form values out of React's controlled-input tracking. Preview data may
-    // supply a value after the first render, so apply it through the DOM property.
-    delete props.value;
-    if (hasValue) {
+    if (interactive && controlKey && onControlChange) {
+      props.onChange = (event: { readonly currentTarget: HTMLInputElement }) =>
+        onControlChange(controlKey, { checked: event.currentTarget.checked });
+    } else {
       props.onChange ??= ignorePreviewChange;
-      if (normalizedTagName === 'input' || normalizedTagName === 'textarea') {
-        props.readOnly = true;
+    }
+  } else if (isFormControl) {
+    if (interactive) {
+      props.value = String(domProperties.value ?? props.value ?? '');
+      if (controlKey && onControlChange) {
+        props.onChange = (event: {
+          readonly currentTarget: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+        }) => onControlChange(controlKey, { value: event.currentTarget.value });
+      }
+    } else {
+      // Keep form values out of React's controlled-input tracking. Preview data may
+      // supply a value after the first render, so apply it through the DOM property.
+      delete props.value;
+      if (hasValue) {
+        props.onChange ??= ignorePreviewChange;
+        if (normalizedTagName === 'input' || normalizedTagName === 'textarea') {
+          props.readOnly = true;
+        }
       }
     }
   }
   if (nodeUuid) props['data-facadeur-node-uuid'] = nodeUuid;
-  if (nodeUuid && behaviorHandler) {
-    for (const eventName of ['click', 'change', 'input', 'submit', 'keydown', 'focus', 'blur']) {
-      const reactName = `on${eventName[0]?.toUpperCase()}${eventName.slice(1)}`;
+  const nodeBehaviorEvents = nodeUuid ? (behaviorEvents?.[nodeUuid] ?? []) : [];
+  if (nodeUuid && (behaviorHandler || nodeBehaviorEvents.length)) {
+    for (const eventName of nodeBehaviorEvents) {
+      const reactName = reactEventPropFor(eventName);
+      if (!reactName) continue;
       const existing = props[reactName];
       props[reactName] = (event: unknown) => {
         if (typeof existing === 'function') (existing as (event: unknown) => void)(event);
-        behaviorHandler(nodeUuid, eventName, event);
+        behaviorHandler?.(nodeUuid, eventName, event);
       };
     }
   }
@@ -132,6 +171,10 @@ export function DynamicElement({
         }
         config={child}
         behaviorHandler={behaviorHandler}
+        interactive={interactive}
+        behaviorEvents={behaviorEvents}
+        controlValues={controlValues}
+        onControlChange={onControlChange}
       />
     )),
   ];

@@ -12,6 +12,7 @@ import type {
 } from '@facadeur/domain';
 import type { EditorEvent } from '../../domain/sidebar/events';
 import { EditorEventType } from '../../domain/sidebar/events';
+import { previewDomEventOptions } from '../../domain/viewport/dom-events';
 import { Field } from '../components/feedback';
 import { Inline, Stack } from '../components/layout';
 import { NumberInput, Select, TextInput, Toggle } from '../controls/form-binding';
@@ -45,6 +46,7 @@ const actionKindOptions = [
   { value: 'increment', label: 'Increment state' },
   { value: 'emit', label: 'Emit callback' },
 ];
+const eventOptions = previewDomEventOptions.map(([value, label]) => ({ value, label }));
 
 export function CatalogBehaviorPanel({
   definition,
@@ -128,7 +130,7 @@ export function CatalogBehaviorPanel({
     if (!nodeUuid || !event) return;
     setTransitions([...behavior.transitions, { nodeUuid, event, actions: [] }]);
     setTransitionNode(nodeUuid);
-    setTransitionEvent('');
+    setTransitionEvent('click');
   };
   const updateTransition = (index: number, transition: Transition) =>
     setTransitions(
@@ -285,10 +287,11 @@ export function CatalogBehaviorPanel({
               Add an element to the component before creating a transition.
             </p>
           )}
-          <Field label="Event name" hint="For example click, change, pointerenter, or keydown.">
-            <TextInput
+          <Field label="Event" hint="Only DOM events supported by the preview can be bound.">
+            <Select
               aria-label="Transition event name"
               value={transitionEvent}
+              options={eventOptions}
               onChange={setTransitionEvent}
             />
           </Field>
@@ -314,10 +317,11 @@ export function CatalogBehaviorPanel({
                     onChange={(nodeUuid) => updateTransition(index, { ...transition, nodeUuid })}
                   />
                 </Field>
-                <Field label="Event name">
-                  <TextInput
+                <Field label="Event">
+                  <Select
                     aria-label={`Event name for transition ${index + 1}`}
                     value={transition.event}
+                    options={eventOptions}
                     onChange={(event) => updateTransition(index, { ...transition, event })}
                   />
                 </Field>
