@@ -65,7 +65,12 @@ const behaviorActionSchema = Type.Union([
       kind: Type.Literal('move-array-item'),
       name: Type.String({ minLength: 1 }),
       repeaterUuid: uuidSchema,
-      direction: Type.Union([Type.Literal('up'), Type.Literal('down')]),
+      direction: Type.Union([
+        Type.Literal('up'),
+        Type.Literal('down'),
+        Type.Literal('before'),
+        Type.Literal('after'),
+      ]),
     },
     { additionalProperties: false },
   ),

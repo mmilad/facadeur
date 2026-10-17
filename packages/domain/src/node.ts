@@ -78,7 +78,7 @@ export type BehaviorAction =
       readonly kind: 'move-array-item';
       readonly name: string;
       readonly repeaterUuid: Uuid;
-      readonly direction: 'up' | 'down';
+      readonly direction: 'up' | 'down' | 'before' | 'after';
     }
   | { readonly kind: 'emit'; readonly name: string; readonly args: readonly BehaviorValue[] };
 

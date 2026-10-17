@@ -271,5 +271,23 @@ function behaviorEventSnapshot(event: unknown) {
     ...(typeof record.ctrlKey === 'boolean' ? { ctrlKey: record.ctrlKey } : {}),
     ...(typeof record.metaKey === 'boolean' ? { metaKey: record.metaKey } : {}),
     ...(typeof record.shiftKey === 'boolean' ? { shiftKey: record.shiftKey } : {}),
+    ...draggedRepeaterIndices(record),
   };
+}
+
+function draggedRepeaterIndices(event: Record<string, unknown>) {
+  const dataTransfer = event.dataTransfer as { getData?: (type: string) => string } | undefined;
+  if (!dataTransfer || typeof dataTransfer.getData !== 'function') return {};
+  try {
+    const value = JSON.parse(dataTransfer.getData('application/x-facadeur-repeater')) as unknown;
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+    const indices = Object.fromEntries(
+      Object.entries(value).filter(
+        ([, index]) => typeof index === 'number' && Number.isInteger(index),
+      ),
+    );
+    return { draggedRepeaterIndices: indices };
+  } catch {
+    return {};
+  }
 }

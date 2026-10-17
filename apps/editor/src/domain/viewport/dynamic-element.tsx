@@ -29,6 +29,7 @@ export type PreviewBehaviorHandler = (
     readonly definitionUuid: string;
     readonly nodeUuid: string;
     readonly props?: Readonly<Record<string, FieldValue>>;
+    readonly repeaterIndices?: Readonly<Record<string, number>>;
   },
   eventName: string,
   event: unknown,
@@ -151,11 +152,32 @@ export function DynamicElement({
   if (nodeUuid) props['data-facadeur-node-uuid'] = nodeUuid;
   if (behaviorHandler && config.behaviorTargets?.length) {
     const eventNames = [...new Set(config.behaviorTargets.flatMap((target) => target.events))];
+    const isRepeaterDragSource = config.behaviorTargets.some(
+      (target) =>
+        target.events.includes('dragstart') && Object.keys(target.repeaterIndices ?? {}).length,
+    );
+    const isRepeaterDropTarget = config.behaviorTargets.some((target) =>
+      target.events.includes('drop'),
+    );
+    if (isRepeaterDragSource) props.draggable = true;
+    if (isRepeaterDropTarget) {
+      props.onDragOver = (event: { preventDefault: () => void }) => event.preventDefault();
+    }
     for (const eventName of eventNames) {
       const reactName = reactEventPropFor(eventName);
       if (!reactName) continue;
       const existing = props[reactName];
       props[reactName] = (event: unknown) => {
+        if (eventName === 'dragstart') {
+          const dataTransfer = (
+            event as { dataTransfer?: { setData?: (type: string, value: string) => void } }
+          ).dataTransfer;
+          const indices = Object.assign(
+            {},
+            ...config.behaviorTargets!.map((target) => target.repeaterIndices ?? {}),
+          );
+          dataTransfer?.setData?.('application/x-facadeur-repeater', JSON.stringify(indices));
+        }
         if (typeof existing === 'function') (existing as (event: unknown) => void)(event);
         for (const target of config.behaviorTargets ?? []) {
           if (target.events.includes(eventName)) behaviorHandler(target, eventName, event);

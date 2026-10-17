@@ -183,6 +183,23 @@ const sortableListDemo: NodeDefinition = {
           },
         ],
       },
+      {
+        nodeUuid: '860e8400-e29b-41d4-a716-446655440012',
+        event: 'dragstart',
+        actions: [],
+      },
+      {
+        nodeUuid: '860e8400-e29b-41d4-a716-446655440012',
+        event: 'drop',
+        actions: [
+          {
+            kind: 'move-array-item',
+            name: 'items',
+            repeaterUuid: '860e8400-e29b-41d4-a716-446655440011',
+            direction: 'after',
+          },
+        ],
+      },
     ],
   },
 };

@@ -190,6 +190,8 @@ describe('CatalogBehaviorPanel transitions', () => {
       (within(openState).getByRole('button', { name: 'Remove state' }) as HTMLButtonElement)
         .disabled,
     ).toBe(true);
-    expect(within(openState).getByText(/class condition or transition references/i)).toBeTruthy();
+    expect(
+      within(openState).getByText(/Repeater, class condition, or transition references/i),
+    ).toBeTruthy();
   });
 });

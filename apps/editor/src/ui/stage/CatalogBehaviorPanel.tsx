@@ -678,9 +678,11 @@ function ActionEditor({
               options={[
                 { value: 'up', label: 'Up' },
                 { value: 'down', label: 'Down' },
+                { value: 'before', label: 'Before dropped item' },
+                { value: 'after', label: 'After dropped item' },
               ]}
               onChange={(direction) =>
-                onChange({ ...action, direction: direction as 'up' | 'down' })
+                onChange({ ...action, direction: direction as 'up' | 'down' | 'before' | 'after' })
               }
             />
           </Field>

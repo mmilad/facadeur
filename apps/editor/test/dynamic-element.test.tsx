@@ -26,6 +26,36 @@ describe('DynamicElement', () => {
     expect(previewDomEventOptions.every(([eventName]) => reactEventPropFor(eventName))).toBe(true);
   });
 
+  it('sets up scoped repeater drag sources and accepts drops on repeater rows', () => {
+    const behaviorHandler = vi.fn();
+    const target = {
+      scopeKey: 'instance',
+      definitionUuid: 'definition',
+      nodeUuid: 'row',
+      events: ['dragstart', 'drop'],
+      repeaterIndices: { repeater: 1 },
+    };
+    const view = render(
+      <DynamicElement
+        config={{ tagName: 'li', nodeUuid: 'row', behaviorTargets: [target] }}
+        behaviorHandler={behaviorHandler}
+        interactive
+      />,
+    );
+    const row = view.container.querySelector('li')!;
+    const setData = vi.fn();
+    const transfer = { setData, getData: vi.fn(() => '{"repeater":1}') };
+
+    expect(row.draggable).toBe(true);
+    fireEvent.dragStart(row, { dataTransfer: transfer });
+    expect(setData).toHaveBeenCalledWith('application/x-facadeur-repeater', '{"repeater":1}');
+    const dragOver = new Event('dragover', { bubbles: true, cancelable: true });
+    row.dispatchEvent(dragOver);
+    expect(dragOver.defaultPrevented).toBe(true);
+    fireEvent.drop(row, { dataTransfer: transfer });
+    expect(behaviorHandler).toHaveBeenCalledWith(target, 'drop', expect.anything());
+  });
+
   it('updates changed props while preserving a keyed void element', () => {
     const first: ElementBuildConfig = {
       tagName: 'img',

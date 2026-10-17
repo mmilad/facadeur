@@ -48,15 +48,24 @@ export function executeComponentBehavior(
         state[action.name] = (typeof current === 'number' ? current : 0) + (action.amount ?? 1);
       } else if (action.kind === 'move-array-item') {
         const current = state[action.name];
-        const from = context.repeaterIndices?.[action.repeaterUuid];
-        const to = from === undefined ? undefined : from + (action.direction === 'up' ? -1 : 1);
-        if (
-          Array.isArray(current) &&
-          from !== undefined &&
-          to !== undefined &&
-          to >= 0 &&
-          to < current.length
-        ) {
+        const from =
+          action.direction === 'before' || action.direction === 'after'
+            ? draggedIndex(context.event, action.repeaterUuid)
+            : context.repeaterIndices?.[action.repeaterUuid];
+        const targetIndex = context.repeaterIndices?.[action.repeaterUuid];
+        if (Array.isArray(current) && from !== undefined && from >= 0 && from < current.length) {
+          let to = from;
+          if (action.direction === 'up' || action.direction === 'down') {
+            to = from + (action.direction === 'up' ? -1 : 1);
+          } else if (
+            targetIndex !== undefined &&
+            targetIndex >= 0 &&
+            targetIndex < current.length
+          ) {
+            to = targetIndex + (action.direction === 'after' ? 1 : 0);
+            if (from < to) to -= 1;
+          }
+          if (to < 0 || to >= current.length || to === from) continue;
           const next = [...current];
           const [item] = next.splice(from, 1);
           next.splice(to, 0, item!);
@@ -71,6 +80,14 @@ export function executeComponentBehavior(
     }
   }
   return { state, emitted, matched: true };
+}
+
+function draggedIndex(event: unknown, repeaterUuid: string) {
+  if (!event || typeof event !== 'object') return undefined;
+  const dragged = (event as { draggedRepeaterIndices?: unknown }).draggedRepeaterIndices;
+  if (!dragged || typeof dragged !== 'object') return undefined;
+  const index = (dragged as Record<string, unknown>)[repeaterUuid];
+  return typeof index === 'number' && Number.isInteger(index) ? index : undefined;
 }
 
 function evaluate(

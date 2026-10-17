@@ -269,6 +269,19 @@ describe('Catalog-driven React code generation', () => {
             },
           ],
         },
+        { nodeUuid: rowUuid, event: 'dragstart', actions: [] },
+        {
+          nodeUuid: rowUuid,
+          event: 'drop',
+          actions: [
+            {
+              kind: 'move-array-item',
+              name: 'items',
+              repeaterUuid,
+              direction: 'after',
+            },
+          ],
+        },
       ],
     });
 
@@ -280,6 +293,10 @@ describe('Catalog-driven React code generation', () => {
     expect(output).toContain('handleBehaviorAt');
     expect(output).toContain(`${JSON.stringify(repeaterUuid)}: index`);
     expect(output).toContain(`repeaterIndices[${JSON.stringify(repeaterUuid)}]`);
+    expect(output).toContain('draggable={true}');
+    expect(output).toContain('onDragOver={(event) => event.preventDefault()}');
+    expect(output).toContain('application/x-facadeur-repeater');
+    expect(output).toContain('draggedIndex');
     const diagnostics = ts.transpileModule(output, {
       reportDiagnostics: true,
       compilerOptions: {

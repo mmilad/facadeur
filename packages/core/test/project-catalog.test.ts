@@ -485,6 +485,41 @@ describe('executeComponentBehavior', () => {
     expect(behavior.state.items).toEqual(['first', 'second', 'third']);
   });
 
+  it.each([
+    ['before', 0, 2, ['third', 'first', 'second']],
+    ['after', 2, 0, ['second', 'third', 'first']],
+  ] as const)(
+    'drops a dragged row %s another row without mutating state',
+    (direction, target, source, expected) => {
+      const repeaterUuid = globalThis.crypto.randomUUID();
+      const behavior = {
+        state: { items: ['first', 'second', 'third'] },
+        transitions: [
+          {
+            nodeUuid: rootNodeUuid,
+            event: 'drop',
+            actions: [
+              {
+                kind: 'move-array-item' as const,
+                name: 'items',
+                repeaterUuid,
+                direction,
+              },
+            ],
+          },
+        ],
+      };
+      const result = executeComponentBehavior(behavior, rootNodeUuid, 'drop', {
+        state: behavior.state,
+        repeaterIndices: { [repeaterUuid]: target },
+        event: { draggedRepeaterIndices: { [repeaterUuid]: source } },
+      });
+
+      expect(result.state.items).toEqual(expected);
+      expect(behavior.state.items).toEqual(['first', 'second', 'third']);
+    },
+  );
+
   it('executes ordered transition actions against an isolated state snapshot', () => {
     const behavior = {
       state: { open: false, count: 0 },
