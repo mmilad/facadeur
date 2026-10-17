@@ -95,6 +95,7 @@ export default defineConfig({
       'apps/editor/test/schema-editor-reference.test.ts',
       'apps/editor/test/definition-field-settings.test.tsx',
       'apps/editor/test/schema-form-config.test.ts',
+      'apps/editor/test/nested-schema-form.test.tsx',
       'apps/editor/test/editor-navigation.test.ts',
       'apps/editor/test/design-domain.test.tsx',
     ],

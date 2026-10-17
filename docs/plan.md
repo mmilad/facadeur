@@ -694,12 +694,12 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
   - Contracts: preserve class order, sparse style declarations/breakpoints, existing reference encodings, `Object.is` equality and unset semantics (`undefined`/`null` are unset; empty string/array/object are set), and old `prop-equals` catalog data. Empty groups are invalid and evaluate false defensively. Generated repeater markup retains its existing preview-data cardinality; each emitted row's condition reads the current prop at that row's stable repeater index.
   - Validation: Core, Editor, and Codegen typechecks passed in the approved host context; Prettier, candidate detector rerun, and `git diff --check` passed. Automated tests and Storybook interaction were not run in this implementation.
 
-- [ ] Editor: render nested object fields and preserve repeater form paths.
+- [x] Editor: render nested object fields and preserve repeater form paths.
   - Evidence: `json-schema-form-config.ts` falls back to a text control for object-valued properties, so `rules[].declarations` serializes as a string. `SchemaForm.tsx` reads and writes nested schema fields without resolving the current `PathPrefix`, so editing a schema field inside an array targets the wrong path and the catalog rejects the malformed preview value.
   - Action: route object schemas through the recursive schema value editor and resolve `schemaField` values and commits against the active path prefix. Keep array-item indexing and outer form values intact.
   - Scope: fix nested object fields in array-valued preview data and inspector forms; no schema, persistence, or validation contract changes.
   - Contracts: retain JSON Schema object and array shapes, preserve current form bindings and preview-data field paths, and keep non-nested scalar controls on their existing form path.
-  - Validation: Editor typecheck, focused source-level check of nested object and array path handling, candidate detector rerun, and `git diff --check`; no test suite added or run.
+  - Validation: added and passed an Editor UI regression test editing `rules[0].declarations.display` through the recursive object form while preserving sibling array/object values. Editor typecheck, candidate detector rerun, Prettier, and `git diff --check` passed.
 
 - [x] Core/Editor: expose nested repeater item fields as composition sources.
   - Evidence: nested repeater scopes and `{ kind: 'item', path }` sources are supported by the Core resolver and catalog validation, but `inspector-view.ts` only builds the composition source dropdown from root component properties. The inner repeater cannot select an array from its parent item's schema.
