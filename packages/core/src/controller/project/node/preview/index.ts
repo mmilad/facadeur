@@ -18,6 +18,7 @@ export {
   resolveDefinitionToElementBuildConfig,
   resolveTemplateString,
   type PreviewResolveContext,
+  type PreviewResolutionOptions,
 } from './resolve';
 export {
   classConditionOperatorsForType,

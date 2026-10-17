@@ -32,6 +32,7 @@ export {
   classConditionOperatorsForType,
   effectiveClassList,
   evaluateClassCondition,
+  type PreviewResolutionOptions,
   type ReferenceResolutionContext,
   type RepeaterReferenceScope,
 } from './controller/project/node/preview/index';

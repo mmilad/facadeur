@@ -59,4 +59,9 @@ export type {
   TokenInterface,
   VariantStyleMap,
 } from './design-system';
-export type { ElementBuildConfig, FragmentBuildConfig, RenderBuildConfig } from './element-build';
+export type {
+  ElementBehaviorTarget,
+  ElementBuildConfig,
+  FragmentBuildConfig,
+  RenderBuildConfig,
+} from './element-build';

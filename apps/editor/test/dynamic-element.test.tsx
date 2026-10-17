@@ -183,28 +183,39 @@ describe('DynamicElement', () => {
     expect(changes).toHaveBeenLastCalledWith('device', { value: 'desktop' });
   });
 
-  it('routes configured pointer and drag events to the behavior handler', () => {
+  it('routes events to each scoped behavior target on the rendered element', () => {
     const handler = vi.fn();
     const config: ElementBuildConfig = {
       kind: 'element',
       tagName: 'div',
       nodeUuid: 'drop-target',
+      behaviorTargets: [
+        {
+          scopeKey: 'parent/first',
+          definitionUuid: 'definition-a',
+          nodeUuid: 'drop-target',
+          events: ['pointerenter', 'dragover'],
+        },
+        {
+          scopeKey: 'parent/second',
+          definitionUuid: 'definition-b',
+          nodeUuid: 'drop-target',
+          events: ['dragover'],
+        },
+      ],
     };
-    const view = render(
-      <DynamicElement
-        config={config}
-        behaviorEvents={{ 'drop-target': ['pointerenter', 'dragover'] }}
-        behaviorHandler={handler}
-      />,
-    );
+    const view = render(<DynamicElement config={config} behaviorHandler={handler} />);
     const target = view.container.querySelector('div')!;
 
     fireEvent.pointerEnter(target);
     fireEvent.dragOver(target);
 
-    expect(handler.mock.calls.map(([uuid, eventName]) => [uuid, eventName])).toEqual([
-      ['drop-target', 'pointerenter'],
-      ['drop-target', 'dragover'],
+    expect(
+      handler.mock.calls.map(([behaviorTarget, eventName]) => [behaviorTarget.scopeKey, eventName]),
+    ).toEqual([
+      ['parent/first', 'pointerenter'],
+      ['parent/first', 'dragover'],
+      ['parent/second', 'dragover'],
     ]);
   });
 

@@ -1,4 +1,5 @@
 import type { Uuid } from './uuid';
+import type { FieldValue } from './field-value';
 
 /** Declarative DOM tree for renderers — no document APIs in domain. */
 export interface ElementBuildConfig {
@@ -17,6 +18,19 @@ export interface ElementBuildConfig {
   readonly nodeUuid?: Uuid;
   /** Stable key for repeated instances of one authored node. */
   readonly renderKey?: string;
+  /** Stable rendered path used by editor-only behavior and control state. */
+  readonly instanceKey?: string;
+  /** Component behavior targets attached to this rendered element. */
+  readonly behaviorTargets?: readonly ElementBehaviorTarget[];
+}
+
+/** Identifies the definition instance and authored node that own an interaction. */
+export interface ElementBehaviorTarget {
+  readonly scopeKey: string;
+  readonly definitionUuid: Uuid;
+  readonly nodeUuid: Uuid;
+  readonly events: readonly string[];
+  readonly props?: Readonly<Record<string, FieldValue>>;
 }
 
 /** A structural Catalog node that contributes its children without a DOM element. */

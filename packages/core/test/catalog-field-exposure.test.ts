@@ -86,19 +86,117 @@ describe('catalog field exposure', () => {
       behavior: { state: { open: true }, transitions: [] },
       root: {
         ...original.root,
-        classes: [{
-          name: 'is-open',
-          condition: {
-            kind: 'condition',
-            left: { kind: 'reference', reference: '{state:open}' },
-            operator: 'equals',
-            right: { kind: 'literal', value: true },
+        classes: [
+          {
+            name: 'is-open',
+            condition: {
+              kind: 'condition',
+              left: { kind: 'reference', reference: '{state:open}' },
+              operator: 'equals',
+              right: { kind: 'literal', value: true },
+            },
           },
-        }],
+        ],
       },
     };
     const resolved = resolveDefinitionToElementBuildConfig(definition, catalog);
     expect(resolved.attributes?.class).toContain('is-open');
+  });
+
+  it('isolates behavior state for two references to the same embedded definition', () => {
+    const childId = testUuid12;
+    const firstRefId = testUuid13;
+    const secondRefId = testUuid14;
+    const embedded: NodeDefinition = {
+      uuid: childId,
+      name: 'Disclosure',
+      kind: 'component',
+      schema: { kind: 'inline', schema: { type: 'object', properties: {} } },
+      behavior: {
+        state: { open: false },
+        transitions: [{ nodeUuid: testUuid15, event: 'click', actions: [] }],
+      },
+      root: {
+        uuid: testUuid10,
+        dom: { tagName: 'section', children: [{ uuid: testUuid15, dom: { tagName: 'button' } }] },
+        classes: [
+          {
+            name: 'is-open',
+            condition: {
+              kind: 'condition',
+              left: { kind: 'reference', reference: '{state:open}' },
+              operator: 'equals',
+              right: { kind: 'literal', value: true },
+            },
+          },
+        ],
+      },
+    };
+    const parent: NodeDefinition = {
+      uuid: cardId,
+      name: 'Two disclosures',
+      kind: 'component',
+      schema: { kind: 'inline', schema: { type: 'object', properties: {} } },
+      root: {
+        uuid: testUuid11,
+        dom: {
+          tagName: 'main',
+          children: [
+            { uuid: firstRefId, dom: { tagName: 'div' }, config: { definitionRef: childId } },
+            { uuid: secondRefId, dom: { tagName: 'div' }, config: { definitionRef: childId } },
+          ],
+        },
+      },
+    };
+    const catalog = {
+      ...createExampleCatalog(),
+      components: { ...createExampleCatalog().components, [childId]: embedded, [cardId]: parent },
+    };
+    const firstScope = `${parent.uuid}/${parent.root.uuid}/${firstRefId}`;
+    const secondScope = `${parent.uuid}/${parent.root.uuid}/${secondRefId}`;
+
+    const resolved = resolveDefinitionToElementBuildConfig(
+      parent,
+      catalog,
+      {},
+      {
+        includeBehaviorTargets: true,
+        behaviorStateByInstance: { [firstScope]: { open: true } },
+      },
+    );
+
+    expect(resolved.kind).toBeUndefined();
+    if (resolved.kind === 'fragment') throw new Error('Expected a DOM element');
+    const [first, second] = resolved.children ?? [];
+    if (!first || first.kind === 'fragment' || !second || second.kind === 'fragment') {
+      throw new Error('Expected embedded DOM elements');
+    }
+    expect(first.attributes?.class).toContain('is-open');
+    expect(second.attributes?.class ?? '').not.toContain('is-open');
+    const firstButton = first.children?.[0];
+    const secondButton = second.children?.[0];
+    if (
+      !firstButton ||
+      firstButton.kind === 'fragment' ||
+      !secondButton ||
+      secondButton.kind === 'fragment'
+    ) {
+      throw new Error('Expected embedded behavior buttons');
+    }
+    expect(firstButton.behaviorTargets?.[0]).toMatchObject({
+      scopeKey: firstScope,
+      definitionUuid: childId,
+      nodeUuid: testUuid15,
+      events: ['click'],
+    });
+    expect(secondButton.behaviorTargets?.[0]?.scopeKey).toBe(secondScope);
+    const normalPreview = resolveDefinitionToElementBuildConfig(parent, catalog);
+    if (normalPreview.kind === 'fragment') throw new Error('Expected a normal DOM element');
+    expect(
+      normalPreview.children?.[0]?.kind === 'fragment'
+        ? undefined
+        : normalPreview.children?.[0]?.behaviorTargets,
+    ).toBeUndefined();
   });
 
   it('adds nested fields and target preview defaults to the flat public contract', () => {

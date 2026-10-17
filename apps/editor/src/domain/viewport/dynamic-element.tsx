@@ -2,6 +2,7 @@ import { isVoidHtmlTag } from '@facadeur/core';
 import type { RenderBuildConfig } from '@facadeur/core';
 import { Fragment, createElement, useLayoutEffect, useRef } from 'react';
 import type { CSSProperties, HTMLAttributes, RefAttributes } from 'react';
+import type { FieldValue } from '@facadeur/domain';
 import { reactEventPropFor } from './dom-events';
 
 const REACT_ATTRIBUTE_NAMES: Readonly<Record<string, string>> = {
@@ -22,7 +23,16 @@ const REACT_ATTRIBUTE_NAMES: Readonly<Record<string, string>> = {
 
 const ignorePreviewChange = () => {};
 
-export type PreviewBehaviorHandler = (nodeUuid: string, eventName: string, event: unknown) => void;
+export type PreviewBehaviorHandler = (
+  target: {
+    readonly scopeKey: string;
+    readonly definitionUuid: string;
+    readonly nodeUuid: string;
+    readonly props?: Readonly<Record<string, FieldValue>>;
+  },
+  eventName: string,
+  event: unknown,
+) => void;
 export interface PreviewControlValue {
   readonly value?: string;
   readonly checked?: boolean;
@@ -32,14 +42,12 @@ export function DynamicElement({
   config,
   behaviorHandler,
   interactive = false,
-  behaviorEvents,
   controlValues,
   onControlChange,
 }: {
   config: RenderBuildConfig;
   behaviorHandler?: PreviewBehaviorHandler;
   interactive?: boolean;
-  behaviorEvents?: Readonly<Record<string, readonly string[]>>;
   controlValues?: Readonly<Record<string, PreviewControlValue>>;
   onControlChange?: (key: string, value: PreviewControlValue) => void;
 }) {
@@ -47,7 +55,10 @@ export function DynamicElement({
   const previousDomProperties = useRef<Readonly<Record<string, unknown>>>({});
   const children = config.children ?? [];
   const renderNodeUuid = config.kind === 'fragment' ? undefined : config.nodeUuid;
-  const controlKey = config.kind === 'fragment' ? undefined : (config.renderKey ?? renderNodeUuid);
+  const controlKey =
+    config.kind === 'fragment'
+      ? undefined
+      : (config.instanceKey ?? config.renderKey ?? renderNodeUuid);
   const domProperties: Record<string, unknown> = {
     ...domPropertiesFor(config),
     ...(controlKey ? controlValues?.[controlKey] : undefined),
@@ -83,7 +94,6 @@ export function DynamicElement({
           config={child}
           behaviorHandler={behaviorHandler}
           interactive={interactive}
-          behaviorEvents={behaviorEvents}
           controlValues={controlValues}
           onControlChange={onControlChange}
         />
@@ -91,7 +101,7 @@ export function DynamicElement({
     );
   }
 
-  const { attributes = {}, dataset, nodeUuid, renderKey, styleNodeUuids, tagName, text } = config;
+  const { attributes = {}, dataset, nodeUuid, styleNodeUuids, tagName, text } = config;
   const content = interactive && tagName.toLowerCase() === 'textarea' ? undefined : text;
   const attributeStyle = attributes.style;
   const props: Record<string, unknown> = {};
@@ -139,15 +149,17 @@ export function DynamicElement({
     }
   }
   if (nodeUuid) props['data-facadeur-node-uuid'] = nodeUuid;
-  const nodeBehaviorEvents = nodeUuid ? (behaviorEvents?.[nodeUuid] ?? []) : [];
-  if (nodeUuid && (behaviorHandler || nodeBehaviorEvents.length)) {
-    for (const eventName of nodeBehaviorEvents) {
+  if (behaviorHandler && config.behaviorTargets?.length) {
+    const eventNames = [...new Set(config.behaviorTargets.flatMap((target) => target.events))];
+    for (const eventName of eventNames) {
       const reactName = reactEventPropFor(eventName);
       if (!reactName) continue;
       const existing = props[reactName];
       props[reactName] = (event: unknown) => {
         if (typeof existing === 'function') (existing as (event: unknown) => void)(event);
-        behaviorHandler?.(nodeUuid, eventName, event);
+        for (const target of config.behaviorTargets ?? []) {
+          if (target.events.includes(eventName)) behaviorHandler(target, eventName, event);
+        }
       };
     }
   }
@@ -172,7 +184,6 @@ export function DynamicElement({
         config={child}
         behaviorHandler={behaviorHandler}
         interactive={interactive}
-        behaviorEvents={behaviorEvents}
         controlValues={controlValues}
         onControlChange={onControlChange}
       />

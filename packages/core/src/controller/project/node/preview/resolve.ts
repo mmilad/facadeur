@@ -5,7 +5,7 @@ import type {
   NodeDefinition,
   ProjectCatalog,
 } from '@facadeur/domain';
-import type { RenderBuildConfig } from '@facadeur/domain';
+import type { ElementBehaviorTarget, RenderBuildConfig } from '@facadeur/domain';
 import { findDefinition } from '../../catalog/ops';
 import {
   compatibleNodeFieldValues,
@@ -19,7 +19,7 @@ import {
   inheritableSchemaForDefinition,
 } from '../../catalog/field-contract';
 import { canAcceptCatalogChildren } from '../../catalog/tree-ops';
-import { effectiveClassList, evaluateClassCondition } from './class-conditions';
+import { effectiveClassList } from './class-conditions';
 import {
   componentPropValues,
   computedIndexName,
@@ -46,20 +46,36 @@ export type PreviewResolveContext = {
   readonly repeaterScopes?: readonly RepeaterReferenceScope[];
 };
 
-const STYLE_REFERENCE = /^\{props:[^}]+\}$/;
 const MAX_DYNAMIC_DEFINITION_DEPTH = 32;
 
 type ChildrenSlotContent = {
   nodes: readonly Node[];
+  context: NodeResolveContext;
+  parentSlotContent?: ChildrenSlotContent;
+};
+
+type NodeResolveContext = {
   definition: NodeDefinition;
-  fields: Record<string, FieldValue>;
+  catalog: ProjectCatalog;
+  parentFields: Record<string, FieldValue>;
   activeDefinitions: ReadonlySet<string>;
   inheritedOverrides: Record<string, FieldValue>;
   itemContext: FieldValue | undefined;
   repeaterScopes: readonly RepeaterReferenceScope[];
   dynamicDefinitionDepth: number;
-  parentSlotContent?: ChildrenSlotContent;
+  slotContent: ChildrenSlotContent | undefined;
+  behaviorScopeKey: string;
+  elementInstancePath: string;
+  behaviorStateByInstance?: Readonly<Record<string, Readonly<Record<string, FieldValue | null>>>>;
+  includeBehaviorTargets: boolean;
 };
+
+export interface PreviewResolutionOptions {
+  readonly behaviorStateByInstance?: Readonly<
+    Record<string, Readonly<Record<string, FieldValue | null>>>
+  >;
+  readonly includeBehaviorTargets?: boolean;
+}
 
 /** Replace `{prop:uuid}` and similar templates with literal strings for renderers. */
 export function resolveTemplateString(template: string, ctx: PreviewResolveContext): string {
@@ -118,33 +134,41 @@ export function resolveDefinitionToElementBuildConfig(
   definition: NodeDefinition,
   catalog: ProjectCatalog,
   parentFields: Record<string, FieldValue> = {},
+  options: PreviewResolutionOptions = {},
 ): RenderBuildConfig {
-  return resolveNodeToElementBuildConfig(
-    definition.root,
+  return resolveNodeToElementBuildConfig(definition.root, {
     definition,
     catalog,
     parentFields,
-    new Set([definition.uuid]),
-    {},
-    undefined,
-    [],
-    0,
-    undefined,
-  );
+    activeDefinitions: new Set([definition.uuid]),
+    inheritedOverrides: {},
+    itemContext: undefined,
+    repeaterScopes: [],
+    dynamicDefinitionDepth: 0,
+    slotContent: undefined,
+    behaviorScopeKey: definition.uuid,
+    elementInstancePath: definition.uuid,
+    behaviorStateByInstance: options.behaviorStateByInstance,
+    includeBehaviorTargets: options.includeBehaviorTargets ?? false,
+  });
 }
 
 function resolveNodeToElementBuildConfig(
   node: Node,
-  definition: NodeDefinition,
-  catalog: ProjectCatalog,
-  parentFields: Record<string, FieldValue>,
-  activeDefinitions: ReadonlySet<string>,
-  inheritedOverrides: Record<string, FieldValue>,
-  itemContext: FieldValue | undefined,
-  repeaterScopes: readonly RepeaterReferenceScope[],
-  dynamicDefinitionDepth: number,
-  slotContent: ChildrenSlotContent | undefined,
+  context: NodeResolveContext,
 ): RenderBuildConfig {
+  const {
+    definition,
+    catalog,
+    parentFields,
+    activeDefinitions,
+    inheritedOverrides,
+    itemContext,
+    repeaterScopes,
+    dynamicDefinitionDepth,
+    slotContent,
+  } = context;
+  const instancePath = `${context.elementInstancePath}/${node.uuid}`;
   const boundDefinitionRef = node.config?.definitionRefBinding
     ? fieldAtPath(itemContext, node.config.definitionRefBinding.path)
     : undefined;
@@ -245,35 +269,41 @@ function resolveNodeToElementBuildConfig(
       for (const [field, config] of Object.entries(instanceFieldConfigs)) {
         if (config.isStatic && config.expose !== true) delete instanceOverrides[field];
       }
-      const built = resolveNodeToElementBuildConfig(
-        refDefinition.root,
-        refDefinition,
-        catalog,
-        instanceFields,
-        dynamicReference ? activeDefinitions : new Set(activeDefinitions).add(refDefinition.uuid),
-        instanceOverrides,
-        itemContext,
-        repeaterScopes,
-        dynamicDefinitionDepth + (dynamicReference ? 1 : 0),
-        node.dom.children?.length
-          ? {
-              nodes: node.dom.children,
-              definition,
-              fields: parentFields,
-              activeDefinitions,
-              inheritedOverrides,
-              itemContext,
-              repeaterScopes,
-              dynamicDefinitionDepth,
-              ...(slotContent ? { parentSlotContent: slotContent } : {}),
-            }
-          : undefined,
-      );
+      const nestedSlotContent = node.dom.children?.length
+        ? {
+            nodes: node.dom.children,
+            context,
+            ...(slotContent ? { parentSlotContent: slotContent } : {}),
+          }
+        : undefined;
+      const built = resolveNodeToElementBuildConfig(refDefinition.root, {
+        ...context,
+        definition: refDefinition,
+        parentFields: instanceFields,
+        activeDefinitions: dynamicReference
+          ? activeDefinitions
+          : new Set(activeDefinitions).add(refDefinition.uuid),
+        inheritedOverrides: instanceOverrides,
+        dynamicDefinitionDepth: dynamicDefinitionDepth + (dynamicReference ? 1 : 0),
+        slotContent: nestedSlotContent,
+        behaviorScopeKey: instancePath,
+        elementInstancePath: instancePath,
+      });
       if (built.kind === 'fragment') return { ...built, nodeUuid: node.uuid };
       const styleNodeUuids = new Set(built.styleNodeUuids ?? []);
       if (built.nodeUuid) styleNodeUuids.add(built.nodeUuid);
       styleNodeUuids.add(node.uuid);
-      return { ...built, nodeUuid: node.uuid, styleNodeUuids: [...styleNodeUuids] };
+      const behaviorTargets = [
+        ...(built.behaviorTargets ?? []),
+        ...(behaviorTargetFor(context, definition, node, parentComponentProps) ?? []),
+      ];
+      return {
+        ...built,
+        nodeUuid: node.uuid,
+        styleNodeUuids: [...styleNodeUuids],
+        ...(context.includeBehaviorTargets ? { instanceKey: instancePath } : {}),
+        ...(behaviorTargets.length ? { behaviorTargets } : {}),
+      };
     }
   }
 
@@ -303,7 +333,8 @@ function resolveNodeToElementBuildConfig(
     catalog,
     fields,
     componentProps: componentPropValues(resolvedSchema, fields),
-    componentState: definition.behavior?.state,
+    componentState:
+      context.behaviorStateByInstance?.[context.behaviorScopeKey] ?? definition.behavior?.state,
     componentSchema: resolvedSchema,
     overrides: nodeOverrides,
     item: itemContext,
@@ -342,18 +373,14 @@ function resolveNodeToElementBuildConfig(
                 ),
                 itemPath: repeaterItemPath(composition.source, ctx.componentSchema, repeaterScopes),
               };
-              const resolved = resolveNodeToElementBuildConfig(
-                child,
-                definition,
-                catalog,
-                fields,
-                activeDefinitions,
-                fields,
-                item,
-                [...repeaterScopes, scope],
-                dynamicDefinitionDepth,
-                slotContent,
-              );
+              const resolved = resolveNodeToElementBuildConfig(child, {
+                ...context,
+                parentFields: fields,
+                inheritedOverrides: fields,
+                itemContext: item,
+                repeaterScopes: [...repeaterScopes, scope],
+                elementInstancePath: `${instancePath}/repeat:${itemIndex}:${templateIndex}`,
+              });
               return {
                 ...resolved,
                 renderKey: `${child.uuid}:${itemIndex}:${templateIndex}`,
@@ -369,50 +396,31 @@ function resolveNodeToElementBuildConfig(
             return childNodes
               .filter((child) => child.config?.compositionCase === String(value ?? ''))
               .map((child) =>
-                resolveNodeToElementBuildConfig(
-                  child,
-                  definition,
-                  catalog,
-                  fields,
-                  activeDefinitions,
-                  fields,
-                  itemContext,
-                  repeaterScopes,
-                  dynamicDefinitionDepth,
-                  slotContent,
-                ),
+                resolveNodeToElementBuildConfig(child, {
+                  ...context,
+                  parentFields: fields,
+                  inheritedOverrides: fields,
+                  elementInstancePath: instancePath,
+                }),
               );
           })()
         : composition?.kind === 'slot'
           ? slotContent
             ? slotContent.nodes.map((child) =>
-                resolveNodeToElementBuildConfig(
-                  child,
-                  slotContent.definition,
-                  catalog,
-                  slotContent.fields,
-                  slotContent.activeDefinitions,
-                  slotContent.inheritedOverrides,
-                  slotContent.itemContext,
-                  slotContent.repeaterScopes,
-                  slotContent.dynamicDefinitionDepth,
-                  slotContent.parentSlotContent,
-                ),
+                resolveNodeToElementBuildConfig(child, {
+                  ...slotContent.context,
+                  slotContent: slotContent.parentSlotContent,
+                  elementInstancePath: `${instancePath}/slot:${child.uuid}`,
+                }),
               )
             : []
           : childNodes.map((child) =>
-              resolveNodeToElementBuildConfig(
-                child,
-                definition,
-                catalog,
-                fields,
-                activeDefinitions,
-                fields,
-                itemContext,
-                repeaterScopes,
-                dynamicDefinitionDepth,
-                slotContent,
-              ),
+              resolveNodeToElementBuildConfig(child, {
+                ...context,
+                parentFields: fields,
+                inheritedOverrides: fields,
+                elementInstancePath: instancePath,
+              }),
             );
   const resolvedChildren =
     node.dom.tagName?.toLowerCase() === 'svg' && icon
@@ -447,6 +455,7 @@ function resolveNodeToElementBuildConfig(
     }),
   );
   const properties = node.dom.properties;
+  const behaviorTargets = behaviorTargetFor(context, definition, node, ctx.componentProps);
 
   return {
     tagName: node.dom.tagName ?? 'div',
@@ -457,7 +466,38 @@ function resolveNodeToElementBuildConfig(
     ...(properties && Object.keys(properties).length ? { properties } : {}),
     ...(resolvedChildren.length ? { children: resolvedChildren } : {}),
     nodeUuid: node.uuid,
+    ...(context.includeBehaviorTargets
+      ? {
+          instanceKey: instancePath,
+          ...(behaviorTargets ? { behaviorTargets } : {}),
+        }
+      : {}),
   };
+}
+
+function behaviorTargetFor(
+  context: NodeResolveContext,
+  definition: NodeDefinition,
+  node: Node,
+  props: Readonly<Record<string, FieldValue>> | undefined,
+) {
+  if (!context.includeBehaviorTargets) return undefined;
+  const events = [
+    ...new Set(
+      (definition.behavior?.transitions ?? [])
+        .filter((transition) => transition.nodeUuid === node.uuid)
+        .map((transition) => transition.event),
+    ),
+  ];
+  if (!events.length) return undefined;
+  const target: ElementBehaviorTarget = {
+    scopeKey: context.behaviorScopeKey,
+    definitionUuid: definition.uuid,
+    nodeUuid: node.uuid,
+    events,
+    ...(props ? { props } : {}),
+  };
+  return [target];
 }
 
 function staticFieldNames(definition: NodeDefinition) {

@@ -48,8 +48,10 @@ export function StageCanvas({
   const stageControllerRef = useRef<StageController | null>(null);
   const fitRef = useRef<() => void>(() => {});
   const [interacting, setInteracting] = useState(false);
-  const [runtimeState, setRuntimeState] = useState<Record<string, FieldValue | null>>({});
-  const runtimeStateRef = useRef(runtimeState);
+  const [runtimeStates, setRuntimeStates] = useState<
+    Record<string, Readonly<Record<string, FieldValue | null>>>
+  >({});
+  const runtimeStatesRef = useRef(runtimeStates);
   const [controlValues, setControlValues] = useState<Record<string, PreviewControlValue>>({});
 
   useStagePointer({
@@ -81,30 +83,38 @@ export function StageCanvas({
   });
   const coreSnapshot = app.getCoreSnapshot();
   const definition = coreSnapshot.openDefinition;
-  const behavior = definition?.behavior as ComponentBehavior | undefined;
-  const behaviorStateSignature = JSON.stringify(behavior?.state ?? {});
-  const behaviorEvents = useMemo(() => {
-    const events: Record<string, string[]> = {};
-    for (const transition of behavior?.transitions ?? []) {
-      const nodeEvents = (events[transition.nodeUuid] ??= []);
-      if (!nodeEvents.includes(transition.event)) nodeEvents.push(transition.event);
-    }
-    return events;
-  }, [behavior]);
+  const previewCatalog = useMemo(() => {
+    if (!definition) return coreSnapshot.catalog;
+    const collection =
+      definition.kind === 'atom' ? 'atoms' : definition.kind === 'page' ? 'pages' : 'components';
+    return {
+      ...coreSnapshot.catalog,
+      [collection]: { ...coreSnapshot.catalog[collection], [definition.uuid]: definition },
+    };
+  }, [coreSnapshot.catalog, definition]);
+  const behaviorDefinitions = useMemo(() => {
+    const definitions = [
+      ...Object.values(previewCatalog.atoms),
+      ...Object.values(previewCatalog.components),
+      ...Object.values(previewCatalog.pages),
+    ];
+    return new Map(definitions.map((item) => [item.uuid, item]));
+  }, [previewCatalog]);
+  const behaviorStateSignature = JSON.stringify(
+    [...behaviorDefinitions.values()].map((item) => [item.uuid, item.behavior]),
+  );
   const handleControlChange = useCallback((key: string, value: PreviewControlValue) => {
     setControlValues((current) => ({ ...current, [key]: value }));
   }, []);
   const toggleInteraction = useCallback(() => {
-    const initialState = JSON.parse(behaviorStateSignature) as Record<string, FieldValue | null>;
-    runtimeStateRef.current = initialState;
-    setRuntimeState(initialState);
+    runtimeStatesRef.current = {};
+    setRuntimeStates({});
     setControlValues({});
     setInteracting((current) => !current);
   }, [behaviorStateSignature]);
   useEffect(() => {
-    const initialState = JSON.parse(behaviorStateSignature) as Record<string, FieldValue | null>;
-    runtimeStateRef.current = initialState;
-    setRuntimeState(initialState);
+    runtimeStatesRef.current = {};
+    setRuntimeStates({});
     setControlValues({});
     setInteracting(false);
   }, [openId, behaviorStateSignature]);
@@ -113,40 +123,50 @@ export function StageCanvas({
   }, [frames, interacting]);
   const buildConfig = useMemo(() => {
     if (!frames.length || !definition) return null;
-    const previewDefinition =
-      interacting && behavior
-        ? { ...definition, behavior: { ...behavior, state: runtimeState } }
-        : definition;
-    return resolveDefinitionToElementBuildConfig(previewDefinition, coreSnapshot.catalog);
-  }, [
-    frames,
-    definition,
-    coreSnapshot.catalog,
-    openId,
-    designRevision,
-    interacting,
-    behavior,
-    runtimeState,
-  ]);
+    return resolveDefinitionToElementBuildConfig(
+      definition,
+      previewCatalog,
+      {},
+      {
+        ...(interacting ? { behaviorStateByInstance: runtimeStates } : {}),
+        includeBehaviorTargets: interacting,
+      },
+    );
+  }, [frames, definition, previewCatalog, openId, designRevision, interacting, runtimeStates]);
   const behaviorHandler = useCallback(
-    (nodeUuid: string, eventName: string, event: unknown) => {
-      if (!interacting || !behavior) return;
-      const result = executeComponentBehavior(behavior, nodeUuid, eventName, {
-        state: runtimeStateRef.current,
-        props: definition?.config?.previewData?.fields,
+    (
+      target: {
+        scopeKey: string;
+        definitionUuid: string;
+        nodeUuid: string;
+        props?: Readonly<Record<string, FieldValue>>;
+      },
+      eventName: string,
+      event: unknown,
+    ) => {
+      if (!interacting) return;
+      const owner = behaviorDefinitions.get(target.definitionUuid);
+      const behavior = owner?.behavior as ComponentBehavior | undefined;
+      if (!behavior) return;
+      const result = executeComponentBehavior(behavior, target.nodeUuid, eventName, {
+        state: runtimeStatesRef.current[target.scopeKey] ?? behavior.state ?? {},
+        props: target.props ?? owner?.config?.previewData?.fields,
         event: behaviorEventSnapshot(event),
       });
       if (!result.matched) return;
-      runtimeStateRef.current = { ...result.state };
-      setRuntimeState({ ...result.state });
+      const nextStates = { ...runtimeStatesRef.current, [target.scopeKey]: { ...result.state } };
+      runtimeStatesRef.current = nextStates;
+      setRuntimeStates(nextStates);
       for (const emission of result.emitted) {
-        const document = boardRef.current?.frames()[0]?.host.contentDocument();
+        const eventTarget = (event as { target?: { ownerDocument?: Document } } | null)?.target;
+        const document =
+          eventTarget?.ownerDocument ?? boardRef.current?.frames()[0]?.host.contentDocument();
         document?.dispatchEvent(
           new CustomEvent(`facadeur:${emission.name}`, { detail: emission.args }),
         );
       }
     },
-    [interacting, behavior, definition],
+    [interacting, behaviorDefinitions],
   );
   const globalStyleCss = useMemo(() => {
     const catalog = app.getCatalog();
@@ -187,7 +207,6 @@ export function StageCanvas({
               config={buildConfig}
               behaviorHandler={interacting ? behaviorHandler : undefined}
               interactive={interacting}
-              behaviorEvents={behaviorEvents}
               controlValues={controlValues}
               onControlChange={handleControlChange}
             />,
