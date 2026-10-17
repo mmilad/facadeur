@@ -1,6 +1,7 @@
 import type {
   FieldExposure,
   FieldValue,
+  CompositionSource,
   Node,
   NodeDefinition,
   ProjectCatalog,
@@ -17,8 +18,14 @@ import { configFieldsForDefinition, schemaWithReferenceOptions } from './inspect
 import { inspectorInputsForNode } from '../config/inspector';
 import { designPropOptions, type DesignPropOption } from './prop-ref';
 import {
+  componentPropValues,
   computedIndexName,
+  fieldAtPath,
+  repeaterItemPath,
+  repeaterItemPropBindings,
   repeaterItemSchema,
+  resolveCatalogSchemaReferences,
+  resolveReferenceValue,
   type RepeaterReferenceScope,
 } from './reference-resolver';
 import type { InspectorFormChangeTarget } from '../../inspector-form-change';
@@ -136,28 +143,65 @@ export function buildInspectorFormModel(
 ): InspectorFormModel | null {
   const node = findNodeByUuid(definition.root, nodeUuid);
   if (!node) return null;
-  const referencedDefinition = node.config?.definitionRef
-    ? findDefinition(catalog, node.config.definitionRef)?.definition
+  const effective = effectiveSchemaForDefinition(catalog, definition);
+  const ancestorNodes = findNodePath(definition.root, nodeUuid).slice(0, -1);
+  const repeaterScopes = buildInspectorRepeaterScopes(
+    ancestorNodes,
+    effective.schema,
+    { ...effective.previewDefaults },
+    catalog,
+  );
+  const boundDefinitionRef = node.config?.definitionRefBinding
+    ? fieldAtPath(repeaterScopes.at(-1)?.item, node.config.definitionRefBinding.path)
+    : undefined;
+  const resolvedBoundDefinitionRef =
+    typeof boundDefinitionRef === 'string'
+      ? resolveReferenceValue(boundDefinitionRef, {
+          catalog,
+          componentProps: componentPropValues(effective.schema, effective.previewDefaults),
+          repeaterScopes,
+        })
+      : undefined;
+  const definitionRef =
+    node.config?.definitionRef ??
+    (typeof resolvedBoundDefinitionRef === 'string'
+      ? resolvedBoundDefinitionRef
+      : typeof boundDefinitionRef === 'string'
+        ? boundDefinitionRef
+        : undefined);
+  const referencedDefinition = definitionRef
+    ? findDefinition(catalog, definitionRef)?.definition
     : undefined;
   const scopedDefinition = referencedDefinition ?? definition;
-  const effective = effectiveSchemaForDefinition(catalog, scopedDefinition);
   const componentEffective =
     scopedDefinition === definition ? effective : effectiveSchemaForDefinition(catalog, definition);
-  const ancestorNodes = findNodePath(definition.root, nodeUuid).slice(0, -1);
-  const repeaterScopes = buildInspectorRepeaterScopes(ancestorNodes, componentEffective.schema);
+  const scopedEffective =
+    scopedDefinition === definition
+      ? effective
+      : effectiveSchemaForDefinition(catalog, scopedDefinition);
   const configFields =
     nodeUuid === definition.root.uuid ? configFieldsForDefinition(catalog, definition) : [];
-  const schemaFields = effective.schema
-    ? fieldsFromJsonSchema(schemaWithReferenceOptions(effective.schema, catalog))
+  const resolvedSchema = scopedEffective.schema
+    ? (resolveCatalogSchemaReferences(
+        scopedEffective.schema,
+        catalog,
+      ) as typeof scopedEffective.schema)
+    : null;
+  const schemaFields = resolvedSchema
+    ? fieldsFromJsonSchema(schemaWithReferenceOptions(resolvedSchema, catalog))
     : [];
   const classSuggestions = collectClassSuggestions(definition.root);
   const tagOptions = htmlTagOptions(node.dom.tagName ?? 'div');
-  const nodeInputs = inspectorInputsForNode(
-    catalog,
-    scopedDefinition,
-    nodeUuid,
-    referencedDefinition ? node.data : undefined,
-  );
+  const itemPropBindings = referencedDefinition
+    ? repeaterItemPropBindings(scopedEffective.schema, repeaterScopes)
+    : [];
+  const instanceValues = referencedDefinition
+    ? {
+        ...Object.fromEntries(itemPropBindings.map(({ path, ref }) => [path, ref])),
+        ...(node.data ?? {}),
+      }
+    : undefined;
+  const nodeInputs = inspectorInputsForNode(catalog, scopedDefinition, nodeUuid, instanceValues);
   const previewFields = { ...nodeInputs.values } as Record<string, FieldValue>;
   if (nodeUuid === definition.root.uuid) {
     Object.assign(previewFields, staticFieldValues(definition));
@@ -587,6 +631,8 @@ function findNodePath(root: Node, targetUuid: string): Node[] {
 function buildInspectorRepeaterScopes(
   ancestors: readonly Node[],
   componentSchema: Record<string, unknown> | null,
+  componentFields: Record<string, FieldValue>,
+  catalog: ProjectCatalog,
 ): RepeaterReferenceScope[] {
   const scopes: RepeaterReferenceScope[] = [];
   for (const node of ancestors) {
@@ -597,9 +643,31 @@ function buildInspectorRepeaterScopes(
       nodeUuid: node.uuid,
       indexName: composition.indexName?.trim() || computedIndexName(depth),
       index: 0,
-      item: {},
-      itemSchema: repeaterItemSchema(composition.source, componentSchema, scopes),
+      itemPath: repeaterItemPath(composition.source, componentSchema, scopes),
+      item: firstRepeaterItem(composition.source, componentSchema, componentFields, scopes),
+      itemSchema: repeaterItemSchema(composition.source, componentSchema, scopes, catalog),
     });
   }
   return scopes;
+}
+
+function firstRepeaterItem(
+  source: CompositionSource | undefined,
+  componentSchema: Record<string, unknown> | null,
+  componentFields: Readonly<Record<string, FieldValue>>,
+  repeaterScopes: readonly RepeaterReferenceScope[],
+): FieldValue {
+  if (!source) return {};
+  const sourcePath =
+    source.kind === 'prop'
+      ? componentPropsForSchema(componentSchema).find((prop) => prop.uuid === source.uuid)?.path
+      : source.path;
+  if (!sourcePath) return {};
+  const sourceValue =
+    source.kind === 'prop'
+      ? (fieldAtPath(componentFields as FieldValue, sourcePath) ??
+        schemaAtPath(componentSchema, sourcePath)?.default)
+      : (fieldAtPath(repeaterScopes.at(-1)?.item, sourcePath) ??
+        schemaAtPath(repeaterScopes.at(-1)?.itemSchema, sourcePath)?.default);
+  return Array.isArray(sourceValue) ? (sourceValue[0] ?? {}) : {};
 }

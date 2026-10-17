@@ -3062,7 +3062,7 @@
                     "type": "string",
                     "title": "Kind",
                     "enum": ["component", "group"],
-                    "x-facadeur-prop-id": "81c319b2-2746-41b9-8f1c-aa42333263a8"
+                    "x-facadeur-prop-id": "6f752ecd-2c0b-48ee-bd70-cd3d216e23ae"
                   },
                   "componentId": {
                     "type": "string",
@@ -3070,12 +3070,12 @@
                     "x-facadeur-reference": {
                       "target": "component"
                     },
-                    "x-facadeur-prop-id": "752070a9-e3bb-48c5-9ab4-c92c04f5e56c"
+                    "x-facadeur-prop-id": "57e2feb6-d310-470b-9fbd-02942214707b"
                   },
                   "label": {
                     "type": "string",
                     "title": "Label",
-                    "x-facadeur-prop-id": "eeb8c845-9aba-4b46-8710-53a5ae7b6c40"
+                    "x-facadeur-prop-id": "9f964cf2-7dc0-4b10-a81c-ce03a0649cd4"
                   },
                   "children": {
                     "type": "array",
@@ -3089,18 +3089,18 @@
                           "x-facadeur-reference": {
                             "target": "component"
                           },
-                          "x-facadeur-prop-id": "05332226-82d5-4122-bbb2-72e63ec1de89"
+                          "x-facadeur-prop-id": "937ef287-e6eb-41f3-94c6-4b6af50d3380"
                         },
                         "label": {
                           "type": "string",
                           "title": "Label",
-                          "x-facadeur-prop-id": "3d9dce46-31ab-49cc-8f04-478d26578367"
+                          "x-facadeur-prop-id": "8637fa9f-ba90-4f67-8519-a60f0af9d489"
                         }
                       },
                       "required": ["componentId", "label"],
                       "additionalProperties": false
                     },
-                    "x-facadeur-prop-id": "330178d6-64eb-41f9-b11a-c156d9e69a34"
+                    "x-facadeur-prop-id": "32f83949-e6b3-4e8b-bdac-f242769f6326"
                   }
                 },
                 "required": ["kind", "label"],
@@ -3484,7 +3484,7 @@
           }
         ]
       },
-      "category": "sidebar",
+      "category": "sidebar/right/ui",
       "config": {
         "previewData": {
           "fields": {
@@ -3503,6 +3503,114 @@
               }
             ],
             "selector": ".default-class"
+          }
+        }
+      }
+    },
+    "7e164f33-d469-4321-ae55-254086bb4f8c": {
+      "uuid": "7e164f33-d469-4321-ae55-254086bb4f8c",
+      "name": "Style Tab",
+      "kind": "component",
+      "schema": {
+        "kind": "inline",
+        "schema": {
+          "type": "object",
+          "title": "New component",
+          "properties": {
+            "styles": {
+              "type": "array",
+              "items": {
+                "$ref": "urn:facadeur:schema:6faf561c-fad5-48ae-8bb5-d7ddb4237c34"
+              },
+              "x-facadeur-prop-id": "5f9f44e2-0e69-4c24-8eb0-050879f72e5c"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "root": {
+        "uuid": "d0fd5d5a-b40c-405d-818f-d7f8f49021f9",
+        "dom": {
+          "tagName": "div",
+          "children": [
+            {
+              "uuid": "a6bc3adc-eeee-4b61-a0eb-b6a4138cc009",
+              "name": "Repeater",
+              "dom": {
+                "children": [
+                  {
+                    "uuid": "329c1243-ded4-4ede-a7ac-37489ccf05e8",
+                    "name": "Css Rule Set",
+                    "dom": {
+                      "tagName": "div",
+                      "children": []
+                    },
+                    "classes": [
+                      {
+                        "name": "css-rule-set",
+                        "generated": true
+                      }
+                    ],
+                    "config": {
+                      "definitionRef": "631ca8f3-acb7-42aa-bc96-3062ef6dda9c"
+                    }
+                  }
+                ]
+              },
+              "classes": [
+                {
+                  "name": "repeater",
+                  "generated": true
+                }
+              ],
+              "config": {
+                "composition": {
+                  "kind": "repeater",
+                  "source": {
+                    "kind": "prop",
+                    "uuid": "5f9f44e2-0e69-4c24-8eb0-050879f72e5c"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "classes": [
+          {
+            "name": "layer",
+            "generated": true
+          }
+        ]
+      },
+      "category": "sidebar/right/tabs",
+      "config": {
+        "previewData": {
+          "fields": {
+            "styles": [
+              {
+                "selector": ".default-class",
+                "rules": [
+                  {
+                    "propName": "color",
+                    "propValue": "red"
+                  },
+                  {
+                    "propName": "border",
+                    "propValue": "1px solid blue"
+                  },
+                  {
+                    "propName": "padding",
+                    "propValue": "10px"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "fieldExposure": {
+          "329c1243-ded4-4ede-a7ac-37489ccf05e8": {
+            "mode": "manual",
+            "fields": {}
           }
         }
       }

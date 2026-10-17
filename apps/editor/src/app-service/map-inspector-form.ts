@@ -137,6 +137,14 @@ function mapFieldDefinition(
       ),
     };
   }
+  if (field.type === 'array' && bindable) {
+    return {
+      type: 'transformable',
+      name: path,
+      label,
+      fieldOptions: fieldOptions(path, label),
+    };
+  }
   if (field.type === 'array') {
     const item = field.items;
     const itemFieldsDefinition =

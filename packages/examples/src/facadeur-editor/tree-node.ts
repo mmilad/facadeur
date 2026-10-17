@@ -5,6 +5,12 @@ import { prop, uuid } from './shared';
 const treeNodeUuid = uuid(5000);
 const titleProp = prop(5001);
 const itemsProp = prop(5002);
+const itemKindProp = prop(5013);
+const itemComponentProp = prop(5014);
+const itemLabelProp = prop(5015);
+const itemChildrenProp = prop(5016);
+const childComponentProp = prop(5017);
+const childLabelProp = prop(5018);
 const repeaterUuid = uuid(5003);
 const switchUuid = uuid(5004);
 const componentCaseUuid = uuid(5005);
@@ -35,15 +41,27 @@ const treeNodeSchema: JsonSchemaObject = {
       items: {
         type: 'object',
         properties: {
-          kind: { type: 'string', title: 'Kind', enum: ['component', 'group'] },
-          componentId: componentReferenceSchema,
-          label: labelSchema,
+          kind: {
+            type: 'string',
+            title: 'Kind',
+            enum: ['component', 'group'],
+            'x-facadeur-prop-id': itemKindProp,
+          },
+          componentId: { ...componentReferenceSchema, 'x-facadeur-prop-id': itemComponentProp },
+          label: { ...labelSchema, 'x-facadeur-prop-id': itemLabelProp },
           children: {
             type: 'array',
             title: 'Components',
+            'x-facadeur-prop-id': itemChildrenProp,
             items: {
               type: 'object',
-              properties: { componentId: componentReferenceSchema, label: labelSchema },
+              properties: {
+                componentId: {
+                  ...componentReferenceSchema,
+                  'x-facadeur-prop-id': childComponentProp,
+                },
+                label: { ...labelSchema, 'x-facadeur-prop-id': childLabelProp },
+              },
               required: ['componentId', 'label'],
               additionalProperties: false,
             },

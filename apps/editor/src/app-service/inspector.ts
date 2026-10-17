@@ -47,7 +47,8 @@ export class InspectorService {
     const selectionKind =
       model.nodeUuid === definition.root.uuid
         ? 'root'
-        : node.config?.definitionRef !== undefined
+        : node.config?.definitionRef !== undefined ||
+            node.config?.definitionRefBinding !== undefined
           ? 'instance'
           : 'element';
     const attributes = Object.fromEntries(

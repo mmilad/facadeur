@@ -529,6 +529,14 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
   - Contracts: nested preview data remains an object in Catalog; inherited prop refs remain UUID-backed and resolve to the correct instance field; direct child prop IDs remain unchanged.
   - Validation: Core and Editor typechecks, Prettier, candidate detector review, and `git diff --check` passed. Tests were not run.
 
+- [x] Core/Editor: show component instance properties and bindings in the Properties tab.
+  - Evidence: selected component instance fields are routed to Preview data, while dynamic component references are not resolved by the Inspector and therefore show the containing definition's schema instead of the referenced component's properties.
+  - Action: resolve a selected dynamic component reference from the enclosing repeater's preview sample; show selected instance fields in Properties with their current defaults or explicit bindings, and keep root definition defaults in Preview data. Clarify that Direct controls exposure to the parent, not a value binding.
+  - Scope: selected instance Inspector presentation and sample-based dynamic target lookup; do not change runtime composition or serialized binding formats.
+  - Contracts: preserve `definitionRefBinding` and node data values, existing UUID-backed prop binding references, direct/grouped/manual field exposure semantics, and root preview data.
+  - Validation: Core and Editor typechecks, focused Inspector model checks for static and dynamic instances, candidate detector rerun, and `git diff --check`; no tests run.
+  - Refactoring review: keep the Inspector model builder cohesive; keep sample resolution as a private helper beside the Inspector context that consumes it.
+
 - [x] Editor: prototype the schema form and catalog manager separately in Storybook.
   - Evidence: the current `SchemaEditor` only edits one schema; the existing catalog screen also manages selection, search, creation, deletion, and saving, which the prototype does not yet demonstrate.
   - Action: keep `SchemaEditor` as a controlled single-schema form and add a separate controlled catalog manager that receives schema entries and emits selection, create, change, delete, and save events. Keep catalog state and fixture data in the Storybook host.
@@ -743,6 +751,14 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
   - Contracts: retain UUID references, permit Font assets in font-family fields and Typography references in whole-style fields, preserve other token picker labels and descriptions.
   - Structure: `DesignTypographyEditor.tsx` remains a cohesive control that owns field presentation and token options; the detector's 506-line review signal does not identify a separate responsibility touched by this change.
   - Validation: Editor typecheck, source inspection, Prettier, candidate detector rerun, and `git diff --check` passed; tests were not run.
+- [x] Core/Editor: render shared-schema object arrays in preview editors.
+  - Evidence: `Style Tab.styles.items` is a catalog `$ref`; preview field derivation treats each object as a scalar and displays `[object Object]`, while the root Inspector uses bindable component-property controls for definition preview defaults and shows the array as blank.
+  - Action: resolve catalog schema references before deriving preview/Inspector form fields, and render the root Preview data tab from `Preview defaults` fields so schema-shaped arrays remain editable as structured items.
+  - Scope: definition preview editors and root Inspector Preview data only; preserve schema references in the Catalog and runtime field values.
+  - Contracts: keep stored schemas and sample values unchanged, preserve Repeater binding behavior and component-instance property editing, and retain root preview field commit paths.
+  - Validation: focused Core runtime check confirms the sample array keeps its stored `$ref` while `styles.items` derives `selector` and `rules` fields; root preview fields remain available for structured editing. Core/Editor typechecks, Prettier, candidate detector, and `git diff --check` passed; tests not run.
+  - Structure: retain `inspector-view.ts` as the cohesive Inspector model builder; shared-schema expansion extends its existing field derivation and adds no separate domain or UI responsibility.
+
 - [ ] Core: keep schema edits and preview defaults in sync.
   - Evidence: `CatalogSchemaStage` allows removing fields from an inline schema while `definition.config.previewData.fields` keeps values for those fields; `validateProjectCatalog` then rejects the next catalog commit, including inserting a component, with an invalid preview-default error.
   - Action: when an inline schema is replaced, remove definition preview defaults for fields no longer in the contract; make catalog validation tolerate stale or mistyped preview examples, and filter them from rendering. Keep strict validation for component instance data and type validation for active preview fields.
@@ -750,9 +766,37 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
   - Contracts: preserve preview values for retained fields, preserve valid partial values and bindings, and keep invalid values for known fields rejected.
   - Validation: Core and Editor typechecks, focused in-memory reproduction for stale CSS rule preview values, candidate detector rerun, and `git diff --check`; no tests run.
 
+- [x] Examples/Editor: keep Tree Node nested schema prop IDs stable.
+  - Evidence: `EditorBootstrap` replaces the catalog's saved Tree Node with the Examples definition at startup, while `tree-node.ts` only assigns IDs to its top-level fields. Catalog normalization generates IDs for nested schema fields, so those IDs change on every startup and can invalidate bindings.
+  - Action: assign deterministic prop IDs to every nested Tree Node schema field in the Examples definition. Keep bootstrap composition behavior and the saved catalog format unchanged.
+  - Scope: Tree Node seed schema only; no changes to general schema normalization or other example definitions.
+  - Contracts: preserve current top-level prop IDs, dynamic component-reference paths, node UUIDs, and nested field semantics; nested prop IDs remain stable across editor restarts.
+  - Validation: Examples and Editor typechecks, repeated in-memory bootstrap normalization confirming identical nested IDs, candidate detector, and `git diff --check`; no tests run.
+
 - [x] Core: preserve Repeater layers when their schema changes.
   - Evidence: switching a definition from its inline schema to a shared schema can leave Repeater and child text/style bindings pointing at property IDs from the old schema; validation rejects an invalid Repeater source, and deleting children destroys authored layers.
   - Action: reconcile `{props:uuid}` bindings by schema path when a definition schema changes. Clear only bindings with no corresponding property in the new schema, remove only an invalid Repeater source, and retain its child layers. Preserve repeaters whose source remains valid.
   - Scope: schema-change commits only; do not alter manual Repeater editing or Switch behavior.
   - Contracts: keep node and Repeater identities, child order, and composition kind; remap matching paths to new stable field IDs and blank only removed property bindings.
   - Validation: Core and Editor typechecks, in-memory switch to the existing global CSS Rule Set schema confirming Repeater and child identities are retained and bindings remapped, candidate detector, and `git diff --check`; tests not run.
+- [x] Core: resolve shared schemas for Repeater item bindings.
+  - Evidence: `Style Tab.styles.items` uses a `urn:facadeur:schema:<uuid>` `$ref` to the shared `Css Rule Set` schema, but `repeaterItemSchema` exposes only the unresolved `$ref`; `componentPropsForSchema` therefore has no item fields to offer or resolve.
+  - Action: expand shared-schema references when deriving Repeater item schemas, and carry a readable source path so item binding options show paths such as `props.styles[].selector` and `props.styles[].rules`. Offer fields inside nested arrays only from that nested Repeater's item scope, with paths such as `props.styles[].rules[].propName`; keep `index` as a separate option.
+  - Scope: schema-backed Repeater item properties in the Inspector and preview resolver; no edits to the user’s Catalog JSON or schema/reference serialization.
+  - Contracts: preserve existing item-prop UUID bindings, schema field IDs, Repeater values/children, and current item resolution semantics; only make referenced item fields discoverable and resolvable.
+  - Validation: focused Core runtime reproduction for top-level and nested shared-schema item options and reference resolution, full Inspector view-model check for `Style Tab`, Core/Editor typechecks, candidate detector rerun, and `git diff --check`; tests not run.
+  - Refactoring review: keep `inspector-view.ts` (661 lines) as the cohesive declarative Inspector model and `resolve.ts` (561 lines) as the recursive preview tree resolver; these changes extend their existing Repeater context handling without adding an independent responsibility.
+- [x] Core/Form/Editor: inherit matching component properties from Repeater items.
+  - Evidence: the Inspector listed schema property bindings, but component instance defaults remained empty; preview inheritance passed parent definition fields and dropped the current Repeater item. Array properties rendered only as editable Repeaters, so their whole-value binding could not be inspected or selected. The component-prop resolver also preferred scoped Repeater values over explicit instance overrides, and preview filtering dropped values whose array items came from a shared-schema `$ref`.
+  - Action: synthesize bindings for target component fields whose stable schema property IDs match the active Repeater item, resolve them as instance defaults at runtime, and display those defaults as editable bindings in Component properties. Render bindable array props as the same Transformable selector as scalar props, with no nested repeater editor. Accept scoped item-property references for non-string schema fields and prefer current component prop values over Repeater-scope fallback values; resolve shared-schema refs before preview filtering.
+  - Scope: component instances nested in schema-backed Repeaters; preserve explicit instance values/bindings and ordinary unbound array editing.
+  - Contracts: do not persist synthesized defaults; persist only user changes; preserve item/field UUIDs, scoped binding encoding, existing manual field exposure, and ordinary editing for non-bindable arrays.
+  - Validation: focused Core runtime reproductions confirmed default `selector`/`rules` bindings in the Inspector, rendered preview values through the shared schema ref, explicit instance values overriding synthesized defaults, and clearing/reselecting an array reference through catalog validation. Inspector mapping confirms `rules` uses the Transformable selector without a nested editor; Core/Editor typechecks, Prettier, candidate detector, and `git diff --check` passed; tests not run.
+  - Refactoring review: keep the Inspector builder and preview resolver cohesive; use the existing Transformable field for bindable array properties, with no new form control, domain package, or public schema format.
+
+- [x] Editor catalog: render a representative Style Tab Repeater item in the component editor preview.
+  - Evidence: the Style Tab Repeater reads `props.styles[]`, but the component has no `previewData.fields.styles`; its empty source array correctly renders no Css Rule Set instance even though that child has preview defaults of its own.
+  - Action: add one representative `styles` item to the Style Tab's editor-only preview defaults, matching the existing Css Rule Set preview values. Do not synthesize runtime Repeater items from a child component's preview defaults.
+  - Scope: the saved Facadeur Editor seed catalog's Style Tab preview only; preserve runtime behavior for empty arrays and user-provided component data.
+  - Contracts: do not change the schema, Repeater source, child layers, bindings, or exported component data; keep the preview sample editable/removable in Preview data.
+  - Validation: focused Core preview resolution and catalog validation confirm the Css Rule Set renders the sample row; Editor typecheck, Prettier, candidate detector, and `git diff --check` passed; tests not run.

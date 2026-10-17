@@ -2,6 +2,7 @@ import type { FieldValue, NodeDefinition, ProjectCatalog } from '@facadeur/domai
 import { fieldsFromJsonSchema, type JsonSchemaField } from '../../../../schema/json-schema-fields';
 import { effectiveSchemaForDefinition } from '../../catalog/field-contract';
 import { previewFieldsForNode } from '../preview/merge';
+import { resolveCatalogSchemaReferences } from '../preview/reference-resolver';
 
 export type InspectorInputs = {
   fields: readonly JsonSchemaField[];
@@ -16,10 +17,12 @@ export function inspectorInputsForNode(
   instanceData?: Readonly<Record<string, FieldValue>>,
 ): InspectorInputs {
   const effective = effectiveSchemaForDefinition(catalog, definition);
-  const schema = effective.schema;
+  const schema = effective.schema
+    ? (resolveCatalogSchemaReferences(effective.schema, catalog) as typeof effective.schema)
+    : null;
   if (!schema) return { fields: [], values: {} };
   const fields = fieldsFromJsonSchema(schema);
-  const merged = instanceData ?? previewFieldsForNode(definition, nodeUuid, {}, effective.schema);
+  const merged = instanceData ?? previewFieldsForNode(definition, nodeUuid, {}, schema);
   const values: Record<string, FieldValue> = {};
   for (const field of fields) {
     if (Object.prototype.hasOwnProperty.call(effective.previewDefaults, field.name)) {

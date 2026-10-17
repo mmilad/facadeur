@@ -45,7 +45,14 @@ export function buildInspectorSidebarViewModel(
   const nodeDataSection = sectionFields(
     model,
     'Properties',
-    'Node data',
+    model.selectionKind === 'instance' ? 'Component properties' : 'Node data',
+    propOptions,
+    fieldOptions,
+  );
+  const previewDefaultsSection = sectionFields(
+    model,
+    'Preview defaults',
+    'Component defaults',
     propOptions,
     fieldOptions,
   );
@@ -71,13 +78,10 @@ export function buildInspectorSidebarViewModel(
           },
         ]
       : []),
-    ...(model.selectionKind === 'element' && nodeDataSection ? [nodeDataSection] : []),
+    ...(model.selectionKind !== 'root' && nodeDataSection ? [nodeDataSection] : []),
   ];
-  const componentDefaults = nodeDataSection
-    ? { ...nodeDataSection, label: 'Component defaults' }
-    : null;
-  const previewSections =
-    model.selectionKind !== 'element' && componentDefaults ? [componentDefaults] : [];
+  const componentDefaults = model.selectionKind === 'root' ? previewDefaultsSection : null;
+  const previewSections = componentDefaults ? [componentDefaults] : [];
   const staticFieldNames = new Set(
     model.configFields.filter(({ config }) => config?.isStatic).map(({ field }) => field.name),
   );
@@ -93,7 +97,11 @@ export function buildInspectorSidebarViewModel(
               ...section,
               fields: section.fields.map((field) => {
                 if (field.type === 'layout') return field;
-                const name = field.name.startsWith('props.') ? field.name.slice(6) : '';
+                const name = field.name.startsWith('previewData.')
+                  ? field.name.slice('previewData.'.length)
+                  : field.name.startsWith('props.')
+                    ? field.name.slice('props.'.length)
+                    : '';
                 return name && staticFieldNames.has(name) ? { ...field, disabled: true } : field;
               }),
             })),

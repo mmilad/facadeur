@@ -222,6 +222,11 @@ docs/plan.md` attempted to fetch pinned pnpm 10.33.3 and failed with `ENOTFOUND`
 registry.npmjs.org`). The same Core, Editor, and Codegen commands passed in the approved host
   context. Continue using that context for package-manager verification; no repository workaround
   is needed.
+- **Update (2026-10-17, Style Tab preview):** Restricted Editor typecheck and Prettier checks
+  again failed before project code because Corepack tried to fetch pinned pnpm 10.33.3 and DNS
+  returned `ENOTFOUND registry.npmjs.org`. The same Editor typecheck and Prettier check passed in
+  the approved host context. Continue using that context for pnpm-based checks; no repository
+  workaround is needed.
 
 ## Cloud verification process limits (2026-10-11)
 

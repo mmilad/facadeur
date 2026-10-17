@@ -33,6 +33,7 @@ export function isFieldBindingValue(value: unknown, schema: unknown) {
   }
   return (
     /^\{prop:[^}]+\}$/.test(value) ||
+    /^\{item-prop:[^:}]+:[^}]+\}$/.test(value) ||
     /^[A-Za-z][A-Za-z0-9_-]*(?:\.[A-Za-z][A-Za-z0-9_-]*)+$/.test(value)
   );
 }

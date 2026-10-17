@@ -25,7 +25,10 @@ import {
   computedIndexName,
   fieldAtPath,
   isSupportedReference,
+  repeaterItemPath,
+  repeaterItemPropBindings,
   repeaterItemSchema,
+  resolveCatalogSchemaReferences,
   resolveReferenceValue,
   resolveReferenceText,
   type RepeaterReferenceScope,
@@ -166,6 +169,7 @@ function resolveNodeToElementBuildConfig(
         throw new Error(`Cyclic catalog definition reference at "${refDefinition.uuid}"`);
       }
       const parentSchema = effectiveSchemaForDefinition(catalog, definition).schema;
+      const targetEffective = effectiveSchemaForDefinition(catalog, refDefinition);
       const exposure =
         definition.config?.fieldExposure?.[node.uuid] ??
         defaultFieldExposure(
@@ -175,6 +179,18 @@ function resolveNodeToElementBuildConfig(
         );
       const instanceFieldConfigs = definition.config?.instanceFieldConfigs?.[node.uuid] ?? {};
       const parentComponentProps = componentPropValues(parentSchema, parentFields);
+      const repeaterItemBindings = Object.fromEntries(
+        repeaterItemPropBindings(targetEffective.schema, repeaterScopes).map(({ path, ref }) => [
+          path,
+          ref,
+        ]),
+      );
+      const repeaterItemValues =
+        resolveParentPropBindings(repeaterItemBindings, {
+          catalog,
+          componentProps: parentComponentProps,
+          repeaterScopes,
+        }) ?? {};
       const instancePreviewData = resolveParentPropBindings(
         node.config?.previewData?.fields as Record<string, FieldValue> | undefined,
         { catalog, componentProps: parentComponentProps, repeaterScopes },
@@ -204,7 +220,8 @@ function resolveNodeToElementBuildConfig(
               )
             : inheritedFields;
       const instanceFields = {
-        ...effectiveSchemaForDefinition(catalog, refDefinition).previewDefaults,
+        ...targetEffective.previewDefaults,
+        ...omitFields(repeaterItemValues, hiddenStaticFields),
         ...omitFields(instancePreviewData, staticFieldNames(refDefinition)),
         ...omitFields(instanceData, hiddenStaticFields),
         ...inheritedFields,
@@ -217,6 +234,7 @@ function resolveNodeToElementBuildConfig(
         }
       }
       const instanceOverrides = {
+        ...omitFields(repeaterItemValues, hiddenStaticFields),
         ...omitFields(instancePreviewData, staticFieldNames(refDefinition)),
         ...omitFields(instanceData, hiddenStaticFields),
         ...inheritedFields,
@@ -260,15 +278,19 @@ function resolveNodeToElementBuildConfig(
 
   const definitionPreview = definition.config?.previewData?.fields ?? {};
   const effective = effectiveSchemaForDefinition(catalog, definition);
+  const resolvedSchema = resolveCatalogSchemaReferences(effective.schema, catalog) as Record<
+    string,
+    unknown
+  > | null;
   const nodeData = compatibleNodeFieldValues(
     node.data as Record<string, FieldValue> | undefined,
-    effective.schema,
+    resolvedSchema,
   );
   const fields = mergePreviewFields(
     { ...(definitionPreview as Record<string, FieldValue>), ...staticFieldValues(definition) },
     nodeData,
     parentFields,
-    effective.schema,
+    resolvedSchema,
   );
   Object.assign(fields, lockedStaticFieldValues(definition));
   const nodeOverrides = {
@@ -279,8 +301,8 @@ function resolveNodeToElementBuildConfig(
   const ctx: PreviewResolveContext = {
     catalog,
     fields,
-    componentProps: componentPropValues(effective.schema, fields),
-    componentSchema: effective.schema,
+    componentProps: componentPropValues(resolvedSchema, fields),
+    componentSchema: resolvedSchema,
     overrides: nodeOverrides,
     item: itemContext,
     repeaterScopes,
@@ -314,7 +336,9 @@ function resolveNodeToElementBuildConfig(
                   composition.source,
                   ctx.componentSchema,
                   repeaterScopes,
+                  catalog,
                 ),
+                itemPath: repeaterItemPath(composition.source, ctx.componentSchema, repeaterScopes),
               };
               const resolved = resolveNodeToElementBuildConfig(
                 child,

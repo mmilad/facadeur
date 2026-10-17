@@ -7,6 +7,7 @@ export type RepeaterReferenceScope = {
   readonly nodeUuid: string;
   readonly indexName: string;
   readonly index: number;
+  readonly itemPath?: string;
   readonly item: FieldValue;
   readonly itemSchema: Record<string, unknown> | null;
 };
@@ -56,13 +57,13 @@ function resolveReference(
   if (componentProp?.[1]) {
     const activeKey = `component:${componentProp[1]}`;
     if (activeReferences.has(activeKey)) return undefined;
-    let value: unknown;
-    let foundInScope = false;
-    for (const scope of [...(context.repeaterScopes ?? [])].reverse()) {
-      const scopedProp = componentPropsForSchema(scope.itemSchema).find(
-        (candidate) => candidate.uuid === componentProp[1] && !candidate.name.includes('[].'),
-      );
-      if (scopedProp) {
+    let value = context.componentProps?.[componentProp[1]];
+    if (value === undefined) {
+      for (const scope of [...(context.repeaterScopes ?? [])].reverse()) {
+        const scopedProp = componentPropsForSchema(scope.itemSchema).find(
+          (candidate) => candidate.uuid === componentProp[1] && !candidate.name.includes('[].'),
+        );
+        if (!scopedProp) continue;
         value = fieldAtPath(scope.item, scopedProp.path);
         if (
           value === undefined &&
@@ -71,11 +72,9 @@ function resolveReference(
         ) {
           value = false;
         }
-        foundInScope = true;
         break;
       }
     }
-    if (!foundInScope) value = context.componentProps?.[componentProp[1]];
     if (typeof value !== 'string' || !isSupportedReference(value)) return value;
     return resolveReference(value, context, new Set(activeReferences).add(activeKey));
   }
@@ -177,13 +176,15 @@ export function referenceOptionsForScopes(scopes: readonly RepeaterReferenceScop
       kind: 'index' as const,
       valueType: 'integer',
     },
-    ...componentPropsForSchema(scope.itemSchema).map((prop) => ({
-      uuid: `item:${scope.nodeUuid}:${prop.uuid}`,
-      name: `${scope.indexName}.${prop.name.replace(/^props\./, '').replace(/\[\]$/, '')}`,
-      ref: `{item-prop:${scope.nodeUuid}:${prop.uuid}}`,
-      kind: 'item' as const,
-      ...(prop.valueType ? { valueType: prop.valueType } : {}),
-    })),
+    ...componentPropsForSchema(scope.itemSchema)
+      .filter((prop) => !prop.name.includes('[].'))
+      .map((prop) => ({
+        uuid: `item:${scope.nodeUuid}:${prop.uuid}`,
+        name: `${scope.itemPath ?? scope.indexName}.${prop.name.replace(/^props\./, '').replace(/\[\]$/, '')}`,
+        ref: `{item-prop:${scope.nodeUuid}:${prop.uuid}}`,
+        kind: 'item' as const,
+        ...(prop.valueType ? { valueType: prop.valueType } : {}),
+      })),
   ]);
 }
 
@@ -191,6 +192,7 @@ export function repeaterItemSchema(
   source: { kind: 'prop'; uuid: string } | { kind: 'item'; path: string } | undefined,
   componentSchema: unknown,
   repeaterScopes: readonly RepeaterReferenceScope[],
+  catalog: ProjectCatalog,
 ) {
   const sourceSchema =
     source?.kind === 'prop'
@@ -199,9 +201,56 @@ export function repeaterItemSchema(
         ? schemaAtPath(repeaterScopes.at(-1)?.itemSchema, source.path)
         : undefined;
   const items = sourceSchema?.items;
-  return items && typeof items === 'object' && !Array.isArray(items)
-    ? (items as Record<string, unknown>)
+  const resolvedItems = resolveCatalogSchemaReferences(items, catalog);
+  return resolvedItems && typeof resolvedItems === 'object' && !Array.isArray(resolvedItems)
+    ? (resolvedItems as Record<string, unknown>)
     : null;
+}
+
+export function repeaterItemPath(
+  source: { kind: 'prop'; uuid: string } | { kind: 'item'; path: string } | undefined,
+  componentSchema: unknown,
+  repeaterScopes: readonly RepeaterReferenceScope[],
+) {
+  if (source?.kind === 'prop') {
+    const propName =
+      componentPropsForSchema(componentSchema).find((prop) => prop.uuid === source.uuid)?.name ??
+      'props.item[]';
+    const parentScope = repeaterScopes.at(-1);
+    return parentScope
+      ? `${parentScope.itemPath ?? parentScope.indexName}.${propName.replace(/^props\./, '')}`
+      : propName;
+  }
+  if (source?.kind === 'item') {
+    const parentScope = repeaterScopes.at(-1);
+    const itemProp = componentPropsForSchema(parentScope?.itemSchema).find(
+      (prop) => prop.path === source.path,
+    );
+    const itemName = itemProp?.name.replace(/^props\./, '') ?? source.path;
+    return parentScope
+      ? `${parentScope.itemPath ?? parentScope.indexName}.${itemName}`
+      : `props.${itemName}`;
+  }
+  return 'item[]';
+}
+
+/** Match direct component fields to the same stable property IDs in the active Repeater item. */
+export function repeaterItemPropBindings(
+  schema: unknown,
+  repeaterScopes: readonly RepeaterReferenceScope[],
+) {
+  return componentPropsForSchema(schema)
+    .filter((prop) => !prop.path.includes('.') && !prop.name.includes('[].'))
+    .flatMap((prop) => {
+      const scope = [...repeaterScopes]
+        .reverse()
+        .find((candidate) =>
+          componentPropsForSchema(candidate.itemSchema).some(
+            (itemProp) => itemProp.uuid === prop.uuid,
+          ),
+        );
+      return scope ? [{ path: prop.path, ref: `{item-prop:${scope.nodeUuid}:${prop.uuid}}` }] : [];
+    });
 }
 
 export function fieldAtPath(value: FieldValue | undefined, path: string): FieldValue | undefined {
@@ -254,4 +303,42 @@ function schemaAtPath(schema: unknown, path: string) {
   return current && typeof current === 'object' && !Array.isArray(current)
     ? (current as Record<string, unknown>)
     : undefined;
+}
+
+export function resolveCatalogSchemaReferences(
+  value: unknown,
+  catalog: ProjectCatalog,
+  activeSchemaIds: ReadonlySet<string> = new Set(),
+): unknown {
+  if (Array.isArray(value)) {
+    return value.map((entry) => resolveCatalogSchemaReferences(entry, catalog, activeSchemaIds));
+  }
+  if (!value || typeof value !== 'object') return value;
+  const record = value as Record<string, unknown>;
+  const reference = typeof record.$ref === 'string' ? record.$ref : undefined;
+  const match = reference?.match(/^urn:facadeur:schema:([^#]+)$/);
+  const target = match?.[1] ? catalog.schemas?.[match[1]] : undefined;
+  if (target && match?.[1] && !activeSchemaIds.has(match[1])) {
+    const nextActiveIds = new Set(activeSchemaIds).add(match[1]);
+    const resolvedTarget = resolveCatalogSchemaReferences(target, catalog, nextActiveIds);
+    if (resolvedTarget && typeof resolvedTarget === 'object' && !Array.isArray(resolvedTarget)) {
+      return {
+        ...(resolvedTarget as Record<string, unknown>),
+        ...Object.fromEntries(
+          Object.entries(record)
+            .filter(([key]) => key !== '$ref')
+            .map(([key, entry]) => [
+              key,
+              resolveCatalogSchemaReferences(entry, catalog, activeSchemaIds),
+            ]),
+        ),
+      };
+    }
+  }
+  return Object.fromEntries(
+    Object.entries(record).map(([key, entry]) => [
+      key,
+      resolveCatalogSchemaReferences(entry, catalog, activeSchemaIds),
+    ]),
+  );
 }
