@@ -5,6 +5,7 @@ import type {
   Node,
   NodeDefinition,
   ProjectCatalog,
+  RepeaterFilter,
   StaticFieldConfig,
 } from '@facadeur/domain';
 import { htmlTagOptions, isVoidHtmlTag } from '../../../../document/html-tags';
@@ -42,6 +43,7 @@ export type InspectorFormValue = {
     data: Record<string, string>;
     compositionSource: string;
     compositionIndexName: string;
+    compositionFilter: string;
     compositionCase: string;
     definitionRefBindingPath: string;
   };
@@ -229,6 +231,13 @@ export function buildInspectorFormModel(
         composition?.kind === 'repeater'
           ? (composition.indexName ?? computedIndexName(repeaterScopes.length))
           : '',
+      compositionFilter:
+        composition?.kind === 'repeater' && composition.filter
+          ? JSON.stringify({
+              queryState: composition.filter.queryState,
+              itemPath: composition.filter.itemPath,
+            })
+          : '',
       compositionCase: node.config?.compositionCase ?? '',
       definitionRefBindingPath: node.config?.definitionRefBinding?.path ?? '',
     },
@@ -299,6 +308,25 @@ export function buildInspectorFormModel(
                       label: 'Index name',
                       hint: 'Leave blank for the generated name.',
                     },
+                    ...(composition.source?.kind === 'state'
+                      ? [
+                          {
+                            type: 'select' as const,
+                            path: 'node.compositionFilter',
+                            label: 'Filter options by',
+                            options: [
+                              { value: '', label: 'No filtering' },
+                              ...compositionFilterOptions(
+                                composition.source,
+                                effective.schema,
+                                repeaterScopes,
+                                catalog,
+                                definition.behavior?.stateSchema,
+                              ),
+                            ],
+                          },
+                        ]
+                      : []),
                   ]
                 : []),
             ]
@@ -477,6 +505,22 @@ export function inspectorChangeTarget(
       patch: { indexName: indexName || null },
     };
   }
+  if (path === 'node.compositionFilter') {
+    const selection = String(value ?? '').trim();
+    if (!selection) return { kind: 'nodeComposition', nodeUuid, patch: { filter: null } };
+    try {
+      const parsed = JSON.parse(selection) as { queryState?: unknown; itemPath?: unknown };
+      if (typeof parsed.queryState !== 'string' || typeof parsed.itemPath !== 'string') return null;
+      const filter: RepeaterFilter = {
+        kind: 'contains',
+        queryState: parsed.queryState,
+        itemPath: parsed.itemPath,
+      };
+      return { kind: 'nodeComposition', nodeUuid, patch: { filter } };
+    } catch {
+      return null;
+    }
+  }
   if (path === 'node.compositionCase') {
     const caseValue = String(value ?? '').trim();
     return {
@@ -597,6 +641,48 @@ function compositionSourceSelection(
   if (source.kind === 'prop') return `prop:${source.uuid}`;
   if (source.kind === 'state') return `state:${source.name}`;
   return `item:${source.path}`;
+}
+
+function compositionFilterOptions(
+  source: CompositionSource,
+  componentSchema: Record<string, unknown> | null,
+  repeaterScopes: readonly RepeaterReferenceScope[],
+  catalog: ProjectCatalog,
+  stateSchema: Readonly<Record<string, Record<string, unknown>>> | undefined,
+) {
+  const itemSchema = repeaterItemSchema(
+    source,
+    componentSchema,
+    repeaterScopes,
+    catalog,
+    stateSchema,
+  );
+  if (!itemSchema) return [];
+  const itemFields = stringSchemaPaths(itemSchema);
+  const queryStates = Object.entries(stateSchema ?? {}).filter(
+    ([, schema]) => schema.type === 'string',
+  );
+  return queryStates.flatMap(([queryState]) =>
+    itemFields.map(({ path, label }) => ({
+      value: JSON.stringify({ queryState, itemPath: path }),
+      label: `${queryState} → ${label}`,
+    })),
+  );
+}
+
+function stringSchemaPaths(
+  schema: Record<string, unknown>,
+  prefix = '',
+): { path: string; label: string }[] {
+  const properties = schema.properties;
+  if (!properties || typeof properties !== 'object' || Array.isArray(properties)) return [];
+  return Object.entries(properties as Record<string, unknown>).flatMap(([name, value]) => {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return [];
+    const property = value as Record<string, unknown>;
+    const path = prefix ? `${prefix}.${name}` : name;
+    if (property.type === 'string') return [{ path, label: path }];
+    return property.type === 'object' ? stringSchemaPaths(property, path) : [];
+  });
 }
 
 function isCompositionSource(field: Record<string, unknown>, kind: 'repeater' | 'switch') {

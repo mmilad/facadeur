@@ -283,7 +283,12 @@ function renderNode(
         .join('');
       const keyPath = behavior?.stateArrayKeyPaths?.[node.repeater.stateName];
       const key = keyPath ? `item[${JSON.stringify(keyPath)}] ?? index` : 'index';
-      return `{(${state} ?? []).map((item, index) => <Fragment key={${key}}>${templates}</Fragment>)}`;
+      const filter = node.repeater.filter;
+      const queryState = filter ? stateIdentifiers.get(filter.queryState) : undefined;
+      const rows = filter
+        ? `(${state} ?? []).map((item, index) => ({ item, index })).filter(({ item }) => { const query = (${queryState ?? 'undefined'} ?? '').trim().toLowerCase(); if (!query) return true; const value = getProp(item, ${JSON.stringify(filter.itemPath)}); return typeof value === 'string' && value.toLowerCase().includes(query); }).map(({ item, index }) => <Fragment key={${key}}>${templates}</Fragment>)`
+        : `(${state} ?? []).map((item, index) => <Fragment key={${key}}>${templates}</Fragment>)`;
+      return `{${rows}}`;
     }
     return (node.children ?? [])
       .map((child) =>

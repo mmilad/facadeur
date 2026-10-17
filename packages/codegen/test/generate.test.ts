@@ -395,14 +395,19 @@ describe('Catalog-driven React code generation', () => {
     const repeaterUuid = component.root.uuid;
     const rowUuid = globalThis.crypto.randomUUID();
     Reflect.set(component.root, 'config', {
-      composition: { kind: 'repeater', source: { kind: 'state', name: 'items' } },
+      composition: {
+        kind: 'repeater',
+        source: { kind: 'state', name: 'items' },
+        filter: { kind: 'contains', itemPath: 'label', queryState: 'query' },
+      },
     });
     Reflect.set(component.root.dom, 'children', [
       { uuid: rowUuid, dom: { tagName: 'article', text: '{item:label}' } },
     ]);
     Reflect.set(component, 'behavior', {
-      state: { items: [{ id: 'one', label: 'One' }] },
+      state: { items: [{ id: 'one', label: 'One' }], query: '' },
       stateSchema: {
+        query: { type: 'string' },
         items: {
           type: 'array',
           items: {
@@ -431,6 +436,9 @@ describe('Catalog-driven React code generation', () => {
     expect(output).toContain('randomUUID');
     expect(output).toContain('repeaterIndices[' + JSON.stringify(repeaterUuid) + ']');
     expect(output).toContain('filter((_: unknown, index: number) => index !==');
+    expect(output).toContain(
+      `.filter(({ item }) => { const query = (behaviorState1 ?? '').trim().toLowerCase(); if (!query) return true; const value = getProp(item, "label"); return typeof value === 'string' && value.toLowerCase().includes(query); })`,
+    );
     const diagnostics = ts.transpileModule(output, {
       reportDiagnostics: true,
       compilerOptions: {

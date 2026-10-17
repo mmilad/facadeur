@@ -90,12 +90,28 @@ export function remapStateReferences(node: Node, renamed: ReadonlyMap<string, st
     source?.kind === 'state'
       ? { ...source, name: renamed.get(source.name) ?? source.name }
       : source;
+  const nextComposition =
+    composition && composition.kind !== 'slot'
+      ? {
+          ...composition,
+          ...(source?.kind === 'state' ? { source: nextSource } : {}),
+          ...(composition.kind === 'repeater' && composition.filter
+            ? {
+                filter: {
+                  ...composition.filter,
+                  queryState:
+                    renamed.get(composition.filter.queryState) ?? composition.filter.queryState,
+                },
+              }
+            : {}),
+        }
+      : undefined;
   return {
     ...node,
     ...(classes ? { classes } : {}),
     dom: { ...node.dom, ...(children ? { children } : {}) },
-    ...(composition && composition.kind !== 'slot' && source?.kind === 'state'
-      ? { config: { ...node.config, composition: { ...composition, source: nextSource } } }
+    ...(nextComposition && (source?.kind === 'state' || composition?.kind === 'repeater')
+      ? { config: { ...node.config, composition: nextComposition } }
       : {}),
   };
 }

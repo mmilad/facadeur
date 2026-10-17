@@ -5,6 +5,12 @@ import type { JsonSchemaObject } from './schema-source';
 import type { LayerMap, StyleLayer, VariantStyleMap } from './design-system';
 import type { Uuid } from './uuid';
 
+export type RepeaterFilter = {
+  readonly kind: 'contains';
+  readonly itemPath: string;
+  readonly queryState: string;
+};
+
 export interface PreviewData {
   readonly fields?: Readonly<Record<string, FieldValue>>;
 }
@@ -20,6 +26,8 @@ export interface NodeConfig {
         readonly source?: CompositionSource;
         /** Optional display name for this repeater's current item index. */
         readonly indexName?: string;
+        /** Optional derived autocomplete filter from an item string field to local string state. */
+        readonly filter?: RepeaterFilter;
       }
     | {
         readonly kind: 'switch';

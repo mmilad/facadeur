@@ -454,7 +454,15 @@ function stateIsReferenced(
     const source =
       node.config?.composition?.kind === 'repeater' ? node.config.composition.source : undefined;
     const repeaterReference = source?.kind === 'state' && source.name === name;
-    return classReference || repeaterReference || (node.dom.children ?? []).some(visit);
+    const filterReference =
+      node.config?.composition?.kind === 'repeater' &&
+      node.config.composition.filter?.queryState === name;
+    return (
+      classReference ||
+      repeaterReference ||
+      filterReference ||
+      (node.dom.children ?? []).some(visit)
+    );
   };
   return (
     visit(root) ||

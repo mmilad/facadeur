@@ -1,5 +1,6 @@
 import type { Uuid } from './uuid';
 import type { FieldValue } from './field-value';
+import type { RepeaterFilter } from './node';
 
 /** Declarative DOM tree for renderers — no document APIs in domain. */
 export interface ElementBuildConfig {
@@ -50,6 +51,7 @@ export interface FragmentBuildConfig {
     readonly itemSchema: Readonly<Record<string, unknown>>;
     readonly templates: readonly RenderBuildConfig[];
     readonly indexName: string;
+    readonly filter?: RepeaterFilter;
   };
 }
 

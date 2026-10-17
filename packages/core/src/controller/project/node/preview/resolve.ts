@@ -358,8 +358,20 @@ function resolveNodeToElementBuildConfig(
             ? resolveCompositionSource(composition.source, ctx)
             : undefined;
           if (!Array.isArray(value)) return [];
-          return value.flatMap((item, itemIndex) =>
-            childNodes.map((child, templateIndex) => {
+          const rawQuery = composition.filter
+            ? ctx.componentState?.[composition.filter.queryState]
+            : undefined;
+          const query = typeof rawQuery === 'string' ? rawQuery.trim().toLowerCase() : '';
+          return value.flatMap((item, itemIndex) => {
+            if (query && composition.filter) {
+              const itemValue =
+                item !== null && typeof item === 'object' && !Array.isArray(item)
+                  ? fieldAtPath(item as FieldValue, composition.filter.itemPath)
+                  : undefined;
+              if (typeof itemValue !== 'string' || !itemValue.toLowerCase().includes(query))
+                return [];
+            }
+            return childNodes.map((child, templateIndex) => {
               const scope: RepeaterReferenceScope = {
                 nodeUuid: node.uuid,
                 indexName:
@@ -397,8 +409,8 @@ function resolveNodeToElementBuildConfig(
                 ...resolved,
                 renderKey: `${child.uuid}:${stableKey}:${templateIndex}`,
               };
-            }),
-          );
+            });
+          });
         })()
       : composition?.kind === 'switch'
         ? (() => {
@@ -496,6 +508,7 @@ function resolveNodeToElementBuildConfig(
               itemSchema,
               templates: templates ?? [],
               indexName: composition.indexName?.trim() || computedIndexName(repeaterScopes.length),
+              ...(composition.filter ? { filter: composition.filter } : {}),
             },
           }
         : {}),

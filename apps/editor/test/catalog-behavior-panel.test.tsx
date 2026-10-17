@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ComponentBehavior, NodeDefinition } from '@facadeur/domain';
 import type { EditorEvent } from '../src/domain/sidebar/events';
 import { EditorEventType } from '../src/domain/sidebar/events';
+import { remapStateReferences } from '../src/app-service/remap-state-references';
 import { CatalogBehaviorPanel } from '../src/ui/stage/CatalogBehaviorPanel';
 
 afterEach(cleanup);
@@ -224,8 +225,30 @@ describe('CatalogBehaviorPanel transitions', () => {
   it('renames state references in transitions when a state is renamed', () => {
     const withTransition = {
       ...definition,
+      root: {
+        ...definition.root,
+        dom: {
+          ...definition.root.dom,
+          children: [
+            ...(definition.root.dom.children ?? []),
+            {
+              uuid: 'repeater-1',
+              config: {
+                composition: {
+                  kind: 'repeater' as const,
+                  source: { kind: 'state' as const, name: 'options' },
+                  filter: { kind: 'contains' as const, itemPath: 'label', queryState: 'query' },
+                },
+              },
+              dom: { tagName: 'ul' },
+            },
+          ],
+        },
+      },
       behavior: {
         ...definition.behavior!,
+        state: { ...definition.behavior!.state, query: '' },
+        stateSchema: { query: { type: 'string' } },
         transitions: [
           {
             nodeUuid: 'button-1',
@@ -234,7 +257,7 @@ describe('CatalogBehaviorPanel transitions', () => {
               {
                 kind: 'set-state' as const,
                 name: 'open',
-                value: { kind: 'state' as const, name: 'open' },
+                value: { kind: 'state' as const, name: 'query' },
               },
             ],
           },
@@ -243,8 +266,8 @@ describe('CatalogBehaviorPanel transitions', () => {
     };
     const { onEvent: captureEvent } = renderControlledPanel(withTransition);
 
-    fireEvent.change(screen.getByRole('textbox', { name: 'State name open' }), {
-      target: { value: 'expanded' },
+    fireEvent.change(screen.getByRole('textbox', { name: 'State name query' }), {
+      target: { value: 'search' },
     });
 
     const event = captureEvent.mock.calls.at(-1)?.[0] as Extract<
@@ -252,9 +275,15 @@ describe('CatalogBehaviorPanel transitions', () => {
       { type: EditorEventType.DefinitionBehaviorSet }
     >;
     const behavior = event.data.behavior as ComponentBehavior;
-    expect(behavior.state).toEqual({ expanded: false, count: 0 });
+    expect(behavior.state).toEqual({ open: false, count: 0, search: '' });
+    const remappedRoot = remapStateReferences(withTransition.root, new Map([['query', 'search']]));
+    const repeater = remappedRoot.dom.children?.find((node) => node.uuid === 'repeater-1');
+    expect(repeater?.config?.composition).toMatchObject({
+      kind: 'repeater',
+      filter: { kind: 'contains', itemPath: 'label', queryState: 'search' },
+    });
     expect(behavior.transitions[0]?.actions).toEqual([
-      { kind: 'set-state', name: 'expanded', value: { kind: 'state', name: 'expanded' } },
+      { kind: 'set-state', name: 'open', value: { kind: 'state', name: 'search' } },
     ]);
   });
 
@@ -263,6 +292,23 @@ describe('CatalogBehaviorPanel transitions', () => {
       ...definition,
       root: {
         ...definition.root,
+        dom: {
+          ...definition.root.dom,
+          children: [
+            ...(definition.root.dom.children ?? []),
+            {
+              uuid: 'filter-repeater',
+              config: {
+                composition: {
+                  kind: 'repeater' as const,
+                  source: { kind: 'state' as const, name: 'options' },
+                  filter: { kind: 'contains' as const, itemPath: 'label', queryState: 'query' },
+                },
+              },
+              dom: { tagName: 'ul' },
+            },
+          ],
+        },
         classes: [
           {
             name: 'is-open',
@@ -277,6 +323,8 @@ describe('CatalogBehaviorPanel transitions', () => {
       },
       behavior: {
         ...definition.behavior!,
+        state: { ...definition.behavior!.state, query: '' },
+        stateSchema: { query: { type: 'string' } },
         transitions: [
           {
             nodeUuid: 'button-1',
@@ -296,5 +344,10 @@ describe('CatalogBehaviorPanel transitions', () => {
     expect(
       within(openState).getByText(/Repeater, class condition, or transition references/i),
     ).toBeTruthy();
+    const queryState = screen.getByRole('heading', { name: 'query' }).closest('li')!;
+    expect(
+      (within(queryState).getByRole('button', { name: 'Remove state' }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
   });
 });

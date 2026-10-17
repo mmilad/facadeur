@@ -8,7 +8,11 @@ import {
   validateProjectCatalog,
 } from '../src/index';
 import { createExampleCatalog } from '@facadeur/examples';
-import { buildInspectorFormModel } from '../src/controller/project/node/preview/inspector-view';
+import { patchNodeComposition } from '../src/controller/project/catalog/ops';
+import {
+  buildInspectorFormModel,
+  inspectorChangeTarget,
+} from '../src/controller/project/node/preview/inspector-view';
 const testUuid25 = globalThis.crypto.randomUUID();
 const testUuid26 = globalThis.crypto.randomUUID();
 const testUuid27 = globalThis.crypto.randomUUID();
@@ -577,6 +581,168 @@ describe('executeComponentBehavior', () => {
     expect(preview.attributes?.['aria-label']).toBe('Green');
     expect(preview.attributes?.class).toBe('is-closed');
     expect(openPreview.attributes?.class).toBe('is-open');
+  });
+
+  it('filters state-backed Repeater rows from a query state without renumbering the source', () => {
+    const catalog = createExampleCatalog();
+    const component = Object.values(catalog.components)[0]!;
+    const repeaterUuid = globalThis.crypto.randomUUID();
+    const rowUuid = globalThis.crypto.randomUUID();
+    const searchUuid = globalThis.crypto.randomUUID();
+    Reflect.set(component.root.dom, 'children', [
+      {
+        uuid: searchUuid,
+        dom: { tagName: 'input', attributes: { value: '{state:query}' } },
+      },
+      {
+        uuid: repeaterUuid,
+        config: {
+          composition: {
+            kind: 'repeater',
+            source: { kind: 'state', name: 'options' },
+            filter: { kind: 'contains', itemPath: 'label', queryState: 'query' },
+          },
+        },
+        dom: {
+          tagName: 'ul',
+          children: [{ uuid: rowUuid, dom: { tagName: 'li', text: '{item:label}' } }],
+        },
+      },
+    ]);
+    Reflect.set(component, 'behavior', {
+      state: {
+        query: '',
+        options: [
+          { id: 'red', label: 'Red' },
+          { id: 'green', label: 'Green' },
+          { id: 'blue', label: 'Blue' },
+        ],
+      },
+      stateSchema: {
+        query: { type: 'string' },
+        options: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: { id: { type: 'string' }, label: { type: 'string' } },
+          },
+        },
+      },
+      stateArrayKeyPaths: { options: 'id' },
+      transitions: [
+        {
+          nodeUuid: searchUuid,
+          event: 'input',
+          actions: [
+            { kind: 'set-state', name: 'query', value: { kind: 'event', path: 'target.value' } },
+          ],
+        },
+        { nodeUuid: rowUuid, event: 'click', actions: [] },
+      ],
+    });
+    expect(() => validateProjectCatalog(catalog)).not.toThrow();
+
+    const inspector = buildInspectorFormModel(catalog, component, repeaterUuid)!;
+    const elementSection = inspector.fields.find(
+      (field) => field.type === 'section' && field.title === 'Element',
+    );
+    const filterField =
+      elementSection?.type === 'section'
+        ? elementSection.fields.find(
+            (field) => field.type === 'select' && field.path === 'node.compositionFilter',
+          )
+        : undefined;
+    const filterValue = JSON.stringify({ queryState: 'query', itemPath: 'label' });
+    expect(filterField?.type === 'select' ? filterField.options : []).toContainEqual({
+      value: filterValue,
+      label: 'query → label',
+    });
+    expect(inspector.formValue.node.compositionFilter).toBe(filterValue);
+    expect(
+      inspectorChangeTarget('node.compositionFilter', filterValue, repeaterUuid),
+    ).toMatchObject({
+      kind: 'nodeComposition',
+      patch: { filter: { kind: 'contains', itemPath: 'label', queryState: 'query' } },
+    });
+    const clearedFilter = patchNodeComposition(catalog, component.uuid, repeaterUuid, {
+      filter: null,
+    });
+    const clearedRepeater = clearedFilter.components[component.uuid]!.root.dom.children?.find(
+      (node) => node.uuid === repeaterUuid,
+    );
+    expect(clearedRepeater?.config?.composition).toMatchObject({ kind: 'repeater' });
+    expect(
+      clearedRepeater?.config?.composition?.kind === 'repeater'
+        ? clearedRepeater.config.composition.filter
+        : undefined,
+    ).toBeUndefined();
+    const selectedFilter = patchNodeComposition(clearedFilter, component.uuid, repeaterUuid, {
+      filter: { kind: 'contains', itemPath: 'label', queryState: 'query' },
+    });
+    const filteredRepeater = selectedFilter.components[component.uuid]!.root.dom.children?.find(
+      (node) => node.uuid === repeaterUuid,
+    );
+    expect(
+      filteredRepeater?.config?.composition?.kind === 'repeater'
+        ? filteredRepeater.config.composition.filter
+        : undefined,
+    ).toEqual({ kind: 'contains', itemPath: 'label', queryState: 'query' });
+
+    const emptyQuery = resolveDefinitionToElementBuildConfig(
+      component,
+      catalog,
+      {},
+      {
+        includeBehaviorTargets: true,
+      },
+    );
+    const searchResult = executeComponentBehavior(component.behavior, searchUuid, 'input', {
+      state: component.behavior!.state!,
+      event: { target: { value: 'REEN' } },
+    });
+    expect(searchResult.matched).toBe(true);
+    const filtered = resolveDefinitionToElementBuildConfig(
+      component,
+      catalog,
+      {},
+      {
+        includeBehaviorTargets: true,
+        behaviorStateByInstance: { [component.uuid]: searchResult.state },
+      },
+    );
+    const noMatchesResult = executeComponentBehavior(component.behavior, searchUuid, 'input', {
+      state: searchResult.state,
+      event: { target: { value: 'missing' } },
+    });
+    const noMatches = resolveDefinitionToElementBuildConfig(
+      component,
+      catalog,
+      {},
+      {
+        behaviorStateByInstance: { [component.uuid]: noMatchesResult.state },
+      },
+    );
+    const list = (build: typeof emptyQuery) =>
+      build.children?.find((child) => child.kind === 'fragment');
+    const rows = list(filtered)?.children ?? [];
+
+    expect(list(emptyQuery)?.children?.map((row) => row.text)).toEqual(['Red', 'Green', 'Blue']);
+    expect(rows.map((row) => row.text)).toEqual(['Green']);
+    expect(rows[0]?.renderKey).toContain(':green:');
+    const row = rows[0];
+    expect(
+      row && row.kind !== 'fragment'
+        ? row.behaviorTargets?.[0]?.repeaterIndices?.[repeaterUuid]
+        : undefined,
+    ).toBe(1);
+    expect(list(noMatches)?.children ?? []).toEqual([]);
+
+    Reflect.set(component.behavior!.state!, 'query', 1);
+    Reflect.set(component.behavior!, 'stateSchema', {
+      ...component.behavior!.stateSchema,
+      query: { type: 'number' },
+    });
+    expect(() => validateProjectCatalog(catalog)).toThrow(/Repeater filter.*string/i);
   });
 
   it('moves an array item using the active repeater index without mutating input state', () => {

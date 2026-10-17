@@ -42,6 +42,16 @@ export const nodeConfigSchema = Type.Object(
           {
             kind: Type.Literal('repeater'),
             indexName: Type.Optional(Type.String({ minLength: 1 })),
+            filter: Type.Optional(
+              Type.Object(
+                {
+                  kind: Type.Literal('contains'),
+                  itemPath: Type.String({ minLength: 1 }),
+                  queryState: Type.String({ minLength: 1 }),
+                },
+                { additionalProperties: false },
+              ),
+            ),
             source: Type.Optional(
               Type.Union([
                 Type.Object(

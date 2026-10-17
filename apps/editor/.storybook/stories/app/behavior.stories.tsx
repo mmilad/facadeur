@@ -285,15 +285,40 @@ const customSelectDemo: NodeDefinition = {
           name: 'Selected value',
           dom: {
             tagName: 'button',
-            attributes: { type: 'button', 'aria-expanded': '{state:open}' },
+            attributes: {
+              type: 'button',
+              'aria-haspopup': 'listbox',
+              'aria-expanded': '{state:open}',
+            },
             text: '{state:selected}',
+          },
+        },
+        {
+          uuid: '860e8400-e29b-41d4-a716-446655440026',
+          name: 'Search options',
+          dom: {
+            tagName: 'input',
+            attributes: {
+              type: 'search',
+              role: 'combobox',
+              'aria-autocomplete': 'list',
+              'aria-controls': 'color-options',
+              'aria-expanded': '{state:open}',
+              'aria-label': 'Search colors',
+              placeholder: 'Type to filter colors…',
+              value: '{state:query}',
+            },
           },
         },
         {
           uuid: '860e8400-e29b-41d4-a716-446655440023',
           name: 'Options',
           config: {
-            composition: { kind: 'repeater', source: { kind: 'state', name: 'options' } },
+            composition: {
+              kind: 'repeater',
+              source: { kind: 'state', name: 'options' },
+              filter: { kind: 'contains', itemPath: 'label', queryState: 'query' },
+            },
           },
           classes: [
             {
@@ -319,6 +344,7 @@ const customSelectDemo: NodeDefinition = {
           ],
           dom: {
             tagName: 'ul',
+            attributes: { id: 'color-options', role: 'listbox' },
             children: [
               {
                 uuid: '860e8400-e29b-41d4-a716-446655440024',
@@ -331,8 +357,12 @@ const customSelectDemo: NodeDefinition = {
                       name: 'Choose option',
                       dom: {
                         tagName: 'button',
-                        attributes: { type: 'button', value: '{item}' },
-                        text: '{item}',
+                        attributes: {
+                          type: 'button',
+                          role: 'option',
+                          value: '{item:label}',
+                        },
+                        text: '{item:label}',
                       },
                     },
                   ],
@@ -345,8 +375,29 @@ const customSelectDemo: NodeDefinition = {
     },
   },
   behavior: {
-    state: { open: false, selected: 'Choose a color', options: ['Red', 'Green', 'Blue'] },
-    stateSchema: { options: { type: 'array', items: { type: 'string' } } },
+    state: {
+      open: false,
+      selected: 'Choose a color',
+      query: '',
+      options: [
+        { id: 'color-red', label: 'Red' },
+        { id: 'color-green', label: 'Green' },
+        { id: 'color-blue', label: 'Blue' },
+      ],
+    },
+    stateSchema: {
+      query: { type: 'string' },
+      options: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: { id: { type: 'string' }, label: { type: 'string' } },
+          required: ['id', 'label'],
+          additionalProperties: false,
+        },
+      },
+    },
+    stateArrayKeyPaths: { options: 'id' },
     transitions: [
       {
         nodeUuid: '860e8400-e29b-41d4-a716-446655440022',
@@ -364,11 +415,20 @@ const customSelectDemo: NodeDefinition = {
         ],
       },
       {
+        nodeUuid: '860e8400-e29b-41d4-a716-446655440026',
+        event: 'input',
+        actions: [
+          { kind: 'set-state', name: 'query', value: { kind: 'event', path: 'target.value' } },
+          { kind: 'set-state', name: 'open', value: { kind: 'literal', value: true } },
+        ],
+      },
+      {
         nodeUuid: '860e8400-e29b-41d4-a716-446655440025',
         event: 'click',
         actions: [
           { kind: 'set-state', name: 'selected', value: { kind: 'event', path: 'target.value' } },
           { kind: 'set-state', name: 'open', value: { kind: 'literal', value: false } },
+          { kind: 'set-state', name: 'query', value: { kind: 'literal', value: '' } },
         ],
       },
     ],

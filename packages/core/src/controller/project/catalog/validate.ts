@@ -189,6 +189,23 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
           );
         }
       }
+      if (composition?.kind === 'repeater' && composition.filter) {
+        const filter = composition.filter;
+        const itemSchema = asSchemaRecord(sourceSchema?.items);
+        const itemFieldSchema = itemSchema ? schemaAtPath(itemSchema, filter.itemPath) : null;
+        const querySchema = definition.behavior?.stateSchema?.[filter.queryState];
+        if (
+          source?.kind !== 'state' ||
+          querySchema?.type !== 'string' ||
+          typeof definition.behavior?.state?.[filter.queryState] !== 'string' ||
+          itemFieldSchema?.type !== 'string'
+        ) {
+          throw new DocumentError(
+            'schema',
+            `Repeater filter on node "${node.name ?? node.uuid}" must use a string item field and a string behavior state (${definition.name}).`,
+          );
+        }
+      }
       if (source?.kind === 'item' && !itemSchema) {
         throw new DocumentError(
           'schema',
