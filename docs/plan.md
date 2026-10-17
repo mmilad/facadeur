@@ -639,12 +639,12 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
   - Contracts: retain current token values, breakpoint overrides, font sources, and existing design-stage CSS selector semantics.
   - Validation: switched Fonts → Schemas in the App Storybook view; added and passed a regression test verifying the font imports persist while token rules remain scoped. Editor typecheck, the focused design-domain test suite (5 tests), Prettier, candidate detector, and `git diff --check` passed.
 
-- [ ] Core/Editor: replace icon options-source metadata with typed catalog references.
+- [x] Core/Editor: replace icon options-source metadata with typed catalog references.
   - Evidence: the Icon Button schema uses the one-off `x-facadeur-options-source: "icons"` keyword, and Core converts that one marker into enum fields inside `inspector-view.ts`; schema editing has no UI for choosing a reusable reference target.
   - Action: represent resource references as string schemas with `x-facadeur-reference: { target }`; make the controlled SchemaEditor accept host-supplied target choices and edit this annotation on string properties. Pass the Icon target from the app schema surfaces, resolve Icon IDs to inspector choices centrally, and validate referenced defaults/field values against the catalog icon IDs. Update the seed Icon Button schema and remove the options-source path.
   - Scope: make icon references authorable and usable through the existing schema and inspector surfaces; keep `$ref` for schema-to-schema references and leave future target kinds additive.
   - Contracts: preserve the string value and stable icon ID (`save`), JSON Schema validity, controlled editor updates, preview rendering, and strict catalog validation; unknown reference targets/IDs must be rejected rather than silently accepted.
-  - Validation: focused Core validation and Editor schema UI checks, relevant Core/Editor typechecks, candidate detector rerun, and `git diff --check`.
+  - Validation: no `x-facadeur-options-source` usages remain. Core tests verify icon ID dropdown projection, valid defaults/field values, and rejection of unknown targets/IDs; Editor schema tests cover writing and clearing target metadata. App and Catalog schema panels supply Icon and Component reference target choices; Core and Editor typechecks passed in the recent full typecheck. Candidate detector reviewed; no separate source change was needed in this turn.
 
 - [x] Editor: edit static catalog-reference values with their schema control.
   - Evidence: `DefinitionFieldSettings` routes text-like static values through `TransformableField`, even when the field schema declares `x-facadeur-reference`; the ordinary inspector projection already resolves registered reference values to an enum/select.
@@ -798,12 +798,12 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
   - Validation: focused Core runtime check confirms the sample array keeps its stored `$ref` while `styles.items` derives `selector` and `rules` fields; root preview fields remain available for structured editing. Core/Editor typechecks, Prettier, candidate detector, and `git diff --check` passed; tests not run.
   - Structure: retain `inspector-view.ts` as the cohesive Inspector model builder; shared-schema expansion extends its existing field derivation and adds no separate domain or UI responsibility.
 
-- [ ] Core: keep schema edits and preview defaults in sync.
+- [x] Core: keep schema edits and preview defaults in sync.
   - Evidence: `CatalogSchemaStage` allows removing fields from an inline schema while `definition.config.previewData.fields` keeps values for those fields; `validateProjectCatalog` then rejects the next catalog commit, including inserting a component, with an invalid preview-default error.
   - Action: when an inline schema is replaced, remove definition preview defaults for fields no longer in the contract; make catalog validation tolerate stale or mistyped preview examples, and filter them from rendering. Keep strict validation for component instance data and type validation for active preview fields.
   - Scope: schema replacement and preview-default validation; do not change persisted schema or renderer contracts.
   - Contracts: preserve preview values for retained fields, preserve valid partial values and bindings, and keep invalid values for known fields rejected.
-  - Validation: Core and Editor typechecks, focused in-memory reproduction for stale CSS rule preview values, candidate detector rerun, and `git diff --check`; no tests run.
+  - Validation: Core regression test confirms removed inline fields are pruned, stale/mistyped preview examples pass catalog validation, and incompatible values are omitted from Core rendering. Core/Editor typechecks, candidate detector rerun, and `git diff --check` passed.
 
 - [x] Core/Editor/Style Engine/Codegen: keep generated root class styles first and make optional class order editable.
   - Evidence: node classes are stored as authored classes followed by the generated root class; the style inspector and both preview/codegen CSS emit them in storage order, so the generated base rule can override an optional class with equal specificity.
