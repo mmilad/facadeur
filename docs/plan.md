@@ -701,12 +701,12 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
   - Contracts: retain JSON Schema object and array shapes, preserve current form bindings and preview-data field paths, and keep non-nested scalar controls on their existing form path.
   - Validation: Editor typecheck, focused source-level check of nested object and array path handling, candidate detector rerun, and `git diff --check`; no test suite added or run.
 
-- [ ] Core/Editor: expose nested repeater item fields as composition sources.
+- [x] Core/Editor: expose nested repeater item fields as composition sources.
   - Evidence: nested repeater scopes and `{ kind: 'item', path }` sources are supported by the Core resolver and catalog validation, but `inspector-view.ts` only builds the composition source dropdown from root component properties. The inner repeater cannot select an array from its parent item's schema.
   - Action: build source choices from the root component schema and the active parent repeater item's schema. Encode the selected source in the inspector view model, then map it to the existing prop UUID or item path source contract. Keep source-option generation in the inspector view model because it already owns composition controls; preserve the file's cohesive inspector-model responsibility.
   - Scope: make nested repeater arrays selectable in the Editor; no persisted model or reference-encoding changes.
   - Contracts: keep root `{ kind: 'prop', uuid }` sources and scoped `{ kind: 'item', path }` sources, repeater index UUID identity, item scope order, and Core validation/preview/codegen behavior intact.
-  - Validation: Core and Editor typechecks, candidate detector rerun, and `git diff --check`; no tests run.
+  - Validation: added a Core Inspector regression check proving the nested item array appears as `item:options` with its `[]` path label; Core preview filters that nested source while preserving stable option IDs. Core and Editor typechecks, candidate detector rerun, and `git diff --check` passed.
 
 - [ ] Refactor: review `AppService.ts` ownership boundaries.
   - Evidence: the 652-line service coordinates session/catalog actions, asset workflows, event routing, and inspector/sidebar view-model assembly.

@@ -824,6 +824,7 @@ describe('executeComponentBehavior', () => {
     const catalog = createExampleCatalog();
     const component = Object.values(catalog.components)[0]!;
     const groupsPropId = globalThis.crypto.randomUUID();
+    const optionsFieldId = globalThis.crypto.randomUUID();
     const groupRepeaterUuid = globalThis.crypto.randomUUID();
     const optionRepeaterUuid = globalThis.crypto.randomUUID();
     const rowUuid = globalThis.crypto.randomUUID();
@@ -841,6 +842,7 @@ describe('executeComponentBehavior', () => {
                 id: { type: 'string' },
                 options: {
                   type: 'array',
+                  ['x-facadeur-prop-id']: optionsFieldId,
                   items: {
                     type: 'object',
                     properties: { id: { type: 'string' }, label: { type: 'string' } },
@@ -890,6 +892,20 @@ describe('executeComponentBehavior', () => {
       transitions: [],
     });
     expect(() => validateProjectCatalog(catalog)).not.toThrow();
+    const inspector = buildInspectorFormModel(catalog, component, optionRepeaterUuid)!;
+    const elementSection = inspector.fields.find(
+      (field) => field.type === 'section' && field.title === 'Element',
+    );
+    const sourceField =
+      elementSection?.type === 'section'
+        ? elementSection.fields.find(
+            (field) => field.type === 'select' && field.path === 'node.compositionSource',
+          )
+        : undefined;
+    expect(sourceField?.type === 'select' ? sourceField.options : []).toContainEqual({
+      value: 'item:options',
+      label: 'index.options[] (options)',
+    });
     const preview = resolveDefinitionToElementBuildConfig(component, catalog, {
       groups: [
         {
