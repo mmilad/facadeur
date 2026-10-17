@@ -35,3 +35,10 @@ export type NodeClassConditionCommand = {
   className: string;
   condition: ClassCondition | null;
 };
+
+export type NodeClassOrderCommand = {
+  type: 'setNodeClassOrder';
+  nodeUuid: string;
+  definitionUuid: string;
+  classNames: readonly string[];
+};

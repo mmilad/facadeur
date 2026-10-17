@@ -40,6 +40,7 @@ export type PreviewResolveContext = {
   readonly fields: Record<string, FieldValue>;
   readonly overrides?: Record<string, FieldValue>;
   readonly componentProps?: Readonly<Record<string, FieldValue>>;
+  readonly componentState?: Readonly<Record<string, FieldValue | null>>;
   readonly componentSchema?: Record<string, unknown> | null;
   readonly item?: FieldValue;
   readonly repeaterScopes?: readonly RepeaterReferenceScope[];
@@ -302,6 +303,7 @@ function resolveNodeToElementBuildConfig(
     catalog,
     fields,
     componentProps: componentPropValues(resolvedSchema, fields),
+    componentState: definition.behavior?.state,
     componentSchema: resolvedSchema,
     overrides: nodeOverrides,
     item: itemContext,
@@ -432,18 +434,17 @@ function resolveNodeToElementBuildConfig(
       nodeUuid: node.uuid,
     };
   }
+  const classes = node.classes ?? [];
+  const orderedClasses = [
+    ...classes.filter((item) => item.generated),
+    ...classes.filter((item) => !item.generated),
+  ];
   const dynamicClassStyles = Object.fromEntries(
-    (node.classes ?? [])
-      .filter(({ condition }) => !condition || evaluateClassCondition(condition, ctx))
-      .flatMap((item) => {
-        const referenced = Object.fromEntries(
-          Object.entries(item.style?.declarations ?? {}).filter(([, value]) =>
-            STYLE_REFERENCE.test(value),
-          ),
-        );
-        const resolved = resolveStringRecord(referenced, ctx);
-        return resolved && Object.keys(resolved).length ? [[item.name, resolved]] : [];
-      }),
+    orderedClasses.flatMap((item) => {
+      const declarations = item.style?.declarations ?? {};
+      const resolved = resolveStringRecord(declarations, ctx);
+      return resolved && Object.keys(resolved).length ? [[item.name, resolved]] : [];
+    }),
   );
   const properties = node.dom.properties;
 

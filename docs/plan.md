@@ -1,5 +1,34 @@
 # Facadeur cleanup plan
 
+- [x] Codegen: finalize typed component state and class-condition references.
+  - Evidence: the current prototype creates a boolean state and a hard-coded click transition; its form uses native controls and sits outside the Inspector tabs. Class-condition options and Core reference evaluation only include schema props, so internal state values are unavailable and the condition toggle is disabled when there are no props.
+  - Action: move state editing into a dedicated Inspector Behavior tab; use existing form components to add typed state with an explicit initial value and show type-derived actions (`toggleX`/`setX` for booleans, `setX(value)` for strings/numbers). Do not create event bindings when adding a state. Add `{state:name}` as a typed condition reference, include states in condition options, and resolve them in Core preview and React codegen.
+  - Scope: state definition and read-only class-condition use. Keep event-to-action binding out of this slice; document that actions are available but not yet invokable by authored events. Do not add a visual graph or executable function strings.
+  - Contracts: keep catalogs without `behavior` unchanged; state names are stable identifiers and rename updates references; initial values preserve boolean/string/number types. Repeater/component prop references retain current semantics. Conditions may read a component's declared internal state.
+  - Validation: Core state-condition preview regression and all 8 Codegen generation tests passed; Core, Codegen, and Editor typechecks passed; Storybook browser showed the root Behavior tab and enabled state-backed class conditions. The pre-existing Core field-exposure suite still has three unrelated failing assertions. Candidate detector was rerun; no new size candidate was introduced. `git diff --check` was reviewed.
+  - Structure: domain owns the behavior and state-reference vocabulary; Core owns validation/evaluation; Editor form and Inspector own authoring. Keep React reference emission in the React engine and reconsider extracting behavior generation from `generate.ts` (already flagged by the candidate detector).
+
+- [x] Editor: author component behavior transitions with forms.
+  - Evidence: the Behavior panel currently edits state and displays action names as information, while `behavior.transitions` can only be supplied outside the Editor; the panel explicitly says event bindings come later.
+  - Action: add a form for selecting a layer and event, then composing ordered `set-state`, `increment`, and `emit` actions with literal, state, prop, and event values. Keep saved behavior as declarative `BehaviorAction` data; generate implementation functions from those records instead of saving executable source strings.
+  - Scope: author the existing behavior model in the Editor; no visual graph or arbitrary JavaScript editor.
+  - Contracts: preserve component-private state, stable node UUIDs, event names, action order, typed initial values, and React codegen output; state actions remain portable to later target engines.
+  - Validation: transition/action/value authoring tests (4), Editor typecheck, React codegen tests for event payloads and ordered state updates, Prettier, and `git diff --check` passed. Save/reload and Undo/Redo are covered by the existing catalog event pipeline but were not added as dedicated behavior tests.
+
+- [ ] Editor: execute component behavior in the stage preview.
+  - Evidence: Core preview resolves declared state from its initial values, but the stage renderer does not execute `behavior.transitions`; only generated React output currently wires those transitions to DOM events.
+  - Action: add per-rendered-component state and event dispatch in the stage preview, evaluate transition actions, and refresh state-backed class conditions. Keep separate component instances and repeated items isolated.
+  - Scope: live editor preview only; preserve the declarative behavior contract and generated component behavior. Event values are read from a serializable snapshot of target value/checked/name, key, button and modifier keys.
+  - Contracts: initial state, event values, action order, callback emits, class conditions, Undo/Redo, and repeated component instances must match generated React semantics.
+  - Validation so far: Core runtime test covers ordered toggle, increment, emit payload and input immutability; Stage uses a local preview state and re-runs the Core resolver; Board test confirms iframe pointer input is enabled only during preview interactions. Editor typecheck and focused suites passed. The browser could not inspect the preview iframe due repeatable CDP timeouts, and the Stage jsdom mount harness stalled; end-to-end browser confirmation and repeated/embedded instance isolation remain incomplete.
+
+- [x] Core/Editor: validate behavior types and keep state references consistent.
+  - Evidence: catalog validation checks state/action names and operation arity, but not compatible state/action value types; state rename currently remaps class conditions only, and deleting a state can leave references behind.
+  - Action: validate state targets, incrementable numeric values, operation arity/types, prop/event paths, and event/emit contracts. Remap or safely remove references in class conditions and transitions when states are renamed or deleted; prevent invalid edits from being committed.
+  - Scope: behavior-model integrity and state lifecycle; no new expression operators or arbitrary code.
+  - Contracts: preserve legacy class conditions and valid saved behavior, keep stable node IDs, and reject invalid references with actionable errors.
+  - Validation: Core catalog tests cover valid behavior shape and invalid operation arity/references, Editor tests cover transition rename and guarded deletion, and Core/Editor typechecks passed. Runtime tests cover ordered actions and immutable inputs. Broader legacy field-exposure tests retain three unrelated failures in the combined working tree.
+
 - [x] Examples/Editor: add a reusable Icon atom backed by project icon references.
   - Evidence: Core already resolves an SVG node's `data-icon` key against `ProjectCatalog.icons`, but the reusable example atoms do not expose an SVG Icon atom; the app seed only has an Icon button component.
   - Action: add an `Icon` atom with an Icon-target schema reference, a `data-icon` prop binding, and a preview default; merge that atom into the Editor seed catalog alongside its existing Tree Node example.
@@ -765,6 +794,14 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
   - Scope: schema replacement and preview-default validation; do not change persisted schema or renderer contracts.
   - Contracts: preserve preview values for retained fields, preserve valid partial values and bindings, and keep invalid values for known fields rejected.
   - Validation: Core and Editor typechecks, focused in-memory reproduction for stale CSS rule preview values, candidate detector rerun, and `git diff --check`; no tests run.
+
+- [x] Core/Editor/Style Engine/Codegen: keep generated root class styles first and make optional class order editable.
+  - Evidence: node classes are stored as authored classes followed by the generated root class; the style inspector and both preview/codegen CSS emit them in storage order, so the generated base rule can override an optional class with equal specificity.
+  - Action: show the generated root class first in the inspector and style rule emission, then expose move-up/move-down controls for authored classes. Persist authored order through a catalog design command while preserving the generated class invariant.
+  - Scope: per-node class order and CSS cascade only; do not change selectors, conditions, declarations, breakpoints, or DOM class membership.
+  - Contracts: keep generated classes fixed and first in presentation/CSS, preserve authored class order and definitions through edits and undo, preserve sparse responsive styles and existing condition behavior.
+  - Validation: focused Core/Editor/Codegen behavior tests (13 passed), workspace typecheck, Storybook visual inspection confirms `.layer` is listed before `.is-open` and optional-class sort controls render, candidate detector rerun, and `git diff --check` passed. The live demo has one optional class, so the sort buttons are correctly disabled there; multi-class movement is covered by the Editor integration test.
+  - Structure: keep the recursive Core resolver and React output pipeline cohesive; generated-first ordering is a local projection at each existing class-style emission point. Keep Inspector ordering in `AppService` model assembly; extracting this one ordering operation would add indirection without another consumer.
 
 - [x] Examples/Editor: keep Tree Node nested schema prop IDs stable.
   - Evidence: `EditorBootstrap` replaces the catalog's saved Tree Node with the Examples definition at startup, while `tree-node.ts` only assigns IDs to its top-level fields. Catalog normalization generates IDs for nested schema fields, so those IDs change on every startup and can invalidate bindings.

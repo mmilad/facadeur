@@ -1,0 +1,78 @@
+.catalog-behavior-add,
+.catalog-behavior-state,
+.catalog-behavior-transition,
+.catalog-behavior-action {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface, #fff);
+}
+
+.catalog-behavior-add h4,
+.catalog-behavior-state h4,
+.catalog-behavior-transition h4,
+.catalog-behavior-action h4 {
+  margin: 0;
+}
+
+.catalog-behavior-initial,
+.catalog-behavior-subtitle {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.catalog-behavior-error {
+  color: var(--danger, #a52822);
+  font-size: 12px;
+}
+
+.catalog-behavior-state-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.catalog-behavior-transition-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.catalog-behavior-action {
+  gap: 8px;
+  padding: 10px;
+  border-color: var(--line-subtle, var(--line));
+  background: var(--surface-muted, #faf9f7);
+}
+
+.catalog-behavior-value {
+  display: grid;
+  gap: 8px;
+  padding: 8px;
+  border-left: 2px solid var(--line);
+}
+
+.catalog-behavior-argument {
+  display: grid;
+  gap: 8px;
+}
+
+.catalog-behavior-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.catalog-behavior-actions code,
+.catalog-behavior-state > div > code {
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: var(--surface-muted, #f2eee9);
+}

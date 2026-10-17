@@ -19,6 +19,7 @@ export function classExpression(
   booleanPropUuids: ReadonlySet<string>,
   styleNodeUuids: readonly string[],
   repeaterScopes: ReadonlyMap<string, CodegenRepeaterScope>,
+  stateNames: ReadonlyMap<string, string>,
 ) {
   const values = classes.map((item) => {
     const condition = item.condition;
@@ -28,6 +29,7 @@ export function classExpression(
       propPaths,
       booleanPropUuids,
       repeaterScopes,
+      stateNames,
     );
     return `${expression} ? ${JSON.stringify(item.name)} : ""`;
   });
@@ -76,6 +78,7 @@ function classConditionExpression(
   propPaths: ReadonlyMap<string, string>,
   booleanPropUuids: ReadonlySet<string>,
   repeaterScopes: ReadonlyMap<string, CodegenRepeaterScope>,
+  stateNames: ReadonlyMap<string, string>,
 ): string {
   if (condition.kind === 'prop-equals') {
     const path = propPaths.get(condition.propUuid);
@@ -85,15 +88,16 @@ function classConditionExpression(
     return `Object.is(${resolvedValue}, ${JSON.stringify(condition.value)})`;
   }
   if (condition.kind === 'rule') {
-    if (!condition.conditions.length) return 'false';
+    if (!condition.conditions.length) return 'true';
     const operator = condition.operator === 'and' ? '&&' : '||';
-    return `(${condition.conditions.map((child) => classConditionExpression(child, propPaths, booleanPropUuids, repeaterScopes)).join(` ${operator} `)})`;
+    return `(${condition.conditions.map((child) => classConditionExpression(child, propPaths, booleanPropUuids, repeaterScopes, stateNames)).join(` ${operator} `)})`;
   }
   const left = conditionOperandExpression(
     condition.left,
     propPaths,
     booleanPropUuids,
     repeaterScopes,
+    stateNames,
   );
   if (condition.operator === 'is-set') return `(${left} !== undefined && ${left} !== null)`;
   if (condition.operator === 'is-not-set') return `(${left} === undefined || ${left} === null)`;
@@ -103,6 +107,7 @@ function classConditionExpression(
     propPaths,
     booleanPropUuids,
     repeaterScopes,
+    stateNames,
   );
   const operators: Partial<Record<ClassConditionLeaf['operator'], string>> = {
     equals: 'Object.is(LEFT, RIGHT)',
@@ -133,12 +138,15 @@ function conditionOperandExpression(
   propPaths: ReadonlyMap<string, string>,
   booleanPropUuids: ReadonlySet<string>,
   repeaterScopes: ReadonlyMap<string, CodegenRepeaterScope>,
+  stateNames: ReadonlyMap<string, string>,
 ) {
   if (operand.kind === 'literal') return JSON.stringify(operand.value);
   const match = operand.reference.match(/^\{props:([^}]+)\}$/);
+  const stateMatch = operand.reference.match(/^\{state:([^}]+)\}$/);
   const itemMatch = operand.reference.match(/^\{item-prop:([^:}]+):([^}]+)\}$/);
   const indexMatch = operand.reference.match(/^\{index:([^}]+)\}$/);
   const legacyItemMatch = operand.reference.match(/^\{item:([^}]+)\}$/);
+  if (stateMatch?.[1]) return stateNames.get(stateMatch[1]) ?? 'undefined';
   if (indexMatch) return String(repeaterScopes.get(indexMatch[1]!)?.index ?? 'undefined');
   if (itemMatch?.[1] && itemMatch[2]) {
     const scope = repeaterScopes.get(itemMatch[1]);

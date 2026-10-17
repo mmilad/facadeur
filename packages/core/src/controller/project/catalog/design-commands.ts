@@ -5,6 +5,7 @@ import type {
   NodeClassStyleCommand,
   NodeClassStyleDeclarationsCommand,
   NodeClassConditionCommand,
+  NodeClassOrderCommand,
 } from '../../style/types';
 import { assertBreakpoints, cloneBreakpoints } from '../../style/breakpoints';
 import {
@@ -17,6 +18,7 @@ import {
   setNodeClassCondition,
   setNodeClassStyleDeclaration,
   setNodeClassStyleDeclarations,
+  patchNodeClasses,
 } from './node-classes';
 
 export type CatalogDesignCommand =
@@ -24,7 +26,8 @@ export type CatalogDesignCommand =
   | DesignLibraryCommand
   | NodeClassStyleCommand
   | NodeClassStyleDeclarationsCommand
-  | NodeClassConditionCommand;
+  | NodeClassConditionCommand
+  | NodeClassOrderCommand;
 
 export function applyCatalogDesignCommand(
   catalog: ProjectCatalog,
@@ -40,6 +43,11 @@ export function applyCatalogDesignCommand(
   }
   if (command.type === 'setNodeClassCondition') {
     return validateProjectCatalog(setNodeClassCondition(catalog, command)) as ProjectCatalog;
+  }
+  if (command.type === 'setNodeClassOrder') {
+    return validateProjectCatalog(
+      patchNodeClasses(catalog, command.definitionUuid, command.nodeUuid, command.classNames),
+    ) as ProjectCatalog;
   }
   if (command.type === 'setToken') {
     const tokens = setTokenInTree(

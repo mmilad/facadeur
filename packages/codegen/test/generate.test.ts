@@ -3,6 +3,35 @@ import { createExampleCatalog } from '@facadeur/examples';
 import { generateReact } from '../src';
 
 describe('Catalog-driven React code generation', () => {
+  it('emits generated root class styles before authored class styles', () => {
+    const catalog = createExampleCatalog();
+    const definition = Object.values(catalog.atoms)[0]!;
+    const root = definition.root;
+    const generated = root.classes?.find((item) => item.generated);
+    expect(generated).toBeDefined();
+    const orderedDefinition = {
+      ...definition,
+      root: {
+        ...root,
+        classes: [
+          { name: 'is-open', style: { declarations: { display: 'block' } } },
+          { ...generated!, style: { declarations: { display: 'none' } } },
+        ],
+      },
+    };
+    const orderedCatalog = {
+      ...catalog,
+      atoms: { ...catalog.atoms, [definition.uuid]: orderedDefinition },
+    };
+
+    const output = generateReact({ catalog: orderedCatalog, entries: [definition.uuid] });
+    const css = output.ui.find((file) => file.path === 'styles/components.css')?.contents ?? '';
+    const generatedRule = css.indexOf(`.facadeur-node-${root.uuid}.${generated!.name}`);
+    const authoredRule = css.indexOf(`.facadeur-node-${root.uuid}.is-open`);
+    expect(generatedRule).toBeGreaterThanOrEqual(0);
+    expect(authoredRule).toBeGreaterThan(generatedRule);
+  });
+
   it('generates selected definitions, referenced design tokens, and Storybook stories', () => {
     const catalog = createExampleCatalog();
     const button = Object.values(catalog.atoms).find((definition) => definition.name === 'Button');
@@ -17,7 +46,7 @@ describe('Catalog-driven React code generation', () => {
       (file) => file.path === 'styles/components.css',
     )?.contents;
     expect(componentsCss).toMatch(/^\*,\n\*::before,\n\*::after \{\n  box-sizing: border-box;/);
-    expect(componentsCss).toContain(`[data-facadeur-codegen-node="${button!.root.uuid}"]`);
+    expect(componentsCss).toContain(`.facadeur-node-${button!.root.uuid}`);
     expect(
       generated.ui.find((file) => file.path === 'styles/design-tokens.css')?.contents,
     ).toContain('--color-');
@@ -99,9 +128,6 @@ describe('Catalog-driven React code generation', () => {
     expect(css).toContain(':root {\n  --button-padding-block: 8px;');
     expect(css).toContain('@media (min-width: 768px)');
     expect(css).toContain(
-      `[data-facadeur-codegen-node="${button.root.uuid}"] > [data-facadeur-codegen-node="${childUuid}"]`,
-    );
-    expect(css).toContain(
       `.facadeur-node-${button.root.uuid} .facadeur-node-${childUuid} {\n  color: #fff;`,
     );
     expect(component?.contents).toContain(`data-facadeur-codegen-node={"${childUuid}"}`);
@@ -135,5 +161,139 @@ describe('Catalog-driven React code generation', () => {
     );
     expect(component?.contents).toContain('getProp(props, "title") ?? "Design with confidence"');
     expect(generated.stories[0]?.contents).toContain('"title":"Design with confidence"');
+  });
+
+  it('compiles portable state transitions and emits into React handlers', () => {
+    const catalog = createExampleCatalog();
+    const component = Object.values(catalog.components)[0]!;
+    const toggle = component.root.dom.children?.[0] ?? component.root;
+    Reflect.set(component, 'schema', {
+      kind: 'inline',
+      schema: {
+        type: 'object',
+        properties: { onChange: { type: 'boolean' } },
+        additionalProperties: false,
+      },
+    });
+    Reflect.set(component, 'behavior', {
+      state: { open: false },
+      transitions: [
+        {
+          nodeUuid: toggle.uuid,
+          event: 'click',
+          actions: [
+            {
+              kind: 'set-state',
+              name: 'open',
+              value: {
+                kind: 'operation',
+                operator: 'toggle',
+                values: [{ kind: 'state', name: 'open' }],
+              },
+            },
+            {
+              kind: 'emit',
+              name: 'change',
+              args: [
+                { kind: 'state', name: 'open' },
+                { kind: 'state-after-transition', name: 'open' },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const generated = generateReact({ catalog, entries: [component.uuid] });
+    const output = generated.ui.find((file) => file.path.startsWith('components/'))?.contents ?? '';
+    expect(output).toContain('"onChange"?: (...args: any[]) => void');
+    expect(output).toContain('useState<boolean>(false)');
+    expect(output).toContain('onClick={handleBehaviorAt');
+    expect(output).toContain('const nextBehaviorState0 = !(behaviorState0);');
+    expect(output).toContain('setBehaviorState0(nextBehaviorState0);');
+    expect(output).toContain('props["onChange"]?.(behaviorState0, nextBehaviorState0);');
+  });
+
+  it('binds class conditions to private component state in generated React output', () => {
+    const catalog = createExampleCatalog();
+    const component = Object.values(catalog.components)[0]!;
+    Reflect.set(component, 'behavior', { state: { open: false }, transitions: [] });
+    Reflect.set(component.root, 'classes', [
+      {
+        name: 'is-open',
+        condition: {
+          kind: 'condition',
+          left: { kind: 'reference', reference: '{state:open}' },
+          operator: 'equals',
+          right: { kind: 'literal', value: true },
+        },
+      },
+    ]);
+
+    const generated = generateReact({ catalog, entries: [component.uuid] });
+    const output = generated.ui.find((file) => file.path.startsWith('components/'))?.contents ?? '';
+    expect(output).toContain('Object.is((behaviorState0), (true)) ? "is-open" : ""');
+  });
+
+  it('keeps repeated state actions and same-event transitions sequential', () => {
+    const catalog = createExampleCatalog();
+    const component = Object.values(catalog.components)[0]!;
+    const target = component.root.dom.children?.[0] ?? component.root;
+    Reflect.set(component, 'schema', {
+      kind: 'inline',
+      schema: {
+        type: 'object',
+        properties: {
+          label: { type: 'string' },
+          onChange: { type: 'boolean' },
+        },
+        additionalProperties: false,
+      },
+    });
+    Reflect.set(component, 'behavior', {
+      state: { open: false, count: 0 },
+      transitions: [
+        {
+          nodeUuid: target.uuid,
+          event: 'click',
+          actions: [
+            { kind: 'set-state', name: 'open', value: { kind: 'literal', value: true } },
+            { kind: 'increment', name: 'count', amount: 2 },
+          ],
+        },
+        {
+          nodeUuid: target.uuid,
+          event: 'click',
+          actions: [
+            {
+              kind: 'set-state',
+              name: 'open',
+              value: { kind: 'state-after-transition', name: 'open' },
+            },
+            { kind: 'increment', name: 'count', amount: 3 },
+            {
+              kind: 'emit',
+              name: 'change',
+              args: [
+                { kind: 'state', name: 'open' },
+                { kind: 'state-after-transition', name: 'count' },
+                { kind: 'event', path: 'currentTarget.value' },
+                { kind: 'prop', path: 'label' },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    const generated = generateReact({ catalog, entries: [component.uuid] });
+    const output = generated.ui.find((file) => file.path.startsWith('components/'))?.contents ?? '';
+    expect(output.match(/onClick=\{handleBehaviorAt/g)).toHaveLength(1);
+    expect(output).toContain('const nextBehaviorState0 = true;');
+    expect(output).toContain('const nextBehaviorState1 = (behaviorState1 + 2);');
+    expect(output).toContain('const nextBehaviorState2 = nextBehaviorState0;');
+    expect(output).toContain('const nextBehaviorState3 = (nextBehaviorState1 + 3);');
+    expect(output).toContain(
+      'props["onChange"]?.(behaviorState0, nextBehaviorState3, getProp(event, "currentTarget.value"), getProp(props, "label"));',
+    );
   });
 });

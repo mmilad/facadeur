@@ -21,7 +21,15 @@ const REACT_ATTRIBUTE_NAMES: Readonly<Record<string, string>> = {
 
 const ignorePreviewChange = () => {};
 
-export function DynamicElement({ config }: { config: RenderBuildConfig }) {
+export type PreviewBehaviorHandler = (nodeUuid: string, eventName: string, event: unknown) => void;
+
+export function DynamicElement({
+  config,
+  behaviorHandler,
+}: {
+  config: RenderBuildConfig;
+  behaviorHandler?: PreviewBehaviorHandler;
+}) {
   const elementRef = useRef<HTMLElement | null>(null);
   const previousDomProperties = useRef<Readonly<Record<string, unknown>>>({});
   const children = config.children ?? [];
@@ -54,6 +62,7 @@ export function DynamicElement({ config }: { config: RenderBuildConfig }) {
             `${child.kind === 'fragment' ? 'fragment' : child.tagName}-${index}`
           }
           config={child}
+          behaviorHandler={behaviorHandler}
         />
       )),
     );
@@ -93,6 +102,16 @@ export function DynamicElement({ config }: { config: RenderBuildConfig }) {
     }
   }
   if (nodeUuid) props['data-facadeur-node-uuid'] = nodeUuid;
+  if (nodeUuid && behaviorHandler) {
+    for (const eventName of ['click', 'change', 'input', 'submit', 'keydown', 'focus', 'blur']) {
+      const reactName = `on${eventName[0]?.toUpperCase()}${eventName.slice(1)}`;
+      const existing = props[reactName];
+      props[reactName] = (event: unknown) => {
+        if (typeof existing === 'function') (existing as (event: unknown) => void)(event);
+        behaviorHandler(nodeUuid, eventName, event);
+      };
+    }
+  }
   if (nodeUuid || styleNodeUuids?.length) {
     const currentClass = typeof props.className === 'string' ? props.className : '';
     const styleClasses = new Set([...(styleNodeUuids ?? []), ...(nodeUuid ? [nodeUuid] : [])]);
@@ -112,6 +131,7 @@ export function DynamicElement({ config }: { config: RenderBuildConfig }) {
           `${child.kind === 'fragment' ? 'fragment' : child.tagName}-${index}`
         }
         config={child}
+        behaviorHandler={behaviorHandler}
       />
     )),
   ];

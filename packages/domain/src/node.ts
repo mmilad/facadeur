@@ -56,6 +56,33 @@ export interface DefinitionConfig {
   >;
 }
 
+export type BehaviorValue =
+  | { readonly kind: 'literal'; readonly value: FieldValue | null }
+  | { readonly kind: 'state'; readonly name: string }
+  | { readonly kind: 'prop'; readonly path: string }
+  | { readonly kind: 'event'; readonly path: string }
+  | { readonly kind: 'state-after-transition'; readonly name: string }
+  | {
+      readonly kind: 'operation';
+      readonly operator: 'not' | 'add' | 'subtract' | 'equals' | 'toggle';
+      readonly values: readonly BehaviorValue[];
+    };
+
+export type BehaviorAction =
+  | { readonly kind: 'set-state'; readonly name: string; readonly value: BehaviorValue }
+  | { readonly kind: 'increment'; readonly name: string; readonly amount?: number }
+  | { readonly kind: 'emit'; readonly name: string; readonly args: readonly BehaviorValue[] };
+
+/** Portable, data-only UI behavior. A renderer compiles this contract to its target runtime. */
+export interface ComponentBehavior {
+  readonly state?: Readonly<Record<string, FieldValue | null>>;
+  readonly transitions: readonly {
+    readonly nodeUuid: Uuid;
+    readonly event: string;
+    readonly actions: readonly BehaviorAction[];
+  }[];
+}
+
 export interface Node {
   readonly uuid: Uuid;
   /** Editor-facing label for this authored element, independent of its HTML tag. */
@@ -128,6 +155,7 @@ export interface NodeDefinition {
   readonly schema: SchemaSource;
   readonly root: Node;
   readonly config?: DefinitionConfig;
+  readonly behavior?: ComponentBehavior;
 }
 
 export type NodeDefinitionModel = NodeDefinition;

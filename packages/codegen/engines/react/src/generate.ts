@@ -5,7 +5,13 @@ import {
   resolveJsonSchemaForDefinition,
   tokenCustomProperty,
 } from '@facadeur/core';
-import type { Node, ProjectCatalog, RenderBuildConfig } from '@facadeur/domain';
+import type {
+  BehaviorValue,
+  ComponentBehavior,
+  Node,
+  ProjectCatalog,
+  RenderBuildConfig,
+} from '@facadeur/domain';
 import {
   renderBoxSizingReset,
   renderDesignCss,
@@ -57,6 +63,7 @@ export function generateReact(options: GenerateOptions): GenerateOutput {
       booleanPropUuids,
       entry.definition.root,
       schema,
+      entry.definition.behavior,
     );
     ui.push({ path: `components/${entry.directory}/index.tsx`, contents: component.contents });
     cssRules.push(component.css);
@@ -106,6 +113,7 @@ function renderComponent(
   booleanPropUuids: ReadonlySet<string>,
   sourceRoot: Node,
   schema: unknown,
+  behavior: ComponentBehavior | undefined,
 ) {
   const cssRules: string[] = [];
   const sourceNodes = new Map<string, Node>();
@@ -122,11 +130,21 @@ function renderComponent(
     sourceNodes,
     cssRules,
     new Map(),
+    behavior,
   );
-  const propsType = schemaType(schema);
+  const callbackProps = new Set(
+    (behavior?.transitions ?? []).flatMap((transition) =>
+      transition.actions
+        .filter((action) => action.kind === 'emit')
+        .map((action) => `on${action.name[0]?.toUpperCase() ?? ''}${action.name.slice(1)}`),
+    ),
+  );
+  const propsType = schemaType(schema, callbackProps);
   const propsAreOptional = !schemaHasRequiredProperties(schema);
+  const behaviorSource = renderBehavior(behavior);
   const source = [
     `/// <reference path="../../styles.d.ts" />`,
+    ...(behaviorSource.imports.length ? behaviorSource.imports : []),
     `import '../../styles/components.css';`,
     `import '../../styles/design-tokens.css';`,
     '',
@@ -134,8 +152,10 @@ function renderComponent(
     '',
     `/** Generated from Catalog definition ${uuid}. */`,
     `export function ${exportName}(props: ${exportName}Props${propsAreOptional ? ' = {}' : ''}) {`,
+    ...behaviorSource.setup.map((line) => `  ${line}`),
     `  return ${jsx};`,
     '}',
+    ...behaviorSource.helpers,
     '',
     'function getProp(props: object, path: string) {',
     '  let value: unknown = props;',
@@ -150,6 +170,121 @@ function renderComponent(
   return { contents: source, css: cssRules.join('\n') };
 }
 
+function renderBehavior(behavior: ComponentBehavior | undefined) {
+  if (!behavior) return { imports: [] as string[], setup: [] as string[], helpers: [] as string[] };
+  const setup: string[] = [];
+  const handlers = new Map<
+    string,
+    {
+      nodeUuid: string;
+      event: string;
+      transitions: ComponentBehavior['transitions'][number]['actions'][];
+    }
+  >();
+  const stateIdentifiers = new Map(
+    Object.keys(behavior.state ?? {}).map((name, index) => [name, `behaviorState${index}`]),
+  );
+  for (const [name, initial] of Object.entries(behavior.state ?? {})) {
+    const state = stateIdentifiers.get(name)!;
+    const setter = `setBehaviorState${state.slice('behaviorState'.length)}`;
+    const stateType = Array.isArray(initial)
+      ? 'unknown[]'
+      : initial === null
+        ? 'unknown'
+        : typeof initial;
+    setup.push(`const [${state}, ${setter}] = useState<${stateType}>(${JSON.stringify(initial)});`);
+  }
+  for (const transition of behavior.transitions) {
+    const key = JSON.stringify([transition.nodeUuid, transition.event]);
+    const group = handlers.get(key) ?? {
+      nodeUuid: transition.nodeUuid,
+      event: transition.event,
+      transitions: [],
+    };
+    group.transitions.push(transition.actions);
+    handlers.set(key, group);
+  }
+  const helpers = [...handlers.values()].map(({ nodeUuid, event, transitions }) => {
+    const actions: string[] = [];
+    const nextState = new Map<string, string>();
+    let temporaryIndex = 0;
+    for (const transitionActions of transitions) {
+      for (const action of transitionActions) {
+        if (action.kind === 'set-state') {
+          const expression = behaviorExpression(action.value, stateIdentifiers, nextState);
+          const temporary = `nextBehaviorState${temporaryIndex++}`;
+          nextState.set(action.name, temporary);
+          actions.push(
+            `const ${temporary} = ${expression};`,
+            `${setterName(action.name, stateIdentifiers)}(${temporary});`,
+          );
+        } else if (action.kind === 'increment') {
+          const expression = `(${nextState.get(action.name) ?? stateIdentifiers.get(action.name)} + ${action.amount ?? 1})`;
+          const temporary = `nextBehaviorState${temporaryIndex++}`;
+          nextState.set(action.name, temporary);
+          actions.push(
+            `const ${temporary} = ${expression};`,
+            `${setterName(action.name, stateIdentifiers)}(${temporary});`,
+          );
+        } else {
+          actions.push(
+            `props[${JSON.stringify(`on${action.name[0]?.toUpperCase() ?? ''}${action.name.slice(1)}`)}]?.(${action.args.map((arg) => behaviorExpression(arg, stateIdentifiers, nextState)).join(', ')});`,
+          );
+        }
+      }
+    }
+    const handlerName = behaviorHandlerName(nodeUuid, event);
+    return `function ${handlerName}(event: SyntheticEvent) {\n${actions.map((line) => `  ${line}`).join('\n')}\n}`;
+  });
+  return {
+    imports:
+      setup.length || helpers.length
+        ? [
+            `import { ${[...(setup.length ? ['useState'] : []), ...(helpers.length ? ['type SyntheticEvent'] : [])].join(', ')} } from 'react';`,
+          ]
+        : [],
+    setup,
+    helpers,
+  };
+}
+
+function setterName(name: string, stateIdentifiers: ReadonlyMap<string, string>) {
+  const state = stateIdentifiers.get(name);
+  if (!state) return 'setBehaviorState';
+  return `setBehaviorState${state.slice('behaviorState'.length)}`;
+}
+
+function behaviorExpression(
+  value: BehaviorValue,
+  stateIdentifiers: ReadonlyMap<string, string>,
+  nextState: ReadonlyMap<string, string> = new Map(),
+): string {
+  switch (value.kind) {
+    case 'literal':
+      return JSON.stringify(value.value);
+    case 'state':
+      return stateIdentifiers.get(value.name) ?? 'undefined';
+    case 'state-after-transition':
+      return nextState.get(value.name) ?? stateIdentifiers.get(value.name) ?? 'undefined';
+    case 'prop':
+      return `getProp(props, ${JSON.stringify(value.path)})`;
+    case 'event':
+      return `getProp(event, ${JSON.stringify(value.path)})`;
+    case 'operation': {
+      const expressions = value.values.map((item) =>
+        behaviorExpression(item, stateIdentifiers, nextState),
+      );
+      if (value.operator === 'not') return `!(${expressions[0] ?? 'undefined'})`;
+      if (value.operator === 'add')
+        return `(${expressions[0] ?? 'undefined'} + ${expressions[1] ?? 'undefined'})`;
+      if (value.operator === 'subtract')
+        return `(${expressions[0] ?? 'undefined'} - ${expressions[1] ?? 'undefined'})`;
+      if (value.operator === 'toggle') return `!(${expressions[0] ?? 'undefined'})`;
+      return `Object.is(${expressions[0] ?? 'undefined'}, ${expressions[1] ?? 'undefined'})`;
+    }
+  }
+}
+
 function schemaHasRequiredProperties(schema: unknown): boolean {
   if (!schema || typeof schema !== 'object' || Array.isArray(schema)) return false;
   const record = schema as Record<string, unknown>;
@@ -161,7 +296,7 @@ function schemaHasRequiredProperties(schema: unknown): boolean {
   return false;
 }
 
-function schemaType(schema: unknown): string {
+function schemaType(schema: unknown, callbackProps: ReadonlySet<string> = new Set()): string {
   if (!schema || typeof schema !== 'object' || Array.isArray(schema)) {
     return 'Readonly<Record<string, unknown>>';
   }
@@ -175,9 +310,10 @@ function schemaType(schema: unknown): string {
     : Array.isArray(record.oneOf)
       ? record.oneOf
       : undefined;
-  if (branches?.length) return branches.map(schemaType).join(' | ');
+  if (branches?.length)
+    return branches.map((branch) => schemaType(branch, callbackProps)).join(' | ');
   if (Array.isArray(record.allOf) && record.allOf.length) {
-    return record.allOf.map(schemaType).join(' & ');
+    return record.allOf.map((branch) => schemaType(branch, callbackProps)).join(' & ');
   }
   const types = Array.isArray(record.type)
     ? record.type
@@ -196,8 +332,15 @@ function schemaType(schema: unknown): string {
   }
   if (type === 'object' || (record.properties && typeof record.properties === 'object')) {
     const properties = Object.entries(record.properties ?? {}).map(([name, property]) => {
-      const optional = Array.isArray(record.required) && record.required.includes(name) ? '' : '?';
-      return `${JSON.stringify(name)}${optional}: ${schemaType(property)}`;
+      const isCallback = callbackProps.has(name);
+      const optional =
+        isCallback || !(Array.isArray(record.required) && record.required.includes(name))
+          ? '?'
+          : '';
+      const propertyType = isCallback
+        ? '(...args: any[]) => void'
+        : schemaType(property, callbackProps);
+      return `${JSON.stringify(name)}${optional}: ${propertyType}`;
     });
     if (!properties.length) return 'Readonly<Record<string, unknown>>';
     if (record.additionalProperties === true || record.additionalProperties === undefined) {
@@ -207,7 +350,7 @@ function schemaType(schema: unknown): string {
       typeof record.additionalProperties === 'object' &&
       !Array.isArray(record.additionalProperties)
     ) {
-      properties.push(`[key: string]: ${schemaType(record.additionalProperties)}`);
+      properties.push(`[key: string]: ${schemaType(record.additionalProperties, callbackProps)}`);
     }
     return `Readonly<{ ${properties.join('; ')} }>`;
   }
@@ -222,6 +365,7 @@ function renderNode(
   sourceNodes: ReadonlyMap<string, Node>,
   cssRules: string[],
   repeaterScopes: ReadonlyMap<string, CodegenRepeaterScope>,
+  behavior?: ComponentBehavior,
 ): string {
   const source = node.nodeUuid ? sourceNodes.get(node.nodeUuid) : undefined;
   if (node.kind === 'fragment') {
@@ -235,6 +379,7 @@ function renderNode(
           sourceNodes,
           cssRules,
           childRepeaterScopes(source, child, propPaths, repeaterScopes),
+          behavior,
         ),
       )
       .join('');
@@ -248,7 +393,12 @@ function renderNode(
   }
   if (node.nodeUuid) {
     const resolvedClassStyles = new Map(Object.entries(node.dynamicClassStyles ?? {}));
-    for (const item of source?.classes ?? []) {
+    const classes = source?.classes ?? [];
+    const orderedClasses = [
+      ...classes.filter((item) => item.generated),
+      ...classes.filter((item) => !item.generated),
+    ];
+    for (const item of orderedClasses) {
       const values = resolvedClassStyles.get(item.name) ?? item.style?.declarations ?? {};
       const entries = Object.entries(values).map(
         ([property, value]) => `  ${kebab(property)}: ${cssValue(value, tokenProperties)};`,
@@ -294,6 +444,9 @@ function renderNode(
         booleanPropUuids,
         [...styleNodeUuids],
         repeaterScopes,
+        new Map(
+          Object.keys(behavior?.state ?? {}).map((name, index) => [name, `behaviorState${index}`]),
+        ),
       )
     : undefined;
   const props = Object.entries(attributes)
@@ -304,8 +457,19 @@ function renderNode(
       return ` ${reactAttribute(key)}=${jsxValue(reactValue(reactAttribute(key), value), source?.dom.attributes?.[key], propPaths)}`;
     })
     .join('');
+  const behaviorEvents =
+    behavior?.transitions
+      .filter((transition) => transition.nodeUuid === node.nodeUuid)
+      .map((transition) => transition.event) ?? [];
+  const eventProps = [...new Set(behaviorEvents)]
+    .map((event) => {
+      const name = `on${event[0]?.toUpperCase() ?? ''}${event.slice(1)}`;
+      const handler = behaviorHandlerName(node.nodeUuid ?? '', event);
+      return ` ${name}={${handler}}`;
+    })
+    .join('');
   const tag = safeTag(node.tagName);
-  if (isVoidTag(tag)) return `<${tag}${props} />`;
+  if (isVoidTag(tag)) return `<${tag}${props}${eventProps} />`;
   const content = node.text === undefined ? '' : jsxValue(node.text, source?.dom.text, propPaths);
   const children = (node.children ?? [])
     .map((child) =>
@@ -317,10 +481,16 @@ function renderNode(
         sourceNodes,
         cssRules,
         childRepeaterScopes(source, child, propPaths, repeaterScopes),
+        behavior,
       ),
     )
     .join('');
-  return `<${tag}${props}>${content}${children}</${tag}>`;
+  return `<${tag}${props}${eventProps}>${content}${children}</${tag}>`;
+}
+
+function behaviorHandlerName(nodeUuid: string, event: string) {
+  const eventCodePoints = [...event].map((character) => character.codePointAt(0)!.toString(16));
+  return `handleBehaviorAt${nodeUuid.replaceAll('-', '')}Event${eventCodePoints.join('_')}`;
 }
 
 function jsxValue(value: unknown, source: unknown, propPaths: ReadonlyMap<string, string>) {

@@ -8,6 +8,9 @@ export type { JsonSchemaObject, SchemaSource } from './schema-source';
 export type { DomSpec } from './dom';
 export type {
   DefinitionConfig,
+  BehaviorValue,
+  BehaviorAction,
+  ComponentBehavior,
   CompositionSource,
   FieldExposure,
   StaticFieldConfig,

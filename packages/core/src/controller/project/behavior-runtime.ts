@@ -1,0 +1,136 @@
+import type { BehaviorValue, ComponentBehavior, FieldValue } from '@facadeur/domain';
+
+export interface BehaviorRuntimeContext {
+  readonly state: Readonly<Record<string, FieldValue | null>>;
+  readonly props?: Readonly<Record<string, unknown>>;
+  readonly event?: unknown;
+}
+
+export interface BehaviorRuntimeResult {
+  readonly state: Readonly<Record<string, FieldValue | null>>;
+  readonly emitted: readonly { readonly name: string; readonly args: readonly unknown[] }[];
+  readonly matched: boolean;
+}
+
+const initialStateByBehavior = new WeakMap<
+  ComponentBehavior,
+  Readonly<Record<string, FieldValue | null>>
+>();
+
+/** Execute the ordered, declarative transitions for one node event without mutating inputs. */
+export function executeComponentBehavior(
+  behavior: ComponentBehavior | undefined,
+  nodeUuid: string,
+  eventName: string,
+  context: BehaviorRuntimeContext,
+): BehaviorRuntimeResult {
+  if (behavior && !initialStateByBehavior.has(behavior)) {
+    initialStateByBehavior.set(behavior, { ...context.state });
+  }
+  const eventStart = { ...context.state };
+  const transitions = (behavior?.transitions ?? []).filter(
+    (transition) => transition.nodeUuid === nodeUuid && transition.event === eventName,
+  );
+  if (!transitions.length) {
+    return { state: context.state, emitted: [], matched: false };
+  }
+
+  const state: Record<string, FieldValue | null> = { ...context.state };
+  const initialState = eventStart;
+  const emitted: { name: string; args: unknown[] }[] = [];
+  for (const transition of transitions) {
+    for (const action of transition.actions) {
+      if (action.kind === 'set-state') {
+        state[action.name] = asFieldValue(evaluate(action.value, context, state, initialState));
+      } else if (action.kind === 'increment') {
+        const current = state[action.name];
+        state[action.name] = (typeof current === 'number' ? current : 0) + (action.amount ?? 1);
+      } else {
+        emitted.push({
+          name: action.name,
+          args: action.args.map((value) => evaluate(value, context, state, initialState)),
+        });
+      }
+    }
+  }
+  return { state, emitted, matched: true };
+}
+
+function evaluate(
+  value: BehaviorValue,
+  context: BehaviorRuntimeContext,
+  state: Readonly<Record<string, FieldValue | null>>,
+  initialState: Readonly<Record<string, FieldValue | null>>,
+): unknown {
+  switch (value.kind) {
+    case 'literal':
+      return value.value;
+    case 'state':
+      return initialState[value.name];
+    case 'state-after-transition':
+      return state[value.name];
+    case 'prop':
+      return valueAtPath(context.props, value.path);
+    case 'event':
+      return valueAtPath(context.event, value.path);
+    case 'operation': {
+      const [left, right] = value.values.map((item) =>
+        evaluate(item, context, state, initialState),
+      );
+      switch (value.operator) {
+        case 'not':
+        case 'toggle':
+          return !left;
+        case 'add':
+          return (
+            (typeof left === 'number' ? left : Number(left)) +
+            (typeof right === 'number' ? right : Number(right))
+          );
+        case 'subtract':
+          return (
+            (typeof left === 'number' ? left : Number(left)) -
+            (typeof right === 'number' ? right : Number(right))
+          );
+        case 'equals':
+          return Object.is(left, right);
+      }
+    }
+  }
+}
+
+function valueAtPath(value: unknown, path: string) {
+  let current = value;
+  for (const part of path.split('.')) {
+    if (!current || typeof current !== 'object') return undefined;
+    current = (current as Record<string, unknown>)[part];
+  }
+  return current;
+}
+
+function asFieldValue(value: unknown): FieldValue | null {
+  if (
+    value === null ||
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+  )
+    return value;
+  if (Array.isArray(value)) return value.map(asFieldValue).filter((item) => item !== null);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).filter(([, item]) => item === null || isFieldValue(item)),
+    );
+  }
+  return null;
+}
+
+function isFieldValue(value: unknown): value is FieldValue {
+  return (
+    value !== null &&
+    (typeof value === 'string' ||
+      typeof value === 'number' ||
+      typeof value === 'boolean' ||
+      Array.isArray(value) ||
+      (typeof value === 'object' && Object.values(value).every(isFieldValue)))
+  );
+}

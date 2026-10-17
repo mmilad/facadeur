@@ -97,6 +97,18 @@ export function useStagePointer({
 
     function claimsPan(event: PointerEvent): boolean {
       if (event.button !== 0) return true;
+      if (event.target instanceof Element && event.target.closest('.stage-interaction-toggle'))
+        return false;
+      if (
+        boardRef.current
+          ?.frames()
+          .some(
+            (frame) =>
+              frame.host.element.style.pointerEvents === 'auto' &&
+              frame.column.contains(event.target as Node),
+          )
+      )
+        return true;
       if (session.getSnapshot().tool !== 'select') return false;
       const frame = selection.frameAt(event.clientX, event.clientY);
       const hit = selection.hitAt(event.clientX, event.clientY);
@@ -129,6 +141,22 @@ export function useStagePointer({
 
     const onPointerDown = (event: PointerEvent) => {
       if (event.button !== 0) return;
+      if (event.target instanceof Element && event.target.closest('.stage-interaction-toggle'))
+        return;
+      const interactionFrame = boardRef.current
+        ?.frames()
+        .find(
+          (frame) =>
+            frame.host.element.style.pointerEvents === 'auto' &&
+            frame.column.contains(event.target as Node),
+        );
+      if (interactionFrame) {
+        onEventRef.current({
+          type: EditorEventType.ViewportFocus,
+          data: { breakpointId: interactionFrame.breakpoint.uuid },
+        });
+        return;
+      }
       const frame = selection.frameAt(event.clientX, event.clientY);
       if (frame && claimsPan(event)) {
         onEventRef.current({

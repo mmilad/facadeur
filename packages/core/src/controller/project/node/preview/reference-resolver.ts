@@ -15,6 +15,7 @@ export type RepeaterReferenceScope = {
 export type ReferenceResolutionContext = {
   readonly catalog: ProjectCatalog;
   readonly componentProps?: Readonly<Record<string, FieldValue>>;
+  readonly componentState?: Readonly<Record<string, FieldValue | null>>;
   readonly repeaterScopes?: readonly RepeaterReferenceScope[];
   /** Compatibility for callers that only provide the previous single-item context. */
   readonly item?: FieldValue;
@@ -22,6 +23,7 @@ export type ReferenceResolutionContext = {
 
 const DESIGN_PROP_REF = /^\{prop:([^}]+)\}$/;
 const COMPONENT_PROP_REF = /^\{props:([^}]+)\}$/;
+const COMPONENT_STATE_REF = /^\{state:([^}]+)\}$/;
 const ITEM_FIELD_REF = /^\{item:([^}]+)\}$/;
 const ITEM_PROP_REF = /^\{item-prop:([^:}]+):([^}]+)\}$/;
 const INDEX_REF = /^\{index:([^}]+)\}$/;
@@ -79,6 +81,15 @@ function resolveReference(
     return resolveReference(value, context, new Set(activeReferences).add(activeKey));
   }
 
+  const componentState = reference.match(COMPONENT_STATE_REF);
+  if (componentState?.[1]) {
+    const activeKey = `state:${componentState[1]}`;
+    if (activeReferences.has(activeKey)) return undefined;
+    const value = context.componentState?.[componentState[1]];
+    if (typeof value !== 'string' || !isSupportedReference(value)) return value;
+    return resolveReference(value, context, new Set(activeReferences).add(activeKey));
+  }
+
   const itemField = reference.match(ITEM_FIELD_REF);
   if (itemField?.[1]) return fieldAtPath(lastScope(context)?.item ?? context.item, itemField[1]);
 
@@ -116,6 +127,7 @@ export function resolveReferenceText(reference: string, context: ReferenceResolu
   const isReference =
     DESIGN_PROP_REF.test(reference) ||
     COMPONENT_PROP_REF.test(reference) ||
+    COMPONENT_STATE_REF.test(reference) ||
     ITEM_FIELD_REF.test(reference) ||
     ITEM_PROP_REF.test(reference) ||
     INDEX_REF.test(reference) ||

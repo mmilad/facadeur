@@ -40,6 +40,7 @@ export enum EditorEventType {
   SchemasSave = 'catalog.schemas.save',
   DefinitionSchemaSet = 'catalog.definition.schema.set',
   PreviewFieldSet = 'catalog.preview-field.set',
+  DefinitionBehaviorSet = 'catalog.definition.behavior.set',
   DesignPropUpsert = 'catalog.design-prop.upsert',
   DesignPropRemove = 'catalog.design-prop.remove',
   DesignCommandExecute = 'design.command.execute',
@@ -121,6 +122,9 @@ export interface EditorEventDataMap {
   [EditorEventType.PreviewFieldSet]: {
     readonly field: string;
     readonly value: FieldValue | undefined;
+  };
+  [EditorEventType.DefinitionBehaviorSet]: {
+    readonly behavior: import('@facadeur/domain').ComponentBehavior | undefined;
   };
   [EditorEventType.DesignPropUpsert]: { readonly prop: DesignPropDefinition };
   [EditorEventType.DesignPropRemove]: { readonly uuid: string };

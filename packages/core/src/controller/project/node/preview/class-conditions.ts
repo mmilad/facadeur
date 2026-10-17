@@ -28,7 +28,7 @@ export function evaluateClassCondition(
     return Object.is(context.componentProps?.[condition.propUuid], condition.value);
   }
   if (condition.kind === 'rule') {
-    if (!condition.conditions.length) return false;
+    if (!condition.conditions.length) return true;
     return condition.operator === 'and'
       ? condition.conditions.every((child) => evaluateClassCondition(child, context))
       : condition.conditions.some((child) => evaluateClassCondition(child, context));

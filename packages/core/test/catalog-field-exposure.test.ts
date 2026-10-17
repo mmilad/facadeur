@@ -6,7 +6,7 @@ import type {
   NodeDefinition,
   ProjectCatalog,
 } from '@facadeur/domain';
-import { createExampleCatalog, exampleIds } from '@facadeur/examples';
+import { createExampleCatalog, exampleIds, image as exampleImage } from '@facadeur/examples';
 import { effectiveSchemaForDefinition } from '../src/controller/project/catalog/field-contract';
 import { CoreController } from '../src/controller/project/controller';
 import { buildInspectorFormModel } from '../src/controller/project/node/preview/inspector-view';
@@ -75,6 +75,32 @@ function catalogWith(
 }
 
 describe('catalog field exposure', () => {
+  it('evaluates class conditions against private component state defaults', () => {
+    const original = exampleImage;
+    const catalog = {
+      ...createExampleCatalog(),
+      atoms: { ...createExampleCatalog().atoms, [original.uuid]: original },
+    };
+    const definition: NodeDefinition = {
+      ...original,
+      behavior: { state: { open: true }, transitions: [] },
+      root: {
+        ...original.root,
+        classes: [{
+          name: 'is-open',
+          condition: {
+            kind: 'condition',
+            left: { kind: 'reference', reference: '{state:open}' },
+            operator: 'equals',
+            right: { kind: 'literal', value: true },
+          },
+        }],
+      },
+    };
+    const resolved = resolveDefinitionToElementBuildConfig(definition, catalog);
+    expect(resolved.attributes?.class).toContain('is-open');
+  });
+
   it('adds nested fields and target preview defaults to the flat public contract', () => {
     const catalog = catalogWith();
     const card = catalog.components[cardId]!;

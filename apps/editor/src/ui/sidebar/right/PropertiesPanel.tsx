@@ -2,17 +2,21 @@
 
 import type { InspectorSidebarModel } from '../../../domain/sidebar/types';
 import type { EditorEvent } from '../../../domain/sidebar/events';
+import type { NodeDefinition } from '@facadeur/domain';
 import { CatalogNodeInspector } from './components/CatalogNodeInspector';
 
 /** Schema-driven properties for the selected Catalog node. */
 export function PropertiesPanel({
   model,
+  definition,
   onEvent,
 }: {
   model: InspectorSidebarModel | null;
+  definition: NodeDefinition | null;
   onEvent: (event: EditorEvent) => void;
 }) {
-  if (model) return <CatalogNodeInspector model={model} onEvent={onEvent} />;
+  if (model)
+    return <CatalogNodeInspector model={model} definition={definition} onEvent={onEvent} />;
   return (
     <div className="properties">
       <div className="inspector-context" data-testid="inspector-context">

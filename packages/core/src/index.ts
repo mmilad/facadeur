@@ -1,4 +1,9 @@
 export { DocumentError } from './document/errors';
+export {
+  executeComponentBehavior,
+  type BehaviorRuntimeContext,
+  type BehaviorRuntimeResult,
+} from './controller/project/behavior-runtime';
 export { CoreController } from './controller/project/index';
 export type {
   BreakpointUuid,
