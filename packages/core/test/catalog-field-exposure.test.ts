@@ -106,6 +106,37 @@ describe('catalog field exposure', () => {
       populated.kind === 'fragment' ? populated.children?.map((child) => child.text) : [],
     ).toEqual(['One', 'Two']);
   });
+
+  it('uses a configured object field as stable preview row identity', () => {
+    const catalog = createExampleCatalog();
+    const component = Object.values(catalog.components)[0]!;
+    const row: Node = { uuid: globalThis.crypto.randomUUID(), dom: { tagName: 'span' } };
+    Reflect.set(component.root, 'config', {
+      composition: { kind: 'repeater', source: { kind: 'state', name: 'items' } },
+    });
+    Reflect.set(component.root.dom, 'children', [row]);
+    Reflect.set(component, 'behavior', {
+      state: { items: [{ id: 'stable-a' }, { id: 'stable-b' }] },
+      stateSchema: {
+        items: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: { id: { type: 'string' } },
+            required: ['id'],
+          },
+        },
+      },
+      stateArrayKeyPaths: { items: 'id' },
+      transitions: [],
+    });
+
+    expect(() => validateProjectCatalog(catalog)).not.toThrow();
+    const preview = resolveDefinitionToElementBuildConfig(component, catalog);
+    expect(
+      preview.kind === 'fragment' ? preview.children?.map((child) => child.renderKey) : [],
+    ).toEqual([`${row.uuid}:stable-a:0`, `${row.uuid}:stable-b:0`]);
+  });
   it('evaluates class conditions against private component state defaults', () => {
     const original = exampleImage;
     const catalog = {

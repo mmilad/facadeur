@@ -109,44 +109,67 @@ const sortableListDemo: NodeDefinition = {
   },
   root: {
     uuid: '860e8400-e29b-41d4-a716-446655440011',
-    name: 'Items',
-    config: {
-      composition: {
-        kind: 'repeater',
-        source: { kind: 'state', name: 'items' },
-        indexName: 'rowIndex',
-      },
-    },
+    name: 'Sortable list',
     dom: {
-      tagName: 'ul',
+      tagName: 'div',
       children: [
         {
           uuid: '860e8400-e29b-41d4-a716-446655440012',
-          name: 'List item',
+          name: 'Add item',
+          dom: { tagName: 'button', attributes: { type: 'button' }, text: 'Add item' },
+        },
+        {
+          uuid: '860e8400-e29b-41d4-a716-446655440017',
+          name: 'Items',
+          config: {
+            composition: {
+              kind: 'repeater',
+              source: { kind: 'state', name: 'items' },
+              indexName: 'rowIndex',
+            },
+          },
           dom: {
-            tagName: 'li',
+            tagName: 'ul',
             children: [
               {
-                uuid: '860e8400-e29b-41d4-a716-446655440013',
-                name: 'Item label',
-                dom: { tagName: 'span', text: '{item}' },
-              },
-              {
-                uuid: '860e8400-e29b-41d4-a716-446655440014',
-                name: 'Move up',
+                uuid: '860e8400-e29b-41d4-a716-446655440018',
+                name: 'List item',
                 dom: {
-                  tagName: 'button',
-                  attributes: { type: 'button', 'aria-label': 'Move item up' },
-                  text: '↑',
-                },
-              },
-              {
-                uuid: '860e8400-e29b-41d4-a716-446655440015',
-                name: 'Move down',
-                dom: {
-                  tagName: 'button',
-                  attributes: { type: 'button', 'aria-label': 'Move item down' },
-                  text: '↓',
+                  tagName: 'li',
+                  children: [
+                    {
+                      uuid: '860e8400-e29b-41d4-a716-446655440013',
+                      name: 'Item label',
+                      dom: { tagName: 'span', text: '{item:label}' },
+                    },
+                    {
+                      uuid: '860e8400-e29b-41d4-a716-446655440014',
+                      name: 'Move up',
+                      dom: {
+                        tagName: 'button',
+                        attributes: { type: 'button', 'aria-label': 'Move item up' },
+                        text: '↑',
+                      },
+                    },
+                    {
+                      uuid: '860e8400-e29b-41d4-a716-446655440015',
+                      name: 'Move down',
+                      dom: {
+                        tagName: 'button',
+                        attributes: { type: 'button', 'aria-label': 'Move item down' },
+                        text: '↓',
+                      },
+                    },
+                    {
+                      uuid: '860e8400-e29b-41d4-a716-446655440016',
+                      name: 'Remove item',
+                      dom: {
+                        tagName: 'button',
+                        attributes: { type: 'button', 'aria-label': 'Remove item' },
+                        text: 'Remove',
+                      },
+                    },
+                  ],
                 },
               },
             ],
@@ -156,9 +179,37 @@ const sortableListDemo: NodeDefinition = {
     },
   },
   behavior: {
-    state: { items: ['Alpha', 'Bravo', 'Charlie'] },
-    stateSchema: { items: { type: 'array', items: { type: 'string' } } },
+    state: {
+      items: [
+        { id: 'item-alpha', label: 'Alpha' },
+        { id: 'item-bravo', label: 'Bravo' },
+        { id: 'item-charlie', label: 'Charlie' },
+      ],
+    },
+    stateSchema: {
+      items: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: { id: { type: 'string' }, label: { type: 'string' } },
+          required: ['id'],
+          additionalProperties: false,
+        },
+      },
+    },
+    stateArrayKeyPaths: { items: 'id' },
     transitions: [
+      {
+        nodeUuid: '860e8400-e29b-41d4-a716-446655440012',
+        event: 'click',
+        actions: [
+          {
+            kind: 'append-array-item',
+            name: 'items',
+            repeaterUuid: '860e8400-e29b-41d4-a716-446655440017',
+          },
+        ],
+      },
       {
         nodeUuid: '860e8400-e29b-41d4-a716-446655440014',
         event: 'click',
@@ -166,7 +217,7 @@ const sortableListDemo: NodeDefinition = {
           {
             kind: 'move-array-item',
             name: 'items',
-            repeaterUuid: '860e8400-e29b-41d4-a716-446655440011',
+            repeaterUuid: '860e8400-e29b-41d4-a716-446655440017',
             direction: 'up',
           },
         ],
@@ -178,25 +229,36 @@ const sortableListDemo: NodeDefinition = {
           {
             kind: 'move-array-item',
             name: 'items',
-            repeaterUuid: '860e8400-e29b-41d4-a716-446655440011',
+            repeaterUuid: '860e8400-e29b-41d4-a716-446655440017',
             direction: 'down',
           },
         ],
       },
       {
-        nodeUuid: '860e8400-e29b-41d4-a716-446655440012',
+        nodeUuid: '860e8400-e29b-41d4-a716-446655440018',
         event: 'dragstart',
         actions: [],
       },
       {
-        nodeUuid: '860e8400-e29b-41d4-a716-446655440012',
+        nodeUuid: '860e8400-e29b-41d4-a716-446655440018',
         event: 'drop',
         actions: [
           {
             kind: 'move-array-item',
             name: 'items',
-            repeaterUuid: '860e8400-e29b-41d4-a716-446655440011',
+            repeaterUuid: '860e8400-e29b-41d4-a716-446655440017',
             direction: 'after',
+          },
+        ],
+      },
+      {
+        nodeUuid: '860e8400-e29b-41d4-a716-446655440016',
+        event: 'click',
+        actions: [
+          {
+            kind: 'remove-array-item',
+            name: 'items',
+            repeaterUuid: '860e8400-e29b-41d4-a716-446655440017',
           },
         ],
       },

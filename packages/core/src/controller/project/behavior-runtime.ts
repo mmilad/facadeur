@@ -46,6 +46,22 @@ export function executeComponentBehavior(
       } else if (action.kind === 'increment') {
         const current = state[action.name];
         state[action.name] = (typeof current === 'number' ? current : 0) + (action.amount ?? 1);
+      } else if (action.kind === 'append-array-item') {
+        const current = state[action.name];
+        const itemSchema = behavior?.stateSchema?.[action.name]?.items;
+        if (Array.isArray(current) && itemSchema && typeof itemSchema === 'object') {
+          const item = defaultItem(itemSchema);
+          const keyPath = behavior?.stateArrayKeyPaths?.[action.name];
+          if (keyPath && item && typeof item === 'object')
+            item[keyPath] = createUniqueKey(current, keyPath);
+          state[action.name] = [...current, item];
+        }
+      } else if (action.kind === 'remove-array-item') {
+        const current = state[action.name];
+        const index = context.repeaterIndices?.[action.repeaterUuid];
+        if (Array.isArray(current) && index !== undefined && index >= 0 && index < current.length) {
+          state[action.name] = current.filter((_, itemIndex) => itemIndex !== index);
+        }
       } else if (action.kind === 'move-array-item') {
         const current = state[action.name];
         const from =
@@ -80,6 +96,43 @@ export function executeComponentBehavior(
     }
   }
   return { state, emitted, matched: true };
+}
+
+function defaultItem(schema: unknown) {
+  if (schema && typeof schema === 'object' && !Array.isArray(schema)) {
+    const type = (schema as Record<string, unknown>).type;
+    if (type === 'string') return '';
+    if (type === 'number') return 0;
+    if (type === 'boolean') return false;
+  }
+  const properties =
+    schema && typeof schema === 'object'
+      ? (schema as Record<string, unknown>).properties
+      : undefined;
+  if (!properties || typeof properties !== 'object' || Array.isArray(properties)) return {};
+  return Object.fromEntries(
+    Object.entries(properties).map(([name, schema]) => {
+      const type =
+        schema && typeof schema === 'object' ? (schema as Record<string, unknown>).type : undefined;
+      return [name, type === 'boolean' ? false : type === 'number' ? 0 : ''];
+    }),
+  );
+}
+
+function createUniqueKey(items: readonly unknown[], keyPath: string) {
+  const used = new Set(
+    items.flatMap((item) => {
+      const key =
+        item && typeof item === 'object' ? (item as Record<string, unknown>)[keyPath] : undefined;
+      return typeof key === 'string' ? [key] : [];
+    }),
+  );
+  let key: string =
+    globalThis.crypto?.randomUUID?.() ??
+    `facadeur-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  while (used.has(key))
+    key = `facadeur-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  return key;
 }
 
 function draggedIndex(event: unknown, repeaterUuid: string) {

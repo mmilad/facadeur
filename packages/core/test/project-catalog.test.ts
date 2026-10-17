@@ -455,6 +455,75 @@ describe('validateProjectCatalog', () => {
     Reflect.set(component, 'behavior', withoutSchema);
     expect(() => validateProjectCatalog(catalog)).toThrow(/requires an explicit state schema/i);
   });
+
+  it('allows appending from outside a Repeater and requires removal inside its rows', () => {
+    const catalog = createExampleCatalog();
+    const component = Object.values(catalog.components)[0]!;
+    const repeaterUuid = globalThis.crypto.randomUUID();
+    const buttonUuid = globalThis.crypto.randomUUID();
+    Reflect.set(component.root.dom, 'children', [
+      {
+        uuid: repeaterUuid,
+        config: { composition: { kind: 'repeater', source: { kind: 'state', name: 'items' } } },
+        dom: {
+          tagName: 'ul',
+          children: [{ uuid: globalThis.crypto.randomUUID(), dom: { tagName: 'li' } }],
+        },
+      },
+      { uuid: buttonUuid, dom: { tagName: 'button' } },
+    ]);
+    const behavior = {
+      state: { items: [{ id: 'first' }] },
+      stateSchema: {
+        items: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' } } } },
+      },
+      stateArrayKeyPaths: { items: 'id' },
+      transitions: [
+        {
+          nodeUuid: buttonUuid,
+          event: 'click',
+          actions: [{ kind: 'append-array-item' as const, name: 'items', repeaterUuid }],
+        },
+      ],
+    };
+    Reflect.set(component, 'behavior', behavior);
+    expect(() => validateProjectCatalog(catalog)).not.toThrow();
+
+    Reflect.set(component, 'behavior', {
+      ...behavior,
+      transitions: [
+        {
+          ...behavior.transitions[0],
+          actions: [{ kind: 'remove-array-item' as const, name: 'items', repeaterUuid }],
+        },
+      ],
+    });
+    expect(() => validateProjectCatalog(catalog)).toThrow(/inside its Repeater/i);
+  });
+
+  it('requires configured stable item keys to be declared and unique', () => {
+    const catalog = createExampleCatalog();
+    const component = Object.values(catalog.components)[0]!;
+    Reflect.set(component, 'behavior', {
+      state: { items: [{ id: 'same' }, { id: 'same' }] },
+      stateSchema: {
+        items: {
+          type: 'array',
+          items: { type: 'object', properties: { id: { type: 'string' } } },
+        },
+      },
+      stateArrayKeyPaths: { items: 'id' },
+      transitions: [],
+    });
+    expect(() => validateProjectCatalog(catalog)).toThrow(/unique, non-empty strings/i);
+
+    Reflect.set(component, 'behavior', {
+      ...component.behavior,
+      state: { items: [{ id: 'first' }] },
+      stateArrayKeyPaths: { items: 'missing' },
+    });
+    expect(() => validateProjectCatalog(catalog)).toThrow(/must name a string property/i);
+  });
 });
 
 describe('executeComponentBehavior', () => {
@@ -536,6 +605,48 @@ describe('executeComponentBehavior', () => {
 
     expect(result.state.items).toEqual(['first', 'third', 'second']);
     expect(behavior.state.items).toEqual(['first', 'second', 'third']);
+  });
+
+  it('adds schema defaults with a unique stable ID and removes the current repeater row', () => {
+    const repeaterUuid = globalThis.crypto.randomUUID();
+    const behavior = {
+      state: { items: [{ id: 'first', label: 'One', active: true }] },
+      stateSchema: {
+        items: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              label: { type: 'string' },
+              active: { type: 'boolean' },
+            },
+          },
+        },
+      },
+      stateArrayKeyPaths: { items: 'id' },
+      transitions: [
+        {
+          nodeUuid: rootNodeUuid,
+          event: 'click',
+          actions: [
+            { kind: 'append-array-item' as const, name: 'items', repeaterUuid },
+            { kind: 'remove-array-item' as const, name: 'items', repeaterUuid },
+          ],
+        },
+      ],
+    };
+    const result = executeComponentBehavior(behavior, rootNodeUuid, 'click', {
+      state: behavior.state,
+      repeaterIndices: { [repeaterUuid]: 0 },
+    });
+
+    const items = result.state.items as Array<Record<string, unknown>>;
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({ label: '', active: false });
+    expect(items[0]?.id).toEqual(expect.any(String));
+    expect(items[0]?.id).not.toBe('first');
+    expect(behavior.state.items).toEqual([{ id: 'first', label: 'One', active: true }]);
   });
 
   it.each([

@@ -41,6 +41,109 @@ function renderControlledPanel(initial: NodeDefinition = definition) {
 }
 
 describe('CatalogBehaviorPanel transitions', () => {
+  it('authors object-list state with a visible stable key and generated initial item IDs', () => {
+    const { onEvent } = renderControlledPanel();
+    fireEvent.change(screen.getByRole('combobox', { name: 'New state type' }), {
+      target: { value: 'object-list' },
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: 'New state name' }), {
+      target: { value: 'items' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Add state' }));
+
+    let event = onEvent.mock.calls.at(-1)?.[0] as Extract<
+      EditorEvent,
+      { type: EditorEventType.DefinitionBehaviorSet }
+    >;
+    let behavior = event.data.behavior as ComponentBehavior;
+    expect(behavior.state?.items).toEqual([]);
+    expect(behavior.stateArrayKeyPaths?.items).toBe('id');
+    expect(behavior.stateSchema?.items?.items).toMatchObject({
+      type: 'object',
+      required: ['id'],
+    });
+
+    const stateItem = screen.getByRole('heading', { name: 'items' }).closest('li')!;
+    expect(
+      within(stateItem).getByRole('combobox', { name: 'Stable key field for items' }),
+    ).toBeTruthy();
+    fireEvent.click(within(stateItem).getByRole('button', { name: 'Add Item item' }));
+
+    event = onEvent.mock.calls.at(-1)?.[0] as Extract<
+      EditorEvent,
+      { type: EditorEventType.DefinitionBehaviorSet }
+    >;
+    behavior = event.data.behavior as ComponentBehavior;
+    const items = behavior.state?.items as Array<Record<string, unknown>>;
+    expect(items).toHaveLength(1);
+    expect(typeof items[0]?.id).toBe('string');
+    expect(items[0]?.id).toBeTruthy();
+    expect(items[0]?.label).toBe('');
+  });
+
+  it('authors append and remove actions against the active object-list repeater', () => {
+    const repeaterUuid = 'list-1';
+    const addButtonUuid = 'button-1';
+    const initial: NodeDefinition = {
+      ...definition,
+      root: {
+        ...definition.root,
+        dom: {
+          ...definition.root.dom,
+          children: [
+            { uuid: addButtonUuid, dom: { tagName: 'button' } },
+            {
+              uuid: repeaterUuid,
+              config: {
+                composition: { kind: 'repeater', source: { kind: 'state', name: 'items' } },
+              },
+              dom: {
+                tagName: 'ul',
+                children: [{ uuid: 'row-1', dom: { tagName: 'li' } }],
+              },
+            },
+          ],
+        },
+      },
+      behavior: {
+        state: { items: [{ id: 'first', label: 'First' }] },
+        stateSchema: {
+          items: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: { id: { type: 'string' }, label: { type: 'string' } },
+            },
+          },
+        },
+        stateArrayKeyPaths: { items: 'id' },
+        transitions: [{ nodeUuid: addButtonUuid, event: 'click', actions: [] }],
+      },
+    };
+    const { onEvent } = renderControlledPanel(initial);
+    fireEvent.click(screen.getByRole('button', { name: 'Add state action' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Action type' }), {
+      target: { value: 'append-array-item' },
+    });
+
+    let event = onEvent.mock.calls.at(-1)?.[0] as Extract<
+      EditorEvent,
+      { type: EditorEventType.DefinitionBehaviorSet }
+    >;
+    let action = event.data.behavior.transitions[0]?.actions[0];
+    expect(action).toMatchObject({ kind: 'append-array-item', name: 'items', repeaterUuid });
+
+    fireEvent.change(screen.getByRole('combobox', { name: 'Action type' }), {
+      target: { value: 'remove-array-item' },
+    });
+    event = onEvent.mock.calls.at(-1)?.[0] as Extract<
+      EditorEvent,
+      { type: EditorEventType.DefinitionBehaviorSet }
+    >;
+    action = event.data.behavior.transitions[0]?.actions[0];
+    expect(action).toMatchObject({ kind: 'remove-array-item', name: 'items', repeaterUuid });
+  });
+
   it('only offers preview events and keeps the next transition ready after adding one', () => {
     const { onEvent } = renderControlledPanel();
     const eventInput = screen.getByRole('combobox', { name: 'Transition event name' });

@@ -61,6 +61,46 @@ export function renderBehavior(
             `const ${temporary} = ${expression};`,
             `${setterName(action.name, stateIdentifiers)}(${temporary});`,
           );
+        } else if (action.kind === 'append-array-item') {
+          const array = nextState.get(action.name) ?? stateIdentifiers.get(action.name) ?? '[]';
+          const itemSchema = behavior.stateSchema?.[action.name]?.items as
+            { type?: string; properties?: Record<string, { type?: string }> } | undefined;
+          const defaults = Object.fromEntries(
+            Object.entries(itemSchema?.properties ?? {}).map(([name, schema]) => [
+              name,
+              schema.type === 'boolean' ? false : schema.type === 'number' ? 0 : '',
+            ]),
+          );
+          const keyPath = behavior.stateArrayKeyPaths?.[action.name];
+          const key = keyPath
+            ? `(() => { let id = globalThis.crypto?.randomUUID?.() ?? \`facadeur-\${Date.now().toString(36)}-\${Math.random().toString(36).slice(2)}\`; while ((${array} ?? []).some((item: Record<string, unknown>) => item[${JSON.stringify(keyPath)}] === id)) id = \`facadeur-\${Date.now().toString(36)}-\${Math.random().toString(36).slice(2)}\`; return id; })()`
+            : undefined;
+          const defaultValue =
+            itemSchema?.type === 'string'
+              ? JSON.stringify('')
+              : itemSchema?.type === 'number'
+                ? '0'
+                : itemSchema?.type === 'boolean'
+                  ? 'false'
+                  : JSON.stringify(defaults);
+          const item = keyPath
+            ? `{ ...${defaultValue}, [${JSON.stringify(keyPath)}]: ${key} }`
+            : defaultValue;
+          const temporary = `nextBehaviorState${temporaryIndex++}`;
+          actions.push(
+            `const ${temporary} = [...(${array} ?? []), ${item}];`,
+            `${setterName(action.name, stateIdentifiers)}(${temporary});`,
+          );
+          nextState.set(action.name, temporary);
+        } else if (action.kind === 'remove-array-item') {
+          const array = nextState.get(action.name) ?? stateIdentifiers.get(action.name) ?? '[]';
+          const index = `repeaterIndices[${JSON.stringify(action.repeaterUuid)}]`;
+          const temporary = `nextBehaviorState${temporaryIndex++}`;
+          actions.push(
+            `const ${temporary} = (${array} ?? []).filter((_: unknown, index: number) => index !== ${index});`,
+            `${setterName(action.name, stateIdentifiers)}(${temporary});`,
+          );
+          nextState.set(action.name, temporary);
         } else if (action.kind === 'move-array-item') {
           const array = nextState.get(action.name) ?? stateIdentifiers.get(action.name) ?? '[]';
           const currentIndex = `repeaterIndices[${JSON.stringify(action.repeaterUuid)}]`;

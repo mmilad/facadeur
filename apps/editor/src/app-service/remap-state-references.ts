@@ -33,6 +33,9 @@ export function remapBehaviorStateReferences(
     if (action.kind === 'move-array-item') {
       return { ...action, name: renamed.get(action.name) ?? action.name };
     }
+    if (action.kind === 'append-array-item' || action.kind === 'remove-array-item') {
+      return { ...action, name: renamed.get(action.name) ?? action.name };
+    }
     return { ...action, args: action.args.map(mapValue) };
   };
   return {
@@ -43,6 +46,16 @@ export function remapBehaviorStateReferences(
             Object.entries(behavior.stateSchema).map(([name, schema]) => [
               renamed.get(name) ?? name,
               schema,
+            ]),
+          ),
+        }
+      : {}),
+    ...(behavior.stateArrayKeyPaths
+      ? {
+          stateArrayKeyPaths: Object.fromEntries(
+            Object.entries(behavior.stateArrayKeyPaths).map(([name, keyPath]) => [
+              renamed.get(name) ?? name,
+              keyPath,
             ]),
           ),
         }

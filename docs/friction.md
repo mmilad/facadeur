@@ -51,6 +51,12 @@
 
 ## Resolved: Run pnpm verification in the approved host context
 
+- **Update (2026-10-17, sortable behavior):** Restricted `pnpm --filter ... typecheck` failed
+  before pnpm startup while Corepack tried to download the pinned 10.33.3 and DNS returned
+  `ENOTFOUND registry.npmjs.org`. The identical four package typechecks ran in the approved host
+  context and reached TypeScript. Continue to rerun workspace pnpm checks there; no package-manager
+  or repository workaround is needed.
+
 - **Update (2026-10-12, layer class styles):** Restricted Core and Editor typechecks both stopped
   in Corepack before TypeScript ran, attempting to download the pinned pnpm 10.33.3 and failing
   with `ENOTFOUND registry.npmjs.org`. The same commands completed in the approved host context

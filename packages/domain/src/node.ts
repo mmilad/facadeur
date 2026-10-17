@@ -74,6 +74,8 @@ export type BehaviorValue =
 export type BehaviorAction =
   | { readonly kind: 'set-state'; readonly name: string; readonly value: BehaviorValue }
   | { readonly kind: 'increment'; readonly name: string; readonly amount?: number }
+  | { readonly kind: 'append-array-item'; readonly name: string; readonly repeaterUuid: Uuid }
+  | { readonly kind: 'remove-array-item'; readonly name: string; readonly repeaterUuid: Uuid }
   | {
       readonly kind: 'move-array-item';
       readonly name: string;
@@ -87,6 +89,8 @@ export interface ComponentBehavior {
   readonly state?: Readonly<Record<string, FieldValue | null>>;
   /** Declares item types independently of preview values, including empty arrays. */
   readonly stateSchema?: Readonly<Record<string, JsonSchemaObject>>;
+  /** Direct object property used as the stable React/render key for an array state. */
+  readonly stateArrayKeyPaths?: Readonly<Record<string, string>>;
   readonly transitions: readonly {
     readonly nodeUuid: Uuid;
     readonly event: string;

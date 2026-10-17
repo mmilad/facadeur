@@ -62,6 +62,22 @@ const behaviorActionSchema = Type.Union([
   ),
   Type.Object(
     {
+      kind: Type.Literal('append-array-item'),
+      name: Type.String({ minLength: 1 }),
+      repeaterUuid: uuidSchema,
+    },
+    { additionalProperties: false },
+  ),
+  Type.Object(
+    {
+      kind: Type.Literal('remove-array-item'),
+      name: Type.String({ minLength: 1 }),
+      repeaterUuid: uuidSchema,
+    },
+    { additionalProperties: false },
+  ),
+  Type.Object(
+    {
       kind: Type.Literal('move-array-item'),
       name: Type.String({ minLength: 1 }),
       repeaterUuid: uuidSchema,
@@ -89,6 +105,9 @@ const componentBehaviorSchema = Type.Object(
     state: Type.Optional(Type.Record(Type.String({ minLength: 1 }), Type.Unknown())),
     stateSchema: Type.Optional(
       Type.Record(Type.String({ minLength: 1 }), Type.Record(Type.String(), Type.Unknown())),
+    ),
+    stateArrayKeyPaths: Type.Optional(
+      Type.Record(Type.String({ minLength: 1 }), Type.String({ minLength: 1 })),
     ),
     transitions: Type.Array(
       Type.Object(

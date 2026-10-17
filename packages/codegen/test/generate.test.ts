@@ -388,4 +388,59 @@ describe('Catalog-driven React code generation', () => {
       'props["onChange"]?.(behaviorState0, nextBehaviorState3, getProp(event, "currentTarget.value"), getProp(props, "label"));',
     );
   });
+
+  it('uses object item IDs as React keys and emits add/remove row actions', () => {
+    const catalog = createExampleCatalog();
+    const component = Object.values(catalog.components)[0]!;
+    const repeaterUuid = component.root.uuid;
+    const rowUuid = globalThis.crypto.randomUUID();
+    Reflect.set(component.root, 'config', {
+      composition: { kind: 'repeater', source: { kind: 'state', name: 'items' } },
+    });
+    Reflect.set(component.root.dom, 'children', [
+      { uuid: rowUuid, dom: { tagName: 'article', text: '{item:label}' } },
+    ]);
+    Reflect.set(component, 'behavior', {
+      state: { items: [{ id: 'one', label: 'One' }] },
+      stateSchema: {
+        items: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: { id: { type: 'string' }, label: { type: 'string' } },
+            required: ['id'],
+          },
+        },
+      },
+      stateArrayKeyPaths: { items: 'id' },
+      transitions: [
+        {
+          nodeUuid: rowUuid,
+          event: 'click',
+          actions: [
+            { kind: 'append-array-item', name: 'items', repeaterUuid },
+            { kind: 'remove-array-item', name: 'items', repeaterUuid },
+          ],
+        },
+      ],
+    });
+
+    const generated = generateReact({ catalog, entries: [component.uuid] });
+    const output = generated.ui.find((file) => file.path.startsWith('components/'))?.contents ?? '';
+    expect(output).toContain('<Fragment key={item["id"] ?? index}>');
+    expect(output).toContain('randomUUID');
+    expect(output).toContain('repeaterIndices[' + JSON.stringify(repeaterUuid) + ']');
+    expect(output).toContain('filter((_: unknown, index: number) => index !==');
+    const diagnostics = ts.transpileModule(output, {
+      reportDiagnostics: true,
+      compilerOptions: {
+        jsx: ts.JsxEmit.ReactJSX,
+        target: ts.ScriptTarget.ES2022,
+        module: ts.ModuleKind.ESNext,
+      },
+    }).diagnostics;
+    expect(diagnostics?.filter((item) => item.category === ts.DiagnosticCategory.Error)).toEqual(
+      [],
+    );
+  });
 });

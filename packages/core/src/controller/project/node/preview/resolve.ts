@@ -375,17 +375,27 @@ function resolveNodeToElementBuildConfig(
                 ),
                 itemPath: repeaterItemPath(composition.source, ctx.componentSchema, repeaterScopes),
               };
+              const keyPath =
+                composition.source?.kind === 'state'
+                  ? definition.behavior?.stateArrayKeyPaths?.[composition.source.name]
+                  : undefined;
+              const itemKey =
+                keyPath && item && typeof item === 'object' && !Array.isArray(item)
+                  ? (item as Record<string, unknown>)[keyPath]
+                  : undefined;
+              const stableKey =
+                typeof itemKey === 'string' && itemKey.length > 0 ? itemKey : String(itemIndex);
               const resolved = resolveNodeToElementBuildConfig(child, {
                 ...context,
                 parentFields: fields,
                 inheritedOverrides: fields,
                 itemContext: item,
                 repeaterScopes: [...repeaterScopes, scope],
-                elementInstancePath: `${instancePath}/repeat:${itemIndex}:${templateIndex}`,
+                elementInstancePath: `${instancePath}/repeat:${encodeURIComponent(stableKey)}:${templateIndex}`,
               });
               return {
                 ...resolved,
-                renderKey: `${child.uuid}:${itemIndex}:${templateIndex}`,
+                renderKey: `${child.uuid}:${stableKey}:${templateIndex}`,
               };
             }),
           );

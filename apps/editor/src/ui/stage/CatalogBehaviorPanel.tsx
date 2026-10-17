@@ -7,26 +7,19 @@ import type {
   ComponentBehavior,
   FieldValue,
   Node,
-  NodeClassDefinition,
   NodeDefinition,
 } from '@facadeur/domain';
 import type { EditorEvent } from '../../domain/sidebar/events';
 import { EditorEventType } from '../../domain/sidebar/events';
 import { previewDomEventOptions } from '../../domain/viewport/dom-events';
+import { CatalogBehaviorStates } from './CatalogBehaviorStates';
 import { Field } from '../components/feedback';
 import { Inline, Stack } from '../components/layout';
-import { ArrayField, NumberInput, Select, TextInput, Toggle } from '../controls/form-binding';
+import { NumberInput, Select, TextInput, Toggle } from '../controls/form-binding';
 import './catalog-behavior-panel.css';
 
-type StateType = 'boolean' | 'string' | 'number' | 'string-list';
 type StateEntry = [string, FieldValue | null];
 type Transition = ComponentBehavior['transitions'][number];
-const typeOptions = [
-  { value: 'boolean', label: 'Boolean' },
-  { value: 'string', label: 'Text' },
-  { value: 'number', label: 'Number' },
-  { value: 'string-list', label: 'List of text items' },
-];
 const valueKindOptions = [
   { value: 'literal', label: 'Literal' },
   { value: 'state', label: 'State' },
@@ -45,6 +38,8 @@ const operationOptions = [
 const actionKindOptions = [
   { value: 'set-state', label: 'Set state' },
   { value: 'increment', label: 'Increment state' },
+  { value: 'append-array-item', label: 'Add list item' },
+  { value: 'remove-array-item', label: 'Remove current list item' },
   { value: 'move-array-item', label: 'Move list item' },
   { value: 'emit', label: 'Emit callback' },
 ];
@@ -57,11 +52,6 @@ export function CatalogBehaviorPanel({
   definition: NodeDefinition | null;
   onEvent: (event: EditorEvent) => void;
 }) {
-  const [stateName, setStateName] = useState('open');
-  const [stateType, setStateType] = useState<StateType>('boolean');
-  const [initialString, setInitialString] = useState('');
-  const [initialNumber, setInitialNumber] = useState(0);
-  const [draftNames, setDraftNames] = useState<Record<string, string>>({});
   const [transitionNode, setTransitionNode] = useState('');
   const [transitionEvent, setTransitionEvent] = useState('click');
   if (!definition || definition.kind !== 'component') return null;
@@ -78,81 +68,8 @@ export function CatalogBehaviorPanel({
       type: EditorEventType.DefinitionBehaviorSet,
       data: { behavior: next },
     });
-  const setState = (state: Record<string, FieldValue | null>) => dispatch({ ...behavior, state });
   const setTransitions = (transitions: readonly Transition[]) =>
     dispatch({ ...behavior, transitions });
-  const addState = () => {
-    const name = stateName.trim();
-    if (!isStateName(name) || Object.hasOwn(behavior.state ?? {}, name)) return;
-    const initial: FieldValue =
-      stateType === 'boolean'
-        ? false
-        : stateType === 'number'
-          ? initialNumber
-          : stateType === 'string-list'
-            ? []
-            : initialString;
-    dispatch({
-      ...behavior,
-      state: { ...(behavior.state ?? {}), [name]: initial },
-      ...(stateType === 'string-list'
-        ? {
-            stateSchema: {
-              ...(behavior.stateSchema ?? {}),
-              [name]: { type: 'array', items: { type: 'string' } },
-            },
-          }
-        : {}),
-    });
-    setStateName('');
-  };
-  const updateState = (name: string, value: FieldValue | null) =>
-    setState({ ...(behavior.state ?? {}), [name]: value });
-  const renameState = (name: string, nextName: string) => {
-    const normalized = nextName.trim();
-    if (
-      !isStateName(normalized) ||
-      normalized === name ||
-      Object.hasOwn(behavior.state ?? {}, normalized)
-    )
-      return;
-    dispatch({
-      ...behavior,
-      state: Object.fromEntries(
-        states.map(([key, value]) => [key === name ? normalized : key, value]),
-      ),
-      stateSchema: Object.fromEntries(
-        Object.entries(behavior.stateSchema ?? {}).map(([key, value]) => [
-          key === name ? normalized : key,
-          value,
-        ]),
-      ),
-      transitions: behavior.transitions.map((transition) => ({
-        ...transition,
-        actions: transition.actions.map((action) => renameActionState(action, name, normalized)),
-      })),
-    });
-    setDraftNames((draft) => {
-      const next = { ...draft };
-      delete next[name];
-      return next;
-    });
-  };
-  const editStateName = (name: string, nextName: string) => {
-    if (isStateName(nextName) && !Object.hasOwn(behavior.state ?? {}, nextName))
-      renameState(name, nextName);
-    else setDraftNames((draft) => ({ ...draft, [name]: nextName }));
-  };
-  const removeState = (name: string) => {
-    if (stateIsReferenced(definition.root, behavior.transitions, name)) return;
-    dispatch({
-      ...behavior,
-      state: Object.fromEntries(states.filter(([key]) => key !== name)),
-      stateSchema: Object.fromEntries(
-        Object.entries(behavior.stateSchema ?? {}).filter(([key]) => key !== name),
-      ),
-    });
-  };
   const addTransition = () => {
     const nodeUuid = transitionNode || nodes[0]?.uuid;
     const event = transitionEvent.trim();
@@ -167,8 +84,6 @@ export function CatalogBehaviorPanel({
     );
   const removeTransition = (index: number) =>
     setTransitions(behavior.transitions.filter((_, itemIndex) => itemIndex !== index));
-  const addDisabled =
-    !isStateName(stateName.trim()) || Object.hasOwn(behavior.state ?? {}, stateName.trim());
   const transitionDisabled = !nodes.length || !transitionEvent.trim();
 
   return (
@@ -177,156 +92,8 @@ export function CatalogBehaviorPanel({
       aria-label="Component behavior"
       data-testid="catalog-behavior-panel"
     >
-      <h3 className="inspector-tab-section-title">Internal state</h3>
-      <p className="inspector-context-meta">
-        States hold private values for this component. The initial value is stored when you add one.
-        Use them in class conditions and transitions.
-      </p>
       <Stack gap="md">
-        <section className="catalog-behavior-add" aria-label="Add internal state">
-          <h4>Add a state</h4>
-          <Field
-            label="State name"
-            hint="Use a JavaScript-style name, such as open or activeSlide."
-          >
-            <TextInput aria-label="New state name" value={stateName} onChange={setStateName} />
-          </Field>
-          <Field label="Type">
-            <Select
-              aria-label="New state type"
-              value={stateType}
-              options={typeOptions}
-              onChange={(value) => setStateType(value as StateType)}
-            />
-          </Field>
-          {stateType === 'boolean' ? (
-            <p className="catalog-behavior-initial">
-              Initial value when added: <code>false</code>
-            </p>
-          ) : null}
-          {stateType === 'string' ? (
-            <Field label="Initial value">
-              <TextInput
-                aria-label="New state initial value"
-                value={initialString}
-                onChange={setInitialString}
-              />
-            </Field>
-          ) : null}
-          {stateType === 'number' ? (
-            <Field label="Initial value">
-              <NumberInput
-                aria-label="New state initial value"
-                value={initialNumber}
-                onChange={(value) => setInitialNumber(value ?? 0)}
-                step={1}
-              />
-            </Field>
-          ) : null}
-          {stateType === 'string-list' ? (
-            <p className="catalog-behavior-initial">
-              Starts empty. Add example items below; the Repeater can use this state as its source.
-            </p>
-          ) : null}
-          <Inline gap="sm" align="center">
-            <button type="button" onClick={addState} disabled={addDisabled}>
-              Add state
-            </button>
-            {addDisabled && stateName.trim() ? (
-              <small>A valid, unused state name is required.</small>
-            ) : null}
-          </Inline>
-        </section>
-        {states.length ? (
-          <ul className="catalog-behavior-state-list">
-            {states.map(([name, value]) => (
-              <li key={name} className="catalog-behavior-state">
-                <h4>{name}</h4>
-                <Field label="State name">
-                  <TextInput
-                    aria-label={`State name ${name}`}
-                    value={draftNames[name] ?? name}
-                    onChange={(nextName) => editStateName(name, nextName)}
-                  />
-                </Field>
-                {typeof value === 'boolean' ? (
-                  <Toggle
-                    aria-label={`Initial value ${name}`}
-                    label={`Initial value: ${value ? 'true' : 'false'}`}
-                    value={value}
-                    onChange={(next) => updateState(name, next)}
-                  />
-                ) : null}
-                {typeof value === 'string' ? (
-                  <Field label="Initial value">
-                    <TextInput
-                      aria-label={`Initial value ${name}`}
-                      value={value}
-                      onChange={(next) => updateState(name, next)}
-                    />
-                  </Field>
-                ) : null}
-                {typeof value === 'number' ? (
-                  <Field label="Initial value">
-                    <NumberInput
-                      aria-label={`Initial value ${name}`}
-                      value={value}
-                      onChange={(next) => updateState(name, next ?? 0)}
-                      step={1}
-                    />
-                  </Field>
-                ) : null}
-                {Array.isArray(value) && value.every((item) => typeof item === 'string') ? (
-                  <Field label="Initial list items">
-                    <ArrayField<string>
-                      value={value}
-                      defaultItem=""
-                      rowLabel="Text"
-                      onChange={(next) => updateState(name, next)}
-                    >
-                      {(item, index) => (
-                        <TextInput
-                          aria-label={`Initial item ${index + 1} for ${name}`}
-                          value={item}
-                          onChange={(next) =>
-                            updateState(
-                              name,
-                              (value as string[]).map((current, itemIndex) =>
-                                itemIndex === index ? next : current,
-                              ),
-                            )
-                          }
-                        />
-                      )}
-                    </ArrayField>
-                  </Field>
-                ) : null}
-                <div>
-                  <span className="catalog-behavior-subtitle">Class condition reference</span>
-                  <code>{`{state:${name}}`}</code>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removeState(name)}
-                  disabled={stateIsReferenced(definition.root, behavior.transitions, name)}
-                >
-                  Remove state
-                </button>
-                {stateIsReferenced(definition.root, behavior.transitions, name) ? (
-                  <small className="catalog-behavior-error">
-                    Remove this state’s Repeater, class condition, or transition references before
-                    deleting it.
-                  </small>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="inspector-empty">
-            No internal state yet. Add one above; its initial value becomes part of the component
-            definition.
-          </p>
-        )}
+        <CatalogBehaviorStates definition={definition} behavior={behavior} onChange={dispatch} />
 
         <section className="catalog-behavior-add" aria-label="Add transition">
           <h4>Transitions</h4>
@@ -540,17 +307,18 @@ function ActionEditor({
         name: states.find(([, value]) => typeof value === 'number')?.[0] ?? states[0]?.[0] ?? '',
         amount: 1,
       });
-    else if (kind === 'move-array-item') {
+    else if (
+      kind === 'move-array-item' ||
+      kind === 'append-array-item' ||
+      kind === 'remove-array-item'
+    ) {
       const list = arrayStateOptions[0]?.value ?? '';
-      const repeater = repeaters.find(
-        (item) => item.stateName === list && item.nodeUuids.includes(transitionNodeUuid),
+      const repeater = repeaters.find((item) => item.stateName === list);
+      onChange(
+        kind === 'move-array-item'
+          ? { kind, name: list, repeaterUuid: repeater?.uuid ?? '', direction: 'up' }
+          : { kind, name: list, repeaterUuid: repeater?.uuid ?? '' },
       );
-      onChange({
-        kind,
-        name: list,
-        repeaterUuid: repeater?.uuid ?? '',
-        direction: 'up',
-      });
     } else onChange({ kind: 'emit', name: '', args: [] });
   };
   return (
@@ -644,11 +412,13 @@ function ActionEditor({
           </button>
         </>
       ) : null}
-      {action.kind === 'move-array-item' ? (
+      {action.kind === 'append-array-item' ||
+      action.kind === 'remove-array-item' ||
+      action.kind === 'move-array-item' ? (
         <>
           <Field label="Array state">
             <Select
-              aria-label="Array state to reorder"
+              aria-label="Array state for item action"
               value={action.name}
               options={arrayStateOptions}
               onChange={(name) => {
@@ -659,33 +429,39 @@ function ActionEditor({
           </Field>
           <Field label="Repeater">
             <Select
-              aria-label="Repeater row index source"
+              aria-label="Repeater item action scope"
               value={action.repeaterUuid}
               options={repeaters
                 .filter(
                   (repeater) =>
                     repeater.stateName === action.name &&
-                    repeater.nodeUuids.includes(transitionNodeUuid),
+                    (action.kind === 'append-array-item' ||
+                      repeater.nodeUuids.includes(transitionNodeUuid)),
                 )
                 .map(({ uuid, label }) => ({ value: uuid, label }))}
               onChange={(repeaterUuid) => onChange({ ...action, repeaterUuid })}
             />
           </Field>
-          <Field label="Direction">
-            <Select
-              aria-label="List move direction"
-              value={action.direction}
-              options={[
-                { value: 'up', label: 'Up' },
-                { value: 'down', label: 'Down' },
-                { value: 'before', label: 'Before dropped item' },
-                { value: 'after', label: 'After dropped item' },
-              ]}
-              onChange={(direction) =>
-                onChange({ ...action, direction: direction as 'up' | 'down' | 'before' | 'after' })
-              }
-            />
-          </Field>
+          {action.kind === 'move-array-item' ? (
+            <Field label="Direction">
+              <Select
+                aria-label="List move direction"
+                value={action.direction}
+                options={[
+                  { value: 'up', label: 'Up' },
+                  { value: 'down', label: 'Down' },
+                  { value: 'before', label: 'Before dropped item' },
+                  { value: 'after', label: 'After dropped item' },
+                ]}
+                onChange={(direction) =>
+                  onChange({
+                    ...action,
+                    direction: direction as 'up' | 'down' | 'before' | 'after',
+                  })
+                }
+              />
+            </Field>
+          ) : null}
         </>
       ) : null}
       <button type="button" onClick={onRemove}>
@@ -892,128 +668,4 @@ function listRepeaters(root: Node) {
 
 function nodeLabel(nodes: ReturnType<typeof listNodes>, uuid: string) {
   return nodes.find((node) => node.uuid === uuid)?.label ?? uuid;
-}
-
-function renameActionState(
-  action: BehaviorAction,
-  oldName: string,
-  newName: string,
-): BehaviorAction {
-  if (action.kind === 'emit')
-    return {
-      ...action,
-      args: action.args.map((value) => renameBehaviorValue(value, oldName, newName)),
-    };
-  if (action.kind === 'increment')
-    return action.name === oldName ? { ...action, name: newName } : action;
-  if (action.kind === 'move-array-item')
-    return action.name === oldName ? { ...action, name: newName } : action;
-  return {
-    ...action,
-    name: action.name === oldName ? newName : action.name,
-    value: renameBehaviorValue(action.value, oldName, newName),
-  };
-}
-
-function renameBehaviorValue(
-  value: BehaviorValue,
-  oldName: string,
-  newName: string,
-): BehaviorValue {
-  if (value.kind === 'state' || value.kind === 'state-after-transition')
-    return value.name === oldName ? { ...value, name: newName } : value;
-  if (value.kind === 'operation')
-    return {
-      ...value,
-      values: value.values.map((item) => renameBehaviorValue(item, oldName, newName)),
-    };
-  return value;
-}
-
-function actionUsesState(action: BehaviorAction, name: string) {
-  if (action.kind === 'move-array-item') return action.name === name;
-  if (action.kind === 'increment' || action.kind === 'set-state')
-    return (
-      action.name === name || (action.kind === 'set-state' && valueUsesState(action.value, name))
-    );
-  if (action.kind === 'emit') return action.args.some((value) => valueUsesState(value, name));
-  return false;
-}
-
-function stateIsReferenced(root: Node, transitions: readonly Transition[], name: string): boolean {
-  const visit = (node: Node): boolean => {
-    const classReference =
-      node.classes?.some((item) => conditionUsesState(item.condition, name)) ?? false;
-    const source =
-      node.config?.composition?.kind === 'repeater' ? node.config.composition.source : undefined;
-    const repeaterReference = source?.kind === 'state' && source.name === name;
-    return classReference || repeaterReference || (node.dom.children ?? []).some(visit);
-  };
-  return (
-    visit(root) ||
-    transitions.some((transition) =>
-      transition.actions.some((action) => actionUsesState(action, name)),
-    )
-  );
-}
-
-function conditionUsesState(condition: NodeClassDefinition['condition'], name: string): boolean {
-  if (!condition || typeof condition !== 'object') return false;
-  if ('kind' in condition && condition.kind === 'rule')
-    return condition.conditions.some((child) => conditionUsesState(child, name));
-  if ('kind' in condition && condition.kind === 'condition') {
-    return [condition.left, condition.right].some(
-      (operand) => operand?.kind === 'reference' && operand.reference === `{state:${name}}`,
-    );
-  }
-  return false;
-}
-
-function valueUsesState(value: BehaviorValue, name: string): boolean {
-  if (value.kind === 'state' || value.kind === 'state-after-transition') return value.name === name;
-  return value.kind === 'operation' && value.values.some((item) => valueUsesState(item, name));
-}
-
-function isStateName(name: string) {
-  if (!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(name)) return false;
-  return !new Set([
-    'await',
-    'break',
-    'case',
-    'catch',
-    'class',
-    'const',
-    'continue',
-    'debugger',
-    'default',
-    'delete',
-    'do',
-    'else',
-    'enum',
-    'export',
-    'extends',
-    'false',
-    'finally',
-    'for',
-    'function',
-    'if',
-    'import',
-    'in',
-    'instanceof',
-    'new',
-    'null',
-    'return',
-    'super',
-    'switch',
-    'this',
-    'throw',
-    'true',
-    'try',
-    'typeof',
-    'var',
-    'void',
-    'while',
-    'with',
-    'yield',
-  ]).has(name);
 }

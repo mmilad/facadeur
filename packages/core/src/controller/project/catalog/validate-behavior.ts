@@ -80,6 +80,58 @@ export function assertComponentBehaviorIntegrity(catalog: ProjectCatalog) {
         );
       }
     }
+    for (const [name, keyPath] of Object.entries(behavior.stateArrayKeyPaths ?? {})) {
+      const stateSchema = behavior.stateSchema?.[name];
+      const itemSchema = stateSchema?.items;
+      const itemProperties =
+        itemSchema && typeof itemSchema === 'object' && !Array.isArray(itemSchema)
+          ? (itemSchema as Record<string, unknown>).properties
+          : undefined;
+      const keySchema =
+        itemProperties && typeof itemProperties === 'object' && !Array.isArray(itemProperties)
+          ? (itemProperties as Record<string, unknown>)[keyPath]
+          : undefined;
+      const initial = behavior.state?.[name];
+      if (
+        !Array.isArray(initial) ||
+        stateSchema?.type !== 'array' ||
+        !itemSchema ||
+        typeof itemSchema !== 'object' ||
+        (itemSchema as Record<string, unknown>).type !== 'object' ||
+        !keySchema ||
+        typeof keySchema !== 'object' ||
+        (keySchema as Record<string, unknown>).type !== 'string'
+      ) {
+        throw new DocumentError(
+          'schema',
+          'Stable key "' +
+            keyPath +
+            '" for behavior array "' +
+            name +
+            '" must name a string property in its object item schema (' +
+            definition.name +
+            ').',
+        );
+      }
+      const keys = initial.map((item) =>
+        item && typeof item === 'object' && !Array.isArray(item)
+          ? (item as Record<string, unknown>)[keyPath]
+          : undefined,
+      );
+      if (
+        keys.some((key) => typeof key !== 'string' || key.trim().length === 0) ||
+        new Set(keys).size !== keys.length
+      ) {
+        throw new DocumentError(
+          'schema',
+          'Stable key values for behavior array "' +
+            name +
+            '" must be unique, non-empty strings (' +
+            definition.name +
+            ').',
+        );
+      }
+    }
     for (const node of allNodes) {
       const source =
         node.config?.composition?.kind === 'repeater' ? node.config.composition.source : undefined;
@@ -143,6 +195,20 @@ export function assertComponentBehaviorIntegrity(catalog: ProjectCatalog) {
           throw new DocumentError(
             'schema',
             `Behavior transition increments unknown state "${action.name}" (${definition.name}).`,
+          );
+        }
+        if (
+          (action.kind === 'append-array-item' || action.kind === 'remove-array-item') &&
+          (!Array.isArray(behavior.state?.[action.name]) ||
+            repeaters.get(action.repeaterUuid) !== action.name ||
+            (action.kind === 'remove-array-item' &&
+              !repeaterMembers.get(action.repeaterUuid)?.has(transition.nodeUuid)))
+        ) {
+          throw new DocumentError(
+            'schema',
+            action.kind === 'append-array-item'
+              ? `Behavior append-item action must target an array state and its matching Repeater (${definition.name}).`
+              : `Behavior remove-item action must target an array state and an event node inside its Repeater (${definition.name}).`,
           );
         }
         if (action.kind === 'increment' && typeof behavior.state?.[action.name] !== 'number') {

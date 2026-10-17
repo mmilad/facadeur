@@ -281,7 +281,9 @@ function renderNode(
           ),
         )
         .join('');
-      return `{(${state} ?? []).map((item, index) => <Fragment key={index}>${templates}</Fragment>)}`;
+      const keyPath = behavior?.stateArrayKeyPaths?.[node.repeater.stateName];
+      const key = keyPath ? `item[${JSON.stringify(keyPath)}] ?? index` : 'index';
+      return `{(${state} ?? []).map((item, index) => <Fragment key={${key}}>${templates}</Fragment>)}`;
     }
     return (node.children ?? [])
       .map((child) =>
