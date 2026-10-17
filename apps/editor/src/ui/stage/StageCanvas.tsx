@@ -82,12 +82,13 @@ export function StageCanvas({
   const definition = coreSnapshot.openDefinition;
   const behavior = definition?.behavior as ComponentBehavior | undefined;
   const hasTransitions = (behavior?.transitions.length ?? 0) > 0;
+  const behaviorStateSignature = JSON.stringify(behavior?.state ?? {});
   useEffect(() => {
-    const initialState = { ...(behavior?.state ?? {}) };
+    const initialState = JSON.parse(behaviorStateSignature) as Record<string, FieldValue | null>;
     runtimeStateRef.current = initialState;
     setRuntimeState(initialState);
     setInteracting(false);
-  }, [openId, behavior?.state]);
+  }, [openId, behaviorStateSignature]);
   useEffect(() => {
     boardRef.current?.setInteractionEnabled(interacting);
   }, [frames, interacting]);
