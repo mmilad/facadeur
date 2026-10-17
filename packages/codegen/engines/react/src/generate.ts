@@ -255,9 +255,31 @@ function renderNode(
   const source = node.nodeUuid ? sourceNodes.get(node.nodeUuid) : undefined;
   if (node.kind === 'fragment') {
     if (node.repeater) {
-      const state = stateIdentifiers.get(node.repeater.stateName) ?? '[]';
+      const { source } = node.repeater;
+      const sourcePath =
+        source.kind === 'prop'
+          ? propPaths.get(source.uuid)
+          : source.kind === 'item'
+            ? [...repeaterScopes.values()].at(-1)?.itemExpression
+            : undefined;
+      const state =
+        source.kind === 'state'
+          ? (stateIdentifiers.get(source.name) ?? '[]')
+          : source.kind === 'prop'
+            ? `getProp(props, ${JSON.stringify(sourcePath ?? '')})`
+            : sourcePath
+              ? `getProp(${sourcePath}, ${JSON.stringify(source.path)})`
+              : '[]';
+      const arrayPath =
+        source.kind === 'state'
+          ? `state.${source.name}`
+          : source.kind === 'prop'
+            ? (sourcePath ?? '')
+            : [...repeaterScopes.values()].at(-1)?.arrayPath
+              ? `${[...repeaterScopes.values()].at(-1)!.arrayPath}.${source.path}`
+              : source.path;
       const dynamicScope: CodegenRepeaterScope = {
-        arrayPath: `state.${node.repeater.stateName}`,
+        arrayPath,
         itemExpression: 'item',
         index: 0,
         indexExpression: 'index',
@@ -281,8 +303,14 @@ function renderNode(
           ),
         )
         .join('');
-      const keyPath = behavior?.stateArrayKeyPaths?.[node.repeater.stateName];
-      const key = keyPath ? `item[${JSON.stringify(keyPath)}] ?? index` : 'index';
+      const keyPath =
+        source.kind === 'state'
+          ? behavior?.stateArrayKeyPaths?.[source.name]
+          : node.repeater.keyPath;
+      const keyValue = keyPath ? `getProp(item, ${JSON.stringify(keyPath)})` : undefined;
+      const key = keyValue
+        ? `(typeof ${keyValue} === 'string' && ${keyValue}.length > 0 ? ${keyValue} : index)`
+        : 'index';
       const filter = node.repeater.filter;
       const queryState = filter ? stateIdentifiers.get(filter.queryState) : undefined;
       const rows = filter

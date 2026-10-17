@@ -51,6 +51,10 @@
 
 ## Resolved: Run pnpm verification in the approved host context
 
+- **Update (2026-10-17, prop-backed Repeater):** Restricted `pnpm --filter ... typecheck` again
+  failed before project startup because isolated Corepack attempted to fetch pnpm 10.33.3 and
+  received `ENOTFOUND registry.npmjs.org`. The same package commands passed in the approved host
+  context. Continue using that context for pnpm verification.
 - **Update (2026-10-17, sortable behavior):** Restricted `pnpm --filter ... typecheck` failed
   before pnpm startup while Corepack tried to download the pinned 10.33.3 and DNS returned
   `ENOTFOUND registry.npmjs.org`. The identical four package typechecks ran in the approved host

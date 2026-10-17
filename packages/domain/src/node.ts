@@ -24,6 +24,8 @@ export interface NodeConfig {
     | {
         readonly kind: 'repeater';
         readonly source?: CompositionSource;
+        /** Direct object property used as the stable rendered key for prop/item arrays. */
+        readonly keyPath?: string;
         /** Optional display name for this repeater's current item index. */
         readonly indexName?: string;
         /** Optional derived autocomplete filter from an item string field to local string state. */

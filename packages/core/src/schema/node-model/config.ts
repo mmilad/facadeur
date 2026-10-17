@@ -41,6 +41,7 @@ export const nodeConfigSchema = Type.Object(
         Type.Object(
           {
             kind: Type.Literal('repeater'),
+            keyPath: Type.Optional(Type.String({ minLength: 1 })),
             indexName: Type.Optional(Type.String({ minLength: 1 })),
             filter: Type.Optional(
               Type.Object(

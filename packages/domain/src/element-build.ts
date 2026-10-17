@@ -1,6 +1,6 @@
 import type { Uuid } from './uuid';
 import type { FieldValue } from './field-value';
-import type { RepeaterFilter } from './node';
+import type { CompositionSource, RepeaterFilter } from './node';
 
 /** Declarative DOM tree for renderers — no document APIs in domain. */
 export interface ElementBuildConfig {
@@ -45,12 +45,13 @@ export interface FragmentBuildConfig {
   readonly nodeUuid?: Uuid;
   /** Stable key for repeated instances of one authored node. */
   readonly renderKey?: string;
-  /** Runtime array mapping for a state-backed repeater, including empty-list templates. */
+  /** Runtime array mapping for a dynamic repeater, including empty-list templates. */
   readonly repeater?: {
-    readonly stateName: string;
+    readonly source: CompositionSource;
     readonly itemSchema: Readonly<Record<string, unknown>>;
     readonly templates: readonly RenderBuildConfig[];
     readonly indexName: string;
+    readonly keyPath?: string;
     readonly filter?: RepeaterFilter;
   };
 }

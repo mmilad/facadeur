@@ -195,7 +195,6 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
         const itemFieldSchema = itemSchema ? schemaAtPath(itemSchema, filter.itemPath) : null;
         const querySchema = definition.behavior?.stateSchema?.[filter.queryState];
         if (
-          source?.kind !== 'state' ||
           querySchema?.type !== 'string' ||
           typeof definition.behavior?.state?.[filter.queryState] !== 'string' ||
           itemFieldSchema?.type !== 'string'
@@ -203,6 +202,15 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
           throw new DocumentError(
             'schema',
             `Repeater filter on node "${node.name ?? node.uuid}" must use a string item field and a string behavior state (${definition.name}).`,
+          );
+        }
+      }
+      if (composition?.kind === 'repeater' && composition.keyPath) {
+        const keySchema = schemaAtPath(asSchemaRecord(sourceSchema?.items), composition.keyPath);
+        if (source?.kind === 'state' || keySchema?.type !== 'string') {
+          throw new DocumentError(
+            'schema',
+            `Repeater key field on node "${node.name ?? node.uuid}" must be a string field from a prop or item array (${definition.name}).`,
           );
         }
       }

@@ -220,6 +220,7 @@ export function patchNodeComposition(
   patch: {
     readonly source?: CompositionSource | null;
     readonly indexName?: string | null;
+    readonly keyPath?: string | null;
     readonly filter?: RepeaterFilter | null;
     readonly compositionCase?: string | null;
     readonly definitionRefBinding?: NodeConfig['definitionRefBinding'] | null;
@@ -232,17 +233,25 @@ export function patchNodeComposition(
       config.composition.kind !== 'slot' &&
       (Object.hasOwn(patch, 'source') ||
         Object.hasOwn(patch, 'indexName') ||
+        Object.hasOwn(patch, 'keyPath') ||
         Object.hasOwn(patch, 'filter'))
     ) {
       const composition = { ...config.composition };
       if (Object.hasOwn(patch, 'source')) {
         if (patch.source) composition.source = patch.source;
         else delete composition.source;
-        if (composition.kind === 'repeater') delete composition.filter;
+        if (composition.kind === 'repeater') {
+          delete composition.filter;
+          delete composition.keyPath;
+        }
       }
       if (composition.kind === 'repeater' && Object.hasOwn(patch, 'indexName')) {
         if (patch.indexName?.trim()) composition.indexName = patch.indexName.trim();
         else delete composition.indexName;
+      }
+      if (composition.kind === 'repeater' && Object.hasOwn(patch, 'keyPath')) {
+        if (patch.keyPath?.trim()) composition.keyPath = patch.keyPath.trim();
+        else delete composition.keyPath;
       }
       if (composition.kind === 'repeater' && Object.hasOwn(patch, 'filter')) {
         if (patch.filter) composition.filter = patch.filter;

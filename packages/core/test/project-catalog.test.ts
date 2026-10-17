@@ -745,6 +745,172 @@ describe('executeComponentBehavior', () => {
     expect(() => validateProjectCatalog(catalog)).toThrow(/Repeater filter.*string/i);
   });
 
+  it('filters prop-backed Repeater rows and uses the selected id field as the row key', () => {
+    const catalog = createExampleCatalog();
+    const component = Object.values(catalog.components)[0]!;
+    const propId = globalThis.crypto.randomUUID();
+    const rowUuid = globalThis.crypto.randomUUID();
+    Reflect.set(component, 'schema', {
+      kind: 'inline',
+      schema: {
+        type: 'object',
+        properties: {
+          options: {
+            type: 'array',
+            ['x-facadeur-prop-id']: propId,
+            items: {
+              type: 'object',
+              properties: { id: { type: 'string' }, label: { type: 'string' } },
+            },
+          },
+        },
+      },
+    });
+    const repeaterUuid = globalThis.crypto.randomUUID();
+    Reflect.set(component.root.dom, 'children', [
+      {
+        uuid: repeaterUuid,
+        config: {
+          composition: {
+            kind: 'repeater',
+            source: { kind: 'prop', uuid: propId },
+            keyPath: 'id',
+            filter: { kind: 'contains', itemPath: 'label', queryState: 'query' },
+          },
+        },
+        dom: {
+          tagName: 'ul',
+          children: [{ uuid: rowUuid, dom: { tagName: 'li', text: '{item:label}' } }],
+        },
+      },
+    ]);
+    Reflect.set(component, 'behavior', {
+      state: { query: 'reen' },
+      stateSchema: { query: { type: 'string' } },
+      transitions: [],
+    });
+    expect(() => validateProjectCatalog(catalog)).not.toThrow();
+    const inspector = buildInspectorFormModel(catalog, component, repeaterUuid)!;
+    const elementSection = inspector.fields.find(
+      (field) => field.type === 'section' && field.title === 'Element',
+    );
+    const keyField =
+      elementSection?.type === 'section'
+        ? elementSection.fields.find(
+            (field) => field.type === 'select' && field.path === 'node.compositionKeyPath',
+          )
+        : undefined;
+    expect(keyField?.type === 'select' ? keyField.options : []).toContainEqual({
+      value: 'id',
+      label: 'id',
+    });
+    expect(inspectorChangeTarget('node.compositionKeyPath', 'id', repeaterUuid)).toMatchObject({
+      kind: 'nodeComposition',
+      patch: { keyPath: 'id' },
+    });
+    const preview = resolveDefinitionToElementBuildConfig(component, catalog, {
+      options: [
+        { id: 'red', label: 'Red' },
+        { id: 'green', label: 'Green' },
+      ],
+    });
+    const rows = preview.children?.find((child) => child.kind === 'fragment')?.children ?? [];
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.text).toBe('Green');
+    expect(rows[0]?.renderKey).toContain(':green:');
+  });
+
+  it('resolves an item-backed nested Repeater with filtered stable option IDs', () => {
+    const catalog = createExampleCatalog();
+    const component = Object.values(catalog.components)[0]!;
+    const groupsPropId = globalThis.crypto.randomUUID();
+    const groupRepeaterUuid = globalThis.crypto.randomUUID();
+    const optionRepeaterUuid = globalThis.crypto.randomUUID();
+    const rowUuid = globalThis.crypto.randomUUID();
+    Reflect.set(component, 'schema', {
+      kind: 'inline',
+      schema: {
+        type: 'object',
+        properties: {
+          groups: {
+            type: 'array',
+            ['x-facadeur-prop-id']: groupsPropId,
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                options: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: { id: { type: 'string' }, label: { type: 'string' } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+    Reflect.set(component.root.dom, 'children', [
+      {
+        uuid: groupRepeaterUuid,
+        config: {
+          composition: {
+            kind: 'repeater',
+            source: { kind: 'prop', uuid: groupsPropId },
+            keyPath: 'id',
+          },
+        },
+        dom: {
+          tagName: 'section',
+          children: [
+            {
+              uuid: optionRepeaterUuid,
+              config: {
+                composition: {
+                  kind: 'repeater',
+                  source: { kind: 'item', path: 'options' },
+                  keyPath: 'id',
+                  filter: { kind: 'contains', itemPath: 'label', queryState: 'query' },
+                },
+              },
+              dom: {
+                tagName: 'ul',
+                children: [{ uuid: rowUuid, dom: { tagName: 'li', text: '{item:label}' } }],
+              },
+            },
+          ],
+        },
+      },
+    ]);
+    Reflect.set(component, 'behavior', {
+      state: { query: 'reen' },
+      stateSchema: { query: { type: 'string' } },
+      transitions: [],
+    });
+    expect(() => validateProjectCatalog(catalog)).not.toThrow();
+    const preview = resolveDefinitionToElementBuildConfig(component, catalog, {
+      groups: [
+        {
+          id: 'group-a',
+          options: [
+            { id: 'red', label: 'Red' },
+            { id: 'green', label: 'Green' },
+          ],
+        },
+        { id: 'group-b', options: [{ id: 'blue', label: 'Blue' }] },
+      ],
+    });
+    const findRows = (node: NonNullable<typeof preview>): NonNullable<typeof preview>[] => [
+      node,
+      ...(node.children ?? []).flatMap(findRows),
+    ];
+    const rows = findRows(preview).filter((node) => node.text === 'Green');
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.renderKey).toContain(':green:');
+  });
+
   it('moves an array item using the active repeater index without mutating input state', () => {
     const repeaterUuid = globalThis.crypto.randomUUID();
     const behavior = {

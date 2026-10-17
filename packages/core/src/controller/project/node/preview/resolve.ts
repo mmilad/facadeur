@@ -390,11 +390,8 @@ function resolveNodeToElementBuildConfig(
               const keyPath =
                 composition.source?.kind === 'state'
                   ? definition.behavior?.stateArrayKeyPaths?.[composition.source.name]
-                  : undefined;
-              const itemKey =
-                keyPath && item && typeof item === 'object' && !Array.isArray(item)
-                  ? (item as Record<string, unknown>)[keyPath]
-                  : undefined;
+                  : composition.keyPath;
+              const itemKey = keyPath ? fieldAtPath(item, keyPath) : undefined;
               const stableKey =
                 typeof itemKey === 'string' && itemKey.length > 0 ? itemKey : String(itemIndex);
               const resolved = resolveNodeToElementBuildConfig(child, {
@@ -460,24 +457,22 @@ function resolveNodeToElementBuildConfig(
     attributes.viewBox = icon.data.viewBox;
   }
   if (composition?.kind === 'repeater') {
-    const stateSource = composition.source?.kind === 'state' ? composition.source : undefined;
-    const stateSchema = stateSource
-      ? definition.behavior?.stateSchema?.[stateSource.name]
-      : undefined;
-    const itemSchema = stateSchema
+    const itemSchema = composition.source
       ? repeaterItemSchema(
-          stateSource,
+          composition.source,
           ctx.componentSchema,
           repeaterScopes,
           catalog,
           definition.behavior?.stateSchema,
         )
       : null;
-    const currentItems = stateSource ? ctx.componentState?.[stateSource.name] : undefined;
+    const currentItems = composition.source
+      ? resolveCompositionSource(composition.source, ctx)
+      : undefined;
     const sampleItem = Array.isArray(currentItems)
       ? (currentItems[0] ?? sampleForSchema(itemSchema?.items))
       : undefined;
-    const templates = stateSource
+    const templates = composition.source
       ? childNodes.map((child, templateIndex) => {
           const scope: RepeaterReferenceScope = {
             nodeUuid: node.uuid,
@@ -485,7 +480,7 @@ function resolveNodeToElementBuildConfig(
             index: 0,
             item: sampleItem ?? {},
             itemSchema,
-            itemPath: `state.${stateSource.name}`,
+            itemPath: repeaterItemPath(composition.source, ctx.componentSchema, repeaterScopes),
           };
           return resolveNodeToElementBuildConfig(child, {
             ...context,
@@ -501,13 +496,16 @@ function resolveNodeToElementBuildConfig(
       kind: 'fragment',
       ...(resolvedChildren.length ? { children: resolvedChildren } : {}),
       nodeUuid: node.uuid,
-      ...(stateSource && itemSchema
+      ...(composition.source && itemSchema
         ? {
             repeater: {
-              stateName: stateSource.name,
+              source: composition.source,
               itemSchema,
               templates: templates ?? [],
               indexName: composition.indexName?.trim() || computedIndexName(repeaterScopes.length),
+              ...(composition.source.kind !== 'state' && composition.keyPath
+                ? { keyPath: composition.keyPath }
+                : {}),
               ...(composition.filter ? { filter: composition.filter } : {}),
             },
           }

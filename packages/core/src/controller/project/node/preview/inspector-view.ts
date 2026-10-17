@@ -43,6 +43,7 @@ export type InspectorFormValue = {
     data: Record<string, string>;
     compositionSource: string;
     compositionIndexName: string;
+    compositionKeyPath: string;
     compositionFilter: string;
     compositionCase: string;
     definitionRefBindingPath: string;
@@ -231,6 +232,7 @@ export function buildInspectorFormModel(
         composition?.kind === 'repeater'
           ? (composition.indexName ?? computedIndexName(repeaterScopes.length))
           : '',
+      compositionKeyPath: composition?.kind === 'repeater' ? (composition.keyPath ?? '') : '',
       compositionFilter:
         composition?.kind === 'repeater' && composition.filter
           ? JSON.stringify({
@@ -308,7 +310,28 @@ export function buildInspectorFormModel(
                       label: 'Index name',
                       hint: 'Leave blank for the generated name.',
                     },
-                    ...(composition.source?.kind === 'state'
+                    ...(composition.source && composition.source.kind !== 'state'
+                      ? [
+                          {
+                            type: 'select' as const,
+                            path: 'node.compositionKeyPath',
+                            label: 'Key field',
+                            options: [
+                              { value: '', label: 'Use row index' },
+                              ...stringSchemaPaths(
+                                repeaterItemSchema(
+                                  composition.source,
+                                  effective.schema,
+                                  repeaterScopes,
+                                  catalog,
+                                  definition.behavior?.stateSchema,
+                                ) ?? {},
+                              ).map(({ path, label }) => ({ value: path, label })),
+                            ],
+                          },
+                        ]
+                      : []),
+                    ...(composition.source
                       ? [
                           {
                             type: 'select' as const,
@@ -503,6 +526,14 @@ export function inspectorChangeTarget(
       kind: 'nodeComposition',
       nodeUuid,
       patch: { indexName: indexName || null },
+    };
+  }
+  if (path === 'node.compositionKeyPath') {
+    const keyPath = String(value ?? '').trim();
+    return {
+      kind: 'nodeComposition',
+      nodeUuid,
+      patch: { keyPath: keyPath || null },
     };
   }
   if (path === 'node.compositionFilter') {

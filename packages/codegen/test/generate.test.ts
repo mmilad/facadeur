@@ -432,13 +432,159 @@ describe('Catalog-driven React code generation', () => {
 
     const generated = generateReact({ catalog, entries: [component.uuid] });
     const output = generated.ui.find((file) => file.path.startsWith('components/'))?.contents ?? '';
-    expect(output).toContain('<Fragment key={item["id"] ?? index}>');
+    expect(output).toContain(
+      '<Fragment key={(typeof getProp(item, "id") === \'string\' && getProp(item, "id").length > 0 ? getProp(item, "id") : index)}>',
+    );
     expect(output).toContain('randomUUID');
     expect(output).toContain('repeaterIndices[' + JSON.stringify(repeaterUuid) + ']');
     expect(output).toContain('filter((_: unknown, index: number) => index !==');
     expect(output).toContain(
       `.filter(({ item }) => { const query = (behaviorState1 ?? '').trim().toLowerCase(); if (!query) return true; const value = getProp(item, "label"); return typeof value === 'string' && value.toLowerCase().includes(query); })`,
     );
+    const diagnostics = ts.transpileModule(output, {
+      reportDiagnostics: true,
+      compilerOptions: {
+        jsx: ts.JsxEmit.ReactJSX,
+        target: ts.ScriptTarget.ES2022,
+        module: ts.ModuleKind.ESNext,
+      },
+    }).diagnostics;
+    expect(diagnostics?.filter((item) => item.category === ts.DiagnosticCategory.Error)).toEqual(
+      [],
+    );
+  });
+
+  it('generates prop-backed filtered Repeater rows with their selected key field', () => {
+    const catalog = createExampleCatalog();
+    const component = Object.values(catalog.components)[0]!;
+    const propId = globalThis.crypto.randomUUID();
+    Reflect.set(component, 'schema', {
+      kind: 'inline',
+      schema: {
+        type: 'object',
+        properties: {
+          options: {
+            type: 'array',
+            ['x-facadeur-prop-id']: propId,
+            items: {
+              type: 'object',
+              properties: { id: { type: 'string' }, label: { type: 'string' } },
+            },
+          },
+        },
+      },
+    });
+    Reflect.set(component.root, 'config', {
+      composition: {
+        kind: 'repeater',
+        source: { kind: 'prop', uuid: propId },
+        keyPath: 'id',
+        filter: { kind: 'contains', itemPath: 'label', queryState: 'query' },
+      },
+    });
+    Reflect.set(component.root.dom, 'children', [
+      { uuid: globalThis.crypto.randomUUID(), dom: { tagName: 'li', text: '{item:label}' } },
+    ]);
+    Reflect.set(component, 'behavior', {
+      state: { query: '' },
+      stateSchema: { query: { type: 'string' } },
+      transitions: [],
+    });
+    const generated = generateReact({ catalog, entries: [component.uuid] });
+    const output = generated.ui.find((file) => file.path.startsWith('components/'))?.contents ?? '';
+    expect(output).toContain('getProp(props, "options")');
+    expect(output).toContain('typeof getProp(item, "id") === \'string\'');
+    expect(output).toContain('getProp(item, "label")');
+    const diagnostics = ts.transpileModule(output, {
+      reportDiagnostics: true,
+      compilerOptions: {
+        jsx: ts.JsxEmit.ReactJSX,
+        target: ts.ScriptTarget.ES2022,
+        module: ts.ModuleKind.ESNext,
+      },
+    }).diagnostics;
+    expect(diagnostics?.filter((item) => item.category === ts.DiagnosticCategory.Error)).toEqual(
+      [],
+    );
+  });
+
+  it('generates an item-backed nested Repeater from the enclosing row', () => {
+    const catalog = createExampleCatalog();
+    const component = Object.values(catalog.components)[0]!;
+    const groupsPropId = globalThis.crypto.randomUUID();
+    Reflect.set(component, 'schema', {
+      kind: 'inline',
+      schema: {
+        type: 'object',
+        properties: {
+          groups: {
+            type: 'array',
+            ['x-facadeur-prop-id']: groupsPropId,
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                options: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: { id: { type: 'string' }, label: { type: 'string' } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+    const optionRepeaterUuid = globalThis.crypto.randomUUID();
+    Reflect.set(component.root.dom, 'children', [
+      {
+        uuid: globalThis.crypto.randomUUID(),
+        config: {
+          composition: {
+            kind: 'repeater',
+            source: { kind: 'prop', uuid: groupsPropId },
+            keyPath: 'id',
+          },
+        },
+        dom: {
+          tagName: 'section',
+          children: [
+            {
+              uuid: optionRepeaterUuid,
+              config: {
+                composition: {
+                  kind: 'repeater',
+                  source: { kind: 'item', path: 'options' },
+                  keyPath: 'id',
+                  filter: { kind: 'contains', itemPath: 'label', queryState: 'query' },
+                },
+              },
+              dom: {
+                tagName: 'ul',
+                children: [
+                  {
+                    uuid: globalThis.crypto.randomUUID(),
+                    dom: { tagName: 'li', text: '{item:label}' },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+    ]);
+    Reflect.set(component, 'behavior', {
+      state: { query: '' },
+      stateSchema: { query: { type: 'string' } },
+      transitions: [],
+    });
+    const generated = generateReact({ catalog, entries: [component.uuid] });
+    const output = generated.ui.find((file) => file.path.startsWith('components/'))?.contents ?? '';
+    expect(output).toContain('getProp(props, "groups")');
+    expect(output).toContain('getProp(item, "options")');
+    expect(output).toContain('getProp(item, "id")');
     const diagnostics = ts.transpileModule(output, {
       reportDiagnostics: true,
       compilerOptions: {

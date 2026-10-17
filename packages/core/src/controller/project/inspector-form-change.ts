@@ -25,6 +25,7 @@ export type InspectorFormChangeTarget =
       patch: {
         readonly source?: CompositionSource | null;
         readonly indexName?: string | null;
+        readonly keyPath?: string | null;
         readonly filter?: RepeaterFilter | null;
         readonly compositionCase?: string | null;
         readonly definitionRefBinding?:
