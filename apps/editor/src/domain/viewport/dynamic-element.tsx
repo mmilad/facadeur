@@ -23,16 +23,23 @@ const ignorePreviewChange = () => {};
 
 export function DynamicElement({ config }: { config: RenderBuildConfig }) {
   const elementRef = useRef<HTMLElement | null>(null);
+  const previousDomProperties = useRef<Readonly<Record<string, unknown>>>({});
   const children = config.children ?? [];
-  const domProperties = config.kind === 'fragment' ? {} : (config.properties ?? {});
+  const domProperties = domPropertiesFor(config);
   useLayoutEffect(() => {
     const element = elementRef.current;
-    if (!element || !Object.keys(domProperties).length) return;
+    if (!element) return;
     for (const [name, value] of Object.entries(domProperties)) {
       if (value !== undefined && value !== null) {
         (element as unknown as Record<string, unknown>)[name] = value;
       }
     }
+    for (const name of ['value', 'checked']) {
+      if (name in previousDomProperties.current && !(name in domProperties)) {
+        (element as unknown as Record<string, unknown>)[name] = name === 'checked' ? false : '';
+      }
+    }
+    previousDomProperties.current = domProperties;
   }, [domProperties]);
 
   if (config.kind === 'fragment') {
@@ -65,17 +72,24 @@ export function DynamicElement({ config }: { config: RenderBuildConfig }) {
     props[`data-${name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`] = value;
   }
   const normalizedTagName = tagName.toLowerCase();
-  if (
-    ['input', 'select', 'textarea'].includes(normalizedTagName) &&
-    props.onChange === undefined &&
-    (props.value !== undefined || props.checked !== undefined)
-  ) {
-    props.onChange = ignorePreviewChange;
-    if (
-      (normalizedTagName === 'input' || normalizedTagName === 'textarea') &&
-      props.value !== undefined
-    ) {
-      props.readOnly = true;
+  const isFormControl = ['input', 'select', 'textarea'].includes(normalizedTagName);
+  const isCheckableInput =
+    normalizedTagName === 'input' &&
+    ['checkbox', 'radio'].includes(String(domProperties.type ?? props.type ?? '').toLowerCase());
+  const hasValue = domProperties.value !== undefined && domProperties.value !== null;
+  if (isCheckableInput) {
+    props.checked = Boolean(domProperties.checked ?? props.checked ?? false);
+    delete domProperties.checked;
+    props.onChange ??= ignorePreviewChange;
+  } else if (isFormControl) {
+    // Keep form values out of React's controlled-input tracking. Preview data may
+    // supply a value after the first render, so apply it through the DOM property.
+    delete props.value;
+    if (hasValue) {
+      props.onChange ??= ignorePreviewChange;
+      if (normalizedTagName === 'input' || normalizedTagName === 'textarea') {
+        props.readOnly = true;
+      }
     }
   }
   if (nodeUuid) props['data-facadeur-node-uuid'] = nodeUuid;
@@ -107,6 +121,31 @@ export function DynamicElement({ config }: { config: RenderBuildConfig }) {
     { ...props, ref: elementRef } as HTMLAttributes<HTMLElement> & RefAttributes<HTMLElement>,
     ...(isVoidHtmlTag(tagName) ? [] : renderedChildren),
   );
+}
+
+function domPropertiesFor(config: RenderBuildConfig) {
+  if (config.kind === 'fragment') return {};
+  const properties: Record<string, unknown> = { ...(config.properties ?? {}) };
+  const tagName = config.tagName.toLowerCase();
+  const inputType = String(
+    properties.type ?? attributeValue(config.attributes, 'type') ?? '',
+  ).toLowerCase();
+  const isCheckableInput = tagName === 'input' && ['checkbox', 'radio'].includes(inputType);
+
+  if (
+    ['input', 'select', 'textarea'].includes(tagName) &&
+    !isCheckableInput &&
+    properties.value == null
+  ) {
+    const value = attributeValue(config.attributes, 'value');
+    if (value !== undefined) properties.value = value;
+  }
+
+  return properties;
+}
+
+function attributeValue(attributes: Readonly<Record<string, string>> | undefined, name: string) {
+  return Object.entries(attributes ?? {}).find(([key]) => key.toLowerCase() === name)?.[1];
 }
 
 function cssPropertyName(name: string) {

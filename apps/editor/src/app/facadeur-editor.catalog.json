@@ -49,6 +49,73 @@
           }
         }
       }
+    },
+    "50d14776-42e8-402c-82ed-42d292b745a5": {
+      "uuid": "50d14776-42e8-402c-82ed-42d292b745a5",
+      "name": "input",
+      "kind": "atom",
+      "schema": {
+        "kind": "ref",
+        "uuid": "bb89c277-c7d6-4bce-9f0e-a49f401d2722"
+      },
+      "root": {
+        "uuid": "7d36b9ea-a622-4811-ba5e-ae3a9cda13ad",
+        "dom": {
+          "tagName": "input",
+          "attributes": {
+            "placeholder": "{props:c7698edc-fe1c-433d-af0b-ece3153d2455}"
+          }
+        },
+        "classes": [
+          {
+            "name": "layer",
+            "generated": true
+          }
+        ]
+      },
+      "config": {
+        "previewData": {
+          "fields": {
+            "name": "name",
+            "value": "hello world",
+            "label": "Label",
+            "placeholder": "Plase write something"
+          }
+        }
+      }
+    },
+    "41436845-9e6b-41f5-ab8a-a70bad5a74f1": {
+      "uuid": "41436845-9e6b-41f5-ab8a-a70bad5a74f1",
+      "name": "h2",
+      "kind": "atom",
+      "schema": {
+        "kind": "inline",
+        "schema": {
+          "type": "object",
+          "title": "New atom 2",
+          "properties": {
+            "headline": {
+              "type": "string",
+              "x-facadeur-prop-id": "afd05cd4-f011-4c0c-8f79-eb0d27eb4d49"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "root": {
+        "uuid": "1d8541fe-baf9-4e37-ad6d-cfe0f7c376f0",
+        "dom": {
+          "tagName": "h2",
+          "text": "{props:afd05cd4-f011-4c0c-8f79-eb0d27eb4d49}",
+          "children": []
+        },
+        "classes": [
+          {
+            "name": "layer",
+            "generated": true
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -1011,6 +1078,23 @@
               ]
             },
             {
+              "uuid": "7dc6c7f9-ef9e-4abe-8152-fc0a743bc4df",
+              "name": "Style Tab",
+              "dom": {
+                "tagName": "div",
+                "children": []
+              },
+              "classes": [
+                {
+                  "name": "style-tab",
+                  "generated": true
+                }
+              ],
+              "config": {
+                "definitionRef": "7e164f33-d469-4321-ae55-254086bb4f8c"
+              }
+            },
+            {
               "uuid": "660e8400-e29b-41d4-a716-000000000cf3",
               "name": "Local styles",
               "dom": {
@@ -1407,7 +1491,7 @@
           }
         ]
       },
-      "category": "base/sidebar"
+      "category": "sidebar/right"
     },
     "660e8400-e29b-41d4-a716-000000000154": {
       "uuid": "660e8400-e29b-41d4-a716-000000000154",
@@ -3062,7 +3146,7 @@
                     "type": "string",
                     "title": "Kind",
                     "enum": ["component", "group"],
-                    "x-facadeur-prop-id": "6f752ecd-2c0b-48ee-bd70-cd3d216e23ae"
+                    "x-facadeur-prop-id": "660e8400-e29b-41d4-a716-000000001f4d"
                   },
                   "componentId": {
                     "type": "string",
@@ -3070,16 +3154,17 @@
                     "x-facadeur-reference": {
                       "target": "component"
                     },
-                    "x-facadeur-prop-id": "57e2feb6-d310-470b-9fbd-02942214707b"
+                    "x-facadeur-prop-id": "660e8400-e29b-41d4-a716-000000001f4e"
                   },
                   "label": {
                     "type": "string",
                     "title": "Label",
-                    "x-facadeur-prop-id": "9f964cf2-7dc0-4b10-a81c-ce03a0649cd4"
+                    "x-facadeur-prop-id": "660e8400-e29b-41d4-a716-000000001f4f"
                   },
                   "children": {
                     "type": "array",
                     "title": "Components",
+                    "x-facadeur-prop-id": "660e8400-e29b-41d4-a716-000000001f50",
                     "items": {
                       "type": "object",
                       "properties": {
@@ -3089,18 +3174,17 @@
                           "x-facadeur-reference": {
                             "target": "component"
                           },
-                          "x-facadeur-prop-id": "937ef287-e6eb-41f3-94c6-4b6af50d3380"
+                          "x-facadeur-prop-id": "660e8400-e29b-41d4-a716-000000001f51"
                         },
                         "label": {
                           "type": "string",
                           "title": "Label",
-                          "x-facadeur-prop-id": "8637fa9f-ba90-4f67-8519-a60f0af9d489"
+                          "x-facadeur-prop-id": "660e8400-e29b-41d4-a716-000000001f52"
                         }
                       },
                       "required": ["componentId", "label"],
                       "additionalProperties": false
-                    },
-                    "x-facadeur-prop-id": "32f83949-e6b3-4e8b-bdac-f242769f6326"
+                    }
                   }
                 },
                 "required": ["kind", "label"],
@@ -3534,6 +3618,142 @@
           "tagName": "div",
           "children": [
             {
+              "uuid": "acb4d407-0da1-450b-ba36-55663e0ff053",
+              "name": "class-control",
+              "dom": {
+                "tagName": "div",
+                "children": [
+                  {
+                    "uuid": "11af23c6-0bb5-45a9-8e3c-6afa9554327d",
+                    "name": "h2",
+                    "dom": {
+                      "tagName": "div",
+                      "children": []
+                    },
+                    "classes": [
+                      {
+                        "name": "h2",
+                        "generated": true
+                      }
+                    ],
+                    "config": {
+                      "definitionRef": "41436845-9e6b-41f5-ab8a-a70bad5a74f1"
+                    },
+                    "data": {
+                      "headline": "Active Classes"
+                    }
+                  },
+                  {
+                    "uuid": "9a341bbb-f7ba-4e5a-abb7-10c018ab66ba",
+                    "name": "layer",
+                    "dom": {
+                      "tagName": "div",
+                      "children": [
+                        {
+                          "uuid": "e5d233c9-3e6d-42d3-a0ff-f5830939f672",
+                          "name": "Class chip",
+                          "dom": {
+                            "tagName": "div",
+                            "text": ".field-control   ×"
+                          },
+                          "classes": [
+                            {
+                              "name": "class-chip",
+                              "generated": true,
+                              "style": {
+                                "declarations": {
+                                  "padding": "6px 8px",
+                                  "color": "#6754d9",
+                                  "backgroundColor": "#f0edff",
+                                  "borderRadius": "6px",
+                                  "font": "{token:550e8400-e29b-41d4-a716-000000000439}",
+                                  "display": "inline-block"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "uuid": "994961dd-c10e-4ab1-ae59-3f37fddfda2e",
+                          "name": "Class chip",
+                          "dom": {
+                            "tagName": "div",
+                            "text": ".field-control   ×"
+                          },
+                          "classes": [
+                            {
+                              "name": "class-chip",
+                              "generated": true,
+                              "style": {
+                                "declarations": {
+                                  "padding": "6px 8px",
+                                  "color": "#6754d9",
+                                  "backgroundColor": "#f0edff",
+                                  "borderRadius": "6px",
+                                  "font": "{token:550e8400-e29b-41d4-a716-000000000439}",
+                                  "display": "inline-block"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    "classes": [
+                      {
+                        "name": "layer",
+                        "generated": true,
+                        "style": {
+                          "declarations": {
+                            "display": "flex",
+                            "gap": "{token:550e8400-e29b-41d4-a716-000000000422}"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "uuid": "3bb77abc-6c03-48c4-a115-979b8c9aa004",
+                    "name": "layer",
+                    "dom": {
+                      "tagName": "div",
+                      "children": [
+                        {
+                          "uuid": "f32037b6-c173-489c-8bac-7df4741ad192",
+                          "name": "New atom",
+                          "dom": {
+                            "tagName": "div",
+                            "children": []
+                          },
+                          "classes": [
+                            {
+                              "name": "new-atom",
+                              "generated": true
+                            }
+                          ],
+                          "config": {
+                            "definitionRef": "50d14776-42e8-402c-82ed-42d292b745a5"
+                          }
+                        }
+                      ]
+                    },
+                    "classes": [
+                      {
+                        "name": "layer",
+                        "generated": true
+                      }
+                    ]
+                  }
+                ]
+              },
+              "classes": [
+                {
+                  "name": "class-control",
+                  "generated": true
+                }
+              ]
+            },
+            {
               "uuid": "a6bc3adc-eeee-4b61-a0eb-b6a4138cc009",
               "name": "Repeater",
               "dom": {
@@ -3601,6 +3821,19 @@
                   {
                     "propName": "padding",
                     "propValue": "10px"
+                  },
+                  {
+                    "propName": "dsaasdasd",
+                    "propValue": "asdasdsad"
+                  }
+                ]
+              },
+              {
+                "selector": ".second-class",
+                "rules": [
+                  {
+                    "propName": "margin",
+                    "propValue": "auto"
                   }
                 ]
               }
@@ -4503,6 +4736,25 @@
             "additionalProperties": false
           },
           "x-facadeur-prop-id": "bb7bf186-f4ed-4c9d-a354-00b0cfffcbcd"
+        }
+      },
+      "additionalProperties": false
+    },
+    "bb89c277-c7d6-4bce-9f0e-a49f401d2722": {
+      "type": "object",
+      "title": "input schema",
+      "properties": {
+        "name": {
+          "type": "string",
+          "x-facadeur-prop-id": "05166c60-b65c-4f9c-a11d-30555d80e689"
+        },
+        "value": {
+          "type": "string",
+          "x-facadeur-prop-id": "58ba1ad6-a2c4-4d96-9883-e232d483c186"
+        },
+        "placeholder": {
+          "type": "string",
+          "x-facadeur-prop-id": "c7698edc-fe1c-433d-af0b-ece3153d2455"
         }
       },
       "additionalProperties": false
