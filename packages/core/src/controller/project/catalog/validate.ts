@@ -13,6 +13,7 @@ import { componentPropsForSchema, ensureCatalogFieldIds } from './field-ids';
 import { canAcceptCatalogChildren, defaultChildrenSlotCount } from './tree-ops';
 import { isVoidHtmlTag } from '../../../document/html-tags';
 import { migrateFontSources } from './migrate-font-sources';
+import { resolveCatalogSchemaReferences } from './schema-values';
 
 function catalogSchemaErrorMessage(data: unknown): string {
   try {
@@ -136,11 +137,16 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
     for (const [field, value] of Object.entries(values)) {
       const fieldSchema = properties[field];
       if (!fieldSchema) continue;
+      const resolvedFieldSchema = resolveCatalogSchemaReferences(
+        fieldSchema as Record<string, unknown>,
+        catalog,
+      );
       const matchesSchema = matchesPartialSchemaValue(
         value,
-        fieldSchema as Parameters<typeof matchesPartialSchemaValue>[1],
+        resolvedFieldSchema as Parameters<typeof matchesPartialSchemaValue>[1],
+        catalog.schemas,
       );
-      const isBinding = isFieldBindingValue(value, fieldSchema);
+      const isBinding = isFieldBindingValue(value, resolvedFieldSchema);
       if (!matchesSchema && !isBinding) {
         if (context.startsWith('preview defaults') || context.startsWith('instance preview values'))
           continue;
@@ -150,7 +156,7 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
         );
       }
       if (matchesSchema || isBinding)
-        assertCatalogReferenceValue(value, fieldSchema, catalog, `${context}.${field}`);
+        assertCatalogReferenceValue(value, resolvedFieldSchema, catalog, `${context}.${field}`);
     }
   };
 

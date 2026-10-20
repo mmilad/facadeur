@@ -239,6 +239,11 @@ registry.npmjs.org`). The same Core, Editor, and Codegen commands passed in the 
   returned `ENOTFOUND registry.npmjs.org`. The same Editor typecheck and Prettier check passed in
   the approved host context. Continue using that context for pnpm-based checks; no repository
   workaround is needed.
+- **Update (2026-10-20, icon reference selector):** Restricted Editor typecheck and Prettier
+  checks again failed before project code because Corepack tried to fetch pinned pnpm 10.33.3 and
+  DNS returned `ENOTFOUND registry.npmjs.org`. Editor typecheck and changed-file Prettier passed in
+  approved host execution. Continue using the approved host context for pnpm checks; no repository
+  workaround is needed.
 
 ## Cloud verification process limits (2026-10-11)
 

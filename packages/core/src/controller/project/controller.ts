@@ -34,6 +34,7 @@ import {
   patchNodeTagName,
 } from './catalog/ops';
 import { reconcileDefinitionBindingsForSchemaChange } from './catalog/schema-repeater';
+import { reconcileCatalogValuesForSchemaChange } from './catalog/schema-values';
 import {
   updateDefinitionInstanceField,
   updateDefinitionStaticField,
@@ -200,9 +201,12 @@ export class CoreController implements CoreControllerHost {
         ? pruneDefinitionValuesForSchema(this.catalog, uuid, patch.schema.schema)
         : this.catalog;
     const patched = patchCatalogDefinitionRecord(withPrunedValues, kind, uuid, patch);
-    const nextCatalog = patch.schema
+    const withReconciledBindings = patch.schema
       ? reconcileDefinitionBindingsForSchemaChange(this.catalog, patched, uuid)
       : patched;
+    const nextCatalog = patch.schema
+      ? reconcileCatalogValuesForSchemaChange(this.catalog, withReconciledBindings)
+      : withReconciledBindings;
     this.commitCatalog(nextCatalog, () => {
       if (this.openDefinitionId === uuid) {
         const located = findDefinition(this.catalog, uuid);
@@ -221,7 +225,8 @@ export class CoreController implements CoreControllerHost {
   }
 
   upsertSchema(uuid: string, schema: JsonSchemaObject) {
-    this.commitCatalog(upsertCatalogSchema(this.catalog, uuid, schema));
+    const updated = upsertCatalogSchema(this.catalog, uuid, schema);
+    this.commitCatalog(reconcileCatalogValuesForSchemaChange(this.catalog, updated));
   }
 
   removeSchema(uuid: string) {

@@ -84,6 +84,7 @@ export interface InspectorSidebarModel {
       readonly value?: FieldValue;
       readonly exposed: boolean;
       readonly valueOptions: readonly TransformableFieldOption[];
+      readonly iconOptions: readonly { readonly value: string; readonly label: string }[];
     }[];
   }[];
   readonly values: Readonly<Record<string, unknown>>;

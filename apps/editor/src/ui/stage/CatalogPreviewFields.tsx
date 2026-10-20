@@ -18,11 +18,13 @@ export function CatalogPreviewFields({
   fields,
   previewFields,
   staticFields = {},
+  iconOptions = [],
   onWrite,
 }: {
   fields: readonly JsonSchemaField[];
   previewFields: Readonly<Record<string, FieldValue>>;
   staticFields?: Readonly<Record<string, StaticFieldConfig>>;
+  iconOptions?: readonly { readonly value: string; readonly label: string }[];
   onWrite: (field: JsonSchemaField, value: FieldValue | undefined) => void;
 }) {
   if (!fields.length) {
@@ -45,6 +47,7 @@ export function CatalogPreviewFields({
               : previewFields[field.name]
           }
           disabled={staticFields[field.name]?.isStatic === true}
+          iconOptions={iconOptions}
           onChange={(next) => onWrite(field, next)}
         />
       ))}
@@ -56,11 +59,13 @@ function PreviewField({
   field,
   value,
   disabled,
+  iconOptions,
   onChange,
 }: {
   field: JsonSchemaField;
   value: FieldValue | undefined;
   disabled: boolean;
+  iconOptions: readonly { readonly value: string; readonly label: string }[];
   onChange: (value: FieldValue | undefined) => void;
 }) {
   const label = fieldDisplayLabel(field.name);
@@ -69,7 +74,9 @@ function PreviewField({
       schema={field.schema}
       value={value}
       label={label}
+      id={`preview-field-${field.name}`}
       disabled={disabled}
+      referenceOptions={iconOptions}
       onChange={onChange}
     />
   );

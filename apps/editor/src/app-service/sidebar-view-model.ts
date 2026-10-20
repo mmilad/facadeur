@@ -131,6 +131,7 @@ export function buildInspectorSidebarViewModel(
                     `${field.name} ${field.schema.title ?? ''}`,
                   ),
                 }),
+                iconOptions: isIconReference(field.schema) ? icons : [],
               }),
             ),
           },
@@ -154,6 +155,16 @@ export function buildInspectorSidebarViewModel(
     bindOptions: propOptions,
     styleValueOptions,
   };
+}
+
+function isIconReference(schema: { readonly [key: string]: unknown }) {
+  const reference = schema['x-facadeur-reference'];
+  return (
+    typeof reference === 'object' &&
+    reference !== null &&
+    'target' in reference &&
+    reference.target === 'icon'
+  );
 }
 
 function previewDefaultForProp(model: InspectorViewModel, name: string) {

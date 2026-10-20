@@ -277,6 +277,10 @@ export function CatalogSchemaStage({
                   fields={fields}
                   previewFields={previewFields}
                   staticFields={staticFieldConfigsForDefinition(definition)}
+                  iconOptions={(app.getCatalog().icons ?? []).map((icon) => ({
+                    value: icon.id,
+                    label: icon.name,
+                  }))}
                   onWrite={(field, value) => void writePreview(field, value)}
                 />
               </section>

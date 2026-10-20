@@ -47,6 +47,62 @@ user interactions into Core calls. The current implementation has some overlappi
 resolution helpers; those are listed below so the diagram is not mistaken for a claim that every
 boundary is already clean.
 
+## Package facades and import direction
+
+The goal is one discoverable package API for each consumer, not one implementation module that
+owns every query and not a web of feature-to-feature imports. A consumer should not need to know
+which internal folder owns a query. The facade is the stable doorway; domain modules still own and
+implement their behavior.
+
+```text
+Core consumers (style, node, catalog, app services)
+        │ import query/read capabilities from
+        ▼
+@facadeur/core public API
+        │ explicitly exports domain-owned operations
+        ├── catalog queries ──► catalog internals
+        ├── token queries   ──► token internals
+        ├── node queries    ──► node internals
+        └── schema queries  ──► schema internals
+
+Editor UI/features
+        │ import app read/view capabilities from
+        ▼
+apps/editor app-facing facade
+        │ composes Core data and Editor presentation models
+        ├── sidebar view model
+        ├── schema/form adapters
+        └── feature-specific read models
+```
+
+Import rules:
+
+- **Across packages:** import through the owning package's public entry point. A Core consumer
+  should not deep-import `controller/project/catalog/queries` or import a neighboring domain's
+  private implementation. Core's package entry point explicitly exports the supported read/query
+  capabilities, regardless of which Core domain implements each one.
+- **Inside Core:** implementation modules may import domain internals directly when needed. Avoid
+  importing the package's own public barrel internally, which can create cycles and obscure
+  ownership. Shared behavior is extracted only when multiple domains use the same semantics.
+- **Inside the Editor app:** UI features should use a deliberate app-facing read/view API rather
+  than reaching across unrelated feature folders. The app facade composes Core results with
+  presentation/view models; Core never imports that facade. Feature-private helpers remain private.
+- **Writes:** keep domain mutations at the domain/Core command boundary. A read facade should not
+  become a generic service locator or hide mutation side effects.
+
+Keep source types inferred as close to their implementation and use sites as practical. Do not add
+parallel aliases or re-export every internal type just to make imports look uniform. Name explicit
+types where they are intentional boundary contracts: persisted domain shapes, stable public
+operation inputs/results, or shared cross-domain context. For simple getters and forwarding
+functions, let TypeScript infer the return type from the owned implementation. The public facade
+should export operations and only the types callers actually need, rather than duplicating inferred
+types in every consumer.
+
+This is a **single import surface with multiple domain owners**, not a single catch-all query
+implementation. Catalog candidate lookup remains catalog-owned; token candidate and graph queries
+remain token-owned; node-scoped queries remain node-owned. The facade keeps those APIs discoverable
+and avoids import sprawl without merging their rules.
+
 ## Persisted inputs and shared contracts
 
 Owner: `@facadeur/domain`.
@@ -265,8 +321,9 @@ and expose them as allowed values. A catalog reference's candidate IDs come from
 The Editor decides whether either becomes a select, autocomplete, or another control.
 
 This keeps `AppService` thin without making `@facadeur/form` or Core depend on Editor UI types. The
-Editor can mostly read Core view/query data and map user events to Core commands, while its
-schema-to-control adapter remains responsible for presentation.
+Editor can mostly read Core view/query data through the package facade and map user events to Core
+commands, while its schema-to-control adapter remains responsible for presentation. The Editor's
+own facade is for app-facing composition and view data, not for moving Core query logic into the app.
 
 There is no evidence yet for a generic, cross-domain “search package.” Core already has query
 modules with different owners (`catalog/queries.ts` and token queries), while `catalog/queries.ts`
@@ -302,13 +359,15 @@ handlers. Editor-specific field interpretation belongs in the Editor adapter lay
 
 1. **Domain:** keep saved data contracts and schema source unions; do not add runtime form logic.
 2. **Core:** own catalog data, schema/reference semantics, validation, queries, reconciliation, and
-   mutations. Provide reusable typed lookup/resolution capabilities to domain controllers. Keep
-   algorithm details private where possible and return domain/query data rather than UI `SelectOption`
-   or `FormFieldConfig` types.
+   mutations. Provide one public package facade for supported query/read capabilities, implemented
+   by the owning Core domains. Provide reusable typed lookup/resolution capabilities to domain
+   controllers. Keep algorithm details private where possible and return domain/query data rather
+   than UI `SelectOption` or `FormFieldConfig` types.
 3. **Editor:** own schema form construction, schema-field-to-control mapping, presentation choices,
-   and interaction state. It consumes resolved Core schema/data and Core query results, then adds UI
-   context (labels, grouping, bindings, exposure, placeholders). Reuse adapters across Inspector and
-   Preview where semantics match while allowing different layouts.
+   and interaction state. Provide an app-facing facade for read/view composition so features do not
+   import unrelated feature internals. It consumes resolved Core schema/data and Core query results,
+   then adds UI context (labels, grouping, bindings, exposure, placeholders). Reuse adapters across
+   Inspector and Preview where semantics match while allowing different layouts.
 4. **Form:** retain generic controls and rendering only. Do not move catalog or JSON Schema meaning
    into this package.
 5. **No new package or saved-format change is proposed by this inventory.** First establish which
@@ -321,6 +380,10 @@ handlers. Editor-specific field interpretation belongs in the Editor adapter lay
   today, but the type is not persisted and includes Editor-oriented field kinds.
 - What is the smallest stable public Core reference/query API that lets controllers reuse lookup
   without creating one monolithic resolver or exposing implementation internals?
+- Which Core package entry point is the supported facade today, and what query/read exports are
+  missing from it? Which Editor-facing read/view operations need an app-internal facade?
+- Which inferred implementation types are leaking across boundaries today, and which explicit
+  types are truly stable contracts worth keeping?
 - Which Core module owns catalog `$ref` expansion for validation, preview, and field derivation?
 - Should reference choice lists be explicit metadata rather than temporary `enum` schema keywords?
 - Which catalog-backed candidate queries belong on the Core read API, and what stable domain result
@@ -333,14 +396,16 @@ handlers. Editor-specific field interpretation belongs in the Editor adapter lay
 ## Suggested order after review
 
 1. Keep the persisted schema format unchanged and use the ownership direction above for new work.
-2. Specify typed reference families and the shared Core lookup boundary before moving behavior.
-3. Consolidate one demonstrated duplicate, starting with catalog `$ref` resolution, with focused
+2. Inventory existing package exports and internal deep imports; propose the smallest Core and
+   Editor facades that remove cross-domain import sprawl without creating cycles.
+3. Specify typed reference families and the shared Core lookup boundary before moving behavior.
+4. Consolidate one demonstrated duplicate, starting with catalog `$ref` resolution, with focused
    compatibility checks for validation and preview.
-4. Unify schema-to-control interpretation in the Editor while preserving separate Inspector and
+5. Unify schema-to-control interpretation in the Editor while preserving separate Inspector and
    Preview layouts.
-5. Review Core catalog validation and schema-change reconciliation boundaries; split only where
+6. Review Core catalog validation and schema-change reconciliation boundaries; split only where
    independent responsibilities and stable inputs/outputs are clear.
-6. Add behavioral coverage around schema changes, `$ref`s, icon/component targets, sparse values,
+7. Add behavioral coverage around schema changes, `$ref`s, icon/component targets, sparse values,
    dynamic bindings, preview defaults, instances, and undo/redo as each path is consolidated.
 
 This is a map and a proposal, not a mandate to implement every item. Update it as ownership
