@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 33555)
+Total output lines: 6261
+
 **Facadeur Core API**
 
 ---
@@ -8,7 +11,7 @@
 
 ### CoreController
 
-Defined in: packages/core/src/controller/project/controller.ts:68
+Defined in: packages/core/src/controller/project/controller.ts:67
 
 Single source of truth for ProjectCatalog and catalog editing selection.
 Design tokens, fonts, and ProjectCatalog.globalStyles live on the catalog snapshot;
@@ -24,7 +27,7 @@ node/schema preview flows go through [NodeController](#nodecontroller).
 
 > **new CoreController**(`catalog?`): [`CoreController`](#corecontroller)
 
-Defined in: packages/core/src/controller/project/controller.ts:75
+Defined in: packages/core/src/controller/project/controller.ts:74
 
 ###### Parameters
 
@@ -42,7 +45,7 @@ Defined in: packages/core/src/controller/project/controller.ts:75
 
 > `readonly` **node**: [`NodeController`](#nodecontroller)
 
-Defined in: packages/core/src/controller/project/controller.ts:73
+Defined in: packages/core/src/controller/project/controller.ts:72
 
 #### Methods
 
@@ -50,7 +53,7 @@ Defined in: packages/core/src/controller/project/controller.ts:73
 
 > **subscribe**(`listener`): () => `boolean`
 
-Defined in: packages/core/src/controller/project/controller.ts:80
+Defined in: packages/core/src/controller/project/controller.ts:79
 
 ###### Parameters
 
@@ -66,7 +69,7 @@ Defined in: packages/core/src/controller/project/controller.ts:80
 
 > **getSnapshot**(): [`CoreSnapshot`](#coresnapshot)
 
-Defined in: packages/core/src/controller/project/controller.ts:85
+Defined in: packages/core/src/controller/project/controller.ts:84
 
 ###### Returns
 
@@ -80,7 +83,7 @@ Defined in: packages/core/src/controller/project/controller.ts:85
 
 > **getDefinition**(`uuid`): \{ `kind`: `CatalogMapKey`; `definition`: `NodeDefinition`; \} \| `null`
 
-Defined in: packages/core/src/controller/project/controller.ts:97
+Defined in: packages/core/src/controller/project/controller.ts:96
 
 ###### Parameters
 
@@ -96,7 +99,7 @@ Defined in: packages/core/src/controller/project/controller.ts:97
 
 > **getDefinitionDisplayName**(`uuid`): `string` \| `null`
 
-Defined in: packages/core/src/controller/project/controller.ts:102
+Defined in: packages/core/src/controller/project/controller.ts:101
 
 ###### Parameters
 
@@ -112,7 +115,7 @@ Defined in: packages/core/src/controller/project/controller.ts:102
 
 > **getDefinitionSummaries**(): `object`[]
 
-Defined in: packages/core/src/controller/project/controller.ts:107
+Defined in: packages/core/src/controller/project/controller.ts:106
 
 ###### Returns
 
@@ -122,7 +125,7 @@ Defined in: packages/core/src/controller/project/controller.ts:107
 
 > **getEffectiveNodeTagName**(`nodeUuid`): `string` \| `null`
 
-Defined in: packages/core/src/controller/project/controller.ts:111
+Defined in: packages/core/src/controller/project/controller.ts:110
 
 ###### Parameters
 
@@ -138,7 +141,7 @@ Defined in: packages/core/src/controller/project/controller.ts:111
 
 > **getActiveBreakpoints**(): `object`[]
 
-Defined in: packages/core/src/controller/project/controller.ts:119
+Defined in: packages/core/src/controller/project/controller.ts:118
 
 ###### Returns
 
@@ -148,7 +151,7 @@ Defined in: packages/core/src/controller/project/controller.ts:119
 
 > **getDesignSnapshot**(): `object`
 
-Defined in: packages/core/src/controller/project/controller.ts:123
+Defined in: packages/core/src/controller/project/controller.ts:122
 
 ###### Returns
 
@@ -170,7 +173,7 @@ Defined in: packages/core/src/controller/project/controller.ts:123
 
 > **getSchemas**(): `object`[]
 
-Defined in: packages/core/src/controller/project/controller.ts:131
+Defined in: packages/core/src/controller/project/controller.ts:130
 
 ###### Returns
 
@@ -180,7 +183,7 @@ Defined in: packages/core/src/controller/project/controller.ts:131
 
 > **getSchema**(`uuid`): `Readonly`\<`Record`\<`string`, `unknown`\>\> \| `undefined`
 
-Defined in: packages/core/src/controller/project/controller.ts:138
+Defined in: packages/core/src/controller/project/controller.ts:137
 
 ###### Parameters
 
@@ -196,43 +199,17 @@ Defined in: packages/core/src/controller/project/controller.ts:138
 
 > **getDesignProps**(): `DesignPropDefinition`[]
 
-Defined in: packages/core/src/controller/project/controller.ts:143
+Defined in: packages/core/src/controller/project/controller.ts:142
 
 ###### Returns
 
 `DesignPropDefinition`[]
 
-##### getProjectStyleSuggestions()
-
-> **getProjectStyleSuggestions**(): `object`
-
-Defined in: packages/core/src/controller/project/controller.ts:147
-
-###### Returns
-
-`object`
-
-###### keys
-
-> **keys**: `string`[]
-
-###### valuesByKey
-
-> **valuesByKey**: `object`
-
-###### Index Signature
-
-\[`k`: `string`\]: `string`[]
-
-###### options
-
-> **options**: `object`[] = `tokenOptions`
-
 ##### getTokenByUUID()
 
 > **getTokenByUUID**(`uuid`): [`IndexedToken`](#indexedtoken) \| `undefined`
 
-Defined in: packages/core/src/controller/project/controller.ts:151
+Defined in: packages/core/src/controller/project/controller.ts:146
 
 ###### Parameters
 
@@ -248,7 +225,7 @@ Defined in: packages/core/src/controller/project/controller.ts:151
 
 > **getTokenByReference**(`value`): [`IndexedToken`](#indexedtoken) \| `undefined`
 
-Defined in: packages/core/src/controller/project/controller.ts:155
+Defined in: packages/core/src/controller/project/controller.ts:150
 
 ###### Parameters
 
@@ -264,7 +241,7 @@ Defined in: packages/core/src/controller/project/controller.ts:155
 
 > **getTokensReferencingUUID**(`uuid`): `string`[]
 
-Defined in: packages/core/src/controller/project/controller.ts:159
+Defined in: packages/core/src/controller/project/controller.ts:154
 
 ###### Parameters
 
@@ -280,7 +257,7 @@ Defined in: packages/core/src/controller/project/controller.ts:159
 
 > **replaceCatalog**(`catalog`): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:163
+Defined in: packages/core/src/controller/project/controller.ts:158
 
 ###### Parameters
 
@@ -296,7 +273,7 @@ Defined in: packages/core/src/controller/project/controller.ts:163
 
 > **openDefinition**(`uuid`): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:172
+Defined in: packages/core/src/controller/project/controller.ts:167
 
 ###### Parameters
 
@@ -316,7 +293,7 @@ Defined in: packages/core/src/controller/project/controller.ts:172
 
 > **closeDefinition**(): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:182
+Defined in: packages/core/src/controller/project/controller.ts:177
 
 ###### Returns
 
@@ -330,7 +307,7 @@ Defined in: packages/core/src/controller/project/controller.ts:182
 
 > **applyDesignCommand**(`command`): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:189
+Defined in: packages/core/src/controller/project/controller.ts:184
 
 ###### Parameters
 
@@ -346,7 +323,7 @@ Defined in: packages/core/src/controller/project/controller.ts:189
 
 > **createDefinition**(`kind`, `definition`): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:194
+Defined in: packages/core/src/controller/project/controller.ts:189
 
 ###### Parameters
 
@@ -366,7 +343,7 @@ Defined in: packages/core/src/controller/project/controller.ts:194
 
 > **patchDefinition**(`kind`, `uuid`, `patch`): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:198
+Defined in: packages/core/src/controller/project/controller.ts:193
 
 ###### Parameters
 
@@ -390,7 +367,7 @@ Defined in: packages/core/src/controller/project/controller.ts:198
 
 > **deleteDefinition**(`kind`, `uuid`): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:218
+Defined in: packages/core/src/controller/project/controller.ts:213
 
 ###### Parameters
 
@@ -410,7 +387,7 @@ Defined in: packages/core/src/controller/project/controller.ts:218
 
 > **upsertSchema**(`uuid`, `schema`): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:227
+Defined in: packages/core/src/controller/project/controller.ts:222
 
 ###### Parameters
 
@@ -430,7 +407,7 @@ Defined in: packages/core/src/controller/project/controller.ts:227
 
 > **removeSchema**(`uuid`): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:232
+Defined in: packages/core/src/controller/project/controller.ts:227
 
 ###### Parameters
 
@@ -446,7 +423,7 @@ Defined in: packages/core/src/controller/project/controller.ts:232
 
 > **upsertDesignProp**(`prop`): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:236
+Defined in: packages/core/src/controller/project/controller.ts:231
 
 ###### Parameters
 
@@ -462,7 +439,7 @@ Defined in: packages/core/src/controller/project/controller.ts:236
 
 > **removeDesignProp**(`uuid`): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:240
+Defined in: packages/core/src/controller/project/controller.ts:235
 
 ###### Parameters
 
@@ -478,7 +455,7 @@ Defined in: packages/core/src/controller/project/controller.ts:240
 
 > **patchNodeField**(`field`, `value`): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:244
+Defined in: packages/core/src/controller/project/controller.ts:239
 
 ###### Parameters
 
@@ -502,7 +479,7 @@ Defined in: packages/core/src/controller/project/controller.ts:244
 
 > **patchNodeDataRecord**(`nodeUuid`, `record`): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:251
+Defined in: packages/core/src/controller/project/controller.ts:246
 
 ###### Parameters
 
@@ -522,7 +499,7 @@ Defined in: packages/core/src/controller/project/controller.ts:251
 
 > **patchNodeComposition**(`nodeUuid`, `patch`): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:256
+Defined in: packages/core/src/controller/project/controller.ts:251
 
 ###### Parameters
 
@@ -564,7 +541,7 @@ Defined in: packages/core/src/controller/project/controller.ts:256
 
 > **patchNodeDomAttributeRecord**(`nodeUuid`, `record`): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:298
+Defined in: packages/core/src/controller/project/controller.ts:293
 
 ###### Parameters
 
@@ -584,7 +561,7 @@ Defined in: packages/core/src/controller/project/controller.ts:298
 
 > **patchNodeDomText**(`nodeUuid`, `text`): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:322
+Defined in: packages/core/src/controller/project/controller.ts:317
 
 ###### Parameters
 
@@ -604,7 +581,7 @@ Defined in: packages/core/src/controller/project/controller.ts:322
 
 > **patchNodeClassList**(`nodeUuid`, `classes`): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:327
+Defined in: packages/core/src/controller/project/controller.ts:322
 
 ###### Parameters
 
@@ -624,7 +601,7 @@ readonly `string`[]
 
 > **patchNodeTagName**(`nodeUuid`, `tagName`): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:332
+Defined in: packages/core/src/controller/project/controller.ts:327
 
 ###### Parameters
 
@@ -644,7 +621,7 @@ Defined in: packages/core/src/controller/project/controller.ts:332
 
 > **patchNodeName**(`nodeUuid`, `name`): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:337
+Defined in: packages/core/src/controller/project/controller.ts:332
 
 ###### Parameters
 
@@ -664,7 +641,7 @@ Defined in: packages/core/src/controller/project/controller.ts:337
 
 > **patchDefinitionName**(`name`): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:344
+Defined in: packages/core/src/controller/project/controller.ts:339
 
 ###### Parameters
 
@@ -680,7 +657,7 @@ Defined in: packages/core/src/controller/project/controller.ts:344
 
 > **patchDefinitionPreviewField**(`definitionUuid`, `field`, `value`): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:353
+Defined in: packages/core/src/controller/project/controller.ts:348
 
 ###### Parameters
 
@@ -704,7 +681,7 @@ Defined in: packages/core/src/controller/project/controller.ts:353
 
 > **applyInspectorFormChange**(`target`): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:388
+Defined in: packages/core/src/controller/project/controller.ts:383
 
 ###### Parameters
 
@@ -724,7 +701,7 @@ Defined in: packages/core/src/controller/project/controller.ts:388
 
 > **insertCatalogNode**(`parentUuid`, `index`, `node`): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:494
+Defined in: packages/core/src/controller/project/controller.ts:489
 
 ###### Parameters
 
@@ -748,7 +725,7 @@ Defined in: packages/core/src/controller/project/controller.ts:494
 
 > **duplicateCatalogNode**(`sourceDefinitionUuid`, `sourceNodeUuid`, `parentUuid`, `index`): `string` \| `null`
 
-Defined in: packages/core/src/controller/project/controller.ts:504
+Defined in: packages/core/src/controller/project/controller.ts:499
 
 ###### Parameters
 
@@ -776,7 +753,7 @@ Defined in: packages/core/src/controller/project/controller.ts:504
 
 > **removeCatalogNode**(`nodeUuid`): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:526
+Defined in: packages/core/src/controller/project/controller.ts:521
 
 ###### Parameters
 
@@ -792,7 +769,7 @@ Defined in: packages/core/src/controller/project/controller.ts:526
 
 > **moveCatalogNode**(`nodeUuid`, `parentUuid`, `index`): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:535
+Defined in: packages/core/src/controller/project/controller.ts:530
 
 ###### Parameters
 
@@ -816,7 +793,7 @@ Defined in: packages/core/src/controller/project/controller.ts:535
 
 > **selectNode**(`uuid`): `void`
 
-Defined in: packages/core/src/controller/project/controller.ts:545
+Defined in: packages/core/src/controller/project/controller.ts:540
 
 ###### Parameters
 
@@ -836,7 +813,7 @@ Defined in: packages/core/src/controller/project/controller.ts:545
 
 > **persist**(`port`): `Promise`\<`void`\>
 
-Defined in: packages/core/src/controller/project/controller.ts:551
+Defined in: packages/core/src/controller/project/controller.ts:546
 
 ###### Parameters
 
@@ -852,7 +829,7 @@ Defined in: packages/core/src/controller/project/controller.ts:551
 
 > **createDefinitionFromPort**(`port`, `kind`, `definition`): `Promise`\<`string` \| `undefined`\>
 
-Defined in: packages/core/src/controller/project/controller.ts:555
+Defined in: packages/core/src/controller/project/controller.ts:550
 
 ###### Parameters
 
@@ -876,7 +853,7 @@ Defined in: packages/core/src/controller/project/controller.ts:555
 
 > **deleteDefinitionFromPort**(`port`, `uuid`): `Promise`\<`void`\>
 
-Defined in: packages/core/src/controller/project/controller.ts:567
+Defined in: packages/core/src/controller/project/controller.ts:562
 
 ###### Parameters
 
@@ -2656,918 +2633,7 @@ Defined in: packages/core/src/controller/project/node/preview/inspector-view.ts:
 
 Defined in: packages/core/src/controller/project/node/preview/prop-ref.ts:8
 
-#### Properties
-
-##### uuid
-
-> **uuid**: `string`
-
-Defined in: packages/core/src/controller/project/node/preview/prop-ref.ts:9
-
-##### name
-
-> **name**: `string`
-
-Defined in: packages/core/src/controller/project/node/preview/prop-ref.ts:10
-
-##### ref
-
-> **ref**: `string`
-
-Defined in: packages/core/src/controller/project/node/preview/prop-ref.ts:12
-
-Stored field value: `{prop:uuid}`.
-
-##### kind
-
-> **kind**: `"design"` \| `"component"` \| `"item"` \| `"index"`
-
-Defined in: packages/core/src/controller/project/node/preview/prop-ref.ts:13
-
-##### valueType?
-
-> `optional` **valueType?**: `string`
-
-Defined in: packages/core/src/controller/project/node/preview/prop-ref.ts:14
-
----
-
-### RepeaterReferenceScope
-
-> **RepeaterReferenceScope** = `object`
-
-Defined in: packages/core/src/controller/project/node/preview/reference-resolver.ts:4
-
-#### Properties
-
-##### nodeUuid
-
-> `readonly` **nodeUuid**: `string`
-
-Defined in: packages/core/src/controller/project/node/preview/reference-resolver.ts:5
-
-##### indexName
-
-> `readonly` **indexName**: `string`
-
-Defined in: packages/core/src/controller/project/node/preview/reference-resolver.ts:6
-
-##### index
-
-> `readonly` **index**: `number`
-
-Defined in: packages/core/src/controller/project/node/preview/reference-resolver.ts:7
-
-##### itemPath?
-
-> `readonly` `optional` **itemPath?**: `string`
-
-Defined in: packages/core/src/controller/project/node/preview/reference-resolver.ts:8
-
-##### item
-
-> `readonly` **item**: [`FieldValue`](#fieldvalue)
-
-Defined in: packages/core/src/controller/project/node/preview/reference-resolver.ts:9
-
-##### itemSchema
-
-> `readonly` **itemSchema**: `Record`\<`string`, `unknown`\> \| `null`
-
-Defined in: packages/core/src/controller/project/node/preview/reference-resolver.ts:10
-
----
-
-### ReferenceResolutionContext
-
-> **ReferenceResolutionContext** = `object`
-
-Defined in: packages/core/src/controller/project/node/preview/reference-resolver.ts:13
-
-#### Properties
-
-##### catalog
-
-> `readonly` **catalog**: `ProjectCatalog`
-
-Defined in: packages/core/src/controller/project/node/preview/reference-resolver.ts:14
-
-##### componentProps?
-
-> `readonly` `optional` **componentProps?**: `Readonly`\<`Record`\<`string`, [`FieldValue`](#fieldvalue)\>\>
-
-Defined in: packages/core/src/controller/project/node/preview/reference-resolver.ts:15
-
-##### componentState?
-
-> `readonly` `optional` **componentState?**: `Readonly`\<`Record`\<`string`, [`FieldValue`](#fieldvalue) \| `null`\>\>
-
-Defined in: packages/core/src/controller/project/node/preview/reference-resolver.ts:16
-
-##### repeaterScopes?
-
-> `readonly` `optional` **repeaterScopes?**: readonly [`RepeaterReferenceScope`](#repeaterreferencescope)[]
-
-Defined in: packages/core/src/controller/project/node/preview/reference-resolver.ts:17
-
-##### item?
-
-> `readonly` `optional` **item?**: [`FieldValue`](#fieldvalue)
-
-Defined in: packages/core/src/controller/project/node/preview/reference-resolver.ts:19
-
-Compatibility for callers that only provide the previous single-item context.
-
----
-
-### TokenTier
-
-> **TokenTier** = `"primitive"` \| `"semantic"` \| `"component"`
-
-Defined in: packages/core/src/controller/style/tokens/types.ts:10
-
----
-
-### TokenTree
-
-> **TokenTree** = [`DesignTokenSet`](#designtokenset)
-
-Defined in: packages/core/src/controller/style/tokens/types.ts:12
-
----
-
-### TokenDefinition
-
-> **TokenDefinition** = [`DesignTokenRecord`](#designtokenrecord)
-
-Defined in: packages/core/src/controller/style/tokens/types.ts:13
-
----
-
-### IdentifiedTokenDefinition
-
-> **IdentifiedTokenDefinition** = [`DesignTokenRecord`](#designtokenrecord)
-
-Defined in: packages/core/src/controller/style/tokens/types.ts:14
-
----
-
-### NodeType
-
-> **NodeType** = _typeof_ [`nodeTypes`](#nodetypes)\[`number`\]
-
-Defined in: packages/core/src/document/kinds.ts:10
-
----
-
-### DefaultKind
-
-> **DefaultKind** = _typeof_ [`defaultKinds`](#defaultkinds)\[`number`\]
-
-Defined in: packages/core/src/document/kinds.ts:14
-
----
-
-### TokenType
-
-> **TokenType** = [`DesignTokenValueType`](#designtokenvaluetype)
-
-Defined in: packages/core/src/schema/design-tokens.ts:22
-
----
-
-### FieldDefinition
-
-> **FieldDefinition** = `Static`\<_typeof_ `fieldDefinitionSchema`\>
-
-Defined in: packages/core/src/schema/document.ts:86
-
----
-
-### ChildFieldOverrides
-
-> **ChildFieldOverrides** = `Record`\<`string`, `Record`\<`string`, [`FieldValue`](#fieldvalue)\>\>
-
-Defined in: packages/core/src/schema/document.ts:87
-
----
-
-### PreviewData
-
-> **PreviewData** = `Static`\<_typeof_ [`previewDataSchema`](#previewdataschema)\>
-
-Defined in: packages/core/src/schema/document.ts:88
-
----
-
-### Layout
-
-> **Layout** = `Static`\<_typeof_ `layoutSchema`\>
-
-Defined in: packages/core/src/schema/document.ts:89
-
----
-
-### LayoutOverride
-
-> **LayoutOverride** = `Static`\<_typeof_ `layoutOverrideSchema`\>
-
-Defined in: packages/core/src/schema/document.ts:90
-
----
-
-### AxisSize
-
-> **AxisSize** = `Static`\<_typeof_ `axisSizeSchema`\>
-
-Defined in: packages/core/src/schema/document.ts:91
-
----
-
-### SizeValue
-
-> **SizeValue** = `Static`\<_typeof_ `sizeValueSchema`\>
-
-Defined in: packages/core/src/schema/document.ts:92
-
----
-
-### Spacing
-
-> **Spacing** = `Static`\<_typeof_ `spacingSchema`\>
-
-Defined in: packages/core/src/schema/document.ts:93
-
----
-
-### SpacingBox
-
-> **SpacingBox** = `Static`\<_typeof_ `spacingBoxSchema`\>
-
-Defined in: packages/core/src/schema/document.ts:94
-
----
-
-### Margin
-
-> **Margin** = `Static`\<_typeof_ `marginSchema`\>
-
-Defined in: packages/core/src/schema/document.ts:95
-
----
-
-### MarginBox
-
-> **MarginBox** = `Static`\<_typeof_ `marginBoxSchema`\>
-
-Defined in: packages/core/src/schema/document.ts:96
-
----
-
-### StyleDeclarations
-
-> **StyleDeclarations** = `Record`\<`string`, `string`\>
-
-Defined in: packages/core/src/schema/document.ts:97
-
----
-
-### StyleStates
-
-> **StyleStates** = `Static`\<_typeof_ `styleStatesSchema`\>
-
-Defined in: packages/core/src/schema/document.ts:98
-
----
-
-### StyleLayer
-
-> **StyleLayer** = `Static`\<_typeof_ `styleLayerSchema`\>
-
-Defined in: packages/core/src/schema/document.ts:99
-
----
-
-### StyleRule
-
-> **StyleRule** = `Static`\<_typeof_ `styleRuleSchema`\>
-
-Defined in: packages/core/src/schema/document.ts:100
-
----
-
-### StyleBlock
-
-> **StyleBlock** = `Static`\<_typeof_ `styleBlockSchema`\>
-
-Defined in: packages/core/src/schema/document.ts:101
-
----
-
-### TokenInterface
-
-> **TokenInterface** = `Static`\<_typeof_ `tokenInterfaceSchema`\>
-
-Defined in: packages/core/src/schema/document.ts:102
-
----
-
-### FontStyle
-
-> **FontStyle** = `Static`\<_typeof_ `fontStyleSchema`\>
-
-Defined in: packages/core/src/schema/document.ts:105
-
----
-
-### FontFaceFile
-
-> **FontFaceFile** = `Static`\<_typeof_ `fontFaceFileSchema`\>
-
-Defined in: packages/core/src/schema/document.ts:106
-
----
-
-### FontSource
-
-> **FontSource** = `Static`\<_typeof_ `fontSourceSchema`\>
-
-Defined in: packages/core/src/schema/document.ts:107
-
----
-
-### FontFamily
-
-> **FontFamily** = [`FontFamilyDefinition`](#fontfamilydefinition)
-
-Defined in: packages/core/src/schema/document.ts:108
-
----
-
-### FontFamilyValue
-
-> **FontFamilyValue** = `Static`\<_typeof_ `fontFamilySchema`\>
-
-Defined in: packages/core/src/schema/document.ts:109
-
----
-
-### Breakpoint
-
-> **Breakpoint** = `Static`\<_typeof_ `breakpointSchema`\>
-
-Defined in: packages/core/src/schema/document.ts:110
-
----
-
-### FieldType
-
-> **FieldType** = _typeof_ [`fieldTypes`](#fieldtypes)\[`number`\]
-
-Defined in: packages/core/src/schema/fields.ts:20
-
----
-
-### JsonSchemaField
-
-> **JsonSchemaField** = [`FieldDefinition`](#fielddefinition) & `object`
-
-Defined in: packages/core/src/schema/json-schema-fields.ts:3
-
-#### Type Declaration
-
-##### schema
-
-> **schema**: [`JsonSchema`](#jsonschema)
-
----
-
-### JsonValue
-
-> **JsonValue** = `string` \| `number` \| `boolean` \| `null` \| [`JsonValue`](#jsonvalue)[] \| \{\[`key`: `string`\]: [`JsonValue`](#jsonvalue); \}
-
-Defined in: packages/core/src/utils.ts:1
-
----
-
-### DesignTokenUuid
-
-> **DesignTokenUuid** = `Uuid`
-
-Defined in: packages/domain/src/design-system.ts:4
-
-Stable identity for one design token, independent of its editable label or group.
-
----
-
-### BreakpointUuid
-
-> **BreakpointUuid** = `Uuid`
-
-Defined in: packages/domain/src/design-system.ts:5
-
----
-
-### DesignTokenReference
-
-> **DesignTokenReference** = `` `{token:${DesignTokenUuid}}` ``
-
-Defined in: packages/domain/src/design-system.ts:8
-
-Editor-internal reference syntax persisted in catalog node values.
-
----
-
-### DesignTokenFamily
-
-> **DesignTokenFamily** = `"color"` \| `"space"` \| `"radius"` \| `"shadow"` \| `"type"` \| `"font"`
-
-Defined in: packages/domain/src/design-system.ts:14
-
----
-
-### DesignTokenValueType
-
-> **DesignTokenValueType** = `"color"` \| `"dimension"` \| `"number"` \| `"fontFamily"` \| `"fontWeight"` \| `"shadow"` \| `"typography"`
-
-Defined in: packages/domain/src/design-system.ts:15
-
----
-
-### DesignTokenValue
-
-> **DesignTokenValue** = `string` \| `number` \| `boolean` \| `null` \| readonly [`DesignTokenValue`](#designtokenvalue)[] \| \{\[`key`: `string`\]: [`DesignTokenValue`](#designtokenvalue); \}
-
-Defined in: packages/domain/src/design-system.ts:18
-
----
-
-### DesignTokenFamilyMap
-
-> **DesignTokenFamilyMap** = `Readonly`\<`Record`\<[`DesignTokenUuid`](#designtokenuuid), [`DesignTokenRecord`](#designtokenrecord)\>\>
-
-Defined in: packages/domain/src/design-system.ts:78
-
----
-
-### DesignTokenSet
-
-> **DesignTokenSet** = `Readonly`\<\{ `color`: [`DesignTokenFamilyMap`](#designtokenfamilymap); `space`: [`DesignTokenFamilyMap`](#designtokenfamilymap); `radius`: [`DesignTokenFamilyMap`](#designtokenfamilymap); `shadow`: [`DesignTokenFamilyMap`](#designtokenfamilymap); `type`: [`DesignTokenFamilyMap`](#designtokenfamilymap); `font`: `Readonly`\<`Record`\<[`DesignTokenUuid`](#designtokenuuid), [`FontFamilyDefinition`](#fontfamilydefinition)\>\>; \}\>
-
-Defined in: packages/domain/src/design-system.ts:79
-
----
-
-### RenderBuildConfig
-
-> **RenderBuildConfig** = [`ElementBuildConfig`](#elementbuildconfig) \| [`FragmentBuildConfig`](#fragmentbuildconfig)
-
-Defined in: packages/domain/src/element-build.ts:59
-
----
-
-### FieldValue
-
-> **FieldValue** = `string` \| `number` \| `boolean` \| [`FieldValue`](#fieldvalue)[] \| \{\[`key`: `string`\]: [`FieldValue`](#fieldvalue); \}
-
-Defined in: packages/domain/src/field-value.ts:1
-
----
-
-### NodeDefinitionModel
-
-> **NodeDefinitionModel** = `NodeDefinition`
-
-Defined in: packages/domain/src/node.ts:186
-
-## Variables
-
-### DEFAULT\_HTML\_TAG\_OPTIONS
-
-> `const` **DEFAULT\_HTML\_TAG\_OPTIONS**: readonly \[`"a"`, `"article"`, `"aside"`, `"button"`, `"div"`, `"footer"`, `"form"`, `"h1"`, `"h2"`, `"h3"`, `"h4"`, `"h5"`, `"h6"`, `"header"`, `"img"`, `"input"`, `"label"`, `"li"`, `"main"`, `"nav"`, `"ol"`, `"p"`, `"section"`, `"span"`, `"textarea"`, `"ul"`, `"video"`\]
-
-Defined in: packages/core/src/document/html-tags.ts:2
-
-Common HTML tag names for catalog node `dom.tagName` presets.
-
----
-
-### VOID\_HTML\_TAGS
-
-> `const` **VOID\_HTML\_TAGS**: readonly \[`"area"`, `"base"`, `"br"`, `"col"`, `"embed"`, `"hr"`, `"img"`, `"input"`, `"link"`, `"meta"`, `"param"`, `"source"`, `"track"`, `"wbr"`\]
-
-Defined in: packages/core/src/document/html-tags.ts:35
-
-HTML elements that cannot contain child nodes.
-
----
-
-### ID\_PATTERN
-
-> `const` **ID\_PATTERN**: `RegExp`
-
-Defined in: packages/core/src/document/ids.ts:1
-
----
-
-### TAG\_PATTERN
-
-> `const` **TAG\_PATTERN**: `RegExp`
-
-Defined in: packages/core/src/document/ids.ts:2
-
----
-
-### nodeTypes
-
-> `const` **nodeTypes**: readonly \[`"frame"`, `"text"`, `"image"`, `"instance"`, `"repeater"`, `"switch"`, `"slot"`\]
-
-Defined in: packages/core/src/document/kinds.ts:1
-
----
-
-### defaultKinds
-
-> `const` **defaultKinds**: readonly \[`"atom"`, `"component"`, `"section"`, `"page"`\]
-
-Defined in: packages/core/src/document/kinds.ts:13
-
-Default document kinds. The list is data: pass a different rule map to replace it.
-
----
-
-### defaultNestingRules
-
-> `const` **defaultNestingRules**: `Record`\<[`DefaultKind`](#defaultkind), [`NestingRule`](#nestingrule)\>
-
-Defined in: packages/core/src/document/kinds.ts:32
-
-Atoms are single-element documents (one root node, no children). Anything with
-more than one node belongs in a component or section. Components and sections
-instance atoms from the library. A page canvas holds sections or components.
-
----
-
-### childFieldPathSchema
-
-> `const` **childFieldPathSchema**: `TString`
-
-Defined in: packages/core/src/schema/common.ts:11
-
-Slash-separated instance ids used for sparse overrides inside an instance.
-Frame and root ids are intentionally omitted from these paths.
-
----
-
-### defaultBreakpoints
-
-> `const` **defaultBreakpoints**: [`Breakpoint`](#breakpoint)[]
-
-Defined in: packages/core/src/schema/document.ts:113
-
-Viewports used when a document does not set its own breakpoints.
-
----
-
-### fieldTypes
-
-> `const` **fieldTypes**: readonly \[`"text"`, `"richText"`, `"image"`, `"link"`, `"boolean"`, `"enum"`, `"number"`, `"token"`, `"array"`, `"object"`\]
-
-Defined in: packages/core/src/schema/fields.ts:8
-
----
-
-### previewDataSchema
-
-> `const` **previewDataSchema**: `TObject`\<\{ `fields`: `TOptional`\<`TRecord`\<`TString`, `TUnsafe`\<[`FieldValue`](#fieldvalue)\>\>\>; `variants`: `TOptional`\<`TRecord`\<`TString`, `TRecord`\<`TString`, `TUnsafe`\<[`FieldValue`](#fieldvalue)\>\>\>\>; \}\>
-
-Defined in: packages/core/src/schema/fonts.ts:68
-
-Editor sample values. Never part of the component's runtime defaults.
-
----
-
-### projectCatalogSchema
-
-> `const` **projectCatalogSchema**: `TObject`\<\{ `atoms`: `TRecord`\<`TString`, `TObject`\<\{ `uuid`: `TString`; `name`: `TString`; `kind`: `TUnion`\<\[`TLiteral`\<`"atom"`\>, `TLiteral`\<`"component"`\>, `TLiteral`\<`"page"`\>\]\>; `category`: `TOptional`\<`TString`\>; `schema`: `TUnion`\<\[`TObject`\<\{ `kind`: `TLiteral`\<`"ref"`\>; `uuid`: `TString`; \}\>, `TObject`\<\{ `kind`: `TLiteral`\<`"inline"`\>; `schema`: `TRecord`\<`TString`, `TUnknown`\>; \}\>\]\>; `root`: `TRecursive`\<`TObject`\<\{ `uuid`: `TString`; `name`: `TOptional`\<`TString`\>; `dom`: `TObject`\<\{ `tagName`: `TOptional`\<...\>; `text`: `TOptional`\<...\>; `attributes`: `TOptional`\<...\>; `data`: `TOptional`\<...\>; `properties`: `TOptional`\<...\>; `event`: `TOptional`\<...\>; `children`: `TOptional`\<...\>; \}\>; `classes`: `TOptional`\<`TArray`\<`TObject`\<...\>\>\>; `schema`: `TOptional`\<`TUnion`\<\[..., ...\]\>\>; `data`: `TOptional`\<`TRecord`\<`TString`, `TUnsafe`\<...\>\>\>; `config`: `TOptional`\<`TObject`\<\{ `definitionRef`: ...; `definitionRefBinding`: ...; `composition`: ...; `compositionCase`: ...; `previewData`: ...; \}\>\>; \}\>\>; `behavior`: `TOptional`\<`TObject`\<\{ `state`: `TOptional`\<`TRecord`\<`TString`, `TUnknown`\>\>; `stateSchema`: `TOptional`\<`TRecord`\<`TString`, `TRecord`\<..., ...\>\>\>; `stateArrayKeyPaths`: `TOptional`\<`TRecord`\<`TString`, `TString`\>\>; `transitions`: `TArray`\<`TObject`\<\{ `nodeUuid`: ...; `event`: ...; `actions`: ...; \}\>\>; \}\>\>; `config`: `TOptional`\<`TObject`\<\{ `previewData`: `TOptional`\<`TObject`\<\{ `fields`: ...; \}\>\>; `fieldExposure`: `TOptional`\<`TRecord`\<`TString`, `TUnion`\<...\>\>\>; `staticFields`: `TOptional`\<`TRecord`\<`TString`, `TObject`\<...\>\>\>; `instanceFieldConfigs`: `TOptional`\<`TRecord`\<`TString`, `TRecord`\<..., ...\>\>\>; \}\>\>; \}\>\>; `components`: `TRecord`\<`TString`, `TObject`\<\{ `uuid`: `TString`; `name`: `TString`; `kind`: `TUnion`\<\[`TLiteral`\<`"atom"`\>, `TLiteral`\<`"component"`\>, `TLiteral`\<`"page"`\>\]\>; `category`: `TOptional`\<`TString`\>; `schema`: `TUnion`\<\[`TObject`\<\{ `kind`: `TLiteral`\<`"ref"`\>; `uuid`: `TString`; \}\>, `TObject`\<\{ `kind`: `TLiteral`\<`"inline"`\>; `schema`: `TRecord`\<`TString`, `TUnknown`\>; \}\>\]\>; `root`: `TRecursive`\<`TObject`\<\{ `uuid`: `TString`; `name`: `TOptional`\<`TString`\>; `dom`: `TObject`\<\{ `tagName`: `TOptional`\<...\>; `text`: `TOptional`\<...\>; `attributes`: `TOptional`\<...\>; `data`: `TOptional`\<...\>; `properties`: `TOptional`\<...\>; `event`: `TOptional`\<...\>; `children`: `TOptional`\<...\>; \}\>; `classes`: `TOptional`\<`TArray`\<`TObject`\<...\>\>\>; `schema`: `TOptional`\<`TUnion`\<\[..., ...\]\>\>; `data`: `TOptional`\<`TRecord`\<`TString`, `TUnsafe`\<...\>\>\>; `config`: `TOptional`\<`TObject`\<\{ `definitionRef`: ...; `definitionRefBinding`: ...; `composition`: ...; `compositionCase`: ...; `previewData`: ...; \}\>\>; \}\>\>; `behavior`: `TOptional`\<`TObject`\<\{ `state`: `TOptional`\<`TRecord`\<`TString`, `TUnknown`\>\>; `stateSchema`: `TOptional`\<`TRecord`\<`TString`, `TRecord`\<..., ...\>\>\>; `stateArrayKeyPaths`: `TOptional`\<`TRecord`\<`TString`, `TString`\>\>; `transitions`: `TArray`\<`TObject`\<\{ `nodeUuid`: ...; `event`: ...; `actions`: ...; \}\>\>; \}\>\>; `config`: `TOptional`\<`TObject`\<\{ `previewData`: `TOptional`\<`TObject`\<\{ `fields`: ...; \}\>\>; `fieldExposure`: `TOptional`\<`TRecord`\<`TString`, `TUnion`\<...\>\>\>; `staticFields`: `TOptional`\<`TRecord`\<`TString`, `TObject`\<...\>\>\>; `instanceFieldConfigs`: `TOptional`\<`TRecord`\<`TString`, `TRecord`\<..., ...\>\>\>; \}\>\>; \}\>\>; `pages`: `TRecord`\<`TString`, `TObject`\<\{ `uuid`: `TString`; `name`: `TString`; `kind`: `TUnion`\<\[`TLiteral`\<`"atom"`\>, `TLiteral`\<`"component"`\>, `TLiteral`\<`"page"`\>\]\>; `category`: `TOptional`\<`TString`\>; `schema`: `TUnion`\<\[`TObject`\<\{ `kind`: `TLiteral`\<`"ref"`\>; `uuid`: `TString`; \}\>, `TObject`\<\{ `kind`: `TLiteral`\<`"inline"`\>; `schema`: `TRecord`\<`TString`, `TUnknown`\>; \}\>\]\>; `root`: `TRecursive`\<`TObject`\<\{ `uuid`: `TString`; `name`: `TOptional`\<`TString`\>; `dom`: `TObject`\<\{ `tagName`: `TOptional`\<...\>; `text`: `TOptional`\<...\>; `attributes`: `TOptional`\<...\>; `data`: `TOptional`\<...\>; `properties`: `TOptional`\<...\>; `event`: `TOptional`\<...\>; `children`: `TOptional`\<...\>; \}\>; `classes`: `TOptional`\<`TArray`\<`TObject`\<...\>\>\>; `schema`: `TOptional`\<`TUnion`\<\[..., ...\]\>\>; `data`: `TOptional`\<`TRecord`\<`TString`, `TUnsafe`\<...\>\>\>; `config`: `TOptional`\<`TObject`\<\{ `definitionRef`: ...; `definitionRefBinding`: ...; `composition`: ...; `compositionCase`: ...; `previewData`: ...; \}\>\>; \}\>\>; `behavior`: `TOptional`\<`TObject`\<\{ `state`: `TOptional`\<`TRecord`\<`TString`, `TUnknown`\>\>; `stateSchema`: `TOptional`\<`TRecord`\<`TString`, `TRecord`\<..., ...\>\>\>; `stateArrayKeyPaths`: `TOptional`\<`TRecord`\<`TString`, `TString`\>\>; `transitions`: `TArray`\<`TObject`\<\{ `nodeUuid`: ...; `event`: ...; `actions`: ...; \}\>\>; \}\>\>; `config`: `TOptional`\<`TObject`\<\{ `previewData`: `TOptional`\<`TObject`\<\{ `fields`: ...; \}\>\>; `fieldExposure`: `TOptional`\<`TRecord`\<`TString`, `TUnion`\<...\>\>\>; `staticFields`: `TOptional`\<`TRecord`\<`TString`, `TObject`\<...\>\>\>; `instanceFieldConfigs`: `TOptional`\<`TRecord`\<`TString`, `TRecord`\<..., ...\>\>\>; \}\>\>; \}\>\>; `schemas`: `TOptional`\<`TRecord`\<`TString`, `TRecord`\<`TString`, `TUnknown`\>\>\>; `tokens`: `TOptional`\<`TObject`\<\{ `color`: `TRecord`\<`TString`, `TObject`\<\{ `uuid`: `TString`; `label`: `TString`; `group`: `TString`; `valueType`: `TUnion`\<`TLiteral`\<...\>[]\>; `value`: `TUnsafe`\<[`DesignTokenValue`](#designtokenvalue)\>; `breakpoints`: `TOptional`\<`TRecord`\<`TString`, `TUnsafe`\<...\>\>\>; `extensions`: `TOptional`\<`TRecord`\<`TString`, `TUnsafe`\<...\>\>\>; \}\>\>; `space`: `TRecord`\<`TString`, `TObject`\<\{ `uuid`: `TString`; `label`: `TString`; `group`: `TString`; `valueType`: `TUnion`\<`TLiteral`\<...\>[]\>; `value`: `TUnsafe`\<[`DesignTokenValue`](#designtokenvalue)\>; `breakpoints`: `TOptional`\<`TRecord`\<`TString`, `TUnsafe`\<...\>\>\>; `extensions`: `TOptional`\<`TRecord`\<`TString`, `TUnsafe`\<...\>\>\>; \}\>\>; `radius`: `TRecord`\<`TString`, `TObject`\<\{ `uuid`: `TString`; `label`: `TString`; `group`: `TString`; `valueType`: `TUnion`\<`TLiteral`\<...\>[]\>; `value`: `TUnsafe`\<[`DesignTokenValue`](#designtokenvalue)\>; `breakpoints`: `TOptional`\<`TRecord`\<`TString`, `TUnsafe`\<...\>\>\>; `extensions`: `TOptional`\<`TRecord`\<`TString`, `TUnsafe`\<...\>\>\>; \}\>\>; `shadow`: `TRecord`\<`TString`, `TObject`\<\{ `uuid`: `TString`; `label`: `TString`; `group`: `TString`; `valueType`: `TUnion`\<`TLiteral`\<...\>[]\>; `value`: `TUnsafe`\<[`DesignTokenValue`](#designtokenvalue)\>; `breakpoints`: `TOptional`\<`TRecord`\<`TString`, `TUnsafe`\<...\>\>\>; `extensions`: `TOptional`\<`TRecord`\<`TString`, `TUnsafe`\<...\>\>\>; \}\>\>; `type`: `TRecord`\<`TString`, `TObject`\<\{ `uuid`: `TString`; `label`: `TString`; `group`: `TString`; `valueType`: `TUnion`\<`TLiteral`\<...\>[]\>; `value`: `TUnsafe`\<[`DesignTokenValue`](#designtokenvalue)\>; `breakpoints`: `TOptional`\<`TRecord`\<`TString`, `TUnsafe`\<...\>\>\>; `extensions`: `TOptional`\<`TRecord`\<`TString`, `TUnsafe`\<...\>\>\>; \}\>\>; `font`: `TRecord`\<`TString`, `TObject`\<\{ `uuid`: `TString`; `label`: `TString`; `group`: `TString`; `valueType`: `TUnion`\<`TLiteral`\<...\>[]\>; `value`: `TUnsafe`\<[`DesignTokenValue`](#designtokenvalue)\>; `breakpoints`: `TOptional`\<`TRecord`\<`TString`, `TUnsafe`\<...\>\>\>; `extensions`: `TOptional`\<`TRecord`\<`TString`, `TUnsafe`\<...\>\>\>; \}\>\>; \}\>\>; `icons`: `TOptional`\<`TArray`\<`TObject`\<\{ `id`: `TString`; `name`: `TString`; `data`: `TObject`\<\{ `viewBox`: `TString`; `paths`: `TArray`\<`TString`\>; \}\>; `category`: `TOptional`\<`TString`\>; \}\>\>\>; `props`: `TOptional`\<`TRecord`\<`TString`, `TObject`\<\{ `uuid`: `TString`; `name`: `TString`; `value`: `TString`; \}\>\>\>; `globalStyles`: `TOptional`\<`TObject`\<\{ `block`: `TOptional`\<`TObject`\<\{ `declarations`: `TOptional`\<`TRecord`\<`TString`, `TString`\>\>; `states`: `TOptional`\<`TObject`\<\{ `hover`: ...; `focus-visible`: ...; `disabled`: ...; \}\>\>; `variants`: `TOptional`\<`TRecord`\<`TString`, `TRecord`\<..., ...\>\>\>; `breakpoints`: `TOptional`\<`TRecord`\<`TString`, `TObject`\<...\>\>\>; `rules`: `TOptional`\<`TArray`\<`TObject`\<...\>\>\>; \}\>\>; `tokenInterface`: `TOptional`\<`TObject`\<\{ `reads`: `TOptional`\<`TArray`\<`TString`\>\>; `sets`: `TOptional`\<`TRecord`\<`TString`, `TString`\>\>; \}\>\>; `breakpoints`: `TOptional`\<`TArray`\<`TObject`\<\{ `uuid`: `TString`; `label`: `TString`; `minWidth`: `TInteger`; `enabled`: `TOptional`\<`TBoolean`\>; \}\>\>\>; \}\>\>; \}\>
-
-Defined in: packages/core/src/schema/node-model/catalog.ts:28
-
----
-
-### nodeModelPreviewDataSchema
-
-> `const` **nodeModelPreviewDataSchema**: `TObject`\<\{ `fields`: `TOptional`\<`TRecord`\<`TString`, `TUnknown`\>\>; \}\>
-
-Defined in: packages/core/src/schema/node-model/config.ts:5
-
----
-
-### nodeConfigSchema
-
-> `const` **nodeConfigSchema**: `TObject`\<\{ `definitionRef`: `TOptional`\<`TString`\>; `definitionRefBinding`: `TOptional`\<`TObject`\<\{ `kind`: `TLiteral`\<`"item"`\>; `path`: `TString`; \}\>\>; `composition`: `TOptional`\<`TUnion`\<\[`TObject`\<\{ `kind`: `TLiteral`\<`"repeater"`\>; `keyPath`: `TOptional`\<`TString`\>; `indexName`: `TOptional`\<`TString`\>; `filter`: `TOptional`\<`TObject`\<\{ `kind`: `TLiteral`\<...\>; `itemPath`: `TString`; `queryState`: `TString`; \}\>\>; `source`: `TOptional`\<`TUnion`\<\[`TObject`\<...\>, `TObject`\<...\>, `TObject`\<...\>\]\>\>; \}\>, `TObject`\<\{ `kind`: `TLiteral`\<`"switch"`\>; `source`: `TOptional`\<`TUnion`\<\[`TObject`\<...\>, `TObject`\<...\>\]\>\>; \}\>, `TObject`\<\{ `kind`: `TLiteral`\<`"slot"`\>; \}\>\]\>\>; `compositionCase`: `TOptional`\<`TString`\>; `previewData`: `TOptional`\<`TObject`\<\{ `fields`: `TOptional`\<`TRecord`\<`TString`, `TUnknown`\>\>; \}\>\>; \}\>
-
-Defined in: packages/core/src/schema/node-model/config.ts:30
-
----
-
-### definitionConfigSchema
-
-> `const` **definitionConfigSchema**: `TObject`\<\{ `previewData`: `TOptional`\<`TObject`\<\{ `fields`: `TOptional`\<`TRecord`\<`TString`, `TUnknown`\>\>; \}\>\>; `fieldExposure`: `TOptional`\<`TRecord`\<`TString`, `TUnion`\<\[`TObject`\<\{ `mode`: `TLiteral`\<`"flat"`\>; \}\>, `TObject`\<\{ `mode`: `TLiteral`\<`"grouped"`\>; `groupName`: `TOptional`\<`TString`\>; \}\>, `TObject`\<\{ `mode`: `TLiteral`\<`"manual"`\>; `fields`: `TRecord`\<`TString`, `TString`\>; \}\>\]\>\>\>; `staticFields`: `TOptional`\<`TRecord`\<`TString`, `TObject`\<\{ `isStatic`: `TLiteral`\<`true`\>; `value`: `TOptional`\<`TUnsafe`\<[`FieldValue`](#fieldvalue)\>\>; `expose`: `TOptional`\<`TBoolean`\>; \}\>\>\>; `instanceFieldConfigs`: `TOptional`\<`TRecord`\<`TString`, `TRecord`\<`TString`, `TObject`\<\{ `isStatic`: `TLiteral`\<`true`\>; `value`: `TOptional`\<`TUnsafe`\<[`FieldValue`](#fieldvalue)\>\>; `expose`: `TOptional`\<`TBoolean`\>; \}\>\>\>\>; \}\>
-
-Defined in: packages/core/src/schema/node-model/config.ts:102
-
----
-
-### domEventSchema
-
-> `const` **domEventSchema**: `TRecord`\<`TString`, `TUnknown`\>
-
-Defined in: packages/core/src/schema/node-model/dom.ts:4
-
----
-
-### domSpecSchema
-
-> `const` **domSpecSchema**: `TObject`\<\{ `tagName`: `TOptional`\<`TString`\>; `text`: `TOptional`\<`TString`\>; `attributes`: `TOptional`\<`TRecord`\<`TString`, `TString`\>\>; `data`: `TOptional`\<`TRecord`\<`TString`, `TString`\>\>; `properties`: `TOptional`\<`TRecord`\<`TString`, `TUnsafe`\<[`FieldValue`](#fieldvalue)\>\>\>; `event`: `TOptional`\<`TRecord`\<`TString`, `TUnknown`\>\>; \}\>
-
-Defined in: packages/core/src/schema/node-model/dom.ts:17
-
----
-
-### nodeDefinitionKindSchema
-
-> `const` **nodeDefinitionKindSchema**: `TUnion`\<\[`TLiteral`\<`"atom"`\>, `TLiteral`\<`"component"`\>, `TLiteral`\<`"page"`\>\]\>
-
-Defined in: packages/core/src/schema/node-model/node-definition.ts:126
-
----
-
-### nodeDefinitionSchema
-
-> `const` **nodeDefinitionSchema**: `TObject`\<\{ `uuid`: `TString`; `name`: `TString`; `kind`: `TUnion`\<\[`TLiteral`\<`"atom"`\>, `TLiteral`\<`"component"`\>, `TLiteral`\<`"page"`\>\]\>; `category`: `TOptional`\<`TString`\>; `schema`: `TUnion`\<\[`TObject`\<\{ `kind`: `TLiteral`\<`"ref"`\>; `uuid`: `TString`; \}\>, `TObject`\<\{ `kind`: `TLiteral`\<`"inline"`\>; `schema`: `TRecord`\<`TString`, `TUnknown`\>; \}\>\]\>; `root`: `TRecursive`\<`TObject`\<\{ `uuid`: `TString`; `name`: `TOptional`\<`TString`\>; `dom`: `TObject`\<\{ `tagName`: `TOptional`\<`TString`\>; `text`: `TOptional`\<`TString`\>; `attributes`: `TOptional`\<`TRecord`\<`TString`, `TString`\>\>; `data`: `TOptional`\<`TRecord`\<`TString`, `TString`\>\>; `properties`: `TOptional`\<`TRecord`\<`TString`, `TUnsafe`\<[`FieldValue`](#fieldvalue)\>\>\>; `event`: `TOptional`\<`TRecord`\<`TString`, `TUnknown`\>\>; `children`: `TOptional`\<`TArray`\<`TThis`\>\>; \}\>; `classes`: `TOptional`\<`TArray`\<`TObject`\<\{ `name`: `TString`; `generated`: `TOptional`\<`TLiteral`\<...\>\>; `condition`: `TOptional`\<`TUnion`\<...\>\>; `style`: `TOptional`\<`TObject`\<...\>\>; \}\>\>\>; `schema`: `TOptional`\<`TUnion`\<\[`TObject`\<\{ `kind`: `TLiteral`\<...\>; `uuid`: `TString`; \}\>, `TObject`\<\{ `kind`: `TLiteral`\<...\>; `schema`: `TRecord`\<..., ...\>; \}\>\]\>\>; `data`: `TOptional`\<`TRecord`\<`TString`, `TUnsafe`\<[`FieldValue`](#fieldvalue)\>\>\>; `config`: `TOptional`\<`TObject`\<\{ `definitionRef`: `TOptional`\<`TString`\>; `definitionRefBinding`: `TOptional`\<`TObject`\<\{ `kind`: ...; `path`: ...; \}\>\>; `composition`: `TOptional`\<`TUnion`\<\[..., ..., ...\]\>\>; `compositionCase`: `TOptional`\<`TString`\>; `previewData`: `TOptional`\<`TObject`\<\{ `fields`: ...; \}\>\>; \}\>\>; \}\>\>; `behavior`: `TOptional`\<`TObject`\<\{ `state`: `TOptional`\<`TRecord`\<`TString`, `TUnknown`\>\>; `stateSchema`: `TOptional`\<`TRecord`\<`TString`, `TRecord`\<`TString`, `TUnknown`\>\>\>; `stateArrayKeyPaths`: `TOptional`\<`TRecord`\<`TString`, `TString`\>\>; `transitions`: `TArray`\<`TObject`\<\{ `nodeUuid`: `TString`; `event`: `TString`; `actions`: `TArray`\<`TUnion`\<\[..., ..., ...\]\>\>; \}\>\>; \}\>\>; `config`: `TOptional`\<`TObject`\<\{ `previewData`: `TOptional`\<`TObject`\<\{ `fields`: `TOptional`\<`TRecord`\<`TString`, `TUnknown`\>\>; \}\>\>; `fieldExposure`: `TOptional`\<`TRecord`\<`TString`, `TUnion`\<\[`TObject`\<\{ `mode`: ...; \}\>, `TObject`\<\{ `mode`: ...; `groupName`: ...; \}\>, `TObject`\<\{ `mode`: ...; `fields`: ...; \}\>\]\>\>\>; `staticFields`: `TOptional`\<`TRecord`\<`TString`, `TObject`\<\{ `isStatic`: `TLiteral`\<`true`\>; `value`: `TOptional`\<`TUnsafe`\<...\>\>; `expose`: `TOptional`\<`TBoolean`\>; \}\>\>\>; `instanceFieldConfigs`: `TOptional`\<`TRecord`\<`TString`, `TRecord`\<`TString`, `TObject`\<\{ `isStatic`: `TLiteral`\<...\>; `value`: `TOptional`\<...\>; `expose`: `TOptional`\<...\>; \}\>\>\>\>; \}\>\>; \}\>
-
-Defined in: packages/core/src/schema/node-model/node-definition.ts:132
-
----
-
-### NODE\_MODEL\_SCHEMA\_ID
-
-> `const` **NODE\_MODEL\_SCHEMA\_ID**: `"https://github.com/mmilad/facadeur/schema/node-model/node"` = `'https://github.com/mmilad/facadeur/schema/node-model/node'`
-
-Defined in: packages/core/src/schema/node-model/node.ts:110
-
----
-
-### nodeSchema
-
-> `const` **nodeSchema**: `TRecursive`\<`TObject`\<\{ `uuid`: `TString`; `name`: `TOptional`\<`TString`\>; `dom`: `TObject`\<\{ `tagName`: `TOptional`\<`TString`\>; `text`: `TOptional`\<`TString`\>; `attributes`: `TOptional`\<`TRecord`\<`TString`, `TString`\>\>; `data`: `TOptional`\<`TRecord`\<`TString`, `TString`\>\>; `properties`: `TOptional`\<`TRecord`\<`TString`, `TUnsafe`\<[`FieldValue`](#fieldvalue)\>\>\>; `event`: `TOptional`\<`TRecord`\<`TString`, `TUnknown`\>\>; `children`: `TOptional`\<`TArray`\<`TThis`\>\>; \}\>; `classes`: `TOptional`\<`TArray`\<`TObject`\<\{ `name`: `TString`; `generated`: `TOptional`\<`TLiteral`\<`true`\>\>; `condition`: `TOptional`\<`TUnion`\<\[`TRecursive`\<...\>, `TObject`\<...\>\]\>\>; `style`: `TOptional`\<`TObject`\<\{ `declarations`: `TOptional`\<...\>; `states`: `TOptional`\<...\>; `variants`: `TOptional`\<...\>; `breakpoints`: `TOptional`\<...\>; \}\>\>; \}\>\>\>; `schema`: `TOptional`\<`TUnion`\<\[`TObject`\<\{ `kind`: `TLiteral`\<`"ref"`\>; `uuid`: `TString`; \}\>, `TObject`\<\{ `kind`: `TLiteral`\<`"inline"`\>; `schema`: `TRecord`\<`TString`, `TUnknown`\>; \}\>\]\>\>; `data`: `TOptional`\<`TRecord`\<`TString`, `TUnsafe`\<[`FieldValue`](#fieldvalue)\>\>\>; `config`: `TOptional`\<`TObject`\<\{ `definitionRef`: `TOptional`\<`TString`\>; `definitionRefBinding`: `TOptional`\<`TObject`\<\{ `kind`: `TLiteral`\<`"item"`\>; `path`: `TString`; \}\>\>; `composition`: `TOptional`\<`TUnion`\<\[`TObject`\<\{ `kind`: ...; `keyPath`: ...; `indexName`: ...; `filter`: ...; `source`: ...; \}\>, `TObject`\<\{ `kind`: ...; `source`: ...; \}\>, `TObject`\<\{ `kind`: ...; \}\>\]\>\>; `compositionCase`: `TOptional`\<`TString`\>; `previewData`: `TOptional`\<`TObject`\<\{ `fields`: `TOptional`\<`TRecord`\<..., ...\>\>; \}\>\>; \}\>\>; \}\>\>
-
-Defined in: packages/core/src/schema/node-model/node.ts:112
-
----
-
-### schemaSourceSchema
-
-> `const` **schemaSourceSchema**: `TUnion`\<\[`TObject`\<\{ `kind`: `TLiteral`\<`"ref"`\>; `uuid`: `TString`; \}\>, `TObject`\<\{ `kind`: `TLiteral`\<`"inline"`\>; `schema`: `TRecord`\<`TString`, `TUnknown`\>; \}\>\]\>
-
-Defined in: packages/core/src/schema/node-model/schema-source.ts:4
-
----
-
-### uuidSchema
-
-> `const` **uuidSchema**: `TString`
-
-Defined in: packages/core/src/schema/node-model/uuid.ts:5
-
-Stable registry id (rename-safe). Distinct from legacy document `id` slugs.
-
-## Functions
-
-### executeComponentBehavior()
-
-> **executeComponentBehavior**(`behavior`, `nodeUuid`, `eventName`, `context`): [`BehaviorRuntimeResult`](#behaviorruntimeresult)
-
-Defined in: packages/core/src/controller/project/behavior-runtime.ts:22
-
-Execute the ordered, declarative transitions for one node event without mutating inputs.
-
-#### Parameters
-
-##### behavior
-
-`ComponentBehavior` \| `undefined`
-
-##### nodeUuid
-
-`string`
-
-##### eventName
-
-`string`
-
-##### context
-
-[`BehaviorRuntimeContext`](#behaviorruntimecontext)
-
-#### Returns
-
-[`BehaviorRuntimeResult`](#behaviorruntimeresult)
-
----
-
-### createCatalogDefinition()
-
-> **createCatalogDefinition**(`catalog`, `kind`, `definition`): `ProjectCatalog`
-
-Defined in: packages/core/src/controller/project/catalog/definition-ops.ts:11
-
-#### Parameters
-
-##### catalog
-
-`ProjectCatalog`
-
-##### kind
-
-`CatalogMapKey`
-
-##### definition
-
-`NodeDefinition`
-
-#### Returns
-
-`ProjectCatalog`
-
----
-
-### patchCatalogDefinitionRecord()
-
-> **patchCatalogDefinitionRecord**(`catalog`, `kind`, `uuid`, `patch`): `ProjectCatalog`
-
-Defined in: packages/core/src/controller/project/catalog/definition-ops.ts:24
-
-#### Parameters
-
-##### catalog
-
-`ProjectCatalog`
-
-##### kind
-
-`CatalogMapKey`
-
-##### uuid
-
-`string`
-
-##### patch
-
-`Partial`\<`NodeDefinition`\>
-
-#### Returns
-
-`ProjectCatalog`
-
----
-
-### deleteCatalogDefinitionRecord()
-
-> **deleteCatalogDefinitionRecord**(`catalog`, `kind`, `uuid`): `ProjectCatalog`
-
-Defined in: packages/core/src/controller/project/catalog/definition-ops.ts:60
-
-#### Parameters
-
-##### catalog
-
-`ProjectCatalog`
-
-##### kind
-
-`CatalogMapKey`
-
-##### uuid
-
-`string`
-
-#### Returns
-
-`ProjectCatalog`
-
----
-
-### upsertCatalogSchema()
-
-> **upsertCatalogSchema**(`catalog`, `uuid`, `schema`): `ProjectCatalog`
-
-Defined in: packages/core/src/controller/project/catalog/definition-ops.ts:86
-
-#### Parameters
-
-##### catalog
-
-`ProjectCatalog`
-
-##### uuid
-
-`string`
-
-##### schema
-
-`JsonSchemaObject`
-
-#### Returns
-
-`ProjectCatalog`
-
----
-
-### removeCatalogSchema()
-
-> **removeCatalogSchema**(`catalog`, `uuid`): `ProjectCatalog`
-
-Defined in: packages/core/src/controller/project/catalog/definition-ops.ts:101
-
-#### Parameters
-
-##### catalog
-
-`ProjectCatalog`
-
-##### uuid
-
-`string`
-
-#### Returns
-
-`ProjectCatalog`
-
----
-
-### catalogKindForDefinition()
-
-> **catalogKindForDefinition**(`catalog`, `uuid`): `CatalogMapKey` \| `null`
-
-Defined in: packages/core/src/controller/project/catalog/definition-ops.ts:117
-
-#### Parameters
-
-##### catalog
-
-`ProjectCatalog`
-
-##### uuid
-
-`string`
-
-#### Returns
-
-`CatalogMapKey` \| `null`
-
----
-
-### componentPropsForSchema()
-
-> **componentPropsForSchema**(`schema`): `object`[]
-
-Defined in: packages/core/src/controller/project/catalog/field-ids.ts:220
-
-Project a component schema into its bindable property fields.
-
-#### Parameters
-
-##### schema
-
-`unknown`
-
-#### Returns
-
-`object`[]
-
----
-
-### layerSelectorForName()
-
-> **layerSelectorForName**(`name`): `string`
-
-Defined in: packages/core/src/controller/project/catalog/node-classes.ts:3
-
-#### Parameters
-
-##### name
-
-`string`
-
-#### Returns
-
-`string`
-
----
-
-### classListFromNode()
+#### Propertie…8555 tokens truncated…stFromNode()
 
 > **classListFromNode**(`node`): `string`[]
 
@@ -5926,47 +4992,11 @@ Stable id safe for `data-id` and the document schema.
 
 ---
 
-### projectStyleSuggestions()
-
-> **projectStyleSuggestions**(`catalog`): `object`
-
-Defined in: packages/core/src/queries.ts:21
-
-Compose Catalog style declarations and token choices for Editor read consumers.
-
-#### Parameters
-
-##### catalog
-
-`ProjectCatalog`
-
-#### Returns
-
-`object`
-
-##### keys
-
-> **keys**: `string`[]
-
-##### valuesByKey
-
-> **valuesByKey**: `object`
-
-###### Index Signature
-
-\[`k`: `string`\]: `string`[]
-
-##### options
-
-> **options**: `object`[] = `tokenOptions`
-
----
-
 ### tokenByUuid()
 
 > **tokenByUuid**(`catalog`, `uuid`): [`IndexedToken`](#indexedtoken) \| `undefined`
 
-Defined in: packages/core/src/queries.ts:71
+Defined in: packages/core/src/queries.ts:18
 
 Read a token by UUID from Catalog data, preserving the token parser's inferred result type.
 
@@ -5990,7 +5020,7 @@ Read a token by UUID from Catalog data, preserving the token parser's inferred r
 
 > **tokenByReference**(`catalog`, `value`): [`IndexedToken`](#indexedtoken) \| `undefined`
 
-Defined in: packages/core/src/queries.ts:76
+Defined in: packages/core/src/queries.ts:23
 
 Resolve a Catalog token reference with the same parser used by Style token operations.
 
@@ -6014,7 +5044,7 @@ Resolve a Catalog token reference with the same parser used by Style token opera
 
 > **tokenReferencePaths**(`catalog`, `uuid`): `string`[]
 
-Defined in: packages/core/src/queries.ts:81
+Defined in: packages/core/src/queries.ts:28
 
 Return sorted token paths that use a UUID in values or breakpoint overrides.
 
