@@ -213,7 +213,6 @@ export {
   definitionSummaries,
   effectiveNodeTagName,
   fontFamilyTokens,
-  projectStyleSuggestions,
   tokenByReference,
   tokenByUuid,
   tokenReferencePaths,

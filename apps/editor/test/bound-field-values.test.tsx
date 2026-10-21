@@ -34,7 +34,7 @@ function catalogWithPreviewFields() {
     config: {
       ...definition.config,
       previewData: {
-        fields: { label: 'Work emails', value: '', placeholder: 'placeholder' },
+        fields: { label: 'Work emails', value: '', placeholder: 'Enter a valueasdasdasd' },
       },
     },
   };

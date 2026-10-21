@@ -49,7 +49,6 @@ import {
   definitionDisplayName,
   definitionSummaries,
   effectiveNodeTagName,
-  projectStyleSuggestions,
   tokenByReference,
   tokenByUuid,
   tokenReferencePaths,
@@ -142,10 +141,6 @@ export class CoreController implements CoreControllerHost {
 
   getDesignProps() {
     return Object.values(this.catalog.props ?? {}).map((prop) => structuredClone(prop));
-  }
-
-  getProjectStyleSuggestions() {
-    return projectStyleSuggestions(this.catalog);
   }
 
   getTokenByUUID(uuid: string) {
