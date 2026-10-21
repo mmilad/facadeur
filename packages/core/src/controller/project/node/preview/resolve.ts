@@ -6,19 +6,19 @@ import type {
   ProjectCatalog,
 } from '@facadeur/domain';
 import type { ElementBehaviorTarget, RenderBuildConfig } from '@facadeur/domain';
-import { findDefinition } from '../../catalog/ops';
+import {
+  canAcceptCatalogChildren,
+  defaultFieldExposure,
+  effectiveSchemaForDefinition,
+  findDefinition,
+  inheritableSchemaForDefinition,
+} from '../../../../queries';
 import {
   compatibleNodeFieldValues,
   lockedStaticFieldValues,
   mergePreviewFields,
   staticFieldValues,
 } from './merge';
-import {
-  defaultFieldExposure,
-  effectiveSchemaForDefinition,
-  inheritableSchemaForDefinition,
-} from '../../catalog/field-contract';
-import { canAcceptCatalogChildren } from '../../catalog/tree-ops';
 import { effectiveClassList } from './class-conditions';
 import {
   componentPropValues,

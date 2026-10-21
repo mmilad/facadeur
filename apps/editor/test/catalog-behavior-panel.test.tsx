@@ -30,14 +30,13 @@ const definition: NodeDefinition = {
 
 function renderControlledPanel(initial: NodeDefinition = definition) {
   let current = initial;
-  let view: ReturnType<typeof render>;
   const onEvent = vi.fn((event: EditorEvent) => {
     if (event.type === EditorEventType.DefinitionBehaviorSet) {
       current = { ...current, behavior: event.data.behavior };
       view.rerender(<CatalogBehaviorPanel definition={current} onEvent={onEvent} />);
     }
   });
-  view = render(<CatalogBehaviorPanel definition={current} onEvent={onEvent} />);
+  const view = render(<CatalogBehaviorPanel definition={current} onEvent={onEvent} />);
   return { onEvent };
 }
 

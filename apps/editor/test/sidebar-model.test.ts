@@ -94,7 +94,8 @@ describe('sidebar view-model adapter', () => {
   it('keeps the generated root class first and reorders optional classes through design commands', async () => {
     const catalog = createExampleCatalog();
     const component = catalog.components[exampleIds.components.card.definition]!;
-    const generated = component.root.classes?.find((item) => item.generated)!;
+    const generated = component.root.classes?.find((item) => item.generated);
+    if (!generated) throw new Error('Expected the card root to have a generated class');
     const definition = {
       ...component,
       root: {

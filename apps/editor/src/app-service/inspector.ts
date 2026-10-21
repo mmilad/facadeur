@@ -1,5 +1,6 @@
 import { findNodeByUuid, type CoreController, type InspectorFormModel } from '@facadeur/core';
 import { getPath } from '@facadeur/form';
+import { editorStyleSuggestions } from '../read/style-suggestions';
 
 export interface InspectorViewModel extends InspectorFormModel {
   readonly selectionKind: 'root' | 'instance' | 'element';
@@ -63,7 +64,7 @@ export class InspectorService {
       },
       selectionKind,
       previewDataVisible: hasSchema && selectionKind !== 'element',
-      styleSuggestions: this.core.getProjectStyleSuggestions(),
+      styleSuggestions: editorStyleSuggestions(snapshot.catalog),
     };
   }
 

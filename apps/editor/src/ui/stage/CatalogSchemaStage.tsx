@@ -3,7 +3,7 @@
 import type { FieldValue } from '@facadeur/core';
 import type { JsonSchemaObject } from '@facadeur/domain';
 import type { AppService } from '../../app-service';
-import { catalogSchemaTitle } from '../../domain/catalog/schema-display';
+import { catalogSchemaTitle } from '../../read/catalog';
 import type { EditorEvent } from '../../domain/sidebar/events';
 import { EditorEventType } from '../../domain/sidebar/events';
 import { Stack } from '../components/layout';

@@ -1,5 +1,6 @@
 import type { CoreControllerHost } from '../../../../types/host';
 import type { RenderBuildConfig } from '@facadeur/domain';
+import { effectiveSchemaForDefinition, findDefinition, findNodeByUuid } from '../../../../queries';
 import {
   buildInspectorFormModel,
   inspectorChangeTarget,
@@ -7,8 +8,6 @@ import {
 } from './inspector-view';
 import { resolveDefinitionToElementBuildConfig } from './resolve';
 import { previewFieldsForNode } from './merge';
-import { findDefinition, findNodeByUuid } from '../../catalog/ops';
-import { effectiveSchemaForDefinition } from '../../catalog/field-contract';
 
 /**
  * Preview pipeline for canvas/DOM:

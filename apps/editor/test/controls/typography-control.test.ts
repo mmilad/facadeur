@@ -6,7 +6,7 @@ import {
   isTypographyValue,
   isTokenRef,
   parseTypographyFieldValue,
-  projectFontRefs,
+  projectFontWeightOptions,
 } from '../../src/ui/controls/typography/value';
 import {
   styleDeclarationKind,
@@ -14,19 +14,19 @@ import {
 } from '../../src/ui/controls/style/declaration-kind';
 import { exampleIds as fixtureIds, tokenRef as fixtureTokenRef } from '@facadeur/examples';
 
-// The Example catalog has one font; the second local UUID exercises stable sorting.
-const secondFontUuid = '0498c315-10df-54a4-8213-f36bad42e52b';
-
 describe('typography control value', () => {
   it('detects token references', () => {
     expect(isTokenRef(fixtureTokenRef(fixtureIds.tokens.font.systemUi))).toBe(true);
     expect(isTokenRef('16px')).toBe(false);
   });
 
-  it('builds project font refs', () => {
+  it('builds sorted unique project font weight options', () => {
     expect(
-      projectFontRefs([{ uuid: fixtureIds.tokens.font.systemUi }, { uuid: secondFontUuid }]),
-    ).toEqual([fixtureTokenRef(fixtureIds.tokens.font.systemUi), fixtureTokenRef(secondFontUuid)]);
+      projectFontWeightOptions([
+        { value: { weights: [400, 700] } },
+        { value: { weights: [300, 400] } },
+      ]),
+    ).toEqual(['300', '400', '700']);
   });
 
   it('infers field mode', () => {

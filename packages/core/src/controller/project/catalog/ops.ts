@@ -12,7 +12,7 @@ import type {
   StaticFieldConfig,
 } from '@facadeur/domain';
 import { isVoidHtmlTag } from '../../../document/html-tags';
-import { classListFromNode, layerSelectorForName } from './node-classes';
+import { layerSelectorForName } from './node-classes';
 
 export { classListFromNode } from './node-classes';
 

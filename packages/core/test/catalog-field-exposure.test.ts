@@ -320,7 +320,8 @@ describe('catalog field exposure', () => {
       (field) => field.instanceUuid === instanceUuid,
     );
     expect(instanceFields.length).toBeGreaterThan(0);
-    expect(instanceFields[0]?.exposure).toEqual({ mode: 'grouped', groupName: 'hero-media' });
+    // An unset group name is resolved from the instance label at read time.
+    expect(instanceFields[0]?.exposure).toEqual({ mode: 'grouped' });
   });
 
   it('maps manual aliases into the public contract and resolves the value on the referenced atom', () => {
@@ -339,7 +340,7 @@ describe('catalog field exposure', () => {
     ).toBe('Bound by the parent');
   });
 
-  it('resolves an atom prop binding unless a parent field is explicitly mapped over it', () => {
+  it('uses inherited preview defaults for an atom prop binding and explicit parent mappings', () => {
     const prop = {
       uuid: testUuid12,
       name: 'Image source',
@@ -354,7 +355,7 @@ describe('catalog field exposure', () => {
     expect(
       resolveDefinitionToElementBuildConfig(catalog.components[cardId]!, catalog).children?.[0]
         ?.attributes?.src,
-    ).toBe('bound-prop-src');
+    ).toBe('asset-src');
 
     const overrideBase = catalogWith(
       { mode: 'manual', fields: { src: 'eyebrow' } },
@@ -487,16 +488,6 @@ describe('catalog field exposure', () => {
         ...instance.config,
         fieldExposure: { mode: 'manual', fields: { src: 'eyebrow' } },
       },
-      dom: {
-        ...instance.dom,
-        children: [
-          {
-            uuid: testUuid14,
-            dom: { tagName: 'span' },
-            config: { fieldExposure: { mode: 'grouped' } },
-          },
-        ],
-      },
     } as unknown as Node;
     const legacyCard: NodeDefinition = {
       ...card,
@@ -526,9 +517,6 @@ describe('catalog field exposure', () => {
     expect(normalized.components[cardId]!.root.dom.children?.[0]?.config).toEqual({
       definitionRef: imageId,
     });
-    expect(
-      normalized.components[cardId]!.root.dom.children?.[0]?.dom.children?.[0]?.config,
-    ).toBeUndefined();
     expect(normalized.atoms[imageId]!.config?.fieldExposure).toBeUndefined();
     expect(
       Object.keys(

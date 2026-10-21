@@ -3,6 +3,8 @@ import {
   DocumentError,
   executeComponentBehavior,
   emptyProjectCatalog,
+  definitionSummaries,
+  tokenReferencesByType,
   resolveDefinitionToElementBuildConfig,
   tokenReferenceValue,
   validateProjectCatalog,
@@ -22,6 +24,13 @@ const imageAtomUuid = testUuid26;
 const rootNodeUuid = testUuid27;
 
 describe('validateProjectCatalog', () => {
+  it('exposes domain-owned catalog and token reads through the Core package facade', () => {
+    const catalog = createExampleCatalog();
+
+    expect(definitionSummaries(catalog).length).toBeGreaterThan(0);
+    expect(tokenReferencesByType(catalog.tokens, 'color').length).toBeGreaterThan(0);
+  });
+
   it('accepts empty catalog', () => {
     expect(validateProjectCatalog(emptyProjectCatalog())).toEqual({
       atoms: {},

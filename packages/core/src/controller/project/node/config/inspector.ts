@@ -1,6 +1,6 @@
 import type { FieldValue, NodeDefinition, ProjectCatalog } from '@facadeur/domain';
 import { fieldsFromJsonSchema, type JsonSchemaField } from '../../../../schema/json-schema-fields';
-import { effectiveSchemaForDefinition } from '../../catalog/field-contract';
+import { effectiveSchemaForDefinition } from '../../../../queries';
 import { previewFieldsForNode } from '../preview/merge';
 import { resolveCatalogSchemaReferences } from '../preview/reference-resolver';
 

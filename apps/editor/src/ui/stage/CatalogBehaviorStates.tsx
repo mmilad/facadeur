@@ -25,12 +25,10 @@ import {
 } from './CatalogBehaviorObjectList';
 import type { ItemField, ItemRecord } from './CatalogBehaviorObjectList';
 import { Field } from '../components/feedback';
-import { Inline, Stack } from '../components/layout';
+import { Inline } from '../components/layout';
 import { ArrayField, NumberInput, Select, TextInput, Toggle } from '../controls/form-binding';
 
 type StateType = 'boolean' | 'string' | 'number' | 'string-list' | 'object-list';
-type StateEntry = [string, FieldValue | null];
-
 const typeOptions = [
   { value: 'boolean', label: 'Boolean' },
   { value: 'string', label: 'Text' },
@@ -313,7 +311,6 @@ export function CatalogBehaviorStates({
   );
 
   function updateObjectFields(name: string, currentItems: FieldValue[], nextFields: ItemField[]) {
-    const currentSchema = behavior.stateSchema?.[name];
     const properties = Object.fromEntries(
       nextFields.map((field) => [field.name, { type: field.type }]),
     );

@@ -1,6 +1,5 @@
 import type { CoreController } from '@facadeur/core';
-import { catalogAssetSummaries } from '../catalog/asset-list';
-import { catalogLayerTree } from '../catalog/layer-tree';
+import { catalogAssetSummaries, catalogLayerTree } from '../../read/catalog';
 import type { AssetSummary, EditorDrag, EditorNotice, EditorSnapshot, EditorTool } from './types';
 import type { DefaultKind } from '@facadeur/core';
 import type { StyleEditMode } from '../viewport/viewport-edit';

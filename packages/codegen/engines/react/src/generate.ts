@@ -140,7 +140,7 @@ function renderComponent(
   );
   const propsType = schemaType(schema, callbackProps);
   const propsAreOptional = !schemaHasRequiredProperties(schema);
-  const behaviorSource = renderBehavior(behavior, schemaType);
+  const behaviorSource = renderBehavior(behavior, schemaType, jsx.includes('<Fragment'));
   const source = [
     `/// <reference path="../../styles.d.ts" />`,
     ...(behaviorSource.imports.length ? behaviorSource.imports : []),
@@ -270,6 +270,7 @@ function renderNode(
             : sourcePath
               ? `getProp(${sourcePath}, ${JSON.stringify(source.path)})`
               : '[]';
+      const array = `(Array.isArray(${state}) ? ${state} as unknown[] : [])`;
       const arrayPath =
         source.kind === 'state'
           ? `state.${source.name}`
@@ -314,8 +315,8 @@ function renderNode(
       const filter = node.repeater.filter;
       const queryState = filter ? stateIdentifiers.get(filter.queryState) : undefined;
       const rows = filter
-        ? `(${state} ?? []).map((item, index) => ({ item, index })).filter(({ item }) => { const query = (${queryState ?? 'undefined'} ?? '').trim().toLowerCase(); if (!query) return true; const value = getProp(item, ${JSON.stringify(filter.itemPath)}); return typeof value === 'string' && value.toLowerCase().includes(query); }).map(({ item, index }) => <Fragment key={${key}}>${templates}</Fragment>)`
-        : `(${state} ?? []).map((item, index) => <Fragment key={${key}}>${templates}</Fragment>)`;
+        ? `${array}.map((item, index) => ({ item, index })).filter(({ item }) => { const query = (${queryState ?? 'undefined'} ?? '').trim().toLowerCase(); if (!query) return true; const value = getProp(item, ${JSON.stringify(filter.itemPath)}); return typeof value === 'string' && value.toLowerCase().includes(query); }).map(({ item, index }) => <Fragment key={${key}}>${templates}</Fragment>)`
+        : `${array}.map((item, index) => <Fragment key={${key}}>${templates}</Fragment>)`;
       return `{${rows}}`;
     }
     return (node.children ?? [])

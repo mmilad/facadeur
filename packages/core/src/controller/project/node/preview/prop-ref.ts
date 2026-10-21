@@ -1,5 +1,5 @@
 import type { FieldValue, JsonSchemaObject, ProjectCatalog } from '@facadeur/domain';
-import { componentPropsForSchema } from '../../catalog/field-ids';
+import { componentPropsForSchema } from '../../../../queries';
 import { referenceOptionsForScopes, type RepeaterReferenceScope } from './reference-resolver';
 
 const PROP_REF = /^\{prop:([^}]+)\}$/;

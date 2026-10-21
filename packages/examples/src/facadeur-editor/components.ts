@@ -13,6 +13,7 @@ import {
   row,
   smallText,
   textProp,
+  uuid,
 } from './shared';
 import { facadeurHeader } from './header';
 import { facadeurTreeNode } from './tree-node';
@@ -574,7 +575,7 @@ const cssRule = componentDefinition(
   ),
 );
 
-const globalStylesTable = componentDefinition(
+const globalStylesTableDefinition = componentDefinition(
   380,
   'Global CSS rules list',
   {
@@ -651,6 +652,19 @@ const globalStylesTable = componentDefinition(
     },
   ),
 );
+
+const globalStylesTable = {
+  ...globalStylesTableDefinition,
+  config: {
+    ...globalStylesTableDefinition.config,
+    fieldExposure: Object.fromEntries(
+      [3809, 3810, 3811, 3812, 3813].map((id) => [
+        uuid(id),
+        { mode: 'manual' as const, fields: {} },
+      ]),
+    ),
+  },
+};
 
 export const facadeurComponents = {
   header: facadeurHeader,

@@ -216,6 +216,7 @@ function schemaFieldSignature(value: unknown): string {
   return JSON.stringify(normalize(value));
 }
 
+/** Project a component schema into its bindable property fields. */
 export function componentPropsForSchema(
   schema: unknown,
 ): { uuid: string; name: string; path: string; valueType?: string }[] {
