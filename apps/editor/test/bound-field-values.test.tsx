@@ -34,7 +34,7 @@ function catalogWithPreviewFields() {
     config: {
       ...definition.config,
       previewData: {
-        fields: { label: 'Work emails', value: '', placeholder: 'Enter a valueasdasdasd' },
+        fields: { label: 'Work emails', value: '', placeholder: 'placeholder' },
       },
     },
   };
@@ -60,15 +60,14 @@ describe('catalog inspector preview fields', () => {
     );
 
     fireEvent.click(screen.getByRole('tab', { name: 'Preview data' }));
-    const placeholder = screen.getByRole('textbox', { name: 'placeholder' });
-    expect((placeholder as HTMLInputElement).value).toBe('Enter a valueasdasdasd');
+    const placeholder = screen.getByRole('textbox', { name: 'Placeholder' });
+    expect((placeholder as HTMLInputElement).value).toBe('placeholder');
 
     fireEvent.change(placeholder, { target: { value: 'Email address' } });
     fireEvent.blur(placeholder);
 
     expect(
-      session.core.getSnapshot().openDefinition?.config?.previewData?.fields?.container
-        ?.placeholder,
+      session.core.getSnapshot().openDefinition?.config?.previewData?.fields?.placeholder,
     ).toBe('Email address');
     session.destroy();
   });

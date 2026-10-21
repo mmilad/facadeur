@@ -12,7 +12,7 @@ export const root: Node = {
       autocomplete: 'off',
       type: 'text',
       value: '',
-      placeholder: 'Enter a valueasdasdasd',
+      placeholder: 'Enter a value',
       name: 'example-input',
     },
     properties: {
