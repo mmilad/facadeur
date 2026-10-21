@@ -61,12 +61,15 @@ describe('catalog inspector preview fields', () => {
 
     fireEvent.click(screen.getByRole('tab', { name: 'Preview data' }));
     const placeholder = screen.getByRole('textbox', { name: 'placeholder' });
-    expect((placeholder as HTMLInputElement).value).toBe('placeholder');
+    expect((placeholder as HTMLInputElement).value).toBe('Enter a valueasdasdasd');
 
     fireEvent.change(placeholder, { target: { value: 'Email address' } });
     fireEvent.blur(placeholder);
 
-    expect(session.core.getSnapshot().openDefinition?.root.data?.placeholder).toBe('Email address');
+    expect(
+      session.core.getSnapshot().openDefinition?.config?.previewData?.fields?.container
+        ?.placeholder,
+    ).toBe('Email address');
     session.destroy();
   });
 });

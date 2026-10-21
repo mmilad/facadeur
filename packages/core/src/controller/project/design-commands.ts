@@ -6,20 +6,16 @@ import type {
   NodeClassStyleDeclarationsCommand,
   NodeClassConditionCommand,
   NodeClassOrderCommand,
-} from '../../style/types';
-import { assertBreakpoints, cloneBreakpoints } from '../../style/breakpoints';
-import {
-  emptyTokenTree,
-  removeTokenFromTree,
-  setTokenInTree,
-} from '../../style/tokens/global/tree';
-import { validateProjectCatalog } from './validate';
+} from '../style/types';
+import { assertBreakpoints, cloneBreakpoints } from '../style/breakpoints';
+import { emptyTokenTree, removeTokenFromTree, setTokenInTree } from '../style/tokens/global/tree';
+import { validateProjectCatalog } from './catalog/validate';
 import {
   setNodeClassCondition,
   setNodeClassStyleDeclaration,
   setNodeClassStyleDeclarations,
   patchNodeClasses,
-} from './node-classes';
+} from './catalog/node-classes';
 
 export type CatalogDesignCommand =
   | GlobalTokenCommand

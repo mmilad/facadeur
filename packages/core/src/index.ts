@@ -55,7 +55,7 @@ export {
   buildInspectorFormModel,
   inspectorChangeTarget,
 } from './controller/project/node/preview/inspector-view';
-export { componentPropsForSchema } from './controller/project/catalog/field-ids';
+export { componentPropsForSchema } from './queries';
 export {
   designPropOptions,
   encodePropRef,
@@ -176,7 +176,6 @@ export {
   removeTokenFromTree,
   setTokenInTree,
 } from './controller/style/tokens/global/tree';
-export { fontFamilyTokens, tokenReferencesByType } from './controller/style/tokens/global/query';
 export { tokenReference, tokenReferenceValue } from './controller/style/tokens/syntax';
 export { tokenCssPropertyName } from './controller/style/tokens/global/selector';
 export { tokenCustomProperty, typographyCustomProperty } from './tokens/names';
@@ -209,6 +208,17 @@ export { refsInText } from './controller/style/references/text';
 export { omitVariantAxis, omitVariantValues } from './controller/style/blocks/edit';
 export { parseStyleBlock, parseTokenInterface } from './controller/style/blocks/parse';
 export { matchesSchemaValue } from './controller/validation/index';
+export {
+  definitionDisplayName,
+  definitionSummaries,
+  effectiveNodeTagName,
+  fontFamilyTokens,
+  projectStyleSuggestions,
+  tokenByReference,
+  tokenByUuid,
+  tokenReferencePaths,
+  tokenReferencesByType,
+} from './queries';
 export {
   uuidSchema,
   schemaSourceSchema,

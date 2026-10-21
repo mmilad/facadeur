@@ -232,11 +232,50 @@ function declarations(
       for (const field of TYPOGRAPHY_FIELDS) {
         output.push([kebab(field), `var(${typographyCustomProperty(token.path, field)})`]);
       }
+    } else if (property.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`) === 'font') {
+      const typography = parseJsonRecord(value);
+      if (typography) {
+        for (const field of TYPOGRAPHY_FIELDS) {
+          const item = typography[field];
+          if (typeof item === 'string' || typeof item === 'number') {
+            output.push([kebab(field), substitute(String(item), tokens, catalog)]);
+          }
+        }
+      } else {
+        output.push([kebab(property), substitute(value, tokens, catalog)]);
+      }
+    } else if (
+      property.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`) === 'box-shadow'
+    ) {
+      const shadow = parseJsonRecord(value);
+      if (shadow) {
+        const { offsetX, offsetY, blur, spread, color, inset } = shadow;
+        if ([offsetX, offsetY, blur, color].every((item) => typeof item === 'string')) {
+          output.push([
+            'box-shadow',
+            `${inset === true ? 'inset ' : ''}${offsetX} ${offsetY} ${blur} ${typeof spread === 'string' ? spread : '0'} ${color}`,
+          ]);
+        }
+      } else {
+        output.push([kebab(property), substitute(value, tokens, catalog)]);
+      }
     } else {
       output.push([kebab(property), substitute(value, tokens, catalog)]);
     }
   }
   return output;
+}
+
+function parseJsonRecord(value: string): Record<string, unknown> | undefined {
+  if (!value.startsWith('{')) return undefined;
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function substitute(

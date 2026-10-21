@@ -11,9 +11,13 @@ import type {
 import { htmlTagOptions, isVoidHtmlTag } from '../../../../document/html-tags';
 import { fieldsFromJsonSchema } from '../../../../schema/json-schema-fields';
 import type { JsonSchemaField } from '../../../../schema/json-schema-fields';
-import { classListFromNode, findDefinition, findNodeByUuid } from '../../catalog/ops';
-import { effectiveSchemaForDefinition } from '../../catalog/field-contract';
-import { componentPropsForSchema } from '../../catalog/field-ids';
+import {
+  classListFromNode,
+  componentPropsForSchema,
+  effectiveSchemaForDefinition,
+  findDefinition,
+  findNodeByUuid,
+} from '../../../../queries';
 import { staticFieldValues } from './merge';
 import { configFieldsForDefinition, schemaWithReferenceOptions } from './inspector-config-fields';
 import { inspectorInputsForNode } from '../config/inspector';

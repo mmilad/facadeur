@@ -10,7 +10,7 @@ import type { EditorSession, EditorTool } from '../../../domain/session';
 import { createStage, type StageController } from '../../../domain/viewport/stage';
 import type { ViewportBoard } from '../../../domain/viewport/board';
 import type { ViewportFrame } from '../../../domain/viewport/board';
-import { catalogNodeUuidForRenderedHit } from '../../../domain/catalog/rendered-hit';
+import { catalogNodeUuidForRenderedHit } from '../../../read/catalog';
 import { isEditableTarget } from '../../../domain/keyboard';
 
 export function useStagePointer({
@@ -249,7 +249,6 @@ export function useStagePointer({
       )
         return;
       const definition = app.getCoreSnapshot().openDefinition;
-      const catalog = app.getCoreSnapshot().catalog;
       const nodeUuid = app.getCoreSnapshot().selectedNodeUuid;
       if (!definition || !nodeUuid) return;
       const node = findNodeByUuid(definition.root, nodeUuid);

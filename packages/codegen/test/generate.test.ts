@@ -46,7 +46,7 @@ describe('Catalog-driven React code generation', () => {
     const componentsCss = generated.ui.find(
       (file) => file.path === 'styles/components.css',
     )?.contents;
-    expect(componentsCss).toMatch(/^\*,\n\*::before,\n\*::after \{\n  box-sizing: border-box;/);
+    expect(componentsCss).toMatch(/^\*,\n\*::before,\n\*::after \{\n {2}box-sizing: border-box;/);
     expect(componentsCss).toContain(`.facadeur-node-${button!.root.uuid}`);
     expect(
       generated.ui.find((file) => file.path === 'styles/design-tokens.css')?.contents,
@@ -302,7 +302,9 @@ describe('Catalog-driven React code generation', () => {
     const generated = generateReact({ catalog, entries: [component.uuid] });
     const output = generated.ui.find((file) => file.path.startsWith('components/'))?.contents ?? '';
     expect(output).toContain('useState<string[]>([])');
-    expect(output).toContain('(behaviorState0 ?? []).map((item, index) => <Fragment key={index}>');
+    expect(output).toContain(
+      '(Array.isArray(behaviorState0) ? behaviorState0 as unknown[] : []).map((item, index) => <Fragment key={index}>',
+    );
     expect(output).toContain('>{item}<small data-facadeur-codegen-node=');
     expect(output).toMatch(/<small[^>]*>\{behaviorState1\}<\/small>/);
     expect(output).toContain('value={behaviorState1}');

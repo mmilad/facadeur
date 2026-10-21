@@ -9,7 +9,7 @@ import { DocumentError } from '../../document/errors';
 import type { CoreControllerHost } from '../../types/host';
 import type { CatalogPort, CoreSnapshot } from '../../types/core-contracts';
 import type { CatalogDefinitionPort } from '../../types/catalog-definition-port';
-import { applyCatalogDesignCommand, type CatalogDesignCommand } from './catalog/design-commands';
+import { applyCatalogDesignCommand, type CatalogDesignCommand } from './design-commands';
 import {
   createCatalogDefinition,
   deleteCatalogDefinitionRecord,
@@ -20,8 +20,6 @@ import {
 import { removeCatalogDesignProp, upsertCatalogDesignProp } from './catalog/props-ops';
 import { patchNodeClasses } from './catalog/node-classes';
 import {
-  findDefinition,
-  findNodeByUuid,
   patchNodeData,
   pruneDefinitionValuesForSchema,
   patchCatalogDefinitionPreviewField,
@@ -55,9 +53,11 @@ import {
   tokenByReference,
   tokenByUuid,
   tokenReferencePaths,
-} from './catalog/queries';
+  findDefinition,
+  findNodeByUuid,
+} from '../../queries';
 import { NodeController } from './node/controller';
-import { activeBreakpoints, configuredBreakpoints } from '../../tokens/resolve';
+import { activeBreakpoints, configuredBreakpoints } from '../../queries';
 import { emptyTokenTree } from '../style/tokens/global/tree';
 
 /**

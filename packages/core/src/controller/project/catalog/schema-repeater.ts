@@ -1,4 +1,4 @@
-import type { Node, ProjectCatalog } from '@facadeur/domain';
+import type { Node, NodeDefinition, ProjectCatalog } from '@facadeur/domain';
 import { effectiveSchemaForDefinition } from './field-contract';
 import { componentPropsForSchema } from './field-ids';
 import { findDefinition } from './ops';
@@ -25,7 +25,6 @@ export function reconcileDefinitionBindingsForSchemaChange(
     if (nextProp) remappedProps.set(prop.uuid, nextProp.uuid);
   }
 
-  const nextDefinition = nextCatalog[next.kind][definitionUuid]!;
   const clone = structuredClone(nextCatalog) as ProjectCatalog;
   const definition = clone[next.kind][definitionUuid]!;
   const visit = (node: Node, itemSchema: Record<string, unknown> | null) => {
@@ -72,7 +71,7 @@ export function reconcileDefinitionBindingsForSchemaChange(
     for (const child of node.dom.children ?? []) visit(child, childItemSchema);
   };
   visit(definition.root, null);
-  (clone[next.kind] as Record<string, typeof nextDefinition>)[definitionUuid] = definition;
+  (clone[next.kind] as Record<string, NodeDefinition>)[definitionUuid] = definition;
   return clone;
 }
 

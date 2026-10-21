@@ -1,7 +1,5 @@
 import type { FieldValue, ProjectCatalog } from '@facadeur/domain';
-import { componentPropsForSchema } from '../../catalog/field-ids';
-import { readTokenTree } from '../../../style/tokens/global/tree';
-import { tokenReference } from '../../../style/tokens/syntax';
+import { componentPropsForSchema, readTokenTree, tokenReference } from '../../../../queries';
 
 export type RepeaterReferenceScope = {
   readonly nodeUuid: string;

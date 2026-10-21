@@ -7,7 +7,8 @@ describe('node class order', () => {
   it('resolves generated root class styles before authored class styles', () => {
     const catalog = createExampleCatalog();
     const definition = catalog.components[exampleIds.components.card.definition]!;
-    const generated = definition.root.classes?.find((item) => item.generated)!;
+    const generated = definition.root.classes?.find((item) => item.generated);
+    if (!generated) throw new Error('Expected the card root to have a generated class');
     const orderedDefinition = {
       ...definition,
       root: {

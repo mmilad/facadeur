@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createExampleCatalog, createProjectTemplate } from '@facadeur/examples';
 import { loadTokens } from '@facadeur/core';
+import type { ProjectCatalog } from '@facadeur/domain';
 import {
   createTokenPreviewResolver,
   renderDesignCss,
@@ -22,20 +23,57 @@ const testUuid38 = globalThis.crypto.randomUUID();
 const testUuid39 = globalThis.crypto.randomUUID();
 
 describe('CSS output from UUID-keyed tokens', () => {
+  it('serializes structured typography and shadow values as valid CSS', () => {
+    const catalog = structuredClone(createExampleCatalog());
+    const root = Object.values(catalog.components)[0]!.root;
+    (root as { classes?: unknown[] }).classes = [
+      {
+        name: 'structured-values',
+        style: {
+          declarations: {
+            font: JSON.stringify({
+              fontFamily: 'var(--font-system-ui)',
+              fontSize: '12px',
+              fontWeight: 400,
+              letterSpacing: '0',
+              lineHeight: 1.4,
+            }),
+            boxShadow: JSON.stringify({
+              blur: '24px',
+              color: '#0f172a1f',
+              offsetX: '0px',
+              offsetY: '8px',
+              spread: '0px',
+            }),
+          },
+        },
+      },
+    ];
+
+    const css = renderGlobalStyleCss(catalog);
+
+    expect(css).toContain('font-family: var(--font-system-ui);');
+    expect(css).toContain('font-size: 12px;');
+    expect(css).toContain('line-height: 1.4;');
+    expect(css).toContain('box-shadow: 0px 8px 24px 0px #0f172a1f;');
+    expect(css).not.toContain('font: {');
+    expect(css).not.toContain('box-shadow: {');
+  });
+
   it('switches the single Facadeur header between mobile and desktop at the laptop breakpoint', () => {
     const css = renderGlobalStyleCss(createExampleCatalog());
 
     expect(css).toContain('@media (min-width: 1024px)');
     expect(css).toContain(
-      '[data-facadeur-codegen-node="660e8400-e29b-41d4-a716-000000000c1d"] > [data-facadeur-codegen-node="660e8400-e29b-41d4-a716-000000000c1e"] > [data-facadeur-codegen-node="660e8400-e29b-41d4-a716-000000000c20"] {',
+      '.facadeur-node-660e8400-e29b-41d4-a716-000000000c1d .facadeur-node-660e8400-e29b-41d4-a716-000000000c20.desktop-project-context {',
     );
     expect(css).toContain('display: none;');
     expect(css).toContain('display: flex;');
     expect(css).toContain(
-      '[data-facadeur-codegen-node="660e8400-e29b-41d4-a716-000000000c1d"] > [data-facadeur-codegen-node="660e8400-e29b-41d4-a716-000000000c24"] > [data-facadeur-codegen-node="660e8400-e29b-41d4-a716-000000000c25"] {',
+      '.facadeur-node-660e8400-e29b-41d4-a716-000000000c1d .facadeur-node-660e8400-e29b-41d4-a716-000000000c25.desktop-header-actions {',
     );
     expect(css).toContain(
-      '[data-facadeur-codegen-node="660e8400-e29b-41d4-a716-000000000c1d"] > [data-facadeur-codegen-node="660e8400-e29b-41d4-a716-000000000c24"] > [data-facadeur-codegen-node="660e8400-e29b-41d4-a716-000000000c28"] {',
+      '.facadeur-node-660e8400-e29b-41d4-a716-000000000c1d .facadeur-node-660e8400-e29b-41d4-a716-000000000c27.save-project-icon {',
     );
   });
 
@@ -67,7 +105,7 @@ describe('CSS output from UUID-keyed tokens', () => {
     const design = loadTokens({ tokens: testTokens, breakpoints: testBreakpoints });
     const css = renderDesignCss({ tokens: testTokens, breakpoints: testBreakpoints });
 
-    expect(css).toContain('--type-body--font-family: var(--font-inter);');
+    expect(css).toContain('--type-body--font-family: var(--font-system-ui);');
     expect(css).toContain('--type-body--font-size: 16px;');
     expect(css).toMatch(/@media \(min-width: 768px\) \{[\s\S]*--type-body--font-size: 17px;/);
     expect(css).toMatch(/@media \(min-width: 1440px\) \{[\s\S]*--type-body--font-size: 18px;/);
@@ -244,10 +282,15 @@ describe('global Catalog CSS node lookup', () => {
         dom: { tagName: 'div', children: [{ uuid: nestedUuid, dom: { tagName: 'span' } }] },
       },
     ]);
-    const globalStyles = {
+    const globalStyles: NonNullable<ProjectCatalog['globalStyles']> = {
       block: {
-        children: { [`${childUuid}/${nestedUuid}`]: { declarations: { color: 'red' } } },
         rules: [
+          {
+            id: 'nested-page-child',
+            selector: '.child .nested',
+            bindings: { child: childUuid, nested: nestedUuid },
+            declarations: { color: 'red' },
+          },
           {
             id: 'page-root',
             selector: '.page',
@@ -257,16 +300,14 @@ describe('global Catalog CSS node lookup', () => {
         ],
       },
     };
-    const styledCatalog = { ...catalog, globalStyles };
+    const styledCatalog: ProjectCatalog = { ...catalog, globalStyles };
     const css = renderGlobalStyleCss(styledCatalog);
     expect(css).toContain(
-      `[data-facadeur-codegen-node="${page.root.uuid}"] > [data-facadeur-codegen-node="${childUuid}"] > [data-facadeur-codegen-node="${nestedUuid}"]`,
+      `.facadeur-node-${page.root.uuid} .facadeur-node-${childUuid} .facadeur-node-${nestedUuid} {`,
     );
     expect(css).toContain(`.facadeur-node-${page.root.uuid} {`);
-    Reflect.set(globalStyles.block, 'children', {
-      [page.root.uuid]: { declarations: { color: 'red' } },
-    });
-    expect(() => renderGlobalStyleCss(styledCatalog)).toThrow('does not resolve to Catalog nodes');
+    Reflect.set(globalStyles.block!.rules![0]!.bindings!, 'nested', 'unknown-node');
+    expect(() => renderGlobalStyleCss(styledCatalog)).toThrow('has an unresolved binding');
   });
 
   it('rejects missing authored-rule node bindings', () => {

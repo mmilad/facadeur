@@ -2,7 +2,7 @@ import { Form, type FormFieldConfig } from '@facadeur/form';
 import type { JsonSchema } from '@facadeur/core';
 import { useMemo } from 'react';
 import type { ReactNode } from 'react';
-import { catalogSchemaTitle } from '../../../domain/catalog/schema-display';
+import { catalogSchemaTitle } from '../../../read/catalog';
 import type { SchemaReferenceChoice, SchemaReferenceTargetChoice } from './SchemaEditor';
 import { SchemaEditor } from './SchemaEditor';
 import { SchemaRecursionWarnings } from './SchemaRecursionWarnings';

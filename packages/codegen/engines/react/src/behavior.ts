@@ -3,8 +3,15 @@ import type { BehaviorValue, ComponentBehavior } from '@facadeur/domain';
 export function renderBehavior(
   behavior: ComponentBehavior | undefined,
   schemaType: (schema: unknown, callbackProps?: ReadonlySet<string>) => string,
+  usesFragment = false,
 ) {
-  if (!behavior) return { imports: [] as string[], setup: [] as string[], helpers: [] as string[] };
+  if (!behavior) {
+    return {
+      imports: usesFragment ? [`import { Fragment } from 'react';`] : [],
+      setup: [] as string[],
+      helpers: [] as string[],
+    };
+  }
   const setup: string[] = [];
   const handlers = new Map<
     string,
@@ -136,9 +143,11 @@ export function renderBehavior(
     imports:
       setup.length || helpers.length
         ? [
-            `import { ${[...(setup.length ? ['useState'] : []), ...(helpers.length ? ['type SyntheticEvent'] : []), ...(Object.keys(behavior.stateSchema ?? {}).length ? ['Fragment'] : [])].join(', ')} } from 'react';`,
+            `import { ${[...(setup.length ? ['useState'] : []), ...(helpers.length ? ['type SyntheticEvent'] : []), ...(usesFragment ? ['Fragment'] : [])].join(', ')} } from 'react';`,
           ]
-        : [],
+        : usesFragment
+          ? [`import { Fragment } from 'react';`]
+          : [],
     setup,
     helpers,
   };

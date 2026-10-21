@@ -7,7 +7,6 @@ import { TokensDomainPanel } from '../design/tokens/TokensDomainPanel';
 import {
   designDomainLabel,
   isSettingsTokenDomain,
-  type EditorSurface,
   type DesignDomain,
 } from '../design/design-domain';
 import { ViewportsSettingsPanel } from '../design/ViewportsSettingsPanel';

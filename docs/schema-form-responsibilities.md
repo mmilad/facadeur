@@ -47,6 +47,42 @@ user interactions into Core calls. The current implementation has some overlappi
 resolution helpers; those are listed below so the diagram is not mistaken for a claim that every
 boundary is already clean.
 
+### Repository state confirmed during the facade inventory
+
+```text
+Core public package surface: packages/core/src/index.ts
+  ├─ queries.ts composes stable cross-domain Catalog/token reads
+  ├─ catalog/index.ts exports catalog operations, validation, and tree operations
+  ├─ catalog/queries.ts owns definition names, summaries, and effective tags
+  └─ style/tokens/global/query.ts owns token type and font-family queries
+
+Core implementation dependencies
+  ├─ node preview/schema adapters → Core queries facade → catalog and token owners
+  ├─ Core queries facade → Catalog + token query implementations
+  └─ project design-command coordinator → Catalog validation + Style token edits
+
+Editor app read/view implementation
+  ├─ domain/catalog/* → catalog summaries, layer trees, and schema labels
+  ├─ domain/session/* → catalog projections + sidebar/viewport contracts
+  ├─ app-service/* → Core data + catalog projections + Inspector view models
+  └─ UI features → selected domain projections directly
+```
+
+`@facadeur/core` has a single root export plus two explicit schema subpaths. Its root exports the
+supported query API through `packages/core/src/queries.ts`. That module composes Catalog-backed
+reads with token-owned query implementations; Core internals use it for cross-domain reads and
+keep direct imports for same-domain helpers, writes, and feature-private implementation details.
+It stays separate from the broad package root to avoid controller/barrel cycles. Token parsing,
+token lookup, and reference scanning remain in the Style token owner. The project-level design
+command coordinator composes Catalog validation and node-style edits with Style token edits.
+
+The Editor has no package export map; its existing `app-service/index.ts` is a service barrel
+rather than a general app read/view facade. `apps/editor/src/read/catalog.ts` exposes catalog
+projections used by UI and app-service consumers, while `apps/editor/src/read/sidebar.ts` exposes
+sidebar view composition. Session internals and feature-private collaborators keep direct imports
+where they remain within their owning area. These facades preserve the Catalog, token, and Editor
+feature modules as implementation owners.
+
 ## Package facades and import direction
 
 The goal is one discoverable package API for each consumer, not one implementation module that
@@ -102,6 +138,19 @@ This is a **single import surface with multiple domain owners**, not a single ca
 implementation. Catalog candidate lookup remains catalog-owned; token candidate and graph queries
 remain token-owned; node-scoped queries remain node-owned. The facade keeps those APIs discoverable
 and avoids import sprawl without merging their rules.
+
+### Current read surfaces
+
+| Surface                           | Operations                                                                                                                                                          | Implementation owner                                          |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `@facadeur/core`                  | definition summaries/names, style suggestions, token lookup and reference paths, node/class lookup, schema resolution, child capability, and schema prop projection | Catalog, token, node, and schema modules via `src/queries.ts` |
+| `apps/editor/src/read/catalog.ts` | asset summaries, layer tree, rendered-hit lookup, and schema titles                                                                                                 | Editor catalog projections                                    |
+| `apps/editor/src/read/sidebar.ts` | Inspector sidebar view-model composition                                                                                                                            | Editor app-service                                            |
+
+The facade forwards inferred return types from the owner modules. TSDoc belongs beside exported
+operations; the generated Core API reference is in [`api/core`](api/core/README.md) and is updated
+with `corepack pnpm docs:api`. This responsibility map documents the boundaries without
+duplicating API signatures.
 
 ## Persisted inputs and shared contracts
 

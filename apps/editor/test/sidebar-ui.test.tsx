@@ -63,12 +63,15 @@ describe('sidebar UI contracts', () => {
     const inspector: InspectorSidebarModel = {
       nodeId: 'root',
       formKey: 'asset-1:root',
+      definitionId: 'asset-1',
       selectionKind: 'root',
       layerStyle: { selector: '.root', declarations: {}, breakpoints: [], overrides: {} },
+      layerStyles: [],
       headerFields: [{ type: 'text', name: 'definition.name', label: 'Name' }],
       tabs: [{ id: 'style', label: 'Style', sections: [] }],
       values: { 'definition.name': 'Card' },
       bindOptions: [],
+      styleValueOptions: [],
     };
     render(<CatalogNodeInspector model={inspector} onEvent={onEvent} />);
     const name = screen.getByRole('textbox', { name: 'Name' });

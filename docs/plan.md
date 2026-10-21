@@ -923,3 +923,88 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
   - Contracts: serialize the selected catalog icon ID as the string value expected by `x-facadeur-reference.target: "icon"`; do not change schema or catalog serialization.
   - Validation: Editor typecheck and changed-file Prettier passed in the approved host context; candidate detector and `git diff --check` passed. Tests were not run.
   - Refactoring review: keep icon-reference rendering in `SchemaValueForm`, its icon options in the existing stage/sidebar projections, and config selection in `DefinitionFieldSettings`; these modules already own schema values and field presentation, with no repeated behavior or independent responsibility that warrants extraction.
+- [x] Refactor: establish the first Core query and Editor read facades
+  - Evidence: `packages/core/src/index.ts` is the public Core entry point but catalog read
+    operations in `controller/project/catalog/queries.ts` are not exported there; token query
+    exports are mixed into the broad root barrel. Core implementations also cross-import Catalog,
+    Node Preview, and Style/Token internals. Editor has `app-service/index.ts` for service exports,
+    while app services and UI features reach directly into app domain projections such as catalog
+    asset/layer helpers, session snapshots, and sidebar view-model code. These are actual ownership
+    edges; they do not justify merging those implementations.
+  - Action: add an explicit Core query facade that re-exports catalog- and token-owned query
+    operations through the supported `@facadeur/core` package entry point. Add narrow app-internal
+    Editor read facades for catalog projections and sidebar view composition; migrate the two
+    schema-title consumers that crossed from UI into Catalog internals. Do not add a resolver
+    framework or generalized query abstraction.
+  - Scope: first facade slice, without consolidating `$ref` resolution or changing schema behavior.
+  - Contracts: preserve exported names and inferred result shapes, catalog query ordering and
+    semantics, saved Catalog schema/data, Editor presentation composition, and mutation boundaries.
+  - Validation: the public query export regression test, focused schema/form tests, CSS structured
+    value regression, Core and Editor typechecks, all 296 workspace tests, ESLint, Prettier, the
+    candidate detector, and `git diff --check` passed. A local import-graph audit found 32 modules reachable
+    from `queries.ts` and no cycle in that graph.
+  - Inventory: Core exports are defined by `packages/core/package.json` (`.` maps to
+    `src/index.ts`, with two explicit schema subpaths); Editor has no package export map and uses
+    relative source imports. Catalog queries currently provide definition display/summaries,
+    effective node tag names, style suggestions, token lookup, and token reference paths; token
+    domain queries provide token references by type and font-family records. Node Preview, schema
+    Inspector/controller, and Core project read methods now use the narrow Core queries composition
+    surface; token parsing and token-only queries remain in the Style token owner. Project-level
+    design command coordination is outside the Catalog implementation folder. Editor app-service,
+    session read models, and UI consumers use the app read facades for catalog projections;
+    feature-private mutation helpers remain within their owning area.
+    No serialized-schema change is part of this work.
+
+- [x] Refactor: migrate cross-domain Core reads through acyclic owned query boundaries
+  - Evidence: Node Preview and schema adapters read Catalog definitions, schemas, tokens, and tree
+    data across ownership areas. Catalog query code also parsed token data and scanned token
+    references directly, while Core project methods mixed those reads with Catalog mutations.
+  - Action: compose public and internal read functions in `packages/core/src/queries.ts`; keep
+    token-tree parsing and token-only lookups in the Style token owner, Catalog summaries in the
+    Catalog owner, and node/schema adapters on the composition surface. Move mixed Catalog/Style
+    design-command coordination to the project layer, and keep writes in their existing owners.
+    Route Editor session, app-service, and UI read projections through `apps/editor/src/read/*`.
+  - Scope: explicit query and read facades only; no universal resolver, query framework, or
+    broad root-barrel imports from Core internals.
+  - Contracts: preserve inferred token result types, catalog ordering, reference semantics, Editor
+    view composition, mutation boundaries, serialized data, and existing public imports.
+  - Validation: Core and Editor typechecks, all 296 workspace tests, zero Core import cycles in
+    the 32-module `queries.ts` dependency graph, Prettier, candidate detector review, and
+    `git diff --check` passed.
+  - Structure: keep token parsing/lookups in the token owner and cross-domain composition in the
+    narrow Core facade. `project/design-commands.ts` owns coordination across Catalog validation,
+    node styles, and token edits. Editor session/app-service/UI reads use the app facade; write and
+    feature-private helpers remain in their owners. The detector's 702-line example catalog and
+    698-line AppService signals were reviewed and kept cohesive because they remain one example
+    registry and one app command router, respectively.
+
+- [x] Triage the full-suite failures against current contracts
+  - Evidence: the original full-suite run reported 21 failures / 274 passes. The failure clusters
+    covered preview-field paths, stale Editor DTO fixtures and APIs, Catalog exposure semantics,
+    generated TypeScript, CSS serialization, and example composition.
+  - Action: update assertions and fixtures where they contradicted current contracts; fix the
+    generated repeater type guard, React Fragment imports, and structured CSS serialization where
+    output was invalid. Preserve runtime assertions for nested preview paths and repeated CSS-rule
+    row values.
+  - Scope: current branch verification; no persisted schema or contract changes.
+  - Contracts: current ownership/specs take precedence; retain Catalog Children-slot validation,
+    explicit per-instance mappings, inferred result types, and generated project semantics.
+  - Validation: all 296 workspace tests pass, including standalone generated workspace compilation.
+
+- [x] Docs: generate a Core API reference with TypeDoc
+  - Evidence: the public Core package entry point exports domain contracts, controller APIs, and
+    the new query facade, but there was no generated reference for consumers to browse.
+  - Action: add TypeDoc with single-file Markdown output, a root `docs:api` command, and generated
+    documentation rooted only at `packages/core/src/index.ts`; link it from the README and
+    responsibility map.
+  - Scope: public Core API documentation. App-private Editor reads remain implementation details
+    and are not treated as a published package API.
+  - Contracts: document the existing export surface without changing runtime behavior, package
+    exports, persisted schemas, or API types. Keep signatures inferred from implementation unless
+    a deliberate contract type is needed.
+  - Validation: `corepack pnpm docs:api` generated Markdown with zero errors. TypeDoc reports 30
+    unresolved references to internal or domain symbols that are not exported through the Core
+    entry point; the generated API remains usable, and those warnings are recorded for later
+    boundary/documentation review rather than solved by widening the public API.
+  - Structure: generate from the package entry point rather than crawling internal modules, so
+    private implementation exports do not become accidental API documentation.

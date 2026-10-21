@@ -101,7 +101,12 @@ describe('fonts domain panel', () => {
     fireEvent.change(view.container.querySelector('input[name="font-search"]')!, {
       target: { value: 'system' },
     });
-    expect(view.container.querySelectorAll('.font-row')).toHaveLength(1);
+    expect(view.container.querySelectorAll('.font-row')).toHaveLength(2);
+    const systemFontRows = [...view.container.querySelectorAll('.font-row')].map(
+      (row) => row.textContent ?? '',
+    );
+    expect(systemFontRows.some((row) => row.includes('System UI'))).toBe(true);
+    expect(systemFontRows.some((row) => row.includes('Georgia'))).toBe(true);
     expect(view.container.textContent).toContain('System');
 
     fireEvent.click(view.container.querySelector(`button[name="font-details-${uuid}"]`)!);

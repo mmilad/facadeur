@@ -9,12 +9,13 @@ This repository contains the editor and its catalog-to-project generation packag
 ## Run the editor preview
 
 ```bash
-pnpm install
-pnpm dev
+corepack pnpm install
+corepack pnpm dev
 ```
 
-Use Node.js 22.13 or later. Open http://localhost:3001 (Next.js) for the local example-backed
-editor preview, or run `pnpm storybook` to browse the component and editor stories. The local
+Use Node.js 22.13 or later. `package.json` pins pnpm 10.33.3; Corepack reads that pin, so use
+`corepack pnpm` for repository commands. Open http://localhost:3001 (Next.js) for the local
+example-backed editor preview, or run `corepack pnpm storybook` to browse the component and editor stories. The local
 preview uses an in-memory catalog; Storybook and tests share catalog fixtures from
 `packages/examples`.
 
@@ -47,23 +48,23 @@ in-memory catalog; use **Export catalog** to download a JSON copy.
 The editor's Storybook runs with:
 
 ```bash
-pnpm storybook
+corepack pnpm storybook
 ```
 
 `packages/codegen` owns React project generation from a canonical `ProjectCatalog`. Run
-`pnpm codegen --catalog catalog.json --workspace ./generated-project`; see the
+`corepack pnpm codegen --catalog catalog.json --workspace ./generated-project`; see the
 [Codegen guide](packages/codegen/README.md) for component-only output and options. The generator
 accepts canonical `ProjectCatalog` JSON.
 
 ## Checks
 
 ```bash
-pnpm lint
-pnpm typecheck
-pnpm test
+corepack pnpm lint
+corepack pnpm typecheck
+corepack pnpm test
 ```
 
-`pnpm schema` rewrites `schema/catalog.schema.json` from the TypeBox schema in `@facadeur/core`.
+`corepack pnpm schema` rewrites `schema/catalog.schema.json` from the TypeBox schema in `@facadeur/core`.
 
 ## Layout
 
@@ -83,5 +84,11 @@ The Editor renders its canvas with React. Core owns the active catalog and editi
 To print the default stylesheet:
 
 ```bash
-pnpm exec tsx -e "import { createProjectTemplate } from '@facadeur/examples'; import { renderDesignCss } from '@facadeur/style-engine'; console.log(renderDesignCss(createProjectTemplate()))"
+corepack pnpm exec tsx -e "import { createProjectTemplate } from '@facadeur/examples'; import { renderDesignCss } from '@facadeur/style-engine'; console.log(renderDesignCss(createProjectTemplate()))"
 ```
+
+# API reference
+
+The generated Core API reference is available in [`docs/api/core`](docs/api/core/README.md).
+Regenerate it after changing the public Core entry point or its TSDoc comments with
+`corepack pnpm docs:api`.

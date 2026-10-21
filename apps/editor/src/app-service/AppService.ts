@@ -13,7 +13,7 @@ import type { EditorSession } from '../domain/session/types';
 import type { CatalogDefinitionKind, EditorCatalogPort } from '../domain/project/catalog-port';
 import { InspectorService } from './inspector';
 import { assetKindToCatalogMap, blankCatalogDefinition } from '../domain/catalog/blank-definition';
-import { catalogAssetSummaries } from '../domain/catalog/asset-list';
+import { catalogAssetSummaries } from '../read/catalog';
 import type { EditorEvent, EditorEventDataMap } from '../domain/sidebar/events';
 import { EditorEventType } from '../domain/sidebar/events';
 import { catalogLayerDropTarget } from '../domain/catalog/catalog-layer-move';
@@ -25,7 +25,7 @@ import {
 import { catalogNodeFromInsertEntry } from '../domain/catalog/layer-node-draft';
 import { isInsertTool, refusalMessage, toolAllowed } from '../domain/editing';
 import type { LayerItem } from '../domain/catalog/layer-tree';
-import { buildInspectorSidebarViewModel } from './sidebar-view-model';
+import { buildInspectorSidebarViewModel } from '../read/sidebar';
 import { remapBehaviorStateReferences, remapStateReferences } from './remap-state-references';
 
 /** Editor entry: catalog editing via {@link CoreController}, chrome via {@link EditorSession}. */

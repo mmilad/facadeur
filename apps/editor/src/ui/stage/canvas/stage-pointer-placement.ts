@@ -18,7 +18,7 @@ import {
 } from '../../../domain/editing';
 import { catalogNodeFromInsertEntry } from '../../../domain/catalog/layer-node-draft';
 import { catalogPlacementAllowed } from '../../../domain/catalog/catalog-layer-insert';
-import { catalogNodeUuidForRenderedHit } from '../../../domain/catalog/rendered-hit';
+import { catalogNodeUuidForRenderedHit } from '../../../read/catalog';
 import type { LayerInsertEntry } from '../../../domain/catalog/catalog-layer-insert';
 import { overlayBox, pointInFrame, type OverlayBox } from '../../../domain/viewport/geometry';
 import { type SelectionController } from '../../../domain/selection/selection';

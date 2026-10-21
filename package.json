@@ -18,12 +18,13 @@
     "verify": "pnpm typecheck && pnpm lint && pnpm test",
     "schema": "tsx scripts/export-schema.ts",
     "codegen": "pnpm --filter @facadeur/codegen codegen",
-    "storybook": "pnpm --filter @facadeur/editor storybook"
+    "storybook": "pnpm --filter @facadeur/editor storybook",
+    "docs:api": "node scripts/clean-api-docs.mjs && typedoc && prettier --write docs/api/core"
   },
   "devDependencies": {
+    "@eslint/js": "^9.36.0",
     "@facadeur/examples": "workspace:*",
     "@sinclair/typebox": "^0.34.41",
-    "@eslint/js": "^9.36.0",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.7",
@@ -31,6 +32,8 @@
     "jsdom": "^26.1.0",
     "prettier": "^3.6.2",
     "tsx": "^4.20.5",
+    "typedoc": "^0.28.20",
+    "typedoc-plugin-markdown": "^4.14.1",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.44.0",
     "vite": "^7.1.5",

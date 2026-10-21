@@ -37,4 +37,4 @@ export {
   setNodeClassStyleDeclarations,
 } from './node-classes';
 export { assertCatalogRefIntegrity, emptyProjectCatalog, validateProjectCatalog } from './validate';
-export { applyCatalogDesignCommand, type CatalogDesignCommand } from './design-commands';
+export { applyCatalogDesignCommand, type CatalogDesignCommand } from '../design-commands';
