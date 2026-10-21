@@ -1,5 +1,21 @@
 # Facadeur cleanup plan
 
+- [x] Editor: initialize comparison values for class conditions
+  - Evidence: `ClassConditionEditor` changes an `is-set` condition to `equals` without adding a `right` operand. Its controlled boolean select then receives an empty value while offering only `true` and `false`, so it appears to select `true` although the catalog still omits the operand; Core correctly evaluates the incomplete condition as false.
+  - Action: when a comparison operator needs a right operand and none exists, initialize a typed literal matching the visible default (boolean `true`, numeric `0`, or empty string). Keep existing right operands when switching comparison operators.
+  - Scope: class-condition authoring and its displayed values; no change to condition semantics or initial-state evaluation.
+  - Contracts: persist the literal shown by the Editor, preserve reference operands and existing literals, and retain Core's false result for malformed legacy conditions.
+  - Validation: Editor typecheck, catalog JSON parsing, Prettier, candidate detector rerun, and `git diff --check` passed; tests were not run.
+  - Structure: keep the condition authoring logic in its cohesive Editor component and evaluation in Core. The unrelated 698-line `AppService.ts` candidate remains a separate backlog review; it is the app command router and this fix adds no responsibility there.
+
+- [x] Style Engine: preserve main-before-custom class cascade order
+  - Evidence: preview CSS concatenates dynamic class rules (generated class first, authored classes after) with global class rules. Global rules currently follow raw catalog array order, so a generated main class stored after an authored class can override that class again.
+  - Action: emit each node's global class rules with its generated class first, then authored classes in their existing order, matching the Editor and dynamic CSS ordering.
+  - Scope: CSS rule ordering for catalog node classes; preserve selector construction and declarations.
+  - Contracts: generated/main styles are the base, authored classes retain user order and can override them, and breakpoint and global selector behavior remains unchanged.
+  - Validation: Style Engine typecheck, Prettier, candidate detector rerun, and `git diff --check` passed; tests were not run.
+  - Structure: keep ordering beside the Style Engine CSS emission that owns the cascade; the module is cohesive and below the detector threshold.
+
 - [x] Core: migrate incompatible catalog field values when effective schemas change.
   - Evidence: `validate.ts` validates definition static values, preview defaults, nested instance data, and nested static field configs against effective schemas, while `patchDefinition` only prunes values for removed inline properties. A schema shape change therefore leaves stale values (for example `header`'s `Menu Btn.icon`) that block the schema edit. Field-level `$ref`s also reached AJV without the catalog schema registry, so valid migrated object values could still fail validation.
   - Action: during definition or shared-schema changes, find definitions whose effective contracts change and reconcile their stored field values against the resulting schemas. Replace incompatible values with an explicit or recursively derivable schema default; remove an incompatible static override when no default exists. Keep static status only when a replacement value exists. Do not infer a conversion from the previous value. Validate `$ref` fields with their catalog schemas registered, preserving partial-object validation semantics.

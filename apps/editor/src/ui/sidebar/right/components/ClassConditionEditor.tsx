@@ -161,7 +161,7 @@ function ConditionLeafEditor({
   const operators = classConditionOperatorsForType(selected?.valueType);
   const operator = operators.includes(condition.operator) ? condition.operator : 'is-set';
   const hasRight = operator !== 'is-set' && operator !== 'is-not-set';
-  const right = condition.right ?? { kind: 'literal' as const, value: '' };
+  const right = condition.right ?? defaultRightOperand(selected?.valueType);
   return (
     <div className="class-condition-leaf">
       <div className="class-condition-row">
@@ -173,13 +173,17 @@ function ConditionLeafEditor({
           onChange={(value) => {
             const option = options.find((entry) => entry.value === value);
             const nextOperators = classConditionOperatorsForType(option?.valueType);
+            const nextOperator = nextOperators.includes(condition.operator)
+              ? condition.operator
+              : (nextOperators[0] as ClassConditionOperator);
             onChange({
               ...condition,
               left: { kind: 'reference', reference: value },
-              operator: nextOperators.includes(condition.operator)
-                ? condition.operator
-                : (nextOperators[0] as ClassConditionOperator),
-              right: undefined,
+              operator: nextOperator,
+              right:
+                nextOperator === 'is-set' || nextOperator === 'is-not-set'
+                  ? undefined
+                  : defaultRightOperand(option?.valueType),
             });
           }}
         />
@@ -188,9 +192,16 @@ function ConditionLeafEditor({
           value={operator}
           className="class-condition-control"
           options={operators.map((item) => ({ value: item, label: operatorLabel(item) }))}
-          onChange={(value) =>
-            onChange({ ...condition, operator: value as ClassConditionOperator })
-          }
+          onChange={(value) => {
+            const nextOperator = value as ClassConditionOperator;
+            onChange({
+              ...condition,
+              operator: nextOperator,
+              ...(nextOperator !== 'is-set' && nextOperator !== 'is-not-set' && !condition.right
+                ? { right: defaultRightOperand(selected?.valueType) }
+                : {}),
+            });
+          }}
         />
         {hasRight ? (
           <>
@@ -297,6 +308,12 @@ function newLeaf(options: readonly ConditionOption[]): ClassConditionLeaf {
     left: { kind: 'reference', reference: options[0]?.value ?? '' },
     operator: 'is-set',
   };
+}
+
+function defaultRightOperand(valueType: string | undefined): ClassConditionOperand {
+  const value =
+    valueType === 'boolean' ? true : valueType === 'number' || valueType === 'integer' ? 0 : '';
+  return { kind: 'literal', value };
 }
 
 function normalizeCondition(condition: ClassCondition | LegacyClassCondition): ClassCondition {

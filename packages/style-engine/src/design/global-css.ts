@@ -68,7 +68,12 @@ export function renderGlobalStyleCss(catalog: ProjectCatalog): string {
 
   for (const node of nodes.values()) {
     const rootUuid = rootUuidByNode.get(node.uuid);
-    for (const item of node.classes ?? []) {
+    const classes = node.classes ?? [];
+    const orderedClasses = [
+      ...classes.filter((item) => item.generated),
+      ...classes.filter((item) => !item.generated),
+    ];
+    for (const item of orderedClasses) {
       if (!item.style) continue;
       const nodeSelector = `.${codegenNodeClass(node.uuid)}${classSelector(item.name)}`;
       const selector =

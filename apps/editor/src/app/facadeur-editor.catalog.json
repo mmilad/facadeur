@@ -3639,6 +3639,32 @@
               },
               "classes": [
                 {
+                  "name": "hidden",
+                  "style": {
+                    "declarations": {
+                      "display": "none"
+                    }
+                  },
+                  "condition": {
+                    "kind": "rule",
+                    "operator": "and",
+                    "conditions": [
+                      {
+                        "kind": "condition",
+                        "left": {
+                          "kind": "reference",
+                          "reference": "{state:open}"
+                        },
+                        "operator": "equals",
+                        "right": {
+                          "kind": "literal",
+                          "value": true
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
                   "name": "property-item-list",
                   "generated": true
                 }
@@ -3677,7 +3703,7 @@
       },
       "behavior": {
         "state": {
-          "open": false
+          "open": true
         },
         "transitions": []
       }
