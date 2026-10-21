@@ -69,12 +69,16 @@ describe('design domain stage', () => {
 
     await openSettingsDomain(host!, 'fonts');
     const designStyles = host!.querySelector('.app > style');
-    expect(designStyles?.textContent).toContain('@import url(');
+    expect(designStyles?.textContent).not.toContain('@import url(');
+    expect(designStyles?.textContent).toContain('--type-body--font-family');
+    expect(designStyles?.textContent).toContain('var(--font-system-ui)');
     expect(designStyles?.textContent).toContain('.design-domain-stage {');
 
     await act(async () => clickSettingsTab(host!, 'schemas'));
     expect(host!.querySelector('.design-domain-stage')).toBeNull();
-    expect(host!.querySelector('.app > style')?.textContent).toContain('@import url(');
+    expect(host!.querySelector('.app > style')?.textContent).not.toContain('@import url(');
+    expect(host!.querySelector('.app > style')?.textContent).toContain('--type-body--font-family');
+    expect(host!.querySelector('.app > style')?.textContent).toContain('var(--font-system-ui)');
     expect(host!.querySelector('.app > style')?.textContent).toContain('.design-domain-stage {');
   });
 

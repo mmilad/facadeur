@@ -52,6 +52,27 @@
   font-weight: 500;
 }
 
+.stage-interaction-toggle {
+  position: absolute;
+  right: 16px;
+  bottom: 12px;
+  z-index: 3;
+  border: 1px solid var(--border, #c7b9a8);
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: var(--text, #322b25);
+  background: var(--surface, #fffaf4);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.stage-interaction-toggle[aria-pressed='true'] {
+  color: #fff;
+  background: #345c91;
+  border-color: #345c91;
+}
+
 .viewport-frames {
   display: flex;
   align-items: flex-start;

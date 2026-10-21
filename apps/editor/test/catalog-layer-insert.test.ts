@@ -21,6 +21,7 @@ describe('Catalog layer insert choices', () => {
       { kind: 'primitive', tool: 'frame', label: 'Frame' },
       { kind: 'structural', tool: 'repeater', label: 'Repeater' },
       { kind: 'structural', tool: 'switch', label: 'Switch' },
+      { kind: 'structural', tool: 'slot', label: 'Children' },
       { kind: 'instance', assetId: 'button', label: 'Button' },
       { kind: 'instance', assetId: 'link', label: 'Link' },
     ]);
@@ -42,14 +43,15 @@ describe('Catalog layer insert choices', () => {
       fieldEditable: false,
     } satisfies LayerItem;
 
-    expect(catalogLayerInsertEntriesForLayer(snap, rootItem, 'inside')).toContainEqual({
+    expect(
+      catalogLayerInsertEntriesForLayer(snap, snap.catalog, rootItem, 'inside'),
+    ).toContainEqual({
       kind: 'instance',
       assetId: exampleIds.components.button.definition,
       label: 'Button',
     });
-    expect(catalogLayerInsertEntriesForLayer(snap, rootItem, 'inside')).not.toContainEqual(
-      expect.objectContaining({ kind: 'structural' }),
-    );
+    const insertions = catalogLayerInsertEntriesForLayer(snap, snap.catalog, rootItem, 'inside');
+    expect(insertions).toContainEqual({ kind: 'structural', tool: 'slot', label: 'Children' });
     session.destroy();
   });
 });

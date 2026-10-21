@@ -20,6 +20,7 @@ export interface ViewportBoard {
   frames(): readonly ViewportFrame[];
   renderedNodes(frame: ViewportFrame): readonly RenderedNodeBox[];
   setTitle(title: string): void;
+  setInteractionEnabled(enabled: boolean): void;
   syncHeights(): void;
   destroy(): void;
 }
@@ -68,7 +69,7 @@ export function createViewportBoard(options: {
       ownerDocument,
     });
     host.element.title = `${options.title} — ${breakpointLabel(breakpoint)}`;
-    // Let pointer events reach the stage; selection overlays are painted above this iframe.
+    // Stage layer selection owns pointer input unless preview interactions are enabled.
     host.element.style.pointerEvents = 'none';
     body.append(screen);
     row.append(column);
@@ -95,6 +96,11 @@ export function createViewportBoard(options: {
     setTitle(title) {
       for (const frame of frames) {
         frame.host.element.title = `${title} — ${breakpointLabel(frame.breakpoint)}`;
+      }
+    },
+    setInteractionEnabled(enabled) {
+      for (const frame of frames) {
+        frame.host.element.style.pointerEvents = enabled ? 'auto' : 'none';
       }
     },
     syncHeights() {

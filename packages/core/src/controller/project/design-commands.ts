@@ -5,26 +5,25 @@ import type {
   NodeClassStyleCommand,
   NodeClassStyleDeclarationsCommand,
   NodeClassConditionCommand,
-} from '../../style/types';
-import { assertBreakpoints, cloneBreakpoints } from '../../style/breakpoints';
-import {
-  emptyTokenTree,
-  removeTokenFromTree,
-  setTokenInTree,
-} from '../../style/tokens/global/tree';
-import { validateProjectCatalog } from './validate';
+  NodeClassOrderCommand,
+} from '../style/types';
+import { assertBreakpoints, cloneBreakpoints } from '../style/breakpoints';
+import { emptyTokenTree, removeTokenFromTree, setTokenInTree } from '../style/tokens/global/tree';
+import { validateProjectCatalog } from './catalog/validate';
 import {
   setNodeClassCondition,
   setNodeClassStyleDeclaration,
   setNodeClassStyleDeclarations,
-} from './node-classes';
+  patchNodeClasses,
+} from './catalog/node-classes';
 
 export type CatalogDesignCommand =
   | GlobalTokenCommand
   | DesignLibraryCommand
   | NodeClassStyleCommand
   | NodeClassStyleDeclarationsCommand
-  | NodeClassConditionCommand;
+  | NodeClassConditionCommand
+  | NodeClassOrderCommand;
 
 export function applyCatalogDesignCommand(
   catalog: ProjectCatalog,
@@ -40,6 +39,11 @@ export function applyCatalogDesignCommand(
   }
   if (command.type === 'setNodeClassCondition') {
     return validateProjectCatalog(setNodeClassCondition(catalog, command)) as ProjectCatalog;
+  }
+  if (command.type === 'setNodeClassOrder') {
+    return validateProjectCatalog(
+      patchNodeClasses(catalog, command.definitionUuid, command.nodeUuid, command.classNames),
+    ) as ProjectCatalog;
   }
   if (command.type === 'setToken') {
     const tokens = setTokenInTree(

@@ -78,7 +78,9 @@ describe('catalog layer navigation', () => {
 
     const core = new CoreController(catalog);
     core.openDefinition(exampleIds.components.card.definition);
-    const tree = catalogLayerTree('definition-1', root, core);
+    const definition = core.getSnapshot().openDefinition;
+    if (!definition) throw new Error('Expected the Card component to open');
+    const tree = catalogLayerTree({ ...definition, root }, catalog, core);
 
     expect(tree.name).toBe('root');
     expect(tree.children.map(({ name }) => name)).toEqual(['Primary action', 'input']);

@@ -1,18 +1,9 @@
-import type {
-  GlobalStyleBlock,
-  Node,
-  NodeDefinition,
-  ProjectCatalog,
-  StyleLayer,
-} from '@facadeur/domain';
-import { tokenCustomProperty } from '../../../tokens/names';
+import type { Node, NodeDefinition, ProjectCatalog } from '@facadeur/domain';
 import { listCatalogDefinitions, findDefinition } from './ops';
-import { readTokenTree } from '../../style/tokens/global/tree';
-import { tokenReference, tokenReferenceValue } from '../../style/tokens/syntax';
-import { refsInText } from '../../style/references/text';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+/** Resolve a definition's user-facing name from its name, schema title, or kind. */
 export function definitionDisplayName(catalog: ProjectCatalog, definition: NodeDefinition) {
   const raw = definition.name?.trim() ?? '';
   if (raw && !UUID_RE.test(raw)) return raw;
@@ -26,6 +17,7 @@ export function definitionDisplayName(catalog: ProjectCatalog, definition: NodeD
   return definition.kind.charAt(0).toUpperCase() + definition.kind.slice(1);
 }
 
+/** Resolve the rendered HTML tag through nested component definitions. */
 export function effectiveNodeTagName(catalog: ProjectCatalog, node: Node) {
   const visit = (current: Node, seen: Set<string>): string | undefined => {
     if (current.config?.composition?.kind === 'repeater') return undefined;
@@ -38,6 +30,7 @@ export function effectiveNodeTagName(catalog: ProjectCatalog, node: Node) {
   return visit(node, new Set());
 }
 
+/** Return all catalog definitions as name-sorted summary records. */
 export function definitionSummaries(catalog: ProjectCatalog) {
   const kindByMapKey = { atoms: 'atom', components: 'component', pages: 'page' } as const;
   return listCatalogDefinitions(catalog)
@@ -48,82 +41,4 @@ export function definitionSummaries(catalog: ProjectCatalog) {
       ...(definition.category ? { category: definition.category } : {}),
     }))
     .sort((left, right) => left.name.localeCompare(right.name));
-}
-
-export function projectStyleSuggestions(catalog: ProjectCatalog) {
-  const valuesByKey = new Map<string, Set<string>>();
-  const tokenOptions = [...readTokenTree(catalog.tokens ?? {}).tokens.values()].map((token) => ({
-    value: tokenReferenceValue(token.uuid),
-    label: tokenCustomProperty(token.path),
-    description: token.path,
-    group: 'Design tokens',
-  }));
-  const addDeclarations = (record: Readonly<Record<string, string>> | undefined) => {
-    for (const [key, value] of Object.entries(record ?? {})) {
-      if (!value.trim()) continue;
-      const values = valuesByKey.get(key) ?? new Set<string>();
-      values.add(value);
-      valuesByKey.set(key, values);
-    }
-  };
-  const addLayer = (layer: Pick<StyleLayer, 'declarations' | 'states'>) => {
-    addDeclarations(layer.declarations);
-    for (const declarations of Object.values(layer.states ?? {})) addDeclarations(declarations);
-  };
-  const block = catalog.globalStyles?.block;
-  if (block) {
-    addLayer(block);
-    addResponsiveLayers(block);
-    for (const rule of block.rules ?? []) {
-      addLayer(rule);
-      addResponsiveLayers(rule);
-    }
-  }
-
-  return {
-    keys: [...valuesByKey.keys()].sort((left, right) => left.localeCompare(right)),
-    valuesByKey: Object.fromEntries(
-      [...valuesByKey].map(([key, values]) => [
-        key,
-        [...values].sort((left, right) => left.localeCompare(right)),
-      ]),
-    ),
-    options: tokenOptions,
-  };
-
-  function addResponsiveLayers(layer: Pick<GlobalStyleBlock, 'variants' | 'breakpoints'>) {
-    for (const values of Object.values(layer.variants ?? {})) {
-      for (const variant of Object.values(values)) addLayer(variant);
-    }
-    for (const breakpoint of Object.values(layer.breakpoints ?? {})) addLayer(breakpoint);
-  }
-}
-
-export function tokenByUuid(catalog: ProjectCatalog, uuid: string) {
-  const token = readTokenTree(catalog.tokens ?? {}).tokens.get(uuid);
-  return token ? structuredClone(token) : undefined;
-}
-
-export function tokenByReference(catalog: ProjectCatalog, value: unknown) {
-  const uuid = tokenReference(value);
-  return uuid ? tokenByUuid(catalog, uuid) : undefined;
-}
-
-export function tokenReferencePaths(catalog: ProjectCatalog, uuid: string) {
-  const paths: string[] = [];
-  const contains = (value: unknown): boolean => {
-    if (typeof value === 'string') return refsInText(value).includes(uuid);
-    if (Array.isArray(value)) return value.some(contains);
-    if (value && typeof value === 'object') return Object.values(value).some(contains);
-    return false;
-  };
-  for (const token of readTokenTree(catalog.tokens ?? {}).tokens.values()) {
-    if (
-      contains(token.value) ||
-      Object.values(token.breakpoints).some((value) => contains(value))
-    ) {
-      paths.push(token.path);
-    }
-  }
-  return paths.sort((left, right) => left.localeCompare(right));
 }

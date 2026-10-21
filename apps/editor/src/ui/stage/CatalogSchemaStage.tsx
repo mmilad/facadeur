@@ -3,7 +3,7 @@
 import type { FieldValue } from '@facadeur/core';
 import type { JsonSchemaObject } from '@facadeur/domain';
 import type { AppService } from '../../app-service';
-import { catalogSchemaTitle } from '../../domain/catalog/schema-display';
+import { catalogSchemaTitle } from '../../read/catalog';
 import type { EditorEvent } from '../../domain/sidebar/events';
 import { EditorEventType } from '../../domain/sidebar/events';
 import { Stack } from '../components/layout';
@@ -277,6 +277,10 @@ export function CatalogSchemaStage({
                   fields={fields}
                   previewFields={previewFields}
                   staticFields={staticFieldConfigsForDefinition(definition)}
+                  iconOptions={(app.getCatalog().icons ?? []).map((icon) => ({
+                    value: icon.id,
+                    label: icon.name,
+                  }))}
                   onWrite={(field, value) => void writePreview(field, value)}
                 />
               </section>

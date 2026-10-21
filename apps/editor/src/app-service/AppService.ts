@@ -13,7 +13,7 @@ import type { EditorSession } from '../domain/session/types';
 import type { CatalogDefinitionKind, EditorCatalogPort } from '../domain/project/catalog-port';
 import { InspectorService } from './inspector';
 import { assetKindToCatalogMap, blankCatalogDefinition } from '../domain/catalog/blank-definition';
-import { catalogAssetSummaries } from '../domain/catalog/asset-list';
+import { catalogAssetSummaries } from '../read/catalog';
 import type { EditorEvent, EditorEventDataMap } from '../domain/sidebar/events';
 import { EditorEventType } from '../domain/sidebar/events';
 import { catalogLayerDropTarget } from '../domain/catalog/catalog-layer-move';
@@ -25,7 +25,8 @@ import {
 import { catalogNodeFromInsertEntry } from '../domain/catalog/layer-node-draft';
 import { isInsertTool, refusalMessage, toolAllowed } from '../domain/editing';
 import type { LayerItem } from '../domain/catalog/layer-tree';
-import { buildInspectorSidebarViewModel } from './sidebar-view-model';
+import { buildInspectorSidebarViewModel } from '../read/sidebar';
+import { remapBehaviorStateReferences, remapStateReferences } from './remap-state-references';
 
 /** Editor entry: catalog editing via {@link CoreController}, chrome via {@link EditorSession}. */
 export class AppService {
@@ -147,18 +148,31 @@ export class AppService {
     const definition = definitionId ? findDefinition(catalog, definitionId)?.definition : undefined;
     const node = definition ? findNodeByUuid(definition.root, nodeUuid) : undefined;
     if (!definition || !node || !definitionId) return null;
-    const layerStyles = (node.classes ?? []).map((item) => ({
+    const stateOptions = Object.entries(definition.behavior?.state ?? {}).map(([name, value]) => ({
+      value: `{state:${name}}`,
+      label: `State: ${name}`,
+      valueType: Array.isArray(value) ? 'array' : value === null ? 'null' : typeof value,
+    }));
+    const classes = node.classes ?? [];
+    const orderedClasses = [
+      ...classes.filter((item) => item.generated),
+      ...classes.filter((item) => !item.generated),
+    ];
+    const layerStyles = orderedClasses.map((item) => ({
       className: item.name,
       generated: item.generated === true,
       selector: `.${item.name}`,
       condition: item.condition,
-      conditionOptions: model.propOptions
-        .filter((option) => option.kind !== 'design')
-        .map((option) => ({
-          value: option.ref,
-          label: option.name,
-          ...(option.valueType ? { valueType: option.valueType } : {}),
-        })),
+      conditionOptions: [
+        ...model.propOptions
+          .filter((option) => option.kind !== 'design')
+          .map((option) => ({
+            value: option.ref,
+            label: option.name,
+            ...(option.valueType ? { valueType: option.valueType } : {}),
+          })),
+        ...stateOptions,
+      ],
       declarations: { ...(item.style?.declarations ?? {}) },
       breakpoints: catalog.globalStyles?.breakpoints ?? [],
       overrides: Object.fromEntries(
@@ -303,6 +317,9 @@ export class AppService {
           return;
         case EditorEventType.PreviewFieldSet:
           await this.patchPreviewField(event.data.field, event.data.value);
+          return;
+        case EditorEventType.DefinitionBehaviorSet:
+          await this.patchDefinitionBehavior(event.data.behavior);
           return;
         case EditorEventType.DesignPropUpsert:
           this.upsertDesignProp(event.data.prop);
@@ -630,6 +647,35 @@ export class AppService {
     const definition = this.core.getSnapshot().openDefinition;
     if (!definition) return;
     this.core.patchDefinitionPreviewField(definition.uuid, field, value);
+  }
+
+  async patchDefinitionBehavior(
+    behavior: import('@facadeur/domain').ComponentBehavior | undefined,
+  ) {
+    const definition = this.core.getSnapshot().openDefinition;
+    if (!definition) return;
+    const previousState = definition.behavior?.state ?? {};
+    const nextState = behavior?.state ?? {};
+    const removedNames = Object.keys(previousState).filter(
+      (name) => !Object.hasOwn(nextState, name),
+    );
+    const renamed = new Map<string, string>();
+    for (const removed of removedNames) {
+      const candidates = Object.keys(nextState).filter(
+        (name) => !Object.hasOwn(previousState, name),
+      );
+      if (candidates.length === 1) renamed.set(removed, candidates[0]!);
+    }
+    if (renamed.size) {
+      this.core.patchDefinition(this.core.getDefinition(definition.uuid)!.kind, definition.uuid, {
+        behavior: behavior ? remapBehaviorStateReferences(behavior, renamed) : undefined,
+        root: remapStateReferences(definition.root, renamed),
+      });
+      return;
+    }
+    this.core.patchDefinition(this.core.getDefinition(definition.uuid)!.kind, definition.uuid, {
+      behavior,
+    });
   }
 }
 

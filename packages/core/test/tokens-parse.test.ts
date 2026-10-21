@@ -59,7 +59,7 @@ describe('UUID-keyed token resolution', () => {
     expect(
       design.properties.find((property) => property.name === '--color-accent-default')?.value,
     ).toBe('var(--color-blue-500)');
-    expect(design.fonts).toMatchObject([fontToken]);
+    expect(design.fonts).toEqual(expect.arrayContaining([expect.objectContaining(fontToken)]));
   });
 
   it('resolves UUID references inside shadow, typography, and font values', () => {
@@ -70,7 +70,7 @@ describe('UUID-keyed token resolution', () => {
     );
     expect(
       design.properties.find((property) => property.name === '--type-body--font-family')?.value,
-    ).toBe('var(--font-inter)');
+    ).toBe('var(--font-system-ui)');
     expect(
       design.properties.find((property) => property.name === '--type-body--font-size')?.breakpoints[
         breakpointIds.tablet

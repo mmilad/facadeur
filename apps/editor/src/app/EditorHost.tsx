@@ -85,9 +85,13 @@ export function EditorHost({
 
   let mainContent: ReactNode;
   if (surface === 'schemas') {
-    mainContent = <CatalogSchemasPanel schemas={app.getSchemas()} surface={surface} onEvent={onEvent} />;
+    mainContent = (
+      <CatalogSchemasPanel schemas={app.getSchemas()} surface={surface} onEvent={onEvent} />
+    );
   } else if (surface === 'props') {
-    mainContent = <CatalogDesignPropsPanel entries={app.getDesignProps()} surface={surface} onEvent={onEvent} />;
+    mainContent = (
+      <CatalogDesignPropsPanel entries={app.getDesignProps()} surface={surface} onEvent={onEvent} />
+    );
   } else if (isDesignDomain(surface)) {
     mainContent = <DesignDomainStage snap={snap} domain={surface} onEvent={onEvent} />;
   } else if (surface === 'schema') {

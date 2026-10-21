@@ -38,6 +38,8 @@ export function DefinitionFieldSettings({
             schema={field.schema}
             value={value}
             label="Static value"
+            id={`static-field-${configField.instanceUuid ?? 'root'}-${field.name}`}
+            referenceOptions={configField.iconOptions}
             onChange={(next) => onChange('value', next)}
           />
         ) : isTransformable(field.type) ? (

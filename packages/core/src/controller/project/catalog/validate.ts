@@ -3,6 +3,8 @@ import { DocumentError } from '../../../document/errors';
 import { projectCatalogSchema } from '../../../schema/node-model/index';
 import type { Node, ProjectCatalog } from '@facadeur/domain';
 import { sanitizeProjectCatalog } from './sanitize-field-values';
+import { assertComponentBehaviorIntegrity } from './validate-behavior';
+import { schemaPathExists } from './schema-path';
 import { ensureGeneratedNodeClasses } from './node-classes';
 import { findDefinition, listCatalogDefinitions, resolveJsonSchemaForDefinition } from './ops';
 import { effectiveSchemaForDefinition, inheritableSchemaForDefinition } from './field-contract';
@@ -11,6 +13,7 @@ import { componentPropsForSchema, ensureCatalogFieldIds } from './field-ids';
 import { canAcceptCatalogChildren, defaultChildrenSlotCount } from './tree-ops';
 import { isVoidHtmlTag } from '../../../document/html-tags';
 import { migrateFontSources } from './migrate-font-sources';
+import { resolveCatalogSchemaReferences } from './schema-values';
 
 function catalogSchemaErrorMessage(data: unknown): string {
   try {
@@ -50,6 +53,7 @@ export function validateProjectCatalog(data: unknown): ProjectCatalog {
 
   assertCatalogRefIntegrity(catalog as ProjectCatalog);
   assertNodeTagIntegrity(catalog as ProjectCatalog);
+  assertComponentBehaviorIntegrity(catalog as ProjectCatalog);
   assertChildrenSlotIntegrity(catalog as ProjectCatalog);
   assertEffectiveCatalogFields(catalog as ProjectCatalog);
   return catalog as ProjectCatalog;
@@ -133,11 +137,16 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
     for (const [field, value] of Object.entries(values)) {
       const fieldSchema = properties[field];
       if (!fieldSchema) continue;
+      const resolvedFieldSchema = resolveCatalogSchemaReferences(
+        fieldSchema as Record<string, unknown>,
+        catalog,
+      );
       const matchesSchema = matchesPartialSchemaValue(
         value,
-        fieldSchema as Parameters<typeof matchesPartialSchemaValue>[1],
+        resolvedFieldSchema as Parameters<typeof matchesPartialSchemaValue>[1],
+        catalog.schemas,
       );
-      const isBinding = isFieldBindingValue(value, fieldSchema);
+      const isBinding = isFieldBindingValue(value, resolvedFieldSchema);
       if (!matchesSchema && !isBinding) {
         if (context.startsWith('preview defaults') || context.startsWith('instance preview values'))
           continue;
@@ -147,7 +156,7 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
         );
       }
       if (matchesSchema || isBinding)
-        assertCatalogReferenceValue(value, fieldSchema, catalog, `${context}.${field}`);
+        assertCatalogReferenceValue(value, resolvedFieldSchema, catalog, `${context}.${field}`);
     }
   };
 
@@ -169,6 +178,10 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
         sourceSchema = prop ? schemaAtPath(effective.schema, prop.path) : null;
       } else if (composition && source?.kind === 'item') {
         sourceSchema = itemSchema ? schemaAtPath(itemSchema, source.path) : null;
+      } else if (composition && source?.kind === 'state') {
+        sourceSchema =
+          (definition.behavior?.stateSchema?.[source.name] as
+            Record<string, unknown> | undefined) ?? null;
       }
       if (composition && source) {
         const validSource =
@@ -179,6 +192,31 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
           throw new DocumentError(
             'schema',
             `Invalid ${composition.kind} source on node "${node.name ?? node.uuid}"`,
+          );
+        }
+      }
+      if (composition?.kind === 'repeater' && composition.filter) {
+        const filter = composition.filter;
+        const itemSchema = asSchemaRecord(sourceSchema?.items);
+        const itemFieldSchema = itemSchema ? schemaAtPath(itemSchema, filter.itemPath) : null;
+        const querySchema = definition.behavior?.stateSchema?.[filter.queryState];
+        if (
+          querySchema?.type !== 'string' ||
+          typeof definition.behavior?.state?.[filter.queryState] !== 'string' ||
+          itemFieldSchema?.type !== 'string'
+        ) {
+          throw new DocumentError(
+            'schema',
+            `Repeater filter on node "${node.name ?? node.uuid}" must use a string item field and a string behavior state (${definition.name}).`,
+          );
+        }
+      }
+      if (composition?.kind === 'repeater' && composition.keyPath) {
+        const keySchema = schemaAtPath(asSchemaRecord(sourceSchema?.items), composition.keyPath);
+        if (source?.kind === 'state' || keySchema?.type !== 'string') {
+          throw new DocumentError(
+            'schema',
+            `Repeater key field on node "${node.name ?? node.uuid}" must be a string field from a prop or item array (${definition.name}).`,
           );
         }
       }
@@ -226,12 +264,14 @@ function assertEffectiveCatalogFields(catalog: ProjectCatalog) {
             ? itemSchema
               ? schemaAtPath(itemSchema, parentSource.path)
               : null
-            : (() => {
-                const parentProp = componentPropsForSchema(effective.schema).find(
-                  (entry) => entry.uuid === parentSource.uuid,
-                );
-                return parentProp ? schemaAtPath(effective.schema, parentProp.path) : null;
-              })();
+            : parentSource.kind === 'state'
+              ? null
+              : (() => {
+                  const parentProp = componentPropsForSchema(effective.schema).find(
+                    (entry) => entry.uuid === parentSource.uuid,
+                  );
+                  return parentProp ? schemaAtPath(effective.schema, parentProp.path) : null;
+                })();
         if (!enumValues(parentSourceSchema).includes(node.config.compositionCase)) {
           throw new DocumentError(
             'schema',
@@ -418,17 +458,6 @@ function findDefinitionInstance(root: Node, uuid: string): Node | null {
     if (found) return found;
   }
   return null;
-}
-
-function schemaPathExists(schema: Record<string, unknown> | null, path: string) {
-  let current: unknown = schema;
-  for (const segment of path.split('.')) {
-    if (!current || typeof current !== 'object') return false;
-    const properties = (current as Record<string, unknown>).properties;
-    if (!properties || typeof properties !== 'object' || !(segment in properties)) return false;
-    current = (properties as Record<string, unknown>)[segment];
-  }
-  return true;
 }
 
 /** Ensure schema refs and definitionRef targets exist in the catalog. */

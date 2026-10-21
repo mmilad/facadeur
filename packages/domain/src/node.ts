@@ -1,8 +1,15 @@
 import type { DomSpec } from './dom';
 import type { FieldValue } from './field-value';
 import type { SchemaSource } from './schema-source';
+import type { JsonSchemaObject } from './schema-source';
 import type { LayerMap, StyleLayer, VariantStyleMap } from './design-system';
 import type { Uuid } from './uuid';
+
+export type RepeaterFilter = {
+  readonly kind: 'contains';
+  readonly itemPath: string;
+  readonly queryState: string;
+};
 
 export interface PreviewData {
   readonly fields?: Readonly<Record<string, FieldValue>>;
@@ -17,8 +24,12 @@ export interface NodeConfig {
     | {
         readonly kind: 'repeater';
         readonly source?: CompositionSource;
+        /** Direct object property used as the stable rendered key for prop/item arrays. */
+        readonly keyPath?: string;
         /** Optional display name for this repeater's current item index. */
         readonly indexName?: string;
+        /** Optional derived autocomplete filter from an item string field to local string state. */
+        readonly filter?: RepeaterFilter;
       }
     | {
         readonly kind: 'switch';
@@ -30,7 +41,9 @@ export interface NodeConfig {
 }
 
 export type CompositionSource =
-  { readonly kind: 'prop'; readonly uuid: Uuid } | { readonly kind: 'item'; readonly path: string };
+  | { readonly kind: 'prop'; readonly uuid: Uuid }
+  | { readonly kind: 'item'; readonly path: string }
+  | { readonly kind: 'state'; readonly name: string };
 
 export type FieldExposure =
   | { readonly mode: 'flat' }
@@ -54,6 +67,45 @@ export interface DefinitionConfig {
   readonly instanceFieldConfigs?: Readonly<
     Record<Uuid, Readonly<Record<string, StaticFieldConfig>>>
   >;
+}
+
+export type BehaviorValue =
+  | { readonly kind: 'literal'; readonly value: FieldValue | null }
+  | { readonly kind: 'state'; readonly name: string }
+  | { readonly kind: 'prop'; readonly path: string }
+  | { readonly kind: 'event'; readonly path: string }
+  | { readonly kind: 'state-after-transition'; readonly name: string }
+  | {
+      readonly kind: 'operation';
+      readonly operator: 'not' | 'add' | 'subtract' | 'equals' | 'toggle';
+      readonly values: readonly BehaviorValue[];
+    };
+
+export type BehaviorAction =
+  | { readonly kind: 'set-state'; readonly name: string; readonly value: BehaviorValue }
+  | { readonly kind: 'increment'; readonly name: string; readonly amount?: number }
+  | { readonly kind: 'append-array-item'; readonly name: string; readonly repeaterUuid: Uuid }
+  | { readonly kind: 'remove-array-item'; readonly name: string; readonly repeaterUuid: Uuid }
+  | {
+      readonly kind: 'move-array-item';
+      readonly name: string;
+      readonly repeaterUuid: Uuid;
+      readonly direction: 'up' | 'down' | 'before' | 'after';
+    }
+  | { readonly kind: 'emit'; readonly name: string; readonly args: readonly BehaviorValue[] };
+
+/** Portable, data-only UI behavior. A renderer compiles this contract to its target runtime. */
+export interface ComponentBehavior {
+  readonly state?: Readonly<Record<string, FieldValue | null>>;
+  /** Declares item types independently of preview values, including empty arrays. */
+  readonly stateSchema?: Readonly<Record<string, JsonSchemaObject>>;
+  /** Direct object property used as the stable React/render key for an array state. */
+  readonly stateArrayKeyPaths?: Readonly<Record<string, string>>;
+  readonly transitions: readonly {
+    readonly nodeUuid: Uuid;
+    readonly event: string;
+    readonly actions: readonly BehaviorAction[];
+  }[];
 }
 
 export interface Node {
@@ -128,6 +180,7 @@ export interface NodeDefinition {
   readonly schema: SchemaSource;
   readonly root: Node;
   readonly config?: DefinitionConfig;
+  readonly behavior?: ComponentBehavior;
 }
 
 export type NodeDefinitionModel = NodeDefinition;

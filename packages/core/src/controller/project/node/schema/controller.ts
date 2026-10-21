@@ -1,6 +1,9 @@
 import type { CoreControllerHost } from '../../../../types/host';
-import { findDefinition, resolveJsonSchemaForDefinition } from '../../catalog/ops';
-import { effectiveSchemaForDefinition } from '../../catalog/field-contract';
+import {
+  effectiveSchemaForDefinition,
+  findDefinition,
+  resolveJsonSchemaForDefinition,
+} from '../../../../queries';
 
 export class SchemaController {
   constructor(private readonly core: CoreControllerHost) {}

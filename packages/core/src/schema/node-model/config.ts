@@ -41,7 +41,18 @@ export const nodeConfigSchema = Type.Object(
         Type.Object(
           {
             kind: Type.Literal('repeater'),
+            keyPath: Type.Optional(Type.String({ minLength: 1 })),
             indexName: Type.Optional(Type.String({ minLength: 1 })),
+            filter: Type.Optional(
+              Type.Object(
+                {
+                  kind: Type.Literal('contains'),
+                  itemPath: Type.String({ minLength: 1 }),
+                  queryState: Type.String({ minLength: 1 }),
+                },
+                { additionalProperties: false },
+              ),
+            ),
             source: Type.Optional(
               Type.Union([
                 Type.Object(
@@ -50,6 +61,10 @@ export const nodeConfigSchema = Type.Object(
                 ),
                 Type.Object(
                   { kind: Type.Literal('item'), path: Type.String({ minLength: 1 }) },
+                  { additionalProperties: false },
+                ),
+                Type.Object(
+                  { kind: Type.Literal('state'), name: Type.String({ minLength: 1 }) },
                   { additionalProperties: false },
                 ),
               ]),

@@ -121,7 +121,11 @@ export function AppShell({
         {mainContent}
         {designSurface || surface === 'schemas' || isCatalogDocumentView(surface) ? null : (
           <ResizableInspector>
-            <RightRail model={snap.sidebar.inspector} onEvent={onEvent} />
+            <RightRail
+              model={snap.sidebar.inspector}
+              definition={snap.openDefinition}
+              onEvent={onEvent}
+            />
           </ResizableInspector>
         )}
       </div>

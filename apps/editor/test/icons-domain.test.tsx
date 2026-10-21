@@ -31,7 +31,7 @@ describe('icons domain panel', () => {
     });
   }
 
-  it('selects a gallery icon and shows stable id and source details', async () => {
+  it('selects a gallery icon and shows stable id and structured data details', async () => {
     const session = createEditorSession({ projectCatalog: createExampleCatalog() });
     await openIcons(session);
 
@@ -46,7 +46,8 @@ describe('icons domain panel', () => {
 
     expect(cards[1]?.getAttribute('aria-pressed')).toBe('true');
     expect(panel.querySelector('.icon-details')?.textContent).toContain('ID');
-    expect(panel.querySelector('.icon-details')?.textContent).toContain('Source');
+    expect(panel.querySelector('.icon-details')?.textContent).toContain('Data');
+    expect(panel.querySelector('.icon-details')?.textContent).toContain('viewBox');
   });
 
   it('filters icons by category and keeps the panel read only', async () => {

@@ -5,14 +5,19 @@ import type {
   Node,
   NodeDefinition,
   ProjectCatalog,
+  RepeaterFilter,
   StaticFieldConfig,
 } from '@facadeur/domain';
 import { htmlTagOptions, isVoidHtmlTag } from '../../../../document/html-tags';
 import { fieldsFromJsonSchema } from '../../../../schema/json-schema-fields';
 import type { JsonSchemaField } from '../../../../schema/json-schema-fields';
-import { classListFromNode, findDefinition, findNodeByUuid } from '../../catalog/ops';
-import { effectiveSchemaForDefinition } from '../../catalog/field-contract';
-import { componentPropsForSchema } from '../../catalog/field-ids';
+import {
+  classListFromNode,
+  componentPropsForSchema,
+  effectiveSchemaForDefinition,
+  findDefinition,
+  findNodeByUuid,
+} from '../../../../queries';
 import { staticFieldValues } from './merge';
 import { configFieldsForDefinition, schemaWithReferenceOptions } from './inspector-config-fields';
 import { inspectorInputsForNode } from '../config/inspector';
@@ -42,6 +47,8 @@ export type InspectorFormValue = {
     data: Record<string, string>;
     compositionSource: string;
     compositionIndexName: string;
+    compositionKeyPath: string;
+    compositionFilter: string;
     compositionCase: string;
     definitionRefBindingPath: string;
   };
@@ -150,6 +157,8 @@ export function buildInspectorFormModel(
     effective.schema,
     { ...effective.previewDefaults },
     catalog,
+    definition.behavior?.state,
+    definition.behavior?.stateSchema,
   );
   const boundDefinitionRef = node.config?.definitionRefBinding
     ? fieldAtPath(repeaterScopes.at(-1)?.item, node.config.definitionRefBinding.path)
@@ -227,6 +236,14 @@ export function buildInspectorFormModel(
         composition?.kind === 'repeater'
           ? (composition.indexName ?? computedIndexName(repeaterScopes.length))
           : '',
+      compositionKeyPath: composition?.kind === 'repeater' ? (composition.keyPath ?? '') : '',
+      compositionFilter:
+        composition?.kind === 'repeater' && composition.filter
+          ? JSON.stringify({
+              queryState: composition.filter.queryState,
+              itemPath: composition.filter.itemPath,
+            })
+          : '',
       compositionCase: node.config?.compositionCase ?? '',
       definitionRefBindingPath: node.config?.definitionRefBinding?.path ?? '',
     },
@@ -285,6 +302,7 @@ export function buildInspectorFormModel(
                     effectiveSchemaForDefinition(catalog, definition).schema,
                     composition.kind,
                     repeaterScopes,
+                    definition.behavior?.stateSchema,
                   ),
                 ],
               },
@@ -296,6 +314,46 @@ export function buildInspectorFormModel(
                       label: 'Index name',
                       hint: 'Leave blank for the generated name.',
                     },
+                    ...(composition.source && composition.source.kind !== 'state'
+                      ? [
+                          {
+                            type: 'select' as const,
+                            path: 'node.compositionKeyPath',
+                            label: 'Key field',
+                            options: [
+                              { value: '', label: 'Use row index' },
+                              ...stringSchemaPaths(
+                                repeaterItemSchema(
+                                  composition.source,
+                                  effective.schema,
+                                  repeaterScopes,
+                                  catalog,
+                                  definition.behavior?.stateSchema,
+                                ) ?? {},
+                              ).map(({ path, label }) => ({ value: path, label })),
+                            ],
+                          },
+                        ]
+                      : []),
+                    ...(composition.source
+                      ? [
+                          {
+                            type: 'select' as const,
+                            path: 'node.compositionFilter',
+                            label: 'Filter options by',
+                            options: [
+                              { value: '', label: 'No filtering' },
+                              ...compositionFilterOptions(
+                                composition.source,
+                                effective.schema,
+                                repeaterScopes,
+                                catalog,
+                                definition.behavior?.stateSchema,
+                              ),
+                            ],
+                          },
+                        ]
+                      : []),
                   ]
                 : []),
             ]
@@ -452,12 +510,14 @@ export function inspectorChangeTarget(
     const selection = String(value ?? '').trim();
     const source = selection.startsWith('item:')
       ? { kind: 'item' as const, path: selection.slice('item:'.length) }
-      : selection
-        ? {
-            kind: 'prop' as const,
-            uuid: selection.startsWith('prop:') ? selection.slice('prop:'.length) : selection,
-          }
-        : null;
+      : selection.startsWith('state:')
+        ? { kind: 'state' as const, name: selection.slice('state:'.length) }
+        : selection
+          ? {
+              kind: 'prop' as const,
+              uuid: selection.startsWith('prop:') ? selection.slice('prop:'.length) : selection,
+            }
+          : null;
     return {
       kind: 'nodeComposition',
       nodeUuid,
@@ -471,6 +531,30 @@ export function inspectorChangeTarget(
       nodeUuid,
       patch: { indexName: indexName || null },
     };
+  }
+  if (path === 'node.compositionKeyPath') {
+    const keyPath = String(value ?? '').trim();
+    return {
+      kind: 'nodeComposition',
+      nodeUuid,
+      patch: { keyPath: keyPath || null },
+    };
+  }
+  if (path === 'node.compositionFilter') {
+    const selection = String(value ?? '').trim();
+    if (!selection) return { kind: 'nodeComposition', nodeUuid, patch: { filter: null } };
+    try {
+      const parsed = JSON.parse(selection) as { queryState?: unknown; itemPath?: unknown };
+      if (typeof parsed.queryState !== 'string' || typeof parsed.itemPath !== 'string') return null;
+      const filter: RepeaterFilter = {
+        kind: 'contains',
+        queryState: parsed.queryState,
+        itemPath: parsed.itemPath,
+      };
+      return { kind: 'nodeComposition', nodeUuid, patch: { filter } };
+    } catch {
+      return null;
+    }
   }
   if (path === 'node.compositionCase') {
     const caseValue = String(value ?? '').trim();
@@ -537,6 +621,7 @@ function compositionSourceOptions(
   schema: Record<string, unknown> | null,
   kind: 'repeater' | 'switch',
   repeaterScopes: readonly RepeaterReferenceScope[],
+  stateSchema?: Readonly<Record<string, Record<string, unknown>>>,
 ) {
   const properties = schema?.properties;
   const componentOptions =
@@ -569,14 +654,70 @@ function compositionSourceOptions(
         ];
       })
     : [];
-  return [...componentOptions, ...itemOptions];
+  const stateOptions =
+    kind === 'repeater'
+      ? Object.entries(stateSchema ?? {}).flatMap(([name, field]) =>
+          isCompositionSource(field, kind)
+            ? [{ value: `state:${name}`, label: `${name} (internal state)` }]
+            : [],
+        )
+      : [];
+  return [...componentOptions, ...itemOptions, ...stateOptions];
 }
 
 function compositionSourceSelection(
-  source: { kind: 'prop'; uuid: string } | { kind: 'item'; path: string } | undefined,
+  source:
+    | { kind: 'prop'; uuid: string }
+    | { kind: 'item'; path: string }
+    | { kind: 'state'; name: string }
+    | undefined,
 ) {
   if (!source) return '';
-  return source.kind === 'prop' ? `prop:${source.uuid}` : `item:${source.path}`;
+  if (source.kind === 'prop') return `prop:${source.uuid}`;
+  if (source.kind === 'state') return `state:${source.name}`;
+  return `item:${source.path}`;
+}
+
+function compositionFilterOptions(
+  source: CompositionSource,
+  componentSchema: Record<string, unknown> | null,
+  repeaterScopes: readonly RepeaterReferenceScope[],
+  catalog: ProjectCatalog,
+  stateSchema: Readonly<Record<string, Record<string, unknown>>> | undefined,
+) {
+  const itemSchema = repeaterItemSchema(
+    source,
+    componentSchema,
+    repeaterScopes,
+    catalog,
+    stateSchema,
+  );
+  if (!itemSchema) return [];
+  const itemFields = stringSchemaPaths(itemSchema);
+  const queryStates = Object.entries(stateSchema ?? {}).filter(
+    ([, schema]) => schema.type === 'string',
+  );
+  return queryStates.flatMap(([queryState]) =>
+    itemFields.map(({ path, label }) => ({
+      value: JSON.stringify({ queryState, itemPath: path }),
+      label: `${queryState} → ${label}`,
+    })),
+  );
+}
+
+function stringSchemaPaths(
+  schema: Record<string, unknown>,
+  prefix = '',
+): { path: string; label: string }[] {
+  const properties = schema.properties;
+  if (!properties || typeof properties !== 'object' || Array.isArray(properties)) return [];
+  return Object.entries(properties as Record<string, unknown>).flatMap(([name, value]) => {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return [];
+    const property = value as Record<string, unknown>;
+    const path = prefix ? `${prefix}.${name}` : name;
+    if (property.type === 'string') return [{ path, label: path }];
+    return property.type === 'object' ? stringSchemaPaths(property, path) : [];
+  });
 }
 
 function isCompositionSource(field: Record<string, unknown>, kind: 'repeater' | 'switch') {
@@ -633,6 +774,8 @@ function buildInspectorRepeaterScopes(
   componentSchema: Record<string, unknown> | null,
   componentFields: Record<string, FieldValue>,
   catalog: ProjectCatalog,
+  componentState?: Readonly<Record<string, FieldValue | null>>,
+  stateSchema?: Readonly<Record<string, Record<string, unknown>>>,
 ): RepeaterReferenceScope[] {
   const scopes: RepeaterReferenceScope[] = [];
   for (const node of ancestors) {
@@ -644,8 +787,20 @@ function buildInspectorRepeaterScopes(
       indexName: composition.indexName?.trim() || computedIndexName(depth),
       index: 0,
       itemPath: repeaterItemPath(composition.source, componentSchema, scopes),
-      item: firstRepeaterItem(composition.source, componentSchema, componentFields, scopes),
-      itemSchema: repeaterItemSchema(composition.source, componentSchema, scopes, catalog),
+      item: firstRepeaterItem(
+        composition.source,
+        componentSchema,
+        componentFields,
+        scopes,
+        componentState,
+      ),
+      itemSchema: repeaterItemSchema(
+        composition.source,
+        componentSchema,
+        scopes,
+        catalog,
+        stateSchema,
+      ),
     });
   }
   return scopes;
@@ -656,8 +811,13 @@ function firstRepeaterItem(
   componentSchema: Record<string, unknown> | null,
   componentFields: Readonly<Record<string, FieldValue>>,
   repeaterScopes: readonly RepeaterReferenceScope[],
+  componentState?: Readonly<Record<string, FieldValue | null>>,
 ): FieldValue {
   if (!source) return {};
+  if (source.kind === 'state') {
+    const value = componentState?.[source.name];
+    return Array.isArray(value) ? (value[0] ?? {}) : {};
+  }
   const sourcePath =
     source.kind === 'prop'
       ? componentPropsForSchema(componentSchema).find((prop) => prop.uuid === source.uuid)?.path

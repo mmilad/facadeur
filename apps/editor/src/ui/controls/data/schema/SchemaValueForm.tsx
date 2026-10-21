@@ -1,4 +1,6 @@
 import { primaryJsonSchemaType, type FieldValue, type JsonSchema } from '@facadeur/core';
+import { SelectField } from '@facadeur/form';
+import { Field } from '../../../components/feedback';
 import { JsonSchemaContractEditor } from '../../../schema/JsonSchemaContractEditor';
 import { StructuralSchemaValueForm } from './StructuralSchemaValueForm';
 
@@ -37,16 +39,30 @@ export function SchemaValueForm({
   schema,
   value,
   label,
+  id,
   onChange,
   disabled = false,
+  referenceOptions = [],
 }: {
   schema: JsonSchema;
   value: FieldValue | undefined;
   label: string;
+  id?: string;
   onChange: (value: FieldValue) => void;
   disabled?: boolean;
+  referenceOptions?: readonly { readonly value: string; readonly label: string }[];
 }) {
-  const editor = usesStructuralEditor(schema) ? (
+  const editor = isIconReference(schema) ? (
+    <Field label={label}>
+      <SelectField
+        id={id ?? `schema-value-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+        value={typeof value === 'string' ? value : ''}
+        options={referenceOptions}
+        placeholder="Select icon"
+        onChange={onChange}
+      />
+    </Field>
+  ) : usesStructuralEditor(schema) ? (
     <StructuralSchemaValueForm schema={schema} value={value} label={label} onChange={onChange} />
   ) : (
     <JsonSchemaContractEditor
@@ -67,6 +83,16 @@ export function SchemaValueForm({
     </fieldset>
   ) : (
     editor
+  );
+}
+
+function isIconReference(schema: JsonSchema) {
+  const reference = schema['x-facadeur-reference'];
+  return (
+    typeof reference === 'object' &&
+    reference !== null &&
+    'target' in reference &&
+    reference.target === 'icon'
   );
 }
 

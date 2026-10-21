@@ -127,7 +127,31 @@
         "kind": "inline",
         "schema": {
           "type": "object",
-          "properties": {},
+          "title": "Css Rule Set",
+          "properties": {
+            "selector": {
+              "type": "string",
+              "x-facadeur-prop-id": "9c7df0e9-6a58-4876-94ca-e15654103d22"
+            },
+            "rules": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "propName": {
+                    "type": "string",
+                    "x-facadeur-prop-id": "449fb6d4-7937-4f8c-a303-11a04e011ec4"
+                  },
+                  "propValue": {
+                    "type": "string",
+                    "x-facadeur-prop-id": "36ab4f66-00d7-42f9-8472-14534e502c84"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "x-facadeur-prop-id": "bb7bf186-f4ed-4c9d-a354-00b0cfffcbcd"
+            }
+          },
           "additionalProperties": false
         }
       },
@@ -3064,7 +3088,10 @@
         "previewData": {
           "fields": {
             "label": "Save project",
-            "icon": "save"
+            "icon": "save",
+            "Icon": {
+              "icon": "menu"
+            }
           }
         }
       },
@@ -3447,77 +3474,144 @@
           "tagName": "div",
           "children": [
             {
-              "uuid": "149dbfaa-6b29-4083-a497-772f60df1f68",
-              "name": "Style Selector LAbel",
+              "uuid": "10f72726-f3a5-44ad-856c-54a9117202cd",
+              "name": "Label Wrapper",
               "dom": {
                 "tagName": "div",
-                "text": "{props:9c7df0e9-6a58-4876-94ca-e15654103d22}",
-                "children": []
+                "children": [
+                  {
+                    "uuid": "149dbfaa-6b29-4083-a497-772f60df1f68",
+                    "name": "Label",
+                    "dom": {
+                      "tagName": "span",
+                      "text": "{props:9c7df0e9-6a58-4876-94ca-e15654103d22}",
+                      "children": []
+                    },
+                    "classes": [
+                      {
+                        "name": "label",
+                        "generated": true,
+                        "style": {
+                          "declarations": {
+                            "min-height": "48px",
+                            "display": "flex",
+                            "align-items": "center"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "uuid": "c79f6cca-5fce-4d16-912c-23db0cc0808a",
+                    "name": "Icon Btn",
+                    "dom": {
+                      "tagName": "div",
+                      "children": []
+                    },
+                    "classes": [
+                      {
+                        "name": "icon-btn",
+                        "generated": true
+                      }
+                    ],
+                    "config": {
+                      "definitionRef": "76c5666b-70e4-43ad-bed7-5b682b749258"
+                    },
+                    "data": {
+                      "Icon": {
+                        "icon": "components"
+                      }
+                    }
+                  }
+                ]
               },
               "classes": [
                 {
-                  "name": "style-selector-label",
+                  "name": "label-wrapper",
                   "generated": true,
                   "style": {
                     "declarations": {
-                      "min-height": "48px",
                       "display": "flex",
-                      "align-items": "center"
+                      "justify-content": "space-between"
                     }
                   }
                 }
               ]
             },
             {
-              "uuid": "3957dc87-9283-4b0a-abda-d2f02434c354",
-              "name": "Repeater",
+              "uuid": "59f7b4e3-a0c7-45f7-b8fd-0609b5659e2c",
+              "name": "Property Item List",
               "dom": {
+                "tagName": "div",
                 "children": [
                   {
-                    "uuid": "940b6c04-49a7-478b-ba01-b7c776d3c562",
-                    "name": "Property Item",
+                    "uuid": "3957dc87-9283-4b0a-abda-d2f02434c354",
+                    "name": "Repeater",
                     "dom": {
-                      "tagName": "div",
                       "children": [
                         {
-                          "uuid": "f3468848-4ec3-4d79-be0d-241db46a2e85",
-                          "name": "property-name",
+                          "uuid": "940b6c04-49a7-478b-ba01-b7c776d3c562",
+                          "name": "Property Item",
                           "dom": {
                             "tagName": "div",
-                            "text": "{props:449fb6d4-7937-4f8c-a303-11a04e011ec4}"
-                          },
-                          "classes": [
-                            {
-                              "name": "property-name",
-                              "generated": true,
-                              "style": {
-                                "declarations": {
-                                  "flex": "1",
-                                  "minWidth": "0",
-                                  "font": "{token:550e8400-e29b-41d4-a716-00000000043a}"
-                                }
+                            "children": [
+                              {
+                                "uuid": "f3468848-4ec3-4d79-be0d-241db46a2e85",
+                                "name": "property-name",
+                                "dom": {
+                                  "tagName": "div",
+                                  "text": "{props:449fb6d4-7937-4f8c-a303-11a04e011ec4}"
+                                },
+                                "classes": [
+                                  {
+                                    "name": "property-name",
+                                    "generated": true,
+                                    "style": {
+                                      "declarations": {
+                                        "flex": "1",
+                                        "minWidth": "0",
+                                        "font": "{token:550e8400-e29b-41d4-a716-00000000043d}",
+                                        "font-weight": "bold"
+                                      }
+                                    }
+                                  }
+                                ]
+                              },
+                              {
+                                "uuid": "0d13da20-9a70-4565-8806-6ae4160d717f",
+                                "name": "property-value",
+                                "dom": {
+                                  "tagName": "div",
+                                  "text": "{props:36ab4f66-00d7-42f9-8472-14534e502c84}",
+                                  "children": []
+                                },
+                                "classes": [
+                                  {
+                                    "name": "property-value",
+                                    "generated": true,
+                                    "style": {
+                                      "declarations": {
+                                        "flex": "1",
+                                        "minWidth": "0",
+                                        "font": "{token:550e8400-e29b-41d4-a716-00000000043a}"
+                                      }
+                                    }
+                                  }
+                                ]
                               }
-                            }
-                          ]
-                        },
-                        {
-                          "uuid": "0d13da20-9a70-4565-8806-6ae4160d717f",
-                          "name": "property-value",
-                          "dom": {
-                            "tagName": "div",
-                            "text": "{props:36ab4f66-00d7-42f9-8472-14534e502c84}",
-                            "children": []
+                            ]
                           },
                           "classes": [
                             {
-                              "name": "property-value",
+                              "name": "property-item",
                               "generated": true,
                               "style": {
                                 "declarations": {
-                                  "fontFamily": "monospace",
-                                  "fontSize": "11px",
-                                  "flex": "1",
-                                  "minWidth": "0"
+                                  "display": "flex",
+                                  "flex-direction": "row",
+                                  "width": "100%",
+                                  "align-items": "center",
+                                  "font-family": "{token:0498c315-10df-54a4-8213-f36bad42e52a}"
                                 }
                               }
                             }
@@ -3527,37 +3621,54 @@
                     },
                     "classes": [
                       {
-                        "name": "property-item",
-                        "generated": true,
-                        "style": {
-                          "declarations": {
-                            "display": "flex",
-                            "flex-direction": "row",
-                            "width": "100%",
-                            "align-items": "center",
-                            "font-family": "{token:0498c315-10df-54a4-8213-f36bad42e52a}"
-                          }
+                        "name": "repeater",
+                        "generated": true
+                      }
+                    ],
+                    "config": {
+                      "composition": {
+                        "kind": "repeater",
+                        "source": {
+                          "kind": "prop",
+                          "uuid": "bb7bf186-f4ed-4c9d-a354-00b0cfffcbcd"
                         }
                       }
-                    ]
+                    }
                   }
                 ]
               },
               "classes": [
                 {
-                  "name": "repeater",
+                  "name": "hidden",
+                  "style": {
+                    "declarations": {
+                      "display": "none"
+                    }
+                  },
+                  "condition": {
+                    "kind": "rule",
+                    "operator": "and",
+                    "conditions": [
+                      {
+                        "kind": "condition",
+                        "left": {
+                          "kind": "reference",
+                          "reference": "{state:open}"
+                        },
+                        "operator": "equals",
+                        "right": {
+                          "kind": "literal",
+                          "value": true
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "property-item-list",
                   "generated": true
                 }
-              ],
-              "config": {
-                "composition": {
-                  "kind": "repeater",
-                  "source": {
-                    "kind": "prop",
-                    "uuid": "bb7bf186-f4ed-4c9d-a354-00b0cfffcbcd"
-                  }
-                }
-              }
+              ]
             }
           ]
         },
@@ -3589,6 +3700,12 @@
             "selector": ".default-class"
           }
         }
+      },
+      "behavior": {
+        "state": {
+          "open": true
+        },
+        "transitions": []
       }
     },
     "7e164f33-d469-4321-ae55-254086bb4f8c": {
@@ -4691,22 +4808,13 @@
     "1a60f254-fd8a-4e98-ac6c-22376fb19ba1": {
       "type": "object",
       "title": "Icon button",
-      "required": ["label", "icon"],
+      "required": ["label"],
       "properties": {
         "label": {
           "type": "string",
           "title": "Accessible label",
           "default": "Save project",
           "x-facadeur-prop-id": "678de36a-f6e6-4a5e-b31b-d6f9023bd495"
-        },
-        "icon": {
-          "type": "string",
-          "title": "Icon preset ID",
-          "default": "save",
-          "x-facadeur-reference": {
-            "target": "icon"
-          },
-          "x-facadeur-prop-id": "247d9011-871d-4f73-9967-8efb592a89f4"
         }
       },
       "additionalProperties": false
@@ -4755,6 +4863,17 @@
         "placeholder": {
           "type": "string",
           "x-facadeur-prop-id": "c7698edc-fe1c-433d-af0b-ece3153d2455"
+        }
+      },
+      "additionalProperties": false
+    },
+    "6556b208-a1b0-4c4a-9ce1-7daf0dbd34c1": {
+      "type": "object",
+      "title": "New schema",
+      "properties": {
+        "field1": {
+          "$ref": "urn:facadeur:schema:1a60f254-fd8a-4e98-ac6c-22376fb19ba1",
+          "x-facadeur-prop-id": "1019d9c9-d417-4204-9f04-ce6eb3a81ec6"
         }
       },
       "additionalProperties": false

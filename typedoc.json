@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/typedoc-plugin-markdown/typedoc-plugin-markdown.schema.json",
+  "entryPoints": ["packages/core/src/index.ts"],
+  "tsconfig": "packages/core/tsconfig.json",
+  "plugin": ["typedoc-plugin-markdown"],
+  "outputFileStrategy": "modules",
+  "out": "docs/api/core",
+  "name": "Facadeur Core API",
+  "readme": "none",
+  "excludeInternal": true,
+  "sort": ["source-order"]
+}

@@ -4,7 +4,7 @@ export const config: NodeDefinitionModel['config'] = {
   previewData: {
     fields: {
       value: '',
-      placeholder: 'Enter a valueasdasdasd',
+      placeholder: 'Enter a value',
       name: 'example-input',
       disabled: false,
     },

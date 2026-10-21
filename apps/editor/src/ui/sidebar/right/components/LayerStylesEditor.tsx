@@ -25,6 +25,27 @@ export function LayerStylesEditor({
   valueFieldOptions: readonly TransformableFieldOption[];
   onEvent: (event: EditorEvent) => void;
 }) {
+  const optionalClasses = layerStyles.filter((item) => !item.generated);
+  const optionalClassIndex = (className: string) =>
+    optionalClasses.findIndex((item) => item.className === className);
+  const reorderClasses = (from: number, to: number) => {
+    if (to < 0 || to >= optionalClasses.length) return;
+    const names = optionalClasses.map((item) => item.className);
+    const [moved] = names.splice(from, 1);
+    if (!moved) return;
+    names.splice(to, 0, moved);
+    onEvent({
+      type: EditorEventType.DesignCommandExecute,
+      data: {
+        command: {
+          type: 'setNodeClassOrder',
+          definitionUuid: definitionId,
+          nodeUuid: nodeId,
+          classNames: names,
+        },
+      },
+    });
+  };
   return (
     <Stack gap={10}>
       {layerStyles.map((layerStyle) => (
@@ -35,6 +56,25 @@ export function LayerStylesEditor({
           layerStyle={layerStyle}
           valueFieldOptions={valueFieldOptions}
           onEvent={onEvent}
+          orderAction={
+            layerStyle.generated
+              ? undefined
+              : {
+                  onMoveUp: () =>
+                    reorderClasses(
+                      optionalClassIndex(layerStyle.className),
+                      optionalClassIndex(layerStyle.className) - 1,
+                    ),
+                  onMoveDown: () =>
+                    reorderClasses(
+                      optionalClassIndex(layerStyle.className),
+                      optionalClassIndex(layerStyle.className) + 1,
+                    ),
+                  canMoveUp: optionalClassIndex(layerStyle.className) > 0,
+                  canMoveDown:
+                    optionalClassIndex(layerStyle.className) < optionalClasses.length - 1,
+                }
+          }
         />
       ))}
     </Stack>
@@ -47,12 +87,19 @@ function LayerClassStyleEditor({
   layerStyle,
   valueFieldOptions,
   onEvent,
+  orderAction,
 }: {
   nodeId: string;
   definitionId: string;
   layerStyle: InspectorSidebarModel['layerStyles'][number];
   valueFieldOptions: readonly TransformableFieldOption[];
   onEvent: (event: EditorEvent) => void;
+  orderAction?: {
+    onMoveUp: () => void;
+    onMoveDown: () => void;
+    canMoveUp: boolean;
+    canMoveDown: boolean;
+  };
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [property, setProperty] = useState('');
@@ -94,7 +141,35 @@ function LayerClassStyleEditor({
     });
 
   return (
-    <Section title={layerStyle.selector} collapsible defaultOpen appearance="accordion" keepMounted>
+    <Section
+      title={layerStyle.selector}
+      action={
+        orderAction ? (
+          <span className="layer-style-order" aria-label={`Order ${layerStyle.selector}`}>
+            <button
+              type="button"
+              aria-label={`Move ${layerStyle.selector} up`}
+              disabled={!orderAction.canMoveUp}
+              onClick={orderAction.onMoveUp}
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              aria-label={`Move ${layerStyle.selector} down`}
+              disabled={!orderAction.canMoveDown}
+              onClick={orderAction.onMoveDown}
+            >
+              ↓
+            </button>
+          </span>
+        ) : undefined
+      }
+      collapsible
+      defaultOpen
+      appearance="accordion"
+      keepMounted
+    >
       <Stack gap={10}>
         <ClassConditionEditor
           condition={layerStyle.condition}

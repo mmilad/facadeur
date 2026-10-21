@@ -1,7 +1,5 @@
 import type { FieldValue, ProjectCatalog } from '@facadeur/domain';
-import { componentPropsForSchema } from '../../catalog/field-ids';
-import { readTokenTree } from '../../../style/tokens/global/tree';
-import { tokenReference } from '../../../style/tokens/syntax';
+import { componentPropsForSchema, readTokenTree, tokenReference } from '../../../../queries';
 
 export type RepeaterReferenceScope = {
   readonly nodeUuid: string;
@@ -15,6 +13,7 @@ export type RepeaterReferenceScope = {
 export type ReferenceResolutionContext = {
   readonly catalog: ProjectCatalog;
   readonly componentProps?: Readonly<Record<string, FieldValue>>;
+  readonly componentState?: Readonly<Record<string, FieldValue | null>>;
   readonly repeaterScopes?: readonly RepeaterReferenceScope[];
   /** Compatibility for callers that only provide the previous single-item context. */
   readonly item?: FieldValue;
@@ -22,7 +21,9 @@ export type ReferenceResolutionContext = {
 
 const DESIGN_PROP_REF = /^\{prop:([^}]+)\}$/;
 const COMPONENT_PROP_REF = /^\{props:([^}]+)\}$/;
+const COMPONENT_STATE_REF = /^\{state:([^}]+)\}$/;
 const ITEM_FIELD_REF = /^\{item:([^}]+)\}$/;
+const ITEM_VALUE_REF = /^\{item\}$/;
 const ITEM_PROP_REF = /^\{item-prop:([^:}]+):([^}]+)\}$/;
 const INDEX_REF = /^\{index:([^}]+)\}$/;
 const TOKEN_REF = /^\{token:([^}]+)\}$/;
@@ -79,8 +80,18 @@ function resolveReference(
     return resolveReference(value, context, new Set(activeReferences).add(activeKey));
   }
 
+  const componentState = reference.match(COMPONENT_STATE_REF);
+  if (componentState?.[1]) {
+    const activeKey = `state:${componentState[1]}`;
+    if (activeReferences.has(activeKey)) return undefined;
+    const value = context.componentState?.[componentState[1]];
+    if (typeof value !== 'string' || !isSupportedReference(value)) return value;
+    return resolveReference(value, context, new Set(activeReferences).add(activeKey));
+  }
+
   const itemField = reference.match(ITEM_FIELD_REF);
   if (itemField?.[1]) return fieldAtPath(lastScope(context)?.item ?? context.item, itemField[1]);
+  if (ITEM_VALUE_REF.test(reference)) return lastScope(context)?.item ?? context.item;
 
   const itemProp = reference.match(ITEM_PROP_REF);
   if (itemProp?.[1] && itemProp[2]) {
@@ -116,7 +127,9 @@ export function resolveReferenceText(reference: string, context: ReferenceResolu
   const isReference =
     DESIGN_PROP_REF.test(reference) ||
     COMPONENT_PROP_REF.test(reference) ||
+    COMPONENT_STATE_REF.test(reference) ||
     ITEM_FIELD_REF.test(reference) ||
+    ITEM_VALUE_REF.test(reference) ||
     ITEM_PROP_REF.test(reference) ||
     INDEX_REF.test(reference) ||
     TOKEN_REF.test(reference);
@@ -160,7 +173,9 @@ export function isSupportedReference(reference: string) {
   return (
     DESIGN_PROP_REF.test(reference) ||
     COMPONENT_PROP_REF.test(reference) ||
+    COMPONENT_STATE_REF.test(reference) ||
     ITEM_FIELD_REF.test(reference) ||
+    ITEM_VALUE_REF.test(reference) ||
     ITEM_PROP_REF.test(reference) ||
     INDEX_REF.test(reference) ||
     TOKEN_REF.test(reference)
@@ -189,17 +204,24 @@ export function referenceOptionsForScopes(scopes: readonly RepeaterReferenceScop
 }
 
 export function repeaterItemSchema(
-  source: { kind: 'prop'; uuid: string } | { kind: 'item'; path: string } | undefined,
+  source:
+    | { kind: 'prop'; uuid: string }
+    | { kind: 'item'; path: string }
+    | { kind: 'state'; name: string }
+    | undefined,
   componentSchema: unknown,
   repeaterScopes: readonly RepeaterReferenceScope[],
   catalog: ProjectCatalog,
+  stateSchema?: Readonly<Record<string, Record<string, unknown>>>,
 ) {
   const sourceSchema =
     source?.kind === 'prop'
       ? schemaPropertyById(componentSchema, source.uuid)
       : source?.kind === 'item'
         ? schemaAtPath(repeaterScopes.at(-1)?.itemSchema, source.path)
-        : undefined;
+        : source?.kind === 'state'
+          ? stateSchema?.[source.name]
+          : undefined;
   const items = sourceSchema?.items;
   const resolvedItems = resolveCatalogSchemaReferences(items, catalog);
   return resolvedItems && typeof resolvedItems === 'object' && !Array.isArray(resolvedItems)
@@ -208,7 +230,11 @@ export function repeaterItemSchema(
 }
 
 export function repeaterItemPath(
-  source: { kind: 'prop'; uuid: string } | { kind: 'item'; path: string } | undefined,
+  source:
+    | { kind: 'prop'; uuid: string }
+    | { kind: 'item'; path: string }
+    | { kind: 'state'; name: string }
+    | undefined,
   componentSchema: unknown,
   repeaterScopes: readonly RepeaterReferenceScope[],
 ) {
@@ -231,6 +257,7 @@ export function repeaterItemPath(
       ? `${parentScope.itemPath ?? parentScope.indexName}.${itemName}`
       : `props.${itemName}`;
   }
+  if (source?.kind === 'state') return `state.${source.name}`;
   return 'item[]';
 }
 

@@ -121,10 +121,19 @@ describe('catalog editor shell', () => {
     const session = createSession();
     vi.spyOn(session.core, 'persist').mockResolvedValue();
     session.openAsset(exampleIds.components.card.definition);
-    session.core.patchNodeStyleRecord(exampleIds.components.card.nodes.title, {
-      position: 'absolute',
-      left: '10px',
-      top: '20px',
+    const title = findNodeByUuid(
+      session.core.getSnapshot().openDefinition!.root,
+      exampleIds.components.card.nodes.title,
+    );
+    const generatedClass = title?.classes?.find((item) => item.generated);
+    if (!generatedClass) throw new Error('Expected the title node to have a generated class');
+    session.executeDesign({
+      type: 'setNodeClassStyleDeclarations',
+      definitionUuid: exampleIds.components.card.definition,
+      nodeUuid: exampleIds.components.card.nodes.title,
+      className: generatedClass.name,
+      declarations: { position: 'absolute', left: '10px', top: '20px' },
+      breakpointUuid: null,
     });
     session.selectNode(exampleIds.components.card.nodes.title);
     render(<EditorHost session={session} navigation={createTestNavigation()} />);
@@ -135,6 +144,8 @@ describe('catalog editor shell', () => {
       session.core.getSnapshot().openDefinition!.root,
       exampleIds.components.card.nodes.title,
     );
-    expect(node?.style).toMatchObject({ left: '11px', top: '20px' });
+    expect(
+      node?.classes?.find((item) => item.name === generatedClass.name)?.style?.declarations,
+    ).toMatchObject({ left: '11px', top: '20px' });
   });
 });

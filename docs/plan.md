@@ -1,5 +1,68 @@
 # Facadeur cleanup plan
 
+- [x] Editor: initialize comparison values for class conditions
+  - Evidence: `ClassConditionEditor` changes an `is-set` condition to `equals` without adding a `right` operand. Its controlled boolean select then receives an empty value while offering only `true` and `false`, so it appears to select `true` although the catalog still omits the operand; Core correctly evaluates the incomplete condition as false.
+  - Action: when a comparison operator needs a right operand and none exists, initialize a typed literal matching the visible default (boolean `true`, numeric `0`, or empty string). Keep existing right operands when switching comparison operators.
+  - Scope: class-condition authoring and its displayed values; no change to condition semantics or initial-state evaluation.
+  - Contracts: persist the literal shown by the Editor, preserve reference operands and existing literals, and retain Core's false result for malformed legacy conditions.
+  - Validation: Editor typecheck, catalog JSON parsing, Prettier, candidate detector rerun, and `git diff --check` passed; tests were not run.
+  - Structure: keep the condition authoring logic in its cohesive Editor component and evaluation in Core. The unrelated 698-line `AppService.ts` candidate remains a separate backlog review; it is the app command router and this fix adds no responsibility there.
+
+- [x] Style Engine: preserve main-before-custom class cascade order
+  - Evidence: preview CSS concatenates dynamic class rules (generated class first, authored classes after) with global class rules. Global rules currently follow raw catalog array order, so a generated main class stored after an authored class can override that class again.
+  - Action: emit each node's global class rules with its generated class first, then authored classes in their existing order, matching the Editor and dynamic CSS ordering.
+  - Scope: CSS rule ordering for catalog node classes; preserve selector construction and declarations.
+  - Contracts: generated/main styles are the base, authored classes retain user order and can override them, and breakpoint and global selector behavior remains unchanged.
+  - Validation: Style Engine typecheck, Prettier, candidate detector rerun, and `git diff --check` passed; tests were not run.
+  - Structure: keep ordering beside the Style Engine CSS emission that owns the cascade; the module is cohesive and below the detector threshold.
+
+- [x] Core: migrate incompatible catalog field values when effective schemas change.
+  - Evidence: `validate.ts` validates definition static values, preview defaults, nested instance data, and nested static field configs against effective schemas, while `patchDefinition` only prunes values for removed inline properties. A schema shape change therefore leaves stale values (for example `header`'s `Menu Btn.icon`) that block the schema edit. Field-level `$ref`s also reached AJV without the catalog schema registry, so valid migrated object values could still fail validation.
+  - Action: during definition or shared-schema changes, find definitions whose effective contracts change and reconcile their stored field values against the resulting schemas. Replace incompatible values with an explicit or recursively derivable schema default; remove an incompatible static override when no default exists. Keep static status only when a replacement value exists. Do not infer a conversion from the previous value. Validate `$ref` fields with their catalog schemas registered, preserving partial-object validation semantics.
+  - Scope: current schema-edit flow only; preserve unrelated values and schema definitions.
+  - Contracts: preserve valid values, field IDs, static/exposed flags, preview behavior, and catalog reference validation. `$ref` schemas resolve through the catalog registry; derived defaults handle recursive references safely.
+  - Validation: Core typecheck and Prettier passed; `git diff --check` passed. An in-memory CoreController reproduction of an Icon `$ref` type change migrated `header`'s `Menu Btn` data and static config to `{ icon: "save" }` and committed the catalog. The affected-path detector found no candidate in the new module; the existing 643-line `validate.ts` responsibility was reviewed and kept cohesive. Automated tests were not run per current session instructions.
+  - Structure: keep schema-value reconciliation in the Core catalog domain, separate from `ops.ts` record editing and `schema-repeater.ts` binding remapping. `validate.ts` remains one cohesive catalog-integrity pass; its 643-line detector signal was reviewed because ref-aware field validation belongs to that existing responsibility.
+
+- [x] Codegen: finalize typed component state and class-condition references.
+  - Evidence: the current prototype creates a boolean state and a hard-coded click transition; its form uses native controls and sits outside the Inspector tabs. Class-condition options and Core reference evaluation only include schema props, so internal state values are unavailable and the condition toggle is disabled when there are no props.
+  - Action: move state editing into a dedicated Inspector Behavior tab; use existing form components to add typed state with an explicit initial value and show type-derived actions (`toggleX`/`setX` for booleans, `setX(value)` for strings/numbers). Do not create event bindings when adding a state. Add `{state:name}` as a typed condition reference, include states in condition options, and resolve them in Core preview and React codegen.
+  - Scope: state definition and read-only class-condition use. Keep event-to-action binding out of this slice; document that actions are available but not yet invokable by authored events. Do not add a visual graph or executable function strings.
+  - Contracts: keep catalogs without `behavior` unchanged; state names are stable identifiers and rename updates references; initial values preserve boolean/string/number types. Repeater/component prop references retain current semantics. Conditions may read a component's declared internal state.
+  - Validation: Core state-condition preview regression and all 8 Codegen generation tests passed; Core, Codegen, and Editor typechecks passed; Storybook browser showed the root Behavior tab and enabled state-backed class conditions. The pre-existing Core field-exposure suite still has three unrelated failing assertions. Candidate detector was rerun; no new size candidate was introduced. `git diff --check` was reviewed.
+  - Structure: domain owns the behavior and state-reference vocabulary; Core owns validation/evaluation; Editor form and Inspector own authoring. Keep React reference emission in the React engine and reconsider extracting behavior generation from `generate.ts` (already flagged by the candidate detector).
+
+- [x] Editor: author component behavior transitions with forms.
+  - Evidence: the Behavior panel currently edits state and displays action names as information, while `behavior.transitions` can only be supplied outside the Editor; the panel explicitly says event bindings come later.
+  - Action: add a form for selecting a layer and event, then composing ordered `set-state`, `increment`, and `emit` actions with literal, state, prop, and event values. Keep saved behavior as declarative `BehaviorAction` data; generate implementation functions from those records instead of saving executable source strings.
+  - Scope: author the existing behavior model in the Editor; no visual graph or arbitrary JavaScript editor.
+  - Contracts: preserve component-private state, stable node UUIDs, event names, action order, typed initial values, and React codegen output; state actions remain portable to later target engines.
+  - Validation: transition/action/value authoring tests (4), Editor typecheck, React codegen tests for event payloads and ordered state updates, Prettier, and `git diff --check` passed. Save/reload and Undo/Redo are covered by the existing catalog event pipeline but were not added as dedicated behavior tests.
+
+- [x] Editor: isolate behavior runtime per rendered component instance.
+  - Evidence: Stage previously executed every definition's transitions against one `runtimeState`; embedded copies shared state and state-backed classes could not receive scoped overrides.
+  - Action: carry behavior owner, local node UUID, instance path, and resolved props on optional preview behavior targets; keep Stage state keyed by owner instance, route events to that target, and pass scoped state overrides into Core class-condition resolution. Keep control values keyed by their rendered path and shared behavior state stable across responsive frames.
+  - Scope: live editor preview only; preserve the declarative behavior contract and generated component behavior. Current event snapshots include target value/checked/name, key, button and modifier keys.
+  - Contracts: initial state, event values, action order, callback emits, class conditions, Undo/Redo, and repeated component instance isolation must match generated React semantics.
+  - Validation: Core resolver case proves two references to one behavior definition have distinct scopes and only the overridden instance receives its state-backed class (1 passed). DynamicElement scoped event routing and viewport interaction tests passed (11); Core and Editor typechecks passed. Storybook on port 6006 was manually tested: interaction mode toggled the root class across responsive frames, then returned to editing mode. Prettier and `git diff --check` passed. Three unrelated assertions in `catalog-field-exposure.test.ts` also fail with the clean HEAD resolver (group exposure label, atom binding expectation, and legacy exposure validation); they were excluded from the focused passing run.
+  - Refactor: bundled recursive Core preview inputs in a private `NodeResolveContext`, replacing ten positional arguments while preserving the exported resolver signature, traversal order, slot/repeater semantics, and default output.
+  - Structure: `packages/domain` owns optional preview behavior target metadata on `ElementBuildConfig`; Core resolver assigns stable paths, props, and matching state overrides; Editor Stage owns ephemeral state by path. Preserve existing `nodeUuid`, `renderKey`, class identity, default resolver output, and codegen output when no runtime override is supplied. The resolver remains one cohesive tree walk; its candidate-detector size signal (624 lines) was reviewed, and no separate module boundary emerged after context bundling.
+
+- [x] Editor: make the UI test mode usable for native form controls and supported DOM events.
+  - Evidence: Stage interaction is currently offered only when a component already has behavior transitions; DynamicElement makes text inputs and textareas read-only and swallows form changes, and CatalogBehaviorPanel accepts arbitrary event strings while DynamicElement forwards only a fixed subset.
+  - Action: expose a distinct test mode for any open definition, retain entered values locally per rendered node, allow controlled input/select/checkbox/textarea interaction, and share a typed event vocabulary between the behavior form and Stage event wiring. Include pointer and native drag lifecycle events so custom selects, autocomplete and drag/drop compositions can be tried.
+  - Scope: editor preview/test mode; no persistent Catalog value updates, no generic arbitrary-JavaScript or drag-data expression system.
+  - Contracts: normal layer-select mode stays the default; test values are isolated from saved preview data; state transitions and callback emits retain their existing semantics; every authored event option must have a Stage DOM handler.
+  - Validation: DynamicElement tests cover editable/inert controls and prove every authored event maps to a React DOM handler; the Behavior panel test checks the pointer/drag event options. In Storybook, button click applied the state-backed `is-open` class, text/select/textarea values changed locally across responsive previews, and leaving test mode restored their initial values and the initial state. Editor typecheck and focused suites (15 tests) passed.
+  - Structure: reviewed the 827-line `CatalogBehaviorPanel`; retain it as one cohesive editor because state rename/removal must coordinate class-condition and transition references, and both forms dispatch the same live `ComponentBehavior`. Event option mapping remains in the Stage-owned `dom-events` module; no separate panel/editor module is justified for this change.
+
+- [x] Core/Editor: validate behavior types and keep state references consistent.
+  - Evidence: catalog validation checks state/action names and operation arity, but not compatible state/action value types; state rename currently remaps class conditions only, and deleting a state can leave references behind.
+  - Action: validate state targets, incrementable numeric values, operation arity/types, prop/event paths, and event/emit contracts. Remap or safely remove references in class conditions and transitions when states are renamed or deleted; prevent invalid edits from being committed.
+  - Scope: behavior-model integrity and state lifecycle; no new expression operators or arbitrary code.
+  - Contracts: preserve legacy class conditions and valid saved behavior, keep stable node IDs, and reject invalid references with actionable errors.
+  - Validation: Core catalog tests cover valid behavior shape and invalid operation arity/references, Editor tests cover transition rename and guarded deletion, and Core/Editor typechecks passed. Runtime tests cover ordered actions and immutable inputs. Broader legacy field-exposure tests retain three unrelated failures in the combined working tree.
+
 - [x] Examples/Editor: add a reusable Icon atom backed by project icon references.
   - Evidence: Core already resolves an SVG node's `data-icon` key against `ProjectCatalog.icons`, but the reusable example atoms do not expose an SVG Icon atom; the app seed only has an Icon button component.
   - Action: add an `Icon` atom with an Icon-target schema reference, a `data-icon` prop binding, and a preview default; merge that atom into the Editor seed catalog alongside its existing Tree Node example.
@@ -600,12 +663,12 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
   - Contracts: retain current token values, breakpoint overrides, font sources, and existing design-stage CSS selector semantics.
   - Validation: switched Fonts → Schemas in the App Storybook view; added and passed a regression test verifying the font imports persist while token rules remain scoped. Editor typecheck, the focused design-domain test suite (5 tests), Prettier, candidate detector, and `git diff --check` passed.
 
-- [ ] Core/Editor: replace icon options-source metadata with typed catalog references.
+- [x] Core/Editor: replace icon options-source metadata with typed catalog references.
   - Evidence: the Icon Button schema uses the one-off `x-facadeur-options-source: "icons"` keyword, and Core converts that one marker into enum fields inside `inspector-view.ts`; schema editing has no UI for choosing a reusable reference target.
   - Action: represent resource references as string schemas with `x-facadeur-reference: { target }`; make the controlled SchemaEditor accept host-supplied target choices and edit this annotation on string properties. Pass the Icon target from the app schema surfaces, resolve Icon IDs to inspector choices centrally, and validate referenced defaults/field values against the catalog icon IDs. Update the seed Icon Button schema and remove the options-source path.
   - Scope: make icon references authorable and usable through the existing schema and inspector surfaces; keep `$ref` for schema-to-schema references and leave future target kinds additive.
   - Contracts: preserve the string value and stable icon ID (`save`), JSON Schema validity, controlled editor updates, preview rendering, and strict catalog validation; unknown reference targets/IDs must be rejected rather than silently accepted.
-  - Validation: focused Core validation and Editor schema UI checks, relevant Core/Editor typechecks, candidate detector rerun, and `git diff --check`.
+  - Validation: no `x-facadeur-options-source` usages remain. Core tests verify icon ID dropdown projection, valid defaults/field values, and rejection of unknown targets/IDs; Editor schema tests cover writing and clearing target metadata. App and Catalog schema panels supply Icon and Component reference target choices; Core and Editor typechecks passed in the recent full typecheck. Candidate detector reviewed; no separate source change was needed in this turn.
 
 - [x] Editor: edit static catalog-reference values with their schema control.
   - Evidence: `DefinitionFieldSettings` routes text-like static values through `TransformableField`, even when the field schema declares `x-facadeur-reference`; the ordinary inspector projection already resolves registered reference values to an enum/select.
@@ -655,19 +718,19 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
   - Contracts: preserve class order, sparse style declarations/breakpoints, existing reference encodings, `Object.is` equality and unset semantics (`undefined`/`null` are unset; empty string/array/object are set), and old `prop-equals` catalog data. Empty groups are invalid and evaluate false defensively. Generated repeater markup retains its existing preview-data cardinality; each emitted row's condition reads the current prop at that row's stable repeater index.
   - Validation: Core, Editor, and Codegen typechecks passed in the approved host context; Prettier, candidate detector rerun, and `git diff --check` passed. Automated tests and Storybook interaction were not run in this implementation.
 
-- [ ] Editor: render nested object fields and preserve repeater form paths.
+- [x] Editor: render nested object fields and preserve repeater form paths.
   - Evidence: `json-schema-form-config.ts` falls back to a text control for object-valued properties, so `rules[].declarations` serializes as a string. `SchemaForm.tsx` reads and writes nested schema fields without resolving the current `PathPrefix`, so editing a schema field inside an array targets the wrong path and the catalog rejects the malformed preview value.
   - Action: route object schemas through the recursive schema value editor and resolve `schemaField` values and commits against the active path prefix. Keep array-item indexing and outer form values intact.
   - Scope: fix nested object fields in array-valued preview data and inspector forms; no schema, persistence, or validation contract changes.
   - Contracts: retain JSON Schema object and array shapes, preserve current form bindings and preview-data field paths, and keep non-nested scalar controls on their existing form path.
-  - Validation: Editor typecheck, focused source-level check of nested object and array path handling, candidate detector rerun, and `git diff --check`; no test suite added or run.
+  - Validation: added and passed an Editor UI regression test editing `rules[0].declarations.display` through the recursive object form while preserving sibling array/object values. Editor typecheck, candidate detector rerun, Prettier, and `git diff --check` passed.
 
-- [ ] Core/Editor: expose nested repeater item fields as composition sources.
+- [x] Core/Editor: expose nested repeater item fields as composition sources.
   - Evidence: nested repeater scopes and `{ kind: 'item', path }` sources are supported by the Core resolver and catalog validation, but `inspector-view.ts` only builds the composition source dropdown from root component properties. The inner repeater cannot select an array from its parent item's schema.
   - Action: build source choices from the root component schema and the active parent repeater item's schema. Encode the selected source in the inspector view model, then map it to the existing prop UUID or item path source contract. Keep source-option generation in the inspector view model because it already owns composition controls; preserve the file's cohesive inspector-model responsibility.
   - Scope: make nested repeater arrays selectable in the Editor; no persisted model or reference-encoding changes.
   - Contracts: keep root `{ kind: 'prop', uuid }` sources and scoped `{ kind: 'item', path }` sources, repeater index UUID identity, item scope order, and Core validation/preview/codegen behavior intact.
-  - Validation: Core and Editor typechecks, candidate detector rerun, and `git diff --check`; no tests run.
+  - Validation: added a Core Inspector regression check proving the nested item array appears as `item:options` with its `[]` path label; Core preview filters that nested source while preserving stable option IDs. Core and Editor typechecks, candidate detector rerun, and `git diff --check` passed.
 
 - [ ] Refactor: review `AppService.ts` ownership boundaries.
   - Evidence: the 652-line service coordinates session/catalog actions, asset workflows, event routing, and inspector/sidebar view-model assembly.
@@ -759,12 +822,20 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
   - Validation: focused Core runtime check confirms the sample array keeps its stored `$ref` while `styles.items` derives `selector` and `rules` fields; root preview fields remain available for structured editing. Core/Editor typechecks, Prettier, candidate detector, and `git diff --check` passed; tests not run.
   - Structure: retain `inspector-view.ts` as the cohesive Inspector model builder; shared-schema expansion extends its existing field derivation and adds no separate domain or UI responsibility.
 
-- [ ] Core: keep schema edits and preview defaults in sync.
+- [x] Core: keep schema edits and preview defaults in sync.
   - Evidence: `CatalogSchemaStage` allows removing fields from an inline schema while `definition.config.previewData.fields` keeps values for those fields; `validateProjectCatalog` then rejects the next catalog commit, including inserting a component, with an invalid preview-default error.
   - Action: when an inline schema is replaced, remove definition preview defaults for fields no longer in the contract; make catalog validation tolerate stale or mistyped preview examples, and filter them from rendering. Keep strict validation for component instance data and type validation for active preview fields.
   - Scope: schema replacement and preview-default validation; do not change persisted schema or renderer contracts.
   - Contracts: preserve preview values for retained fields, preserve valid partial values and bindings, and keep invalid values for known fields rejected.
-  - Validation: Core and Editor typechecks, focused in-memory reproduction for stale CSS rule preview values, candidate detector rerun, and `git diff --check`; no tests run.
+  - Validation: Core regression test confirms removed inline fields are pruned, stale/mistyped preview examples pass catalog validation, and incompatible values are omitted from Core rendering. Core/Editor typechecks, candidate detector rerun, and `git diff --check` passed.
+
+- [x] Core/Editor/Style Engine/Codegen: keep generated root class styles first and make optional class order editable.
+  - Evidence: node classes are stored as authored classes followed by the generated root class; the style inspector and both preview/codegen CSS emit them in storage order, so the generated base rule can override an optional class with equal specificity.
+  - Action: show the generated root class first in the inspector and style rule emission, then expose move-up/move-down controls for authored classes. Persist authored order through a catalog design command while preserving the generated class invariant.
+  - Scope: per-node class order and CSS cascade only; do not change selectors, conditions, declarations, breakpoints, or DOM class membership.
+  - Contracts: keep generated classes fixed and first in presentation/CSS, preserve authored class order and definitions through edits and undo, preserve sparse responsive styles and existing condition behavior.
+  - Validation: focused Core/Editor/Codegen behavior tests (13 passed), workspace typecheck, Storybook visual inspection confirms `.layer` is listed before `.is-open` and optional-class sort controls render, candidate detector rerun, and `git diff --check` passed. The live demo has one optional class, so the sort buttons are correctly disabled there; multi-class movement is covered by the Editor integration test.
+  - Structure: keep the recursive Core resolver and React output pipeline cohesive; generated-first ordering is a local projection at each existing class-style emission point. Keep Inspector ordering in `AppService` model assembly; extracting this one ordering operation would add indirection without another consumer.
 
 - [x] Examples/Editor: keep Tree Node nested schema prop IDs stable.
   - Evidence: `EditorBootstrap` replaces the catalog's saved Tree Node with the Examples definition at startup, while `tree-node.ts` only assigns IDs to its top-level fields. Catalog normalization generates IDs for nested schema fields, so those IDs change on every startup and can invalidate bindings.
@@ -800,3 +871,156 @@ Storybook build still prints existing Vite `use client`, sourcemap, and large-ch
   - Scope: the saved Facadeur Editor seed catalog's Style Tab preview only; preserve runtime behavior for empty arrays and user-provided component data.
   - Contracts: do not change the schema, Repeater source, child layers, bindings, or exported component data; keep the preview sample editable/removable in Preview data.
   - Validation: focused Core preview resolution and catalog validation confirm the Css Rule Set renders the sample row; Editor typecheck, Prettier, candidate detector, and `git diff --check` passed; tests not run.
+
+- [x] Core/Editor/React: make internal state arrays usable for sortable components.
+  - Evidence: Component behavior supports only scalar state and scalar actions; Repeater sources are schema prop/item references, and React codegen expands preview rows into a static tree. These gaps prevent authored components from keeping and rendering a reordered private list.
+  - Action: add an explicit JSON schema for behavior state, support array initial values and a portable `move-array-item` action, allow a Repeater to read behavior state, and make React codegen map the state array over its authored row template with item/index bindings. Use keyboard-accessible up/down actions as the first reorder surface; add native drag only after the generated data and event path is stable.
+  - Scope: first vertical slice supports one-level local string arrays with keyboard and native pointer reordering; the Core schema and renderer support typed item paths for richer arrays. Preserve prop/item Repeater behavior. Defer the full item schema editor, nested sortable lists, arbitrary sorting functions, and row insertion/deletion actions.
+  - Contracts: state remains per rendered component instance; actions are declarative; empty arrays render no rows; array movement is immutable, validated, and preserves item order; generated React and editor preview use the same item bindings. Generated React currently keys rows by index, so stable identity for stateful repeated child components needs explicit item IDs in a follow-up.
+  - Validation: Core validation/resolution tests, React codegen output assertions, Storybook showed the state form and successful keyboard item move across all viewports, four package typechecks, formatting, candidate detector and `git diff --check`. The broad Core field-exposure test still has three unrelated pre-existing expectation failures (group-name persistence, bound-prop precedence, and legacy child-slot migration); the new state-Repeater case passes. Native pointer drag is covered by the follow-up below.
+  - Refactoring review: `validate.ts` had grown from 739 to 826 lines and now mixed catalog-wide integrity checks with a distinct behavior-state/repeater/action integrity pass. Extract that pass into private `validate-behavior.ts`, preserving the public validation entry point and error messages; keep the general catalog traversal and effective-schema checks in `validate.ts`. Keep `CatalogBehaviorPanel.tsx` cohesive for now: state rename/delete and transition/repeater editing share cross-references and one event boundary, so extraction would add callback plumbing without a stable independent owner. Keep `resolve.ts` as the recursive preview-tree resolver and React `generate.ts` as the target generator; the new branches extend those existing responsibilities.
+
+- [x] Refactor: separate behavior-state authoring from transition editing.
+  - Evidence: `CatalogBehaviorPanel.tsx` owned two independently changing forms: state schema/initial-value authoring with rename/delete reference safety, and event transition/action editing. Object-array authoring increases the state editor responsibility.
+  - Action: move the internal-state authoring UI and its state-name/reference helpers into a private `BehaviorStatesEditor` component in the same stage domain. Keep object item schema/key/value editing in a colocated private `CatalogBehaviorObjectList` module because that focused editor has its own schema, uniqueness, and row-edit behavior. Keep transition and action editing in `CatalogBehaviorPanel` and preserve the shared `DefinitionBehaviorSet` event boundary.
+  - Scope: prerequisite for sortable object item authoring.
+  - Contracts: preserve serialized behavior shape, state rename/removal reference checks, initial-value behavior, Form controls, and undo/redo through the existing event path. Keep Core `resolve.ts` as the recursive preview-tree resolver; its existing scoped item resolution already supports declared object item schemas.
+  - Validation: behavior-panel interactions and Editor typecheck passed; candidate detector and `git diff --check` reviewed.
+  - Structure: keep transition/action editing in `CatalogBehaviorPanel` because transition events, repeater scopes, and action editing share one cohesive workflow; keep state lifecycle in `CatalogBehaviorStates` and object item schema/key/value editing in `CatalogBehaviorObjectList`.
+
+- [x] Editor/React: complete sortable item authoring and stable row identity.
+  - Evidence: the first Repeater state UI can edit text arrays and move items, but cannot author object item schemas or item IDs; React currently uses array index keys, and there are no declarative append/remove actions.
+  - Action: add form-based object item schema/value editing, persist the selected direct string key field for each array state, use it for Core instance keys and React keys, and add portable add/remove actions with fresh unique keys. Keep keyboard and native drag reorder working on the same data.
+  - Scope: local sortable lists; keep state actions data-only and renderer-neutral.
+  - Contracts: key fields are visible user data, direct non-empty string properties with unique values; preserve immutable item values, independent state per component instance, undo/redo, Repeater bindings, and consistent Core/React output. Repeater rows without key metadata retain index-key behavior.
+  - Validation: focused Core runtime/validation, React codegen, and behavior-panel tests passed; all four package typechecks passed; Storybook on port 6006 shows Alpha/Bravo/Charlie with Add, Move up/down, and Remove controls at all viewports; candidate detector and `git diff --check` reviewed. The broad Core field-exposure suite retains three unrelated pre-existing failures (group-name persistence, bound-prop precedence, and legacy child-slot migration); the new stable-key case passes.
+
+- [x] Core/Editor/React: support native drag-and-drop reordering for state-backed Repeaters.
+  - Evidence: the Editor exposes native drag lifecycle events and codegen maps them to React events, but authored Repeater rows are not draggable, drop does not allow default browser handling, and behavior cannot read the source row index from a drag operation.
+  - Action: extend the declarative `move-array-item` action with `before`/`after` placement; in test mode serialize scoped Repeater indices into an internal drag payload, allow drops on authored drop handlers, and reorder the matching state array immutably. Generate equivalent React event behavior and expose placement in the existing behavior form.
+  - Scope: state-backed one-level string-list Repeaters; keep `up`/`down` behavior and keyboard actions, and do not add arbitrary drag payload expressions or affect layer drag-and-drop.
+  - Contracts: retain the JSON behavior model, per-instance state, validation that the transition node is a member of the target Repeater, and source order for existing actions; reject payloads for another Repeater and invalid indices.
+  - Validation: Core runtime covers before/after placement and non-mutation; Editor preview covers drag source payload, accepted drop and behavior dispatch; React codegen output includes source, drop and reorder handlers and transpiles. All 42 focused tests passed, four package typechecks passed, Storybook on port 6006 confirmed dragging Alpha after Charlie updates all six viewports, and `git diff --check` passed. The detector no longer flags the React generator as requiring review before extending (595 lines); its recursive JSX/file assembly remain cohesive. `CatalogBehaviorPanel` remains cohesive under the earlier review.
+
+- [x] Codegen React: isolate declarative behavior emission from component-file assembly.
+  - Evidence: `engines/react/src/generate.ts` is flagged at 743 lines and contains a self-contained behavior compiler (`renderBehavior`, action ordering, value expressions, and handler naming) alongside recursive JSX rendering and file assembly. The behavior compiler now changes independently as actions are added.
+  - Action: move the behavior compiler to a private `behavior.ts` module within the React engine and import its `renderBehavior` entry point; keep schema/reference expression ownership and public generator exports unchanged.
+  - Scope: private module boundary required by the state-array drag feature; no public API or output changes outside the newly added action behavior.
+  - Contracts: preserve generated handler names, imports, setup order, state expressions, callback order, JSX, and React output structure.
+  - Validation: codegen tests including TypeScript transpilation, package typechecks, candidate detector, and `git diff --check`.
+
+- [x] Core/Codegen React: render component-state references in authored text and attributes.
+  - Evidence: `resolveReferenceText` handles `{state:name}`, but Core's `isSupportedReference` excludes it, so the preview leaves state references literal. React JSX emission also handles prop and Repeater item references only. These gaps prevent a custom Select from showing its selected state or placing each Repeater item in an option's `value`.
+  - Action: include state references in Core's template recognition; pass the component's behavior-state identifier map through JSX rendering and emit state-bound text and attributes as live expressions.
+  - Scope: existing scalar state values in DOM text/attributes; preserve existing literal, component-prop, and Repeater item bindings.
+  - Contracts: state remains local React state initialized from `behavior.state`; authored reference strings stay unchanged in Catalog data; generated output updates when transitions change the referenced state.
+  - Validation: Core preview-resolution tests cover state-backed text, attributes, and conditional classes; React codegen asserts state-bound text/attributes and transpiles generated TSX; 27 focused tests passed, four package typechecks passed, candidate detector and `git diff --check` passed. Storybook on port 6006 confirmed selecting Green updates the trigger and closes the option list in all six viewport previews.
+
+- [x] Core/Editor/React: filter Repeater options from a component query state.
+  - Evidence: the custom Select story can open, select, and close, but an autocomplete cannot narrow object-array options from its search input; Repeater rendering currently always maps every source item.
+  - Action: add a declarative case-insensitive `contains` filter from an item string path to a component string state; expose both choices in the selected state-backed Repeater's Inspector form; apply it in Core preview and React generation while retaining original source indices and stable item keys.
+  - Scope: one optional filter per state-backed Repeater. Keep filtering pure and derived, with no duplicated filtered array state, arbitrary predicates, or renderer-specific code.
+  - Contracts: empty query leaves all items visible; filtering does not change stored data or source order; remove/move/drag actions receive original source indices; generated React and Editor preview return the same rows.
+  - Validation: Core tests send an input event through the behavior runtime and resolve case-insensitive matches, empty query, no match, stable keys, and original indices; the Inspector form model/change mapper and composition patch are covered; React codegen output is asserted and TSX-transpiled; the behavior Editor tests pass. All four package typechecks pass and the Storybook build completes. Browser visual verification was blocked by the browser URL policy while Storybook's HTTP endpoint returned 200. Candidate detector and `git diff --check` reviewed.
+  - Refactoring review: `resolve.ts` remains the recursive resolver and `generate.ts` the React target generator; filtering is derived within their existing Repeater responsibilities. Keep `inspector-view.ts` as the Inspector form projection/change mapper: Composition source, index, and filter are one cohesive control group, and the filter choices derive from that form's existing schemas and behavior states. Keep `CatalogBehaviorStates` as the state lifecycle owner; its object-list editor remains a private colocated module.
+
+- [x] Core/Editor/React: support filtered Repeaters over prop and enclosing-item arrays.
+  - Evidence: reusable Select/autocomplete options commonly come from a component prop or an enclosing Repeater row, while current dynamic templates and filtering only work for component state arrays.
+  - Action: preserve the selected `id` field as an explicit row-key path for any object-array source; resolve prop/item/state-backed templates consistently in Core and React; allow the existing string-state `contains` filter for each source.
+  - Scope: object arrays and string-field filtering; retain state array key metadata compatibility, original source indices, and visible identity-field choice in the Inspector.
+  - Contracts: authored data stays declarative, source order and source indices are stable, missing or invalid row keys fall back to source indices, configured keys are string fields expected to be unique, and React rendering matches Core preview.
+  - Validation: Core tests cover state and prop filtering, stable IDs, Inspector field options/patching, and a filtered item-backed Repeater nested under an outer Repeater. React tests assert prop/item data expressions, key fields, filter output, and successful TSX transpilation. Focused suites passed (36 tests); all four package typechecks and the Storybook production build passed; Prettier and `git diff --check` passed. Storybook UI was built but not visually inspected because browser navigation is blocked by the active browser URL policy.
+  - Refactoring review: keep recursive traversal in `resolve.ts` and target expression generation in `generate.ts`; keep source/key/filter as the cohesive Repeater Inspector group. Re-evaluate these ownership boundaries if source handling is duplicated beyond these owners.
+
+- [x] Editor: select catalog icons for icon-reference values.
+  - Evidence: `DefinitionFieldSettings` recognizes `x-facadeur-reference` but sends it to the generic schema form, and catalog preview defaults also use that form; both render an icon ID as plain text. `AppService` already supplies catalog icon IDs and names to the sidebar view model for SVG attribute controls.
+  - Action: carry the existing catalog icon options into config-field view data and the schema value form; render a select control for references targeting `icon`; leave other reference targets and non-reference fields on their current controls.
+  - Scope: icon-reference values in component Config and catalog Preview data; preserve exposure, static/dynamic state, and stored icon IDs.
+  - Contracts: serialize the selected catalog icon ID as the string value expected by `x-facadeur-reference.target: "icon"`; do not change schema or catalog serialization.
+  - Validation: Editor typecheck and changed-file Prettier passed in the approved host context; candidate detector and `git diff --check` passed. Tests were not run.
+  - Refactoring review: keep icon-reference rendering in `SchemaValueForm`, its icon options in the existing stage/sidebar projections, and config selection in `DefinitionFieldSettings`; these modules already own schema values and field presentation, with no repeated behavior or independent responsibility that warrants extraction.
+- [x] Refactor: establish the first Core query and Editor read facades
+  - Evidence: `packages/core/src/index.ts` is the public Core entry point but catalog read
+    operations in `controller/project/catalog/queries.ts` are not exported there; token query
+    exports are mixed into the broad root barrel. Core implementations also cross-import Catalog,
+    Node Preview, and Style/Token internals. Editor has `app-service/index.ts` for service exports,
+    while app services and UI features reach directly into app domain projections such as catalog
+    asset/layer helpers, session snapshots, and sidebar view-model code. These are actual ownership
+    edges; they do not justify merging those implementations.
+  - Action: add an explicit Core query facade that re-exports catalog- and token-owned query
+    operations through the supported `@facadeur/core` package entry point. Add narrow app-internal
+    Editor read facades for catalog projections and sidebar view composition; migrate the two
+    schema-title consumers that crossed from UI into Catalog internals. Do not add a resolver
+    framework or generalized query abstraction.
+  - Scope: first facade slice, without consolidating `$ref` resolution or changing schema behavior.
+  - Contracts: preserve exported names and inferred result shapes, catalog query ordering and
+    semantics, saved Catalog schema/data, Editor presentation composition, and mutation boundaries.
+  - Validation: the public query export regression test, focused schema/form tests, CSS structured
+    value regression, Core and Editor typechecks, all 296 workspace tests, ESLint, Prettier, the
+    candidate detector, and `git diff --check` passed. A local import-graph audit found 32 modules reachable
+    from `queries.ts` and no cycle in that graph.
+  - Inventory: Core exports are defined by `packages/core/package.json` (`.` maps to
+    `src/index.ts`, with two explicit schema subpaths); Editor has no package export map and uses
+    relative source imports. Catalog queries currently provide definition display/summaries,
+    effective node tag names, style suggestions, token lookup, and token reference paths; token
+    domain queries provide token references by type and font-family records. Node Preview, schema
+    Inspector/controller, and Core project read methods now use the narrow Core queries composition
+    surface; token parsing and token-only queries remain in the Style token owner. Project-level
+    design command coordination is outside the Catalog implementation folder. Editor app-service,
+    session read models, and UI consumers use the app read facades for catalog projections;
+    feature-private mutation helpers remain within their owning area.
+    No serialized-schema change is part of this work.
+
+- [x] Refactor: migrate cross-domain Core reads through acyclic owned query boundaries
+  - Evidence: Node Preview and schema adapters read Catalog definitions, schemas, tokens, and tree
+    data across ownership areas. Catalog query code also parsed token data and scanned token
+    references directly, while Core project methods mixed those reads with Catalog mutations.
+  - Action: compose public and internal read functions in `packages/core/src/queries.ts`; keep
+    token-tree parsing and token-only lookups in the Style token owner, Catalog summaries in the
+    Catalog owner, and node/schema adapters on the composition surface. Move mixed Catalog/Style
+    design-command coordination to the project layer, and keep writes in their existing owners.
+    Route Editor session, app-service, and UI read projections through `apps/editor/src/read/*`.
+  - Scope: explicit query and read facades only; no universal resolver, query framework, or
+    broad root-barrel imports from Core internals.
+  - Contracts: preserve inferred token result types, catalog ordering, reference semantics, Editor
+    view composition, mutation boundaries, serialized data, and existing public imports.
+  - Validation: Core and Editor typechecks, all 296 workspace tests, zero Core import cycles in
+    the 32-module `queries.ts` dependency graph, Prettier, candidate detector review, and
+    `git diff --check` passed.
+  - Structure: keep token parsing/lookups in the token owner and cross-domain composition in the
+    narrow Core facade. `project/design-commands.ts` owns coordination across Catalog validation,
+    node styles, and token edits. Editor session/app-service/UI reads use the app facade; write and
+    feature-private helpers remain in their owners. The detector's 702-line example catalog and
+    698-line AppService signals were reviewed and kept cohesive because they remain one example
+    registry and one app command router, respectively.
+
+- [x] Triage the full-suite failures against current contracts
+  - Evidence: the original full-suite run reported 21 failures / 274 passes. The failure clusters
+    covered preview-field paths, stale Editor DTO fixtures and APIs, Catalog exposure semantics,
+    generated TypeScript, CSS serialization, and example composition.
+  - Action: update assertions and fixtures where they contradicted current contracts; fix the
+    generated repeater type guard, React Fragment imports, and structured CSS serialization where
+    output was invalid. Preserve runtime assertions for nested preview paths and repeated CSS-rule
+    row values.
+  - Scope: current branch verification; no persisted schema or contract changes.
+  - Contracts: current ownership/specs take precedence; retain Catalog Children-slot validation,
+    explicit per-instance mappings, inferred result types, and generated project semantics.
+  - Validation: all 296 workspace tests pass, including standalone generated workspace compilation.
+
+- [x] Docs: generate a Core API reference with TypeDoc
+  - Evidence: the public Core package entry point exports domain contracts, controller APIs, and
+    the new query facade, but there was no generated reference for consumers to browse.
+  - Action: add TypeDoc with single-file Markdown output, a root `docs:api` command, and generated
+    documentation rooted only at `packages/core/src/index.ts`; link it from the README and
+    responsibility map.
+  - Scope: public Core API documentation. App-private Editor reads remain implementation details
+    and are not treated as a published package API.
+  - Contracts: document the existing export surface without changing runtime behavior, package
+    exports, persisted schemas, or API types. Keep signatures inferred from implementation unless
+    a deliberate contract type is needed.
+  - Validation: `corepack pnpm docs:api` generated Markdown with zero errors. TypeDoc reports 30
+    unresolved references to internal or domain symbols that are not exported through the Core
+    entry point; the generated API remains usable, and those warnings are recorded for later
+    boundary/documentation review rather than solved by widening the public API.
+  - Structure: generate from the package entry point rather than crawling internal modules, so
+    private implementation exports do not become accidental API documentation.

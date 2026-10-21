@@ -6,7 +6,7 @@ import type {
   NodeDefinition,
   ProjectCatalog,
 } from '@facadeur/domain';
-import { createExampleCatalog, exampleIds } from '@facadeur/examples';
+import { createExampleCatalog, exampleIds, image as exampleImage } from '@facadeur/examples';
 import { effectiveSchemaForDefinition } from '../src/controller/project/catalog/field-contract';
 import { CoreController } from '../src/controller/project/controller';
 import { buildInspectorFormModel } from '../src/controller/project/node/preview/inspector-view';
@@ -75,6 +75,192 @@ function catalogWith(
 }
 
 describe('catalog field exposure', () => {
+  it('resolves state-backed repeater rows and keeps an empty-state template for codegen', () => {
+    const catalog = createExampleCatalog();
+    const component = Object.values(catalog.components)[0]!;
+    const rowUuid = globalThis.crypto.randomUUID();
+    const row: Node = { uuid: rowUuid, dom: { tagName: 'span', text: '{item}' } };
+    Reflect.set(component.root, 'config', {
+      composition: { kind: 'repeater', source: { kind: 'state', name: 'items' } },
+    });
+    Reflect.set(component.root.dom, 'children', [row]);
+    Reflect.set(component, 'behavior', {
+      state: { items: [] },
+      stateSchema: { items: { type: 'array', items: { type: 'string' } } },
+      transitions: [],
+    });
+
+    expect(() => validateProjectCatalog(catalog)).not.toThrow();
+    const empty = resolveDefinitionToElementBuildConfig(component, catalog);
+    expect(empty.kind).toBe('fragment');
+    expect(empty.kind === 'fragment' ? empty.children : undefined).toBeUndefined();
+    expect(empty.kind === 'fragment' ? empty.repeater?.templates : undefined).toHaveLength(1);
+
+    Reflect.set(component, 'behavior', {
+      state: { items: ['One', 'Two'] },
+      stateSchema: { items: { type: 'array', items: { type: 'string' } } },
+      transitions: [],
+    });
+    const populated = resolveDefinitionToElementBuildConfig(component, catalog);
+    expect(
+      populated.kind === 'fragment' ? populated.children?.map((child) => child.text) : [],
+    ).toEqual(['One', 'Two']);
+  });
+
+  it('uses a configured object field as stable preview row identity', () => {
+    const catalog = createExampleCatalog();
+    const component = Object.values(catalog.components)[0]!;
+    const row: Node = { uuid: globalThis.crypto.randomUUID(), dom: { tagName: 'span' } };
+    Reflect.set(component.root, 'config', {
+      composition: { kind: 'repeater', source: { kind: 'state', name: 'items' } },
+    });
+    Reflect.set(component.root.dom, 'children', [row]);
+    Reflect.set(component, 'behavior', {
+      state: { items: [{ id: 'stable-a' }, { id: 'stable-b' }] },
+      stateSchema: {
+        items: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: { id: { type: 'string' } },
+            required: ['id'],
+          },
+        },
+      },
+      stateArrayKeyPaths: { items: 'id' },
+      transitions: [],
+    });
+
+    expect(() => validateProjectCatalog(catalog)).not.toThrow();
+    const preview = resolveDefinitionToElementBuildConfig(component, catalog);
+    expect(
+      preview.kind === 'fragment' ? preview.children?.map((child) => child.renderKey) : [],
+    ).toEqual([`${row.uuid}:stable-a:0`, `${row.uuid}:stable-b:0`]);
+  });
+  it('evaluates class conditions against private component state defaults', () => {
+    const original = exampleImage;
+    const catalog = {
+      ...createExampleCatalog(),
+      atoms: { ...createExampleCatalog().atoms, [original.uuid]: original },
+    };
+    const definition: NodeDefinition = {
+      ...original,
+      behavior: { state: { open: true }, transitions: [] },
+      root: {
+        ...original.root,
+        classes: [
+          {
+            name: 'is-open',
+            condition: {
+              kind: 'condition',
+              left: { kind: 'reference', reference: '{state:open}' },
+              operator: 'equals',
+              right: { kind: 'literal', value: true },
+            },
+          },
+        ],
+      },
+    };
+    const resolved = resolveDefinitionToElementBuildConfig(definition, catalog);
+    expect(resolved.attributes?.class).toContain('is-open');
+  });
+
+  it('isolates behavior state for two references to the same embedded definition', () => {
+    const childId = testUuid12;
+    const firstRefId = testUuid13;
+    const secondRefId = testUuid14;
+    const embedded: NodeDefinition = {
+      uuid: childId,
+      name: 'Disclosure',
+      kind: 'component',
+      schema: { kind: 'inline', schema: { type: 'object', properties: {} } },
+      behavior: {
+        state: { open: false },
+        transitions: [{ nodeUuid: testUuid15, event: 'click', actions: [] }],
+      },
+      root: {
+        uuid: testUuid10,
+        dom: { tagName: 'section', children: [{ uuid: testUuid15, dom: { tagName: 'button' } }] },
+        classes: [
+          {
+            name: 'is-open',
+            condition: {
+              kind: 'condition',
+              left: { kind: 'reference', reference: '{state:open}' },
+              operator: 'equals',
+              right: { kind: 'literal', value: true },
+            },
+          },
+        ],
+      },
+    };
+    const parent: NodeDefinition = {
+      uuid: cardId,
+      name: 'Two disclosures',
+      kind: 'component',
+      schema: { kind: 'inline', schema: { type: 'object', properties: {} } },
+      root: {
+        uuid: testUuid11,
+        dom: {
+          tagName: 'main',
+          children: [
+            { uuid: firstRefId, dom: { tagName: 'div' }, config: { definitionRef: childId } },
+            { uuid: secondRefId, dom: { tagName: 'div' }, config: { definitionRef: childId } },
+          ],
+        },
+      },
+    };
+    const catalog = {
+      ...createExampleCatalog(),
+      components: { ...createExampleCatalog().components, [childId]: embedded, [cardId]: parent },
+    };
+    const firstScope = `${parent.uuid}/${parent.root.uuid}/${firstRefId}`;
+    const secondScope = `${parent.uuid}/${parent.root.uuid}/${secondRefId}`;
+
+    const resolved = resolveDefinitionToElementBuildConfig(
+      parent,
+      catalog,
+      {},
+      {
+        includeBehaviorTargets: true,
+        behaviorStateByInstance: { [firstScope]: { open: true } },
+      },
+    );
+
+    expect(resolved.kind).toBeUndefined();
+    if (resolved.kind === 'fragment') throw new Error('Expected a DOM element');
+    const [first, second] = resolved.children ?? [];
+    if (!first || first.kind === 'fragment' || !second || second.kind === 'fragment') {
+      throw new Error('Expected embedded DOM elements');
+    }
+    expect(first.attributes?.class).toContain('is-open');
+    expect(second.attributes?.class ?? '').not.toContain('is-open');
+    const firstButton = first.children?.[0];
+    const secondButton = second.children?.[0];
+    if (
+      !firstButton ||
+      firstButton.kind === 'fragment' ||
+      !secondButton ||
+      secondButton.kind === 'fragment'
+    ) {
+      throw new Error('Expected embedded behavior buttons');
+    }
+    expect(firstButton.behaviorTargets?.[0]).toMatchObject({
+      scopeKey: firstScope,
+      definitionUuid: childId,
+      nodeUuid: testUuid15,
+      events: ['click'],
+    });
+    expect(secondButton.behaviorTargets?.[0]?.scopeKey).toBe(secondScope);
+    const normalPreview = resolveDefinitionToElementBuildConfig(parent, catalog);
+    if (normalPreview.kind === 'fragment') throw new Error('Expected a normal DOM element');
+    expect(
+      normalPreview.children?.[0]?.kind === 'fragment'
+        ? undefined
+        : normalPreview.children?.[0]?.behaviorTargets,
+    ).toBeUndefined();
+  });
+
   it('adds nested fields and target preview defaults to the flat public contract', () => {
     const catalog = catalogWith();
     const card = catalog.components[cardId]!;
@@ -134,7 +320,8 @@ describe('catalog field exposure', () => {
       (field) => field.instanceUuid === instanceUuid,
     );
     expect(instanceFields.length).toBeGreaterThan(0);
-    expect(instanceFields[0]?.exposure).toEqual({ mode: 'grouped', groupName: 'hero-media' });
+    // An unset group name is resolved from the instance label at read time.
+    expect(instanceFields[0]?.exposure).toEqual({ mode: 'grouped' });
   });
 
   it('maps manual aliases into the public contract and resolves the value on the referenced atom', () => {
@@ -153,7 +340,7 @@ describe('catalog field exposure', () => {
     ).toBe('Bound by the parent');
   });
 
-  it('resolves an atom prop binding unless a parent field is explicitly mapped over it', () => {
+  it('uses inherited preview defaults for an atom prop binding and explicit parent mappings', () => {
     const prop = {
       uuid: testUuid12,
       name: 'Image source',
@@ -168,7 +355,7 @@ describe('catalog field exposure', () => {
     expect(
       resolveDefinitionToElementBuildConfig(catalog.components[cardId]!, catalog).children?.[0]
         ?.attributes?.src,
-    ).toBe('bound-prop-src');
+    ).toBe('asset-src');
 
     const overrideBase = catalogWith(
       { mode: 'manual', fields: { src: 'eyebrow' } },
@@ -301,16 +488,6 @@ describe('catalog field exposure', () => {
         ...instance.config,
         fieldExposure: { mode: 'manual', fields: { src: 'eyebrow' } },
       },
-      dom: {
-        ...instance.dom,
-        children: [
-          {
-            uuid: testUuid14,
-            dom: { tagName: 'span' },
-            config: { fieldExposure: { mode: 'grouped' } },
-          },
-        ],
-      },
     } as unknown as Node;
     const legacyCard: NodeDefinition = {
       ...card,
@@ -340,9 +517,6 @@ describe('catalog field exposure', () => {
     expect(normalized.components[cardId]!.root.dom.children?.[0]?.config).toEqual({
       definitionRef: imageId,
     });
-    expect(
-      normalized.components[cardId]!.root.dom.children?.[0]?.dom.children?.[0]?.config,
-    ).toBeUndefined();
     expect(normalized.atoms[imageId]!.config?.fieldExposure).toBeUndefined();
     expect(
       Object.keys(

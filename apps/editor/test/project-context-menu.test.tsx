@@ -3,7 +3,7 @@
  */
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it } from 'vitest';
 import { createExampleCatalog } from '@facadeur/examples';
 import { createAppService } from '../src/app-service';
 import { createInMemoryCatalogPort } from '../src/domain/project/in-memory-catalog-port';

@@ -9,7 +9,7 @@ import { DocumentError } from '../../document/errors';
 import type { CoreControllerHost } from '../../types/host';
 import type { CatalogPort, CoreSnapshot } from '../../types/core-contracts';
 import type { CatalogDefinitionPort } from '../../types/catalog-definition-port';
-import { applyCatalogDesignCommand, type CatalogDesignCommand } from './catalog/design-commands';
+import { applyCatalogDesignCommand, type CatalogDesignCommand } from './design-commands';
 import {
   createCatalogDefinition,
   deleteCatalogDefinitionRecord,
@@ -20,8 +20,6 @@ import {
 import { removeCatalogDesignProp, upsertCatalogDesignProp } from './catalog/props-ops';
 import { patchNodeClasses } from './catalog/node-classes';
 import {
-  findDefinition,
-  findNodeByUuid,
   patchNodeData,
   pruneDefinitionValuesForSchema,
   patchCatalogDefinitionPreviewField,
@@ -34,6 +32,7 @@ import {
   patchNodeTagName,
 } from './catalog/ops';
 import { reconcileDefinitionBindingsForSchemaChange } from './catalog/schema-repeater';
+import { reconcileCatalogValuesForSchemaChange } from './catalog/schema-values';
 import {
   updateDefinitionInstanceField,
   updateDefinitionStaticField,
@@ -50,13 +49,14 @@ import {
   definitionDisplayName,
   definitionSummaries,
   effectiveNodeTagName,
-  projectStyleSuggestions,
   tokenByReference,
   tokenByUuid,
   tokenReferencePaths,
-} from './catalog/queries';
+  findDefinition,
+  findNodeByUuid,
+} from '../../queries';
 import { NodeController } from './node/controller';
-import { activeBreakpoints, configuredBreakpoints } from '../../tokens/resolve';
+import { activeBreakpoints, configuredBreakpoints } from '../../queries';
 import { emptyTokenTree } from '../style/tokens/global/tree';
 
 /**
@@ -143,10 +143,6 @@ export class CoreController implements CoreControllerHost {
     return Object.values(this.catalog.props ?? {}).map((prop) => structuredClone(prop));
   }
 
-  getProjectStyleSuggestions() {
-    return projectStyleSuggestions(this.catalog);
-  }
-
   getTokenByUUID(uuid: string) {
     return tokenByUuid(this.catalog, uuid);
   }
@@ -200,9 +196,12 @@ export class CoreController implements CoreControllerHost {
         ? pruneDefinitionValuesForSchema(this.catalog, uuid, patch.schema.schema)
         : this.catalog;
     const patched = patchCatalogDefinitionRecord(withPrunedValues, kind, uuid, patch);
-    const nextCatalog = patch.schema
+    const withReconciledBindings = patch.schema
       ? reconcileDefinitionBindingsForSchemaChange(this.catalog, patched, uuid)
       : patched;
+    const nextCatalog = patch.schema
+      ? reconcileCatalogValuesForSchemaChange(this.catalog, withReconciledBindings)
+      : withReconciledBindings;
     this.commitCatalog(nextCatalog, () => {
       if (this.openDefinitionId === uuid) {
         const located = findDefinition(this.catalog, uuid);
@@ -221,7 +220,8 @@ export class CoreController implements CoreControllerHost {
   }
 
   upsertSchema(uuid: string, schema: JsonSchemaObject) {
-    this.commitCatalog(upsertCatalogSchema(this.catalog, uuid, schema));
+    const updated = upsertCatalogSchema(this.catalog, uuid, schema);
+    this.commitCatalog(reconcileCatalogValuesForSchemaChange(this.catalog, updated));
   }
 
   removeSchema(uuid: string) {

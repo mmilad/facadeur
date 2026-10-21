@@ -17,6 +17,7 @@
 - **Status (2026-10-09):** Confirmed with a successful Storybook 10.6.1 production build.
 - **Restricted-process recurrence (2026-10-09):** Running `storybook dev -p 6006` or `storybook build` through the local CLI builds the manager, then SWC panics with `EPERM` while canonicalizing `apps/editor` as `jsc.baseUrl`. Preview verification still requires the user's host pnpm environment.
 - **Update (2026-10-09):** `pnpm --filter @facadeur/editor exec storybook dev -p 6007` first attempts to download the pinned pnpm 10.33.3 through Corepack and fails with `ENOTFOUND registry.npmjs.org`. Invoking `apps/editor/node_modules/.bin/storybook.cmd dev -p 6007` bypasses that lookup but reaches the same SWC `EPERM` while canonicalizing `.` as `jsc.baseUrl`; the current browser tab did not reload the edited source. Use the user's host Storybook process for current-source visual verification.
+- **Update (2026-10-17, live sortable preview):** The restricted Node process gets `EACCES` when binding localhost port 6006, so Storybook reports that the requested port is unavailable even though the restricted process cannot inspect its listener. In the approved host context, inspect the port owner, stop only the stale Storybook listener, then run `node node_modules/storybook/dist/bin/dispatcher.js dev -p 6006 --exact-port --no-open` from `apps/editor`. The current branch starts successfully and can be verified in the in-app browser.
 
 ## Test runner blocked by filesystem sandbox
 
@@ -49,6 +50,16 @@
 - **Update (2026-10-04, style controller):** `node node_modules/vitest/vitest.mjs run packages/core/test` again fails inside the sandbox before collecting tests with `EPERM` resolving Vitest's `dist/spy.js`. The identical approved outside-sandbox command passes all 135 Core tests; regular `pnpm -r --if-present typecheck` also passes outside the sandbox. The existing workaround remains required.
 
 ## Resolved: Run pnpm verification in the approved host context
+
+- **Update (2026-10-17, prop-backed Repeater):** Restricted `pnpm --filter ... typecheck` again
+  failed before project startup because isolated Corepack attempted to fetch pnpm 10.33.3 and
+  received `ENOTFOUND registry.npmjs.org`. The same package commands passed in the approved host
+  context. Continue using that context for pnpm verification.
+- **Update (2026-10-17, sortable behavior):** Restricted `pnpm --filter ... typecheck` failed
+  before pnpm startup while Corepack tried to download the pinned 10.33.3 and DNS returned
+  `ENOTFOUND registry.npmjs.org`. The identical four package typechecks ran in the approved host
+  context and reached TypeScript. Continue to rerun workspace pnpm checks there; no package-manager
+  or repository workaround is needed.
 
 - **Update (2026-10-12, layer class styles):** Restricted Core and Editor typechecks both stopped
   in Corepack before TypeScript ran, attempting to download the pinned pnpm 10.33.3 and failing
@@ -92,6 +103,7 @@
 - **Impact:** UI changes can be compiled and tested, but cannot be visually verified through the current Windows browser automation session.
 - **Fix:** Restart Codex and retry the native sandbox setup, then collect a fresh Windows sandbox log if it persists. The current user config already selects the recommended `elevated` mode; the repo cannot repair the CUA helper itself.
 - **Update (2026-10-05):** The DOM-capable in-app browser works for the isolated structural-node preview. Browser interaction and screenshots are verified through CUA; the earlier native-helper limitation no longer blocks this task.
+- **Update (2026-10-17):** Browser interaction, accessibility state, and screenshots work for the editor Storybook in the in-app browser. This workflow verifies both visible editor controls and component event behavior.
 
 ## Workspace link update requests reinstall without a terminal
 
@@ -226,6 +238,11 @@ registry.npmjs.org`). The same Core, Editor, and Codegen commands passed in the 
   again failed before project code because Corepack tried to fetch pinned pnpm 10.33.3 and DNS
   returned `ENOTFOUND registry.npmjs.org`. The same Editor typecheck and Prettier check passed in
   the approved host context. Continue using that context for pnpm-based checks; no repository
+  workaround is needed.
+- **Update (2026-10-20, icon reference selector):** Restricted Editor typecheck and Prettier
+  checks again failed before project code because Corepack tried to fetch pinned pnpm 10.33.3 and
+  DNS returned `ENOTFOUND registry.npmjs.org`. Editor typecheck and changed-file Prettier passed in
+  approved host execution. Continue using the approved host context for pnpm checks; no repository
   workaround is needed.
 
 ## Cloud verification process limits (2026-10-11)

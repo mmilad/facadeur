@@ -5,21 +5,21 @@ import type {
   NodeDefinition,
   ProjectCatalog,
 } from '@facadeur/domain';
-import type { RenderBuildConfig } from '@facadeur/domain';
-import { findDefinition } from '../../catalog/ops';
+import type { ElementBehaviorTarget, RenderBuildConfig } from '@facadeur/domain';
+import {
+  canAcceptCatalogChildren,
+  defaultFieldExposure,
+  effectiveSchemaForDefinition,
+  findDefinition,
+  inheritableSchemaForDefinition,
+} from '../../../../queries';
 import {
   compatibleNodeFieldValues,
   lockedStaticFieldValues,
   mergePreviewFields,
   staticFieldValues,
 } from './merge';
-import {
-  defaultFieldExposure,
-  effectiveSchemaForDefinition,
-  inheritableSchemaForDefinition,
-} from '../../catalog/field-contract';
-import { canAcceptCatalogChildren } from '../../catalog/tree-ops';
-import { effectiveClassList, evaluateClassCondition } from './class-conditions';
+import { effectiveClassList } from './class-conditions';
 import {
   componentPropValues,
   computedIndexName,
@@ -40,25 +40,42 @@ export type PreviewResolveContext = {
   readonly fields: Record<string, FieldValue>;
   readonly overrides?: Record<string, FieldValue>;
   readonly componentProps?: Readonly<Record<string, FieldValue>>;
+  readonly componentState?: Readonly<Record<string, FieldValue | null>>;
   readonly componentSchema?: Record<string, unknown> | null;
   readonly item?: FieldValue;
   readonly repeaterScopes?: readonly RepeaterReferenceScope[];
 };
 
-const STYLE_REFERENCE = /^\{props:[^}]+\}$/;
 const MAX_DYNAMIC_DEFINITION_DEPTH = 32;
 
 type ChildrenSlotContent = {
   nodes: readonly Node[];
+  context: NodeResolveContext;
+  parentSlotContent?: ChildrenSlotContent;
+};
+
+type NodeResolveContext = {
   definition: NodeDefinition;
-  fields: Record<string, FieldValue>;
+  catalog: ProjectCatalog;
+  parentFields: Record<string, FieldValue>;
   activeDefinitions: ReadonlySet<string>;
   inheritedOverrides: Record<string, FieldValue>;
   itemContext: FieldValue | undefined;
   repeaterScopes: readonly RepeaterReferenceScope[];
   dynamicDefinitionDepth: number;
-  parentSlotContent?: ChildrenSlotContent;
+  slotContent: ChildrenSlotContent | undefined;
+  behaviorScopeKey: string;
+  elementInstancePath: string;
+  behaviorStateByInstance?: Readonly<Record<string, Readonly<Record<string, FieldValue | null>>>>;
+  includeBehaviorTargets: boolean;
 };
+
+export interface PreviewResolutionOptions {
+  readonly behaviorStateByInstance?: Readonly<
+    Record<string, Readonly<Record<string, FieldValue | null>>>
+  >;
+  readonly includeBehaviorTargets?: boolean;
+}
 
 /** Replace `{prop:uuid}` and similar templates with literal strings for renderers. */
 export function resolveTemplateString(template: string, ctx: PreviewResolveContext): string {
@@ -117,33 +134,41 @@ export function resolveDefinitionToElementBuildConfig(
   definition: NodeDefinition,
   catalog: ProjectCatalog,
   parentFields: Record<string, FieldValue> = {},
+  options: PreviewResolutionOptions = {},
 ): RenderBuildConfig {
-  return resolveNodeToElementBuildConfig(
-    definition.root,
+  return resolveNodeToElementBuildConfig(definition.root, {
     definition,
     catalog,
     parentFields,
-    new Set([definition.uuid]),
-    {},
-    undefined,
-    [],
-    0,
-    undefined,
-  );
+    activeDefinitions: new Set([definition.uuid]),
+    inheritedOverrides: {},
+    itemContext: undefined,
+    repeaterScopes: [],
+    dynamicDefinitionDepth: 0,
+    slotContent: undefined,
+    behaviorScopeKey: definition.uuid,
+    elementInstancePath: definition.uuid,
+    behaviorStateByInstance: options.behaviorStateByInstance,
+    includeBehaviorTargets: options.includeBehaviorTargets ?? false,
+  });
 }
 
 function resolveNodeToElementBuildConfig(
   node: Node,
-  definition: NodeDefinition,
-  catalog: ProjectCatalog,
-  parentFields: Record<string, FieldValue>,
-  activeDefinitions: ReadonlySet<string>,
-  inheritedOverrides: Record<string, FieldValue>,
-  itemContext: FieldValue | undefined,
-  repeaterScopes: readonly RepeaterReferenceScope[],
-  dynamicDefinitionDepth: number,
-  slotContent: ChildrenSlotContent | undefined,
+  context: NodeResolveContext,
 ): RenderBuildConfig {
+  const {
+    definition,
+    catalog,
+    parentFields,
+    activeDefinitions,
+    inheritedOverrides,
+    itemContext,
+    repeaterScopes,
+    dynamicDefinitionDepth,
+    slotContent,
+  } = context;
+  const instancePath = `${context.elementInstancePath}/${node.uuid}`;
   const boundDefinitionRef = node.config?.definitionRefBinding
     ? fieldAtPath(itemContext, node.config.definitionRefBinding.path)
     : undefined;
@@ -244,35 +269,42 @@ function resolveNodeToElementBuildConfig(
       for (const [field, config] of Object.entries(instanceFieldConfigs)) {
         if (config.isStatic && config.expose !== true) delete instanceOverrides[field];
       }
-      const built = resolveNodeToElementBuildConfig(
-        refDefinition.root,
-        refDefinition,
-        catalog,
-        instanceFields,
-        dynamicReference ? activeDefinitions : new Set(activeDefinitions).add(refDefinition.uuid),
-        instanceOverrides,
-        itemContext,
-        repeaterScopes,
-        dynamicDefinitionDepth + (dynamicReference ? 1 : 0),
-        node.dom.children?.length
-          ? {
-              nodes: node.dom.children,
-              definition,
-              fields: parentFields,
-              activeDefinitions,
-              inheritedOverrides,
-              itemContext,
-              repeaterScopes,
-              dynamicDefinitionDepth,
-              ...(slotContent ? { parentSlotContent: slotContent } : {}),
-            }
-          : undefined,
-      );
+      const nestedSlotContent = node.dom.children?.length
+        ? {
+            nodes: node.dom.children,
+            context,
+            ...(slotContent ? { parentSlotContent: slotContent } : {}),
+          }
+        : undefined;
+      const built = resolveNodeToElementBuildConfig(refDefinition.root, {
+        ...context,
+        definition: refDefinition,
+        parentFields: instanceFields,
+        activeDefinitions: dynamicReference
+          ? activeDefinitions
+          : new Set(activeDefinitions).add(refDefinition.uuid),
+        inheritedOverrides: instanceOverrides,
+        dynamicDefinitionDepth: dynamicDefinitionDepth + (dynamicReference ? 1 : 0),
+        slotContent: nestedSlotContent,
+        behaviorScopeKey: instancePath,
+        elementInstancePath: instancePath,
+      });
       if (built.kind === 'fragment') return { ...built, nodeUuid: node.uuid };
       const styleNodeUuids = new Set(built.styleNodeUuids ?? []);
       if (built.nodeUuid) styleNodeUuids.add(built.nodeUuid);
       styleNodeUuids.add(node.uuid);
-      return { ...built, nodeUuid: node.uuid, styleNodeUuids: [...styleNodeUuids] };
+      const behaviorTargets = [
+        ...(built.behaviorTargets ?? []),
+        ...(behaviorTargetFor(context, definition, node, parentComponentProps, repeaterScopes) ??
+          []),
+      ];
+      return {
+        ...built,
+        nodeUuid: node.uuid,
+        styleNodeUuids: [...styleNodeUuids],
+        ...(context.includeBehaviorTargets ? { instanceKey: instancePath } : {}),
+        ...(behaviorTargets.length ? { behaviorTargets } : {}),
+      };
     }
   }
 
@@ -302,6 +334,8 @@ function resolveNodeToElementBuildConfig(
     catalog,
     fields,
     componentProps: componentPropValues(resolvedSchema, fields),
+    componentState:
+      context.behaviorStateByInstance?.[context.behaviorScopeKey] ?? definition.behavior?.state,
     componentSchema: resolvedSchema,
     overrides: nodeOverrides,
     item: itemContext,
@@ -324,8 +358,20 @@ function resolveNodeToElementBuildConfig(
             ? resolveCompositionSource(composition.source, ctx)
             : undefined;
           if (!Array.isArray(value)) return [];
-          return value.flatMap((item, itemIndex) =>
-            childNodes.map((child, templateIndex) => {
+          const rawQuery = composition.filter
+            ? ctx.componentState?.[composition.filter.queryState]
+            : undefined;
+          const query = typeof rawQuery === 'string' ? rawQuery.trim().toLowerCase() : '';
+          return value.flatMap((item, itemIndex) => {
+            if (query && composition.filter) {
+              const itemValue =
+                item !== null && typeof item === 'object' && !Array.isArray(item)
+                  ? fieldAtPath(item as FieldValue, composition.filter.itemPath)
+                  : undefined;
+              if (typeof itemValue !== 'string' || !itemValue.toLowerCase().includes(query))
+                return [];
+            }
+            return childNodes.map((child, templateIndex) => {
               const scope: RepeaterReferenceScope = {
                 nodeUuid: node.uuid,
                 indexName:
@@ -337,27 +383,31 @@ function resolveNodeToElementBuildConfig(
                   ctx.componentSchema,
                   repeaterScopes,
                   catalog,
+                  definition.behavior?.stateSchema,
                 ),
                 itemPath: repeaterItemPath(composition.source, ctx.componentSchema, repeaterScopes),
               };
-              const resolved = resolveNodeToElementBuildConfig(
-                child,
-                definition,
-                catalog,
-                fields,
-                activeDefinitions,
-                fields,
-                item,
-                [...repeaterScopes, scope],
-                dynamicDefinitionDepth,
-                slotContent,
-              );
+              const keyPath =
+                composition.source?.kind === 'state'
+                  ? definition.behavior?.stateArrayKeyPaths?.[composition.source.name]
+                  : composition.keyPath;
+              const itemKey = keyPath ? fieldAtPath(item, keyPath) : undefined;
+              const stableKey =
+                typeof itemKey === 'string' && itemKey.length > 0 ? itemKey : String(itemIndex);
+              const resolved = resolveNodeToElementBuildConfig(child, {
+                ...context,
+                parentFields: fields,
+                inheritedOverrides: fields,
+                itemContext: item,
+                repeaterScopes: [...repeaterScopes, scope],
+                elementInstancePath: `${instancePath}/repeat:${encodeURIComponent(stableKey)}:${templateIndex}`,
+              });
               return {
                 ...resolved,
-                renderKey: `${child.uuid}:${itemIndex}:${templateIndex}`,
+                renderKey: `${child.uuid}:${stableKey}:${templateIndex}`,
               };
-            }),
-          );
+            });
+          });
         })()
       : composition?.kind === 'switch'
         ? (() => {
@@ -367,50 +417,31 @@ function resolveNodeToElementBuildConfig(
             return childNodes
               .filter((child) => child.config?.compositionCase === String(value ?? ''))
               .map((child) =>
-                resolveNodeToElementBuildConfig(
-                  child,
-                  definition,
-                  catalog,
-                  fields,
-                  activeDefinitions,
-                  fields,
-                  itemContext,
-                  repeaterScopes,
-                  dynamicDefinitionDepth,
-                  slotContent,
-                ),
+                resolveNodeToElementBuildConfig(child, {
+                  ...context,
+                  parentFields: fields,
+                  inheritedOverrides: fields,
+                  elementInstancePath: instancePath,
+                }),
               );
           })()
         : composition?.kind === 'slot'
           ? slotContent
             ? slotContent.nodes.map((child) =>
-                resolveNodeToElementBuildConfig(
-                  child,
-                  slotContent.definition,
-                  catalog,
-                  slotContent.fields,
-                  slotContent.activeDefinitions,
-                  slotContent.inheritedOverrides,
-                  slotContent.itemContext,
-                  slotContent.repeaterScopes,
-                  slotContent.dynamicDefinitionDepth,
-                  slotContent.parentSlotContent,
-                ),
+                resolveNodeToElementBuildConfig(child, {
+                  ...slotContent.context,
+                  slotContent: slotContent.parentSlotContent,
+                  elementInstancePath: `${instancePath}/slot:${child.uuid}`,
+                }),
               )
             : []
           : childNodes.map((child) =>
-              resolveNodeToElementBuildConfig(
-                child,
-                definition,
-                catalog,
-                fields,
-                activeDefinitions,
-                fields,
-                itemContext,
-                repeaterScopes,
-                dynamicDefinitionDepth,
-                slotContent,
-              ),
+              resolveNodeToElementBuildConfig(child, {
+                ...context,
+                parentFields: fields,
+                inheritedOverrides: fields,
+                elementInstancePath: instancePath,
+              }),
             );
   const resolvedChildren =
     node.dom.tagName?.toLowerCase() === 'svg' && icon
@@ -426,26 +457,81 @@ function resolveNodeToElementBuildConfig(
     attributes.viewBox = icon.data.viewBox;
   }
   if (composition?.kind === 'repeater') {
+    const itemSchema = composition.source
+      ? repeaterItemSchema(
+          composition.source,
+          ctx.componentSchema,
+          repeaterScopes,
+          catalog,
+          definition.behavior?.stateSchema,
+        )
+      : null;
+    const currentItems = composition.source
+      ? resolveCompositionSource(composition.source, ctx)
+      : undefined;
+    const sampleItem = Array.isArray(currentItems)
+      ? (currentItems[0] ?? sampleForSchema(itemSchema?.items))
+      : undefined;
+    const templates = composition.source
+      ? childNodes.map((child, templateIndex) => {
+          const scope: RepeaterReferenceScope = {
+            nodeUuid: node.uuid,
+            indexName: composition.indexName?.trim() || computedIndexName(repeaterScopes.length),
+            index: 0,
+            item: sampleItem ?? {},
+            itemSchema,
+            itemPath: repeaterItemPath(composition.source, ctx.componentSchema, repeaterScopes),
+          };
+          return resolveNodeToElementBuildConfig(child, {
+            ...context,
+            parentFields: fields,
+            inheritedOverrides: fields,
+            itemContext: sampleItem,
+            repeaterScopes: [...repeaterScopes, scope],
+            elementInstancePath: `${instancePath}/repeat-template:${templateIndex}`,
+          });
+        })
+      : undefined;
     return {
       kind: 'fragment',
       ...(resolvedChildren.length ? { children: resolvedChildren } : {}),
       nodeUuid: node.uuid,
+      ...(composition.source && itemSchema
+        ? {
+            repeater: {
+              source: composition.source,
+              itemSchema,
+              templates: templates ?? [],
+              indexName: composition.indexName?.trim() || computedIndexName(repeaterScopes.length),
+              ...(composition.source.kind !== 'state' && composition.keyPath
+                ? { keyPath: composition.keyPath }
+                : {}),
+              ...(composition.filter ? { filter: composition.filter } : {}),
+            },
+          }
+        : {}),
     };
   }
+  const classes = node.classes ?? [];
+  const orderedClasses = [
+    ...classes.filter((item) => item.generated),
+    ...classes.filter((item) => !item.generated),
+  ];
   const dynamicClassStyles = Object.fromEntries(
-    (node.classes ?? [])
-      .filter(({ condition }) => !condition || evaluateClassCondition(condition, ctx))
-      .flatMap((item) => {
-        const referenced = Object.fromEntries(
-          Object.entries(item.style?.declarations ?? {}).filter(([, value]) =>
-            STYLE_REFERENCE.test(value),
-          ),
-        );
-        const resolved = resolveStringRecord(referenced, ctx);
-        return resolved && Object.keys(resolved).length ? [[item.name, resolved]] : [];
-      }),
+    orderedClasses.flatMap((item) => {
+      const declarations = item.style?.declarations ?? {};
+      const resolved = resolveStringRecord(declarations, ctx);
+      return resolved && Object.keys(resolved).length ? [[item.name, resolved]] : [];
+    }),
   );
   const properties = node.dom.properties;
+  const behaviorTargets = behaviorTargetFor(
+    context,
+    definition,
+    node,
+    ctx.componentProps,
+    repeaterScopes,
+  );
 
   return {
     tagName: node.dom.tagName ?? 'div',
@@ -456,7 +542,66 @@ function resolveNodeToElementBuildConfig(
     ...(properties && Object.keys(properties).length ? { properties } : {}),
     ...(resolvedChildren.length ? { children: resolvedChildren } : {}),
     nodeUuid: node.uuid,
+    ...(context.includeBehaviorTargets
+      ? {
+          instanceKey: instancePath,
+          ...(behaviorTargets ? { behaviorTargets } : {}),
+        }
+      : {}),
   };
+}
+
+function behaviorTargetFor(
+  context: NodeResolveContext,
+  definition: NodeDefinition,
+  node: Node,
+  props: Readonly<Record<string, FieldValue>> | undefined,
+  repeaterScopes: readonly RepeaterReferenceScope[],
+) {
+  if (!context.includeBehaviorTargets) return undefined;
+  const events = [
+    ...new Set(
+      (definition.behavior?.transitions ?? [])
+        .filter((transition) => transition.nodeUuid === node.uuid)
+        .map((transition) => transition.event),
+    ),
+  ];
+  if (!events.length) return undefined;
+  const target: ElementBehaviorTarget = {
+    scopeKey: context.behaviorScopeKey,
+    definitionUuid: definition.uuid,
+    nodeUuid: node.uuid,
+    events,
+    ...(props ? { props } : {}),
+    ...(repeaterScopes.length
+      ? {
+          repeaterIndices: Object.fromEntries(
+            repeaterScopes.map((scope) => [scope.nodeUuid, scope.index]),
+          ),
+        }
+      : {}),
+  };
+  return [target];
+}
+
+function sampleForSchema(schema: unknown): FieldValue | undefined {
+  if (!schema || typeof schema !== 'object' || Array.isArray(schema)) return undefined;
+  const record = schema as Record<string, unknown>;
+  if (record.default !== undefined) return record.default as FieldValue;
+  if (record.type === 'object') {
+    const properties = record.properties;
+    if (!properties || typeof properties !== 'object' || Array.isArray(properties)) return {};
+    return Object.fromEntries(
+      Object.entries(properties as Record<string, unknown>).map(([name, property]) => [
+        name,
+        sampleForSchema(property) ?? '',
+      ]),
+    );
+  }
+  if (record.type === 'array') return [];
+  if (record.type === 'boolean') return false;
+  if (record.type === 'number' || record.type === 'integer') return 0;
+  return '';
 }
 
 function staticFieldNames(definition: NodeDefinition) {
@@ -510,6 +655,7 @@ function resolveCompositionSource(
 ) {
   if (!source) return undefined;
   if (source.kind === 'item') return fieldAtPath(ctx.item, source.path);
+  if (source.kind === 'state') return ctx.componentState?.[source.name];
   return ctx.componentProps?.[source.uuid];
 }
 

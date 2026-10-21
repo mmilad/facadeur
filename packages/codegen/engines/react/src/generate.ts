@@ -5,7 +5,7 @@ import {
   resolveJsonSchemaForDefinition,
   tokenCustomProperty,
 } from '@facadeur/core';
-import type { Node, ProjectCatalog, RenderBuildConfig } from '@facadeur/domain';
+import type { ComponentBehavior, Node, ProjectCatalog, RenderBuildConfig } from '@facadeur/domain';
 import {
   renderBoxSizingReset,
   renderDesignCss,
@@ -25,6 +25,7 @@ import {
   classSelector,
   type CodegenRepeaterScope,
 } from './class-conditions';
+import { behaviorHandlerName, renderBehavior } from './behavior';
 
 export function generateReact(options: GenerateOptions): GenerateOutput {
   const entries = catalogEntries(options.catalog, options.entries);
@@ -57,6 +58,7 @@ export function generateReact(options: GenerateOptions): GenerateOutput {
       booleanPropUuids,
       entry.definition.root,
       schema,
+      entry.definition.behavior,
     );
     ui.push({ path: `components/${entry.directory}/index.tsx`, contents: component.contents });
     cssRules.push(component.css);
@@ -106,6 +108,7 @@ function renderComponent(
   booleanPropUuids: ReadonlySet<string>,
   sourceRoot: Node,
   schema: unknown,
+  behavior: ComponentBehavior | undefined,
 ) {
   const cssRules: string[] = [];
   const sourceNodes = new Map<string, Node>();
@@ -122,11 +125,25 @@ function renderComponent(
     sourceNodes,
     cssRules,
     new Map(),
+    behavior,
+    new Map(
+      Object.keys(behavior?.state ?? {}).map((name, index) => [name, `behaviorState${index}`]),
+    ),
   );
-  const propsType = schemaType(schema);
+  const returnedJsx = tree.kind === 'fragment' ? `<>${jsx}</>` : jsx;
+  const callbackProps = new Set(
+    (behavior?.transitions ?? []).flatMap((transition) =>
+      transition.actions
+        .filter((action) => action.kind === 'emit')
+        .map((action) => `on${action.name[0]?.toUpperCase() ?? ''}${action.name.slice(1)}`),
+    ),
+  );
+  const propsType = schemaType(schema, callbackProps);
   const propsAreOptional = !schemaHasRequiredProperties(schema);
+  const behaviorSource = renderBehavior(behavior, schemaType, jsx.includes('<Fragment'));
   const source = [
     `/// <reference path="../../styles.d.ts" />`,
+    ...(behaviorSource.imports.length ? behaviorSource.imports : []),
     `import '../../styles/components.css';`,
     `import '../../styles/design-tokens.css';`,
     '',
@@ -134,10 +151,12 @@ function renderComponent(
     '',
     `/** Generated from Catalog definition ${uuid}. */`,
     `export function ${exportName}(props: ${exportName}Props${propsAreOptional ? ' = {}' : ''}) {`,
-    `  return ${jsx};`,
+    ...behaviorSource.setup.map((line) => `  ${line}`),
+    `  return ${returnedJsx};`,
     '}',
+    ...behaviorSource.helpers,
     '',
-    'function getProp(props: object, path: string) {',
+    'function getProp(props: unknown, path: string) {',
     '  let value: unknown = props;',
     '  for (const segment of path.split(".")) {',
     '    if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;',
@@ -161,7 +180,7 @@ function schemaHasRequiredProperties(schema: unknown): boolean {
   return false;
 }
 
-function schemaType(schema: unknown): string {
+function schemaType(schema: unknown, callbackProps: ReadonlySet<string> = new Set()): string {
   if (!schema || typeof schema !== 'object' || Array.isArray(schema)) {
     return 'Readonly<Record<string, unknown>>';
   }
@@ -175,9 +194,10 @@ function schemaType(schema: unknown): string {
     : Array.isArray(record.oneOf)
       ? record.oneOf
       : undefined;
-  if (branches?.length) return branches.map(schemaType).join(' | ');
+  if (branches?.length)
+    return branches.map((branch) => schemaType(branch, callbackProps)).join(' | ');
   if (Array.isArray(record.allOf) && record.allOf.length) {
-    return record.allOf.map(schemaType).join(' & ');
+    return record.allOf.map((branch) => schemaType(branch, callbackProps)).join(' & ');
   }
   const types = Array.isArray(record.type)
     ? record.type
@@ -196,8 +216,15 @@ function schemaType(schema: unknown): string {
   }
   if (type === 'object' || (record.properties && typeof record.properties === 'object')) {
     const properties = Object.entries(record.properties ?? {}).map(([name, property]) => {
-      const optional = Array.isArray(record.required) && record.required.includes(name) ? '' : '?';
-      return `${JSON.stringify(name)}${optional}: ${schemaType(property)}`;
+      const isCallback = callbackProps.has(name);
+      const optional =
+        isCallback || !(Array.isArray(record.required) && record.required.includes(name))
+          ? '?'
+          : '';
+      const propertyType = isCallback
+        ? '(...args: any[]) => void'
+        : schemaType(property, callbackProps);
+      return `${JSON.stringify(name)}${optional}: ${propertyType}`;
     });
     if (!properties.length) return 'Readonly<Record<string, unknown>>';
     if (record.additionalProperties === true || record.additionalProperties === undefined) {
@@ -207,7 +234,7 @@ function schemaType(schema: unknown): string {
       typeof record.additionalProperties === 'object' &&
       !Array.isArray(record.additionalProperties)
     ) {
-      properties.push(`[key: string]: ${schemaType(record.additionalProperties)}`);
+      properties.push(`[key: string]: ${schemaType(record.additionalProperties, callbackProps)}`);
     }
     return `Readonly<{ ${properties.join('; ')} }>`;
   }
@@ -222,9 +249,76 @@ function renderNode(
   sourceNodes: ReadonlyMap<string, Node>,
   cssRules: string[],
   repeaterScopes: ReadonlyMap<string, CodegenRepeaterScope>,
+  behavior?: ComponentBehavior,
+  stateIdentifiers: ReadonlyMap<string, string> = new Map(),
 ): string {
   const source = node.nodeUuid ? sourceNodes.get(node.nodeUuid) : undefined;
   if (node.kind === 'fragment') {
+    if (node.repeater) {
+      const { source } = node.repeater;
+      const sourcePath =
+        source.kind === 'prop'
+          ? propPaths.get(source.uuid)
+          : source.kind === 'item'
+            ? [...repeaterScopes.values()].at(-1)?.itemExpression
+            : undefined;
+      const state =
+        source.kind === 'state'
+          ? (stateIdentifiers.get(source.name) ?? '[]')
+          : source.kind === 'prop'
+            ? `getProp(props, ${JSON.stringify(sourcePath ?? '')})`
+            : sourcePath
+              ? `getProp(${sourcePath}, ${JSON.stringify(source.path)})`
+              : '[]';
+      const array = `(Array.isArray(${state}) ? ${state} as unknown[] : [])`;
+      const arrayPath =
+        source.kind === 'state'
+          ? `state.${source.name}`
+          : source.kind === 'prop'
+            ? (sourcePath ?? '')
+            : [...repeaterScopes.values()].at(-1)?.arrayPath
+              ? `${[...repeaterScopes.values()].at(-1)!.arrayPath}.${source.path}`
+              : source.path;
+      const dynamicScope: CodegenRepeaterScope = {
+        arrayPath,
+        itemExpression: 'item',
+        index: 0,
+        indexExpression: 'index',
+        itemPropPaths: new Map(
+          componentPropsForSchema(node.repeater.itemSchema).map((prop) => [prop.uuid, prop.path]),
+        ),
+      };
+      const scopes = new Map(repeaterScopes).set(node.nodeUuid ?? '', dynamicScope);
+      const templates = node.repeater.templates
+        .map((template) =>
+          renderNode(
+            template,
+            tokenProperties,
+            propPaths,
+            booleanPropUuids,
+            sourceNodes,
+            cssRules,
+            scopes,
+            behavior,
+            stateIdentifiers,
+          ),
+        )
+        .join('');
+      const keyPath =
+        source.kind === 'state'
+          ? behavior?.stateArrayKeyPaths?.[source.name]
+          : node.repeater.keyPath;
+      const keyValue = keyPath ? `getProp(item, ${JSON.stringify(keyPath)})` : undefined;
+      const key = keyValue
+        ? `(typeof ${keyValue} === 'string' && ${keyValue}.length > 0 ? ${keyValue} : index)`
+        : 'index';
+      const filter = node.repeater.filter;
+      const queryState = filter ? stateIdentifiers.get(filter.queryState) : undefined;
+      const rows = filter
+        ? `${array}.map((item, index) => ({ item, index })).filter(({ item }) => { const query = (${queryState ?? 'undefined'} ?? '').trim().toLowerCase(); if (!query) return true; const value = getProp(item, ${JSON.stringify(filter.itemPath)}); return typeof value === 'string' && value.toLowerCase().includes(query); }).map(({ item, index }) => <Fragment key={${key}}>${templates}</Fragment>)`
+        : `${array}.map((item, index) => <Fragment key={${key}}>${templates}</Fragment>)`;
+      return `{${rows}}`;
+    }
     return (node.children ?? [])
       .map((child) =>
         renderNode(
@@ -235,6 +329,8 @@ function renderNode(
           sourceNodes,
           cssRules,
           childRepeaterScopes(source, child, propPaths, repeaterScopes),
+          behavior,
+          stateIdentifiers,
         ),
       )
       .join('');
@@ -248,7 +344,12 @@ function renderNode(
   }
   if (node.nodeUuid) {
     const resolvedClassStyles = new Map(Object.entries(node.dynamicClassStyles ?? {}));
-    for (const item of source?.classes ?? []) {
+    const classes = source?.classes ?? [];
+    const orderedClasses = [
+      ...classes.filter((item) => item.generated),
+      ...classes.filter((item) => !item.generated),
+    ];
+    for (const item of orderedClasses) {
       const values = resolvedClassStyles.get(item.name) ?? item.style?.declarations ?? {};
       const entries = Object.entries(values).map(
         ([property, value]) => `  ${kebab(property)}: ${cssValue(value, tokenProperties)};`,
@@ -267,6 +368,15 @@ function renderNode(
     ),
     ...(node.properties ?? {}),
   };
+  const nodeTransitions = (behavior?.transitions ?? []).filter(
+    (transition) => transition.nodeUuid === node.nodeUuid,
+  );
+  if (
+    nodeTransitions.some((transition) => transition.event === 'dragstart') &&
+    repeaterScopes.size
+  ) {
+    attributes.draggable = true;
+  }
   if (node.nodeUuid) {
     attributes['data-facadeur-codegen-node'] = node.nodeUuid;
   }
@@ -294,6 +404,9 @@ function renderNode(
         booleanPropUuids,
         [...styleNodeUuids],
         repeaterScopes,
+        new Map(
+          Object.keys(behavior?.state ?? {}).map((name, index) => [name, `behaviorState${index}`]),
+        ),
       )
     : undefined;
   const props = Object.entries(attributes)
@@ -301,12 +414,63 @@ function renderNode(
       if (key === classKey && derivedClassExpression) {
         return ` className={${derivedClassExpression}}`;
       }
-      return ` ${reactAttribute(key)}=${jsxValue(reactValue(reactAttribute(key), value), source?.dom.attributes?.[key], propPaths)}`;
+      return ` ${reactAttribute(key)}=${jsxValue(reactValue(reactAttribute(key), value), source?.dom.attributes?.[key], propPaths, repeaterScopes, stateIdentifiers)}`;
+    })
+    .join('');
+  const behaviorEvents = nodeTransitions.map((transition) => transition.event);
+  const hasRepeaterDrop = nodeTransitions.some(
+    (transition) =>
+      transition.event === 'drop' &&
+      transition.actions.some(
+        (action) =>
+          action.kind === 'move-array-item' &&
+          (action.direction === 'before' || action.direction === 'after'),
+      ),
+  );
+  const dragOverProp = hasRepeaterDrop ? ' onDragOver={(event) => event.preventDefault()}' : '';
+  const eventProps = [...new Set(behaviorEvents)]
+    .map((event) => {
+      const name = `on${event[0]?.toUpperCase() ?? ''}${event.slice(1)}`;
+      const handler = behaviorHandlerName(node.nodeUuid ?? '', event);
+      const repeaterUuids = [
+        ...new Set(
+          (behavior?.transitions ?? [])
+            .filter(
+              (transition) => transition.nodeUuid === node.nodeUuid && transition.event === event,
+            )
+            .flatMap((transition) =>
+              transition.actions.flatMap((action) =>
+                action.kind === 'move-array-item' ? [action.repeaterUuid] : [],
+              ),
+            ),
+        ),
+      ];
+      const indices = repeaterUuids
+        .map((uuid) => {
+          const scope = repeaterScopes.get(uuid);
+          const index = scope?.indexExpression ?? (scope ? String(scope.index) : undefined);
+          return index ? `${JSON.stringify(uuid)}: ${index}` : undefined;
+        })
+        .filter((entry): entry is string => Boolean(entry));
+      const repeaterIndexEntries = [...repeaterScopes].map(([uuid, scope]) => {
+        const index = scope.indexExpression ?? String(scope.index);
+        return `${JSON.stringify(uuid)}: ${index}`;
+      });
+      const call = indices.length
+        ? `${handler}(event, { ${indices.join(', ')} })`
+        : `${handler}(event)`;
+      if (event === 'dragstart' && repeaterIndexEntries.length) {
+        return ` ${name}={(event) => { (event.nativeEvent as DragEvent).dataTransfer?.setData('application/x-facadeur-repeater', JSON.stringify({ ${repeaterIndexEntries.join(', ')} })); ${call}; }}`;
+      }
+      return ` ${name}={${call}}`;
     })
     .join('');
   const tag = safeTag(node.tagName);
-  if (isVoidTag(tag)) return `<${tag}${props} />`;
-  const content = node.text === undefined ? '' : jsxValue(node.text, source?.dom.text, propPaths);
+  if (isVoidTag(tag)) return `<${tag}${props}${dragOverProp}${eventProps} />`;
+  const content =
+    node.text === undefined
+      ? ''
+      : jsxValue(node.text, source?.dom.text, propPaths, repeaterScopes, stateIdentifiers);
   const children = (node.children ?? [])
     .map((child) =>
       renderNode(
@@ -317,15 +481,39 @@ function renderNode(
         sourceNodes,
         cssRules,
         childRepeaterScopes(source, child, propPaths, repeaterScopes),
+        behavior,
+        stateIdentifiers,
       ),
     )
     .join('');
-  return `<${tag}${props}>${content}${children}</${tag}>`;
+  return `<${tag}${props}${dragOverProp}${eventProps}>${content}${children}</${tag}>`;
 }
 
-function jsxValue(value: unknown, source: unknown, propPaths: ReadonlyMap<string, string>) {
+function jsxValue(
+  value: unknown,
+  source: unknown,
+  propPaths: ReadonlyMap<string, string>,
+  repeaterScopes: ReadonlyMap<string, CodegenRepeaterScope>,
+  stateIdentifiers: ReadonlyMap<string, string>,
+) {
   if (typeof source === 'string') {
+    const itemScope = [...repeaterScopes.values()].at(-1);
+    if (source === '{item}' && itemScope) return `{${itemScope.itemExpression}}`;
+    const itemFieldMatch = source.match(/^\{item:([^}]+)\}$/);
+    if (itemFieldMatch?.[1] && itemScope) {
+      return `{getProp(${itemScope.itemExpression}, ${JSON.stringify(itemFieldMatch[1])})}`;
+    }
+    const stateMatch = source.match(/^\{state:([^}]+)\}$/);
+    if (stateMatch?.[1]) {
+      const state = stateIdentifiers.get(stateMatch[1]);
+      if (state) return `{${state}}`;
+    }
     const match = source.match(/^\{props:([^}]+)\}$/);
+    const scopedPath = match?.[1] ? itemScope?.itemPropPaths?.get(match[1]) : undefined;
+    if (scopedPath && itemScope && match?.[1]) {
+      const expression = `getProp(${itemScope.itemExpression}, ${JSON.stringify(scopedPath)})`;
+      return `{${expression} ?? ${JSON.stringify(value)}}`;
+    }
     const path = match?.[1] ? propPaths.get(match[1]) : undefined;
     if (path && match) {
       const fallback = value === match[0] ? undefined : value;

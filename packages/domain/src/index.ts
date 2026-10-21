@@ -8,7 +8,11 @@ export type { JsonSchemaObject, SchemaSource } from './schema-source';
 export type { DomSpec } from './dom';
 export type {
   DefinitionConfig,
+  BehaviorValue,
+  BehaviorAction,
+  ComponentBehavior,
   CompositionSource,
+  RepeaterFilter,
   FieldExposure,
   StaticFieldConfig,
   Node,
@@ -56,4 +60,9 @@ export type {
   TokenInterface,
   VariantStyleMap,
 } from './design-system';
-export type { ElementBuildConfig, FragmentBuildConfig, RenderBuildConfig } from './element-build';
+export type {
+  ElementBehaviorTarget,
+  ElementBuildConfig,
+  FragmentBuildConfig,
+  RenderBuildConfig,
+} from './element-build';

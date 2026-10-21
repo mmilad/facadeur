@@ -6,7 +6,7 @@ import {
   type CatalogDesignCommand,
   type DefaultKind,
 } from '@facadeur/core';
-import { catalogAssetSummaries } from '../catalog/asset-list';
+import { catalogAssetSummaries } from '../../read/catalog';
 import { buildCatalogEditorSnapshot, initialCatalogAsset } from './catalog-snapshot';
 import type {
   EditorDrag,

@@ -2,6 +2,8 @@ import { isVoidHtmlTag } from '@facadeur/core';
 import type { RenderBuildConfig } from '@facadeur/core';
 import { Fragment, createElement, useLayoutEffect, useRef } from 'react';
 import type { CSSProperties, HTMLAttributes, RefAttributes } from 'react';
+import type { FieldValue } from '@facadeur/domain';
+import { reactEventPropFor } from './dom-events';
 
 const REACT_ATTRIBUTE_NAMES: Readonly<Record<string, string>> = {
   class: 'className',
@@ -21,15 +23,52 @@ const REACT_ATTRIBUTE_NAMES: Readonly<Record<string, string>> = {
 
 const ignorePreviewChange = () => {};
 
-export function DynamicElement({ config }: { config: RenderBuildConfig }) {
+export type PreviewBehaviorHandler = (
+  target: {
+    readonly scopeKey: string;
+    readonly definitionUuid: string;
+    readonly nodeUuid: string;
+    readonly props?: Readonly<Record<string, FieldValue>>;
+    readonly repeaterIndices?: Readonly<Record<string, number>>;
+  },
+  eventName: string,
+  event: unknown,
+) => void;
+export interface PreviewControlValue {
+  readonly value?: string;
+  readonly checked?: boolean;
+}
+
+export function DynamicElement({
+  config,
+  behaviorHandler,
+  interactive = false,
+  controlValues,
+  onControlChange,
+}: {
+  config: RenderBuildConfig;
+  behaviorHandler?: PreviewBehaviorHandler;
+  interactive?: boolean;
+  controlValues?: Readonly<Record<string, PreviewControlValue>>;
+  onControlChange?: (key: string, value: PreviewControlValue) => void;
+}) {
   const elementRef = useRef<HTMLElement | null>(null);
   const previousDomProperties = useRef<Readonly<Record<string, unknown>>>({});
   const children = config.children ?? [];
-  const domProperties = domPropertiesFor(config);
+  const renderNodeUuid = config.kind === 'fragment' ? undefined : config.nodeUuid;
+  const controlKey =
+    config.kind === 'fragment'
+      ? undefined
+      : (config.instanceKey ?? config.renderKey ?? renderNodeUuid);
+  const domProperties: Record<string, unknown> = {
+    ...domPropertiesFor(config),
+    ...(controlKey ? controlValues?.[controlKey] : undefined),
+  };
   useLayoutEffect(() => {
     const element = elementRef.current;
     if (!element) return;
     for (const [name, value] of Object.entries(domProperties)) {
+      if (interactive && (name === 'value' || name === 'checked')) continue;
       if (value !== undefined && value !== null) {
         (element as unknown as Record<string, unknown>)[name] = value;
       }
@@ -40,7 +79,7 @@ export function DynamicElement({ config }: { config: RenderBuildConfig }) {
       }
     }
     previousDomProperties.current = domProperties;
-  }, [domProperties]);
+  }, [domProperties, interactive]);
 
   if (config.kind === 'fragment') {
     return createElement(
@@ -54,13 +93,17 @@ export function DynamicElement({ config }: { config: RenderBuildConfig }) {
             `${child.kind === 'fragment' ? 'fragment' : child.tagName}-${index}`
           }
           config={child}
+          behaviorHandler={behaviorHandler}
+          interactive={interactive}
+          controlValues={controlValues}
+          onControlChange={onControlChange}
         />
       )),
     );
   }
 
-  const { attributes = {}, dataset, nodeUuid, renderKey, styleNodeUuids, tagName, text } = config;
-  const content = text;
+  const { attributes = {}, dataset, nodeUuid, styleNodeUuids, tagName, text } = config;
+  const content = interactive && tagName.toLowerCase() === 'textarea' ? undefined : text;
   const attributeStyle = attributes.style;
   const props: Record<string, unknown> = {};
 
@@ -80,19 +123,68 @@ export function DynamicElement({ config }: { config: RenderBuildConfig }) {
   if (isCheckableInput) {
     props.checked = Boolean(domProperties.checked ?? props.checked ?? false);
     delete domProperties.checked;
-    props.onChange ??= ignorePreviewChange;
-  } else if (isFormControl) {
-    // Keep form values out of React's controlled-input tracking. Preview data may
-    // supply a value after the first render, so apply it through the DOM property.
-    delete props.value;
-    if (hasValue) {
+    if (interactive && controlKey && onControlChange) {
+      props.onChange = (event: { readonly currentTarget: HTMLInputElement }) =>
+        onControlChange(controlKey, { checked: event.currentTarget.checked });
+    } else {
       props.onChange ??= ignorePreviewChange;
-      if (normalizedTagName === 'input' || normalizedTagName === 'textarea') {
-        props.readOnly = true;
+    }
+  } else if (isFormControl) {
+    if (interactive) {
+      props.value = String(domProperties.value ?? props.value ?? '');
+      if (controlKey && onControlChange) {
+        props.onChange = (event: {
+          readonly currentTarget: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+        }) => onControlChange(controlKey, { value: event.currentTarget.value });
+      }
+    } else {
+      // Keep form values out of React's controlled-input tracking. Preview data may
+      // supply a value after the first render, so apply it through the DOM property.
+      delete props.value;
+      if (hasValue) {
+        props.onChange ??= ignorePreviewChange;
+        if (normalizedTagName === 'input' || normalizedTagName === 'textarea') {
+          props.readOnly = true;
+        }
       }
     }
   }
   if (nodeUuid) props['data-facadeur-node-uuid'] = nodeUuid;
+  if (behaviorHandler && config.behaviorTargets?.length) {
+    const eventNames = [...new Set(config.behaviorTargets.flatMap((target) => target.events))];
+    const isRepeaterDragSource = config.behaviorTargets.some(
+      (target) =>
+        target.events.includes('dragstart') && Object.keys(target.repeaterIndices ?? {}).length,
+    );
+    const isRepeaterDropTarget = config.behaviorTargets.some((target) =>
+      target.events.includes('drop'),
+    );
+    if (isRepeaterDragSource) props.draggable = true;
+    if (isRepeaterDropTarget) {
+      props.onDragOver = (event: { preventDefault: () => void }) => event.preventDefault();
+    }
+    for (const eventName of eventNames) {
+      const reactName = reactEventPropFor(eventName);
+      if (!reactName) continue;
+      const existing = props[reactName];
+      props[reactName] = (event: unknown) => {
+        if (eventName === 'dragstart') {
+          const dataTransfer = (
+            event as { dataTransfer?: { setData?: (type: string, value: string) => void } }
+          ).dataTransfer;
+          const indices = Object.assign(
+            {},
+            ...config.behaviorTargets!.map((target) => target.repeaterIndices ?? {}),
+          );
+          dataTransfer?.setData?.('application/x-facadeur-repeater', JSON.stringify(indices));
+        }
+        if (typeof existing === 'function') (existing as (event: unknown) => void)(event);
+        for (const target of config.behaviorTargets ?? []) {
+          if (target.events.includes(eventName)) behaviorHandler(target, eventName, event);
+        }
+      };
+    }
+  }
   if (nodeUuid || styleNodeUuids?.length) {
     const currentClass = typeof props.className === 'string' ? props.className : '';
     const styleClasses = new Set([...(styleNodeUuids ?? []), ...(nodeUuid ? [nodeUuid] : [])]);
@@ -112,6 +204,10 @@ export function DynamicElement({ config }: { config: RenderBuildConfig }) {
           `${child.kind === 'fragment' ? 'fragment' : child.tagName}-${index}`
         }
         config={child}
+        behaviorHandler={behaviorHandler}
+        interactive={interactive}
+        controlValues={controlValues}
+        onControlChange={onControlChange}
       />
     )),
   ];

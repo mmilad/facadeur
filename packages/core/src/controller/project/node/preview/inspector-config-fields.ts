@@ -7,8 +7,12 @@ import type {
   StaticFieldConfig,
 } from '@facadeur/domain';
 import { fieldsFromJsonSchema, type JsonSchemaField } from '../../../../schema/json-schema-fields';
-import { findDefinition, resolveJsonSchemaForDefinition } from '../../catalog/ops';
-import { defaultFieldExposure, inheritableSchemaForDefinition } from '../../catalog/field-contract';
+import {
+  defaultFieldExposure,
+  findDefinition,
+  inheritableSchemaForDefinition,
+  resolveJsonSchemaForDefinition,
+} from '../../../../queries';
 
 /** Config-tab fields owned by the root, followed by fields from each child instance. */
 export function configFieldsForDefinition(catalog: ProjectCatalog, definition: NodeDefinition) {

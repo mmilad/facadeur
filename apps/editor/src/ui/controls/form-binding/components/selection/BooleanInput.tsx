@@ -8,6 +8,7 @@ export type BooleanInputProps = Omit<
 > & {
   name?: string;
   value?: boolean;
+  checked?: boolean;
   label: string;
   invalid?: boolean;
   onChange?: (value: boolean) => void;
@@ -17,6 +18,7 @@ export type BooleanInputProps = Omit<
 export function BooleanInput({
   name,
   value: valueProp,
+  checked,
   label,
   disabled,
   invalid,
@@ -32,7 +34,10 @@ export function BooleanInput({
     invalid: isInvalid,
     onImmediateChange,
     id,
-  } = useBindable({ name, value: valueProp, disabled, invalid, onChange, onCommit }, false);
+  } = useBindable(
+    { name, value: valueProp ?? checked, disabled, invalid, onChange, onCommit },
+    false,
+  );
 
   return (
     <label className="eu-toggle" {...(labelGap === undefined ? {} : { style: { gap: labelGap } })}>

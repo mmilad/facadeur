@@ -4,22 +4,33 @@ import { useState } from 'react';
 import { Form } from '@facadeur/form';
 import type { FormChangeMeta } from '@facadeur/form';
 import type { FieldValue } from '@facadeur/domain';
+import type { NodeDefinition } from '@facadeur/domain';
 import type { InspectorSidebarModel } from '../../../../domain/sidebar/types';
 import type { EditorEvent } from '../../../../domain/sidebar/events';
 import { EditorEventType } from '../../../../domain/sidebar/events';
 import { LayerStylesEditor } from './LayerStylesEditor';
 import { DefinitionFieldSettings } from './DefinitionFieldSettings';
+import { CatalogBehaviorPanel } from '../../../stage/CatalogBehaviorPanel';
 
 export function CatalogNodeInspector({
   model,
+  definition,
   onEvent,
 }: {
   model: InspectorSidebarModel | null;
+  definition: NodeDefinition | null;
   onEvent: (event: EditorEvent) => void;
 }) {
-  const [activeTab, setActiveTab] = useState<InspectorSidebarModel['tabs'][number]['id']>('style');
+  const [activeTab, setActiveTab] = useState<
+    InspectorSidebarModel['tabs'][number]['id'] | 'behavior'
+  >('style');
   if (!model) return <p className="inspector-empty">Select an element in the layer tree.</p>;
-  const selectedTab = model.tabs.find((tab) => tab.id === activeTab) ?? model.tabs[0];
+  const behaviorAvailable = model.selectionKind === 'root' && definition?.kind === 'component';
+  const tabs = [
+    ...model.tabs,
+    ...(behaviorAvailable ? [{ id: 'behavior' as const, label: 'Behavior', sections: [] }] : []),
+  ];
+  const selectedTab = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
   const emitFieldChange = (path: string, value: unknown) => {
     if (value !== undefined && !isFieldValue(value)) return;
     onEvent({
@@ -54,7 +65,7 @@ export function CatalogNodeInspector({
         />
       </section>
       <div className="inspector-tabs" role="tablist" aria-label="Element settings">
-        {model.tabs.map((tab) => (
+        {tabs.map((tab) => (
           <button
             key={tab.id}
             id={`inspector-tab-${tab.id}`}
@@ -69,7 +80,7 @@ export function CatalogNodeInspector({
           </button>
         ))}
       </div>
-      {model.tabs.map((tab) => (
+      {tabs.map((tab) => (
         <section
           id={`inspector-tabpanel-${tab.id}`}
           className="inspector-tabpanel"
@@ -79,6 +90,9 @@ export function CatalogNodeInspector({
           key={tab.id}
         >
           <div className="inspector-form-stack">
+            {tab.id === 'behavior' ? (
+              <CatalogBehaviorPanel definition={definition} onEvent={onEvent} />
+            ) : null}
             {tab.sections.map((section) => (
               <section className="inspector-tab-section" key={section.label}>
                 <h3 className="inspector-tab-section-title">{section.label}</h3>

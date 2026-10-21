@@ -27,6 +27,9 @@ Catalog paths, schema field configuration, prop bindings, token choices, and ses
 editor-owned. Generic field behavior and native input rendering remain package-owned. Use only the
 package public API from outside `packages/form`.
 
+For the broader schema resolution, validation, and schema-to-form ownership map, see the
+[Schema and form responsibilities draft](schema-form-responsibilities.md).
+
 ## Verification and migration
 
 The root Vitest configuration includes the maintained Editor suites, including the integration

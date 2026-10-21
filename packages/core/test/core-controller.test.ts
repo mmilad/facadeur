@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   CoreController,
+  emptyProjectCatalog,
   resolveDefinitionToElementBuildConfig,
   previewFieldsForNode,
   inspectorInputsForNode,
+  validateProjectCatalog,
   readTokenTree,
   type InspectorFormField,
 } from '../src/index';
@@ -105,6 +107,70 @@ describe('CoreController', () => {
       value: '',
     });
     expect(core.getSnapshot().openDefinition?.config?.previewData?.fields?.alt).toBeUndefined();
+  });
+
+  it('prunes removed inline preview defaults and ignores invalid values during rendering', () => {
+    const uuid = globalThis.crypto.randomUUID();
+    const rootUuid = globalThis.crypto.randomUUID();
+    const inline = {
+      type: 'object',
+      properties: {
+        src: { type: 'string' },
+        alt: { type: 'string' },
+        ratio: { type: 'string' },
+      },
+    };
+    const catalog = {
+      ...emptyProjectCatalog(),
+      atoms: {
+        [uuid]: {
+          uuid,
+          name: 'Preview fixture',
+          kind: 'atom' as const,
+          schema: { kind: 'inline' as const, schema: inline },
+          config: {
+            previewData: { fields: { src: 'valid.png', alt: 'remove me', ratio: '1 / 1' } },
+          },
+          root: { uuid: rootUuid, dom: { tagName: 'div' } },
+        },
+      },
+    };
+    const core = new CoreController(catalog);
+    core.openDefinition(uuid);
+    core.patchDefinition('atoms', uuid, {
+      schema: {
+        kind: 'inline',
+        schema: {
+          type: 'object',
+          properties: { src: { type: 'string' }, ratio: { type: 'string' } },
+        },
+      },
+    });
+
+    expect(core.getSnapshot().openDefinition?.config?.previewData?.fields).not.toHaveProperty(
+      'alt',
+    );
+    const withInvalidPreview = {
+      ...core.getSnapshot().catalog,
+      atoms: {
+        ...core.getSnapshot().catalog.atoms,
+        [uuid]: {
+          ...core.getSnapshot().catalog.atoms[uuid]!,
+          config: {
+            ...core.getSnapshot().catalog.atoms[uuid]!.config,
+            previewData: { fields: { src: 42, ratio: '1 / 1', removed: 'stale' } },
+          },
+        },
+      },
+    };
+    expect(() => validateProjectCatalog(withInvalidPreview)).not.toThrow();
+    const rendered = resolveDefinitionToElementBuildConfig(
+      withInvalidPreview.atoms[uuid]!,
+      withInvalidPreview,
+    );
+    expect(rendered.attributes?.src).toBeUndefined();
+    expect(rendered.attributes?.alt).toBeUndefined();
+    expect(rendered.attributes?.['data-ratio']).toBeUndefined();
   });
 
   it('calculates inspector field defs and merged values', () => {

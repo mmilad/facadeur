@@ -1,5 +1,5 @@
 import type { FieldValue, JsonSchemaObject, NodeDefinition } from '@facadeur/domain';
-import { findNodeByUuid } from '../../catalog/ops';
+import { findNodeByUuid } from '../../../../queries';
 import {
   isFieldBindingValue,
   matchesPartialSchemaValue,

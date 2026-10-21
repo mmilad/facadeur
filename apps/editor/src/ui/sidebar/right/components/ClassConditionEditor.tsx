@@ -6,6 +6,8 @@ import type {
   LegacyClassCondition,
 } from '@facadeur/domain';
 import { classConditionOperatorsForType } from '@facadeur/core';
+import { Checkbox, NumberInput, Select, TextInput } from '../../../controls/form-binding';
+import { Field } from '../../../components/feedback';
 
 type ConditionOption = { value: string; label: string; valueType?: string };
 
@@ -21,21 +23,16 @@ export function ClassConditionEditor({
   const tree = condition ? normalizeCondition(condition) : null;
   return (
     <section className="class-condition-editor" aria-label="Class condition">
-      <label className="class-condition-toggle">
-        <input
-          type="checkbox"
-          checked={tree !== null}
-          disabled={!options.length}
-          onChange={(event) =>
-            onChange(
-              event.currentTarget.checked
-                ? { kind: 'rule', operator: 'and', conditions: [newLeaf(options)] }
-                : null,
-            )
-          }
-        />
-        Apply class condition
-      </label>
+      <Checkbox
+        label="Apply class condition"
+        value={tree !== null}
+        disabled={!options.length}
+        onChange={(checked) =>
+          onChange(
+            checked ? { kind: 'rule', operator: 'and', conditions: [newLeaf(options)] } : null,
+          )
+        }
+      />
       {tree ? (
         <ConditionNodeEditor
           node={tree}
@@ -44,7 +41,9 @@ export function ClassConditionEditor({
           onRemove={() => onChange(null)}
         />
       ) : null}
-      {!options.length ? <small>Component props are needed to create a condition.</small> : null}
+      {!options.length ? (
+        <small>Add a component prop or internal state to create a condition.</small>
+      ) : null}
     </section>
   );
 }
@@ -77,16 +76,16 @@ function ConditionNodeEditor({
     <fieldset className="class-condition-rule">
       <legend>Condition group</legend>
       <div className="class-condition-row">
-        <select
+        <Select
           aria-label="Condition group operator"
           value={node.operator}
-          onChange={(event) =>
-            onChange({ ...node, operator: event.currentTarget.value as 'and' | 'or' })
-          }
-        >
-          <option value="and">All conditions (AND)</option>
-          <option value="or">Any condition (OR)</option>
-        </select>
+          className="class-condition-control"
+          options={[
+            { value: 'and', label: 'All conditions (AND)' },
+            { value: 'or', label: 'Any condition (OR)' },
+          ]}
+          onChange={(value) => onChange({ ...node, operator: value as 'and' | 'or' })}
+        />
         {canRemove ? (
           <button type="button" aria-label="Remove condition group" onClick={onRemove}>
             ×
@@ -162,120 +161,134 @@ function ConditionLeafEditor({
   const operators = classConditionOperatorsForType(selected?.valueType);
   const operator = operators.includes(condition.operator) ? condition.operator : 'is-set';
   const hasRight = operator !== 'is-set' && operator !== 'is-not-set';
-  const right = condition.right ?? { kind: 'literal' as const, value: '' };
+  const right = condition.right ?? defaultRightOperand(selected?.valueType);
   return (
     <div className="class-condition-leaf">
       <div className="class-condition-row">
-        <select
+        <Select
           aria-label="Condition property"
           value={refFor(condition.left)}
-          onChange={(event) => {
-            const option = options.find((entry) => entry.value === event.currentTarget.value);
+          className="class-condition-control"
+          options={options}
+          onChange={(value) => {
+            const option = options.find((entry) => entry.value === value);
             const nextOperators = classConditionOperatorsForType(option?.valueType);
+            const nextOperator = nextOperators.includes(condition.operator)
+              ? condition.operator
+              : (nextOperators[0] as ClassConditionOperator);
             onChange({
               ...condition,
-              left: { kind: 'reference', reference: event.currentTarget.value },
-              operator: nextOperators.includes(condition.operator)
-                ? condition.operator
-                : (nextOperators[0] as ClassConditionOperator),
-              right: undefined,
+              left: { kind: 'reference', reference: value },
+              operator: nextOperator,
+              right:
+                nextOperator === 'is-set' || nextOperator === 'is-not-set'
+                  ? undefined
+                  : defaultRightOperand(option?.valueType),
             });
           }}
-        >
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        <select
+        />
+        <Select
           aria-label="Condition operator"
           value={operator}
-          onChange={(event) =>
+          className="class-condition-control"
+          options={operators.map((item) => ({ value: item, label: operatorLabel(item) }))}
+          onChange={(value) => {
+            const nextOperator = value as ClassConditionOperator;
             onChange({
               ...condition,
-              operator: event.currentTarget.value as ClassConditionOperator,
-            })
-          }
-        >
-          {operators.map((item) => (
-            <option key={item} value={item}>
-              {operatorLabel(item)}
-            </option>
-          ))}
-        </select>
+              operator: nextOperator,
+              ...(nextOperator !== 'is-set' && nextOperator !== 'is-not-set' && !condition.right
+                ? { right: defaultRightOperand(selected?.valueType) }
+                : {}),
+            });
+          }}
+        />
         {hasRight ? (
           <>
-            <select
+            <Select
               aria-label="Comparison value kind"
               value={right.kind}
-              onChange={(event) =>
+              className="class-condition-control"
+              options={[
+                { value: 'literal', label: 'Value' },
+                {
+                  value: 'reference',
+                  label: 'Another prop or state',
+                  disabled: !comparisonOptions.length,
+                },
+              ]}
+              onChange={(value) =>
                 onChange({
                   ...condition,
                   right:
-                    event.currentTarget.value === 'reference'
+                    value === 'reference'
                       ? { kind: 'reference', reference: comparisonOptions[0]?.value ?? '' }
                       : { kind: 'literal', value: '' },
                 })
               }
-            >
-              <option value="literal">Value</option>
-              <option value="reference" disabled={!comparisonOptions.length}>
-                Another prop
-              </option>
-            </select>
+            />
             {right.kind === 'reference' ? (
-              <select
+              <Select
                 aria-label="Comparison property"
                 value={right.reference}
-                onChange={(event) =>
-                  onChange({
-                    ...condition,
-                    right: { kind: 'reference', reference: event.currentTarget.value },
-                  })
-                }
-              >
-                {comparisonOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            ) : selected?.valueType === 'boolean' ? (
-              <select
-                aria-label="Comparison value"
-                value={right.value === true ? 'true' : right.value === false ? 'false' : ''}
-                onChange={(event) =>
-                  onChange({
-                    ...condition,
-                    right: { kind: 'literal', value: event.currentTarget.value === 'true' },
-                  })
-                }
-              >
-                <option value="true">true</option>
-                <option value="false">false</option>
-              </select>
-            ) : (
-              <input
-                aria-label="Comparison value"
-                type={
-                  selected?.valueType === 'number' ||
-                  selected?.valueType === 'integer' ||
-                  operator.startsWith('length-')
-                    ? 'number'
-                    : 'text'
-                }
-                value={String(right.value ?? '')}
-                onChange={(event) =>
-                  onChange({
-                    ...condition,
-                    right: {
-                      kind: 'literal',
-                      value: literalValue(event.currentTarget.value, selected?.valueType, operator),
-                    },
-                  })
+                className="class-condition-control"
+                options={comparisonOptions}
+                onChange={(value) =>
+                  onChange({ ...condition, right: { kind: 'reference', reference: value } })
                 }
               />
+            ) : right.kind === 'literal' && selected?.valueType === 'boolean' ? (
+              <Select
+                aria-label="Comparison value"
+                value={right.value === true ? 'true' : right.value === false ? 'false' : ''}
+                className="class-condition-control"
+                options={[
+                  { value: 'true', label: 'true' },
+                  { value: 'false', label: 'false' },
+                ]}
+                onChange={(value) =>
+                  onChange({ ...condition, right: { kind: 'literal', value: value === 'true' } })
+                }
+              />
+            ) : (
+              <Field label="Comparison value">
+                {selected?.valueType === 'number' ||
+                selected?.valueType === 'integer' ||
+                operator.startsWith('length-') ? (
+                  <NumberInput
+                    aria-label="Comparison value"
+                    value={typeof right.value === 'number' ? right.value : Number(right.value) || 0}
+                    onChange={(value) =>
+                      onChange({
+                        ...condition,
+                        right: {
+                          kind: 'literal',
+                          value: literalValue(
+                            value === null ? '' : String(value),
+                            selected?.valueType,
+                            operator,
+                          ),
+                        },
+                      })
+                    }
+                  />
+                ) : (
+                  <TextInput
+                    className="class-condition-control"
+                    aria-label="Comparison value"
+                    value={String(right.value ?? '')}
+                    onChange={(value) =>
+                      onChange({
+                        ...condition,
+                        right: {
+                          kind: 'literal',
+                          value: literalValue(value, selected?.valueType, operator),
+                        },
+                      })
+                    }
+                  />
+                )}
+              </Field>
             )}
           </>
         ) : null}
@@ -295,6 +308,12 @@ function newLeaf(options: readonly ConditionOption[]): ClassConditionLeaf {
     left: { kind: 'reference', reference: options[0]?.value ?? '' },
     operator: 'is-set',
   };
+}
+
+function defaultRightOperand(valueType: string | undefined): ClassConditionOperand {
+  const value =
+    valueType === 'boolean' ? true : valueType === 'number' || valueType === 'integer' ? 0 : '';
+  return { kind: 'literal', value };
 }
 
 function normalizeCondition(condition: ClassCondition | LegacyClassCondition): ClassCondition {

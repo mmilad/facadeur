@@ -22,6 +22,10 @@ it('uses the referenced catalog choices for a static value instead of transforma
     value: 'menu',
     exposed: false,
     valueOptions: [{ type: 'text', label: 'Text' }],
+    iconOptions: [
+      { value: 'save', label: 'save' },
+      { value: 'menu', label: 'menu' },
+    ],
   } satisfies Parameters<typeof DefinitionFieldSettings>[0]['configField'];
 
   render(<DefinitionFieldSettings configField={configField} onChange={() => undefined} />);
